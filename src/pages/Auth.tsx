@@ -17,7 +17,7 @@ const authSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, hasRole, isLoading, signIn, signUp } = useAuth();
+  const { isAuthenticated, hasRole, isLoading, signIn, signUp, signOut } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
