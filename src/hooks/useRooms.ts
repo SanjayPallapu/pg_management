@@ -40,6 +40,8 @@ export const useRooms = () => {
             monthlyRent: tenant.monthly_rent,
             paymentStatus: tenant.payment_status as 'Paid' | 'Pending',
             paymentDate: tenant.payment_date || undefined,
+            securityDepositAmount: tenant.security_deposit_amount,
+            securityDepositDate: tenant.security_deposit_date,
           })),
       })) as Room[];
     },
@@ -141,17 +143,21 @@ export const useRooms = () => {
 
   const updateTenant = useMutation({
     mutationFn: async ({ tenantId, updates }: { tenantId: string; updates: Partial<Tenant> }) => {
+      const updateData: Record<string, unknown> = {};
+      
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.phone !== undefined) updateData.phone = updates.phone;
+      if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
+      if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
+      if (updates.monthlyRent !== undefined) updateData.monthly_rent = updates.monthlyRent;
+      if (updates.paymentStatus !== undefined) updateData.payment_status = updates.paymentStatus;
+      if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
+      if (updates.securityDepositAmount !== undefined) updateData.security_deposit_amount = updates.securityDepositAmount;
+      if (updates.securityDepositDate !== undefined) updateData.security_deposit_date = updates.securityDepositDate;
+
       const { error } = await supabase
         .from('tenants')
-        .update({
-          name: updates.name,
-          phone: updates.phone,
-          start_date: updates.startDate,
-          end_date: updates.endDate,
-          monthly_rent: updates.monthlyRent,
-          payment_status: updates.paymentStatus,
-          payment_date: updates.paymentDate,
-        })
+        .update(updateData)
         .eq('id', tenantId);
 
       if (error) throw error;

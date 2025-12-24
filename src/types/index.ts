@@ -18,6 +18,8 @@ export interface Tenant {
   monthlyRent: number;
   paymentStatus: 'Paid' | 'Pending';
   paymentDate?: string;
+  securityDepositAmount?: number | null;
+  securityDepositDate?: string | null;
 }
 
 export interface PaymentEntry {

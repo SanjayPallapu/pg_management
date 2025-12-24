@@ -168,6 +168,8 @@ export type Database = {
           payment_status: string
           phone: string
           room_id: string
+          security_deposit_amount: number | null
+          security_deposit_date: string | null
           start_date: string
           updated_at: string
         }
@@ -181,6 +183,8 @@ export type Database = {
           payment_status: string
           phone: string
           room_id: string
+          security_deposit_amount?: number | null
+          security_deposit_date?: string | null
           start_date: string
           updated_at?: string
         }
@@ -194,6 +198,8 @@ export type Database = {
           payment_status?: string
           phone?: string
           room_id?: string
+          security_deposit_amount?: number | null
+          security_deposit_date?: string | null
           start_date?: string
           updated_at?: string
         }
