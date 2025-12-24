@@ -1,0 +1,878 @@
+import { useState, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Room, Tenant } from '@/types';
+import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon } from 'lucide-react';
+import { useRooms } from '@/hooks/useRooms';
+import { toast } from '@/hooks/use-toast';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { useMonthContext } from '@/contexts/MonthContext';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+interface TenantManagementProps {
+  room: Room;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProps) => {
+  const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
+  const { payments, upsertPayment } = useTenantPayments();
+  const { selectedMonth, selectedYear } = useMonthContext();
+  const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
+  const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
+  const [partialAmount, setPartialAmount] = useState<number>(0);
+  const [payRemainingTenant, setPayRemainingTenant] = useState<string | null>(null);
+  const [payRemainingAmount, setPayRemainingAmount] = useState<number>(0);
+  const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
+  const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
+  
+  // Get payment status for a tenant for the SELECTED month
+  const getSelectedMonthPayment = (tenantId: string) => {
+    return payments.find(
+      p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear
+    );
+  };
+  
+  // Check payment status for the selected month
+  const getTenantPaymentStatus = (tenantId: string) => {
+    const payment = getSelectedMonthPayment(tenantId);
+    return payment?.paymentStatus || 'Pending';
+  };
+
+  const isTenantPaidForMonth = (tenantId: string) => {
+    return getTenantPaymentStatus(tenantId) === 'Paid';
+  };
+
+  const isTenantPartialForMonth = (tenantId: string) => {
+    return getTenantPaymentStatus(tenantId) === 'Partial';
+  };
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const [confirmAction, setConfirmAction] = useState<{ type: 'paid' | 'unpaid' | 'delete', tenantId: string } | null>(null);
+  
+  const getPricePerPerson = (capacity: number) => {
+    const priceMap: { [key: number]: number } = {
+      1: 11500,
+      2: 6000,
+      3: 5000,
+      4: 4500,
+      5: 4000
+    };
+    return priceMap[capacity] || 4000;
+  };
+
+  const [newTenant, setNewTenant] = useState<Partial<Tenant>>({
+    name: '',
+    phone: '',
+    monthlyRent: getPricePerPerson(room.capacity),
+    paymentStatus: 'Pending',
+    startDate: new Date().toISOString().split('T')[0]
+  });
+
+  const getFloorName = (floor: number) => {
+    const floorNames = { 1: '1st Floor', 2: '2nd Floor', 3: '3rd Floor' };
+    return floorNames[floor as keyof typeof floorNames];
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === 'Occupied') return 'bg-occupied text-occupied-foreground';
+    if (status === 'Partially Occupied') return 'bg-warning text-warning-foreground';
+    return 'bg-vacant text-vacant-foreground';
+  };
+
+  const handleAddTenant = async () => {
+    if (!newTenant.name || !newTenant.phone) return;
+
+    const tenant = {
+      name: newTenant.name,
+      phone: newTenant.phone,
+      startDate: newTenant.startDate || new Date().toISOString().split('T')[0],
+      monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity),
+      paymentStatus: newTenant.paymentStatus || 'Pending' as const,
+    };
+
+    await addTenant.mutateAsync({ roomNo: room.roomNo, tenant });
+
+    const updatedTenants = [...room.tenants, { ...tenant, id: Date.now().toString() }];
+    const newStatus = updatedTenants.length === room.capacity ? 'Occupied' : 
+                     updatedTenants.length === 0 ? 'Vacant' : 'Partially Occupied';
+
+    await updateRoom.mutateAsync({
+      ...room,
+      tenants: updatedTenants,
+      status: newStatus as any
+    });
+
+    setNewTenant({
+      name: '',
+      phone: '',
+      monthlyRent: getPricePerPerson(room.capacity),
+      paymentStatus: 'Pending',
+      startDate: new Date().toISOString().split('T')[0]
+    });
+
+    toast({
+      title: "Tenant added successfully",
+    });
+  };
+
+  const handleUpdateTenant = async (tenantId: string, updates: Partial<Tenant>) => {
+    await updateTenant.mutateAsync({ tenantId, updates });
+  };
+
+  const handleRemoveTenant = (tenantId: string) => {
+    setConfirmAction({ type: 'delete', tenantId });
+  };
+
+  const confirmRemoveTenant = async (tenantId: string) => {
+    await removeTenant.mutateAsync(tenantId);
+
+    const updatedTenants = room.tenants.filter(tenant => tenant.id !== tenantId);
+    const newStatus = updatedTenants.length === room.capacity ? 'Occupied' : 
+                     updatedTenants.length === 0 ? 'Vacant' : 'Partially Occupied';
+
+    await updateRoom.mutateAsync({
+      ...room,
+      tenants: updatedTenants,
+      status: newStatus as any
+    });
+
+    toast({
+      title: "Tenant removed successfully",
+    });
+  };
+
+  const availableBeds = room.capacity - room.tenants.length;
+
+  const handleCapacityChange = (increment: boolean) => {
+    const newCapacity = increment ? room.capacity + 1 : room.capacity - 1;
+    if (newCapacity >= room.tenants.length && newCapacity > 0) {
+      const pricePerPerson = getPricePerPerson(newCapacity);
+      const newTotalRent = newCapacity * pricePerPerson;
+      
+      updateRoom.mutate({ 
+        ...room, 
+        capacity: newCapacity,
+        rentAmount: newTotalRent
+      });
+      
+      setNewTenant({
+        ...newTenant,
+        monthlyRent: pricePerPerson
+      });
+    }
+  };
+
+  const handlePaymentToggle = (tenantId: string, checked: boolean) => {
+    if (checked) {
+      setConfirmAction({ type: 'paid', tenantId });
+    } else {
+      setConfirmAction({ type: 'unpaid', tenantId });
+    }
+  };
+
+  const confirmPaymentPaid = (tenantId: string) => {
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    if (tenant) {
+      setPartialPaymentTenant(tenantId);
+      setPartialAmount(tenant.monthlyRent);
+    }
+    setConfirmAction(null);
+  };
+
+  const confirmPaymentUnpaid = async (tenantId: string) => {
+    updateTenant.mutate({ 
+      tenantId, 
+      updates: { paymentStatus: 'Pending', paymentDate: undefined } 
+    });
+    
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    if (tenant) {
+      await upsertPayment.mutateAsync({
+        tenantId,
+        month: selectedMonth,
+        year: selectedYear,
+        paymentStatus: 'Pending',
+        amount: tenant.monthlyRent,
+        amountPaid: 0,
+        paymentEntries: [],
+      });
+    }
+    setConfirmAction(null);
+  };
+
+  const handlePartialPaymentConfirm = async (tenantId: string, date: Date) => {
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    if (!tenant) return;
+
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    const existingPayment = getSelectedMonthPayment(tenantId);
+    const previousPaid = existingPayment?.amountPaid || 0;
+    const totalPaid = previousPaid + partialAmount;
+
+    if (partialAmount > tenant.monthlyRent) {
+      toast({
+        title: "Amount exceeds rent",
+        description: "The payment amount cannot exceed the monthly rent",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const isFullPayment = totalPaid >= tenant.monthlyRent;
+    const status = isFullPayment ? 'Paid' : 'Partial';
+
+    // Build new payment entry
+    const newEntry = {
+      amount: partialAmount,
+      date: formattedDate,
+      type: isFullPayment ? 'full' as const : 'partial' as const,
+    };
+
+    // Combine with existing entries
+    const existingEntries = existingPayment?.paymentEntries || [];
+    const updatedEntries = [...existingEntries, newEntry];
+
+    updateTenant.mutate({ 
+      tenantId, 
+      updates: { 
+        paymentStatus: isFullPayment ? 'Paid' : 'Pending', 
+        paymentDate: formattedDate 
+      } 
+    });
+
+    await upsertPayment.mutateAsync({
+      tenantId,
+      month: selectedMonth,
+      year: selectedYear,
+      paymentStatus: status,
+      paymentDate: formattedDate,
+      amount: tenant.monthlyRent,
+      amountPaid: totalPaid,
+      paymentEntries: updatedEntries,
+    });
+
+    toast({
+      title: isFullPayment ? "Payment marked as Paid" : "Partial payment recorded",
+      description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
+    });
+
+    setPartialPaymentTenant(null);
+    setPartialAmount(0);
+  };
+
+  const handlePayRemaining = (tenantId: string) => {
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    const payment = getSelectedMonthPayment(tenantId);
+    if (tenant && payment) {
+      const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
+      setPayRemainingTenant(tenantId);
+      setPayRemainingAmount(remaining);
+      setPayRemainingDate(new Date());
+    }
+  };
+
+  const confirmPayRemaining = async (tenantId: string) => {
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    const payment = getSelectedMonthPayment(tenantId);
+    if (!tenant || !payment) return;
+
+    const formattedDate = format(payRemainingDate, 'yyyy-MM-dd');
+    const previousPaid = payment.amountPaid || 0;
+    const totalPaid = previousPaid + payRemainingAmount;
+    const isFullPayment = totalPaid >= tenant.monthlyRent;
+
+    // Add remaining payment entry
+    const newEntry = {
+      amount: payRemainingAmount,
+      date: formattedDate,
+      type: isFullPayment ? 'remaining' as const : 'partial' as const,
+    };
+
+    const existingEntries = payment.paymentEntries || [];
+    const updatedEntries = [...existingEntries, newEntry];
+
+    const status = isFullPayment ? 'Paid' : 'Partial';
+
+    updateTenant.mutate({ 
+      tenantId, 
+      updates: { 
+        paymentStatus: isFullPayment ? 'Paid' : 'Pending', 
+        paymentDate: formattedDate 
+      } 
+    });
+
+    await upsertPayment.mutateAsync({
+      tenantId,
+      month: selectedMonth,
+      year: selectedYear,
+      paymentStatus: status,
+      paymentDate: formattedDate,
+      amount: tenant.monthlyRent,
+      amountPaid: Math.min(totalPaid, tenant.monthlyRent),
+      paymentEntries: updatedEntries,
+    });
+
+    toast({
+      title: isFullPayment ? "Payment completed" : "Partial payment recorded",
+      description: isFullPayment 
+        ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded`
+        : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
+    });
+
+    setPayRemainingTenant(null);
+    setPayRemainingAmount(0);
+  };
+
+  // detect overdue based on SELECTED month payment status
+  const hasCrossedCycle = (tenant: Tenant) => {
+    const status = getTenantPaymentStatus(tenant.id);
+    if (status === 'Paid') return false;
+    
+    // Check if selected month is in the past
+    const selectedDate = new Date(selectedYear, selectedMonth - 1, 1);
+    const currentDate = new Date();
+    currentDate.setDate(1); // First of current month
+    return selectedDate < currentDate;
+  };
+
+  // choose background + badge color based on SELECTED MONTH payment
+  const getTenantStyles = (tenant: Tenant) => {
+    const status = getTenantPaymentStatus(tenant.id);
+    if (status === 'Paid') {
+      return { card: "bg-paid-muted", badge: "bg-paid text-paid-foreground" };
+    }
+    if (status === 'Partial') {
+      return { card: "bg-partial-muted", badge: "bg-partial text-partial-foreground" };
+    }
+    if (hasCrossedCycle(tenant)) {
+      return { card: "bg-overdue-muted", badge: "bg-overdue text-overdue-foreground" };
+    }
+    return { card: "bg-pending-muted", badge: "bg-pending text-pending-foreground" };
+  };
+  
+  // Get display status for selected month
+  const getPaymentStatusForMonth = (tenantId: string) => {
+    const status = getTenantPaymentStatus(tenantId);
+    if (status === 'Paid') return 'Paid';
+    if (status === 'Partial') return 'Due';
+    return 'Pending';
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Room {room.roomNo}
+            <Badge className={getStatusColor(room.status)}>
+              {room.status}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription>
+            Manage tenants, room capacity, rent amounts, and payment status
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Room Info */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              {getFloorName(room.floor)}
+            </div>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>{room.tenants.length}/{room.capacity} occupied</span>
+              <div className="flex gap-1 ml-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => handleCapacityChange(true)}
+                  disabled={room.capacity >= 5}
+                >
+                  <ChevronUp className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => handleCapacityChange(false)}
+                  disabled={room.capacity <= room.tenants.length}
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              Total: ₹{room.rentAmount.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Current Tenants */}
+          {room.tenants.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">
+                    Current Tenants ({room.tenants.length})
+                  </h3>
+                
+                  <Button
+                    variant={isEditMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setIsEditMode(!isEditMode);
+                      setEditingTenantId(null);
+                    }}
+                  >
+                    {isEditMode ? "Done" : "Edit"}
+                  </Button>
+                </div>
+                
+                {!isEditMode && (
+                  <div className="text-xs text-muted-foreground">
+                    Click Edit to enable long-press editing
+                  </div>
+                )}
+
+              {[...room.tenants]
+              .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+              .map(tenant => {
+                const isEditing = editingTenantId === tenant.id;
+                const payment = getSelectedMonthPayment(tenant.id);
+                const isPartial = isTenantPartialForMonth(tenant.id);
+                const remaining = isPartial ? tenant.monthlyRent - (payment?.amountPaid || 0) : 0;
+                
+                const handleLongPressStart = () => {
+                  if (!isEditMode) return;
+                
+                  longPressTimer.current = setTimeout(() => {
+                    setEditingTenantId(tenant.id);
+                  }, 500);
+                };
+
+                
+                const handleLongPressEnd = () => {
+                  if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                    longPressTimer.current = null;
+                  }
+                };
+                
+                return (
+                  <div
+                    key={tenant.id}
+                    className={cn(
+                      "p-4 border rounded-xl space-y-3 transition-all duration-200",
+                      getTenantStyles(tenant).card,
+                      isEditing && 'ring-2 ring-primary scale-[1.02]'
+                    )}
+                    onMouseDown={handleLongPressStart}
+                    onMouseUp={handleLongPressEnd}
+                    onMouseLeave={handleLongPressEnd}
+                    onTouchStart={handleLongPressStart}
+                    onTouchEnd={handleLongPressEnd}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1 flex-1">
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <Input
+                              value={tenant.name}
+                              onChange={(e) => handleUpdateTenant(tenant.id, { name: e.target.value })}
+                              placeholder="Name"
+                              className="font-medium"
+                            />
+                            <Input
+                              value={tenant.phone}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                handleUpdateTenant(tenant.id, { phone: value });
+                              }}
+                              placeholder="Phone"
+                              maxLength={10}
+                            />
+                            <Input
+                              type="date"
+                              value={tenant.startDate}
+                              onChange={(e) => handleUpdateTenant(tenant.id, { startDate: e.target.value })}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="font-medium text-lg">{tenant.name}</div>
+                            <div className="text-sm text-muted-foreground">{tenant.phone}</div>
+                            <div className="text-xs text-muted-foreground">
+                              Joining Date: {new Date(tenant.startDate).toLocaleDateString()}
+                            </div>
+                            {/* Display payment entries */}
+                            {payment?.paymentEntries && payment.paymentEntries.length > 0 ? (
+                              <div className="mt-1 space-y-0.5">
+                                {payment.paymentEntries.map((entry, idx) => (
+                                  <div key={idx} className="text-xs text-muted-foreground">
+                                    {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {new Date(entry.date).toLocaleDateString()}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : payment?.paymentDate && (
+                              <div className="text-xs text-muted-foreground">
+                                Paid on: {new Date(payment.paymentDate).toLocaleDateString()}
+                              </div>
+                            )}
+                            {isPartial && (
+                              <div className="text-sm font-medium mt-2">
+                                <span className="text-paid">Paid: ₹{(payment?.amountPaid || 0).toLocaleString()}</span>
+                                <span className="mx-2">•</span>
+                                <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2 ml-2">
+                        {!isEditing && (
+                          <>
+                            {isPartial ? (
+                              <Badge className="bg-overdue text-overdue-foreground px-3 py-1 text-sm">
+                                ₹{remaining.toLocaleString()}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className={getTenantStyles(tenant).badge}>
+                                {getPaymentStatusForMonth(tenant.id)}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+
+                        {isEditing && (
+                          <>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveTenant(tenant.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingTenantId(null);
+                                setIsEditMode(false);
+                              }}
+                            >
+                              Done
+                            </Button>
+
+                          </>
+                        )}
+
+                      </div>
+                    </div>
+
+                    {!isEditing && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Monthly Rent</Label>
+                        <div className="text-lg font-semibold bg-background/50 rounded-lg px-3 py-2">
+                          ₹{tenant.monthlyRent.toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="flex items-end">
+                        {isPartial ? (
+                          <Button
+                            onClick={() => handlePayRemaining(tenant.id)}
+                            className="w-full bg-foreground text-background hover:bg-foreground/90"
+                          >
+                            Pay Remaining
+                          </Button>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={isTenantPaidForMonth(tenant.id)}
+                              onCheckedChange={(checked) => handlePaymentToggle(tenant.id, checked)}
+                            />
+                            <Label>Rent Paid</Label>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    )}
+
+                    {isEditing && (
+                    <div>
+                      <Label>Monthly Rent</Label>
+                      <Input
+                        type="number"
+                        value={tenant.monthlyRent}
+                        readOnly={isTenantPaidForMonth(tenant.id)}
+                        className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
+                        onChange={(e) =>
+                          handleUpdateTenant(tenant.id, {
+                            monthlyRent: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add New Tenant */}
+          {availableBeds > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add New Tenant ({availableBeds} beds available)
+              </h3>
+              
+              <div className="p-4 border rounded-lg space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Tenant Name</Label>
+                    <Input
+                      value={newTenant.name}
+                      onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
+                      placeholder="Enter name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone Number</Label>
+                    <Input
+                      value={newTenant.phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setNewTenant({ ...newTenant, phone: value });
+                      }}
+                      placeholder="Enter phone"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="monthlyRent">Monthly Rent (₹)</Label>
+                    <Input
+                      id="monthlyRent"
+                      type="number"
+                      value={newTenant.monthlyRent}
+                      onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: parseInt(e.target.value) || 0 })}
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate">Joining Date</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={newTenant.startDate}
+                      onChange={(e) => setNewTenant({ ...newTenant, startDate: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleAddTenant}
+                  disabled={!newTenant.name || !newTenant.phone}
+                  className="w-full"
+                >
+                  Add Tenant
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Room Notes */}
+          <div className="space-y-2">
+            <Label>Room Notes</Label>
+            <Textarea
+              placeholder="Add any notes about this room..."
+              value={room.notes || ''}
+              onChange={(e) => updateRoom.mutate({ ...room, notes: e.target.value })}
+            />
+          </div>
+        </div>
+      </DialogContent>
+
+      <AlertDialog open={confirmAction?.type === 'paid'} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Rent as Paid</AlertDialogTitle>
+            <AlertDialogDescription>
+              Did you mean to mark this rent as paid?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmAction && confirmPaymentPaid(confirmAction.tenantId)}>
+              Yes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmAction?.type === 'unpaid'} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Paid Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to remove the paid status for this rent?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmAction && confirmPaymentUnpaid(confirmAction.tenantId)}>
+              Yes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmAction?.type === 'delete'} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this tenant?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmAction && confirmRemoveTenant(confirmAction.tenantId)}>
+              Yes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Partial Payment Dialog */}
+      <AlertDialog open={!!partialPaymentTenant} onOpenChange={() => setPartialPaymentTenant(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enter Payment Amount</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter the amount received and select date.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Amount (₹)</Label>
+              <Input
+                type="number"
+                value={partialAmount}
+                onChange={(e) => setPartialAmount(parseInt(e.target.value) || 0)}
+                className="mt-2"
+              />
+              {partialPaymentTenant && (() => {
+                const tenant = room.tenants.find(t => t.id === partialPaymentTenant);
+                if (tenant && partialAmount < tenant.monthlyRent) {
+                  return (
+                    <p className="text-sm text-partial mt-2">
+                      This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - partialAmount).toLocaleString()}
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            <div>
+              <Label>Payment Date</Label>
+              <Calendar
+                mode="single"
+                selected={partialPaymentDate}
+                onSelect={(date) => date && setPartialPaymentDate(date)}
+                className={cn("rounded-md border mt-2 pointer-events-auto")}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPartialPaymentTenant(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => partialPaymentTenant && handlePartialPaymentConfirm(partialPaymentTenant, partialPaymentDate)}
+              disabled={partialAmount <= 0}
+            >
+              Confirm Payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Pay Remaining Dialog */}
+      <AlertDialog open={!!payRemainingTenant} onOpenChange={() => setPayRemainingTenant(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pay Remaining Amount</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter amount and select payment date.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Amount (₹)</Label>
+              <Input
+                type="number"
+                value={payRemainingAmount}
+                onChange={(e) => setPayRemainingAmount(parseInt(e.target.value) || 0)}
+                className="mt-2"
+              />
+              {payRemainingTenant && (() => {
+                const tenant = room.tenants.find(t => t.id === payRemainingTenant);
+                const payment = getSelectedMonthPayment(payRemainingTenant);
+                if (tenant && payment) {
+                  const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
+                  const newTotal = (payment.amountPaid || 0) + payRemainingAmount;
+                  if (payRemainingAmount < remaining) {
+                    return (
+                      <p className="text-sm text-partial mt-2">
+                        Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹{(tenant.monthlyRent - newTotal).toLocaleString()}
+                      </p>
+                    );
+                  }
+                }
+                return null;
+              })()}
+            </div>
+            <div>
+              <Label>Payment Date</Label>
+              <Calendar
+                mode="single"
+                selected={payRemainingDate}
+                onSelect={(date) => date && setPayRemainingDate(date)}
+                className={cn("rounded-md border mt-2 pointer-events-auto")}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPayRemainingTenant(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => payRemainingTenant && confirmPayRemaining(payRemainingTenant)}
+              disabled={payRemainingAmount <= 0}
+            >
+              Confirm Payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Dialog>
+  );
+};

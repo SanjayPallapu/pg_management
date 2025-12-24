@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 236 72% 79%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 236 72% 79%;
+
+    --radius: 0.75rem;
+
+    /* PG Management specific colors */
+    --success: 142 76% 36%;
+    --success-foreground: 355 7% 97%;
+    --success-muted: 142 76% 95%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+    --warning-muted: 43 96% 95%;
+    
+    --vacant: 0 84% 60%;
+    --vacant-foreground: 355 7% 97%;
+    --vacant-muted: 0 93% 94%;
+    
+    --occupied: 142 76% 36%;
+    --occupied-foreground: 355 7% 97%;
+    --occupied-muted: 142 76% 95%;
+    
+    --pending: 38 92% 50%;
+    --pending-foreground: 26 83% 14%;
+    --pending-muted: 43 96% 95%;
+    
+    --paid: 142 76% 36%;
+    --paid-foreground: 355 7% 97%;
+    --paid-muted: 142 76% 95%;
+
+    /* Payment status background colors */
+    --overdue: 0 84% 60%;
+    --overdue-foreground: 355 7% 97%;
+    --overdue-muted: 0 84% 95%;
+    
+    --not-due: 217 91% 60%;
+    --not-due-foreground: 210 40% 98%;
+    --not-due-muted: 217 91% 95%;
+    
+    --advance-not-paid: 280 68% 50%;
+    --advance-not-paid-foreground: 355 7% 97%;
+    --advance-not-paid-muted: 280 68% 95%;
+
+    --partial: 30 90% 55%;
+    --partial-foreground: 0 0% 100%;
+    --partial-muted: 30 90% 95%;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 236 72% 79%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 25%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 25%;
+    --input: 217 33% 20%;
+    --ring: 236 72% 79%;
+
+    /* Dark mode PG Management specific colors */
+    --success: 142 70% 35%;
+    --success-foreground: 142 76% 95%;
+    --success-muted: 142 40% 18%;
+    
+    --warning: 38 80% 45%;
+    --warning-foreground: 43 96% 95%;
+    --warning-muted: 38 40% 18%;
+    
+    --vacant: 0 70% 45%;
+    --vacant-foreground: 0 93% 94%;
+    --vacant-muted: 0 40% 18%;
+    
+    --occupied: 142 70% 35%;
+    --occupied-foreground: 142 76% 95%;
+    --occupied-muted: 142 40% 18%;
+    
+    --pending: 38 80% 45%;
+    --pending-foreground: 43 96% 95%;
+    --pending-muted: 38 40% 18%;
+    
+    --paid: 142 70% 35%;
+    --paid-foreground: 142 76% 95%;
+    --paid-muted: 142 40% 18%;
+
+    /* Dark mode payment status background colors */
+    --overdue: 0 70% 45%;
+    --overdue-foreground: 0 93% 94%;
+    --overdue-muted: 0 40% 18%;
+    
+    --not-due: 217 80% 50%;
+    --not-due-foreground: 217 91% 95%;
+    --not-due-muted: 217 40% 20%;
+    
+    --advance-not-paid: 280 60% 45%;
+    --advance-not-paid-foreground: 280 68% 95%;
+    --advance-not-paid-muted: 280 40% 18%;
+
+    --partial: 30 80% 50%;
+    --partial-foreground: 0 0% 100%;
+    --partial-muted: 30 50% 20%;
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 236 72% 79%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 25%;
+    --sidebar-ring: 236 72% 79%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Smooth theme transition for all elements */
+  *,
+  *::before,
+  *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+}

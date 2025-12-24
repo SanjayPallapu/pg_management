@@ -1,0 +1,13 @@
+/* ===== PRODUCTION GLOBAL RESET ===== */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Prevent any pre-render flashes */
+* {
+  box-sizing: border-box;
+}
