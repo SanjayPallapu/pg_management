@@ -8,17 +8,33 @@ import { MonthlyRentSheet } from '@/components/MonthlyRentSheet';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
 import { useRooms } from '@/hooks/useRooms';
 import { Room } from '@/types';
-import { LayoutDashboard, Building, FileBarChart, Receipt } from 'lucide-react';
+import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { rooms, isLoading } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Failed to sign out');
+    } else {
+      toast.success('Signed out successfully');
+      navigate('/auth');
+    }
+  };
 
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
@@ -48,6 +64,9 @@ const Index = () => {
               {months[selectedMonth - 1]} {selectedYear}
             </div>
             <ThemeToggle />
+            <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
