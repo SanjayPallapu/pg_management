@@ -5,13 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Wallet, CheckCircle, XCircle, IndianRupee } from 'lucide-react';
+import { Wallet, CheckCircle, XCircle, IndianRupee, CalendarIcon, X } from 'lucide-react';
 import { Room, Tenant } from '@/types';
 import { useRooms } from '@/hooks/useRooms';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface SecurityDepositCardProps {
   rooms: Room[];
@@ -24,7 +27,9 @@ interface TenantWithRoom extends Tenant {
 export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [depositDialog, setDepositDialog] = useState<TenantWithRoom | null>(null);
+  const [removeDialog, setRemoveDialog] = useState<TenantWithRoom | null>(null);
   const [depositAmount, setDepositAmount] = useState<number>(5000);
+  const [depositDate, setDepositDate] = useState<Date>(new Date());
   const { updateTenant } = useRooms();
   const { isAdmin } = useAuth();
 
@@ -51,27 +56,30 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
         tenantId: depositDialog.id,
         updates: {
           securityDepositAmount: depositAmount,
-          securityDepositDate: format(new Date(), 'yyyy-MM-dd'),
+          securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
         },
       });
       toast.success(`Deposit of ₹${depositAmount.toLocaleString()} recorded for ${depositDialog.name}`);
       setDepositDialog(null);
       setDepositAmount(5000);
+      setDepositDate(new Date());
     } catch (error) {
       toast.error('Failed to record deposit');
     }
   };
 
-  const handleRemoveDeposit = async (tenant: TenantWithRoom) => {
+  const handleRemoveDeposit = async () => {
+    if (!removeDialog) return;
     try {
       await updateTenant.mutateAsync({
-        tenantId: tenant.id,
+        tenantId: removeDialog.id,
         updates: {
           securityDepositAmount: null,
           securityDepositDate: null,
         },
       });
-      toast.success(`Deposit removed for ${tenant.name}`);
+      toast.success(`Deposit removed for ${removeDialog.name}`);
+      setRemoveDialog(null);
     } catch (error) {
       toast.error('Failed to remove deposit');
     }
@@ -161,10 +169,15 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                         {isAdmin && (
                           <Button 
                             variant="ghost" 
-                            size="sm"
-                            onClick={() => handleRemoveDeposit(tenant)}
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRemoveDialog(tenant);
+                            }}
+                            title="Remove deposit"
                           >
-                            Remove
+                            <X className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -223,23 +236,70 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Record Security Deposit</AlertDialogTitle>
             <AlertDialogDescription>
-              Enter the deposit amount for {depositDialog?.name} (Room {depositDialog?.roomNo})
+              Enter the deposit details for {depositDialog?.name} (Room {depositDialog?.roomNo})
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <Label>Deposit Amount (₹)</Label>
-            <Input
-              type="number"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
-              className="mt-2"
-              placeholder="Enter amount"
-            />
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Deposit Amount (₹)</Label>
+              <Input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                className="mt-2"
+                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <Label>Deposit Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal mt-2",
+                      !depositDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {depositDate ? format(depositDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={depositDate}
+                    onSelect={(date) => date && setDepositDate(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleAddDeposit} disabled={depositAmount <= 0}>
               Record Deposit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove Deposit Confirmation Dialog */}
+      <AlertDialog open={!!removeDialog} onOpenChange={() => setRemoveDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Security Deposit</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the deposit record for {removeDialog?.name} (Room {removeDialog?.roomNo})?
+              This will clear the ₹{removeDialog?.securityDepositAmount?.toLocaleString()} deposit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveDeposit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove Deposit
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
