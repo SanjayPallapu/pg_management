@@ -93,6 +93,11 @@ const Auth = () => {
     );
   }
 
+  const handlePendingSignOut = async () => {
+    await signOut();
+    window.location.reload();
+  };
+
   if (isAuthenticated && !hasRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -103,18 +108,14 @@ const Auth = () => {
             </div>
             <CardTitle>Access Pending</CardTitle>
             <CardDescription>
-              Your account is being set up. Please refresh the page or sign in again.
+              Your account is being set up. Please contact an administrator to assign you a role.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               variant="outline"
               className="w-full"
-              onClick={async () => {
-                const { signOut } = useAuth();
-                await signOut();
-                window.location.reload();
-              }}
+              onClick={handlePendingSignOut}
             >
               Sign Out
             </Button>
