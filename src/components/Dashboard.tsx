@@ -8,6 +8,7 @@ import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DayGuestSheet } from './DayGuestSheet';
+import { SecurityDepositCard } from './SecurityDepositCard';
 
 interface DashboardProps {
   rooms: Room[];
@@ -124,33 +125,39 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Day Guest Card - Clickable */}
-        <Card 
-          className="cursor-pointer transition-colors hover:bg-accent/50"
-          onClick={() => setDayGuestSheetOpen(true)}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-paid">
-                  ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+        {/* Bottom Cards Row */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Day Guest Card - Clickable */}
+          <Card 
+            className="cursor-pointer transition-colors hover:bg-accent/50"
+            onClick={() => setDayGuestSheetOpen(true)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-paid">
+                    ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Collected</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Collected</p>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-pending">
-                  ₹{(dayGuestStats?.pending || 0).toLocaleString()}
+                <div>
+                  <div className="text-2xl font-bold text-pending">
+                    ₹{(dayGuestStats?.pending || 0).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Pending</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Pending</p>
               </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
-          </CardContent>
-        </Card>
+              <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
+            </CardContent>
+          </Card>
+
+          {/* Security Deposit Card */}
+          <SecurityDepositCard rooms={rooms} />
+        </div>
       </div>
 
       <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />
