@@ -8,7 +8,7 @@ import { MonthlyRentSheet } from '@/components/MonthlyRentSheet';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
 import { useRooms } from '@/hooks/useRooms';
 import { Room } from '@/types';
-import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut, Shield, User } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +21,7 @@ const Index = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin, role } = useAuth();
   const navigate = useNavigate();
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -60,6 +60,10 @@ const Index = () => {
              <MonthYearPicker />
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              {isAdmin ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
+              <span className="capitalize">{role}</span>
+            </div>
             <div className="text-sm text-muted-foreground">
               {months[selectedMonth - 1]} {selectedYear}
             </div>

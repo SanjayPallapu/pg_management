@@ -15,6 +15,7 @@ import { useRooms } from '@/hooks/useRooms';
 import { toast } from '@/hooks/use-toast';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { isAdmin } = useAuth();
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
   const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
   const [partialAmount, setPartialAmount] = useState<number>(0);
@@ -397,26 +399,28 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span>{room.tenants.length}/{room.capacity} occupied</span>
-              <div className="flex gap-1 ml-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleCapacityChange(true)}
-                  disabled={room.capacity >= 5}
-                >
-                  <ChevronUp className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleCapacityChange(false)}
-                  disabled={room.capacity <= room.tenants.length}
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </div>
+              {isAdmin && (
+                <div className="flex gap-1 ml-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleCapacityChange(true)}
+                    disabled={room.capacity >= 5}
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleCapacityChange(false)}
+                    disabled={room.capacity <= room.tenants.length}
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -432,6 +436,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                     Current Tenants ({room.tenants.length})
                   </h3>
                 
+                {isAdmin && (
                   <Button
                     variant={isEditMode ? "default" : "outline"}
                     size="sm"
@@ -442,13 +447,15 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                   >
                     {isEditMode ? "Done" : "Edit"}
                   </Button>
+                )}
                 </div>
                 
-                {!isEditMode && (
+                {isAdmin && !isEditMode && (
                   <div className="text-xs text-muted-foreground">
                     Click Edit to enable long-press editing
                   </div>
                 )}
+
 
               {[...room.tenants]
               .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
@@ -636,8 +643,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
           )}
 
-          {/* Add New Tenant */}
-          {availableBeds > 0 && (
+          {/* Add New Tenant - Admin Only */}
+          {isAdmin && availableBeds > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -702,15 +709,17 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
           )}
 
-          {/* Room Notes */}
-          <div className="space-y-2">
-            <Label>Room Notes</Label>
-            <Textarea
-              placeholder="Add any notes about this room..."
-              value={room.notes || ''}
-              onChange={(e) => updateRoom.mutate({ ...room, notes: e.target.value })}
-            />
-          </div>
+          {/* Room Notes - Admin Only */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label>Room Notes</Label>
+              <Textarea
+                placeholder="Add any notes about this room..."
+                value={room.notes || ''}
+                onChange={(e) => updateRoom.mutate({ ...room, notes: e.target.value })}
+              />
+            </div>
+          )}
         </div>
       </DialogContent>
 
