@@ -17,5 +17,9 @@ try {
   console.log('App rendered');
 } catch (error) {
   console.error('Error rendering app:', error);
-  document.body.innerHTML = '<div style="color: red; padding: 20px;">Error: ' + error + '</div>';
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText = 'color: red; padding: 20px;';
+  errorDiv.textContent = 'Error: ' + (error instanceof Error ? error.message : String(error));
+  document.body.innerHTML = '';
+  document.body.appendChild(errorDiv);
 }
