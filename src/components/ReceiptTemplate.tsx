@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import hostelLogo from '@/assets/hostel-logo.png';
 
 export interface ReceiptData {
   tenant: {
@@ -51,9 +52,8 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           background: '#ffffff'
         }}>
           <img 
-            src="https://res.cloudinary.com/dpytif6oj/image/upload/v1766743426/file_000000007b507208a9affe0a4bfdaa03_ioz9ry.png"
+            src={hostelLogo}
             alt="Amma Women's Hostel"
-            crossOrigin="anonymous"
             style={{
               width: '200px',
               height: 'auto',
