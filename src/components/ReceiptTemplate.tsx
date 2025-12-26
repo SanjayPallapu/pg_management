@@ -42,7 +42,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           overflow: 'hidden',
         }}
       >
-        {/* Header with Logo - using inline SVG for reliability */}
+        {/* Header with Logo */}
         <div style={{ 
           width: '100%', 
           textAlign: 'center',
@@ -50,28 +50,17 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           paddingBottom: '10px',
           background: '#ffffff'
         }}>
-          {/* Logo placeholder - Amma Women's Hostel */}
-          <div style={{
-            width: '200px',
-            height: '180px',
-            margin: '0 auto',
-            background: 'linear-gradient(135deg, #ec4899 0%, #be185d 50%, #831843 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-          }}>
-            <div style={{
-              color: '#ffffff',
-              fontSize: '14px',
-              textAlign: 'center',
-              fontWeight: 600,
-            }}>
-              <div style={{ fontSize: '32px', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Amma</div>
-              <div style={{ fontSize: '11px', letterSpacing: '2px', marginTop: '4px' }}>WOMEN'S HOSTEL</div>
-            </div>
-          </div>
+          <img 
+            src="https://res.cloudinary.com/dpytif6oj/image/upload/v1766743426/file_000000007b507208a9affe0a4bfdaa03_ioz9ry.png"
+            alt="Amma Women's Hostel"
+            crossOrigin="anonymous"
+            style={{
+              width: '200px',
+              height: 'auto',
+              margin: '0 auto',
+              display: 'block',
+            }}
+          />
         </div>
 
         {/* Payment Successful Badge */}
