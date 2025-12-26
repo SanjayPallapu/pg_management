@@ -5,6 +5,7 @@ import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage, convertToReceiptData } from '@/utils/generateReceiptImage';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ReceiptInputData {
   tenantName: string;
@@ -29,6 +30,7 @@ interface WhatsAppReceiptDialogProps {
 
 export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: WhatsAppReceiptDialogProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -98,14 +100,37 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
       return;
     }
 
+    setIsSending(true);
+
     try {
+      // Convert base64 to blob
       const res = await fetch(generatedImage);
       const blob = await res.blob();
-      const file = new File(
-        [blob],
-        `receipt-${receiptData.tenantName.replace(/\s+/g, '-').toLowerCase()}.png`,
-        { type: blob.type || 'image/png' }
-      );
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const safeName = receiptData.tenantName.replace(/\s+/g, '-').toLowerCase();
+      const fileName = `receipt-${safeName}-${timestamp}.png`;
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('receipts')
+        .upload(fileName, blob, {
+          contentType: 'image/png',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error('Failed to upload receipt');
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(fileName);
+
+      const receiptUrl = urlData.publicUrl;
 
       // Clean phone number
       let phone = receiptData.tenantPhone.replace(/\D/g, '');
@@ -114,36 +139,23 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
       }
 
       const message = receiptData.isFullPayment
-        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
-        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
+        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\n📄 View Receipt: ${receiptUrl}\n\nThank you!\n- Amma Women's Hostel`
+        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\n📄 View Receipt: ${receiptUrl}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
 
-      const navAny = navigator as any;
-      
-      // Use Web Share API with target hint for WhatsApp
-      if (navAny?.share && (!navAny?.canShare || navAny.canShare({ files: [file] }))) {
-        await navAny.share({
-          title: 'Payment Receipt',
-          text: message,
-          files: [file],
-        });
-        toast({ title: 'Select WhatsApp and choose the tenant contact' });
-        return;
-      }
-
-      // Fallback: Download and open WhatsApp chat
-      handleDownload();
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n(Receipt image downloaded, please attach it)')}`;
+      // Open WhatsApp with the message containing receipt URL
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
       window.location.href = whatsappUrl;
-      toast({ title: 'Receipt downloaded', description: 'Attach it in WhatsApp chat' });
+
+      toast({ title: 'Opening WhatsApp with receipt link' });
     } catch (e) {
       console.error('shareReceiptToWhatsApp error', e);
-      // User may have cancelled share, still try to open WhatsApp
-      let phone = receiptData.tenantPhone.replace(/\D/g, '');
-      if (!phone.startsWith('91')) {
-        phone = `91${phone}`;
-      }
-      const whatsappUrl = `https://wa.me/${phone}`;
-      window.location.href = whatsappUrl;
+      toast({
+        title: 'Failed to share',
+        description: 'Could not upload receipt. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -319,9 +331,22 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
             <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
 
             {generatedImage && (
-              <Button onClick={shareReceiptToWhatsApp} className="gap-2 bg-green-600 hover:bg-green-700">
-                <MessageCircle className="h-4 w-4" />
-                Send to WhatsApp
+              <Button 
+                onClick={shareReceiptToWhatsApp} 
+                disabled={isSending}
+                className="gap-2 bg-green-600 hover:bg-green-700"
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="h-4 w-4" />
+                    Send to WhatsApp
+                  </>
+                )}
               </Button>
             )}
           </AlertDialogFooter>
