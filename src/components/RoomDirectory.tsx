@@ -26,7 +26,7 @@ export const RoomDirectory = ({
 
       {([1, 2, 3] as const).map(floor => <div key={floor} className="space-y-4">
           <div className="border-l-4 border-primary pl-4">
-            <h3 className="text-xl font-semibold">{floorNames[floor]}</h3>
+            <h3 className="font-semibold text-lg">{floorNames[floor]}</h3>
             <p className="text-sm text-muted-foreground">
               {roomsByFloor[floor].filter(r => r.tenants.length === r.capacity).length} fully occupied, {' '}
               {roomsByFloor[floor].filter(r => r.tenants.length > 0 && r.tenants.length < r.capacity).length} partially occupied, {' '}
