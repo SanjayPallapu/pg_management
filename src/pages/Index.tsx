@@ -28,12 +28,9 @@ const Index = () => {
 
   const handleSignOut = async () => {
     const { error } = await signOut();
-    if (error) {
-      toast.error('Failed to sign out');
-    } else {
-      toast.success('Signed out successfully');
-      navigate('/auth');
-    }
+    // Navigate to auth page regardless of error (session may already be invalid)
+    toast.success('Signed out successfully');
+    navigate('/auth');
   };
 
   const handleViewDetails = (room: Room) => {
@@ -53,7 +50,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">PG</h1>
