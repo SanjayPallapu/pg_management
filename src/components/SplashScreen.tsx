@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Building2, Home, Key, DoorOpen, Users } from "lucide-react";
+import { Home, Key, DoorOpen, Users } from "lucide-react";
+import appLogo from "@/assets/pg-logo.png";
 
 const SplashScreen = () => {
   return (
@@ -82,13 +83,18 @@ const SplashScreen = () => {
           <motion.div className="absolute inset-0 rounded-3xl bg-blue-400/30 blur-3xl animate-pulse" />
 
           <div
-            className="relative flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-2xl"
+            className="relative flex h-32 w-32 items-center justify-center rounded-3xl bg-primary shadow-2xl"
             style={{
               boxShadow:
                 "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
             }}
           >
-            <Building2 className="h-16 w-16 text-primary" />
+            <img
+              src={appLogo}
+              alt="Amma logo"
+              className="h-16 w-auto"
+              decoding="async"
+            />
           </div>
         </motion.div>
 
@@ -98,7 +104,7 @@ const SplashScreen = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          PG Management
+          Amma Management
         </motion.h1>
 
         <motion.p
