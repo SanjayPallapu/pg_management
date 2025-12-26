@@ -21,13 +21,13 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="px-px">
+      <div>
         <h2 className="text-2xl font-bold tracking-tight">Room Directory</h2>
         <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
       </div>
 
       {([1, 2, 3] as const).map(floor => (
-        <div key={floor} className="space-y-3 px-px">
+        <div key={floor} className="space-y-3">
           <div>
             <h3 className="text-lg font-semibold text-primary">{floorNames[floor]}</h3>
             <p className="text-sm text-muted-foreground">
@@ -37,7 +37,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             </p>
           </div>
           
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-1">
             {roomsByFloor[floor].map(room => (
               <RoomCard 
                 key={room.roomNo} 
