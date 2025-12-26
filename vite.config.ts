@@ -8,7 +8,10 @@ export default defineConfig(({ mode }) => ({
   base: "./", // KEEP this for Vercel
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
 
-  // ❌ Removed server.host and server.port — NOT allowed on Vercel
+  server: {
+    port: 8080,
+  },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

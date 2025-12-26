@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
+import { Loader2, MessageCircle, Download, Copy, Check, Share2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage, convertToReceiptData } from '@/utils/generateReceiptImage';
@@ -88,36 +88,65 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     toast({ title: 'Receipt downloaded!' });
   };
 
+  const shareReceiptImage = async () => {
+    if (!generatedImage || !receiptData) {
+      toast({
+        title: 'Generate receipt first',
+        description: 'Please generate the receipt image before sharing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(generatedImage);
+      const blob = await res.blob();
+      const file = new File(
+        [blob],
+        `receipt-${receiptData.tenantName.replace(/\s+/g, '-').toLowerCase()}.png`,
+        { type: blob.type || 'image/png' }
+      );
+
+      const navAny = navigator as any;
+      if (navAny?.share && (!navAny?.canShare || navAny.canShare({ files: [file] }))) {
+        await navAny.share({
+          title: 'Payment Receipt',
+          text: `Receipt for ${receiptData.tenantName}`,
+          files: [file],
+        });
+        toast({ title: 'Share opened. Select WhatsApp.' });
+        return;
+      }
+
+      handleDownload();
+      toast({ title: 'Sharing not supported here', description: 'Receipt downloaded instead.' });
+    } catch (e) {
+      console.error('shareReceiptImage error', e);
+      handleDownload();
+      toast({ title: 'Share failed', description: 'Receipt downloaded instead.' });
+    }
+  };
+
   const openWhatsApp = () => {
     if (!receiptData) return;
 
     // Clean phone number - remove all non-digits
     let phone = receiptData.tenantPhone.replace(/\D/g, '');
-    
+
     // Add country code if not present
     if (!phone.startsWith('91')) {
       phone = `91${phone}`;
     }
-    
+
     const message = receiptData.isFullPayment
       ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
       : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
 
     const encodedMessage = encodeURIComponent(message);
-    
-    // Try multiple URL schemes for better mobile compatibility
-    // Use whatsapp:// for mobile apps, fall back to wa.me for web
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // For mobile devices, use intent URL that opens WhatsApp app directly
-      const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodedMessage}`;
-      window.location.href = whatsappUrl;
-    } else {
-      // For desktop, use web WhatsApp
-      const whatsappUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
-      window.open(whatsappUrl, '_blank');
-    }
+
+    // Most reliable deep-link: wa.me (opens app if installed, otherwise web)
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.location.href = whatsappUrl;
   };
 
   const copyReceiptData = () => {
@@ -268,13 +297,18 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={openWhatsApp}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Open WhatsApp
-            </AlertDialogAction>
+
+            {generatedImage && (
+              <Button onClick={shareReceiptImage} className="gap-2">
+                <Share2 className="h-4 w-4" />
+                Share Receipt
+              </Button>
+            )}
+
+            <Button onClick={openWhatsApp} className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Open WhatsApp Chat
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

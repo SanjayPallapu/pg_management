@@ -53,6 +53,8 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           <img 
             src={hostelLogo}
             alt="Amma Women's Hostel"
+            crossOrigin="anonymous"
+            loading="eager"
             style={{
               width: '180px',
               height: 'auto',
