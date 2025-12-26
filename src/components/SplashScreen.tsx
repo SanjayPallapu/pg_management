@@ -83,16 +83,12 @@ const SplashScreen = () => {
           <motion.div className="absolute inset-0 rounded-3xl bg-blue-400/30 blur-3xl animate-pulse" />
 
           <div
-            className="relative flex h-32 w-32 items-center justify-center rounded-3xl bg-primary shadow-2xl"
-            style={{
-              boxShadow:
-                "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
-            }}
+            className="relative flex h-40 w-40 items-center justify-center"
           >
             <img
               src={appLogo}
               alt="Amma logo"
-              className="h-16 w-auto"
+              className="h-36 w-auto"
               decoding="async"
             />
           </div>
