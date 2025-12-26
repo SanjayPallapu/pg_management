@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Key, DoorOpen, Users } from "lucide-react";
-import appLogo from "@/assets/pg-logo.png";
+import { Building2, Home, Key, DoorOpen, Users } from "lucide-react";
 
 const SplashScreen = () => {
   return (
@@ -56,19 +55,35 @@ const SplashScreen = () => {
       ))}
 
       {/* Floating Icons */}
-      <motion.div className="absolute top-[20%] left-[15%]" animate={{ y: [-15, 15, -15] }} transition={{ duration: 4, repeat: Infinity }}>
+      <motion.div
+        className="absolute top-[20%] left-[15%]"
+        animate={{ y: [-15, 15, -15] }}
+        transition={{ duration: 4, repeat: Infinity }}
+      >
         <Home className="h-16 w-16 text-white/20" />
       </motion.div>
 
-      <motion.div className="absolute bottom-[25%] right-[15%]" animate={{ y: [15, -15, 15] }} transition={{ duration: 5, repeat: Infinity }}>
+      <motion.div
+        className="absolute bottom-[25%] right-[15%]"
+        animate={{ y: [15, -15, 15] }}
+        transition={{ duration: 5, repeat: Infinity }}
+      >
         <Key className="h-12 w-12 text-white/20" />
       </motion.div>
 
-      <motion.div className="absolute top-[35%] right-[20%]" animate={{ y: [-10, 20, -10] }} transition={{ duration: 6, repeat: Infinity }}>
+      <motion.div
+        className="absolute top-[35%] right-[20%]"
+        animate={{ y: [-10, 20, -10] }}
+        transition={{ duration: 6, repeat: Infinity }}
+      >
         <DoorOpen className="h-14 w-14 text-white/20" />
       </motion.div>
 
-      <motion.div className="absolute bottom-[35%] left-[20%]" animate={{ y: [10, -20, 10] }} transition={{ duration: 5.5, repeat: Infinity }}>
+      <motion.div
+        className="absolute bottom-[35%] left-[20%]"
+        animate={{ y: [10, -20, 10] }}
+        transition={{ duration: 5.5, repeat: Infinity }}
+      >
         <Users className="h-10 w-10 text-white/20" />
       </motion.div>
 
@@ -83,14 +98,12 @@ const SplashScreen = () => {
           <motion.div className="absolute inset-0 rounded-3xl bg-blue-400/30 blur-3xl animate-pulse" />
 
           <div
-            className="relative flex h-40 w-40 items-center justify-center"
+            className="relative flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-2xl"
+            style={{
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
+            }}
           >
-            <img
-              src={appLogo}
-              alt="Amma logo"
-              className="h-36 w-auto"
-              decoding="async"
-            />
+            <Building2 className="h-16 w-16 text-primary" />
           </div>
         </motion.div>
 
@@ -100,7 +113,7 @@ const SplashScreen = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Amma Management
+          PG Management
         </motion.h1>
 
         <motion.p
@@ -109,7 +122,7 @@ const SplashScreen = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          Simple. Smart. Secure. 
+          Simple. Smart. Secure.
         </motion.p>
 
         {/* Loader Bar */}
