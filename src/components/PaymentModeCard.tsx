@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, Banknote } from 'lucide-react';
+import { UpiLogo } from '@/components/icons/UpiLogo';
+import { CashLogo } from '@/components/icons/CashLogo';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { PaymentEntry } from '@/types';
@@ -44,18 +45,18 @@ export const PaymentModeCard = () => {
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Smartphone className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <UpiLogo className="h-10 w-10" />
             </div>
             <div>
               <div className="text-lg font-bold">₹{stats.upiAmount.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">UPI ({stats.upiCount})</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-accent/50 flex items-center justify-center">
-              <Banknote className="h-5 w-5 text-accent-foreground" />
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+              <CashLogo className="h-10 w-10" />
             </div>
             <div>
               <div className="text-lg font-bold">₹{stats.cashAmount.toLocaleString()}</div>
