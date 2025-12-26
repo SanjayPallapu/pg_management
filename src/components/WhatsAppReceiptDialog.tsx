@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
@@ -54,14 +54,19 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     }
   }, [receiptData, open]);
 
-  const generateReceipt = async () => {
-    if (!receiptRef.current || !receiptData) return;
+  const generateReceipt = useCallback(async () => {
+    if (!receiptData || !templateData || !receiptRef.current) {
+      toast({
+        title: 'Error',
+        description: 'Receipt data not ready. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsGenerating(true);
+    
     try {
-      // Wait a bit for images to render
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       const dataUrl = await generateReceiptImage(receiptRef.current);
       setGeneratedImage(dataUrl);
       toast({ title: 'Receipt generated successfully!' });
@@ -75,7 +80,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [receiptData, templateData]);
 
   const handleDownload = () => {
     if (!generatedImage || !receiptData) return;
@@ -135,8 +140,20 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
 
   return (
     <>
-      {/* Hidden receipt template for rendering */}
-      {templateData && <ReceiptTemplate ref={receiptRef} data={templateData} />}
+      {/* Offscreen receipt template for rendering - always mounted when dialog open */}
+      {templateData && (
+        <div 
+          style={{ 
+            position: 'fixed',
+            left: '-10000px',
+            top: '0',
+            visibility: 'hidden',
+          }}
+          aria-hidden="true"
+        >
+          <ReceiptTemplate ref={receiptRef} data={templateData} />
+        </div>
+      )}
       
       <AlertDialog open={open} onOpenChange={handleClose}>
         <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -194,7 +211,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={generateReceipt}
-                  disabled={isGenerating}
+                  disabled={isGenerating || !templateData}
                   variant="outline"
                   className="w-full"
                 >
