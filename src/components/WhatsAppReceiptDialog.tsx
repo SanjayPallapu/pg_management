@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, Download, Copy, Check, Share2 } from 'lucide-react';
+import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage, convertToReceiptData } from '@/utils/generateReceiptImage';
@@ -88,7 +88,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     toast({ title: 'Receipt downloaded!' });
   };
 
-  const shareReceiptImage = async () => {
+  const shareReceiptToWhatsApp = async () => {
     if (!generatedImage || !receiptData) {
       toast({
         title: 'Generate receipt first',
@@ -107,23 +107,43 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
         { type: blob.type || 'image/png' }
       );
 
+      // Clean phone number
+      let phone = receiptData.tenantPhone.replace(/\D/g, '');
+      if (!phone.startsWith('91')) {
+        phone = `91${phone}`;
+      }
+
+      const message = receiptData.isFullPayment
+        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
+        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
+
       const navAny = navigator as any;
+      
+      // Use Web Share API with target hint for WhatsApp
       if (navAny?.share && (!navAny?.canShare || navAny.canShare({ files: [file] }))) {
         await navAny.share({
           title: 'Payment Receipt',
-          text: `Receipt for ${receiptData.tenantName}`,
+          text: message,
           files: [file],
         });
-        toast({ title: 'Share opened. Select WhatsApp.' });
+        toast({ title: 'Select WhatsApp and choose the tenant contact' });
         return;
       }
 
+      // Fallback: Download and open WhatsApp chat
       handleDownload();
-      toast({ title: 'Sharing not supported here', description: 'Receipt downloaded instead.' });
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n(Receipt image downloaded, please attach it)')}`;
+      window.location.href = whatsappUrl;
+      toast({ title: 'Receipt downloaded', description: 'Attach it in WhatsApp chat' });
     } catch (e) {
-      console.error('shareReceiptImage error', e);
-      handleDownload();
-      toast({ title: 'Share failed', description: 'Receipt downloaded instead.' });
+      console.error('shareReceiptToWhatsApp error', e);
+      // User may have cancelled share, still try to open WhatsApp
+      let phone = receiptData.tenantPhone.replace(/\D/g, '');
+      if (!phone.startsWith('91')) {
+        phone = `91${phone}`;
+      }
+      const whatsappUrl = `https://wa.me/${phone}`;
+      window.location.href = whatsappUrl;
     }
   };
 
@@ -299,16 +319,11 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
             <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
 
             {generatedImage && (
-              <Button onClick={shareReceiptImage} className="gap-2">
-                <Share2 className="h-4 w-4" />
-                Share Receipt
+              <Button onClick={shareReceiptToWhatsApp} className="gap-2 bg-green-600 hover:bg-green-700">
+                <MessageCircle className="h-4 w-4" />
+                Send to WhatsApp
               </Button>
             )}
-
-            <Button onClick={openWhatsApp} className="gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Open WhatsApp Chat
-            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
