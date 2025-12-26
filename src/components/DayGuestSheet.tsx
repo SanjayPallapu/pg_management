@@ -62,6 +62,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [paymentGuest, setPaymentGuest] = useState<DayGuest | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
 
   // Filter guests for selected month
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
@@ -133,6 +134,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     setPaymentGuest(guest);
     setPaymentAmount(remaining);
     setPaymentDate(new Date());
+    setPaymentMode('upi');
     setPaymentDialogOpen(true);
   };
 
@@ -148,6 +150,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       amount: paymentAmount,
       date: format(paymentDate, 'yyyy-MM-dd'),
       type: existingPaid === 0 ? (isFullPayment ? 'full' : 'partial') : (isFullPayment ? 'remaining' : 'partial'),
+      mode: paymentMode,
     };
 
     const existingEntries: PaymentEntry[] = (paymentGuest.payment_entries as PaymentEntry[]) || [];
@@ -537,6 +540,30 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              <div>
+                <Label className="text-sm">Payment Mode</Label>
+                <div className="flex gap-2 mt-1">
+                  <Button
+                    type="button"
+                    variant={paymentMode === 'upi' ? 'default' : 'outline'}
+                    size="sm"
+                    className={cn("flex-1", paymentMode === 'upi' && "bg-foreground text-background")}
+                    onClick={() => setPaymentMode('upi')}
+                  >
+                    UPI
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={paymentMode === 'cash' ? 'default' : 'outline'}
+                    size="sm"
+                    className={cn("flex-1", paymentMode === 'cash' && "bg-foreground text-background")}
+                    onClick={() => setPaymentMode('cash')}
+                  >
+                    Cash
+                  </Button>
+                </div>
               </div>
             </div>
           )}
