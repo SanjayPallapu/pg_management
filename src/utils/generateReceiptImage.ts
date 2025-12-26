@@ -2,31 +2,38 @@ import { toPng } from 'html-to-image';
 import type { ReceiptData } from '@/components/ReceiptTemplate';
 
 export const generateReceiptImage = async (element: HTMLElement): Promise<string> => {
-  // Wait for images to load
-  const images = element.querySelectorAll('img');
-  await Promise.all(
-    Array.from(images).map(
-      (img) =>
-        new Promise((resolve) => {
-          if (img.complete) {
-            resolve(true);
-          } else {
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(false);
-          }
-        })
-    )
-  );
+  // Clone the element and position it for capture
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.style.position = 'absolute';
+  clone.style.left = '0';
+  clone.style.top = '0';
+  clone.style.zIndex = '-1';
+  clone.style.pointerEvents = 'none';
+  
+  document.body.appendChild(clone);
 
-  // Generate PNG with high quality
-  const dataUrl = await toPng(element, {
-    quality: 1.0,
-    pixelRatio: 2, // High DPI for sharp text
-    cacheBust: true,
-    backgroundColor: '#ffffff',
-  });
+  try {
+    // Wait a bit for rendering
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-  return dataUrl;
+    // Generate PNG with high quality
+    const dataUrl = await toPng(clone, {
+      quality: 1.0,
+      pixelRatio: 2,
+      cacheBust: true,
+      backgroundColor: '#ffffff',
+      width: 500,
+      style: {
+        transform: 'scale(1)',
+        transformOrigin: 'top left',
+      }
+    });
+
+    return dataUrl;
+  } finally {
+    // Clean up
+    document.body.removeChild(clone);
+  }
 };
 
 export const downloadReceiptImage = (dataUrl: string, tenantName: string): void => {
