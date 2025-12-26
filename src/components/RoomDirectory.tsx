@@ -22,7 +22,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Room Directory</h1>
+        <h1 className="text-xl font-bold tracking-tight">Room Directory</h1>
         <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
       </div>
 
