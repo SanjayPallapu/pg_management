@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import appLogo from '@/assets/pg-logo.png';
 
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email address'),
@@ -129,10 +130,10 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Building2 className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-sm">
+            <img src={appLogo} alt="Amma logo" className="h-7 w-auto" decoding="async" />
           </div>
-          <CardTitle>PG Management</CardTitle>
+          <CardTitle>Amma Management</CardTitle>
           <CardDescription>Sign in to manage your property</CardDescription>
         </CardHeader>
         <CardContent>

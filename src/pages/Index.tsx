@@ -15,6 +15,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import appLogo from '@/assets/pg-logo.png';
+
 const Index = () => {
   const {
     rooms,
@@ -59,10 +61,16 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">PG</h1>
-             <MonthYearPicker />
+            <div className="rounded-md bg-primary p-1 shadow-sm">
+              <img
+                src={appLogo}
+                alt="Amma logo"
+                className="h-9 w-auto"
+                decoding="async"
+              />
+            </div>
+            <MonthYearPicker />
           </div>
-          <div className="flex items-center gap-3">
             <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
