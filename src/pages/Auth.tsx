@@ -130,10 +130,10 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-sm">
-            <img src={appLogo} alt="Amma logo" className="h-7 w-auto" decoding="async" />
+          <div className="mx-auto mb-4">
+            <img src={appLogo} alt="PG logo" className="h-16 w-auto" decoding="async" />
           </div>
-          <CardTitle>Amma Management</CardTitle>
+          <CardTitle>PG Management</CardTitle>
           <CardDescription>Sign in to manage your property</CardDescription>
         </CardHeader>
         <CardContent>
