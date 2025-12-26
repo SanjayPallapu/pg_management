@@ -91,15 +91,33 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
   const openWhatsApp = () => {
     if (!receiptData) return;
 
-    const phone = receiptData.tenantPhone.replace(/\D/g, '');
-    const phoneNumber = phone.startsWith('91') ? phone : `91${phone}`;
+    // Clean phone number - remove all non-digits
+    let phone = receiptData.tenantPhone.replace(/\D/g, '');
+    
+    // Add country code if not present
+    if (!phone.startsWith('91')) {
+      phone = `91${phone}`;
+    }
     
     const message = receiptData.isFullPayment
       ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
       : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
 
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Try multiple URL schemes for better mobile compatibility
+    // Use whatsapp:// for mobile apps, fall back to wa.me for web
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // For mobile devices, use intent URL that opens WhatsApp app directly
+      const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodedMessage}`;
+      window.location.href = whatsappUrl;
+    } else {
+      // For desktop, use web WhatsApp
+      const whatsappUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+      window.open(whatsappUrl, '_blank');
+    }
   };
 
   const copyReceiptData = () => {
