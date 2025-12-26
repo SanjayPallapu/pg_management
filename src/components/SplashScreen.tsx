@@ -114,7 +114,7 @@ const SplashScreen = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Amma Management
+          PG Management
         </motion.h1>
 
         <motion.p
