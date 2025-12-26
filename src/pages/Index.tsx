@@ -58,42 +58,27 @@ const Index = () => {
     }
   }, [rooms, selectedRoom]);
   return <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-          {/* Left: Logo & Month Picker */}
-          <div className="flex items-center gap-4 overflow-visible">
-            <div className="relative">
-              <img
-                src={appLogo}
-                alt="Amma logo"
-                className="h-12 w-auto drop-shadow-md"
-                decoding="async"
-              />
-            </div>
-            <div className="h-8 w-px bg-border/60" />
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3 overflow-visible">
+            <img
+              src={appLogo}
+              alt="Amma logo"
+              className="h-14 w-auto"
+              decoding="async"
+            />
             <MonthYearPicker />
           </div>
-          
-          {/* Right: Month Display & Actions */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 text-sm font-medium text-foreground">
-              <span>{months[selectedMonth - 1]}</span>
-              <span className="text-muted-foreground">{selectedYear}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-muted-foreground px-[11px]">
+              {months[selectedMonth - 1]} {selectedYear}
             </div>
-            <div className="h-8 w-px bg-border/60 hidden sm:block" />
+            <ThemeToggle className="rounded-md border-primary" />
             <div className="flex items-center gap-1">
-              <ThemeToggle className="rounded-lg hover:bg-muted/80 transition-colors" />
-              <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                {isAdmin ? <Shield className="h-4 w-4 text-primary" /> : <User className="h-4 w-4 text-primary" />}
+              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
+                {isAdmin ? <Shield className="h-4 w-4 text-primary-foreground" /> : <User className="h-4 w-4 text-primary-foreground" />}
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleSignOut} 
-                title="Sign Out"
-                className="rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
-              >
+              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
