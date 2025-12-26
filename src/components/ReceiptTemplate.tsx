@@ -46,10 +46,10 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Header with Logo - cropped */}
         <div style={{ 
           width: '100%', 
-          height: '80px',
+          height: '120px',
           overflow: 'hidden',
           textAlign: 'center',
-          paddingTop: '15px',
+          paddingTop: '6px',
           background: '#ffffff'
         }}>
           <img 
