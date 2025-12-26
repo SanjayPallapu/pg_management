@@ -71,6 +71,7 @@ const Index = () => {
             </div>
             <MonthYearPicker />
           </div>
+          <div className="flex items-center gap-3">
             <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
