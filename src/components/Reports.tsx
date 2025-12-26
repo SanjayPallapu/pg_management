@@ -236,13 +236,13 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
         {/* Monthly Collection Summary */}
         <Card>
-          <CardHeader className="pb-3 px-3 pt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-paid" />
               {monthNames[selectedMonth - 1]} {selectedYear} Collection
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-4">
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="p-3 bg-paid-muted rounded-lg">
                 <div className="text-2xl font-bold text-paid">₹{rentCollected.toLocaleString()}</div>
