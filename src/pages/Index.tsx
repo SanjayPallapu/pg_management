@@ -10,7 +10,6 @@ import { useRooms } from '@/hooks/useRooms';
 import { Room } from '@/types';
 import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut, Shield, User } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import pgLogo from '@/assets/pg-logo.png';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -60,14 +59,14 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <img src={pgLogo} alt="PG Logo" className="h-10 w-auto" />
-            <MonthYearPicker />
+            <h1 className="text-3xl font-bold tracking-tight">PG</h1>
+             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-3">
             <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
-            <ThemeToggle />
+            <ThemeToggle className="rounded-md" />
             <div className="flex items-center gap-1">
               <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
                 {isAdmin ? <Shield className="h-4 w-4 text-primary-foreground" /> : <User className="h-4 w-4 text-primary-foreground" />}
