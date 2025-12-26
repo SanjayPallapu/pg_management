@@ -32,6 +32,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [payRemainingTenant, setPayRemainingTenant] = useState<string | null>(null);
   const [payRemainingAmount, setPayRemainingAmount] = useState<number>(0);
   const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
+  const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
   const { payments, upsertPayment } = useTenantPayments();
 
   const months = [
@@ -196,6 +198,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amount: paymentAmount,
       date: formattedDate,
       type: isFullPayment ? 'full' as const : 'partial' as const,
+      mode: paymentMode,
     };
 
     const existingEntries = tenant.payment.paymentEntries || [];
@@ -237,6 +240,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amount: payRemainingAmount,
       date: formattedDate,
       type: isFullPayment ? 'remaining' as const : 'partial' as const,
+      mode: remainingPaymentMode,
     };
 
     const existingEntries = tenant.payment.paymentEntries || [];
@@ -491,6 +495,27 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               })()}
             </div>
             <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={paymentMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPaymentMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={paymentMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPaymentMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
+            </div>
+            <div>
               <Label>Payment Date</Label>
               <Calendar
                 mode="single"
@@ -542,6 +567,27 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 }
                 return null;
               })()}
+            </div>
+            <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={remainingPaymentMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setRemainingPaymentMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={remainingPaymentMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setRemainingPaymentMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Payment Date</Label>

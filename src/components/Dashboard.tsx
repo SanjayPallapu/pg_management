@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DayGuestSheet } from './DayGuestSheet';
 import { SecurityDepositCard } from './SecurityDepositCard';
+import { PaymentModeCard } from './PaymentModeCard';
 
 interface DashboardProps {
   rooms: Room[];
@@ -126,7 +127,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </div>
 
         {/* Bottom Cards Row */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           {/* Day Guest Card - Clickable */}
           <Card 
             className="cursor-pointer transition-colors hover:bg-accent/50"
@@ -154,6 +155,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
             </CardContent>
           </Card>
+
+          {/* Payment Mode Card */}
+          <PaymentModeCard />
 
           {/* Security Deposit Card */}
           <SecurityDepositCard rooms={rooms} />

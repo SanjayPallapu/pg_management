@@ -26,6 +26,7 @@ export interface PaymentEntry {
   amount: number;
   date: string;
   type: 'partial' | 'full' | 'remaining';
+  mode: 'upi' | 'cash';
 }
 
 export interface TenantPayment {
