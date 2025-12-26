@@ -103,34 +103,11 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     setIsSending(true);
 
     try {
-      // Convert base64 to blob
+      // Convert base64 to blob and create file
       const res = await fetch(generatedImage);
       const blob = await res.blob();
-
-      // Generate unique filename
-      const timestamp = Date.now();
       const safeName = receiptData.tenantName.replace(/\s+/g, '-').toLowerCase();
-      const fileName = `receipt-${safeName}-${timestamp}.png`;
-
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(fileName, blob, {
-          contentType: 'image/png',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error('Failed to upload receipt');
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(fileName);
-
-      const receiptUrl = urlData.publicUrl;
+      const file = new File([blob], `receipt-${safeName}.png`, { type: 'image/png' });
 
       // Clean phone number
       let phone = receiptData.tenantPhone.replace(/\D/g, '');
@@ -139,21 +116,39 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
       }
 
       const message = receiptData.isFullPayment
-        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\n📄 View Receipt: ${receiptUrl}\n\nThank you!\n- Amma Women's Hostel`
-        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\n📄 View Receipt: ${receiptUrl}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
+        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
+        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
 
-      // Open WhatsApp with the message containing receipt URL
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      window.location.href = whatsappUrl;
-
-      toast({ title: 'Opening WhatsApp with receipt link' });
-    } catch (e) {
+      // Try Web Share API to share image directly
+      const navAny = navigator as any;
+      if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
+        await navAny.share({
+          text: message,
+          files: [file],
+        });
+        toast({ title: 'Receipt shared! Select the tenant contact in WhatsApp.' });
+      } else {
+        // Fallback: download image and open WhatsApp chat
+        downloadReceiptImage(generatedImage, receiptData.tenantName);
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.location.href = whatsappUrl;
+        toast({ 
+          title: 'Receipt downloaded', 
+          description: 'Attach the downloaded image in WhatsApp chat.' 
+        });
+      }
+    } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);
-      toast({
-        title: 'Failed to share',
-        description: 'Could not upload receipt. Please try again.',
-        variant: 'destructive',
-      });
+      // User cancelled share dialog - that's ok
+      if (e?.name === 'AbortError') {
+        toast({ title: 'Share cancelled' });
+      } else {
+        toast({
+          title: 'Failed to share',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSending(false);
     }
