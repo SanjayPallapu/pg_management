@@ -28,6 +28,7 @@ interface PaymentEntry {
   amount: number;
   date: string;
   type: 'full' | 'partial' | 'remaining';
+  mode?: 'upi' | 'cash';
 }
 
 interface EditingGuest {
@@ -329,8 +330,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                 {paymentEntries.length > 0 && (
                                   <div className="space-y-0.5">
                                     {paymentEntries.map((entry, idx) => (
-                                      <div key={idx} className="text-xs text-muted-foreground">
-                                        {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}
+                                      <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
+                                        {entry.mode && (
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                                            {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                          </span>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
