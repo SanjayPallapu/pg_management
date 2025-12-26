@@ -2,8 +2,13 @@ import { Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  className?: string;
+}
+
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
 
@@ -30,7 +35,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
+      <Button variant="ghost" size="icon" className={cn("relative h-9 w-9 rounded-full", className)}>
         <span className="sr-only">Toggle theme</span>
       </Button>
     );
@@ -41,7 +46,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="relative h-9 w-9 rounded-full"
+      className={cn("relative h-9 w-9 rounded-full", className)}
     >
       <AnimatePresence mode="wait" initial={false}>
         {isDark ? (
