@@ -43,12 +43,13 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           overflow: 'hidden',
         }}
       >
-        {/* Header with Logo */}
+        {/* Header with Logo - cropped */}
         <div style={{ 
           width: '100%', 
+          height: '80px',
+          overflow: 'hidden',
           textAlign: 'center',
-          paddingTop: '30px',
-          paddingBottom: '0',
+          paddingTop: '15px',
           background: '#ffffff'
         }}>
           <img 
@@ -57,7 +58,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
             style={{
               width: '320px',
               height: 'auto',
-              margin: '0 auto -70px',
+              margin: '0 auto',
               display: 'block',
             }}
           />
@@ -66,27 +67,26 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Payment Successful Badge */}
         <div style={{
           textAlign: 'center',
-          marginTop: '0',
-          padding: '0 0 15px',
+          padding: '8px 0',
         }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            fontSize: '20px',
+            gap: '6px',
+            fontSize: '18px',
             fontWeight: 600,
             color: '#1a1a1a',
           }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
               background: '#22c55e',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: 'bold',
             }}>✓</div>
             <span>Payment Successful!</span>
@@ -95,25 +95,25 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
 
         {/* Payment Summary Card */}
         <div style={{
-          margin: '0 20px 15px',
+          margin: '0 15px 8px',
           background: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)',
-          borderRadius: '12px',
-          padding: '20px',
+          borderRadius: '10px',
+          padding: '12px',
           textAlign: 'center',
           border: '1px solid #a7f3d0',
         }}>
           <div style={{
-            fontSize: '28px',
+            fontSize: '24px',
             fontWeight: 700,
             color: '#1a1a1a',
-            marginBottom: '8px',
+            marginBottom: '4px',
           }}>
             {formatCurrency(data.payment.paid)} {isFullPayment ? 'Full Payment' : 'Partial Payment'}
           </div>
           <div style={{
-            fontSize: '14px',
+            fontSize: '12px',
             color: '#4b5563',
-            marginBottom: isFullPayment ? '0' : '12px',
+            marginBottom: isFullPayment ? '0' : '6px',
           }}>
             {isFullPayment 
               ? 'Your full payment has been successfully completed.'
@@ -122,7 +122,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           </div>
           {!isFullPayment && (
             <div style={{
-              fontSize: '17px',
+              fontSize: '14px',
               fontWeight: 600,
               color: '#dc2626',
             }}>
@@ -133,17 +133,17 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
 
         {/* Tenant & Transaction Details */}
         <div style={{
-          margin: '0 20px 15px',
+          margin: '0 15px 8px',
           border: '1px solid #e5e7eb',
-          borderRadius: '12px',
+          borderRadius: '10px',
           overflow: 'hidden',
           background: '#ffffff',
         }}>
           <div style={{
             background: '#ecfdf5',
-            padding: '12px 16px',
+            padding: '8px 12px',
             fontWeight: 600,
-            fontSize: '15px',
+            fontSize: '13px',
             color: '#1a1a1a',
             borderBottom: '1px solid #e5e7eb',
           }}>
@@ -152,20 +152,20 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px', width: '45%' }}>Tenant Name:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.tenant.name}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>Tenant Name:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.tenant.name}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Payment Mode:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.payment.mode}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Mode:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.mode}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Payment Date:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.payment.date}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Date:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.date}</td>
               </tr>
               <tr>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Joining Date:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.tenant.joiningDate}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Joining Date:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.tenant.joiningDate}</td>
               </tr>
             </tbody>
           </table>
@@ -173,17 +173,17 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
 
         {/* Stay & Payment Details */}
         <div style={{
-          margin: '0 20px 15px',
+          margin: '0 15px 8px',
           border: '1px solid #e5e7eb',
-          borderRadius: '12px',
+          borderRadius: '10px',
           overflow: 'hidden',
           background: '#ffffff',
         }}>
           <div style={{
             background: '#ecfdf5',
-            padding: '12px 16px',
+            padding: '8px 12px',
             fontWeight: 600,
-            fontSize: '15px',
+            fontSize: '13px',
             color: '#1a1a1a',
             borderBottom: '1px solid #e5e7eb',
           }}>
@@ -192,20 +192,20 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px', width: '45%' }}>For Month:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.stay.month}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>For Month:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.stay.month}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Room No:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.stay.roomNo}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Room No:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.stay.roomNo}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Sharing Type:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{data.stay.sharingType}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Sharing Type:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.stay.sharingType}</td>
               </tr>
               <tr>
-                <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>Amount:</td>
-                <td style={{ padding: '12px 16px', fontWeight: 500, fontSize: '14px', color: '#1a1a1a' }}>{formatCurrency(data.payment.amount)}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Amount:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{formatCurrency(data.payment.amount)}</td>
               </tr>
             </tbody>
           </table>
@@ -214,27 +214,27 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Footer */}
         <div style={{
           background: 'linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)',
-          padding: '25px 20px',
-          marginTop: '10px',
+          padding: '12px 15px',
+          marginTop: '5px',
         }}>
           <div style={{
             textAlign: 'center',
           }}>
             <div style={{
               fontFamily: 'Georgia, serif',
-              fontSize: '32px',
+              fontSize: '24px',
               fontWeight: 700,
               color: '#166534',
               fontStyle: 'italic',
-              marginBottom: '10px',
+              marginBottom: '4px',
             }}>
               Thank You!
             </div>
             <div style={{
-              fontSize: '14px',
+              fontSize: '11px',
               color: '#4b5563',
-              lineHeight: 1.6,
-              maxWidth: '350px',
+              lineHeight: 1.4,
+              maxWidth: '320px',
               margin: '0 auto',
             }}>
               {isFullPayment 
