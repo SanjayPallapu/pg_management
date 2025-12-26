@@ -96,7 +96,7 @@ const Index = () => {
             <Dashboard rooms={rooms} onStartRentCycle={() => {}} />
           </TabsContent>
 
-          <TabsContent value="rooms" className="space-y-6 mt-6 -mx-6 overflow-x-hidden">
+          <TabsContent value="rooms" className="space-y-6 mt-6 overflow-x-hidden">
             <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
           </TabsContent>
 
