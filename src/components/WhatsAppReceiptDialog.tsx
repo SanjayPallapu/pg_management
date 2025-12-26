@@ -103,37 +103,55 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
     setIsSending(true);
 
     try {
-      // Clean phone number
+      // Convert base64 to blob and create file
+      const res = await fetch(generatedImage);
+      const blob = await res.blob();
+      const safeName = receiptData.tenantName.replace(/\s+/g, '-').toLowerCase();
+      const file = new File([blob], `receipt-${safeName}.png`, { type: 'image/png' });
+
+      // Clean phone number for display
       let phone = receiptData.tenantPhone.replace(/\D/g, '');
-      if (!phone.startsWith('91')) {
-        phone = `91${phone}`;
-      }
+      const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       const message = receiptData.isFullPayment
         ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
         : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
 
-      // Download the receipt image first
-      downloadReceiptImage(generatedImage, receiptData.tenantName);
+      // Copy phone number to clipboard for easy search
+      await navigator.clipboard.writeText(displayPhone);
 
-      // Small delay to ensure download starts
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Open WhatsApp directly to tenant's chat
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      window.location.href = whatsappUrl;
-
+      // Show tenant details in toast for searching
       toast({ 
-        title: `Opening chat with ${receiptData.tenantName}`, 
-        description: 'Tap 📎 and attach the downloaded receipt image' 
+        title: `📱 Search: ${receiptData.tenantName}`, 
+        description: `Phone ${displayPhone} copied! Paste in WhatsApp search.`,
+        duration: 8000,
       });
-    } catch (e) {
+
+      // Small delay so user sees the toast
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Use Web Share API to share image
+      const navAny = navigator as any;
+      if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
+        await navAny.share({
+          text: message,
+          files: [file],
+        });
+      } else {
+        // Fallback: download and open WhatsApp
+        downloadReceiptImage(generatedImage, receiptData.tenantName);
+        if (!phone.startsWith('91')) phone = `91${phone}`;
+        window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      }
+    } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);
-      toast({
-        title: 'Failed to share',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
+      if (e?.name !== 'AbortError') {
+        toast({
+          title: 'Share failed',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSending(false);
     }
