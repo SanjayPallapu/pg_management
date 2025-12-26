@@ -105,7 +105,7 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
       : 'Partially Occupied';
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card className="transition-all hover:shadow-md overflow-hidden w-full min-w-0">
 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-2">
