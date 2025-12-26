@@ -48,7 +48,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           width: '100%', 
           textAlign: 'center',
           paddingTop: '30px',
-          paddingBottom: '10px',
+          paddingBottom: '0',
           background: '#ffffff'
         }}>
           <img 
@@ -66,7 +66,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Payment Successful Badge */}
         <div style={{
           textAlign: 'center',
-          padding: '15px 0',
+          padding: '5px 0 15px',
         }}>
           <div style={{
             display: 'inline-flex',
