@@ -57,7 +57,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
             style={{
               width: '320px',
               height: 'auto',
-              margin: '0 auto',
+              margin: '0 auto -70px',
               display: 'block',
             }}
           />
@@ -66,7 +66,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Payment Successful Badge */}
         <div style={{
           textAlign: 'center',
-          marginTop: '-20px',
+          marginTop: '0',
           padding: '0 0 15px',
         }}>
           <div style={{
