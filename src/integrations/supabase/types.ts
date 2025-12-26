@@ -127,6 +127,8 @@ export type Database = {
           payment_status: string
           tenant_id: string
           updated_at: string
+          whatsapp_sent: boolean | null
+          whatsapp_sent_at: string | null
           year: number
         }
         Insert: {
@@ -140,6 +142,8 @@ export type Database = {
           payment_status?: string
           tenant_id: string
           updated_at?: string
+          whatsapp_sent?: boolean | null
+          whatsapp_sent_at?: string | null
           year: number
         }
         Update: {
@@ -153,6 +157,8 @@ export type Database = {
           payment_status?: string
           tenant_id?: string
           updated_at?: string
+          whatsapp_sent?: boolean | null
+          whatsapp_sent_at?: string | null
           year?: number
         }
         Relationships: []

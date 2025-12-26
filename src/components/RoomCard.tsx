@@ -1,25 +1,51 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle } from 'lucide-react';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useDayGuests } from '@/hooks/useDayGuests';
-
+import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { format } from 'date-fns';
 interface RoomCardProps {
   room: Room;
   onViewDetails: (room: Room) => void;
 }
 
 export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
-  const { payments } = useTenantPayments();
+  const { payments, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const { dayGuests } = useDayGuests(room.id);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    paymentMode: string;
+    paymentDate: string;
+    joiningDate: string;
+    forMonth: string;
+    roomNo: string;
+    sharingType: string;
+    amount: number;
+    amountPaid: number;
+    isFullPayment: boolean;
+    remainingBalance?: number;
+    tenantId: string;
+  } | null>(null);
+
+  const months = [
+    { value: 1, label: 'January' }, { value: 2, label: 'February' },
+    { value: 3, label: 'March' }, { value: 4, label: 'April' },
+    { value: 5, label: 'May' }, { value: 6, label: 'June' },
+    { value: 7, label: 'July' }, { value: 8, label: 'August' },
+    { value: 9, label: 'September' }, { value: 10, label: 'October' },
+    { value: 11, label: 'November' }, { value: 12, label: 'December' }
+  ];
   
   // Filter day guests for current month
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
@@ -128,6 +154,30 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
               const isEligible = isTenantEligible(tenant.startDate);
               const payment = getSelectedMonthPayment(tenant.id);
               const isPaid = payment?.paymentStatus === 'Paid';
+              const isPartial = payment?.paymentStatus === 'Partial';
+              const whatsappSent = payment?.whatsappSent;
+
+              const handlePaidClick = () => {
+                if (!isPaid && !isPartial) return;
+                
+                const lastEntry = payment?.paymentEntries?.[payment.paymentEntries.length - 1];
+                setReceiptData({
+                  tenantName: tenant.name,
+                  tenantPhone: tenant.phone,
+                  paymentMode: lastEntry?.mode || 'cash',
+                  paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+                  joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                  forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                  roomNo: room.roomNo,
+                  sharingType: `${room.capacity} Sharing`,
+                  amount: tenant.monthlyRent,
+                  amountPaid: payment?.amountPaid || tenant.monthlyRent,
+                  isFullPayment: isPaid,
+                  remainingBalance: isPartial ? tenant.monthlyRent - (payment?.amountPaid || 0) : 0,
+                  tenantId: tenant.id,
+                });
+                setWhatsappDialogOpen(true);
+              };
         
               return (
                 <div
@@ -140,25 +190,45 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
                       {tenant.name}
                     </span>
                   </div>
-                  {isEligible ? (
-                    <Badge
-                      variant="outline"
-                      className={
-                        isPaid
-                          ? 'bg-paid text-paid-foreground text-xs'
-                          : 'bg-pending text-pending-foreground text-xs'
-                      }
-                    >
-                      {isPaid ? 'Paid' : 'Not Paid'}
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="bg-muted text-muted-foreground text-xs"
-                    >
-                      Not Due
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {isEligible ? (
+                      <>
+                        {(isPaid || isPartial) && (
+                          <button
+                            onClick={handlePaidClick}
+                            className={`p-1 rounded-full transition-colors ${
+                              whatsappSent 
+                                ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
+                                : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                            }`}
+                            title={whatsappSent ? 'Receipt sent' : 'Send receipt'}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={
+                            isPaid
+                              ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80'
+                              : isPartial
+                              ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80'
+                              : 'bg-pending text-pending-foreground text-xs'
+                          }
+                          onClick={(isPaid || isPartial) ? handlePaidClick : undefined}
+                        >
+                          {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
+                        </Badge>
+                      </>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="bg-muted text-muted-foreground text-xs"
+                      >
+                        Not Due
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -268,6 +338,22 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
         </div>
 
       </CardContent>
+
+      {/* WhatsApp Receipt Dialog */}
+      <WhatsAppReceiptDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        receiptData={receiptData}
+        onWhatsappSent={() => {
+          if (receiptData?.tenantId) {
+            markWhatsappSent.mutate({
+              tenantId: receiptData.tenantId,
+              month: selectedMonth,
+              year: selectedYear,
+            });
+          }
+        }}
+      />
     </Card>
   );
 };

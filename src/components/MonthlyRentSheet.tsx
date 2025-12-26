@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download } from 'lucide-react';
+import { Download, MessageCircle } from 'lucide-react';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { format } from 'date-fns';
@@ -48,8 +48,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     amountPaid: number;
     isFullPayment: boolean;
     remainingBalance?: number;
+    tenantId?: string;
   } | null>(null);
-  const { payments, upsertPayment } = useTenantPayments();
+  const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
 
   const months = [
     { value: 1, label: 'January' }, { value: 2, label: 'February' },
@@ -252,6 +253,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amountPaid: paymentAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+      tenantId: tenant.id,
     });
     setWhatsappDialogOpen(true);
 
@@ -318,6 +320,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amountPaid: payRemainingAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+      tenantId: tenant.id,
     });
     setWhatsappDialogOpen(true);
 
@@ -450,13 +453,54 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 ? 'Advance Due'
                 : 'Pending';
 
+              const whatsappSent = (tenant.payment as any).whatsappSent;
+
+              const handleResendReceipt = () => {
+                const lastEntry = tenant.payment.paymentEntries?.[tenant.payment.paymentEntries.length - 1];
+                const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+                const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+                
+                setReceiptData({
+                  tenantName: tenant.name,
+                  tenantPhone: tenant.phone,
+                  paymentMode: lastEntry?.mode || 'cash',
+                  paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+                  joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                  forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                  roomNo: tenant.roomNo,
+                  sharingType: sharingType,
+                  amount: tenant.monthlyRent,
+                  amountPaid: tenant.payment.amountPaid || tenant.monthlyRent,
+                  isFullPayment: tenant.payment.paymentStatus === 'Paid',
+                  remainingBalance: isPartial ? remaining : 0,
+                  tenantId: tenant.id,
+                });
+                setWhatsappDialogOpen(true);
+              };
+
               return (
                 <div 
                   key={tenant.id} 
                   className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-semibold text-sm">{tenant.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-sm">{tenant.name}</div>
+                      {/* WhatsApp sent indicator */}
+                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && (
+                        <button
+                          onClick={handleResendReceipt}
+                          className={`p-1 rounded-full transition-colors ${
+                            whatsappSent 
+                              ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
+                              : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                          }`}
+                          title={whatsappSent ? 'Receipt sent - Click to resend' : 'Send receipt via WhatsApp'}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                     {isPartial ? (
                       <Badge className="bg-overdue text-overdue-foreground">
                         ₹{remaining.toLocaleString()}
@@ -689,6 +733,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         open={whatsappDialogOpen}
         onOpenChange={setWhatsappDialogOpen}
         receiptData={receiptData}
+        onWhatsappSent={() => {
+          if (receiptData?.tenantId) {
+            markWhatsappSent.mutate({
+              tenantId: receiptData.tenantId,
+              month: selectedMonth,
+              year: selectedYear,
+            });
+          }
+        }}
       />
     </div>
   );

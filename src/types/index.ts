@@ -39,6 +39,8 @@ export interface TenantPayment {
   amount: number;
   amountPaid: number;
   paymentEntries: PaymentEntry[];
+  whatsappSent?: boolean;
+  whatsappSentAt?: string;
 }
 
 export interface DashboardStats {
