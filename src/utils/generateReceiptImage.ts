@@ -14,24 +14,71 @@ const waitForImages = async (element: HTMLElement): Promise<void> => {
   await Promise.all(imagePromises);
 };
 
-// Helper to convert image to base64 inline
-const convertImagesToBase64 = async (element: HTMLElement): Promise<void> => {
-  const images = element.querySelectorAll('img');
-  
-  for (const img of Array.from(images)) {
-    if (img.src.startsWith('data:')) continue; // Already base64
-    
+// Helper to convert image to data URL inline (required for receipt logo/images to render reliably)
+const toDataUrlViaFetch = async (src: string): Promise<string> => {
+  const response = await fetch(src, { cache: 'no-store' });
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed reading image blob'));
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
+};
+
+const toDataUrlViaCanvas = async (src: string): Promise<string> => {
+  return await new Promise<string>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas context not available'));
+        ctx.drawImage(image, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    image.onerror = () => reject(new Error('Failed loading image for canvas conversion'));
+    image.src = src;
+  });
+};
+
+const isHttpUrl = (src: string) => /^https?:\/\//i.test(src);
+
+const convertImagesToDataUrl = async (element: HTMLElement): Promise<void> => {
+  const images = Array.from(element.querySelectorAll('img'));
+
+  for (const img of images) {
+    const src = img.currentSrc || img.src;
+    if (!src || src.startsWith('data:')) continue;
+
+    // Helps some renderers fetch images without tainting the canvas
+    img.setAttribute('crossorigin', 'anonymous');
+
     try {
-      const response = await fetch(img.src);
-      const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      img.src = base64;
+      let dataUrl: string | null = null;
+
+      // In mobile app/webview builds, image URLs can be non-http (e.g. capacitor://).
+      // Fetch can't handle those reliably, but Image+Canvas usually can.
+      if (!isHttpUrl(src)) {
+        dataUrl = await toDataUrlViaCanvas(src);
+      } else {
+        // Prefer fetch for http(s), fallback to canvas if needed.
+        try {
+          dataUrl = await toDataUrlViaFetch(src);
+        } catch {
+          dataUrl = await toDataUrlViaCanvas(src);
+        }
+      }
+
+      if (dataUrl) img.src = dataUrl;
     } catch (error) {
-      console.error('Failed to convert image to base64:', error);
+      console.error('Receipt image embed failed for:', src, error);
     }
   }
 };
@@ -45,21 +92,25 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
   clone.style.zIndex = '99999';
   clone.style.pointerEvents = 'none';
   clone.style.opacity = '0'; // Hide visually but keep layout
-  
+
   document.body.appendChild(clone);
 
   try {
-    // Convert images to base64 to ensure they render
-    await convertImagesToBase64(clone);
-    
+    // Ensure all images (logo) are inlined as data URLs before capture
+    await convertImagesToDataUrl(clone);
+
     // Wait for images to fully load
     await waitForImages(clone);
-    
+
     // Additional wait for rendering
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
     // Make visible for capture
     clone.style.opacity = '1';
+
+    const rect = clone.getBoundingClientRect();
+    const width = Math.max(1, Math.ceil(rect.width));
+    const height = Math.max(1, Math.ceil(rect.height));
 
     // Generate PNG with high quality
     const dataUrl = await toPng(clone, {
@@ -67,8 +118,12 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
       pixelRatio: 2,
       cacheBust: true,
       backgroundColor: '#ffffff',
-      width: 500,
+      width,
+      height,
       skipFonts: true,
+      onImageErrorHandler: (event) => {
+        console.error('Receipt image load error:', event);
+      },
     });
 
     return dataUrl;
