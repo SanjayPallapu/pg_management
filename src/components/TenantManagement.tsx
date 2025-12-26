@@ -37,6 +37,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [payRemainingAmount, setPayRemainingAmount] = useState<number>(0);
   const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
   const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
+  const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
   
   // Get payment status for a tenant for the SELECTED month
   const getSelectedMonthPayment = (tenantId: string) => {
@@ -242,6 +244,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       amount: partialAmount,
       date: formattedDate,
       type: isFullPayment ? 'full' as const : 'partial' as const,
+      mode: paymentMode,
     };
 
     // Combine with existing entries
@@ -302,6 +305,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       amount: payRemainingAmount,
       date: formattedDate,
       type: isFullPayment ? 'remaining' as const : 'partial' as const,
+      mode: remainingPaymentMode,
     };
 
     const existingEntries = payment.paymentEntries || [];
@@ -805,6 +809,27 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               })()}
             </div>
             <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={paymentMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPaymentMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={paymentMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setPaymentMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
+            </div>
+            <div>
               <Label>Payment Date</Label>
               <Calendar
                 mode="single"
@@ -860,6 +885,27 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                 }
                 return null;
               })()}
+            </div>
+            <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={remainingPaymentMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setRemainingPaymentMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={remainingPaymentMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setRemainingPaymentMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Payment Date</Label>
