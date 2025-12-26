@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
-
+import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -34,6 +34,21 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    paymentMode: string;
+    paymentDate: string;
+    joiningDate: string;
+    forMonth: string;
+    roomNo: string;
+    sharingType: string;
+    amount: number;
+    amountPaid: number;
+    isFullPayment: boolean;
+    remainingBalance?: number;
+  } | null>(null);
   const { payments, upsertPayment } = useTenantPayments();
 
   const months = [
@@ -220,6 +235,26 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
     });
 
+    // Prepare receipt data for WhatsApp
+    const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+    const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+    
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: paymentMode,
+      paymentDate: format(paymentDate, 'dd-MMM-yyyy'),
+      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+      forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: sharingType,
+      amount: tenant.monthlyRent,
+      amountPaid: paymentAmount,
+      isFullPayment: isFullPayment,
+      remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+    });
+    setWhatsappDialogOpen(true);
+
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
   };
@@ -265,6 +300,26 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded`
         : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
     });
+
+    // Prepare receipt data for WhatsApp
+    const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+    const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+    
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: remainingPaymentMode,
+      paymentDate: format(payRemainingDate, 'dd-MMM-yyyy'),
+      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+      forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: sharingType,
+      amount: tenant.monthlyRent,
+      amountPaid: payRemainingAmount,
+      isFullPayment: isFullPayment,
+      remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+    });
+    setWhatsappDialogOpen(true);
 
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
@@ -628,6 +683,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* WhatsApp Receipt Dialog */}
+      <WhatsAppReceiptDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        receiptData={receiptData}
+      />
     </div>
   );
 };
