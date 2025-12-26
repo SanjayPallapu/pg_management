@@ -18,9 +18,13 @@ import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
-
-export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
-  const { selectedMonth, selectedYear } = useMonthContext();
+export const MonthlyRentSheet = ({
+  rooms
+}: MonthlyRentSheetProps) => {
+  const {
+    selectedMonth,
+    selectedYear
+  } = useMonthContext();
   const [confirmAction, setConfirmAction] = useState<{
     type: 'paid' | 'unpaid';
     tenantId: string;
@@ -50,82 +54,93 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     remainingBalance?: number;
     tenantId?: string;
   } | null>(null);
-  const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
-
-  const months = [
-    { value: 1, label: 'January' }, { value: 2, label: 'February' },
-    { value: 3, label: 'March' }, { value: 4, label: 'April' },
-    { value: 5, label: 'May' }, { value: 6, label: 'June' },
-    { value: 7, label: 'July' }, { value: 8, label: 'August' },
-    { value: 9, label: 'September' }, { value: 10, label: 'October' },
-    { value: 11, label: 'November' }, { value: 12, label: 'December' }
-  ];
-
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
-
+  const {
+    payments,
+    upsertPayment,
+    markWhatsappSent
+  } = useTenantPayments();
+  const months = [{
+    value: 1,
+    label: 'January'
+  }, {
+    value: 2,
+    label: 'February'
+  }, {
+    value: 3,
+    label: 'March'
+  }, {
+    value: 4,
+    label: 'April'
+  }, {
+    value: 5,
+    label: 'May'
+  }, {
+    value: 6,
+    label: 'June'
+  }, {
+    value: 7,
+    label: 'July'
+  }, {
+    value: 8,
+    label: 'August'
+  }, {
+    value: 9,
+    label: 'September'
+  }, {
+    value: 10,
+    label: 'October'
+  }, {
+    value: 11,
+    label: 'November'
+  }, {
+    value: 12,
+    label: 'December'
+  }];
+  const years = Array.from({
+    length: 5
+  }, (_, i) => new Date().getFullYear() - 2 + i);
   const eligibleTenants = useMemo(() => {
     const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
       ...tenant,
       roomNo: room.roomNo
     })));
-    
     return allTenants.filter(tenant => {
       const joinDate = new Date(tenant.startDate);
       const joinMonth = joinDate.getMonth() + 1;
       const joinYear = joinDate.getFullYear();
-      
       if (joinYear < selectedYear) return true;
       if (joinYear === selectedYear && joinMonth <= selectedMonth) return true;
       return false;
     });
   }, [rooms, selectedMonth, selectedYear]);
-
   const tenantsWithPayments = useMemo(() => {
     return eligibleTenants.map(tenant => {
-      const payment = payments.find(
-        p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
-      );
-      
+      const payment = payments.find(p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
       const joinDate = new Date(tenant.startDate);
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
-      
       const today = new Date();
       const todayDate = today.getDate();
-      
-      const isPastMonth =
-        selectedYear < currentYear ||
-        (selectedYear === currentYear && selectedMonth < currentMonth);
-      
-      const isFutureMonth =
-        selectedYear > currentYear ||
-        (selectedYear === currentYear && selectedMonth > currentMonth);
-      
+      const isPastMonth = selectedYear < currentYear || selectedYear === currentYear && selectedMonth < currentMonth;
+      const isFutureMonth = selectedYear > currentYear || selectedYear === currentYear && selectedMonth > currentMonth;
       const tenantDueDay = joinDate.getDate();
-      
       let paymentCategory: 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
-      
       if (payment?.paymentStatus === 'Paid') {
         paymentCategory = 'paid';
-      }
-      else if (payment?.paymentStatus === 'Partial') {
+      } else if (payment?.paymentStatus === 'Partial') {
         paymentCategory = 'partial';
-      }
-      else if (isPastMonth) {
+      } else if (isPastMonth) {
         paymentCategory = 'overdue';
-      }
-      else if (isFutureMonth) {
+      } else if (isFutureMonth) {
         paymentCategory = 'not-due';
-      }
-      else {
+      } else {
         if (todayDate < tenantDueDay) {
           paymentCategory = 'not-due';
         } else {
           paymentCategory = 'advance-not-paid';
         }
       }
-
       return {
         ...tenant,
         payment: payment || {
@@ -133,13 +148,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           amount: tenant.monthlyRent,
           paymentDate: undefined,
           amountPaid: 0,
-          paymentEntries: [],
+          paymentEntries: []
         },
         paymentCategory
       };
     });
   }, [eligibleTenants, selectedMonth, selectedYear, payments]);
-
   const previousMonthOverdue = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -147,25 +161,18 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       prevMonth = 12;
       prevYear = selectedYear - 1;
     }
-
-    const overduePayments = payments.filter(
-      p => p.month === prevMonth && p.year === prevYear && p.paymentStatus !== 'Paid'
-    );
-
+    const overduePayments = payments.filter(p => p.month === prevMonth && p.year === prevYear && p.paymentStatus !== 'Paid');
     return {
       total: overduePayments.reduce((sum, p) => sum + (p.amount - (p.amountPaid || 0)), 0),
-      count: overduePayments.length,
+      count: overduePayments.length
     };
   }, [selectedMonth, selectedYear, payments]);
-
   const stats = useMemo(() => {
     const paid = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Paid');
     const partial = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Partial');
     const pending = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Pending');
-    
     const partialCollected = partial.reduce((sum, t) => sum + (t.payment.amountPaid || 0), 0);
     const partialRemaining = partial.reduce((sum, t) => sum + (t.monthlyRent - (t.payment.amountPaid || 0)), 0);
-    
     return {
       totalCollected: paid.reduce((sum, t) => sum + t.monthlyRent, 0) + partialCollected,
       totalPending: pending.reduce((sum, t) => sum + t.monthlyRent, 0) + partialRemaining,
@@ -173,7 +180,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       pendingCount: pending.length + partial.length
     };
   }, [tenantsWithPayments]);
-
   const handlePaymentToggle = (tenantId: string, tenantName: string, currentStatus: 'Paid' | 'Pending' | 'Partial') => {
     if (currentStatus === 'Pending') {
       const tenant = tenantsWithPayments.find(t => t.id === tenantId);
@@ -183,10 +189,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         setPaymentDate(new Date());
       }
     } else {
-      setConfirmAction({ type: 'unpaid', tenantId, tenantName });
+      setConfirmAction({
+        type: 'unpaid',
+        tenantId,
+        tenantName
+      });
     }
   };
-
   const handlePayRemaining = (tenantId: string) => {
     const tenant = tenantsWithPayments.find(t => t.id === tenantId);
     if (tenant) {
@@ -196,13 +205,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       setPayRemainingDate(new Date());
     }
   };
-
   const confirmPaymentAmount = () => {
     if (!paymentAmountTenant) return;
-    
     const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
     if (!tenant) return;
-
     const formattedDate = format(paymentDate, 'yyyy-MM-dd');
     const existingPaid = tenant.payment.amountPaid || 0;
     const totalPaid = existingPaid + paymentAmount;
@@ -214,12 +220,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amount: paymentAmount,
       date: formattedDate,
       type: isFullPayment ? 'full' as const : 'partial' as const,
-      mode: paymentMode,
+      mode: paymentMode
     };
-
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
-
     upsertPayment.mutate({
       tenantId: tenant.id,
       month: selectedMonth,
@@ -228,9 +232,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
       amountPaid: Math.min(totalPaid, tenant.monthlyRent),
-      paymentEntries: updatedEntries,
+      paymentEntries: updatedEntries
     });
-
     toast({
       title: isFullPayment ? 'Payment marked as Paid' : 'Partial payment recorded',
       description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
@@ -239,7 +242,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     // Prepare receipt data for WhatsApp
     const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
     const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
-    
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -253,20 +255,16 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amountPaid: paymentAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
-      tenantId: tenant.id,
+      tenantId: tenant.id
     });
     setWhatsappDialogOpen(true);
-
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
   };
-
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
-    
     const tenant = tenantsWithPayments.find(t => t.id === payRemainingTenant);
     if (!tenant) return;
-
     const formattedDate = format(payRemainingDate, 'yyyy-MM-dd');
     const previousPaid = tenant.payment.amountPaid || 0;
     const totalPaid = previousPaid + payRemainingAmount;
@@ -277,14 +275,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amount: payRemainingAmount,
       date: formattedDate,
       type: isFullPayment ? 'remaining' as const : 'partial' as const,
-      mode: remainingPaymentMode,
+      mode: remainingPaymentMode
     };
-
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
-
     const status = isFullPayment ? 'Paid' : 'Partial';
-
     upsertPayment.mutate({
       tenantId: tenant.id,
       month: selectedMonth,
@@ -293,20 +288,16 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
       amountPaid: Math.min(totalPaid, tenant.monthlyRent),
-      paymentEntries: updatedEntries,
+      paymentEntries: updatedEntries
     });
-
     toast({
       title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',
-      description: isFullPayment 
-        ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded`
-        : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
+      description: isFullPayment ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded` : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
     });
 
     // Prepare receipt data for WhatsApp
     const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
     const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
-    
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -320,14 +311,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amountPaid: payRemainingAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
-      tenantId: tenant.id,
+      tenantId: tenant.id
     });
     setWhatsappDialogOpen(true);
-
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
   };
-
   const confirmPaymentUnpaid = () => {
     if (confirmAction?.type === 'unpaid') {
       const tenant = tenantsWithPayments.find(t => t.id === confirmAction.tenantId);
@@ -340,20 +329,20 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           paymentDate: undefined,
           amount: tenant.monthlyRent,
           amountPaid: 0,
-          paymentEntries: [],
+          paymentEntries: []
         });
-        toast({ title: 'Payment status updated to Pending' });
+        toast({
+          title: 'Payment status updated to Pending'
+        });
       }
     }
     setConfirmAction(null);
   };
-
   const exportToExcel = () => {
     const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
       ...tenant,
       roomNo: room.roomNo
     })));
-
     const excelData = allTenants.map(tenant => {
       const row: any = {
         'Name': tenant.name,
@@ -362,11 +351,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         'Phone': tenant.phone,
         'Monthly Rent': tenant.monthlyRent
       };
-
       months.forEach(month => {
-        const payment = payments.find(
-          p => p.tenantId === tenant.id && p.month === month.value && p.year === selectedYear
-        );
+        const payment = payments.find(p => p.tenantId === tenant.id && p.month === month.value && p.year === selectedYear);
         if (payment) {
           if (payment.paymentStatus === 'Partial') {
             row[month.label] = `Partial ₹${payment.amountPaid}`;
@@ -381,25 +367,34 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       });
       return row;
     });
-
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
-
-    const colWidths = [{ wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
-    months.forEach(() => colWidths.push({ wch: 12 }));
+    const colWidths = [{
+      wch: 20
+    }, {
+      wch: 10
+    }, {
+      wch: 15
+    }, {
+      wch: 15
+    }, {
+      wch: 12
+    }];
+    months.forEach(() => colWidths.push({
+      wch: 12
+    }));
     ws['!cols'] = colWidths;
     XLSX.utils.book_append_sheet(wb, ws, `Rent ${selectedYear}`);
-
     XLSX.writeFile(wb, `Rent_Sheet_${selectedYear}.xlsx`);
-    toast({ title: 'Excel file exported with full year data' });
+    toast({
+      title: 'Excel file exported with full year data'
+    });
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
-            <CardTitle>Rent Sheet</CardTitle>
+            <CardTitle className="text-lg">Rent Sheet</CardTitle>
             <Button onClick={exportToExcel} variant="outline" size="icon">
               <Download className="h-4 w-4" />
             </Button>
@@ -417,107 +412,63 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             </div>
           </div>
 
-          {previousMonthOverdue.count > 0 && (
-            <div className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive">
+          {previousMonthOverdue.count > 0 && <div className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive">
               <div className="font-semibold text-destructive">
                 Previous Month Overdue: ₹{previousMonthOverdue.total.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">
                 {previousMonthOverdue.count} tenant(s) from {months[(selectedMonth === 1 ? 12 : selectedMonth - 1) - 1]?.label}
               </div>
-            </div>
-          )}
+            </div>}
 
           <div className="space-y-2">
             {tenantsWithPayments.map(tenant => {
-              const isPartial = tenant.paymentCategory === 'partial';
-              const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;
-
-              const bgClass = tenant.paymentCategory === 'paid' 
-                ? 'bg-paid-muted border-l-4 border-paid' 
-                : tenant.paymentCategory === 'partial'
-                ? 'bg-partial-muted border-l-4 border-partial'
-                : tenant.paymentCategory === 'overdue'
-                ? 'bg-overdue-muted border-l-4 border-overdue'
-                : tenant.paymentCategory === 'advance-not-paid'
-                ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid'
-                : 'bg-not-due-muted border-l-4 border-not-due';
-              
-              const statusLabel = tenant.paymentCategory === 'paid' 
-                ? 'Paid' 
-                : tenant.paymentCategory === 'partial'
-                ? 'Due'
-                : tenant.paymentCategory === 'overdue'
-                ? 'Overdue'
-                : tenant.paymentCategory === 'advance-not-paid'
-                ? 'Advance Due'
-                : 'Pending';
-
-              const whatsappSent = (tenant.payment as any).whatsappSent;
-
-              const handleResendReceipt = () => {
-                const lastEntry = tenant.payment.paymentEntries?.[tenant.payment.paymentEntries.length - 1];
-                const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
-                const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
-                
-                setReceiptData({
-                  tenantName: tenant.name,
-                  tenantPhone: tenant.phone,
-                  paymentMode: lastEntry?.mode || 'cash',
-                  paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
-                  joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
-                  forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
-                  roomNo: tenant.roomNo,
-                  sharingType: sharingType,
-                  amount: tenant.monthlyRent,
-                  amountPaid: tenant.payment.amountPaid || tenant.monthlyRent,
-                  isFullPayment: tenant.payment.paymentStatus === 'Paid',
-                  remainingBalance: isPartial ? remaining : 0,
-                  tenantId: tenant.id,
-                });
-                setWhatsappDialogOpen(true);
-              };
-
-              return (
-                <div 
-                  key={tenant.id} 
-                  className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}
-                >
+            const isPartial = tenant.paymentCategory === 'partial';
+            const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;
+            const bgClass = tenant.paymentCategory === 'paid' ? 'bg-paid-muted border-l-4 border-paid' : tenant.paymentCategory === 'partial' ? 'bg-partial-muted border-l-4 border-partial' : tenant.paymentCategory === 'overdue' ? 'bg-overdue-muted border-l-4 border-overdue' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' : 'bg-not-due-muted border-l-4 border-not-due';
+            const statusLabel = tenant.paymentCategory === 'paid' ? 'Paid' : tenant.paymentCategory === 'partial' ? 'Due' : tenant.paymentCategory === 'overdue' ? 'Overdue' : tenant.paymentCategory === 'advance-not-paid' ? 'Advance Due' : 'Pending';
+            const whatsappSent = (tenant.payment as any).whatsappSent;
+            const handleResendReceipt = () => {
+              const lastEntry = tenant.payment.paymentEntries?.[tenant.payment.paymentEntries.length - 1];
+              const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+              const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+              setReceiptData({
+                tenantName: tenant.name,
+                tenantPhone: tenant.phone,
+                paymentMode: lastEntry?.mode || 'cash',
+                paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+                joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                roomNo: tenant.roomNo,
+                sharingType: sharingType,
+                amount: tenant.monthlyRent,
+                amountPaid: tenant.payment.amountPaid || tenant.monthlyRent,
+                isFullPayment: tenant.payment.paymentStatus === 'Paid',
+                remainingBalance: isPartial ? remaining : 0,
+                tenantId: tenant.id
+              });
+              setWhatsappDialogOpen(true);
+            };
+            return <div key={tenant.id} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">{tenant.name}</div>
                       {/* WhatsApp sent indicator */}
-                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && (
-                        <button
-                          onClick={handleResendReceipt}
-                          className={`p-1 rounded-full transition-colors ${
-                            whatsappSent 
-                              ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
-                              : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
-                          }`}
-                          title={whatsappSent ? 'Receipt sent - Click to resend' : 'Send receipt via WhatsApp'}
-                        >
+                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && <button onClick={handleResendReceipt} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click to resend' : 'Send receipt via WhatsApp'}>
                           <MessageCircle className="h-4 w-4" />
-                        </button>
-                      )}
+                        </button>}
                     </div>
-                    {isPartial ? (
-                      <Badge className="bg-overdue text-overdue-foreground">
+                    {isPartial ? <Badge className="bg-overdue text-overdue-foreground">
                         ₹{remaining.toLocaleString()}
-                      </Badge>
-                    ) : (
-                      <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>
-                    )}
+                      </Badge> : <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>}
                   </div>
                   <div className="text-xs text-muted-foreground mb-2">Room {tenant.roomNo}</div>
                   
-                  {isPartial && (
-                    <div className="text-sm font-medium mb-2">
+                  {isPartial && <div className="text-sm font-medium mb-2">
                       <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
                       <span className="mx-2">•</span>
                       <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
-                    </div>
-                  )}
+                    </div>}
 
                   <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
@@ -525,45 +476,23 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
                       </div>
                       {/* Display payment entries */}
-                      {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
-                        tenant.payment.paymentEntries.map((entry, idx) => (
-                          <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                      {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? tenant.payment.paymentEntries.map((entry, idx) => <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
                             <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
-                            {entry.mode && (
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                            {entry.mode && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
                                 {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                              </span>
-                            )}
-                          </div>
-                        ))
-                      ) : tenant.payment.paymentDate && (
-                        <div className="text-xs text-muted-foreground">
+                              </span>}
+                          </div>) : tenant.payment.paymentDate && <div className="text-xs text-muted-foreground">
                           Paid on: {format(new Date(tenant.payment.paymentDate), 'dd MMM yyyy')}
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                    {isPartial ? (
-                      <Button
-                        onClick={() => handlePayRemaining(tenant.id)}
-                        size="sm"
-                        className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90"
-                      >
+                    {isPartial ? <Button onClick={() => handlePayRemaining(tenant.id)} size="sm" className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90">
                         Pay Remaining
-                      </Button>
-                    ) : (
-                      <Button 
-                        variant={tenant.payment.paymentStatus === 'Paid' ? 'default' : 'outline'} 
-                        size="sm"
-                        className="text-xs h-7 px-3"
-                        onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
-                      >
+                      </Button> : <Button variant={tenant.payment.paymentStatus === 'Paid' ? 'default' : 'outline'} size="sm" className="text-xs h-7 px-3" onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}>
                         {tenant.payment.paymentStatus === 'Paid' ? 'Paid' : 'Mark Paid'}
-                      </Button>
-                    )}
+                      </Button>}
                   </div>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </CardContent>
       </Card>
@@ -580,53 +509,31 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="py-4 space-y-4">
             <div>
               <Label>Amount (₹)</Label>
-              <Input
-                type="number"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(parseInt(e.target.value) || 0)}
-                className="mt-2"
-              />
+              <Input type="number" value={paymentAmount} onChange={e => setPaymentAmount(parseInt(e.target.value) || 0)} className="mt-2" />
               {paymentAmountTenant && (() => {
-                const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
-                if (tenant && paymentAmount < tenant.monthlyRent) {
-                  return (
-                    <p className="text-sm text-partial mt-2">
+              const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
+              if (tenant && paymentAmount < tenant.monthlyRent) {
+                return <p className="text-sm text-partial mt-2">
                       This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - paymentAmount).toLocaleString()}
-                    </p>
-                  );
-                }
-                return null;
-              })()}
+                    </p>;
+              }
+              return null;
+            })()}
             </div>
             <div>
               <Label>Payment Mode</Label>
               <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={paymentMode === 'upi' ? 'default' : 'outline'}
-                  className="flex-1"
-                  onClick={() => setPaymentMode('upi')}
-                >
+                <Button type="button" variant={paymentMode === 'upi' ? 'default' : 'outline'} className="flex-1" onClick={() => setPaymentMode('upi')}>
                   UPI/Online
                 </Button>
-                <Button
-                  type="button"
-                  variant={paymentMode === 'cash' ? 'default' : 'outline'}
-                  className="flex-1"
-                  onClick={() => setPaymentMode('cash')}
-                >
+                <Button type="button" variant={paymentMode === 'cash' ? 'default' : 'outline'} className="flex-1" onClick={() => setPaymentMode('cash')}>
                   Cash
                 </Button>
               </div>
             </div>
             <div>
               <Label>Payment Date</Label>
-              <Calendar
-                mode="single"
-                selected={paymentDate}
-                onSelect={(date) => date && setPaymentDate(date)}
-                className={cn("rounded-md border mt-2 pointer-events-auto")}
-              />
+              <Calendar mode="single" selected={paymentDate} onSelect={date => date && setPaymentDate(date)} className={cn("rounded-md border mt-2 pointer-events-auto")} />
             </div>
           </div>
           <AlertDialogFooter>
@@ -650,57 +557,35 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="py-4 space-y-4">
             <div>
               <Label>Amount (₹)</Label>
-              <Input
-                type="number"
-                value={payRemainingAmount}
-                onChange={(e) => setPayRemainingAmount(parseInt(e.target.value) || 0)}
-                className="mt-2"
-              />
+              <Input type="number" value={payRemainingAmount} onChange={e => setPayRemainingAmount(parseInt(e.target.value) || 0)} className="mt-2" />
               {payRemainingTenant && (() => {
-                const tenant = tenantsWithPayments.find(t => t.id === payRemainingTenant);
-                if (tenant) {
-                  const remaining = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
-                  const newTotal = (tenant.payment.amountPaid || 0) + payRemainingAmount;
-                  if (payRemainingAmount < remaining) {
-                    return (
-                      <p className="text-sm text-partial mt-2">
+              const tenant = tenantsWithPayments.find(t => t.id === payRemainingTenant);
+              if (tenant) {
+                const remaining = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
+                const newTotal = (tenant.payment.amountPaid || 0) + payRemainingAmount;
+                if (payRemainingAmount < remaining) {
+                  return <p className="text-sm text-partial mt-2">
                         Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹{(tenant.monthlyRent - newTotal).toLocaleString()}
-                      </p>
-                    );
-                  }
+                      </p>;
                 }
-                return null;
-              })()}
+              }
+              return null;
+            })()}
             </div>
             <div>
               <Label>Payment Mode</Label>
               <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={remainingPaymentMode === 'upi' ? 'default' : 'outline'}
-                  className="flex-1"
-                  onClick={() => setRemainingPaymentMode('upi')}
-                >
+                <Button type="button" variant={remainingPaymentMode === 'upi' ? 'default' : 'outline'} className="flex-1" onClick={() => setRemainingPaymentMode('upi')}>
                   UPI/Online
                 </Button>
-                <Button
-                  type="button"
-                  variant={remainingPaymentMode === 'cash' ? 'default' : 'outline'}
-                  className="flex-1"
-                  onClick={() => setRemainingPaymentMode('cash')}
-                >
+                <Button type="button" variant={remainingPaymentMode === 'cash' ? 'default' : 'outline'} className="flex-1" onClick={() => setRemainingPaymentMode('cash')}>
                   Cash
                 </Button>
               </div>
             </div>
             <div>
               <Label>Payment Date</Label>
-              <Calendar
-                mode="single"
-                selected={payRemainingDate}
-                onSelect={(date) => date && setPayRemainingDate(date)}
-                className={cn("rounded-md border mt-2 pointer-events-auto")}
-              />
+              <Calendar mode="single" selected={payRemainingDate} onSelect={date => date && setPayRemainingDate(date)} className={cn("rounded-md border mt-2 pointer-events-auto")} />
             </div>
           </div>
           <AlertDialogFooter>
@@ -729,20 +614,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       </AlertDialog>
 
       {/* WhatsApp Receipt Dialog */}
-      <WhatsAppReceiptDialog
-        open={whatsappDialogOpen}
-        onOpenChange={setWhatsappDialogOpen}
-        receiptData={receiptData}
-        onWhatsappSent={() => {
-          if (receiptData?.tenantId) {
-            markWhatsappSent.mutate({
-              tenantId: receiptData.tenantId,
-              month: selectedMonth,
-              year: selectedYear,
-            });
-          }
-        }}
-      />
-    </div>
-  );
+      <WhatsAppReceiptDialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen} receiptData={receiptData} onWhatsappSent={() => {
+      if (receiptData?.tenantId) {
+        markWhatsappSent.mutate({
+          tenantId: receiptData.tenantId,
+          month: selectedMonth,
+          year: selectedYear
+        });
+      }
+    }} />
+    </div>;
 };
