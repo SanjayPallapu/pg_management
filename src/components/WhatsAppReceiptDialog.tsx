@@ -26,9 +26,10 @@ interface WhatsAppReceiptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   receiptData: ReceiptInputData | null;
+  onWhatsappSent?: () => void;
 }
 
-export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: WhatsAppReceiptDialogProps) => {
+export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhatsappSent }: WhatsAppReceiptDialogProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -137,11 +138,15 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData }: Whats
           text: message,
           files: [file],
         });
+        // Mark as sent after successful share
+        onWhatsappSent?.();
       } else {
         // Fallback: download and open WhatsApp
         downloadReceiptImage(generatedImage, receiptData.tenantName);
         if (!phone.startsWith('91')) phone = `91${phone}`;
         window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        // Also mark as sent for fallback
+        onWhatsappSent?.();
       }
     } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);

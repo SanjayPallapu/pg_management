@@ -26,6 +26,8 @@ export const useTenantPayments = () => {
         amount: payment.amount,
         amountPaid: (payment as any).amount_paid || 0,
         paymentEntries: ((payment as any).payment_entries || []) as PaymentEntry[],
+        whatsappSent: (payment as any).whatsapp_sent || false,
+        whatsappSentAt: (payment as any).whatsapp_sent_at || undefined,
       })) as TenantPayment[];
     },
   });
@@ -78,11 +80,31 @@ export const useTenantPayments = () => {
     };
   };
 
+  const markWhatsappSent = useMutation({
+    mutationFn: async ({ tenantId, month, year }: { tenantId: string; month: number; year: number }) => {
+      const { error } = await supabase
+        .from('tenant_payments')
+        .update({
+          whatsapp_sent: true,
+          whatsapp_sent_at: new Date().toISOString(),
+        } as any)
+        .eq('tenant_id', tenantId)
+        .eq('month', month)
+        .eq('year', year);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+    },
+  });
+
   return {
     payments,
     isLoading,
     upsertPayment,
     getPaymentForMonth,
     getPreviousMonthOverdue,
+    markWhatsappSent,
   };
 };
