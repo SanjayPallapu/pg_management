@@ -395,9 +395,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle>Rent Sheet</CardTitle>
             <Button onClick={exportToExcel} variant="outline" size="icon">
@@ -405,20 +405,20 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 mb-6">
-            <div className="p-4 bg-paid-muted rounded-lg">
+        <CardContent className="px-3 pb-4">
+          <div className="grid gap-3 md:grid-cols-2 mb-4">
+            <div className="p-3 bg-paid-muted rounded-lg">
               <div className="text-2xl font-bold text-paid">₹{stats.totalCollected.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">Collected ({stats.paidCount} tenants)</div>
             </div>
-            <div className="p-4 bg-pending-muted rounded-lg">
+            <div className="p-3 bg-pending-muted rounded-lg">
               <div className="text-2xl font-bold text-pending">₹{stats.totalPending.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">Pending ({stats.pendingCount} tenants)</div>
             </div>
           </div>
 
           {previousMonthOverdue.count > 0 && (
-            <div className="mb-6 p-4 bg-destructive/10 rounded-lg border border-destructive">
+            <div className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive">
               <div className="font-semibold text-destructive">
                 Previous Month Overdue: ₹{previousMonthOverdue.total.toLocaleString()}
               </div>
@@ -428,7 +428,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {tenantsWithPayments.map(tenant => {
               const isPartial = tenant.paymentCategory === 'partial';
               const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;

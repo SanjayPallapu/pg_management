@@ -18,6 +18,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 
 interface TenantManagementProps {
   room: Room;
@@ -27,7 +28,7 @@ interface TenantManagementProps {
 
 export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProps) => {
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
-  const { payments, upsertPayment } = useTenantPayments();
+  const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin } = useAuth();
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
@@ -39,6 +40,31 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    paymentMode: string;
+    paymentDate: string;
+    joiningDate: string;
+    forMonth: string;
+    roomNo: string;
+    sharingType: string;
+    amount: number;
+    amountPaid: number;
+    isFullPayment: boolean;
+    remainingBalance?: number;
+    tenantId: string;
+  } | null>(null);
+  
+  const months = [
+    { value: 1, label: 'January' }, { value: 2, label: 'February' },
+    { value: 3, label: 'March' }, { value: 4, label: 'April' },
+    { value: 5, label: 'May' }, { value: 6, label: 'June' },
+    { value: 7, label: 'July' }, { value: 8, label: 'August' },
+    { value: 9, label: 'September' }, { value: 10, label: 'October' },
+    { value: 11, label: 'November' }, { value: 12, label: 'December' }
+  ];
   
   // Get payment status for a tenant for the SELECTED month
   const getSelectedMonthPayment = (tenantId: string) => {
@@ -275,6 +301,24 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
     });
 
+    // Show receipt dialog
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: paymentMode,
+      paymentDate: format(date, 'dd-MMM-yyyy'),
+      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+      forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+      roomNo: room.roomNo,
+      sharingType: `${room.capacity} Sharing`,
+      amount: tenant.monthlyRent,
+      amountPaid: partialAmount,
+      isFullPayment: isFullPayment,
+      remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+      tenantId: tenant.id,
+    });
+    setWhatsappDialogOpen(true);
+
     setPartialPaymentTenant(null);
     setPartialAmount(0);
   };
@@ -338,6 +382,24 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded`
         : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
     });
+
+    // Show receipt dialog
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: remainingPaymentMode,
+      paymentDate: format(payRemainingDate, 'dd-MMM-yyyy'),
+      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+      forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+      roomNo: room.roomNo,
+      sharingType: `${room.capacity} Sharing`,
+      amount: tenant.monthlyRent,
+      amountPaid: payRemainingAmount,
+      isFullPayment: isFullPayment,
+      remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+      tenantId: tenant.id,
+    });
+    setWhatsappDialogOpen(true);
 
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
@@ -933,6 +995,22 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* WhatsApp Receipt Dialog */}
+      <WhatsAppReceiptDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        receiptData={receiptData}
+        onWhatsappSent={() => {
+          if (receiptData?.tenantId) {
+            markWhatsappSent.mutate({
+              tenantId: receiptData.tenantId,
+              month: selectedMonth,
+              year: selectedYear,
+            });
+          }
+        }}
+      />
     </Dialog>
   );
 };

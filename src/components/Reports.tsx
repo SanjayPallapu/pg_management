@@ -50,7 +50,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Reports</h2>
         <p className="text-muted-foreground">
@@ -58,20 +58,20 @@ export const Reports = ({ rooms }: ReportsProps) => {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Vacant Rooms Report */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 px-3 pt-4">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-vacant" />
               Vacant Rooms ({vacantRooms.length})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-4">
             {vacantRooms.length === 0 ? (
               <p className="text-muted-foreground">All rooms have at least one tenant!</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {vacantRooms.map(room => (
                   <div key={room.roomNo} className="flex items-center justify-between p-3 bg-vacant-muted rounded-lg">
                     <div>
@@ -94,14 +94,14 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
         {/* Available Beds Report */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 px-3 pt-4">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-warning" />
               Available Beds ({rooms.reduce((sum, room) => sum + (room.capacity - room.tenants.length), 0)})
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="px-3 pb-4">
+            <div className="space-y-2">
               {partiallyOccupiedRooms.map(room => (
                 <div key={room.roomNo} className="flex items-center justify-between p-3 bg-warning-muted rounded-lg">
                   <div>
@@ -128,23 +128,23 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
         {/* Pending Rent Report */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 px-3 pt-4">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-pending" />
               Pending Rent ({pendingTenants.length} tenants)
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-4">
             {pendingTenants.length === 0 ? (
               <p className="text-muted-foreground">All tenants have paid rent for {monthNames[selectedMonth - 1]}!</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {pendingTenants.map(tenant => {
                   const isPartial = tenant.paymentCategory === 'partial';
                   const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
 
                   const bgClass = tenant.paymentCategory === 'overdue' 
-                    ? 'bg-overdue-muted border-l-4 border-overdue' 
+                    ? 'bg-overdue-muted border-l-4 border-overdue'
                     : tenant.paymentCategory === 'partial'
                     ? 'bg-partial-muted border-l-4 border-partial'
                     : tenant.paymentCategory === 'advance-not-paid'
@@ -236,26 +236,26 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
         {/* Monthly Collection Summary */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3 px-3 pt-4">
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-paid" />
               {monthNames[selectedMonth - 1]} {selectedYear} Collection
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="p-4 bg-paid-muted rounded-lg">
+          <CardContent className="px-3 pb-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="p-3 bg-paid-muted rounded-lg">
                 <div className="text-2xl font-bold text-paid">₹{rentCollected.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Rent Collected ({paidTenants.length + partialTenants.length} tenants)</div>
               </div>
               
-              <div className="p-4 bg-pending-muted rounded-lg">
+              <div className="p-3 bg-pending-muted rounded-lg">
                 <div className="text-2xl font-bold text-pending">₹{pendingRent.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Pending Rent ({pendingTenants.length} tenants)</div>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4">
               <div className="text-sm font-medium mb-2">Collection Progress</div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
