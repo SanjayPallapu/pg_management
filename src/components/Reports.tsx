@@ -121,7 +121,7 @@ export const Reports = ({
         {/* Pending Rent Report */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
               <AlertTriangle className="h-5 w-5 text-pending" />
               Pending Rent ({pendingTenants.length} tenants)
             </CardTitle>
@@ -186,7 +186,7 @@ export const Reports = ({
         {/* Monthly Collection Summary */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
               <CheckCircle className="h-5 w-5 text-paid" />
               {monthNames[selectedMonth - 1]} {selectedYear} Collection
             </CardTitle>
