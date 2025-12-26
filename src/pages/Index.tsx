@@ -15,24 +15,32 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-
 const Index = () => {
-  const { rooms, isLoading } = useRooms();
+  const {
+    rooms,
+    isLoading
+  } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { selectedMonth, selectedYear } = useMonthContext();
-  const { signOut, isAdmin, role } = useAuth();
+  const {
+    selectedMonth,
+    selectedYear
+  } = useMonthContext();
+  const {
+    signOut,
+    isAdmin,
+    role
+  } = useAuth();
   const navigate = useNavigate();
-
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
   const handleSignOut = async () => {
-    const { error } = await signOut();
+    const {
+      error
+    } = await signOut();
     // Navigate to auth page regardless of error (session may already be invalid)
     toast.success('Signed out successfully');
     navigate('/auth');
   };
-
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
     setIsDialogOpen(true);
@@ -47,17 +55,15 @@ const Index = () => {
       }
     }
   }, [rooms, selectedRoom]);
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
+  return <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">PG</h1>
              <MonthYearPicker />
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
             <ThemeToggle />
@@ -96,7 +102,7 @@ const Index = () => {
             <Dashboard rooms={rooms} onStartRentCycle={() => {}} />
           </TabsContent>
 
-          <TabsContent value="rooms" className="space-y-6 mt-6 overflow-x-hidden">
+          <TabsContent value="rooms" className="space-y-6 mt-6">
             <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
           </TabsContent>
 
@@ -110,16 +116,8 @@ const Index = () => {
         </Tabs>
 
         {/* Tenant Management Dialog */}
-        {selectedRoom && (
-          <TenantManagement
-            room={selectedRoom}
-            isOpen={isDialogOpen}
-            onClose={() => setIsDialogOpen(false)}
-          />
-        )}
+        {selectedRoom && <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
