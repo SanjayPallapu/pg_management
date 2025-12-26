@@ -182,11 +182,11 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
               return (
                 <div
                   key={tenant.id}
-                  className="flex items-center justify-between pb-2 border-b last:border-b-0"
+                  className="flex items-center justify-between gap-2 pb-2 border-b last:border-b-0"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <User className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-sm font-medium truncate">
+                    <span className="min-w-0 text-sm font-medium truncate">
                       {tenant.name}
                     </span>
                   </div>

@@ -21,13 +21,13 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="px-3">
+      <div className="px-px">
         <h2 className="text-2xl font-bold tracking-tight">Room Directory</h2>
         <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
       </div>
 
       {([1, 2, 3] as const).map(floor => (
-        <div key={floor} className="space-y-3 px-3">
+        <div key={floor} className="space-y-3 px-px">
           <div>
             <h3 className="text-lg font-semibold text-primary">{floorNames[floor]}</h3>
             <p className="text-sm text-muted-foreground">
