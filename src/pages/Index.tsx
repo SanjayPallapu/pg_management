@@ -60,15 +60,13 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="rounded-md bg-primary p-1 shadow-sm">
-              <img
-                src={appLogo}
-                alt="Amma logo"
-                className="h-9 w-auto"
-                decoding="async"
-              />
-            </div>
+          <div className="flex items-center gap-3 overflow-visible">
+            <img
+              src={appLogo}
+              alt="Amma logo"
+              className="h-14 w-auto"
+              decoding="async"
+            />
             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-3">
