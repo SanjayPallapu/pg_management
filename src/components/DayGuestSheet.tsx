@@ -64,6 +64,10 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
 
+  // Mark unpaid confirmation dialog state
+  const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
+  const [unpaidGuest, setUnpaidGuest] = useState<DayGuest | null>(null);
+
   // Filter guests for selected month
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
   const endOfMonth = new Date(selectedYear, selectedMonth, 0);
@@ -177,15 +181,23 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       // Open payment dialog
       handlePaymentStart(guest);
     } else if (newStatus === 'Pending') {
-      // Reset payment
-      await updateDayGuest.mutateAsync({
-        id: guest.id,
-        payment_status: 'Pending',
-        amount_paid: 0,
-        payment_entries: [],
-      });
-      toast.success('Payment status reset to Pending');
+      // Open confirmation dialog
+      setUnpaidGuest(guest);
+      setUnpaidDialogOpen(true);
     }
+  };
+
+  const handleUnpaidConfirm = async () => {
+    if (!unpaidGuest) return;
+    await updateDayGuest.mutateAsync({
+      id: unpaidGuest.id,
+      payment_status: 'Pending',
+      amount_paid: 0,
+      payment_entries: [],
+    });
+    toast.success('Payment status reset to Pending');
+    setUnpaidDialogOpen(false);
+    setUnpaidGuest(null);
   };
 
   const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -575,6 +587,29 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
               disabled={updateDayGuest.isPending || paymentAmount <= 0}
             >
               Confirm Payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark Unpaid Confirmation Dialog */}
+      <AlertDialog open={unpaidDialogOpen} onOpenChange={setUnpaidDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark as Unpaid?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reset the payment for {unpaidGuest?.guest_name}? 
+              This will clear ₹{unpaidGuest?.amount_paid?.toLocaleString()} paid amount and all payment entries.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUnpaidGuest(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleUnpaidConfirm} 
+              disabled={updateDayGuest.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Mark Unpaid
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

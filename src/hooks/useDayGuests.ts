@@ -98,6 +98,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
       toast.success('Day guest added successfully');
     },
     onError: (error) => {
@@ -127,6 +128,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
     },
     onError: (error) => {
       console.error('Error updating day guest:', error);
@@ -141,6 +143,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
       toast.success('Day guest deleted successfully');
     },
     onError: (error) => {
