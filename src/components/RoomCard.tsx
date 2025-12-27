@@ -191,43 +191,34 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    {isEligible ? (
-                      <>
-                        {(isPaid || isPartial) && (
-                          <button
-                            onClick={handlePaidClick}
-                            className={`p-1 rounded-full transition-colors ${
-                              whatsappSent 
-                                ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
-                                : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
-                            }`}
-                            title={whatsappSent ? 'Receipt sent' : 'Send receipt'}
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                        <Badge
-                          variant="outline"
-                          className={
-                            isPaid
-                              ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80'
-                              : isPartial
-                              ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80'
-                              : 'bg-pending text-pending-foreground text-xs'
-                          }
-                          onClick={(isPaid || isPartial) ? handlePaidClick : undefined}
+                    <>
+                      {(isPaid || isPartial) && (
+                        <button
+                          onClick={handlePaidClick}
+                          className={`p-1 rounded-full transition-colors ${
+                            whatsappSent 
+                              ? 'text-green-600 bg-green-100 dark:bg-green-900/30' 
+                              : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                          }`}
+                          title={whatsappSent ? 'Receipt sent' : 'Send receipt'}
                         >
-                          {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
-                        </Badge>
-                      </>
-                    ) : (
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                       <Badge
                         variant="outline"
-                        className="bg-muted text-muted-foreground text-xs"
+                        className={
+                          isPaid
+                            ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80'
+                            : isPartial
+                            ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80'
+                            : 'bg-pending text-pending-foreground text-xs'
+                        }
+                        onClick={(isPaid || isPartial) ? handlePaidClick : undefined}
                       >
-                        Not Due
+                        {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
                       </Badge>
-                    )}
+                    </>
                   </div>
                 </div>
               );
