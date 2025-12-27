@@ -93,11 +93,9 @@ export const useRentCalculations = ({
             paymentCategory = 'not-due';
           }
           else if (isCurrentMonth) {
-            if (todayDate < tenantDueDay) {
-              paymentCategory = 'not-due';
-            } else {
-              paymentCategory = 'advance-not-paid';
-            }
+            // Tenant joined and not paid yet = not-paid (advance-not-paid)
+            // Regardless of whether due date has passed or not
+            paymentCategory = 'advance-not-paid';
           } else {
             paymentCategory = 'not-due';
           }

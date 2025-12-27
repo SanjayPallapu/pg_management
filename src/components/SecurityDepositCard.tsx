@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Wallet, CheckCircle, XCircle, IndianRupee, CalendarIcon, X } from 'lucide-react';
+import { Wallet, CheckCircle, XCircle, IndianRupee, CalendarIcon, X, SquarePen } from 'lucide-react';
 import { Room, Tenant } from '@/types';
 import { useRooms } from '@/hooks/useRooms';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,6 +28,7 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [depositDialog, setDepositDialog] = useState<TenantWithRoom | null>(null);
   const [removeDialog, setRemoveDialog] = useState<TenantWithRoom | null>(null);
+  const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [depositDate, setDepositDate] = useState<Date>(new Date());
   const { updateTenant } = useRooms();
@@ -65,6 +66,26 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
       setDepositDate(new Date());
     } catch (error) {
       toast.error('Failed to record deposit');
+    }
+  };
+
+  const handleEditDeposit = async () => {
+    if (!editDialog || depositAmount <= 0) return;
+
+    try {
+      await updateTenant.mutateAsync({
+        tenantId: editDialog.id,
+        updates: {
+          securityDepositAmount: depositAmount,
+          securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
+        },
+      });
+      toast.success(`Deposit updated to ₹${depositAmount.toLocaleString()} for ${editDialog.name}`);
+      setEditDialog(null);
+      setDepositAmount(5000);
+      setDepositDate(new Date());
+    } catch (error) {
+      toast.error('Failed to update deposit');
     }
   };
 
@@ -167,18 +188,34 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                           {tenant.securityDepositAmount?.toLocaleString()}
                         </Badge>
                         {isAdmin && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRemoveDialog(tenant);
-                            }}
-                            title="Remove deposit"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDepositAmount(tenant.securityDepositAmount || 5000);
+                                setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
+                                setEditDialog(tenant);
+                              }}
+                              title="Edit deposit"
+                            >
+                              <SquarePen className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRemoveDialog(tenant);
+                              }}
+                              title="Remove deposit"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -300,6 +337,62 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleRemoveDeposit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Remove Deposit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Deposit Dialog */}
+      <AlertDialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit Security Deposit</AlertDialogTitle>
+            <AlertDialogDescription>
+              Update the deposit details for {editDialog?.name} (Room {editDialog?.roomNo})
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Deposit Amount (₹)</Label>
+              <Input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                className="mt-2"
+                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <Label>Deposit Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal mt-2",
+                      !depositDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {depositDate ? format(depositDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={depositDate}
+                    onSelect={(date) => date && setDepositDate(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditDeposit} disabled={depositAmount <= 0}>
+              Update Deposit
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
