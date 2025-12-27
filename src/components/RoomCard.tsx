@@ -92,7 +92,8 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
   // Calculate expected rent for eligible tenants
   const expectedRent = eligibleTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
 
-  const paidCount = eligibleTenants.filter(t => {
+  // Calculate paid count from all tenants in the room (not just eligible)
+  const paidCount = room.tenants.filter(t => {
     const payment = getSelectedMonthPayment(t.id);
     return payment?.paymentStatus === 'Paid';
   }).length;
@@ -131,16 +132,16 @@ export const RoomCard = ({ room, onViewDetails }: RoomCardProps) => {
             </span>
           </div>
 
-          {eligibleTenants.length > 0 && (
+          {room.tenants.length > 0 && (
             <Badge
               variant="outline"
               className={
-                paidCount === eligibleTenants.length
+                paidCount === room.tenants.length
                   ? 'bg-paid text-paid-foreground'
                   : 'bg-pending text-pending-foreground'
               }
             >
-              {paidCount}/{eligibleTenants.length} paid
+              {paidCount}/{room.tenants.length} paid
             </Badge>
           )}
         </div>
