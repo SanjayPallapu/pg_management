@@ -31,6 +31,8 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [depositDate, setDepositDate] = useState<Date>(new Date());
+  const [showEditActions, setShowEditActions] = useState(false);
+  const [selectedTenantForAction, setSelectedTenantForAction] = useState<TenantWithRoom | null>(null);
   const { updateTenant } = useRooms();
   const { isAdmin } = useAuth();
 
@@ -167,9 +169,22 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
             {/* Deposited Tenants */}
             {depositedTenants.length > 0 && (
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Deposited ({depositedTenants.length})
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Deposited ({depositedTenants.length})
+                  </h3>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => setShowEditActions(prev => !prev)}
+                    >
+                      <SquarePen className="h-4 w-4 mr-1" />
+                      {showEditActions ? 'Done' : 'Edit'}
+                    </Button>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {depositedTenants.map(tenant => (
                     <div 
@@ -187,33 +202,31 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                           <IndianRupee className="h-3 w-3 mr-1" />
                           {tenant.securityDepositAmount?.toLocaleString()}
                         </Badge>
-                        {isAdmin && (
+                        {isAdmin && showEditActions && (
                           <>
                             <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="h-8 w-8"
+                              variant="outline" 
+                              size="sm"
+                              className="h-7 px-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDepositAmount(tenant.securityDepositAmount || 5000);
                                 setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
                                 setEditDialog(tenant);
                               }}
-                              title="Edit deposit"
                             >
-                              <SquarePen className="h-4 w-4" />
+                              Edit
                             </Button>
                             <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              variant="outline" 
+                              size="sm"
+                              className="h-7 px-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setRemoveDialog(tenant);
                               }}
-                              title="Remove deposit"
                             >
-                              <X className="h-4 w-4" />
+                              Delete
                             </Button>
                           </>
                         )}
