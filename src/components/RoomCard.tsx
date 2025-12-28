@@ -234,7 +234,7 @@ export const RoomCard = ({
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <Badge variant="outline" className="bg-background border-0 rounded-sm">
-                  {room.tenants.length} Permanent
+                  {room.tenants.length} Present
                 </Badge>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 rounded-sm">
                   {currentGuests.length} Guest{currentGuests.length > 1 ? 's' : ''}
