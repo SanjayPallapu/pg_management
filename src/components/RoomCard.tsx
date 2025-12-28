@@ -233,7 +233,7 @@ export const RoomCard = ({
                 <span className="text-sm font-medium">Day Guests</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <Badge variant="outline" className="bg-background border-0">
+                <Badge variant="outline" className="bg-background border-0 rounded-sm">
                   {room.tenants.length} Permanent
                 </Badge>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 rounded-sm">
