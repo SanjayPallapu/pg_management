@@ -157,7 +157,7 @@ export const RoomCard = ({
             </span>
           </div>
 
-          {room.tenants.length > 0 && <Badge variant="outline" className={paidCount === room.tenants.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}>
+          {room.tenants.length > 0 && <Badge variant="outline" className={`rounded-sm ${paidCount === room.tenants.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}`}>
               {paidCount}/{room.tenants.length} paid
             </Badge>}
         </div>
