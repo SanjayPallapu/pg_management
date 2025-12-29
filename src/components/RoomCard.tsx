@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone } from 'lucide-react';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -192,12 +192,24 @@ export const RoomCard = ({
             });
             setWhatsappDialogOpen(true);
           };
+          const openWhatsAppChat = () => {
+            const phone = tenant.phone.replace(/\D/g, '');
+            const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+            window.open(`https://wa.me/${formattedPhone}`, '_blank');
+          };
           return <div key={tenant.id} className="flex items-center justify-between gap-2 pb-2 border-b last:border-b-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <User className="h-3 w-3 text-muted-foreground" />
                     <span className="min-w-0 text-sm font-medium truncate">
                       {tenant.name}
                     </span>
+                    <button 
+                      onClick={openWhatsAppChat}
+                      className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                      title={`Chat with ${tenant.name}`}
+                    >
+                      <Phone className="h-3 w-3" />
+                    </button>
                   </div>
                   <div className="flex items-center gap-1">
                     <>
