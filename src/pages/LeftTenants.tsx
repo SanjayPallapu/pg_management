@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
+import { Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const setMeta = (name: string, content: string) => {
   const el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -51,6 +53,32 @@ const LeftTenants = () => {
     return all.filter(x => x.roomNo === roomNo);
   }, [rooms, roomNo]);
 
+  const handleExportExcel = useCallback(() => {
+    const data = leftTenants.map(({ roomNo: rn, tenant }) => ({
+      'Room No': rn,
+      'Tenant Name': tenant.name,
+      'Phone': tenant.phone,
+      'Join Date': format(parseDateOnly(tenant.startDate), 'dd MMM yyyy'),
+      'Leave Date': tenant.endDate ? format(parseDateOnly(tenant.endDate), 'dd MMM yyyy') : '',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Left Tenants');
+    
+    // Auto-size columns
+    const colWidths = [
+      { wch: 10 }, // Room No
+      { wch: 20 }, // Tenant Name
+      { wch: 12 }, // Phone
+      { wch: 15 }, // Join Date
+      { wch: 15 }, // Leave Date
+    ];
+    ws['!cols'] = colWidths;
+    
+    XLSX.writeFile(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  }, [leftTenants, roomNo]);
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 space-y-4">
@@ -66,7 +94,15 @@ const LeftTenants = () => {
             </p>
           </div>
 
-          <Button variant="outline" onClick={() => navigate('/')}>Back</Button>
+          <div className="flex gap-2">
+            {leftTenants.length > 0 && (
+              <Button variant="outline" onClick={handleExportExcel}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate('/')}>Back</Button>
+          </div>
         </header>
 
         <Separator />
