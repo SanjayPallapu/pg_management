@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle, MapPin, Users } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface ReportsProps {
   rooms: Room[];
 }
@@ -33,8 +34,15 @@ export const Reports = ({
     rooms,
     payments
   });
-  const vacantRooms = rooms.filter(room => room.tenants.length === 0);
-  const partiallyOccupiedRooms = rooms.filter(room => room.tenants.length > 0 && room.tenants.length < room.capacity);
+  // Filter tenants active in selected month for accurate counts
+  const getActiveTenantsInMonth = (room: typeof rooms[0]) => 
+    room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth));
+  
+  const vacantRooms = rooms.filter(room => getActiveTenantsInMonth(room).length === 0);
+  const partiallyOccupiedRooms = rooms.filter(room => {
+    const activeCount = getActiveTenantsInMonth(room).length;
+    return activeCount > 0 && activeCount < room.capacity;
+  });
 
   // Pending tenants = all non-paid (overdue + advance-not-paid + not-due + partial)
   const pendingTenants = eligibleTenants.filter(t => t.paymentCategory !== 'paid');
@@ -93,19 +101,22 @@ export const Reports = ({
           <CardHeader className="pb-3 px-3 pt-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="h-5 w-5 text-warning" />
-              Available Beds ({rooms.reduce((sum, room) => sum + (room.capacity - room.tenants.length), 0)})
+              Available Beds ({rooms.reduce((sum, room) => sum + (room.capacity - getActiveTenantsInMonth(room).length), 0)})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-4">
             <div className="space-y-2">
-              {partiallyOccupiedRooms.map(room => <div key={room.roomNo} className="flex items-center justify-between p-3 bg-warning-muted rounded-lg">
+              {partiallyOccupiedRooms.map(room => {
+                const activeCount = getActiveTenantsInMonth(room).length;
+                return <div key={room.roomNo} className="flex items-center justify-between p-3 bg-warning-muted rounded-lg">
                   <div>
                     <div className="font-semibold">Room {room.roomNo}</div>
                     <div className="text-sm text-muted-foreground">
-                      {room.tenants.length}/{room.capacity} occupied • {room.capacity - room.tenants.length} beds available
+                      {activeCount}/{room.capacity} occupied • {room.capacity - activeCount} beds available
                     </div>
                   </div>
-                </div>)}
+                </div>;
+              })}
               {vacantRooms.map(room => <div key={room.roomNo} className="flex items-center justify-between p-3 bg-vacant-muted rounded-lg">
                   <div>
                     <div className="font-semibold">Room {room.roomNo}</div>

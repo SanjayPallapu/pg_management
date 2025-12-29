@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -104,14 +105,10 @@ export const MonthlyRentSheet = ({
       ...tenant,
       roomNo: room.roomNo
     })));
-    return allTenants.filter(tenant => {
-      const joinDate = new Date(tenant.startDate);
-      const joinMonth = joinDate.getMonth() + 1;
-      const joinYear = joinDate.getFullYear();
-      if (joinYear < selectedYear) return true;
-      if (joinYear === selectedYear && joinMonth <= selectedMonth) return true;
-      return false;
-    });
+    // Filter tenants who are active in the selected month (joined before end of month AND not left before month started)
+    return allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
+    );
   }, [rooms, selectedMonth, selectedYear]);
   const tenantsWithPayments = useMemo(() => {
     return eligibleTenants.map(tenant => {
