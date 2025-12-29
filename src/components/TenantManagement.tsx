@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Room, Tenant } from '@/types';
-import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon } from 'lucide-react';
+import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import { toast } from '@/hooks/use-toast';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -580,11 +580,23 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                               placeholder="Phone"
                               maxLength={10}
                             />
-                            <Input
-                              type="date"
-                              value={tenant.startDate}
-                              onChange={(e) => handleUpdateTenant(tenant.id, { startDate: e.target.value })}
-                            />
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                              <Input
+                                type="date"
+                                value={tenant.startDate}
+                                onChange={(e) => handleUpdateTenant(tenant.id, { startDate: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Leave Date (if left)</Label>
+                              <Input
+                                type="date"
+                                value={tenant.endDate || ''}
+                                onChange={(e) => handleUpdateTenant(tenant.id, { endDate: e.target.value || undefined })}
+                                placeholder="Leave date"
+                              />
+                            </div>
                           </div>
                         ) : (
                           <>
@@ -593,6 +605,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                             <div className="text-xs text-muted-foreground">
                               Joining Date: {new Date(tenant.startDate).toLocaleDateString()}
                             </div>
+                            {tenant.endDate && (
+                              <div className="text-xs text-destructive font-medium">
+                                Left: {new Date(tenant.endDate).toLocaleDateString()}
+                              </div>
+                            )}
                             {/* Display payment entries */}
                             {payment?.paymentEntries && payment.paymentEntries.length > 0 ? (
                               <div className="mt-1 space-y-0.5">
@@ -639,6 +656,40 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
                         {isEditing && (
                           <>
+                            {!tenant.endDate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                onClick={() => {
+                                  const today = format(new Date(), 'yyyy-MM-dd');
+                                  handleUpdateTenant(tenant.id, { endDate: today });
+                                  toast({
+                                    title: "Tenant marked as left",
+                                    description: `${tenant.name} marked as left on ${format(new Date(), 'dd MMM yyyy')}`,
+                                  });
+                                }}
+                              >
+                                <LogOut className="h-4 w-4 mr-1" />
+                                Mark Left
+                              </Button>
+                            )}
+                            {tenant.endDate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                onClick={() => {
+                                  handleUpdateTenant(tenant.id, { endDate: undefined });
+                                  toast({
+                                    title: "Tenant reactivated",
+                                    description: `${tenant.name} is now active again`,
+                                  });
+                                }}
+                              >
+                                Reactivate
+                              </Button>
+                            )}
                             <Button
                               variant="destructive"
                               size="sm"
