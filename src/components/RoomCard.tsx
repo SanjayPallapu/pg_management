@@ -105,10 +105,16 @@ export const RoomCard = ({
     return payments.find(p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
   };
 
+  // Parse date string (YYYY-MM-DD) to get year, month, day without timezone issues
+  const parseDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Check if tenant was active during selected month
   // Active means: joined on or before the end of the month AND (no end date OR left during/after the month)
   const isTenantActiveInMonth = (startDate: string, endDate?: string) => {
-    const joinDate = new Date(startDate);
+    const joinDate = parseDate(startDate);
     const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
     const monthEnd = new Date(selectedYear, selectedMonth, 0); // Last day of month
     
@@ -119,14 +125,14 @@ export const RoomCard = ({
     if (!endDate) return true;
     
     // If tenant has end date, they must have left during or after the selected month
-    const leaveDate = new Date(endDate);
+    const leaveDate = parseDate(endDate);
     return leaveDate >= monthStart;
   };
 
   // Check if tenant left during the selected month
   const tenantLeftInMonth = (endDate?: string) => {
     if (!endDate) return false;
-    const leaveDate = new Date(endDate);
+    const leaveDate = parseDate(endDate);
     const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
     const monthEnd = new Date(selectedYear, selectedMonth, 0);
     return leaveDate >= monthStart && leaveDate <= monthEnd;
@@ -134,7 +140,7 @@ export const RoomCard = ({
 
   // Check if tenant joined during the selected month
   const tenantJoinedInMonth = (startDate: string) => {
-    const joinDate = new Date(startDate);
+    const joinDate = parseDate(startDate);
     const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
     const monthEnd = new Date(selectedYear, selectedMonth, 0);
     return joinDate >= monthStart && joinDate <= monthEnd;
