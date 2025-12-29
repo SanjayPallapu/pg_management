@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { useNavigate } from 'react-router-dom';
-import { isTenantActiveNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface TenantManagementProps {
   room: Room;
@@ -190,7 +190,25 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     });
   };
 
-  const activeTenants = room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate));
+  const isSelectedCurrentMonth = (() => {
+    const now = new Date();
+    return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+  })();
+
+  const tenantsInSelectedMonth = room.tenants.filter(t =>
+    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+  );
+
+  const activeTenants = isSelectedCurrentMonth
+    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate))
+    : tenantsInSelectedMonth;
+
+  const derivedStatus = activeTenants.length === room.capacity
+    ? 'Occupied'
+    : activeTenants.length === 0
+      ? 'Vacant'
+      : 'Partially Occupied';
+
   const leftTenantsCount = room.tenants.filter(t => !!t.endDate).length;
 
   const availableBeds = room.capacity - activeTenants.length;
@@ -454,8 +472,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Room {room.roomNo}
-            <Badge className={getStatusColor(room.status)}>
-              {room.status}
+            <Badge className={getStatusColor(derivedStatus)}>
+              {derivedStatus}
             </Badge>
           </DialogTitle>
           <DialogDescription>
@@ -503,47 +521,50 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           </div>
 
           {/* Current Tenants */}
-          {activeTenants.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">
-                      Current Tenants ({activeTenants.length})
-                    </h3>
-                    {leftTenantsCount > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/left-tenants?roomNo=${encodeURIComponent(room.roomNo)}`)}
-                      >
-                        Left ({leftTenantsCount})
-                      </Button>
-                    )}
-                  </div>
-                  {isAdmin && (
-                    <Button
-                      variant={isEditMode ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        setIsEditMode(!isEditMode);
-                        setEditingTenantId(null);
-                      }}
-                    >
-                      {isEditMode ? "Done" : "Edit"}
-                    </Button>
-                  )}
-                </div>
-                
-                {isAdmin && !isEditMode && (
-                  <div className="text-xs text-muted-foreground">
-                    Click Edit to enable long-press editing
-                  </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold">
+                  Current Tenants ({activeTenants.length})
+                </h3>
+                {leftTenantsCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/left-tenants?roomNo=${encodeURIComponent(room.roomNo)}`)}
+                  >
+                    Left ({leftTenantsCount})
+                  </Button>
                 )}
+              </div>
+              {isAdmin && (
+                <Button
+                  variant={isEditMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setIsEditMode(!isEditMode);
+                    setEditingTenantId(null);
+                  }}
+                >
+                  {isEditMode ? "Done" : "Edit"}
+                </Button>
+              )}
+            </div>
 
+            {isAdmin && !isEditMode && (
+              <div className="text-xs text-muted-foreground">
+                Click Edit to enable long-press editing
+              </div>
+            )}
 
-              {[...activeTenants]
-              .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-              .map(tenant => {
+            {activeTenants.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                No tenants for the selected month.
+              </div>
+            ) : (
+              [...activeTenants]
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .map(tenant => {
                 const isEditing = editingTenantId === tenant.id;
                 const payment = getSelectedMonthPayment(tenant.id);
                 const isPartial = isTenantPartialForMonth(tenant.id);
