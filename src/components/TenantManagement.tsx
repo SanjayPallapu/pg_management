@@ -518,17 +518,18 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                       </Button>
                     )}
                   </div>
-                  <Button
-                    variant={isEditMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setIsEditMode(!isEditMode);
-                      setEditingTenantId(null);
-                    }}
-                  >
-                    {isEditMode ? "Done" : "Edit"}
-                  </Button>
-                )}
+                  {isAdmin && (
+                    <Button
+                      variant={isEditMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setIsEditMode(!isEditMode);
+                        setEditingTenantId(null);
+                      }}
+                    >
+                      {isEditMode ? "Done" : "Edit"}
+                    </Button>
+                  )}
                 </div>
                 
                 {isAdmin && !isEditMode && (
