@@ -1,0 +1,127 @@
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRooms } from '@/hooks/useRooms';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { parseDateOnly } from '@/utils/dateOnly';
+import { format } from 'date-fns';
+
+const setMeta = (name: string, content: string) => {
+  const el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+  if (el) el.content = content;
+};
+
+const upsertCanonical = (href: string) => {
+  let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'canonical';
+    document.head.appendChild(link);
+  }
+  link.href = href;
+};
+
+const LeftTenants = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const roomNo = searchParams.get('roomNo');
+
+  const { rooms, isLoading } = useRooms();
+
+  useEffect(() => {
+    document.title = 'Left Tenants | PG Management';
+    setMeta('description', 'Left tenants list with room details and leave dates for PG management.');
+    upsertCanonical(window.location.href);
+  }, []);
+
+  const leftTenants = useMemo(() => {
+    const all = rooms.flatMap(r =>
+      r.tenants
+        .filter(t => !!t.endDate)
+        .map(t => ({
+          roomNo: r.roomNo,
+          capacity: r.capacity,
+          tenant: t,
+        }))
+    );
+
+    if (!roomNo) return all;
+    return all.filter(x => x.roomNo === roomNo);
+  }, [rooms, roomNo]);
+
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 space-y-4">
+        <header className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold">Left Tenants</h1>
+            <p className="text-sm text-muted-foreground">
+              {roomNo ? (
+                <>Showing left tenants for Room <span className="font-medium text-foreground">{roomNo}</span>.</>
+              ) : (
+                <>All left tenants across rooms.</>
+              )}
+            </p>
+          </div>
+
+          <Button variant="outline" onClick={() => navigate('/')}>Back</Button>
+        </header>
+
+        <Separator />
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Total: <span className="font-medium text-foreground">{leftTenants.length}</span>
+            </div>
+            {roomNo && (
+              <Badge variant="outline">Room {roomNo}</Badge>
+            )}
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {isLoading ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Loading…</CardTitle>
+                </CardHeader>
+                <CardContent />
+              </Card>
+            ) : leftTenants.length === 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">No left tenants</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  No tenants have been marked as left{roomNo ? ' for this room' : ''}.
+                </CardContent>
+              </Card>
+            ) : (
+              leftTenants.map(({ roomNo: rn, tenant }) => (
+                <Card key={tenant.id} className="rounded-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-base">{tenant.name}</CardTitle>
+                      <Badge variant="outline">Room {rn}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-1.5 text-sm">
+                    <div className="text-muted-foreground">Phone: <span className="text-foreground">{tenant.phone}</span></div>
+                    <div className="text-muted-foreground">Joined: <span className="text-foreground">{format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}</span></div>
+                    {tenant.endDate && (
+                      <div className="text-muted-foreground">Left: <span className="text-foreground">{format(parseDateOnly(tenant.endDate), 'dd MMM yyyy')}</span></div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+};
+
+export default LeftTenants;

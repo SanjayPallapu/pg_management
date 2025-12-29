@@ -28,6 +28,14 @@ export const isTenantActiveInMonth = (
   return leaveDate >= monthStart;
 };
 
+// Active now means: joined on/before today AND has NOT left (end_date is empty)
+export const isTenantActiveNow = (startDate: string, endDate: string | undefined) => {
+  if (endDate) return false;
+  const today = new Date();
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return parseDateOnly(startDate) <= todayOnly;
+};
+
 export const tenantLeftInMonth = (endDate: string | undefined, year: number, month: number) => {
   if (!endDate) return false;
   const { start: monthStart, end: monthEnd } = getMonthStartEnd(year, month);
