@@ -67,9 +67,6 @@ const Index = () => {
               className="h-14 w-auto"
               decoding="async"
             />
-            <div className="text-sm text-muted-foreground font-medium">
-              {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </div>
             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-3">
