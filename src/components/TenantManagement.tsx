@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { useNavigate } from 'react-router-dom';
-import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from '@/utils/dateOnly';
 
 interface TenantManagementProps {
   room: Room;
@@ -196,13 +196,13 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   })();
 
   const tenantsInSelectedMonth = room.tenants.filter(t =>
-    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth) && !t.endDate
+    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
   );
 
-  // For current month: show only active tenants who haven't left
-  // For past/future months: show tenants active in that month who haven't left
+  // For current month: show tenants who are active now (end_date is null or in the future)
+  // For past/future months: show tenants active in that month
   const activeTenants = isSelectedCurrentMonth
-    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate) && !t.endDate)
+    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate))
     : tenantsInSelectedMonth;
 
   const derivedStatus = activeTenants.length === room.capacity
@@ -211,7 +211,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       ? 'Vacant'
       : 'Partially Occupied';
 
-  const leftTenantsCount = room.tenants.filter(t => !!t.endDate).length;
+  const leftTenantsCount = room.tenants.filter(t => hasTenantLeftNow(t.endDate)).length;
 
   const availableBeds = room.capacity - activeTenants.length;
 
