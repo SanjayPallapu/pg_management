@@ -54,3 +54,13 @@ export const tenantJoinedInMonth = (startDate: string, year: number, month: numb
   const joinDate = parseDateOnly(startDate);
   return joinDate >= monthStart && joinDate <= monthEnd;
 };
+
+// Left now means: endDate exists AND endDate is strictly before today
+// (If endDate is today, the tenant is still considered active for today)
+export const hasTenantLeftNow = (endDate: string | undefined) => {
+  if (!endDate) return false;
+  const today = new Date();
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const leaveDate = parseDateOnly(endDate);
+  return leaveDate < todayOnly;
+};
