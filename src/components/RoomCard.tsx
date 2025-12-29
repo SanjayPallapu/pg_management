@@ -105,16 +105,54 @@ export const RoomCard = ({
     return payments.find(p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
   };
 
-  // Check if tenant is eligible for selected month (joined on or before)
-  const isTenantEligible = (startDate: string) => {
+  // Check if tenant was active during selected month
+  // Active means: joined on or before the end of the month AND (no end date OR left during/after the month)
+  const isTenantActiveInMonth = (startDate: string, endDate?: string) => {
     const joinDate = new Date(startDate);
-    const selectedDate = new Date(selectedYear, selectedMonth - 1, 1);
-    return joinDate <= selectedDate;
+    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
+    const monthEnd = new Date(selectedYear, selectedMonth, 0); // Last day of month
+    
+    // Tenant must have joined on or before the end of the selected month
+    if (joinDate > monthEnd) return false;
+    
+    // If tenant has no end date, they're still active
+    if (!endDate) return true;
+    
+    // If tenant has end date, they must have left during or after the selected month
+    const leaveDate = new Date(endDate);
+    return leaveDate >= monthStart;
   };
 
-  // Filter eligible tenants for selected month
-  const eligibleTenants = room.tenants.filter(t => isTenantEligible(t.startDate));
-  const occupiedCount = room.tenants.length;
+  // Check if tenant left during the selected month
+  const tenantLeftInMonth = (endDate?: string) => {
+    if (!endDate) return false;
+    const leaveDate = new Date(endDate);
+    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
+    const monthEnd = new Date(selectedYear, selectedMonth, 0);
+    return leaveDate >= monthStart && leaveDate <= monthEnd;
+  };
+
+  // Check if tenant joined during the selected month
+  const tenantJoinedInMonth = (startDate: string) => {
+    const joinDate = new Date(startDate);
+    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
+    const monthEnd = new Date(selectedYear, selectedMonth, 0);
+    return joinDate >= monthStart && joinDate <= monthEnd;
+  };
+
+  // Filter tenants active in selected month
+  const tenantsInMonth = room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate));
+  
+  // For payment eligibility, tenant must have joined before the month end
+  const eligibleTenants = tenantsInMonth.filter(t => {
+    const joinDate = new Date(t.startDate);
+    const monthEnd = new Date(selectedYear, selectedMonth, 0);
+    return joinDate <= monthEnd;
+  });
+  
+  // Current active tenants (no end date or end date in future)
+  const currentTenants = room.tenants.filter(t => !t.endDate);
+  const occupiedCount = currentTenants.length;
 
   // Calculate collected amount from tenant_payments for selected month
   const totalCollected = eligibleTenants.reduce((sum, t) => {
@@ -125,8 +163,8 @@ export const RoomCard = ({
   // Calculate expected rent for eligible tenants
   const expectedRent = eligibleTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
 
-  // Calculate paid count from all tenants in the room (not just eligible)
-  const paidCount = room.tenants.filter(t => {
+  // Calculate paid count from tenants active in the selected month
+  const paidCount = tenantsInMonth.filter(t => {
     const payment = getSelectedMonthPayment(t.id);
     return payment?.paymentStatus === 'Paid';
   }).length;
@@ -157,17 +195,18 @@ export const RoomCard = ({
             </span>
           </div>
 
-          {room.tenants.length > 0 && <Badge variant="outline" className={`rounded-sm ${paidCount === room.tenants.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}`}>
-              {paidCount}/{room.tenants.length} paid
+          {tenantsInMonth.length > 0 && <Badge variant="outline" className={`rounded-sm ${paidCount === tenantsInMonth.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}`}>
+              {paidCount}/{tenantsInMonth.length} paid
             </Badge>}
         </div>
 
        {/* Tenant List */}
-        {room.tenants.length > 0 && <div className="space-y-2">
+        {tenantsInMonth.length > 0 && <div className="space-y-2">
             <div className="text-xs text-muted-foreground font-medium">Tenants:</div>
         
-            {(isExpanded ? room.tenants : room.tenants.slice(0, 2)).map(tenant => {
-          const isEligible = isTenantEligible(tenant.startDate);
+            {(isExpanded ? tenantsInMonth : tenantsInMonth.slice(0, 2)).map(tenant => {
+          const leftThisMonth = tenantLeftInMonth(tenant.endDate);
+          const joinedThisMonth = tenantJoinedInMonth(tenant.startDate);
           const payment = getSelectedMonthPayment(tenant.id);
           const isPaid = payment?.paymentStatus === 'Paid';
           const isPartial = payment?.paymentStatus === 'Partial';
@@ -197,14 +236,26 @@ export const RoomCard = ({
             const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
             window.open(`https://wa.me/${formattedPhone}`, '_blank');
           };
-          return <div key={tenant.id} className="flex items-center justify-between gap-2 pb-2 border-b last:border-b-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <User className="h-3 w-3 text-muted-foreground" />
-                    <span className="min-w-0 text-sm font-medium truncate">
-                      {tenant.name}
-                    </span>
+          return <div key={tenant.id} className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 ${leftThisMonth ? 'opacity-60' : ''}`}>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium truncate block">
+                        {tenant.name}
+                      </span>
+                      {leftThisMonth && tenant.endDate && (
+                        <span className="text-xs text-destructive">
+                          Left: {format(new Date(tenant.endDate), 'dd MMM')}
+                        </span>
+                      )}
+                      {joinedThisMonth && (
+                        <span className="text-xs text-green-600 dark:text-green-400">
+                          Joined: {format(new Date(tenant.startDate), 'dd MMM')}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <button 
                       onClick={openWhatsAppChat}
                       className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
@@ -222,8 +273,8 @@ export const RoomCard = ({
                 </div>;
         })}
         
-            {!isExpanded && room.tenants.length > 2 && <div className="text-xs text-muted-foreground">
-                +{room.tenants.length - 2} more
+            {!isExpanded && tenantsInMonth.length > 2 && <div className="text-xs text-muted-foreground">
+                +{tenantsInMonth.length - 2} more
               </div>}
           </div>}
 
@@ -305,7 +356,7 @@ export const RoomCard = ({
           </div>}
 
         <div className="flex items-center justify-between pt-2">
-          {room.tenants.length > 0 ? <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
+          {tenantsInMonth.length > 0 ? <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
               {isExpanded ? <>
                   <ChevronUp className="h-4 w-4" />
                   <span>Collapse</span>
