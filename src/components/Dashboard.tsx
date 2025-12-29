@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DayGuestSheet } from './DayGuestSheet';
 import { SecurityDepositCard } from './SecurityDepositCard';
 import { PaymentModeCard } from './PaymentModeCard';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
   rooms: Room[];
@@ -59,25 +59,42 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
   
-  // Count only tenants active in the selected month
+  // Check if viewing current month
+  const today = new Date();
+  const isCurrentMonth = selectedMonth === (today.getMonth() + 1) && selectedYear === today.getFullYear();
+  
+  // Count only tenants active in the selected month (and still active today if current month)
   const totalOccupied = rooms.reduce((sum, room) => {
-    const activeInMonth = room.tenants.filter(t => 
-      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-    ).length;
+    const activeInMonth = room.tenants.filter(t => {
+      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
+      // For current month, also check if tenant is still active today
+      if (isCurrentMonth) {
+        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
+      }
+      return activeInSelectedMonth;
+    }).length;
     return sum + activeInMonth;
   }, 0);
   
   const fullyOccupiedRooms = rooms.filter(room => {
-    const activeInMonth = room.tenants.filter(t => 
-      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-    ).length;
+    const activeInMonth = room.tenants.filter(t => {
+      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
+      if (isCurrentMonth) {
+        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
+      }
+      return activeInSelectedMonth;
+    }).length;
     return activeInMonth === room.capacity;
   }).length;
   
   const vacantRooms = rooms.filter(room => {
-    const activeInMonth = room.tenants.filter(t => 
-      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-    ).length;
+    const activeInMonth = room.tenants.filter(t => {
+      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
+      if (isCurrentMonth) {
+        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
+      }
+      return activeInSelectedMonth;
+    }).length;
     return activeInMonth === 0;
   }).length;
 
