@@ -796,9 +796,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                     )}
                   </div>
                 );
-              })}
-            </div>
-          )}
+              })
+            )}
+          </div>
 
           {/* Add New Tenant - Admin Only */}
           {isAdmin && availableBeds > 0 && (
