@@ -1,13 +1,19 @@
 import { Room } from '@/types';
+import { useMonthContext } from '@/contexts/MonthContext';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
+
 interface RoomDirectoryProps {
   rooms: Room[];
   onViewDetails: (room: Room) => void;
 }
-export const RoomDirectory = ({
-  rooms,
-  onViewDetails
-}: RoomDirectoryProps) => {
+
+export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
+  const { selectedMonth, selectedYear } = useMonthContext();
+
+  const occupiedCountForMonth = (room: Room) =>
+    room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)).length;
+
   const roomsByFloor = {
     1: rooms.filter(room => room.floor === 1).sort((a, b) => a.roomNo.localeCompare(b.roomNo)),
     2: rooms.filter(room => room.floor === 2).sort((a, b) => a.roomNo.localeCompare(b.roomNo)),
@@ -28,9 +34,12 @@ export const RoomDirectory = ({
           <div className="border-l-4 border-primary pl-4">
             <h3 className="font-semibold text-lg">{floorNames[floor]}</h3>
             <p className="text-sm text-muted-foreground">
-              {roomsByFloor[floor].filter(r => r.tenants.length === r.capacity).length} fully occupied, {' '}
-              {roomsByFloor[floor].filter(r => r.tenants.length > 0 && r.tenants.length < r.capacity).length} partially occupied, {' '}
-              {roomsByFloor[floor].filter(r => r.tenants.length === 0).length} vacant
+              {roomsByFloor[floor].filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
+              {roomsByFloor[floor].filter(r => {
+                const c = occupiedCountForMonth(r);
+                return c > 0 && c < r.capacity;
+              }).length} partially occupied,{' '}
+              {roomsByFloor[floor].filter(r => occupiedCountForMonth(r) === 0).length} vacant
             </p>
           </div>
           
