@@ -203,6 +203,8 @@ export const RoomCard = ({
                     <span className="min-w-0 text-sm font-medium truncate">
                       {tenant.name}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <button 
                       onClick={openWhatsAppChat}
                       className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
@@ -210,16 +212,12 @@ export const RoomCard = ({
                     >
                       <Phone className="h-3 w-3" />
                     </button>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <>
-                      {(isPaid || isPartial) && <button onClick={handlePaidClick} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent' : 'Send receipt'}>
-                          <MessageCircle className="h-3.5 w-3.5" />
-                        </button>}
-                      <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
-                        {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
-                      </Badge>
-                    </>
+                    {(isPaid || isPartial) && <button onClick={handlePaidClick} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent' : 'Send receipt'}>
+                        <MessageCircle className="h-3.5 w-3.5" />
+                      </button>}
+                    <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
+                      {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
+                    </Badge>
                   </div>
                 </div>;
         })}
@@ -238,7 +236,7 @@ export const RoomCard = ({
         </div>
 
         {/* Day Guests Info - Show if guests present */}
-        {currentGuests.length > 0 && <div className="border border-dashed border-primary/50 rounded-lg p-3 bg-primary/5">
+        {currentGuests.length > 0 && <div className="border border-dashed border-primary/50 rounded-lg p-3 bg-primary/5 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-primary" />
@@ -255,6 +253,39 @@ export const RoomCard = ({
                   {guestsPaidCount}/{currentGuests.length} paid
                 </Badge>
               </div>
+            </div>
+            {/* Guest List with WhatsApp */}
+            <div className="space-y-1.5 pt-1">
+              {currentGuests.map(guest => {
+                const openGuestWhatsApp = () => {
+                  if (!guest.mobile_number) return;
+                  const phone = guest.mobile_number.replace(/\D/g, '');
+                  const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                  window.open(`https://wa.me/${formattedPhone}`, '_blank');
+                };
+                return (
+                  <div key={guest.id} className="flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <User className="h-3 w-3 text-muted-foreground" />
+                      <span className="truncate">{guest.guest_name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {guest.mobile_number && (
+                        <button 
+                          onClick={openGuestWhatsApp}
+                          className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                          title={`Chat with ${guest.guest_name}`}
+                        >
+                          <Phone className="h-3 w-3" />
+                        </button>
+                      )}
+                      <Badge variant="outline" className={guest.payment_status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}>
+                        {guest.payment_status}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>}
 
