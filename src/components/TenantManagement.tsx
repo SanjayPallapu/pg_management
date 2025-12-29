@@ -196,11 +196,13 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   })();
 
   const tenantsInSelectedMonth = room.tenants.filter(t =>
-    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth) && !t.endDate
   );
 
+  // For current month: show only active tenants who haven't left
+  // For past/future months: show tenants active in that month who haven't left
   const activeTenants = isSelectedCurrentMonth
-    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate))
+    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate) && !t.endDate)
     : tenantsInSelectedMonth;
 
   const derivedStatus = activeTenants.length === room.capacity
@@ -642,11 +644,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                             <div className="font-medium text-lg">{tenant.name}</div>
                             <div className="text-sm text-muted-foreground">{tenant.phone}</div>
                             <div className="text-xs text-muted-foreground">
-                              Joining Date: {new Date(tenant.startDate).toLocaleDateString()}
+                              Joining Date: {format(new Date(tenant.startDate), 'd MMM yyyy')}
                             </div>
                             {tenant.endDate && (
                               <div className="text-xs text-destructive font-medium">
-                                Left: {new Date(tenant.endDate).toLocaleDateString()}
+                                Left: {format(new Date(tenant.endDate), 'd MMM yyyy')}
                               </div>
                             )}
                             {/* Display payment entries */}
@@ -654,7 +656,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                               <div className="mt-1 space-y-0.5">
                                 {payment.paymentEntries.map((entry, idx) => (
                                   <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {new Date(entry.date).toLocaleDateString()}</span>
+                                    <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'd MMM yyyy')}</span>
                                     {entry.mode && (
                                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
                                         {entry.mode === 'upi' ? 'UPI' : 'Cash'}
@@ -665,7 +667,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                               </div>
                             ) : payment?.paymentDate && (
                               <div className="text-xs text-muted-foreground">
-                                Paid on: {new Date(payment.paymentDate).toLocaleDateString()}
+                                Paid on: {format(new Date(payment.paymentDate), 'd MMM yyyy')}
                               </div>
                             )}
                             {isPartial && (

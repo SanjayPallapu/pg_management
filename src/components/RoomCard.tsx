@@ -111,15 +111,15 @@ export const RoomCard = ({
     return payments.find(p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
   };
 
-  // Tenants active in selected month (history view)
+  // Tenants active in selected month (history view) - exclude left tenants for "Current" display
   const tenantsInSelectedMonth = room.tenants.filter(t =>
-    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth) && !t.endDate
   );
 
   // For CURRENT month, show occupancy based on who is staying NOW (end_date empty)
-  // For past/future months, show occupancy based on month history.
+  // For past/future months, show occupancy based on month history (also excluding left tenants)
   const tenantsForDisplay = isSelectedCurrentMonth
-    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate))
+    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate) && !t.endDate)
     : tenantsInSelectedMonth;
 
   const eligibleTenants = tenantsForDisplay;
