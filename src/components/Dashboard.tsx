@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DayGuestSheet } from './DayGuestSheet';
 import { SecurityDepositCard } from './SecurityDepositCard';
 import { PaymentModeCard } from './PaymentModeCard';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
 interface DashboardProps {
   rooms: Room[];
@@ -57,9 +58,28 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   });
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
-  const totalOccupied = rooms.reduce((sum, room) => sum + room.tenants.length, 0);
-  const fullyOccupiedRooms = rooms.filter(room => room.tenants.length === room.capacity).length;
-  const vacantRooms = rooms.filter(room => room.tenants.length === 0).length;
+  
+  // Count only tenants active in the selected month
+  const totalOccupied = rooms.reduce((sum, room) => {
+    const activeInMonth = room.tenants.filter(t => 
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    ).length;
+    return sum + activeInMonth;
+  }, 0);
+  
+  const fullyOccupiedRooms = rooms.filter(room => {
+    const activeInMonth = room.tenants.filter(t => 
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    ).length;
+    return activeInMonth === room.capacity;
+  }).length;
+  
+  const vacantRooms = rooms.filter(room => {
+    const activeInMonth = room.tenants.filter(t => 
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    ).length;
+    return activeInMonth === 0;
+  }).length;
 
   const stats: DashboardStats = {
     totalRooms: rooms.length,
