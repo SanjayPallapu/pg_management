@@ -180,6 +180,8 @@ CREATE TABLE public.tenant_payments (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     amount_paid integer DEFAULT 0,
     payment_entries jsonb DEFAULT '[]'::jsonb,
+    whatsapp_sent boolean DEFAULT false,
+    whatsapp_sent_at timestamp with time zone,
     CONSTRAINT tenant_payments_month_check CHECK (((month >= 1) AND (month <= 12)))
 );
 
@@ -200,6 +202,8 @@ CREATE TABLE public.tenants (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     payment_date date,
+    security_deposit_amount integer,
+    security_deposit_date date,
     CONSTRAINT tenants_payment_status_check CHECK ((payment_status = ANY (ARRAY['Paid'::text, 'Pending'::text])))
 );
 
@@ -354,62 +358,6 @@ CREATE POLICY "Admins can manage user roles" ON public.user_roles TO authenticat
 
 
 --
--- Name: day_guests Authenticated users with role can insert day guests; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can insert day guests" ON public.day_guests FOR INSERT WITH CHECK (public.has_any_role(auth.uid()));
-
-
---
--- Name: tenant_payments Authenticated users with role can insert payments; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can insert payments" ON public.tenant_payments FOR INSERT TO authenticated WITH CHECK (public.has_any_role(auth.uid()));
-
-
---
--- Name: rooms Authenticated users with role can insert rooms; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can insert rooms" ON public.rooms FOR INSERT TO authenticated WITH CHECK (public.has_any_role(auth.uid()));
-
-
---
--- Name: tenants Authenticated users with role can insert tenants; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can insert tenants" ON public.tenants FOR INSERT TO authenticated WITH CHECK (public.has_any_role(auth.uid()));
-
-
---
--- Name: day_guests Authenticated users with role can update day guests; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can update day guests" ON public.day_guests FOR UPDATE USING (public.has_any_role(auth.uid()));
-
-
---
--- Name: tenant_payments Authenticated users with role can update payments; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can update payments" ON public.tenant_payments FOR UPDATE TO authenticated USING (public.has_any_role(auth.uid()));
-
-
---
--- Name: rooms Authenticated users with role can update rooms; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can update rooms" ON public.rooms FOR UPDATE TO authenticated USING (public.has_any_role(auth.uid()));
-
-
---
--- Name: tenants Authenticated users with role can update tenants; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users with role can update tenants" ON public.tenants FOR UPDATE TO authenticated USING (public.has_any_role(auth.uid()));
-
-
---
 -- Name: day_guests Authenticated users with role can view day guests; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -463,6 +411,62 @@ CREATE POLICY "Only admins can delete rooms" ON public.rooms FOR DELETE TO authe
 --
 
 CREATE POLICY "Only admins can delete tenants" ON public.tenants FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: day_guests Only admins can insert day guests; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can insert day guests" ON public.day_guests FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: tenant_payments Only admins can insert payments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can insert payments" ON public.tenant_payments FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: rooms Only admins can insert rooms; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can insert rooms" ON public.rooms FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: tenants Only admins can insert tenants; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can insert tenants" ON public.tenants FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: day_guests Only admins can update day guests; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can update day guests" ON public.day_guests FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: tenant_payments Only admins can update payments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can update payments" ON public.tenant_payments FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: rooms Only admins can update rooms; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can update rooms" ON public.rooms FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: tenants Only admins can update tenants; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can update tenants" ON public.tenants FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
