@@ -44,6 +44,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [markLeftTenantId, setMarkLeftTenantId] = useState<string | null>(null);
+  const [markLeftDate, setMarkLeftDate] = useState<Date>(new Date());
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -678,12 +680,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                 size="sm"
                                 className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                                 onClick={() => {
-                                  const today = format(new Date(), 'yyyy-MM-dd');
-                                  handleUpdateTenant(tenant.id, { endDate: today });
-                                  toast({
-                                    title: "Tenant marked as left",
-                                    description: `${tenant.name} marked as left on ${format(new Date(), 'dd MMM yyyy')}`,
-                                  });
+                                  setMarkLeftTenantId(tenant.id);
+                                  setMarkLeftDate(new Date());
                                 }}
                               >
                                 <LogOut className="h-4 w-4 mr-1" />
@@ -1058,6 +1056,45 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               disabled={payRemainingAmount <= 0}
             >
               Confirm Payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark Left Date Picker Dialog */}
+      <AlertDialog open={!!markLeftTenantId} onOpenChange={(open) => !open && setMarkLeftTenantId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Select Leave Date</AlertDialogTitle>
+            <AlertDialogDescription>
+              Choose the date when {room.tenants.find(t => t.id === markLeftTenantId)?.name} left the room.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Calendar
+              mode="single"
+              selected={markLeftDate}
+              onSelect={(date) => date && setMarkLeftDate(date)}
+              className={cn("rounded-md border pointer-events-auto mx-auto")}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setMarkLeftTenantId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (markLeftTenantId) {
+                  const tenant = room.tenants.find(t => t.id === markLeftTenantId);
+                  const formattedDate = format(markLeftDate, 'yyyy-MM-dd');
+                  handleUpdateTenant(markLeftTenantId, { endDate: formattedDate });
+                  toast({
+                    title: "Tenant marked as left",
+                    description: `${tenant?.name} marked as left on ${format(markLeftDate, 'dd MMM yyyy')}`,
+                  });
+                  setMarkLeftTenantId(null);
+                }
+              }}
+            >
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
