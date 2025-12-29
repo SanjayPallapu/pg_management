@@ -169,16 +169,16 @@ export const RoomCard = ({
             </span>
           </div>
 
-          {tenantsInMonth.length > 0 && <Badge variant="outline" className={`rounded-sm ${paidCount === tenantsInMonth.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}`}>
-              {paidCount}/{tenantsInMonth.length} paid
+          {tenantsForDisplay.length > 0 && <Badge variant="outline" className={`rounded-sm ${paidCount === tenantsForDisplay.length ? 'bg-paid text-paid-foreground' : 'bg-pending text-pending-foreground'}`}>
+              {paidCount}/{tenantsForDisplay.length} paid
             </Badge>}
         </div>
 
        {/* Tenant List */}
-        {tenantsInMonth.length > 0 && <div className="space-y-2">
+        {tenantsForDisplay.length > 0 && <div className="space-y-2">
             <div className="text-xs text-muted-foreground font-medium">Tenants:</div>
         
-            {(isExpanded ? tenantsInMonth : tenantsInMonth.slice(0, 2)).map(tenant => {
+            {(isExpanded ? tenantsForDisplay : tenantsForDisplay.slice(0, 2)).map(tenant => {
           const leftThisMonth = tenantLeftInMonth(tenant.endDate, selectedYear, selectedMonth);
           const joinedThisMonth = tenantJoinedInMonth(tenant.startDate, selectedYear, selectedMonth);
           const payment = getSelectedMonthPayment(tenant.id);
@@ -247,8 +247,8 @@ export const RoomCard = ({
                 </div>;
         })}
         
-            {!isExpanded && tenantsInMonth.length > 2 && <div className="text-xs text-muted-foreground">
-                +{tenantsInMonth.length - 2} more
+            {!isExpanded && tenantsForDisplay.length > 2 && <div className="text-xs text-muted-foreground">
+                +{tenantsForDisplay.length - 2} more
               </div>}
           </div>}
 
