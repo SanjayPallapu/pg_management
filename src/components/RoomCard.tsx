@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useDayGuests } from '@/hooks/useDayGuests';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { format } from 'date-fns';
+import { isTenantActiveInMonth, tenantJoinedInMonth, tenantLeftInMonth, parseDateOnly } from '@/utils/dateOnly';
 interface RoomCardProps {
   room: Room;
   onViewDetails: (room: Room) => void;
@@ -105,60 +106,16 @@ export const RoomCard = ({
     return payments.find(p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
   };
 
-  // Parse date string (YYYY-MM-DD) to get year, month, day without timezone issues
-  const parseDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  // Check if tenant was active during selected month
-  // Active means: joined on or before the end of the month AND (no end date OR left during/after the month)
-  const isTenantActiveInMonth = (startDate: string, endDate?: string) => {
-    const joinDate = parseDate(startDate);
-    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
-    const monthEnd = new Date(selectedYear, selectedMonth, 0); // Last day of month
-    
-    // Tenant must have joined on or before the end of the selected month
-    if (joinDate > monthEnd) return false;
-    
-    // If tenant has no end date, they're still active
-    if (!endDate) return true;
-    
-    // If tenant has end date, they must have left during or after the selected month
-    const leaveDate = parseDate(endDate);
-    return leaveDate >= monthStart;
-  };
-
-  // Check if tenant left during the selected month
-  const tenantLeftInMonth = (endDate?: string) => {
-    if (!endDate) return false;
-    const leaveDate = parseDate(endDate);
-    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
-    const monthEnd = new Date(selectedYear, selectedMonth, 0);
-    return leaveDate >= monthStart && leaveDate <= monthEnd;
-  };
-
-  // Check if tenant joined during the selected month
-  const tenantJoinedInMonth = (startDate: string) => {
-    const joinDate = parseDate(startDate);
-    const monthStart = new Date(selectedYear, selectedMonth - 1, 1);
-    const monthEnd = new Date(selectedYear, selectedMonth, 0);
-    return joinDate >= monthStart && joinDate <= monthEnd;
-  };
-
   // Filter tenants active in selected month
-  const tenantsInMonth = room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate));
-  
-  // For payment eligibility, tenant must have joined before the month end
-  const eligibleTenants = tenantsInMonth.filter(t => {
-    const joinDate = new Date(t.startDate);
-    const monthEnd = new Date(selectedYear, selectedMonth, 0);
-    return joinDate <= monthEnd;
-  });
-  
-  // Current active tenants (no end date or end date in future)
-  const currentTenants = room.tenants.filter(t => !t.endDate);
-  const occupiedCount = currentTenants.length;
+  const tenantsInMonth = room.tenants.filter(t =>
+    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+  );
+
+  // Tenants eligible for rent/payment calculations for this month
+  const eligibleTenants = tenantsInMonth;
+
+  // Occupancy for the selected month
+  const occupiedCount = tenantsInMonth.length;
 
   // Calculate collected amount from tenant_payments for selected month
   const totalCollected = eligibleTenants.reduce((sum, t) => {
@@ -211,8 +168,8 @@ export const RoomCard = ({
             <div className="text-xs text-muted-foreground font-medium">Tenants:</div>
         
             {(isExpanded ? tenantsInMonth : tenantsInMonth.slice(0, 2)).map(tenant => {
-          const leftThisMonth = tenantLeftInMonth(tenant.endDate);
-          const joinedThisMonth = tenantJoinedInMonth(tenant.startDate);
+          const leftThisMonth = tenantLeftInMonth(tenant.endDate, selectedYear, selectedMonth);
+          const joinedThisMonth = tenantJoinedInMonth(tenant.startDate, selectedYear, selectedMonth);
           const payment = getSelectedMonthPayment(tenant.id);
           const isPaid = payment?.paymentStatus === 'Paid';
           const isPartial = payment?.paymentStatus === 'Partial';
@@ -225,7 +182,7 @@ export const RoomCard = ({
               tenantPhone: tenant.phone,
               paymentMode: lastEntry?.mode || 'cash',
               paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
-              joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+              joiningDate: format(parseDateOnly(tenant.startDate), 'dd-MMM-yyyy'),
               forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
               roomNo: room.roomNo,
               sharingType: `${room.capacity} Sharing`,
@@ -251,14 +208,14 @@ export const RoomCard = ({
                       </span>
                       {leftThisMonth && tenant.endDate && (
                         <span className="text-xs text-destructive">
-                          Left: {format(new Date(tenant.endDate), 'dd MMM')}
-                        </span>
-                      )}
-                      {joinedThisMonth && (
-                        <span className="text-xs text-green-600 dark:text-green-400">
-                          Joined: {format(new Date(tenant.startDate), 'dd MMM')}
-                        </span>
-                      )}
+                           Left: {format(parseDateOnly(tenant.endDate), 'dd MMM')}
+                         </span>
+                       )}
+                       {joinedThisMonth && (
+                         <span className="text-xs text-green-600 dark:text-green-400">
+                           Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM')}
+                         </span>
+                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
@@ -301,7 +258,7 @@ export const RoomCard = ({
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <Badge variant="outline" className="bg-background border-0 rounded-sm">
-                  {room.tenants.length} Present
+                  {occupiedCount} Present
                 </Badge>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 rounded-sm">
                   {currentGuests.length} Guest{currentGuests.length > 1 ? 's' : ''}
