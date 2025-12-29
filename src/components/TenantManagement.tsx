@@ -19,6 +19,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { useNavigate } from 'react-router-dom';
+import { isTenantActiveNow } from '@/utils/dateOnly';
 
 interface TenantManagementProps {
   room: Room;
@@ -31,6 +33,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
   const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
   const [partialAmount, setPartialAmount] = useState<number>(0);
@@ -185,7 +188,10 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     });
   };
 
-  const availableBeds = room.capacity - room.tenants.length;
+  const activeTenants = room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate));
+  const leftTenantsCount = room.tenants.filter(t => !!t.endDate).length;
+
+  const availableBeds = room.capacity - activeTenants.length;
 
   const handleCapacityChange = (increment: boolean) => {
     const newCapacity = increment ? room.capacity + 1 : room.capacity - 1;
@@ -464,7 +470,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span>{room.tenants.length}/{room.capacity} occupied</span>
+              <span>{activeTenants.length}/{room.capacity} occupied</span>
               {isAdmin && (
                 <div className="flex gap-1 ml-2">
                   <Button
@@ -495,14 +501,23 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           </div>
 
           {/* Current Tenants */}
-          {room.tenants.length > 0 && (
+          {activeTenants.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">
-                    Current Tenants ({room.tenants.length})
-                  </h3>
-                
-                {isAdmin && (
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">
+                      Current Tenants ({activeTenants.length})
+                    </h3>
+                    {leftTenantsCount > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/left-tenants?roomNo=${encodeURIComponent(room.roomNo)}`)}
+                      >
+                        Left ({leftTenantsCount})
+                      </Button>
+                    )}
+                  </div>
                   <Button
                     variant={isEditMode ? "default" : "outline"}
                     size="sm"
@@ -523,7 +538,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                 )}
 
 
-              {[...room.tenants]
+              {[...activeTenants]
               .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
               .map(tenant => {
                 const isEditing = editingTenantId === tenant.id;

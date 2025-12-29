@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useDayGuests } from '@/hooks/useDayGuests';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { format } from 'date-fns';
-import { isTenantActiveInMonth, tenantJoinedInMonth, tenantLeftInMonth, parseDateOnly } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow, tenantJoinedInMonth, tenantLeftInMonth, parseDateOnly } from '@/utils/dateOnly';
 interface RoomCardProps {
   room: Room;
   onViewDetails: (room: Room) => void;
@@ -86,6 +86,11 @@ export const RoomCard = ({
     label: 'December'
   }];
 
+  const isSelectedCurrentMonth = (() => {
+    const now = new Date();
+    return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+  })();
+
   // Filter day guests for current month
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
   const endOfMonth = new Date(selectedYear, selectedMonth, 0);
@@ -106,16 +111,21 @@ export const RoomCard = ({
     return payments.find(p => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
   };
 
-  // Filter tenants active in selected month
-  const tenantsInMonth = room.tenants.filter(t =>
+  // Tenants active in selected month (history view)
+  const tenantsInSelectedMonth = room.tenants.filter(t =>
     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
   );
 
-  // Tenants eligible for rent/payment calculations for this month
-  const eligibleTenants = tenantsInMonth;
+  // For CURRENT month, show occupancy based on who is staying NOW (end_date empty)
+  // For past/future months, show occupancy based on month history.
+  const tenantsForDisplay = isSelectedCurrentMonth
+    ? room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate))
+    : tenantsInSelectedMonth;
 
-  // Occupancy for the selected month
-  const occupiedCount = tenantsInMonth.length;
+  const eligibleTenants = tenantsForDisplay;
+
+  // Occupancy for the selected month/current month view
+  const occupiedCount = tenantsForDisplay.length;
 
   // Calculate collected amount from tenant_payments for selected month
   const totalCollected = eligibleTenants.reduce((sum, t) => {
@@ -126,11 +136,12 @@ export const RoomCard = ({
   // Calculate expected rent for eligible tenants
   const expectedRent = eligibleTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
 
-  // Calculate paid count from tenants active in the selected month
-  const paidCount = tenantsInMonth.filter(t => {
+  // Calculate paid count from displayed tenants
+  const paidCount = tenantsForDisplay.filter(t => {
     const payment = getSelectedMonthPayment(t.id);
     return payment?.paymentStatus === 'Paid';
   }).length;
+
   const currentStatus = occupiedCount === room.capacity ? 'Occupied' : occupiedCount === 0 ? 'Vacant' : 'Partially Occupied';
   return <Card className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
 
@@ -310,8 +321,8 @@ export const RoomCard = ({
           </div>}
 
 
-        {/* Day Guest Button - only show if beds available */}
-        {occupiedCount < room.capacity && <div className="pt-2 border-t border-border/50">
+        {/* Day Guest Button - only show for current month & if beds available */}
+        {isSelectedCurrentMonth && occupiedCount < room.capacity && <div className="pt-2 border-t border-border/50">
             <Button variant="outline" size="sm" onClick={() => navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`)} className="w-full h-10 flex items-center justify-center gap-2 border-dashed">
               <UserPlus className="h-4 w-4" />
               <span>Day Guest</span>
@@ -319,7 +330,7 @@ export const RoomCard = ({
           </div>}
 
         <div className="flex items-center justify-between pt-2">
-          {tenantsInMonth.length > 0 ? <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
+          {tenantsForDisplay.length > 0 ? <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
               {isExpanded ? <>
                   <ChevronUp className="h-4 w-4" />
                   <span>Collapse</span>

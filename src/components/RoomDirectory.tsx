@@ -1,6 +1,6 @@
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 
 interface RoomDirectoryProps {
@@ -11,8 +11,17 @@ interface RoomDirectoryProps {
 export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
 
+  const isSelectedCurrentMonth = (() => {
+    const now = new Date();
+    return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+  })();
+
   const occupiedCountForMonth = (room: Room) =>
-    room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)).length;
+    room.tenants.filter(t =>
+      isSelectedCurrentMonth
+        ? isTenantActiveNow(t.startDate, t.endDate)
+        : isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
+    ).length;
 
   const roomsByFloor = {
     1: rooms.filter(room => room.floor === 1).sort((a, b) => a.roomNo.localeCompare(b.roomNo)),

@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
+import LeftTenants from "./pages/LeftTenants";
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,6 +82,11 @@ const App = () => {
                 <Route path="/day-guest/:roomId" element={
                   <ProtectedRoute>
                     <DayGuest />
+                  </ProtectedRoute>
+                } />
+                <Route path="/left-tenants" element={
+                  <ProtectedRoute>
+                    <LeftTenants />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
