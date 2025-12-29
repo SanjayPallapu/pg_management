@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
-import { Download } from 'lucide-react';
+import { Download, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 const setMeta = (name: string, content: string) => {
   const el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -29,8 +34,14 @@ const LeftTenants = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomNo = searchParams.get('roomNo');
+  const { isAdmin } = useAuth();
 
-  const { rooms, isLoading } = useRooms();
+  const { rooms, isLoading, updateTenant, removeTenant } = useRooms();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', phone: '', startDate: '', endDate: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [reactivateConfirm, setReactivateConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = 'Left Tenants | PG Management';
@@ -66,18 +77,57 @@ const LeftTenants = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Left Tenants');
     
-    // Auto-size columns
     const colWidths = [
-      { wch: 10 }, // Room No
-      { wch: 20 }, // Tenant Name
-      { wch: 12 }, // Phone
-      { wch: 15 }, // Join Date
-      { wch: 15 }, // Leave Date
+      { wch: 10 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 15 },
     ];
     ws['!cols'] = colWidths;
     
     XLSX.writeFile(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   }, [leftTenants, roomNo]);
+
+  const handleStartEdit = (tenant: any) => {
+    setEditingTenantId(tenant.id);
+    setEditForm({
+      name: tenant.name,
+      phone: tenant.phone,
+      startDate: tenant.startDate,
+      endDate: tenant.endDate || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTenantId) return;
+    await updateTenant.mutateAsync({
+      tenantId: editingTenantId,
+      updates: {
+        name: editForm.name,
+        phone: editForm.phone,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate || undefined,
+      },
+    });
+    toast({ title: 'Tenant updated successfully' });
+    setEditingTenantId(null);
+  };
+
+  const handleDelete = async (tenantId: string) => {
+    await removeTenant.mutateAsync(tenantId);
+    toast({ title: 'Tenant deleted successfully' });
+    setDeleteConfirm(null);
+  };
+
+  const handleReactivate = async (tenantId: string) => {
+    await updateTenant.mutateAsync({
+      tenantId,
+      updates: { endDate: undefined },
+    });
+    toast({ title: 'Tenant reactivated successfully' });
+    setReactivateConfirm(null);
+  };
 
   return (
     <main className="min-h-screen bg-background">
@@ -109,8 +159,22 @@ const LeftTenants = () => {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Total: <span className="font-medium text-foreground">{leftTenants.length}</span>
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted-foreground">
+                Total: <span className="font-medium text-foreground">{leftTenants.length}</span>
+              </div>
+              {isAdmin && leftTenants.length > 0 && (
+                <Button
+                  variant={isEditMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setIsEditMode(!isEditMode);
+                    setEditingTenantId(null);
+                  }}
+                >
+                  {isEditMode ? "Done" : "Edit"}
+                </Button>
+              )}
             </div>
             {roomNo && (
               <Badge variant="outline">Room {roomNo}</Badge>
@@ -135,27 +199,141 @@ const LeftTenants = () => {
                 </CardContent>
               </Card>
             ) : (
-              leftTenants.map(({ roomNo: rn, tenant }) => (
-                <Card key={tenant.id} className="rounded-sm">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-base">{tenant.name}</CardTitle>
-                      <Badge variant="outline">Room {rn}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5 text-sm">
-                    <div className="text-muted-foreground">Phone: <span className="text-foreground">{tenant.phone}</span></div>
-                    <div className="text-muted-foreground">Joined: <span className="text-foreground">{format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}</span></div>
-                    {tenant.endDate && (
-                      <div className="text-muted-foreground">Left: <span className="text-foreground">{format(parseDateOnly(tenant.endDate), 'dd MMM yyyy')}</span></div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
+              leftTenants.map(({ roomNo: rn, tenant }) => {
+                const isEditing = editingTenantId === tenant.id;
+                
+                return (
+                  <Card key={tenant.id} className="rounded-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        {isEditing ? (
+                          <Input
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                            placeholder="Name"
+                            className="font-medium"
+                          />
+                        ) : (
+                          <CardTitle className="text-base">{tenant.name}</CardTitle>
+                        )}
+                        <Badge variant="outline">Room {rn}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs">Phone</Label>
+                            <Input
+                              value={editForm.phone}
+                              onChange={(e) => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                              placeholder="Phone"
+                              maxLength={10}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Joining Date</Label>
+                            <Input
+                              type="date"
+                              value={editForm.startDate}
+                              onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Leave Date</Label>
+                            <Input
+                              type="date"
+                              value={editForm.endDate}
+                              onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                            />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingTenantId(null)}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-muted-foreground">Phone: <span className="text-foreground">{tenant.phone}</span></div>
+                          <div className="text-muted-foreground">Joined: <span className="text-foreground">{format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}</span></div>
+                          {tenant.endDate && (
+                            <div className="text-muted-foreground">Left: <span className="text-foreground">{format(parseDateOnly(tenant.endDate), 'dd MMM yyyy')}</span></div>
+                          )}
+                          
+                          {isEditMode && (
+                            <div className="flex gap-2 pt-2 border-t mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStartEdit(tenant)}
+                              >
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                onClick={() => setReactivateConfirm(tenant.id)}
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1" />
+                                Reactivate
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => setDeleteConfirm(tenant.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </section>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete this tenant? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reactivate Confirmation Dialog */}
+      <AlertDialog open={!!reactivateConfirm} onOpenChange={() => setReactivateConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reactivate Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the leave date and mark the tenant as active again. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => reactivateConfirm && handleReactivate(reactivateConfirm)}>
+              Reactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
