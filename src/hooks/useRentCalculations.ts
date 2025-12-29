@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Room, Tenant, TenantPayment } from '@/types';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
 export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
 
@@ -44,14 +45,8 @@ export const useRentCalculations = ({
     const eligibleTenants: TenantWithPayment[] = rooms.flatMap(room =>
       room.tenants
         .filter(tenant => {
-          const joinDate = new Date(tenant.startDate);
-          const joinMonth = joinDate.getMonth() + 1;
-          const joinYear = joinDate.getFullYear();
-          
-          // Tenant must have joined on or before the selected month/year
-          if (joinYear < selectedYear) return true;
-          if (joinYear === selectedYear && joinMonth <= selectedMonth) return true;
-          return false;
+          // Tenant must be active in the selected month (joined before end of month AND not left before month started)
+          return isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth);
         })
         .map(tenant => {
           const payment = payments.find(
