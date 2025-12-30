@@ -436,10 +436,10 @@ export const PaymentReconciliation = ({
     XLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
   };
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full" : "w-full sm:max-w-lg"}>
-        <SheetHeader>
-          <div className="flex items-center justify-between pr-8">
-            <SheetTitle className="flex items-center gap-2 text-base">
+      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}>
+        <SheetHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <SheetTitle className="text-base">
               Payment Reconciliation
             </SheetTitle>
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
@@ -449,7 +449,8 @@ export const PaymentReconciliation = ({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-80px)] mt-4 pr-4">
+        <div className={`${isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto' : ''}`}>
+          <ScrollArea className={isMobile ? "h-full" : "h-[calc(100vh-80px)] mt-4 pr-4"}>
           <div className="space-y-6">
             {/* Date Range Filter */}
             <div className="flex items-center gap-3 flex-wrap">
@@ -732,6 +733,7 @@ export const PaymentReconciliation = ({
             </div>
           </div>
         </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>;
 };
