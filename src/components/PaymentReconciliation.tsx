@@ -448,8 +448,8 @@ export const PaymentReconciliation = ({
           </div>
         </SheetHeader>
 
-        <div className={`${isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto' : ''}`}>
-          <ScrollArea className={isMobile ? "h-full" : "h-[calc(100vh-80px)] mt-4 pr-4"}>
+        <div className={`${isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto scrollbar-none' : ''}`}>
+          <ScrollArea className={isMobile ? "h-full [&>div>div]:!block" : "h-[calc(100vh-80px)] mt-4 pr-4"} scrollHideDelay={0}>
           <div className="space-y-6">
             {/* Date Range Filter */}
             <div className="flex items-center gap-3 flex-wrap">
