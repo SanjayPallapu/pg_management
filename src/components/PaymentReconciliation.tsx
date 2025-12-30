@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp, X } from 'lucide-react';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -442,9 +442,8 @@ export const PaymentReconciliation = ({
             <SheetTitle className="text-base">
               Payment Reconciliation
             </SheetTitle>
-            <Button variant="outline" size="sm" onClick={handleExportExcel}>
-              <Download className="h-4 w-4 mr-1" />
-              Export
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>
@@ -468,12 +467,18 @@ export const PaymentReconciliation = ({
                   <SelectItem value="last6">Last 6 Months</SelectItem>
                 </SelectContent>
               </Select>
-              <Badge variant="outline" className="rounded-sm">
-                {dateRange === 'current' 
-                  ? `${months[selectedMonth - 1]} ${selectedYear}`
-                  : `${monthsShort[monthsToShow[0].month - 1]} ${monthsToShow[0].year} - ${monthsShort[monthsToShow[monthsToShow.length - 1].month - 1]} ${monthsToShow[monthsToShow.length - 1].year}`
-                }
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 text-sm">
+                  {dateRange === 'current' 
+                    ? `${months[selectedMonth - 1]} ${selectedYear}`
+                    : `${monthsShort[monthsToShow[0].month - 1]} ${monthsToShow[0].year} - ${monthsShort[monthsToShow[monthsToShow.length - 1].month - 1]} ${monthsToShow[monthsToShow.length - 1].year}`
+                  }
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportExcel} className="h-8">
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
+                </Button>
+              </div>
             </div>
 
             {/* Month Trend Comparison - Only show for multi-month view */}
