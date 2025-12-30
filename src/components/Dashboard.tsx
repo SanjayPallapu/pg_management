@@ -110,55 +110,59 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     <>
       <div className="space-y-6">
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Split KPI Cards */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Capacity & Occupancy Split Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOccupied}/{totalCapacity}</div>
-              <p className="text-xs text-muted-foreground">{stats.totalRooms} rooms across 3 floors</p>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 divide-x divide-border">
+                {/* Left: Capacity */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Capacity</span>
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-2xl font-bold">{totalOccupied}/{totalCapacity}</div>
+                  <p className="text-xs text-muted-foreground">{stats.totalRooms} rooms across 3 floors</p>
+                </div>
+                {/* Right: Occupancy */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Occupancy</span>
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-2xl font-bold">{stats.occupiedCount} rooms</div>
+                  <p className="text-xs text-muted-foreground">
+                    {((totalOccupied / totalCapacity) * 100).toFixed(1)}% total occupancy
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
+          {/* Rent Collected & Pending Split Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Fully Occupied</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.occupiedCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {((totalOccupied / totalCapacity) * 100).toFixed(1)}% total occupancy
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rent Collected</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Rent</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                Needs collection
-              </p>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 divide-x divide-border">
+                {/* Left: Collected */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Collected</span>
+                    <CreditCard className="h-4 w-4 text-paid" />
+                  </div>
+                  <div className="text-2xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">This month</p>
+                </div>
+                {/* Right: Pending */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Pending</span>
+                    <AlertTriangle className="h-4 w-4 text-pending" />
+                  </div>
+                  <div className="text-2xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Needs collection</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
