@@ -114,7 +114,8 @@ export const useRentCalculations = ({
 
     // Calculate totals
     const totalRent = eligibleTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-    const rentCollected = paidTenants.reduce((sum, t) => sum + t.monthlyRent, 0) + 
+    // Use actual amount paid (includes extras/overpayments) for rent collected
+    const rentCollected = paidTenants.reduce((sum, t) => sum + (t.amountPaid || t.monthlyRent), 0) + 
                           partialTenants.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
     const totalPending = eligibleTenants
       .filter(t => t.paymentCategory !== 'paid')
