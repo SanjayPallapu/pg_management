@@ -468,23 +468,23 @@ export const MonthlyRentSheet = ({
                           <Phone className="h-4 w-4" />
                         </a>
                       )}
-                      {/* WhatsApp dropdown menu */}
-                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button 
-                              className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
-                              title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            <DropdownMenuItem onClick={handleResendReceipt} className="gap-2">
-                              <Receipt className="h-4 w-4" />
-                              Generate Receipt
-                            </DropdownMenuItem>
-                            {tenant.phone && tenant.phone !== '••••••••••' && (
+                      {/* WhatsApp dropdown menu - shows for paid/partial, or just chat for others */}
+                      {tenant.phone && tenant.phone !== '••••••••••' && (
+                        (tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button 
+                                className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                                title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              <DropdownMenuItem onClick={handleResendReceipt} className="gap-2">
+                                <Receipt className="h-4 w-4" />
+                                Generate Receipt
+                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')}
                                 className="gap-2"
@@ -492,9 +492,19 @@ export const MonthlyRentSheet = ({
                                 <MessageSquare className="h-4 w-4" />
                                 Chat with Tenant
                               </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <a
+                            href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                            title={`Chat with ${tenant.name}`}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </a>
+                        )
                       )}
                     </div>
                     {isPartial ? <Badge className="bg-overdue text-overdue-foreground">
