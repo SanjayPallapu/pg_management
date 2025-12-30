@@ -42,6 +42,7 @@ export const MonthlyRentSheet = ({
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [overpaymentReason, setOverpaymentReason] = useState<string>('');
+  const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
@@ -219,13 +220,10 @@ export const MonthlyRentSheet = ({
     // Check for overpayment without reason
     const isOverpayment = paymentAmount > tenant.monthlyRent;
     if (isOverpayment && !overpaymentReason.trim()) {
-      toast({
-        title: 'Reason required',
-        description: 'Please provide a reason for the extra payment amount',
-        variant: 'destructive'
-      });
+      setOverpaymentError(true);
       return;
     }
+    setOverpaymentError(false);
     
     const formattedDate = format(paymentDate, 'yyyy-MM-dd');
     const existingPaid = tenant.payment.amountPaid || 0;
@@ -609,10 +607,16 @@ export const MonthlyRentSheet = ({
                         <Input 
                           type="text" 
                           value={overpaymentReason} 
-                          onChange={e => setOverpaymentReason(e.target.value)} 
+                          onChange={e => {
+                            setOverpaymentReason(e.target.value);
+                            setOverpaymentError(false);
+                          }} 
                           placeholder="e.g., Advance, Electricity, Next month"
-                          className="mt-1"
+                          className={cn("mt-1", overpaymentError && "border-destructive")}
                         />
+                        {overpaymentError && (
+                          <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
+                        )}
                       </div>
                     </div>
                   );
