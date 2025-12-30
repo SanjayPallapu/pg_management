@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +40,28 @@ export const PaymentReconciliation = ({
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
 
+  // Handle OS back gesture by using browser history
+  const handleClose = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    if (open) {
+      // Push a state to history when sheet opens
+      window.history.pushState({ sheetOpen: true }, '');
+      
+      const handlePopState = (event: PopStateEvent) => {
+        // When back is pressed, close the sheet
+        handleClose();
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [open, handleClose]);
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
     selectedYear,
