@@ -41,8 +41,8 @@ export const PaymentReconciliation = ({
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
 
-  // Handle OS back gesture to close sheet
-  useBackGesture(open, () => onOpenChange(false));
+  // Handle OS back gesture to close sheet with animation
+  const { gestureAnimationClass } = useBackGesture(open, () => onOpenChange(false));
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -442,7 +442,7 @@ export const PaymentReconciliation = ({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        className={`${isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"} ${gestureAnimationClass}`}
       >
         <SheetHeader className="pb-2">
           <div className="flex items-center justify-between">

@@ -28,8 +28,8 @@ interface TenantWithRoom extends Tenant {
 export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   
-  // Handle OS back gesture to close sheet
-  useBackGesture(sheetOpen, () => setSheetOpen(false));
+  // Handle OS back gesture to close sheet with animation
+  const { gestureAnimationClass } = useBackGesture(sheetOpen, () => setSheetOpen(false));
   const [depositDialog, setDepositDialog] = useState<TenantWithRoom | null>(null);
   const [removeDialog, setRemoveDialog] = useState<TenantWithRoom | null>(null);
   const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
@@ -138,7 +138,7 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
       </Card>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent className={`w-full sm:max-w-lg overflow-y-auto ${gestureAnimationClass}`}>
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5" />
