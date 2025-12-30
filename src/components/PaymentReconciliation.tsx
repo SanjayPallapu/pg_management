@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, AlertTriangle, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, AlertTriangle, User, Download } from 'lucide-react';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -10,11 +11,15 @@ import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface PaymentReconciliationProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)'];
 
 export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliationProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
@@ -116,14 +121,87 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
     };
   }, [payments, selectedMonth, selectedYear, rooms, rentCollected, paidTenants, partialTenants]);
 
+  // Chart data
+  const pieChartData = useMemo(() => [
+    { name: 'UPI', value: reconciliationData.upiTotal, count: reconciliationData.upiCount },
+    { name: 'Cash', value: reconciliationData.cashTotal, count: reconciliationData.cashCount },
+  ], [reconciliationData]);
+
+  const barChartData = useMemo(() => [
+    { name: 'UPI', amount: reconciliationData.upiTotal },
+    { name: 'Cash', amount: reconciliationData.cashTotal },
+  ], [reconciliationData]);
+
+  const handleExportExcel = () => {
+    // Summary sheet data
+    const summaryData = [
+      { Metric: 'Month', Value: `${months[selectedMonth - 1]} ${selectedYear}` },
+      { Metric: 'Rent Collected', Value: reconciliationData.rentCollected },
+      { Metric: 'Payment Entries Total', Value: reconciliationData.paymentModeTotal },
+      { Metric: 'UPI Total', Value: reconciliationData.upiTotal },
+      { Metric: 'UPI Transactions', Value: reconciliationData.upiCount },
+      { Metric: 'Cash Total', Value: reconciliationData.cashTotal },
+      { Metric: 'Cash Transactions', Value: reconciliationData.cashCount },
+      { Metric: 'Match Status', Value: reconciliationData.isMatching ? 'Matched' : 'Mismatch' },
+      { Metric: 'Difference', Value: reconciliationData.difference },
+    ];
+
+    // Payment details sheet data
+    const detailsData = reconciliationData.paymentDetails.flatMap(detail => 
+      detail.entries.length > 0 
+        ? detail.entries.map((entry, idx) => ({
+            'Tenant Name': detail.tenantName,
+            'Room No': detail.roomNo,
+            'Monthly Rent': detail.monthlyRent,
+            'Status': detail.status,
+            'Amount Paid': detail.amountPaid,
+            'Entry #': idx + 1 as string | number,
+            'Entry Type': entry.type as string,
+            'Entry Date': format(new Date(entry.date), 'dd MMM yyyy'),
+            'Entry Mode': entry.mode.toUpperCase(),
+            'Entry Amount': entry.amount as string | number,
+          }))
+        : [{
+            'Tenant Name': detail.tenantName,
+            'Room No': detail.roomNo,
+            'Monthly Rent': detail.monthlyRent,
+            'Status': detail.status,
+            'Amount Paid': detail.amountPaid,
+            'Entry #': '-' as string | number,
+            'Entry Type': '-' as string,
+            'Entry Date': '-',
+            'Entry Mode': '-',
+            'Entry Amount': '-' as string | number,
+          }]
+    );
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+    
+    const detailsWs = XLSX.utils.json_to_sheet(detailsData);
+    XLSX.utils.book_append_sheet(wb, detailsWs, 'Payment Details');
+
+    // Download
+    XLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            Payment Reconciliation
-            <Badge variant="outline">{months[selectedMonth - 1]} {selectedYear}</Badge>
-          </SheetTitle>
+          <div className="flex items-center justify-between pr-8">
+            <SheetTitle className="flex items-center gap-2">
+              Payment Reconciliation
+              <Badge variant="outline">{months[selectedMonth - 1]} {selectedYear}</Badge>
+            </SheetTitle>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </div>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-100px)] mt-4 pr-4">
@@ -175,6 +253,59 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
                 </div>
               )}
             </div>
+
+            {/* Payment Distribution Charts */}
+            {reconciliationData.paymentModeTotal > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Payment Distribution</h3>
+                
+                {/* Pie Chart */}
+                <div className="h-48 bg-muted/30 rounded-lg p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={60}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {pieChartData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number, name: string, props: any) => [
+                          `₹${value.toLocaleString()} (${props.payload.count} txns)`,
+                          name
+                        ]}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Bar Chart */}
+                <div className="h-32 bg-muted/30 rounded-lg p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barChartData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                      <YAxis type="category" dataKey="name" width={40} />
+                      <Tooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Amount']} />
+                      <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
+                        {barChartData.map((_, index) => (
+                          <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
 
             {/* Payment Mode Breakdown */}
             <div className="space-y-3">
