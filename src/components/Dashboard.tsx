@@ -114,8 +114,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const fullyOccupiedRooms = roomStats.filter(r => r.isFull).length;
   const vacantRooms = roomStats.filter(r => r.isEmpty).length;
   
-  // Max monthly revenue if all beds filled
-  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.rentAmount, 0);
+  // Max monthly revenue if all beds filled (using fixed per-bed rates)
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPerBedRate(room.capacity)), 0);
 
   const stats: DashboardStats = {
     totalRooms: rooms.length,
