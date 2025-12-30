@@ -72,6 +72,12 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
   const [unpaidGuest, setUnpaidGuest] = useState<DayGuest | null>(null);
 
+  // Handle OS back gesture to close sub-dialogs
+  useBackGesture(editDialogOpen, () => setEditDialogOpen(false));
+  useBackGesture(deleteDialogOpen, () => setDeleteDialogOpen(false));
+  useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
+  useBackGesture(unpaidDialogOpen, () => setUnpaidDialogOpen(false));
+
   // Filter guests for selected month
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
   const endOfMonth = new Date(selectedYear, selectedMonth, 0);

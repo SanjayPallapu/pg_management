@@ -36,6 +36,11 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [depositDate, setDepositDate] = useState<Date>(new Date());
   const [showEditActions, setShowEditActions] = useState(false);
+
+  // Handle OS back gesture to close sub-dialogs
+  useBackGesture(!!depositDialog, () => setDepositDialog(null));
+  useBackGesture(!!removeDialog, () => setRemoveDialog(null));
+  useBackGesture(!!editDialog, () => setEditDialog(null));
   const [selectedTenantForAction, setSelectedTenantForAction] = useState<TenantWithRoom | null>(null);
   const { updateTenant } = useRooms();
   const { isAdmin } = useAuth();

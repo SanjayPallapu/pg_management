@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,10 @@ const LeftTenants = () => {
   const [editForm, setEditForm] = useState({ name: '', phone: '', startDate: '', endDate: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [reactivateConfirm, setReactivateConfirm] = useState<string | null>(null);
+
+  // Handle OS back gesture to close dialogs
+  useBackGesture(!!deleteConfirm, () => setDeleteConfirm(null));
+  useBackGesture(!!reactivateConfirm, () => setReactivateConfirm(null));
 
   useEffect(() => {
     document.title = 'Left Tenants | PG Management';

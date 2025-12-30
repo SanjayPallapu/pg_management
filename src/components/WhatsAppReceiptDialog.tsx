@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
@@ -36,6 +37,9 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   const [copied, setCopied] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReceiptData | null>(null);
+
+  // Handle OS back gesture to close dialog
+  useBackGesture(open, () => onOpenChange(false));
 
   useEffect(() => {
     if (receiptData && open) {
