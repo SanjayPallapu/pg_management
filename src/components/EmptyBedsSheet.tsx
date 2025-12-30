@@ -94,7 +94,7 @@ export const EmptyBedsSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side={isMobile ? "right" : "bottom"} 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[80vh]"}
+        className={isMobile ? "w-full max-w-full sm:max-w-full h-full p-4 [&>button]:hidden" : "h-[80vh]"}
       >
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">
