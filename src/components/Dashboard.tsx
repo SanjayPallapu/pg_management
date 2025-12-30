@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DayGuestSheet } from './DayGuestSheet';
 import { SecurityDepositCard } from './SecurityDepositCard';
 import { PaymentModeCard } from './PaymentModeCard';
+import { EmptyBedsSheet } from './EmptyBedsSheet';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -21,6 +22,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
+  const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
@@ -168,8 +170,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Potential Revenue Card */}
-        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+        {/* Potential Revenue Card - Clickable */}
+        <Card 
+          className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
+          onClick={() => setEmptyBedsSheetOpen(true)}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -189,6 +194,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <p className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</p>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
           </CardContent>
         </Card>
 
@@ -231,6 +237,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       </div>
 
       <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />
+      <EmptyBedsSheet 
+        open={emptyBedsSheetOpen} 
+        onOpenChange={setEmptyBedsSheetOpen}
+        roomStats={roomStats}
+        totalEmptyBeds={totalEmptyBeds}
+        totalPotentialRevenue={totalPotentialAdditionalRevenue}
+      />
     </>
   );
 };
