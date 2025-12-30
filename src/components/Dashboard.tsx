@@ -226,11 +226,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           className="cursor-pointer transition-colors hover:bg-accent/50"
           onClick={() => setDayGuestSheetOpen(true)}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
             <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-paid">

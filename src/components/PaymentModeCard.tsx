@@ -92,7 +92,7 @@ export const PaymentModeCard = () => {
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
           <CardTitle className="text-sm font-medium">Payment Mode</CardTitle>
           <button 
             onClick={() => setReconciliationOpen(true)}
@@ -102,7 +102,7 @@ export const PaymentModeCard = () => {
             <FileSearch className="h-4 w-4 text-muted-foreground" />
           </button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0">
           <div className="flex items-center justify-between">
             {/* UPI Section with Tooltip */}
             <Tooltip>
