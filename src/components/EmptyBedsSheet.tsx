@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,7 +10,6 @@ interface RoomStat {
   emptyBeds: number;
   perBedRent: number;
   potentialAdditionalRent: number;
-  floor: 1 | 2 | 3;
 }
 
 interface EmptyBedsSheetProps {
@@ -29,32 +27,21 @@ export const EmptyBedsSheet = ({
   totalEmptyBeds,
   totalPotentialRevenue,
 }: EmptyBedsSheetProps) => {
-  const [selectedSharing, setSelectedSharing] = useState<number | null>(null);
-  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
-
-  // Filter rooms with empty beds
-  const roomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
-  
-  // Apply filters and sort by potential revenue (highest first)
-  const filteredRooms = roomsWithEmptyBeds
-    .filter(r => selectedSharing === null || r.capacity === selectedSharing)
-    .filter(r => selectedFloor === null || r.floor === selectedFloor)
+  // Filter rooms with empty beds and sort by potential revenue (highest first)
+  const roomsWithEmptyBeds = roomStats
+    .filter(r => r.emptyBeds > 0)
     .sort((a, b) => b.potentialAdditionalRent - a.potentialAdditionalRent);
 
-  // Group by sharing type for summary
+  // Group by sharing type
   const bySharing = roomsWithEmptyBeds.reduce((acc, room) => {
-    const key = room.capacity;
+    const key = `${room.capacity}-sharing`;
     if (!acc[key]) {
       acc[key] = { beds: 0, revenue: 0, perBedRent: room.perBedRent };
     }
     acc[key].beds += room.emptyBeds;
     acc[key].revenue += room.potentialAdditionalRent;
     return acc;
-  }, {} as Record<number, { beds: number; revenue: number; perBedRent: number }>);
-
-  // Get unique floors with empty beds
-  const floorsWithEmptyBeds = [...new Set(roomsWithEmptyBeds.map(r => r.floor))].sort();
-  const sharingTypes = Object.keys(bySharing).map(Number).sort((a, b) => b - a);
+  }, {} as Record<string, { beds: number; revenue: number; perBedRent: number }>);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -78,79 +65,26 @@ export const EmptyBedsSheet = ({
           </div>
         </div>
 
-        {/* Filters Row */}
-        <div className="mb-4 space-y-2">
-          <div className="flex items-center gap-4">
-            {/* Sharing Type Filter */}
-            <div className="flex-1">
-              <h3 className="text-xs font-medium text-muted-foreground mb-1.5">By Sharing</h3>
-              <div className="flex flex-wrap gap-1.5">
-                <Badge 
-                  variant={selectedSharing === null ? "default" : "outline"}
-                  className="cursor-pointer py-1 px-2 text-xs"
-                  onClick={() => setSelectedSharing(null)}
-                >
-                  All
-                </Badge>
-                {sharingTypes.map(type => (
-                  <Badge 
-                    key={type}
-                    variant={selectedSharing === type ? "default" : "outline"}
-                    className="cursor-pointer py-1 px-2 text-xs"
-                    onClick={() => setSelectedSharing(selectedSharing === type ? null : type)}
-                  >
-                    {type}-share ({bySharing[type].beds})
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Floor Filter */}
-            <div className="flex-1">
-              <h3 className="text-xs font-medium text-muted-foreground mb-1.5">By Floor</h3>
-              <div className="flex flex-wrap gap-1.5">
-                <Badge 
-                  variant={selectedFloor === null ? "default" : "outline"}
-                  className="cursor-pointer py-1 px-2 text-xs"
-                  onClick={() => setSelectedFloor(null)}
-                >
-                  All
-                </Badge>
-                {floorsWithEmptyBeds.map(floor => (
-                  <Badge 
-                    key={floor}
-                    variant={selectedFloor === floor ? "default" : "outline"}
-                    className="cursor-pointer py-1 px-2 text-xs"
-                    onClick={() => setSelectedFloor(selectedFloor === floor ? null : floor)}
-                  >
-                    Floor {floor}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* By Sharing Type Summary */}
+        {/* By Sharing Type */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Summary by Sharing Type</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">By Sharing Type</h3>
           <div className="flex flex-wrap gap-2">
-            {sharingTypes.map(type => (
+            {Object.entries(bySharing).map(([type, data]) => (
               <Badge key={type} variant="outline" className="py-1.5 px-3">
-                <span className="font-medium">{type}-sharing</span>
+                <span className="font-medium">{type}</span>
                 <span className="mx-2 text-muted-foreground">•</span>
-                <span>{bySharing[type].beds} beds</span>
+                <span>{data.beds} beds</span>
                 <span className="mx-2 text-muted-foreground">•</span>
-                <span className="text-paid">₹{Math.round(bySharing[type].perBedRent).toLocaleString()}/bed</span>
+                <span className="text-paid">₹{Math.round(data.perBedRent).toLocaleString()}/bed</span>
               </Badge>
             ))}
           </div>
         </div>
 
         {/* Room List */}
-        <ScrollArea className="h-[calc(80vh-300px)]">
+        <ScrollArea className="h-[calc(80vh-220px)]">
           <div className="space-y-2">
-            {filteredRooms.map(room => (
+            {roomsWithEmptyBeds.map(room => (
               <div
                 key={room.roomNo}
                 className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
@@ -164,9 +98,6 @@ export const EmptyBedsSheet = ({
                       <span className="font-medium">Room {room.roomNo}</span>
                       <Badge variant="secondary" className="text-xs">
                         {room.capacity}-sharing
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        F{room.floor}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -189,13 +120,6 @@ export const EmptyBedsSheet = ({
                 </div>
               </div>
             ))}
-
-            {filteredRooms.length === 0 && roomsWithEmptyBeds.length > 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Bed className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                <p>No rooms match the selected filters</p>
-              </div>
-            )}
 
             {roomsWithEmptyBeds.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
