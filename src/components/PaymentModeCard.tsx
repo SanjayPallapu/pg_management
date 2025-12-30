@@ -82,9 +82,9 @@ export const PaymentModeCard = () => {
       }
     });
 
-    // Sort by date descending
-    upiDetails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    cashDetails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date ascending (oldest first - sequence order)
+    upiDetails.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    cashDetails.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return { upiCount, upiAmount, cashCount, cashAmount, upiDetails, cashDetails };
   }, [payments, selectedMonth, selectedYear, rooms]);
