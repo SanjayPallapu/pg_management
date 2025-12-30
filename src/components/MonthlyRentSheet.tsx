@@ -455,7 +455,7 @@ export const MonthlyRentSheet = ({
                       {tenant.phone && tenant.phone !== '••••••••••' && (
                         <a
                           href={`tel:${tenant.phone}`}
-                          className="p-1 rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                          className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                           title={`Call ${tenant.name}`}
                         >
                           <Phone className="h-4 w-4" />
@@ -466,7 +466,7 @@ export const MonthlyRentSheet = ({
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button 
-                              className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                              className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
                               title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
                             >
                               <MessageCircle className="h-4 w-4" />
