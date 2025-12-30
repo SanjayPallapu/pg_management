@@ -36,8 +36,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Handle OS back gesture to close dialog with animation
-  const { gestureAnimationClass } = useBackGesture(isOpen, onClose);
+  // Handle OS back gesture to close dialog
+  useBackGesture(isOpen, onClose);
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
   const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
   const [partialAmount, setPartialAmount] = useState<number>(0);
@@ -474,7 +474,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${gestureAnimationClass}`}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Room {room.roomNo}
