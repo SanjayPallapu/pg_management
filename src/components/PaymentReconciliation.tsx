@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,6 +39,37 @@ export const PaymentReconciliation = ({
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
+  
+  // Swipe gesture handling
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 80;
+  const EDGE_ZONE = 30; // Only trigger from leftmost 30px
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    // Only register if touch starts from left edge
+    if (touch.clientX <= EDGE_ZONE) {
+      touchStartX.current = touch.clientX;
+      touchStartY.current = touch.clientY;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = Math.abs(touch.clientY - touchStartY.current);
+    
+    // Swipe right detected (horizontal movement > threshold, vertical < half of horizontal)
+    if (deltaX > SWIPE_THRESHOLD && deltaY < deltaX / 2) {
+      onOpenChange(false);
+    }
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, [onOpenChange]);
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -436,7 +467,12 @@ export const PaymentReconciliation = ({
     XLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
   };
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}>
+      <SheetContent 
+        side="right" 
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <SheetHeader className="pb-2">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">
