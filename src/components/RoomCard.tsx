@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -230,16 +231,41 @@ export const RoomCard = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button 
-                      onClick={openWhatsAppChat}
-                      className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                      title={`Chat with ${tenant.name}`}
-                    >
-                      <Phone className="h-3 w-3" />
-                    </button>
-                    {(isPaid || isPartial) && <button onClick={handlePaidClick} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent' : 'Send receipt'}>
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </button>}
+                    {/* Call badge */}
+                    {tenant.phone && tenant.phone !== '••••••••••' && (
+                      <a 
+                        href={`tel:${tenant.phone}`}
+                        className="p-1 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        title={`Call ${tenant.name}`}
+                      >
+                        <Phone className="h-3 w-3" />
+                      </a>
+                    )}
+                    {/* WhatsApp dropdown menu */}
+                    {(isPaid || isPartial) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button 
+                            className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                            title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handlePaidClick} className="gap-2">
+                            <Receipt className="h-4 w-4" />
+                            Generate Receipt
+                          </DropdownMenuItem>
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                              <MessageSquare className="h-4 w-4" />
+                              Chat with Tenant
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
                       {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
                     </Badge>
