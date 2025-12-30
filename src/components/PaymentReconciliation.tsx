@@ -620,10 +620,19 @@ export const PaymentReconciliation = ({
                       <YAxis tick={{
                     fontSize: 10
                   }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={35} />
-                      <Tooltip formatter={(value: number, name: string) => {
-                        const color = name === 'upi' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
-                        return [<span style={{ color }}>{`₹${value.toLocaleString()}`}</span>, <span style={{ color }}>{name === 'upi' ? 'UPI' : 'Cash'}</span>];
-                      }} labelFormatter={day => `Day ${day}`} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151', fontWeight: 600 }} />
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (!active || !payload) return null;
+                        return (
+                          <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '8px 12px', borderRadius: '6px' }}>
+                            <p style={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}>Day {label}</p>
+                            {payload.map((entry: any) => (
+                              <p key={entry.name} style={{ color: entry.name === 'upi' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)', margin: '2px 0' }}>
+                                {entry.name === 'upi' ? 'UPI' : 'Cash'} : ₹{entry.value.toLocaleString()}
+                              </p>
+                            ))}
+                          </div>
+                        );
+                      }} />
                       <Area type="monotone" dataKey="upi" stackId="1" stroke="hsl(217, 91%, 60%)" fill="hsl(217, 91%, 60%)" fillOpacity={0.6} name="upi" />
                       <Area type="monotone" dataKey="cash" stackId="1" stroke="hsl(142, 71%, 45%)" fill="hsl(142, 71%, 45%)" fillOpacity={0.6} name="cash" />
                       <Legend formatter={value => value === 'upi' ? 'UPI' : 'Cash'} wrapperStyle={{
