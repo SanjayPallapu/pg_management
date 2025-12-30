@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CheckCircle, AlertTriangle, User, Download } from 'lucide-react';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -25,6 +26,7 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -67,6 +69,7 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
       amountPaid: number;
       entries: PaymentEntry[];
       entriesTotal: number;
+      earliestEntryDate: Date | null;
     }> = [];
 
     eligiblePayments.forEach(payment => {
@@ -89,6 +92,14 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
         }
       });
 
+      // Find earliest entry date for sorting
+      const earliestEntryDate = entries.length > 0 
+        ? entries.reduce((earliest, entry) => {
+            const entryDate = new Date(entry.date);
+            return !earliest || entryDate < earliest ? entryDate : earliest;
+          }, null as Date | null)
+        : null;
+
       if (payment.paymentStatus === 'Paid' || payment.paymentStatus === 'Partial') {
         paymentDetails.push({
           tenantId: payment.tenantId,
@@ -97,10 +108,19 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
           monthlyRent: tenant.monthlyRent,
           status: payment.paymentStatus,
           amountPaid: payment.amountPaid || 0,
-          entries,
+          entries: entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
           entriesTotal,
+          earliestEntryDate,
         });
       }
+    });
+
+    // Sort payment details by earliest entry date
+    paymentDetails.sort((a, b) => {
+      if (!a.earliestEntryDate && !b.earliestEntryDate) return 0;
+      if (!a.earliestEntryDate) return 1;
+      if (!b.earliestEntryDate) return -1;
+      return a.earliestEntryDate.getTime() - b.earliestEntryDate.getTime();
     });
 
     const paymentModeTotal = upiTotal + cashTotal;
@@ -120,6 +140,19 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
       partialCount: partialTenants.length,
     };
   }, [payments, selectedMonth, selectedYear, rooms, rentCollected, paidTenants, partialTenants]);
+
+  // Filtered payment details based on filter selection
+  const filteredPaymentDetails = useMemo(() => {
+    if (paymentFilter === 'all') return reconciliationData.paymentDetails;
+    
+    return reconciliationData.paymentDetails
+      .map(detail => ({
+        ...detail,
+        entries: detail.entries.filter(e => e.mode === paymentFilter),
+        entriesTotal: detail.entries.filter(e => e.mode === paymentFilter).reduce((sum, e) => sum + e.amount, 0),
+      }))
+      .filter(detail => detail.entries.length > 0);
+  }, [reconciliationData.paymentDetails, paymentFilter]);
 
   // Chart data
   const pieChartData = useMemo(() => [
@@ -326,9 +359,16 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
 
             {/* Individual Payment Details */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Payment Details ({reconciliationData.paymentDetails.length})</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
+                <ToggleGroup type="single" value={paymentFilter} onValueChange={(v) => v && setPaymentFilter(v)} size="sm">
+                  <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
+                  <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
+                  <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
               <div className="space-y-2">
-                {reconciliationData.paymentDetails.map((detail) => (
+                {filteredPaymentDetails.map((detail) => (
                   <div key={detail.tenantId} className="p-3 border rounded-lg space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
