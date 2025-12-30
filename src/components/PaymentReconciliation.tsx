@@ -4,16 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CheckCircle, AlertTriangle, User, Download } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
-import { format } from 'date-fns';
+import { format, getDaysInMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, AreaChart, Area } from 'recharts';
 
 interface PaymentReconciliationProps {
   open: boolean;
@@ -27,6 +28,7 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -164,6 +166,57 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
     { name: 'UPI', amount: reconciliationData.upiTotal },
     { name: 'Cash', amount: reconciliationData.cashTotal },
   ], [reconciliationData]);
+
+  // Daily timeline chart data
+  const dailyTimelineData = useMemo(() => {
+    const daysInMonth = getDaysInMonth(new Date(selectedYear, selectedMonth - 1));
+    const dailyData: Array<{ day: number; upi: number; cash: number; total: number }> = [];
+    
+    // Initialize all days
+    for (let day = 1; day <= daysInMonth; day++) {
+      dailyData.push({ day, upi: 0, cash: 0, total: 0 });
+    }
+    
+    // Aggregate payments by day
+    reconciliationData.paymentDetails.forEach(detail => {
+      detail.entries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        const day = entryDate.getDate();
+        const dayIndex = day - 1;
+        
+        if (dayIndex >= 0 && dayIndex < dailyData.length) {
+          if (entry.mode === 'upi') {
+            dailyData[dayIndex].upi += entry.amount;
+          } else if (entry.mode === 'cash') {
+            dailyData[dayIndex].cash += entry.amount;
+          }
+          dailyData[dayIndex].total += entry.amount;
+        }
+      });
+    });
+    
+    return dailyData;
+  }, [reconciliationData.paymentDetails, selectedMonth, selectedYear]);
+
+  const toggleTenantExpanded = (tenantId: string) => {
+    setExpandedTenants(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(tenantId)) {
+        newSet.delete(tenantId);
+      } else {
+        newSet.add(tenantId);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAll = () => {
+    setExpandedTenants(new Set(filteredPaymentDetails.map(d => d.tenantId)));
+  };
+
+  const collapseAll = () => {
+    setExpandedTenants(new Set());
+  };
 
   const handleExportExcel = () => {
     // Summary sheet data
@@ -340,6 +393,60 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
               </div>
             )}
 
+            {/* Daily Payment Timeline */}
+            {reconciliationData.paymentModeTotal > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Daily Payment Timeline</h3>
+                <div className="h-40 bg-muted/30 rounded-lg p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dailyTimelineData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="day" 
+                        tick={{ fontSize: 10 }} 
+                        tickFormatter={(day) => day}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10 }} 
+                        tickFormatter={(v) => v > 0 ? `₹${(v/1000).toFixed(0)}k` : '0'}
+                        width={35}
+                      />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `₹${value.toLocaleString()}`,
+                          name === 'upi' ? 'UPI' : name === 'cash' ? 'Cash' : 'Total'
+                        ]}
+                        labelFormatter={(day) => `Day ${day}`}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="upi" 
+                        stackId="1"
+                        stroke="hsl(217, 91%, 60%)" 
+                        fill="hsl(217, 91%, 60%)" 
+                        fillOpacity={0.6}
+                        name="upi"
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="cash" 
+                        stackId="1"
+                        stroke="hsl(142, 71%, 45%)" 
+                        fill="hsl(142, 71%, 45%)" 
+                        fillOpacity={0.6}
+                        name="cash"
+                      />
+                      <Legend 
+                        formatter={(value) => value === 'upi' ? 'UPI' : 'Cash'}
+                        wrapperStyle={{ fontSize: 10 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
             {/* Payment Mode Breakdown */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Payment Mode Breakdown</h3>
@@ -359,8 +466,18 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
 
             {/* Individual Payment Details */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
+                      Expand All
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={collapseAll}>
+                      Collapse All
+                    </Button>
+                  </div>
+                </div>
                 <ToggleGroup type="single" value={paymentFilter} onValueChange={(v) => v && setPaymentFilter(v)} size="sm">
                   <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
                   <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
@@ -369,53 +486,75 @@ export const PaymentReconciliation = ({ open, onOpenChange }: PaymentReconciliat
               </div>
               <div className="space-y-2">
                 {filteredPaymentDetails.map((detail) => (
-                  <div key={detail.tenantId} className="p-3 border rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium text-sm">{detail.tenantName}</span>
-                        <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
-                      </div>
-                      <Badge className={detail.status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-partial text-partial-foreground'}>
-                        {detail.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <span className="text-muted-foreground">Monthly Rent:</span>
-                        <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Amount Paid:</span>
-                        <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Entries Total:</span>
-                        <div className={`font-medium ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : ''}`}>
-                          ₹{detail.entriesTotal.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {detail.entries.length > 0 && (
-                      <div className="pt-2 border-t space-y-1">
-                        {detail.entries.map((entry, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">
-                              {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} on {format(new Date(entry.date), 'dd MMM')}
-                            </span>
+                  <Collapsible 
+                    key={detail.tenantId} 
+                    open={expandedTenants.has(detail.tenantId)}
+                    onOpenChange={() => toggleTenantExpanded(detail.tenantId)}
+                  >
+                    <div className="border rounded-lg overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className={`px-1.5 py-0.5 rounded ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-                                {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                              </span>
-                              <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                              {expandedTenants.has(detail.tenantId) ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-sm">{detail.tenantName}</span>
+                              <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">₹{detail.amountPaid.toLocaleString()}</span>
+                              <Badge className={detail.status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-partial text-partial-foreground'}>
+                                {detail.status}
+                              </Badge>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        <div className="px-3 pb-3 space-y-2 border-t bg-muted/20">
+                          <div className="grid grid-cols-3 gap-2 text-xs pt-2">
+                            <div>
+                              <span className="text-muted-foreground">Monthly Rent:</span>
+                              <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Amount Paid:</span>
+                              <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Entries Total:</span>
+                              <div className={`font-medium ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : ''}`}>
+                                ₹{detail.entriesTotal.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          {detail.entries.length > 0 && (
+                            <div className="pt-2 border-t space-y-1">
+                              {detail.entries.map((entry, idx) => (
+                                <div key={idx} className="flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">
+                                    {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} on {format(new Date(entry.date), 'dd MMM')}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-1.5 py-0.5 rounded ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                                      {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                    </span>
+                                    <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
                 ))}
 
                 {reconciliationData.paymentDetails.length === 0 && (
