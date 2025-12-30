@@ -68,27 +68,31 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   // Count only tenants active in the selected month (and still active today if current month)
   // Also calculate empty beds and potential additional revenue per room
   const roomStats = rooms.map(room => {
-    const activeInMonth = room.tenants.filter(t => {
+    const activeTenants = room.tenants.filter(t => {
       const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
       if (isCurrentMonth) {
         return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
       }
       return activeInSelectedMonth;
-    }).length;
+    });
+    const activeCount = activeTenants.length;
     
-    const emptyBeds = room.capacity - activeInMonth;
+    // Ensure we don't count more occupied than capacity
+    const occupied = Math.min(activeCount, room.capacity);
+    const emptyBeds = Math.max(0, room.capacity - occupied);
     const perBedRent = room.rentAmount / room.capacity;
     const potentialAdditionalRent = emptyBeds * perBedRent;
     
     return {
       roomNo: room.roomNo,
       capacity: room.capacity,
-      occupied: activeInMonth,
+      occupied,
       emptyBeds,
       perBedRent,
       potentialAdditionalRent,
-      isFull: activeInMonth === room.capacity,
-      isEmpty: activeInMonth === 0,
+      floor: room.floor,
+      isFull: occupied === room.capacity,
+      isEmpty: occupied === 0,
     };
   });
   
@@ -170,70 +174,64 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Potential Revenue Card - Clickable */}
-        <Card 
-          className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
-          onClick={() => setEmptyBedsSheetOpen(true)}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
-                </div>
-                <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">
-                  {totalEmptyBeds} empty beds can add ₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-paid">
-                  +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</p>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
-          </CardContent>
-        </Card>
-
         {/* Bottom Cards Row */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Payment Mode Card - Now first */}
+          {/* Payment Mode Card - First */}
           <PaymentModeCard />
 
-          {/* Day Guest Card - Clickable - Now second */}
+          {/* Potential Revenue Card - Clickable */}
           <Card 
-            className="cursor-pointer transition-colors hover:bg-accent/50"
-            onClick={() => setDayGuestSheetOpen(true)}
+            className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => setEmptyBedsSheetOpen(true)}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-paid">
-                    ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">Collected</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-pending">
-                    ₹{(dayGuestStats?.pending || 0).toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {totalEmptyBeds} empty beds = +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
+                  </p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
+              <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
             </CardContent>
           </Card>
 
           {/* Security Deposit Card */}
           <SecurityDepositCard rooms={rooms} />
         </div>
+
+        {/* Day Guest Card - Separate Row */}
+        <Card 
+          className="cursor-pointer transition-colors hover:bg-accent/50"
+          onClick={() => setDayGuestSheetOpen(true)}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-paid">
+                  ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">Collected</p>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-pending">
+                  ₹{(dayGuestStats?.pending || 0).toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">Pending</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
+          </CardContent>
+        </Card>
       </div>
 
       <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />
