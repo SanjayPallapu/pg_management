@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bed, Users, SlidersHorizontal } from 'lucide-react';
+import { Bed, Users, SlidersHorizontal, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RoomStat {
   roomNo: string;
@@ -31,8 +33,12 @@ export const EmptyBedsSheet = ({
   totalEmptyBeds,
   totalPotentialRevenue,
 }: EmptyBedsSheetProps) => {
+  const isMobile = useIsMobile();
   const [floorFilter, setFloorFilter] = useState<number | null>(null);
   const [sharingFilter, setSharingFilter] = useState<number | null>(null);
+
+  // Handle OS back gesture to close sheet
+  useBackGesture(open, () => onOpenChange(false));
 
   // Filter rooms with empty beds and sort by sharing type (highest first), then by room number
   const roomsWithEmptyBeds = useMemo(() => {
@@ -86,14 +92,23 @@ export const EmptyBedsSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[80vh]">
+      <SheetContent 
+        side={isMobile ? "right" : "bottom"} 
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[80vh]"}
+      >
         <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Bed className="h-5 w-5 text-primary" />
-            Empty Beds Breakdown
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
+              Empty Beds Breakdown
+            </SheetTitle>
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </SheetHeader>
 
+        <div className={`${isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto scrollbar-none' : ''}`}>
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">
@@ -190,7 +205,7 @@ export const EmptyBedsSheet = ({
         </div>
 
         {/* Room List */}
-        <ScrollArea className="h-[calc(80vh-220px)]">
+        <ScrollArea className={isMobile ? "h-[calc(100vh-380px)]" : "h-[calc(80vh-220px)]"}>
           <div className="space-y-2">
             {roomsWithEmptyBeds.map(room => (
               <div
@@ -237,6 +252,7 @@ export const EmptyBedsSheet = ({
             )}
           </div>
         </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );
