@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp, X } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp, X, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -40,6 +41,7 @@ export const PaymentReconciliation = ({
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Handle OS back gesture to close sheet
   useBackGesture(open, () => onOpenChange(false));
@@ -285,16 +287,26 @@ export const PaymentReconciliation = ({
     return multiMonthData.flatMap(data => data.paymentDetails);
   }, [dateRange, reconciliationData.paymentDetails, multiMonthData, selectedMonth, selectedYear]);
 
-  // Filtered payment details based on filter selection
+  // Filtered payment details based on filter selection and search query
   const filteredPaymentDetails = useMemo(() => {
-    const baseDetails = dateRange === 'current' ? reconciliationData.paymentDetails : allPaymentDetails;
+    let baseDetails = dateRange === 'current' ? reconciliationData.paymentDetails : allPaymentDetails;
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      baseDetails = baseDetails.filter(detail => 
+        detail.tenantName.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply payment mode filter
     if (paymentFilter === 'all') return baseDetails;
     return baseDetails.map(detail => ({
       ...detail,
       entries: detail.entries.filter(e => e.mode === paymentFilter),
       entriesTotal: detail.entries.filter(e => e.mode === paymentFilter).reduce((sum, e) => sum + e.amount, 0)
     })).filter(detail => detail.entries.length > 0);
-  }, [reconciliationData.paymentDetails, allPaymentDetails, paymentFilter, dateRange]);
+  }, [reconciliationData.paymentDetails, allPaymentDetails, paymentFilter, dateRange, searchQuery]);
 
   // Chart data
   const pieChartData = useMemo(() => [{
@@ -681,11 +693,23 @@ export const PaymentReconciliation = ({
                     </Button>
                   </div>
                 </div>
-                <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
-                  <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
-                  <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
-                  <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
-                </ToggleGroup>
+                <div className="flex items-center gap-2">
+                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
+                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
+                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
+                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
+                  </ToggleGroup>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search tenant"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-7 w-28 pl-6 text-xs"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 {filteredPaymentDetails.map((detail, detailIdx) => {
