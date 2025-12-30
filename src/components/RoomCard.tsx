@@ -241,31 +241,31 @@ export const RoomCard = ({
                         <Phone className="h-3 w-3" />
                       </a>
                     )}
-                    {/* WhatsApp dropdown menu */}
-                    {(isPaid || isPartial) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button 
-                            className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
-                            title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                    {/* WhatsApp dropdown menu - Always visible */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button 
+                          className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                          title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {(isPaid || isPartial) && (
                           <DropdownMenuItem onClick={handlePaidClick} className="gap-2">
                             <Receipt className="h-4 w-4" />
                             Generate Receipt
                           </DropdownMenuItem>
-                          {tenant.phone && tenant.phone !== '••••••••••' && (
-                            <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
-                              <MessageSquare className="h-4 w-4" />
-                              Chat with Tenant
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                        )}
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            Chat with Tenant
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
                       {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
                     </Badge>

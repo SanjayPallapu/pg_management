@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus } from 'lucide-react';
+import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp } from 'lucide-react';
 import { Room, DashboardStats } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -58,6 +58,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   });
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
+  
+  // Calculate potential revenue if PG is fully occupied
+  // Each bed pays (room rent / capacity) per month
+  const potentialRevenue = rooms.reduce((sum, room) => {
+    const perBedRent = room.rentAmount / room.capacity;
+    return sum + (perBedRent * room.capacity);
+  }, 0);
+  
+  // This simplifies to total of all room rents when fully occupied
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.rentAmount, 0);
   
   // Check if viewing current month
   const today = new Date();
@@ -167,9 +177,36 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
+        {/* Potential Revenue Card */}
+        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
+                </div>
+                <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  {totalCapacity} beds × ₹{Math.round(maxMonthlyRevenue / totalCapacity).toLocaleString()}/bed avg
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-semibold text-paid">
+                  +₹{(maxMonthlyRevenue - stats.rentCollected - stats.pendingRent).toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">More possible</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Bottom Cards Row */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Day Guest Card - Clickable */}
+          {/* Payment Mode Card - Now first */}
+          <PaymentModeCard />
+
+          {/* Day Guest Card - Clickable - Now second */}
           <Card 
             className="cursor-pointer transition-colors hover:bg-accent/50"
             onClick={() => setDayGuestSheetOpen(true)}
@@ -196,9 +233,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
             </CardContent>
           </Card>
-
-          {/* Payment Mode Card */}
-          <PaymentModeCard />
 
           {/* Security Deposit Card */}
           <SecurityDepositCard rooms={rooms} />
