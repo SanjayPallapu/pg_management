@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bed, Users, SlidersHorizontal } from 'lucide-react';
 
 interface RoomStat {
@@ -32,31 +33,43 @@ export const EmptyBedsSheet = ({
 }: EmptyBedsSheetProps) => {
   const [floorFilter, setFloorFilter] = useState<number | null>(null);
   const [sharingFilter, setSharingFilter] = useState<number | null>(null);
-  
+
   // Filter rooms with empty beds and sort by sharing type (highest first), then by room number
-  const roomsWithEmptyBeds = roomStats
-    .filter(r => r.emptyBeds > 0)
-    .filter(r => floorFilter === null || r.floor === floorFilter)
-    .filter(r => sharingFilter === null || r.capacity === sharingFilter)
-    .sort((a, b) => b.capacity - a.capacity || a.roomNo.localeCompare(b.roomNo));
+  const roomsWithEmptyBeds = useMemo(() => {
+    return roomStats
+      .filter(r => r.emptyBeds > 0)
+      .filter(r => floorFilter === null || r.floor === floorFilter)
+      .filter(r => sharingFilter === null || r.capacity === sharingFilter)
+      .sort((a, b) => b.capacity - a.capacity || a.roomNo.localeCompare(b.roomNo));
+  }, [roomStats, floorFilter, sharingFilter]);
 
   // Group by sharing type (from all rooms with empty beds, not filtered)
-  const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
-  const bySharing = allRoomsWithEmptyBeds.reduce((acc, room) => {
-    const key = room.capacity;
-    if (!acc[key]) {
-      acc[key] = { beds: 0, revenue: 0, perBedRent: room.perBedRent, capacity: room.capacity };
-    }
-    acc[key].beds += room.emptyBeds;
-    acc[key].revenue += room.potentialAdditionalRent;
-    return acc;
-  }, {} as Record<number, { beds: number; revenue: number; perBedRent: number; capacity: number }>);
+  const bySharing = useMemo(() => {
+    const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
+
+    return allRoomsWithEmptyBeds.reduce(
+      (acc, room) => {
+        const key = room.capacity;
+        if (!acc[key]) {
+          acc[key] = { beds: 0, revenue: 0 };
+        }
+        acc[key].beds += room.emptyBeds;
+        acc[key].revenue += room.potentialAdditionalRent;
+        return acc;
+      },
+      {} as Record<number, { beds: number; revenue: number }>
+    );
+  }, [roomStats]);
 
   // Get unique floors from rooms with empty beds (unfiltered)
-  const availableFloors = [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
-  
+  const availableFloors = useMemo(() => {
+    return [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
+  }, [roomStats]);
+
   // Get unique sharing types sorted descending
-  const availableSharingTypes = [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.capacity))].sort((a, b) => b - a);
+  const availableSharingTypes = useMemo(() => {
+    return [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.capacity))].sort((a, b) => b - a);
+  }, [roomStats]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -84,53 +97,86 @@ export const EmptyBedsSheet = ({
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">By Sharing Type</h3>
-            <div className="flex items-center gap-1">
-              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-              {availableSharingTypes.map(capacity => (
-                <Button
-                  key={capacity}
-                  variant={sharingFilter === capacity ? "secondary" : "ghost"}
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => setSharingFilter(sharingFilter === capacity ? null : capacity)}
-                >
-                  {capacity}S
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 px-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Filters</span>
                 </Button>
-              ))}
-              <span className="mx-1 text-muted-foreground">|</span>
-              <Button
-                variant={floorFilter === null ? "secondary" : "ghost"}
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={() => setFloorFilter(null)}
-              >
-                All
-              </Button>
-              {availableFloors.map(floor => (
-                <Button
-                  key={floor}
-                  variant={floorFilter === floor ? "secondary" : "ghost"}
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => setFloorFilter(floor)}
-                >
-                  F{floor}
-                </Button>
-              ))}
-            </div>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-3">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Sharing type</div>
+                    <div className="flex flex-wrap gap-1">
+                      <Button
+                        variant={sharingFilter === null ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setSharingFilter(null)}
+                      >
+                        All
+                      </Button>
+                      {availableSharingTypes.map(capacity => (
+                        <Button
+                          key={capacity}
+                          variant={sharingFilter === capacity ? 'secondary' : 'ghost'}
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setSharingFilter(sharingFilter === capacity ? null : capacity)}
+                        >
+                          {capacity}S
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Floor</div>
+                    <div className="flex flex-wrap gap-1">
+                      <Button
+                        variant={floorFilter === null ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setFloorFilter(null)}
+                      >
+                        All
+                      </Button>
+                      {availableFloors.map(floor => (
+                        <Button
+                          key={floor}
+                          variant={floorFilter === floor ? 'secondary' : 'ghost'}
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setFloorFilter(floor)}
+                        >
+                          F{floor}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
+
           <div className="flex flex-wrap gap-2">
             {Object.entries(bySharing)
               .sort(([a], [b]) => Number(b) - Number(a))
-              .map(([capacity, data]) => (
-              <Badge key={capacity} variant="outline" className="py-1.5 px-3">
-                <span className="font-medium">{capacity}-sharing</span>
-                <span className="mx-2 text-muted-foreground">•</span>
-                <span>{data.beds} beds</span>
-                <span className="mx-2 text-muted-foreground">•</span>
-                <span className="text-paid">₹{Math.round(data.perBedRent).toLocaleString()}/bed</span>
-              </Badge>
-            ))}
+              .map(([capacity, data]) => {
+                const perBed = data.beds > 0 ? data.revenue / data.beds : 0;
+
+                return (
+                  <Badge key={capacity} variant="outline" className="py-1.5 px-3">
+                    <span className="font-medium">{capacity}-sharing</span>
+                    <span className="mx-2 text-muted-foreground">•</span>
+                    <span>{data.beds} beds</span>
+                    <span className="mx-2 text-muted-foreground">•</span>
+                    <span className="text-paid">₹{Math.round(perBed).toLocaleString()}/bed</span>
+                  </Badge>
+                );
+              })}
           </div>
         </div>
 

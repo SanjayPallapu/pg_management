@@ -11,7 +11,8 @@ const getMonthStartEnd = (year: number, month: number) => {
   return { start, end };
 };
 
-// Active means: joined on/before month end AND (no end date OR left on/after month start)
+// Active means: joined on/before month end AND (no end date OR left AFTER month start)
+// Note: endDate is exclusive (tenant is NOT active on their endDate)
 export const isTenantActiveInMonth = (
   startDate: string,
   endDate: string | undefined,
@@ -25,7 +26,9 @@ export const isTenantActiveInMonth = (
 
   if (!endDate) return true;
   const leaveDate = parseDateOnly(endDate);
-  return leaveDate >= monthStart;
+
+  // If endDate is the 1st of the month, tenant already left before this month began
+  return leaveDate > monthStart;
 };
 
 // Active now means: joined on/before today AND (has NOT left OR endDate is in the future)
