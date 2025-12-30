@@ -193,8 +193,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   </div>
                   <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
                   <p className="text-xs text-muted-foreground">
-                    {totalEmptyBeds} empty beds = +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
+                    {totalEmptyBeds} empty beds can add ₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
                   </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold text-paid">+₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</p>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>

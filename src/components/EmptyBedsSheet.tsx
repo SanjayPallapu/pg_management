@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bed, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bed, Users, Filter } from 'lucide-react';
 
 interface RoomStat {
   roomNo: string;
@@ -10,6 +12,7 @@ interface RoomStat {
   emptyBeds: number;
   perBedRent: number;
   potentialAdditionalRent: number;
+  floor: number;
 }
 
 interface EmptyBedsSheetProps {
@@ -27,12 +30,15 @@ export const EmptyBedsSheet = ({
   totalEmptyBeds,
   totalPotentialRevenue,
 }: EmptyBedsSheetProps) => {
+  const [floorFilter, setFloorFilter] = useState<number | null>(null);
+  
   // Filter rooms with empty beds and sort by potential revenue (highest first)
   const roomsWithEmptyBeds = roomStats
     .filter(r => r.emptyBeds > 0)
+    .filter(r => floorFilter === null || r.floor === floorFilter)
     .sort((a, b) => b.potentialAdditionalRent - a.potentialAdditionalRent);
 
-  // Group by sharing type
+  // Group by sharing type (only filtered rooms)
   const bySharing = roomsWithEmptyBeds.reduce((acc, room) => {
     const key = `${room.capacity}-sharing`;
     if (!acc[key]) {
@@ -42,6 +48,9 @@ export const EmptyBedsSheet = ({
     acc[key].revenue += room.potentialAdditionalRent;
     return acc;
   }, {} as Record<string, { beds: number; revenue: number; perBedRent: number }>);
+
+  // Get unique floors from rooms with empty beds (unfiltered)
+  const availableFloors = [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -65,9 +74,33 @@ export const EmptyBedsSheet = ({
           </div>
         </div>
 
-        {/* By Sharing Type */}
+        {/* By Sharing Type with Floor Filter */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">By Sharing Type</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-muted-foreground">By Sharing Type</h3>
+            <div className="flex items-center gap-1">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <Button
+                variant={floorFilter === null ? "secondary" : "ghost"}
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setFloorFilter(null)}
+              >
+                All
+              </Button>
+              {availableFloors.map(floor => (
+                <Button
+                  key={floor}
+                  variant={floorFilter === floor ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setFloorFilter(floor)}
+                >
+                  F{floor}
+                </Button>
+              ))}
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(bySharing).map(([type, data]) => (
               <Badge key={type} variant="outline" className="py-1.5 px-3">
