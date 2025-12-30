@@ -43,6 +43,18 @@ export const EmptyBedsSheet = ({
       .sort((a, b) => b.capacity - a.capacity || a.roomNo.localeCompare(b.roomNo));
   }, [roomStats, floorFilter, sharingFilter]);
 
+  // Fixed per-bed rates by sharing type
+  const getPerBedRate = (capacity: number): number => {
+    switch (capacity) {
+      case 5: return 4000;
+      case 4: return 4500;
+      case 3: return 5000;
+      case 2: return 6000;
+      case 1: return 11500;
+      default: return 4000;
+    }
+  };
+
   // Group by sharing type (from all rooms with empty beds, not filtered)
   const bySharing = useMemo(() => {
     const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
@@ -50,14 +62,15 @@ export const EmptyBedsSheet = ({
     return allRoomsWithEmptyBeds.reduce(
       (acc, room) => {
         const key = room.capacity;
+        const perBedRate = getPerBedRate(key);
         if (!acc[key]) {
-          acc[key] = { beds: 0, revenue: 0 };
+          acc[key] = { beds: 0, revenue: 0, perBed: perBedRate };
         }
         acc[key].beds += room.emptyBeds;
-        acc[key].revenue += room.potentialAdditionalRent;
+        acc[key].revenue += room.emptyBeds * perBedRate;
         return acc;
       },
-      {} as Record<number, { beds: number; revenue: number }>
+      {} as Record<number, { beds: number; revenue: number; perBed: number }>
     );
   }, [roomStats]);
 
@@ -164,19 +177,15 @@ export const EmptyBedsSheet = ({
           <div className="flex flex-wrap gap-2">
             {Object.entries(bySharing)
               .sort(([a], [b]) => Number(b) - Number(a))
-              .map(([capacity, data]) => {
-                const perBed = data.beds > 0 ? data.revenue / data.beds : 0;
-
-                return (
-                  <Badge key={capacity} variant="outline" className="py-1.5 px-3">
-                    <span className="font-medium">{capacity}-sharing</span>
-                    <span className="mx-2 text-muted-foreground">•</span>
-                    <span>{data.beds} beds</span>
-                    <span className="mx-2 text-muted-foreground">•</span>
-                    <span className="text-paid">₹{Math.round(perBed).toLocaleString()}/bed</span>
-                  </Badge>
-                );
-              })}
+              .map(([capacity, data]) => (
+                <Badge key={capacity} variant="outline" className="py-1.5 px-3">
+                  <span className="font-medium">{capacity}-sharing</span>
+                  <span className="mx-2 text-muted-foreground">•</span>
+                  <span>{data.beds} beds</span>
+                  <span className="mx-2 text-muted-foreground">•</span>
+                  <span className="text-paid">₹{data.perBed.toLocaleString()}/bed</span>
+                </Badge>
+              ))}
           </div>
         </div>
 
