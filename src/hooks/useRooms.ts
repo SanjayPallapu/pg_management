@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Tenant } from '@/types';
+import { useAuth } from './useAuth';
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
+  const { isAdmin, isLoading: authLoading } = useAuth();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ['rooms'],
+    queryKey: ['rooms', isAdmin],
     queryFn: async () => {
       const { data: roomsData, error: roomsError } = await supabase
         .from('rooms')
@@ -34,17 +36,20 @@ export const useRooms = () => {
           .map(tenant => ({
             id: tenant.id,
             name: tenant.name,
-            phone: tenant.phone,
+            // Mask phone number for staff users
+            phone: isAdmin ? tenant.phone : '••••••••••',
             startDate: tenant.start_date,
             endDate: tenant.end_date || undefined,
             monthlyRent: tenant.monthly_rent,
             paymentStatus: tenant.payment_status as 'Paid' | 'Pending',
             paymentDate: tenant.payment_date || undefined,
-            securityDepositAmount: tenant.security_deposit_amount,
-            securityDepositDate: tenant.security_deposit_date,
+            // Hide security deposit info from staff
+            securityDepositAmount: isAdmin ? tenant.security_deposit_amount : null,
+            securityDepositDate: isAdmin ? tenant.security_deposit_date : null,
           })),
       })) as Room[];
     },
+    enabled: !authLoading,
   });
 
   const updateRoom = useMutation({
@@ -73,8 +78,8 @@ export const useRooms = () => {
     },
     onMutate: async (newRoom) => {
       await queryClient.cancelQueries({ queryKey: ['rooms'] });
-      const previousRooms = queryClient.getQueryData(['rooms']);
-      queryClient.setQueryData(['rooms'], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(['rooms', isAdmin]);
+      queryClient.setQueryData(['rooms', isAdmin], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map(room => room.roomNo === newRoom.roomNo ? newRoom : room);
       });
@@ -82,7 +87,7 @@ export const useRooms = () => {
     },
     onError: (_err, _newRoom, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(['rooms'], context.previousRooms);
+        queryClient.setQueryData(['rooms', isAdmin], context.previousRooms);
       }
     },
     onSuccess: () => {
@@ -164,8 +169,8 @@ export const useRooms = () => {
     },
     onMutate: async ({ tenantId, updates }) => {
       await queryClient.cancelQueries({ queryKey: ['rooms'] });
-      const previousRooms = queryClient.getQueryData(['rooms']);
-      queryClient.setQueryData(['rooms'], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(['rooms', isAdmin]);
+      queryClient.setQueryData(['rooms', isAdmin], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map(room => ({
           ...room,
@@ -178,7 +183,7 @@ export const useRooms = () => {
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(['rooms'], context.previousRooms);
+        queryClient.setQueryData(['rooms', isAdmin], context.previousRooms);
       }
     },
     onSuccess: () => {
@@ -216,7 +221,7 @@ export const useRooms = () => {
 
   return {
     rooms,
-    isLoading,
+    isLoading: isLoading || authLoading,
     updateRoom,
     addTenant,
     updateTenant,

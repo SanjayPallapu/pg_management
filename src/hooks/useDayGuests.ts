@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
+import { useAuth } from './useAuth';
 
 export interface PaymentEntry {
   amount: number;
@@ -44,9 +45,10 @@ export interface CreateDayGuestInput {
 
 export const useDayGuests = (roomId?: string) => {
   const queryClient = useQueryClient();
+  const { isAdmin, isLoading: authLoading } = useAuth();
 
   const { data: dayGuests = [], isLoading } = useQuery({
-    queryKey: ['day-guests', roomId],
+    queryKey: ['day-guests', roomId, isAdmin],
     queryFn: async () => {
       let query = supabase
         .from('day_guests')
@@ -64,13 +66,17 @@ export const useDayGuests = (roomId?: string) => {
         throw error;
       }
 
-      // Map the data to our DayGuest type
+      // Map the data to our DayGuest type with masked values for staff
       return (data || []).map(item => ({
         ...item,
+        // Mask sensitive data for staff users
+        mobile_number: isAdmin ? item.mobile_number : (item.mobile_number ? '••••••••••' : null),
+        id_proof: isAdmin ? item.id_proof : (item.id_proof ? '••••••••' : null),
         payment_status: item.payment_status as 'Paid' | 'Pending',
         payment_entries: (item.payment_entries as unknown) as PaymentEntry[] | null,
       })) as DayGuest[];
     },
+    enabled: !authLoading,
   });
 
   const addDayGuest = useMutation({
@@ -154,7 +160,7 @@ export const useDayGuests = (roomId?: string) => {
 
   return {
     dayGuests,
-    isLoading,
+    isLoading: isLoading || authLoading,
     addDayGuest,
     updateDayGuest,
     deleteDayGuest,
