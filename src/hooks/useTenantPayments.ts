@@ -28,6 +28,7 @@ export const useTenantPayments = () => {
         paymentEntries: ((payment as any).payment_entries || []) as PaymentEntry[],
         whatsappSent: (payment as any).whatsapp_sent || false,
         whatsappSentAt: (payment as any).whatsapp_sent_at || undefined,
+        notes: (payment as any).notes || undefined,
       })) as TenantPayment[];
     },
   });
@@ -45,6 +46,7 @@ export const useTenantPayments = () => {
           amount: payment.amount,
           amount_paid: payment.amountPaid,
           payment_entries: payment.paymentEntries,
+          notes: payment.notes || null,
         } as any, {
           onConflict: 'tenant_id,month,year',
         });

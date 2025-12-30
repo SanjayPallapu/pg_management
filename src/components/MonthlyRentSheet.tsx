@@ -41,6 +41,7 @@ export const MonthlyRentSheet = ({
   const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [overpaymentReason, setOverpaymentReason] = useState<string>('');
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
@@ -214,6 +215,18 @@ export const MonthlyRentSheet = ({
     if (!paymentAmountTenant) return;
     const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
     if (!tenant) return;
+    
+    // Check for overpayment without reason
+    const isOverpayment = paymentAmount > tenant.monthlyRent;
+    if (isOverpayment && !overpaymentReason.trim()) {
+      toast({
+        title: 'Reason required',
+        description: 'Please provide a reason for the extra payment amount',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     const formattedDate = format(paymentDate, 'yyyy-MM-dd');
     const existingPaid = tenant.payment.amountPaid || 0;
     const totalPaid = existingPaid + paymentAmount;
@@ -229,6 +242,12 @@ export const MonthlyRentSheet = ({
     };
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
+    
+    // Build notes for overpayment
+    const notes = isOverpayment 
+      ? `Extra ₹${(paymentAmount - tenant.monthlyRent).toLocaleString()}: ${overpaymentReason.trim()}`
+      : undefined;
+    
     upsertPayment.mutate({
       tenantId: tenant.id,
       month: selectedMonth,
@@ -236,12 +255,13 @@ export const MonthlyRentSheet = ({
       paymentStatus: status,
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
-      amountPaid: Math.min(totalPaid, tenant.monthlyRent),
-      paymentEntries: updatedEntries
+      amountPaid: paymentAmount, // Store actual paid amount for overpayment tracking
+      paymentEntries: updatedEntries,
+      notes
     });
     toast({
       title: isFullPayment ? 'Payment marked as Paid' : 'Partial payment recorded',
-      description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
+      description: `₹${paymentAmount.toLocaleString()} paid${isOverpayment ? ` (includes extra ₹${(paymentAmount - tenant.monthlyRent).toLocaleString()})` : !isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
     });
 
     // Prepare receipt data for WhatsApp
@@ -265,6 +285,7 @@ export const MonthlyRentSheet = ({
     setWhatsappDialogOpen(true);
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
+    setOverpaymentReason('');
   };
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
@@ -533,6 +554,12 @@ export const MonthlyRentSheet = ({
                           </div>) : tenant.payment.paymentDate && <div className="text-xs text-muted-foreground">
                           Paid on: {format(new Date(tenant.payment.paymentDate), 'dd MMM yyyy')}
                         </div>}
+                      {/* Display overpayment notes */}
+                      {(tenant.payment as any).notes && (
+                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                          📝 {(tenant.payment as any).notes}
+                        </div>
+                      )}
                     </div>
                     {isPartial ? <Button onClick={() => handlePayRemaining(tenant.id)} size="sm" className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90">
                         Pay Remaining
@@ -558,13 +585,38 @@ export const MonthlyRentSheet = ({
           <div className="py-4 space-y-4">
             <div>
               <Label>Amount (₹)</Label>
-              <Input type="number" value={paymentAmount} onChange={e => setPaymentAmount(parseInt(e.target.value) || 0)} className="mt-2" />
+              <Input type="number" value={paymentAmount} onChange={e => {
+                setPaymentAmount(parseInt(e.target.value) || 0);
+                // Reset overpayment reason when amount changes
+                setOverpaymentReason('');
+              }} className="mt-2" />
               {paymentAmountTenant && (() => {
               const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
-              if (tenant && paymentAmount < tenant.monthlyRent) {
-                return <p className="text-sm text-partial mt-2">
-                      This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - paymentAmount).toLocaleString()}
-                    </p>;
+              if (tenant) {
+                if (paymentAmount < tenant.monthlyRent) {
+                  return <p className="text-sm text-partial mt-2">
+                        This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - paymentAmount).toLocaleString()}
+                      </p>;
+                } else if (paymentAmount > tenant.monthlyRent) {
+                  const extra = paymentAmount - tenant.monthlyRent;
+                  return (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                        Extra payment: ₹{extra.toLocaleString()} above rent of ₹{tenant.monthlyRent.toLocaleString()}
+                      </p>
+                      <div>
+                        <Label className="text-sm">Reason for extra amount *</Label>
+                        <Input 
+                          type="text" 
+                          value={overpaymentReason} 
+                          onChange={e => setOverpaymentReason(e.target.value)} 
+                          placeholder="e.g., Advance, Electricity, Next month"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  );
+                }
               }
               return null;
             })()}
