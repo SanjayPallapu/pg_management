@@ -579,7 +579,10 @@ export const PaymentReconciliation = ({
                   }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                         {pieChartData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={(value: number, name: string, props: any) => [`₹${value.toLocaleString()} (${props.payload.count} txns)`, name]} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', color: '#1f2937' }} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#1f2937' }} />
+                      <Tooltip formatter={(value: number, name: string, props: any) => {
+                        const color = name === 'UPI' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
+                        return [<span style={{ color }}>{`₹${value.toLocaleString()} (${props.payload.count} txns)`}</span>, <span style={{ color }}>{name}</span>];
+                      }} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151' }} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -592,7 +595,10 @@ export const PaymentReconciliation = ({
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                       <YAxis type="category" dataKey="name" width={40} />
-                      <Tooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Amount']} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', color: '#1f2937' }} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#1f2937' }} />
+                      <Tooltip formatter={(value: number, name: string, props: any) => {
+                        const color = props.payload.name === 'UPI' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
+                        return [<span style={{ color }}>{`₹${value.toLocaleString()}`}</span>, <span style={{ color }}>{props.payload.name}</span>];
+                      }} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151' }} />
                       <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
                         {barChartData.map((_, index) => <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />)}
                       </Bar>
@@ -614,7 +620,10 @@ export const PaymentReconciliation = ({
                       <YAxis tick={{
                     fontSize: 10
                   }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={35} />
-                      <Tooltip formatter={(value: number, name: string) => [`₹${value.toLocaleString()}`, name === 'upi' ? 'UPI' : name === 'cash' ? 'Cash' : 'Total']} labelFormatter={day => `Day ${day}`} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', color: '#1f2937' }} labelStyle={{ color: '#374151', fontWeight: 600 }} itemStyle={{ color: '#1f2937' }} />
+                      <Tooltip formatter={(value: number, name: string) => {
+                        const color = name === 'upi' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
+                        return [<span style={{ color }}>{`₹${value.toLocaleString()}`}</span>, <span style={{ color }}>{name === 'upi' ? 'UPI' : 'Cash'}</span>];
+                      }} labelFormatter={day => `Day ${day}`} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151', fontWeight: 600 }} />
                       <Area type="monotone" dataKey="upi" stackId="1" stroke="hsl(217, 91%, 60%)" fill="hsl(217, 91%, 60%)" fillOpacity={0.6} name="upi" />
                       <Area type="monotone" dataKey="cash" stackId="1" stroke="hsl(142, 71%, 45%)" fill="hsl(142, 71%, 45%)" fillOpacity={0.6} name="cash" />
                       <Legend formatter={value => value === 'upi' ? 'UPI' : 'Cash'} wrapperStyle={{
