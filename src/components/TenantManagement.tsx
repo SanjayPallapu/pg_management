@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Handle OS back gesture to close dialog with animation
+  const { gestureAnimationClass } = useBackGesture(isOpen, onClose);
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
   const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
   const [partialAmount, setPartialAmount] = useState<number>(0);
@@ -470,7 +474,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${gestureAnimationClass}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Room {room.roomNo}
