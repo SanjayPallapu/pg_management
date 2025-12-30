@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { format } from 'date-fns';
@@ -460,10 +461,34 @@ export const MonthlyRentSheet = ({
                           <Phone className="h-4 w-4" />
                         </a>
                       )}
-                      {/* WhatsApp sent indicator */}
-                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && <button onClick={handleResendReceipt} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click to resend' : 'Send receipt via WhatsApp'}>
-                          <MessageCircle className="h-4 w-4" />
-                        </button>}
+                      {/* WhatsApp dropdown menu */}
+                      {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button 
+                              className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                              title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem onClick={handleResendReceipt} className="gap-2">
+                              <Receipt className="h-4 w-4" />
+                              Generate Receipt
+                            </DropdownMenuItem>
+                            {tenant.phone && tenant.phone !== '••••••••••' && (
+                              <DropdownMenuItem 
+                                onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')}
+                                className="gap-2"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                Chat with Tenant
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                     {isPartial ? <Badge className="bg-overdue text-overdue-foreground">
                         ₹{remaining.toLocaleString()}
