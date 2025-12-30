@@ -82,7 +82,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     
     return {
       roomNo: room.roomNo,
-      floor: room.floor,
       capacity: room.capacity,
       occupied: activeInMonth,
       emptyBeds,
