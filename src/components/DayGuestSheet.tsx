@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,9 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const { rooms } = useRooms();
   const { role } = useAuth();
   const isAdmin = role === 'admin';
+
+  // Handle OS back gesture to close sheet
+  useBackGesture(open, () => onOpenChange(false));
 
   // Edit mode state - tracks which room is in edit mode
   const [editModeRoom, setEditModeRoom] = useState<string | null>(null);

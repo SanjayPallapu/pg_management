@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,9 @@ interface TenantWithRoom extends Tenant {
 
 export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
+  
+  // Handle OS back gesture to close sheet
+  useBackGesture(sheetOpen, () => setSheetOpen(false));
   const [depositDialog, setDepositDialog] = useState<TenantWithRoom | null>(null);
   const [removeDialog, setRemoveDialog] = useState<TenantWithRoom | null>(null);
   const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
