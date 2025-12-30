@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bed, Users } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface RoomStat {
   roomNo: string;
+  floor: number;
   capacity: number;
   occupied: number;
   emptyBeds: number;
@@ -27,12 +36,22 @@ export const EmptyBedsSheet = ({
   totalEmptyBeds,
   totalPotentialRevenue,
 }: EmptyBedsSheetProps) => {
-  // Filter rooms with empty beds and sort by potential revenue (highest first)
+  const [selectedFloor, setSelectedFloor] = useState<string>('all');
+
+  // Get unique floors
+  const floors = [...new Set(roomStats.map(r => r.floor))].sort((a, b) => a - b);
+
+  // Filter rooms with empty beds
   const roomsWithEmptyBeds = roomStats
     .filter(r => r.emptyBeds > 0)
+    .filter(r => selectedFloor === 'all' || r.floor === parseInt(selectedFloor))
     .sort((a, b) => b.potentialAdditionalRent - a.potentialAdditionalRent);
 
-  // Group by sharing type
+  // Calculate filtered totals
+  const filteredEmptyBeds = roomsWithEmptyBeds.reduce((sum, r) => sum + r.emptyBeds, 0);
+  const filteredPotentialRevenue = roomsWithEmptyBeds.reduce((sum, r) => sum + r.potentialAdditionalRent, 0);
+
+  // Group by sharing type (for filtered rooms)
   const bySharing = roomsWithEmptyBeds.reduce((acc, room) => {
     const key = `${room.capacity}-sharing`;
     if (!acc[key]) {
@@ -47,42 +66,65 @@ export const EmptyBedsSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Bed className="h-5 w-5 text-primary" />
-            Empty Beds Breakdown
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
+              Empty Beds Breakdown
+            </SheetTitle>
+            <Select value={selectedFloor} onValueChange={setSelectedFloor}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Floor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Floors</SelectItem>
+                {floors.map(floor => (
+                  <SelectItem key={floor} value={floor.toString()}>
+                    Floor {floor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </SheetHeader>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">
-            <div className="text-2xl font-bold text-primary">{totalEmptyBeds}</div>
-            <p className="text-xs text-muted-foreground">Total Empty Beds</p>
+            <div className="text-2xl font-bold text-primary">
+              {selectedFloor === 'all' ? totalEmptyBeds : filteredEmptyBeds}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {selectedFloor === 'all' ? 'Total Empty Beds' : `Floor ${selectedFloor} Empty Beds`}
+            </p>
           </div>
           <div className="bg-paid/10 rounded-lg p-3">
-            <div className="text-2xl font-bold text-paid">₹{Math.round(totalPotentialRevenue).toLocaleString()}</div>
+            <div className="text-2xl font-bold text-paid">
+              ₹{Math.round(selectedFloor === 'all' ? totalPotentialRevenue : filteredPotentialRevenue).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">Potential Revenue</p>
           </div>
         </div>
 
         {/* By Sharing Type */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">By Sharing Type</h3>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(bySharing).map(([type, data]) => (
-              <Badge key={type} variant="outline" className="py-1.5 px-3">
-                <span className="font-medium">{type}</span>
-                <span className="mx-2 text-muted-foreground">•</span>
-                <span>{data.beds} beds</span>
-                <span className="mx-2 text-muted-foreground">•</span>
-                <span className="text-paid">₹{Math.round(data.perBedRent).toLocaleString()}/bed</span>
-              </Badge>
-            ))}
+        {Object.keys(bySharing).length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">By Sharing Type</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(bySharing).map(([type, data]) => (
+                <Badge key={type} variant="outline" className="py-1.5 px-3">
+                  <span className="font-medium">{type}</span>
+                  <span className="mx-2 text-muted-foreground">•</span>
+                  <span>{data.beds} beds</span>
+                  <span className="mx-2 text-muted-foreground">•</span>
+                  <span className="text-paid">₹{Math.round(data.perBedRent).toLocaleString()}/bed</span>
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Room List */}
-        <ScrollArea className="h-[calc(80vh-220px)]">
+        <ScrollArea className="h-[calc(80vh-240px)]">
           <div className="space-y-2">
             {roomsWithEmptyBeds.map(room => (
               <div
@@ -98,6 +140,9 @@ export const EmptyBedsSheet = ({
                       <span className="font-medium">Room {room.roomNo}</span>
                       <Badge variant="secondary" className="text-xs">
                         {room.capacity}-sharing
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        F{room.floor}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -124,7 +169,7 @@ export const EmptyBedsSheet = ({
             {roomsWithEmptyBeds.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Bed className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                <p>All beds are occupied!</p>
+                <p>{selectedFloor === 'all' ? 'All beds are occupied!' : `No empty beds on Floor ${selectedFloor}`}</p>
               </div>
             )}
           </div>
