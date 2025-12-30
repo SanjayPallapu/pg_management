@@ -59,54 +59,45 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
   
-  // Calculate potential revenue if PG is fully occupied
-  // Each bed pays (room rent / capacity) per month
-  const potentialRevenue = rooms.reduce((sum, room) => {
-    const perBedRent = room.rentAmount / room.capacity;
-    return sum + (perBedRent * room.capacity);
-  }, 0);
-  
-  // This simplifies to total of all room rents when fully occupied
-  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.rentAmount, 0);
-  
   // Check if viewing current month
   const today = new Date();
   const isCurrentMonth = selectedMonth === (today.getMonth() + 1) && selectedYear === today.getFullYear();
   
   // Count only tenants active in the selected month (and still active today if current month)
-  const totalOccupied = rooms.reduce((sum, room) => {
+  // Also calculate empty beds and potential additional revenue per room
+  const roomStats = rooms.map(room => {
     const activeInMonth = room.tenants.filter(t => {
       const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
-      // For current month, also check if tenant is still active today
       if (isCurrentMonth) {
         return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
       }
       return activeInSelectedMonth;
     }).length;
-    return sum + activeInMonth;
-  }, 0);
+    
+    const emptyBeds = room.capacity - activeInMonth;
+    const perBedRent = room.rentAmount / room.capacity;
+    const potentialAdditionalRent = emptyBeds * perBedRent;
+    
+    return {
+      roomNo: room.roomNo,
+      capacity: room.capacity,
+      occupied: activeInMonth,
+      emptyBeds,
+      perBedRent,
+      potentialAdditionalRent,
+      isFull: activeInMonth === room.capacity,
+      isEmpty: activeInMonth === 0,
+    };
+  });
   
-  const fullyOccupiedRooms = rooms.filter(room => {
-    const activeInMonth = room.tenants.filter(t => {
-      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
-      if (isCurrentMonth) {
-        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
-      }
-      return activeInSelectedMonth;
-    }).length;
-    return activeInMonth === room.capacity;
-  }).length;
+  const totalOccupied = roomStats.reduce((sum, r) => sum + r.occupied, 0);
+  const totalEmptyBeds = roomStats.reduce((sum, r) => sum + r.emptyBeds, 0);
+  const totalPotentialAdditionalRevenue = roomStats.reduce((sum, r) => sum + r.potentialAdditionalRent, 0);
+  const fullyOccupiedRooms = roomStats.filter(r => r.isFull).length;
+  const vacantRooms = roomStats.filter(r => r.isEmpty).length;
   
-  const vacantRooms = rooms.filter(room => {
-    const activeInMonth = room.tenants.filter(t => {
-      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
-      if (isCurrentMonth) {
-        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
-      }
-      return activeInSelectedMonth;
-    }).length;
-    return activeInMonth === 0;
-  }).length;
+  // Max monthly revenue if all beds filled
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.rentAmount, 0);
 
   const stats: DashboardStats = {
     totalRooms: rooms.length,
@@ -188,14 +179,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 </div>
                 <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground">
-                  {totalCapacity} beds × ₹{Math.round(maxMonthlyRevenue / totalCapacity).toLocaleString()}/bed avg
+                  {totalEmptyBeds} empty beds can add ₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-paid">
-                  +₹{(maxMonthlyRevenue - stats.rentCollected - stats.pendingRent).toLocaleString()}
+                  +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
                 </div>
-                <p className="text-xs text-muted-foreground">More possible</p>
+                <p className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</p>
               </div>
             </div>
           </CardContent>
