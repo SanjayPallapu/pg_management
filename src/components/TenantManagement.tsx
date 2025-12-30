@@ -101,6 +101,12 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [confirmAction, setConfirmAction] = useState<{ type: 'paid' | 'unpaid' | 'delete', tenantId: string } | null>(null);
+
+  // Handle OS back gesture to close sub-dialogs
+  useBackGesture(!!confirmAction, () => setConfirmAction(null));
+  useBackGesture(!!partialPaymentTenant, () => setPartialPaymentTenant(null));
+  useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
+  useBackGesture(!!markLeftTenantId, () => setMarkLeftTenantId(null));
   
   const getPricePerPerson = (capacity: number) => {
     const priceMap: { [key: number]: number } = {

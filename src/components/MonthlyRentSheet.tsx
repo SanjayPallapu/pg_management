@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,12 @@ export const MonthlyRentSheet = ({
     remainingBalance?: number;
     tenantId?: string;
   } | null>(null);
+
+  // Handle OS back gesture to close dialogs
+  useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
+  useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
+  useBackGesture(confirmAction?.type === 'unpaid', () => setConfirmAction(null));
+
   const {
     payments,
     upsertPayment,
