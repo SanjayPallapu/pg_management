@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,39 +39,6 @@ export const PaymentReconciliation = ({
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
-  
-  // Swipe gesture handling - swipe right from anywhere to close
-  const touchStartX = useRef<number>(0);
-  const touchStartY = useRef<number>(0);
-  const SWIPE_THRESHOLD = 100;
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Prevent default only if swiping horizontally to avoid scroll interference
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX.current;
-    const deltaY = Math.abs(touch.clientY - touchStartY.current);
-    
-    if (deltaX > 30 && deltaY < deltaX) {
-      // Horizontal swipe detected, could add visual feedback here
-    }
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartX.current;
-    const deltaY = Math.abs(touch.clientY - touchStartY.current);
-    
-    // Swipe right detected (horizontal movement > threshold, mostly horizontal)
-    if (deltaX > SWIPE_THRESHOLD && deltaY < deltaX * 0.7) {
-      onOpenChange(false);
-    }
-  }, [onOpenChange]);
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -471,10 +438,7 @@ export const PaymentReconciliation = ({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden touch-pan-y" : "w-full sm:max-w-lg"}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
       >
         <SheetHeader className="pb-2">
           <div className="flex items-center justify-between">
