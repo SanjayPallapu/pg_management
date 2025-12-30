@@ -67,6 +67,18 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   
   // Count only tenants active in the selected month (and still active today if current month)
   // Also calculate empty beds and potential additional revenue per room
+  // Fixed per-bed rates by sharing type
+  const getPerBedRate = (capacity: number): number => {
+    switch (capacity) {
+      case 5: return 4000;
+      case 4: return 4500;
+      case 3: return 5000;
+      case 2: return 6000;
+      case 1: return 11500;
+      default: return 4000;
+    }
+  };
+
   const roomStats = rooms.map(room => {
     const activeTenants = room.tenants.filter(t => {
       const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
@@ -80,7 +92,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     // Ensure we don't count more occupied than capacity
     const occupied = Math.min(activeCount, room.capacity);
     const emptyBeds = Math.max(0, room.capacity - occupied);
-    const perBedRent = room.rentAmount / room.capacity;
+    const perBedRent = getPerBedRate(room.capacity);
     const potentialAdditionalRent = emptyBeds * perBedRent;
     
     return {
