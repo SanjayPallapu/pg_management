@@ -5,56 +5,177 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
-import { format, getDaysInMonth } from 'date-fns';
+import { format, getDaysInMonth, subMonths } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, AreaChart, Area } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 interface PaymentReconciliationProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
 const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)'];
+const TREND_COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)', 'hsl(262, 83%, 58%)', 'hsl(25, 95%, 53%)'];
+
+type DateRangeOption = 'current' | 'last3' | 'last6' | 'custom';
+
 export const PaymentReconciliation = ({
   open,
   onOpenChange
 }: PaymentReconciliationProps) => {
-  const {
-    selectedMonth,
-    selectedYear
-  } = useMonthContext();
-  const {
-    payments
-  } = useTenantPayments();
-  const {
-    rooms
-  } = useRooms();
+  const { selectedMonth, selectedYear } = useMonthContext();
+  const { payments } = useTenantPayments();
+  const { rooms } = useRooms();
+  const isMobile = useIsMobile();
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
-  const {
-    rentCollected,
-    paidTenants,
-    partialTenants
-  } = useRentCalculations({
+  const [dateRange, setDateRange] = useState<DateRangeOption>('current');
+
+  const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
     selectedYear,
     rooms,
     payments
   });
+
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  // Get months to display based on date range
+  const monthsToShow = useMemo(() => {
+    const currentDate = new Date(selectedYear, selectedMonth - 1);
+    const result: Array<{ month: number; year: number }> = [];
+    
+    const numMonths = dateRange === 'current' ? 1 : dateRange === 'last3' ? 3 : 6;
+    
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const date = subMonths(currentDate, i);
+      result.push({ month: date.getMonth() + 1, year: date.getFullYear() });
+    }
+    
+    return result;
+  }, [selectedMonth, selectedYear, dateRange]);
+
+  // Calculate data for a specific month
+  const getMonthData = (targetMonth: number, targetYear: number) => {
+    const eligibleTenantIds = new Set(rooms.flatMap(room => 
+      room.tenants.filter(tenant => 
+        isTenantActiveInMonth(tenant.startDate, tenant.endDate, targetYear, targetMonth)
+      ).map(tenant => tenant.id)
+    ));
+
+    const eligiblePayments = payments.filter(p => 
+      p.month === targetMonth && p.year === targetYear && eligibleTenantIds.has(p.tenantId)
+    );
+
+    let upiTotal = 0;
+    let cashTotal = 0;
+    let upiCount = 0;
+    let cashCount = 0;
+    let totalCollected = 0;
+    
+    const paymentDetails: Array<{
+      tenantId: string;
+      tenantName: string;
+      roomNo: string;
+      monthlyRent: number;
+      status: string;
+      amountPaid: number;
+      entries: PaymentEntry[];
+      entriesTotal: number;
+      earliestEntryDate: Date | null;
+      month: number;
+      year: number;
+    }> = [];
+
+    eligiblePayments.forEach(payment => {
+      const room = rooms.find(r => r.tenants.some(t => t.id === payment.tenantId));
+      const tenant = room?.tenants.find(t => t.id === payment.tenantId);
+      if (!tenant || !room) return;
+      
+      let entriesTotal = 0;
+      const entries = payment.paymentEntries || [];
+      
+      entries.forEach((entry: PaymentEntry) => {
+        entriesTotal += entry.amount;
+        if (entry.mode === 'upi') {
+          upiTotal += entry.amount;
+          upiCount++;
+        } else if (entry.mode === 'cash') {
+          cashTotal += entry.amount;
+          cashCount++;
+        }
+      });
+
+      if (payment.paymentStatus === 'Paid') {
+        totalCollected += tenant.monthlyRent;
+      } else if (payment.paymentStatus === 'Partial') {
+        totalCollected += payment.amountPaid || 0;
+      }
+
+      const earliestEntryDate = entries.length > 0 
+        ? entries.reduce((earliest, entry) => {
+            const entryDate = new Date(entry.date);
+            return !earliest || entryDate < earliest ? entryDate : earliest;
+          }, null as Date | null) 
+        : null;
+
+      if (payment.paymentStatus === 'Paid' || payment.paymentStatus === 'Partial') {
+        paymentDetails.push({
+          tenantId: payment.tenantId,
+          tenantName: tenant.name,
+          roomNo: room.roomNo,
+          monthlyRent: tenant.monthlyRent,
+          status: payment.paymentStatus,
+          amountPaid: payment.amountPaid || 0,
+          entries: entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+          entriesTotal,
+          earliestEntryDate,
+          month: targetMonth,
+          year: targetYear
+        });
+      }
+    });
+
+    paymentDetails.sort((a, b) => {
+      if (!a.earliestEntryDate && !b.earliestEntryDate) return 0;
+      if (!a.earliestEntryDate) return 1;
+      if (!b.earliestEntryDate) return -1;
+      return a.earliestEntryDate.getTime() - b.earliestEntryDate.getTime();
+    });
+
+    return {
+      month: targetMonth,
+      year: targetYear,
+      rentCollected: totalCollected,
+      upiTotal,
+      cashTotal,
+      upiCount,
+      cashCount,
+      paymentModeTotal: upiTotal + cashTotal,
+      paymentDetails
+    };
+  };
+
   const reconciliationData = useMemo(() => {
-    // Get eligible tenant IDs
-    const eligibleTenantIds = new Set(rooms.flatMap(room => room.tenants.filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)).map(tenant => tenant.id)));
+    const eligibleTenantIds = new Set(rooms.flatMap(room => 
+      room.tenants.filter(tenant => 
+        isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
+      ).map(tenant => tenant.id)
+    ));
 
-    // Get payments from eligible tenants
-    const eligiblePayments = payments.filter(p => p.month === selectedMonth && p.year === selectedYear && eligibleTenantIds.has(p.tenantId));
+    const eligiblePayments = payments.filter(p => 
+      p.month === selectedMonth && p.year === selectedYear && eligibleTenantIds.has(p.tenantId)
+    );
 
-    // Calculate payment mode totals from entries
     let upiTotal = 0;
     let cashTotal = 0;
     let upiCount = 0;
@@ -70,10 +191,12 @@ export const PaymentReconciliation = ({
       entriesTotal: number;
       earliestEntryDate: Date | null;
     }> = [];
+
     eligiblePayments.forEach(payment => {
       const room = rooms.find(r => r.tenants.some(t => t.id === payment.tenantId));
       const tenant = room?.tenants.find(t => t.id === payment.tenantId);
       if (!tenant || !room) return;
+      
       let entriesTotal = 0;
       const entries = payment.paymentEntries || [];
       entries.forEach((entry: PaymentEntry) => {
@@ -87,11 +210,13 @@ export const PaymentReconciliation = ({
         }
       });
 
-      // Find earliest entry date for sorting
-      const earliestEntryDate = entries.length > 0 ? entries.reduce((earliest, entry) => {
-        const entryDate = new Date(entry.date);
-        return !earliest || entryDate < earliest ? entryDate : earliest;
-      }, null as Date | null) : null;
+      const earliestEntryDate = entries.length > 0 
+        ? entries.reduce((earliest, entry) => {
+            const entryDate = new Date(entry.date);
+            return !earliest || entryDate < earliest ? entryDate : earliest;
+          }, null as Date | null) 
+        : null;
+
       if (payment.paymentStatus === 'Paid' || payment.paymentStatus === 'Partial') {
         paymentDetails.push({
           tenantId: payment.tenantId,
@@ -107,15 +232,16 @@ export const PaymentReconciliation = ({
       }
     });
 
-    // Sort payment details by earliest entry date
     paymentDetails.sort((a, b) => {
       if (!a.earliestEntryDate && !b.earliestEntryDate) return 0;
       if (!a.earliestEntryDate) return 1;
       if (!b.earliestEntryDate) return -1;
       return a.earliestEntryDate.getTime() - b.earliestEntryDate.getTime();
     });
+
     const paymentModeTotal = upiTotal + cashTotal;
     const isMatching = rentCollected === paymentModeTotal;
+    
     return {
       rentCollected,
       paymentModeTotal,
@@ -131,15 +257,40 @@ export const PaymentReconciliation = ({
     };
   }, [payments, selectedMonth, selectedYear, rooms, rentCollected, paidTenants, partialTenants]);
 
+  // Multi-month data for trend comparison
+  const multiMonthData = useMemo(() => {
+    return monthsToShow.map(({ month, year }) => getMonthData(month, year));
+  }, [monthsToShow, rooms, payments]);
+
+  // Trend chart data
+  const trendChartData = useMemo(() => {
+    return multiMonthData.map(data => ({
+      name: `${monthsShort[data.month - 1]} ${data.year}`,
+      total: data.rentCollected,
+      upi: data.upiTotal,
+      cash: data.cashTotal,
+      transactions: data.upiCount + data.cashCount
+    }));
+  }, [multiMonthData]);
+
+  // All payment details across selected months
+  const allPaymentDetails = useMemo(() => {
+    if (dateRange === 'current') {
+      return reconciliationData.paymentDetails.map(d => ({ ...d, month: selectedMonth, year: selectedYear }));
+    }
+    return multiMonthData.flatMap(data => data.paymentDetails);
+  }, [dateRange, reconciliationData.paymentDetails, multiMonthData, selectedMonth, selectedYear]);
+
   // Filtered payment details based on filter selection
   const filteredPaymentDetails = useMemo(() => {
-    if (paymentFilter === 'all') return reconciliationData.paymentDetails;
-    return reconciliationData.paymentDetails.map(detail => ({
+    const baseDetails = dateRange === 'current' ? reconciliationData.paymentDetails : allPaymentDetails;
+    if (paymentFilter === 'all') return baseDetails;
+    return baseDetails.map(detail => ({
       ...detail,
       entries: detail.entries.filter(e => e.mode === paymentFilter),
       entriesTotal: detail.entries.filter(e => e.mode === paymentFilter).reduce((sum, e) => sum + e.amount, 0)
     })).filter(detail => detail.entries.length > 0);
-  }, [reconciliationData.paymentDetails, paymentFilter]);
+  }, [reconciliationData.paymentDetails, allPaymentDetails, paymentFilter, dateRange]);
 
   // Chart data
   const pieChartData = useMemo(() => [{
@@ -209,7 +360,11 @@ export const PaymentReconciliation = ({
     });
   };
   const expandAll = () => {
-    setExpandedTenants(new Set(filteredPaymentDetails.map(d => d.tenantId)));
+    setExpandedTenants(new Set(filteredPaymentDetails.map(d => {
+      const month = 'month' in d ? (d as any).month : selectedMonth;
+      const year = 'year' in d ? (d as any).year : selectedYear;
+      return `${d.tenantId}-${month}-${year}`;
+    })));
   };
   const collapseAll = () => {
     setExpandedTenants(new Set());
@@ -281,12 +436,11 @@ export const PaymentReconciliation = ({
     XLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
   };
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg">
+      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full" : "w-full sm:max-w-lg"}>
         <SheetHeader>
           <div className="flex items-center justify-between pr-8">
-            <SheetTitle className="flex items-center gap-2">
+            <SheetTitle className="flex items-center gap-2 text-base">
               Payment Reconciliation
-              <Badge variant="outline" className="rounded-sm">{months[selectedMonth - 1]} {selectedYear}</Badge>
             </SheetTitle>
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
               <Download className="h-4 w-4 mr-1" />
@@ -295,8 +449,74 @@ export const PaymentReconciliation = ({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-100px)] mt-4 pr-4">
+        <ScrollArea className="h-[calc(100vh-80px)] mt-4 pr-4">
           <div className="space-y-6">
+            {/* Date Range Filter */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Date Range:</span>
+              </div>
+              <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
+                <SelectTrigger className="w-[160px] h-8">
+                  <SelectValue placeholder="Select range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current">Current Month</SelectItem>
+                  <SelectItem value="last3">Last 3 Months</SelectItem>
+                  <SelectItem value="last6">Last 6 Months</SelectItem>
+                </SelectContent>
+              </Select>
+              <Badge variant="outline" className="rounded-sm">
+                {dateRange === 'current' 
+                  ? `${months[selectedMonth - 1]} ${selectedYear}`
+                  : `${monthsShort[monthsToShow[0].month - 1]} ${monthsToShow[0].year} - ${monthsShort[monthsToShow[monthsToShow.length - 1].month - 1]} ${monthsToShow[monthsToShow.length - 1].year}`
+                }
+              </Badge>
+            </div>
+
+            {/* Month Trend Comparison - Only show for multi-month view */}
+            {dateRange !== 'current' && trendChartData.length > 1 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm">Payment Trend Comparison</h3>
+                </div>
+                
+                {/* Trend Bar Chart */}
+                <div className="h-48 bg-muted/30 rounded-lg p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={trendChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} width={40} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `₹${value.toLocaleString()}`, 
+                          name === 'total' ? 'Total' : name === 'upi' ? 'UPI' : 'Cash'
+                        ]} 
+                      />
+                      <Legend formatter={value => value === 'total' ? 'Total' : value === 'upi' ? 'UPI' : 'Cash'} wrapperStyle={{ fontSize: 10 }} />
+                      <Bar dataKey="upi" stackId="a" fill={TREND_COLORS[0]} name="upi" />
+                      <Bar dataKey="cash" stackId="a" fill={TREND_COLORS[1]} name="cash" />
+                      <Line type="monotone" dataKey="total" stroke={TREND_COLORS[2]} strokeWidth={2} dot={{ r: 4 }} name="total" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Monthly Summary Cards */}
+                <div className={`grid gap-2 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                  {multiMonthData.map((data, idx) => (
+                    <div key={idx} className="p-2 bg-muted/50 rounded-lg text-center">
+                      <div className="text-xs text-muted-foreground">{monthsShort[data.month - 1]} {data.year}</div>
+                      <div className="text-sm font-bold">₹{data.rentCollected.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">{data.upiCount + data.cashCount} txns</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Summary Comparison */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Summary Comparison</h3>
@@ -437,66 +657,76 @@ export const PaymentReconciliation = ({
                 </ToggleGroup>
               </div>
               <div className="space-y-2">
-                {filteredPaymentDetails.map(detail => <Collapsible key={detail.tenantId} open={expandedTenants.has(detail.tenantId)} onOpenChange={() => toggleTenantExpanded(detail.tenantId)}>
-                    <div className="border rounded-lg overflow-hidden">
-                      <CollapsibleTrigger asChild>
-                        <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {expandedTenants.has(detail.tenantId) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-sm">{detail.tenantName}</span>
-                              <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">₹{detail.amountPaid.toLocaleString()}</span>
-                              <Badge className={detail.status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-partial text-partial-foreground'}>
-                                {detail.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CollapsibleTrigger>
-                      
-                      <CollapsibleContent>
-                        <div className="px-3 pb-3 space-y-2 border-t bg-muted/20">
-                          <div className="grid grid-cols-3 gap-2 text-xs pt-2">
-                            <div>
-                              <span className="text-muted-foreground">Monthly Rent:</span>
-                              <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Amount Paid:</span>
-                              <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Entries Total:</span>
-                              <div className={`font-medium ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : ''}`}>
-                                ₹{detail.entriesTotal.toLocaleString()}
+                {filteredPaymentDetails.map((detail, detailIdx) => {
+                  const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
+                  return (
+                    <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
+                      <div className="border rounded-lg overflow-hidden">
+                        <CollapsibleTrigger asChild>
+                          <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {expandedTenants.has(detailKey) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium text-sm">{detail.tenantName}</span>
+                                <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
+                                {dateRange !== 'current' && 'month' in detail && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {monthsShort[(detail as any).month - 1]} {(detail as any).year}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm">₹{detail.amountPaid.toLocaleString()}</span>
+                                <Badge className={detail.status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-partial text-partial-foreground'}>
+                                  {detail.status}
+                                </Badge>
                               </div>
                             </div>
                           </div>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <div className="px-3 pb-3 space-y-2 border-t bg-muted/20">
+                            <div className="grid grid-cols-3 gap-2 text-xs pt-2">
+                              <div>
+                                <span className="text-muted-foreground">Monthly Rent:</span>
+                                <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Amount Paid:</span>
+                                <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Entries Total:</span>
+                                <div className={`font-medium ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : ''}`}>
+                                  ₹{detail.entriesTotal.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
 
-                          {detail.entries.length > 0 && <div className="pt-2 border-t space-y-1">
-                              {detail.entries.map((entry, idx) => <div key={idx} className="flex items-center justify-between text-xs">
-                                  <span className="text-muted-foreground">
-                                    {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} on {format(new Date(entry.date), 'dd MMM')}
-                                  </span>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`px-1.5 py-0.5 rounded ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-                                      {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                            {detail.entries.length > 0 && <div className="pt-2 border-t space-y-1">
+                                {detail.entries.map((entry, idx) => <div key={idx} className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">
+                                      {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} on {format(new Date(entry.date), 'dd MMM')}
                                     </span>
-                                    <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
-                                  </div>
-                                </div>)}
-                            </div>}
-                        </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>)}
+                                    <div className="flex items-center gap-2">
+                                      <span className={`px-1.5 py-0.5 rounded ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                                        {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                      </span>
+                                      <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                                    </div>
+                                  </div>)}
+                              </div>}
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  );
+                })}
 
-                {reconciliationData.paymentDetails.length === 0 && <div className="text-center py-8 text-muted-foreground">
-                    No payments recorded for this month
+                {filteredPaymentDetails.length === 0 && <div className="text-center py-8 text-muted-foreground">
+                    No payments recorded for the selected period
                   </div>}
               </div>
             </div>
