@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSwipeTabs } from '@/hooks/useSwipeTabs';
 import { Dashboard } from '@/components/Dashboard';
 import { RoomDirectory } from '@/components/RoomDirectory';
 import { Reports } from '@/components/Reports';
@@ -24,6 +25,16 @@ const Index = () => {
   } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Tab order for swipe navigation
+  const tabOrder = ['dashboard', 'rooms', 'rent-sheet', 'reports'];
+  
+  const { swipeHandlers } = useSwipeTabs({
+    tabs: tabOrder,
+    currentTab: activeTab,
+    onTabChange: setActiveTab,
+  });
   const {
     selectedMonth,
     selectedYear
@@ -85,7 +96,7 @@ const Index = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="dashboard" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="sticky top-0 z-50 bg-background grid w-full grid-cols-4 lg:w-[500px] shadow-sm border-b">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
@@ -105,21 +116,23 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6 mt-6">
-            <Dashboard rooms={rooms} onStartRentCycle={() => {}} />
-          </TabsContent>
+          <div {...swipeHandlers} className="touch-pan-y">
+            <TabsContent value="dashboard" className="space-y-6 mt-6">
+              <Dashboard rooms={rooms} onStartRentCycle={() => {}} />
+            </TabsContent>
 
-          <TabsContent value="rooms" className="space-y-6 mt-6">
-            <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
-          </TabsContent>
+            <TabsContent value="rooms" className="space-y-6 mt-6">
+              <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
+            </TabsContent>
 
-          <TabsContent value="rent-sheet" className="space-y-6 mt-6">
-            <MonthlyRentSheet rooms={rooms} />
-          </TabsContent>
+            <TabsContent value="rent-sheet" className="space-y-6 mt-6">
+              <MonthlyRentSheet rooms={rooms} />
+            </TabsContent>
 
-          <TabsContent value="reports" className="space-y-6 mt-6">
-            <Reports rooms={rooms} />
-          </TabsContent>
+            <TabsContent value="reports" className="space-y-6 mt-6">
+              <Reports rooms={rooms} />
+            </TabsContent>
+          </div>
         </Tabs>
 
         {/* Tenant Management Dialog */}
