@@ -47,6 +47,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [overpaymentReason, setOverpaymentReason] = useState<string>('');
+  const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [markLeftTenantId, setMarkLeftTenantId] = useState<string | null>(null);
   const [markLeftDate, setMarkLeftDate] = useState<Date>(new Date());
@@ -291,14 +293,13 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const previousPaid = existingPayment?.amountPaid || 0;
     const totalPaid = previousPaid + partialAmount;
 
-    if (partialAmount > tenant.monthlyRent) {
-      toast({
-        title: "Amount exceeds rent",
-        description: "The payment amount cannot exceed the monthly rent",
-        variant: "destructive"
-      });
+    // Check for overpayment without reason
+    const isOverpayment = partialAmount > tenant.monthlyRent;
+    if (isOverpayment && !overpaymentReason.trim()) {
+      setOverpaymentError(true);
       return;
     }
+    setOverpaymentError(false);
 
     const isFullPayment = totalPaid >= tenant.monthlyRent;
     const status = isFullPayment ? 'Paid' : 'Partial';
@@ -315,6 +316,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const existingEntries = existingPayment?.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
 
+    // Build notes for overpayment
+    const notes = isOverpayment 
+      ? `Extra ₹${(partialAmount - tenant.monthlyRent).toLocaleString()}: ${overpaymentReason.trim()}`
+      : undefined;
+
     updateTenant.mutate({ 
       tenantId, 
       updates: { 
@@ -330,13 +336,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       paymentStatus: status,
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
-      amountPaid: totalPaid,
+      amountPaid: partialAmount, // Store actual amount paid for overpayment tracking
       paymentEntries: updatedEntries,
+      notes,
     });
 
     toast({
       title: isFullPayment ? "Payment marked as Paid" : "Partial payment recorded",
-      description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
+      description: `₹${partialAmount.toLocaleString()} paid${isOverpayment ? ` (includes extra ₹${(partialAmount - tenant.monthlyRent).toLocaleString()})` : !isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ''}`
     });
 
     // Show receipt dialog
@@ -359,6 +366,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
     setPartialPaymentTenant(null);
     setPartialAmount(0);
+    setOverpaymentReason('');
   };
 
   const handlePayRemaining = (tenantId: string) => {
@@ -958,17 +966,48 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               <Input
                 type="number"
                 value={partialAmount}
-                onChange={(e) => setPartialAmount(parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  setPartialAmount(parseInt(e.target.value) || 0);
+                  setOverpaymentReason('');
+                  setOverpaymentError(false);
+                }}
                 className="mt-2"
               />
               {partialPaymentTenant && (() => {
                 const tenant = room.tenants.find(t => t.id === partialPaymentTenant);
-                if (tenant && partialAmount < tenant.monthlyRent) {
-                  return (
-                    <p className="text-sm text-partial mt-2">
-                      This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - partialAmount).toLocaleString()}
-                    </p>
-                  );
+                if (tenant) {
+                  if (partialAmount < tenant.monthlyRent) {
+                    return (
+                      <p className="text-sm text-partial mt-2">
+                        This will be recorded as a partial payment. Remaining: ₹{(tenant.monthlyRent - partialAmount).toLocaleString()}
+                      </p>
+                    );
+                  } else if (partialAmount > tenant.monthlyRent) {
+                    const extra = partialAmount - tenant.monthlyRent;
+                    return (
+                      <div className="mt-2 space-y-2">
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                          Extra payment: ₹{extra.toLocaleString()} above rent of ₹{tenant.monthlyRent.toLocaleString()}
+                        </p>
+                        <div>
+                          <Label className="text-sm">Reason for extra amount *</Label>
+                          <Input 
+                            type="text" 
+                            value={overpaymentReason} 
+                            onChange={e => {
+                              setOverpaymentReason(e.target.value);
+                              setOverpaymentError(false);
+                            }} 
+                            placeholder="e.g., Advance, Electricity, Next month"
+                            className={cn("mt-1", overpaymentError && "border-destructive")}
+                          />
+                          {overpaymentError && (
+                            <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
                 }
                 return null;
               })()}
