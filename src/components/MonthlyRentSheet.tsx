@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle } from 'lucide-react';
+import { Download, MessageCircle, Phone } from 'lucide-react';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { format } from 'date-fns';
@@ -450,6 +450,16 @@ export const MonthlyRentSheet = ({
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">{tenant.name}</div>
+                      {/* Call badge */}
+                      {tenant.phone && tenant.phone !== '••••••••••' && (
+                        <a
+                          href={`tel:${tenant.phone}`}
+                          className="p-1 rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                          title={`Call ${tenant.name}`}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </a>
+                      )}
                       {/* WhatsApp sent indicator */}
                       {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && <button onClick={handleResendReceipt} className={`p-1 rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click to resend' : 'Send receipt via WhatsApp'}>
                           <MessageCircle className="h-4 w-4" />
