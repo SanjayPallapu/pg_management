@@ -45,8 +45,8 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const { role } = useAuth();
   const isAdmin = role === 'admin';
 
-  // Handle OS back gesture to close sheet with animation
-  const { gestureAnimationClass } = useBackGesture(open, () => onOpenChange(false));
+  // Handle OS back gesture to close sheet
+  useBackGesture(open, () => onOpenChange(false));
 
   // Edit mode state - tracks which room is in edit mode
   const [editModeRoom, setEditModeRoom] = useState<string | null>(null);
@@ -212,7 +212,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className={`h-[90vh] p-0 ${gestureAnimationClass}`}>
+        <SheetContent side="bottom" className="h-[90vh] p-0">
           <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
             <SheetTitle className="text-left">Day Guest Details - {monthName}</SheetTitle>
             <div className="grid grid-cols-2 gap-6 mt-2">
