@@ -4,16 +4,30 @@ import { UpiLogo } from '@/components/icons/UpiLogo';
 import { CashLogo } from '@/components/icons/CashLogo';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { useRooms } from '@/hooks/useRooms';
 import { PaymentEntry } from '@/types';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
 export const PaymentModeCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const { rooms } = useRooms();
 
   const stats = useMemo(() => {
-    // Get payments for selected month
+    // Get eligible tenant IDs for the selected month
+    const eligibleTenantIds = new Set(
+      rooms.flatMap(room =>
+        room.tenants
+          .filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth))
+          .map(tenant => tenant.id)
+      )
+    );
+
+    // Get payments for selected month from eligible tenants only
     const monthPayments = payments.filter(
-      p => p.month === selectedMonth && p.year === selectedYear
+      p => p.month === selectedMonth && 
+           p.year === selectedYear && 
+           eligibleTenantIds.has(p.tenantId)
     );
 
     let upiCount = 0;
@@ -36,7 +50,7 @@ export const PaymentModeCard = () => {
     });
 
     return { upiCount, upiAmount, cashCount, cashAmount };
-  }, [payments, selectedMonth, selectedYear]);
+  }, [payments, selectedMonth, selectedYear, rooms]);
 
   return (
     <Card>
