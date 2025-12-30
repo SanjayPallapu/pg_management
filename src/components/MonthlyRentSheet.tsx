@@ -180,8 +180,10 @@ export const MonthlyRentSheet = ({
     const pending = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Pending');
     const partialCollected = partial.reduce((sum, t) => sum + (t.payment.amountPaid || 0), 0);
     const partialRemaining = partial.reduce((sum, t) => sum + (t.monthlyRent - (t.payment.amountPaid || 0)), 0);
+    // Use actual amount paid (includes extras/overpayments) for paid tenants
+    const paidCollected = paid.reduce((sum, t) => sum + (t.payment.amountPaid || t.monthlyRent), 0);
     return {
-      totalCollected: paid.reduce((sum, t) => sum + t.monthlyRent, 0) + partialCollected,
+      totalCollected: paidCollected + partialCollected,
       totalPending: pending.reduce((sum, t) => sum + t.monthlyRent, 0) + partialRemaining,
       paidCount: paid.length,
       pendingCount: pending.length + partial.length
