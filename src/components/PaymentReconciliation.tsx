@@ -40,35 +40,37 @@ export const PaymentReconciliation = ({
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
   
-  // Swipe gesture handling
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const SWIPE_THRESHOLD = 80;
-  const EDGE_ZONE = 30; // Only trigger from leftmost 30px
+  // Swipe gesture handling - swipe right from anywhere to close
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const SWIPE_THRESHOLD = 100;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    // Only register if touch starts from left edge
-    if (touch.clientX <= EDGE_ZONE) {
-      touchStartX.current = touch.clientX;
-      touchStartY.current = touch.clientY;
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Prevent default only if swiping horizontally to avoid scroll interference
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = Math.abs(touch.clientY - touchStartY.current);
+    
+    if (deltaX > 30 && deltaY < deltaX) {
+      // Horizontal swipe detected, could add visual feedback here
     }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = Math.abs(touch.clientY - touchStartY.current);
     
-    // Swipe right detected (horizontal movement > threshold, vertical < half of horizontal)
-    if (deltaX > SWIPE_THRESHOLD && deltaY < deltaX / 2) {
+    // Swipe right detected (horizontal movement > threshold, mostly horizontal)
+    if (deltaX > SWIPE_THRESHOLD && deltaY < deltaX * 0.7) {
       onOpenChange(false);
     }
-    
-    touchStartX.current = null;
-    touchStartY.current = null;
   }, [onOpenChange]);
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
@@ -469,8 +471,9 @@ export const PaymentReconciliation = ({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden touch-pan-y" : "w-full sm:max-w-lg"}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <SheetHeader className="pb-2">
