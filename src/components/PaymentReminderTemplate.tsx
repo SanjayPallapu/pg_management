@@ -27,37 +27,36 @@ const formatCurrency = (amount: number): string => {
   return `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
 };
 
-const formatBillingRange = (
-  joiningDate: string,
-  referenceDate: Date = new Date()
-): string => {
-  const join = new Date(joiningDate);
-  if (isNaN(join.getTime())) return "—";
+const formatStayPeriod = (joiningDate: string, billingCycle: number): string => {
+  const original = new Date(joiningDate);
 
-  const joinDay = join.getDate();
+  // Step 1: calculate cycle start
+  const start = new Date(original);
+  start.setMonth(original.getMonth() + billingCycle);
 
-  const start = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth(),
-    joinDay
-  );
+  // If start date overflowed (31 → Feb), fix to last day
+  if (start.getDate() !== original.getDate()) {
+    start.setDate(0);
+  }
 
-  const end = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth() + 1,
-    joinDay - 1
-  );
+  // Step 2: calculate cycle end
+  const end = new Date(start);
+  end.setMonth(start.getMonth() + 1);
 
-  const format = (d: Date) =>
-    d.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+  if (end.getDate() !== start.getDate()) {
+    end.setDate(0);
+  } else {
+    end.setDate(end.getDate() - 1);
+  }
 
-  return `${format(start)} - ${format(end)}`;
+  const options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  };
+
+  return `${start.toLocaleDateString("en-GB", options)} – ${end.toLocaleDateString("en-GB", options)}`;
 };
-
 
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
   const hasPaid = (data.payment.paid || 0) > 0;
