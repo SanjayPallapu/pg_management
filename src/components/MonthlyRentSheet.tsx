@@ -64,7 +64,6 @@ export const MonthlyRentSheet = ({
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(confirmAction?.type === 'unpaid', () => setConfirmAction(null));
-
   const {
     payments,
     upsertPayment,
@@ -116,9 +115,7 @@ export const MonthlyRentSheet = ({
       roomNo: room.roomNo
     })));
     // Filter tenants who are active in the selected month (joined before end of month AND not left before month started)
-    return allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
-    );
+    return allTenants.filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth));
   }, [rooms, selectedMonth, selectedYear]);
   const tenantsWithPayments = useMemo(() => {
     return eligibleTenants.map(tenant => {
@@ -218,7 +215,7 @@ export const MonthlyRentSheet = ({
     if (!paymentAmountTenant) return;
     const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
     if (!tenant) return;
-    
+
     // Check for overpayment without reason
     const isOverpayment = paymentAmount > tenant.monthlyRent;
     if (isOverpayment && !overpaymentReason.trim()) {
@@ -226,7 +223,6 @@ export const MonthlyRentSheet = ({
       return;
     }
     setOverpaymentError(false);
-    
     const formattedDate = format(paymentDate, 'yyyy-MM-dd');
     const existingPaid = tenant.payment.amountPaid || 0;
     const totalPaid = existingPaid + paymentAmount;
@@ -242,12 +238,9 @@ export const MonthlyRentSheet = ({
     };
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
-    
+
     // Build notes for overpayment
-    const notes = isOverpayment 
-      ? `Extra ₹${(paymentAmount - tenant.monthlyRent).toLocaleString()}: ${overpaymentReason.trim()}`
-      : undefined;
-    
+    const notes = isOverpayment ? `Extra ₹${(paymentAmount - tenant.monthlyRent).toLocaleString()}: ${overpaymentReason.trim()}` : undefined;
     upsertPayment.mutate({
       tenantId: tenant.id,
       month: selectedMonth,
@@ -255,7 +248,8 @@ export const MonthlyRentSheet = ({
       paymentStatus: status,
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
-      amountPaid: paymentAmount, // Store actual paid amount for overpayment tracking
+      amountPaid: paymentAmount,
+      // Store actual paid amount for overpayment tracking
       paymentEntries: updatedEntries,
       notes
     });
@@ -480,24 +474,13 @@ export const MonthlyRentSheet = ({
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">{tenant.name}</div>
                       {/* Call badge */}
-                      {tenant.phone && tenant.phone !== '••••••••••' && (
-                        <a
-                          href={`tel:${tenant.phone}`}
-                          className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                          title={`Call ${tenant.name}`}
-                        >
+                      {tenant.phone && tenant.phone !== '••••••••••' && <a href={`tel:${tenant.phone}`} className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30" title={`Call ${tenant.name}`}>
                           <Phone className="h-4 w-4" />
-                        </a>
-                      )}
+                        </a>}
                       {/* WhatsApp dropdown menu - shows for paid/partial, or just chat for others */}
-                      {tenant.phone && tenant.phone !== '••••••••••' && (
-                        (tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') ? (
-                          <DropdownMenu>
+                      {tenant.phone && tenant.phone !== '••••••••••' && (tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial' ? <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button 
-                                className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
-                                title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}
-                              >
+                              <button className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}>
                                 <MessageCircle className="h-4 w-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -506,27 +489,14 @@ export const MonthlyRentSheet = ({
                                 <Receipt className="h-4 w-4" />
                                 Generate Receipt
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')}
-                                className="gap-2"
-                              >
+                              <DropdownMenuItem onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')} className="gap-2">
                                 <MessageSquare className="h-4 w-4" />
                                 Chat with Tenant
                               </DropdownMenuItem>
                             </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <a
-                            href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                            title={`Chat with ${tenant.name}`}
-                          >
+                          </DropdownMenu> : <a href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30" title={`Chat with ${tenant.name}`}>
                             <MessageCircle className="h-4 w-4" />
-                          </a>
-                        )
-                      )}
+                          </a>)}
                     </div>
                     {isPartial ? <Badge className="bg-overdue text-overdue-foreground">
                         ₹{remaining.toLocaleString()}
@@ -555,14 +525,12 @@ export const MonthlyRentSheet = ({
                           Paid on: {format(new Date(tenant.payment.paymentDate), 'dd MMM yyyy')}
                         </div>}
                       {/* Display overpayment notes */}
-                      {(tenant.payment as any).notes && (
-                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                      {(tenant.payment as any).notes && <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
                           📝 {(tenant.payment as any).notes}
-                        </div>
-                      )}
+                        </div>}
                     </div>
                     {isPartial ? <Button onClick={() => handlePayRemaining(tenant.id)} size="sm" className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90">
-                        Pay Remaining
+                        Pay 
                       </Button> : <Button variant={tenant.payment.paymentStatus === 'Paid' ? 'default' : 'outline'} size="sm" className="text-xs h-7 px-3" onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}>
                         {tenant.payment.paymentStatus === 'Paid' ? 'Paid' : 'Mark Paid'}
                       </Button>}
@@ -586,10 +554,10 @@ export const MonthlyRentSheet = ({
             <div>
               <Label>Amount (₹)</Label>
               <Input type="number" value={paymentAmount} onChange={e => {
-                setPaymentAmount(parseInt(e.target.value) || 0);
-                // Reset overpayment reason when amount changes
-                setOverpaymentReason('');
-              }} className="mt-2" />
+              setPaymentAmount(parseInt(e.target.value) || 0);
+              // Reset overpayment reason when amount changes
+              setOverpaymentReason('');
+            }} className="mt-2" />
               {paymentAmountTenant && (() => {
               const tenant = tenantsWithPayments.find(t => t.id === paymentAmountTenant);
               if (tenant) {
@@ -599,29 +567,19 @@ export const MonthlyRentSheet = ({
                       </p>;
                 } else if (paymentAmount > tenant.monthlyRent) {
                   const extra = paymentAmount - tenant.monthlyRent;
-                  return (
-                    <div className="mt-2 space-y-2">
+                  return <div className="mt-2 space-y-2">
                       <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
                         Extra payment: ₹{extra.toLocaleString()} above rent of ₹{tenant.monthlyRent.toLocaleString()}
                       </p>
                       <div>
                         <Label className="text-sm">Reason for extra amount *</Label>
-                        <Input 
-                          type="text" 
-                          value={overpaymentReason} 
-                          onChange={e => {
-                            setOverpaymentReason(e.target.value);
-                            setOverpaymentError(false);
-                          }} 
-                          placeholder="e.g., Advance, Electricity, Next month"
-                          className={cn("mt-1", overpaymentError && "border-destructive")}
-                        />
-                        {overpaymentError && (
-                          <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
-                        )}
+                        <Input type="text" value={overpaymentReason} onChange={e => {
+                        setOverpaymentReason(e.target.value);
+                        setOverpaymentError(false);
+                      }} placeholder="e.g., Advance, Electricity, Next month" className={cn("mt-1", overpaymentError && "border-destructive")} />
+                        {overpaymentError && <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>}
                       </div>
-                    </div>
-                  );
+                    </div>;
                 }
               }
               return null;
