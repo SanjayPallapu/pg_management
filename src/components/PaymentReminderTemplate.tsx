@@ -27,18 +27,19 @@ const formatCurrency = (amount: number): string => {
   return `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
 };
 
-const formatStayPeriod = (joiningDate: string): string => {
+const formatStayPeriod = (joiningDate: string, billingCycle: number): string => {
   const start = new Date(joiningDate);
+
+  // Move start forward by billingCycle months
+  start.setMonth(start.getMonth() + billingCycle);
 
   const end = new Date(start);
   end.setMonth(start.getMonth() + 1);
 
-  // If date overflows (e.g., 31 → Feb), JS changes month
-  // In that case, set to last day of previous month
+  // Handle month overflow (31st issue)
   if (end.getDate() !== start.getDate()) {
     end.setDate(0);
   } else {
-    // Normal case: subtract 1 day
     end.setDate(end.getDate() - 1);
   }
 
