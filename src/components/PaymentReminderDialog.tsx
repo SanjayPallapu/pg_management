@@ -127,6 +127,21 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     onOpenChange(false);
   };
 
+  const copyDataToClipboard = () => {
+    if (!reminderData) return;
+    const jsonData = {
+      tenant: reminderData.tenantName,
+      phone: reminderData.tenantPhone,
+      amountDue: reminderData.balance,
+      totalAmount: reminderData.amount,
+      amountPaid: reminderData.amountPaid || 0,
+      forMonth: reminderData.forMonth,
+      roomNo: reminderData.roomNo,
+    };
+    navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
+    toast({ title: 'Reminder data copied!' });
+  };
+
   return (
     <>
       {templateData && (
@@ -139,31 +154,33 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-amber-600" />
-              Payment Reminder
+              <Bell className="h-5 w-5 text-green-600" />
+              Send Payment Reminder
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Generate and send payment reminder to {reminderData?.tenantName}.
+              Generate and send payment reminder to {reminderData?.tenantName} via WhatsApp.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           {reminderData && (
             <div className="py-4 space-y-4">
-              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-sm space-y-1 border border-amber-200 dark:border-amber-800">
+              {/* Summary Card matching the receipt dialog style */}
+              <div className="rounded-lg p-4 text-sm space-y-2 border border-border bg-muted/30">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tenant:</span>
-                  <span className="font-medium">{reminderData.tenantName}</span>
+                  <span className="font-semibold">{reminderData.tenantName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Due:</span>
-                  <span className="font-medium text-amber-600">₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}</span>
+                  <span className="font-semibold text-amber-600">₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">For Month:</span>
-                  <span className="font-medium">{reminderData.forMonth}</span>
+                  <span className="font-semibold">{reminderData.forMonth}</span>
                 </div>
               </div>
 
+              {/* Generated Image Preview */}
               {generatedImage && (
                 <div className="relative">
                   <img src={generatedImage} alt="Payment Reminder" className="w-full rounded-lg border" />
@@ -173,21 +190,50 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 </div>
               )}
 
-              <Button onClick={generateReminder} disabled={isGenerating || !templateData} variant="outline" className="w-full">
+              {/* Generate Reminder Image Button */}
+              <Button 
+                onClick={generateReminder} 
+                disabled={isGenerating || !templateData} 
+                variant="secondary"
+                className="w-full h-11"
+              >
                 {isGenerating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
                 ) : generatedImage ? 'Regenerate Image' : 'Generate Reminder Image'}
               </Button>
+
+              {/* Copy Data Button */}
+              <Button 
+                onClick={copyDataToClipboard} 
+                variant="outline" 
+                className="w-full h-11 gap-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2"/>
+                </svg>
+                Copy Reminder Data (JSON)
+              </Button>
             </div>
           )}
 
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             {generatedImage && (
-              <Button onClick={shareToWhatsApp} disabled={isSending} className="gap-2 bg-amber-600 hover:bg-amber-700">
-                {isSending ? <><Loader2 className="h-4 w-4 animate-spin" />Sending...</> : <><MessageCircle className="h-4 w-4" />Send to WhatsApp</>}
+              <Button 
+                onClick={shareToWhatsApp} 
+                disabled={isSending} 
+                className="w-full gap-2 bg-green-600 hover:bg-green-700 h-11"
+              >
+                {isSending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />Sending...</>
+                ) : (
+                  <><MessageCircle className="h-4 w-4" />Send to WhatsApp</>
+                )}
               </Button>
             )}
+            <AlertDialogCancel onClick={handleClose} className="w-full h-11 mt-0">
+              Close
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

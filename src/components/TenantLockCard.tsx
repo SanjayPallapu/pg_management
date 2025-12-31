@@ -69,16 +69,27 @@ export const TenantLockCard = ({ rooms }: TenantLockCardProps) => {
     );
   };
 
+  const [showLocked, setShowLocked] = useState(false);
+
+  // Get locked tenants
+  const lockedTenants = allTenants.filter(t => t.isLocked);
+
   return (
     <Card>
       <CardHeader className="pb-2 px-4 pt-4">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <Lock className="h-4 w-4 text-muted-foreground" />
-          Lock Tenants
+        <CardTitle className="flex items-center justify-between text-sm font-medium">
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-muted-foreground" />
+            Lock Tenants
+          </div>
           {lockedCount > 0 && (
-            <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
+            <button
+              onClick={() => setShowLocked(!showLocked)}
+              className="flex items-center gap-1.5 text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-full hover:bg-destructive/20 transition-colors"
+            >
+              <Lock className="h-3 w-3" />
               {lockedCount} locked
-            </span>
+            </button>
           )}
         </CardTitle>
       </CardHeader>
@@ -124,11 +135,11 @@ export const TenantLockCard = ({ rooms }: TenantLockCardProps) => {
           </div>
         )}
 
-        {/* Locked tenants list when no search */}
-        {!searchQuery.trim() && lockedCount > 0 && (
+        {/* Locked tenants list toggle */}
+        {showLocked && lockedTenants.length > 0 && (
           <div className="mt-3 space-y-2">
-            <div className="text-xs text-muted-foreground">Locked tenants:</div>
-            {allTenants.filter(t => t.isLocked).map(tenant => (
+            <div className="text-xs text-muted-foreground font-medium">Locked tenants:</div>
+            {lockedTenants.map(tenant => (
               <div 
                 key={tenant.id} 
                 className="flex items-center justify-between p-2 rounded-lg bg-destructive/5 border border-destructive/20"
