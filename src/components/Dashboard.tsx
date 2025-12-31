@@ -11,6 +11,7 @@ import { DayGuestSheet } from './DayGuestSheet';
 import { SecurityDepositCard } from './SecurityDepositCard';
 import { PaymentModeCard } from './PaymentModeCard';
 import { EmptyBedsSheet } from './EmptyBedsSheet';
+import { TenantLockCard } from './TenantLockCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -219,6 +220,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Security Deposit Card */}
           <SecurityDepositCard rooms={rooms} />
+
+          {/* Tenant Lock Card */}
+          <TenantLockCard rooms={rooms} />
         </div>
 
         {/* Day Guest Card - Separate Row */}
