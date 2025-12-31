@@ -35,7 +35,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
       ref={ref}
       style={{
         width: "500px",
-        height: "700px",
+        height: "625px",
         background: "#ffffff",
         fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
         overflow: "hidden",
