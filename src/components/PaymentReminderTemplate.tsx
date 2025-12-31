@@ -27,6 +27,36 @@ const formatCurrency = (amount: number): string => {
   return `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
 };
 
+const formatBillingRange = (
+  joiningDate: string,
+  referenceDate: Date = new Date()
+): string => {
+  const join = new Date(joiningDate);
+  if (isNaN(join.getTime())) return "—";
+
+  const joinDay = join.getDate();
+
+  const start = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    joinDay
+  );
+
+  const end = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() + 1,
+    joinDay - 1
+  );
+
+  const format = (d: Date) =>
+    d.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+  return `${format(start)} - ${format(end)}`;
+};
 
 
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
@@ -182,7 +212,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {data.stay.month}
+                 {formatBillingRange(data.tenant.joiningDate)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
