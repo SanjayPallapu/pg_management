@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Lock, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useDayGuests } from '@/hooks/useDayGuests';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { TenantLockDialog } from './TenantLockDialog';
 import { format } from 'date-fns';
 import { isTenantActiveInMonth, isTenantActiveNow, tenantJoinedInMonth, tenantLeftInMonth, parseDateOnly } from '@/utils/dateOnly';
 interface RoomCardProps {
@@ -49,6 +50,8 @@ export const RoomCard = ({
     remainingBalance?: number;
     tenantId: string;
   } | null>(null);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [lockTenant, setLockTenant] = useState<{ id: string; name: string; isLocked?: boolean } | null>(null);
   const months = [{
     value: 1,
     label: 'January'
@@ -211,6 +214,17 @@ export const RoomCard = ({
             const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
             window.open(`https://wa.me/${formattedPhone}`, '_blank');
           };
+          const sendPaymentReminder = () => {
+            const phone = tenant.phone.replace(/\D/g, '');
+            const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+            const monthName = months[selectedMonth - 1].label;
+            const message = `Hi ${tenant.name}, this is a gentle reminder for your rent payment of ₹${tenant.monthlyRent.toLocaleString()} for ${monthName} ${selectedYear}. Please make the payment at your earliest convenience. Thank you!`;
+            window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+          };
+          const openLockDialog = () => {
+            setLockTenant({ id: tenant.id, name: tenant.name, isLocked: tenant.isLocked });
+            setLockDialogOpen(true);
+          };
           return <div key={tenant.id} className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 ${leftThisMonth ? 'opacity-60' : ''}`}>
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
@@ -241,6 +255,14 @@ export const RoomCard = ({
                         <Phone className="h-3 w-3" />
                       </a>
                     )}
+                    {/* Lock button */}
+                    <button 
+                      onClick={openLockDialog}
+                      className={`p-1 rounded-full transition-colors ${tenant.isLocked ? 'text-destructive bg-destructive/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                      title={tenant.isLocked ? 'Locked - excluded from totals' : 'Lock tenant'}
+                    >
+                      <Lock className="h-3 w-3" />
+                    </button>
                     {/* WhatsApp dropdown menu - Always visible */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -264,10 +286,16 @@ export const RoomCard = ({
                             Chat with Tenant
                           </DropdownMenuItem>
                         )}
+                        {tenant.phone && tenant.phone !== '••••••••••' && !isPaid && (
+                          <DropdownMenuItem onClick={sendPaymentReminder} className="gap-2">
+                            <Bell className="h-4 w-4" />
+                            Payment Reminder
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
-                      {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
+                      {tenant.isLocked ? '🔒' : ''}{isPaid ? 'Paid' : isPartial ? 'Partial' : 'Not Paid'}
                     </Badge>
                   </div>
                 </div>;
@@ -386,5 +414,12 @@ export const RoomCard = ({
         });
       }
     }} />
+
+      {/* Tenant Lock Dialog */}
+      <TenantLockDialog 
+        open={lockDialogOpen} 
+        onOpenChange={setLockDialogOpen} 
+        tenant={lockTenant} 
+      />
     </Card>;
 };

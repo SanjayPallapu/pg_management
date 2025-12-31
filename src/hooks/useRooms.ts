@@ -46,6 +46,7 @@ export const useRooms = () => {
             // Hide security deposit info from staff
             securityDepositAmount: isAdmin ? tenant.security_deposit_amount : null,
             securityDepositDate: isAdmin ? tenant.security_deposit_date : null,
+            isLocked: (tenant as any).is_locked || false,
           })),
       })) as Room[];
     },
@@ -159,6 +160,7 @@ export const useRooms = () => {
       if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
       if (updates.securityDepositAmount !== undefined) updateData.security_deposit_amount = updates.securityDepositAmount;
       if (updates.securityDepositDate !== undefined) updateData.security_deposit_date = updates.securityDepositDate;
+      if (updates.isLocked !== undefined) updateData.is_locked = updates.isLocked;
 
       const { error } = await supabase
         .from('tenants')

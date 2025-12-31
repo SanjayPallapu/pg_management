@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone, Receipt, MessageSquare } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Lock, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { TenantLockDialog } from './TenantLockDialog';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -59,6 +60,8 @@ export const MonthlyRentSheet = ({
     remainingBalance?: number;
     tenantId?: string;
   } | null>(null);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [lockTenant, setLockTenant] = useState<{ id: string; name: string; isLocked?: boolean } | null>(null);
 
   // Handle OS back gesture to close dialogs
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
@@ -172,9 +175,11 @@ export const MonthlyRentSheet = ({
     };
   }, [selectedMonth, selectedYear, payments]);
   const stats = useMemo(() => {
-    const paid = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Paid');
-    const partial = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Partial');
-    const pending = tenantsWithPayments.filter(t => t.payment.paymentStatus === 'Pending');
+    // Exclude locked tenants from stats
+    const unlockedTenants = tenantsWithPayments.filter(t => !t.isLocked);
+    const paid = unlockedTenants.filter(t => t.payment.paymentStatus === 'Paid');
+    const partial = unlockedTenants.filter(t => t.payment.paymentStatus === 'Partial');
+    const pending = unlockedTenants.filter(t => t.payment.paymentStatus === 'Pending');
     const partialCollected = partial.reduce((sum, t) => sum + (t.payment.amountPaid || 0), 0);
     const partialRemaining = partial.reduce((sum, t) => sum + (t.monthlyRent - (t.payment.amountPaid || 0)), 0);
     // Use actual amount paid (includes extras/overpayments) for paid tenants
@@ -469,40 +474,67 @@ export const MonthlyRentSheet = ({
               });
               setWhatsappDialogOpen(true);
             };
+            const sendPaymentReminder = () => {
+              const phone = tenant.phone.replace(/\D/g, '');
+              const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+              const monthName = months[selectedMonth - 1].label;
+              const message = `Hi ${tenant.name}, this is a gentle reminder for your rent payment of ₹${tenant.monthlyRent.toLocaleString()} for ${monthName} ${selectedYear}. Please make the payment at your earliest convenience. Thank you!`;
+              window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+            };
+            const openLockDialog = () => {
+              setLockTenant({ id: tenant.id, name: tenant.name, isLocked: tenant.isLocked });
+              setLockDialogOpen(true);
+            };
             return <div key={tenant.id} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="font-semibold text-sm">{tenant.name}</div>
+                      <div className="font-semibold text-sm">{tenant.isLocked && '🔒 '}{tenant.name}</div>
+                      {/* Lock button */}
+                      <button 
+                        onClick={openLockDialog}
+                        className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${tenant.isLocked ? 'text-destructive bg-destructive/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                        title={tenant.isLocked ? 'Locked - excluded from totals' : 'Lock tenant'}
+                      >
+                        <Lock className="h-4 w-4" />
+                      </button>
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== '••••••••••' && <a href={`tel:${tenant.phone}`} className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30" title={`Call ${tenant.name}`}>
                           <Phone className="h-4 w-4" />
                         </a>}
-                      {/* WhatsApp dropdown menu - shows for paid/partial, or just chat for others */}
-                      {tenant.phone && tenant.phone !== '••••••••••' && (tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial' ? <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}>
-                                <MessageCircle className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
+                      {/* WhatsApp dropdown menu - shows for paid/partial, or dropdown for others */}
+                      {tenant.phone && tenant.phone !== '••••••••••' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? 'text-green-600 bg-green-100 dark:bg-green-900/30' : 'text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} title={whatsappSent ? 'Receipt sent - Click for options' : 'WhatsApp options'}>
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {(tenant.payment.paymentStatus === 'Paid' || tenant.payment.paymentStatus === 'Partial') && (
                               <DropdownMenuItem onClick={handleResendReceipt} className="gap-2">
                                 <Receipt className="h-4 w-4" />
                                 Generate Receipt
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')} className="gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                Chat with Tenant
+                            )}
+                            <DropdownMenuItem onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')} className="gap-2">
+                              <MessageSquare className="h-4 w-4" />
+                              Chat with Tenant
+                            </DropdownMenuItem>
+                            {tenant.payment.paymentStatus !== 'Paid' && (
+                              <DropdownMenuItem onClick={sendPaymentReminder} className="gap-2">
+                                <Bell className="h-4 w-4" />
+                                Payment Reminder
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu> : <a href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30" title={`Chat with ${tenant.name}`}>
-                            <MessageCircle className="h-4 w-4" />
-                          </a>)}
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                     {isPartial ? <Badge className="bg-overdue text-overdue-foreground">
                         ₹{remaining.toLocaleString()}
                       </Badge> : <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>}
                   </div>
-                  <div className="text-xs text-muted-foreground mb-2">Room {tenant.roomNo}</div>
+                  <div className="text-xs text-muted-foreground mb-2">Room {tenant.roomNo}{tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}</div>
                   
                   {isPartial && <div className="text-sm font-medium mb-2">
                       <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
@@ -688,5 +720,12 @@ export const MonthlyRentSheet = ({
         });
       }
     }} />
+
+      {/* Tenant Lock Dialog */}
+      <TenantLockDialog 
+        open={lockDialogOpen} 
+        onOpenChange={setLockDialogOpen} 
+        tenant={lockTenant} 
+      />
     </div>;
 };
