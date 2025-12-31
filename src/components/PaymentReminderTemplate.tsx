@@ -219,7 +219,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
               fontWeight: 500,
             }}
           >
-            Kindly pay at your earliest convenience. Thank you for staying with us! 🙏
+            Kindly pay at your earliest convenience. Thank you! 🙏
           </div>
         </div>
       </div>
