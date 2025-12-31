@@ -31,8 +31,16 @@ const formatStayPeriod = (joiningDate: string): string => {
   const start = new Date(joiningDate);
 
   const end = new Date(start);
-  end.setMonth(end.getMonth() + 1);
-  end.setDate(end.getDate() - 1);
+  end.setMonth(start.getMonth() + 1);
+
+  // If date overflows (e.g., 31 → Feb), JS changes month
+  // In that case, set to last day of previous month
+  if (end.getDate() !== start.getDate()) {
+    end.setDate(0);
+  } else {
+    // Normal case: subtract 1 day
+    end.setDate(end.getDate() - 1);
+  }
 
   const options: Intl.DateTimeFormatOptions = {
     day: "numeric",
