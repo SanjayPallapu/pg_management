@@ -27,6 +27,22 @@ const formatCurrency = (amount: number): string => {
   return `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
 };
 
+const formatStayPeriod = (joiningDate: string): string => {
+  const start = new Date(joiningDate);
+
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 1);
+  end.setDate(end.getDate() - 1);
+
+  const options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  };
+
+  return `${start.toLocaleDateString("en-GB", options)} – ${end.toLocaleDateString("en-GB", options)}`;
+};
+
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
   const hasPaid = (data.payment.paid || 0) > 0;
 
@@ -35,7 +51,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
       ref={ref}
       style={{
         width: "500px",
-        height: "610px",
+        height: "625px",
         background: "#ffffff",
         fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
         overflow: "hidden",
@@ -180,7 +196,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {data.stay.month}
+                {formatStayPeriod(data.tenant.joiningDate)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
