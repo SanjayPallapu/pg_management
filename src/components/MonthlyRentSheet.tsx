@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -44,6 +45,18 @@ export const MonthlyRentSheet = ({
   const [overpaymentReason, setOverpaymentReason] = useState<string>('');
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderData, setReminderData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    forMonth: string;
+    roomNo: string;
+    sharingType: string;
+    amount: number;
+    amountPaid?: number;
+    balance: number;
+  } | null>(null);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -471,12 +484,23 @@ export const MonthlyRentSheet = ({
               });
               setWhatsappDialogOpen(true);
             };
-            const sendPaymentReminder = () => {
-              const phone = tenant.phone.replace(/\D/g, '');
-              const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
-              const monthName = months[selectedMonth - 1].label;
-              const message = `Hi ${tenant.name}, this is a gentle reminder for your rent payment of ₹${tenant.monthlyRent.toLocaleString()} for ${monthName} ${selectedYear}. Please make the payment at your earliest convenience. Thank you!`;
-              window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+            const openPaymentReminder = () => {
+              const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+              const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+              const amountPaid = tenant.payment.amountPaid || 0;
+              const balance = tenant.monthlyRent - amountPaid;
+              setReminderData({
+                tenantName: tenant.name,
+                tenantPhone: tenant.phone,
+                joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                roomNo: tenant.roomNo,
+                sharingType: sharingType,
+                amount: tenant.monthlyRent,
+                amountPaid: amountPaid > 0 ? amountPaid : undefined,
+                balance: balance,
+              });
+              setReminderDialogOpen(true);
             };
             return <div key={tenant.id} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
                   <div className="flex justify-between items-start mb-2">
@@ -506,7 +530,7 @@ export const MonthlyRentSheet = ({
                               Chat with Tenant
                             </DropdownMenuItem>
                             {tenant.payment.paymentStatus !== 'Paid' && (
-                              <DropdownMenuItem onClick={sendPaymentReminder} className="gap-2">
+                              <DropdownMenuItem onClick={openPaymentReminder} className="gap-2">
                                 <Bell className="h-4 w-4" />
                                 Payment Reminder
                               </DropdownMenuItem>
@@ -705,6 +729,13 @@ export const MonthlyRentSheet = ({
         });
       }
     }} />
+
+      {/* Payment Reminder Dialog */}
+      <PaymentReminderDialog 
+        open={reminderDialogOpen} 
+        onOpenChange={setReminderDialogOpen} 
+        reminderData={reminderData} 
+      />
 
     </div>;
 };
