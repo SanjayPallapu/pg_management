@@ -46,11 +46,18 @@ export const Reports = ({
 
   // Pending tenants = all non-paid (overdue + advance-not-paid + not-due + partial)
   const pendingTenants = eligibleTenants.filter(t => t.paymentCategory !== 'paid');
-  const totalOverdueRent = overdueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalAdvanceNotPaidRent = advanceNotPaidTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalNotYetDueRent = notDueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalPartialPaid = partialTenants.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
-  const totalPartialRemaining = partialTenants.reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
+  
+  // Exclude locked tenants from financial totals
+  const unlockedOverdueTenants = overdueTenants.filter(t => !t.isLocked);
+  const unlockedAdvanceNotPaidTenants = advanceNotPaidTenants.filter(t => !t.isLocked);
+  const unlockedNotDueTenants = notDueTenants.filter(t => !t.isLocked);
+  const unlockedPartialTenants = partialTenants.filter(t => !t.isLocked);
+  
+  const totalOverdueRent = unlockedOverdueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const totalAdvanceNotPaidRent = unlockedAdvanceNotPaidTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const totalNotYetDueRent = unlockedNotDueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const totalPartialPaid = unlockedPartialTenants.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+  const totalPartialRemaining = unlockedPartialTenants.reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
   const getFloorName = (floor: number) => {
     const floorNames = {
       1: '1st Floor',
@@ -170,24 +177,24 @@ export const Reports = ({
                     </div>;
             })}
                 <div className="mt-4 space-y-2">
-                  {partialTenants.length > 0 && <div className="p-3 rounded-lg bg-partial-muted">
+                {unlockedPartialTenants.length > 0 && <div className="p-3 rounded-lg bg-partial-muted">
                       <div className="font-medium text-partial">Partial Payments: ₹{totalPartialRemaining.toLocaleString()} remaining</div>
-                      <div className="text-xs text-muted-foreground">({partialTenants.length} tenants, ₹{totalPartialPaid.toLocaleString()} collected)</div>
+                      <div className="text-xs text-muted-foreground">({unlockedPartialTenants.length} tenants, ₹{totalPartialPaid.toLocaleString()} collected)</div>
                     </div>}
 
-                  {advanceNotPaidTenants.length > 0 && <div className="p-3 rounded-lg bg-advance-not-paid-muted">
+                  {unlockedAdvanceNotPaidTenants.length > 0 && <div className="p-3 rounded-lg bg-advance-not-paid-muted">
                       <div className="font-medium text-advance-not-paid">Advance Due: ₹{totalAdvanceNotPaidRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({advanceNotPaidTenants.length} new tenants)</div>
+                      <div className="text-xs text-muted-foreground">({unlockedAdvanceNotPaidTenants.length} new tenants)</div>
                     </div>}
 
-                  {notDueTenants.length > 0 && <div className="p-3 rounded-lg bg-not-due-muted">
+                  {unlockedNotDueTenants.length > 0 && <div className="p-3 rounded-lg bg-not-due-muted">
                       <div className="font-medium text-not-due">Not Yet Due: ₹{totalNotYetDueRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({notDueTenants.length} tenants)</div>
+                      <div className="text-xs text-muted-foreground">({unlockedNotDueTenants.length} tenants)</div>
                     </div>}
 
-                  {overdueTenants.length > 0 && <div className="p-3 rounded-lg bg-overdue-muted">
+                  {unlockedOverdueTenants.length > 0 && <div className="p-3 rounded-lg bg-overdue-muted">
                       <div className="font-medium text-overdue">Overdue: ₹{totalOverdueRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({overdueTenants.length} tenants)</div>
+                      <div className="text-xs text-muted-foreground">({unlockedOverdueTenants.length} tenants)</div>
                     </div>}
                 </div>
               </div>}

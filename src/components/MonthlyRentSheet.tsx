@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Lock, Bell } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
-import { TenantLockDialog } from './TenantLockDialog';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -60,8 +59,6 @@ export const MonthlyRentSheet = ({
     remainingBalance?: number;
     tenantId?: string;
   } | null>(null);
-  const [lockDialogOpen, setLockDialogOpen] = useState(false);
-  const [lockTenant, setLockTenant] = useState<{ id: string; name: string; isLocked?: boolean } | null>(null);
 
   // Handle OS back gesture to close dialogs
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
@@ -481,22 +478,10 @@ export const MonthlyRentSheet = ({
               const message = `Hi ${tenant.name}, this is a gentle reminder for your rent payment of ₹${tenant.monthlyRent.toLocaleString()} for ${monthName} ${selectedYear}. Please make the payment at your earliest convenience. Thank you!`;
               window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
             };
-            const openLockDialog = () => {
-              setLockTenant({ id: tenant.id, name: tenant.name, isLocked: tenant.isLocked });
-              setLockDialogOpen(true);
-            };
             return <div key={tenant.id} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">{tenant.isLocked && '🔒 '}{tenant.name}</div>
-                      {/* Lock button */}
-                      <button 
-                        onClick={openLockDialog}
-                        className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${tenant.isLocked ? 'text-destructive bg-destructive/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                        title={tenant.isLocked ? 'Locked - excluded from totals' : 'Lock tenant'}
-                      >
-                        <Lock className="h-4 w-4" />
-                      </button>
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== '••••••••••' && <a href={`tel:${tenant.phone}`} className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30" title={`Call ${tenant.name}`}>
                           <Phone className="h-4 w-4" />
@@ -721,11 +706,5 @@ export const MonthlyRentSheet = ({
       }
     }} />
 
-      {/* Tenant Lock Dialog */}
-      <TenantLockDialog 
-        open={lockDialogOpen} 
-        onOpenChange={setLockDialogOpen} 
-        tenant={lockTenant} 
-      />
     </div>;
 };
