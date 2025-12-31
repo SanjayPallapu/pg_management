@@ -10,6 +10,7 @@ export interface ReminderData {
     month: string;
     roomNo: string;
     sharingType: string;
+    billingCycle: number;
   };
   payment: {
     amount: number;
@@ -51,6 +52,7 @@ const formatStayPeriod = (joiningDate: string, billingCycle: number): string => 
 
   return `${start.toLocaleDateString("en-GB", options)} – ${end.toLocaleDateString("en-GB", options)}`;
 };
+
 
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
   const hasPaid = (data.payment.paid || 0) > 0;
@@ -205,7 +207,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {formatStayPeriod(data.tenant.joiningDate)}
+                {formatStayPeriod(data.tenant.joiningDate, data.stay.billingCycle)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
