@@ -20,6 +20,7 @@ export interface Tenant {
   paymentDate?: string;
   securityDepositAmount?: number | null;
   securityDepositDate?: string | null;
+  isLocked?: boolean;
 }
 
 export interface PaymentEntry {

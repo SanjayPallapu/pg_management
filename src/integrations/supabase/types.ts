@@ -171,6 +171,7 @@ export type Database = {
           created_at: string
           end_date: string | null
           id: string
+          is_locked: boolean
           monthly_rent: number
           name: string
           payment_date: string | null
@@ -186,6 +187,7 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          is_locked?: boolean
           monthly_rent: number
           name: string
           payment_date?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          is_locked?: boolean
           monthly_rent?: number
           name?: string
           payment_date?: string | null

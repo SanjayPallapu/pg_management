@@ -9,6 +9,7 @@ export interface TenantWithPayment extends Tenant {
   paymentCategory: PaymentCategory;
   paymentDate?: string;
   amountPaid?: number;
+  isLocked?: boolean;
 }
 
 interface UseRentCalculationsProps {
@@ -112,12 +113,16 @@ export const useRentCalculations = ({
     const advanceNotPaidTenants = eligibleTenants.filter(t => t.paymentCategory === 'advance-not-paid');
     const notDueTenants = eligibleTenants.filter(t => t.paymentCategory === 'not-due');
 
-    // Calculate totals
-    const totalRent = eligibleTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
+    // Calculate totals - exclude locked tenants
+    const unlockedTenants = eligibleTenants.filter(t => !t.isLocked);
+    const unlockedPaid = paidTenants.filter(t => !t.isLocked);
+    const unlockedPartial = partialTenants.filter(t => !t.isLocked);
+    
+    const totalRent = unlockedTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
     // Use actual amount paid (includes extras/overpayments) for rent collected
-    const rentCollected = paidTenants.reduce((sum, t) => sum + (t.amountPaid || t.monthlyRent), 0) + 
-                          partialTenants.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
-    const totalPending = eligibleTenants
+    const rentCollected = unlockedPaid.reduce((sum, t) => sum + (t.amountPaid || t.monthlyRent), 0) + 
+                          unlockedPartial.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+    const totalPending = unlockedTenants
       .filter(t => t.paymentCategory !== 'paid')
       .reduce((sum, t) => {
         if (t.paymentCategory === 'partial') {
