@@ -45,25 +45,54 @@ const formatBillingRange = (
   const joinDate = new Date(joiningDate);
   if (isNaN(joinDate.getTime())) return "—";
 
-  const originalJoinDay = joinDate.getDate();
-  const isFebruary = selectedMonth === 2;
+  const joinDay = joinDate.getDate();
+  const isFeb = selectedMonth === 2;
 
-  const lastDayCurrentMonth = getLastDayOfMonth(selectedYear, selectedMonth);
-  const lastDayNextMonth = getLastDayOfMonth(selectedYear, selectedMonth + 1);
+  const lastDayCurrent = getLastDayOfMonth(selectedYear, selectedMonth);
+  const lastDayNext = getLastDayOfMonth(selectedYear, selectedMonth + 1);
 
-  // 🔒 SPECIAL FEB RULE
-  const effectiveJoinDay =
-    isFebruary && originalJoinDay >= 29 ? 28 : originalJoinDay;
+  /* =========================
+     START DAY (calendar-safe)
+  ========================= */
 
-  // ✅ START DAY (clamped)
-  const startDay = Math.min(effectiveJoinDay, lastDayCurrentMonth);
+  let startDay: number;
 
-  // ✅ END DAY (day before next cycle)
-  let endDay = effectiveJoinDay - 1;
-  if (endDay <= 0) {
-    endDay = lastDayCurrentMonth;
+  if (isFeb && joinDay >= 28) {
+    startDay = 28; // clamp Feb
+  } else {
+    startDay = Math.min(joinDay, lastDayCurrent);
   }
-  endDay = Math.min(endDay, lastDayNextMonth);
+
+  /* =========================
+     END DAY (locked rules)
+  ========================= */
+
+  let endDay: number;
+
+  if (isFeb) {
+    // Base end is 27 March
+    let carry = 0;
+
+    if (joinDay === 29) carry = 1;
+    if (joinDay === 30) carry = 2;
+    if (joinDay >= 31) carry = 3;
+
+    endDay = 27 + carry;
+
+    // Cap March to max 30 for billing
+    endDay = Math.min(endDay, 30);
+  } else {
+    // Normal months
+    endDay = joinDay - 1;
+    if (endDay <= 0) {
+      endDay = lastDayCurrent;
+    }
+    endDay = Math.min(endDay, lastDayNext);
+  }
+
+  /* =========================
+     BUILD DATES (NO AUTO FIX)
+  ========================= */
 
   const startDate = new Date(selectedYear, selectedMonth - 1, startDay);
   const endDate = new Date(selectedYear, selectedMonth, endDay);
@@ -76,6 +105,7 @@ const formatBillingRange = (
 
   return `${format(startDate)} - ${format(endDate)}`;
 };
+
 
 /* =========================
    Component
