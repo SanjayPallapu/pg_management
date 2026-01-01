@@ -6,6 +6,7 @@ import { Loader2, Bell, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { useMonthContext } from '@/contexts/MonthContext';
 
 interface ReminderInputData {
   tenantName: string;
@@ -31,6 +32,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const reminderRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReminderData | null>(null);
+  const { selectedMonth, selectedYear } = useMonthContext();
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -51,9 +53,11 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
           paid: reminderData.amountPaid,
           balance: reminderData.balance,
         },
+        selectedMonth,
+        selectedYear,
       });
     }
-  }, [reminderData, open]);
+  }, [reminderData, open, selectedMonth, selectedYear]);
 
   const generateReminder = useCallback(async () => {
     if (!reminderData || !templateData || !reminderRef.current) {
