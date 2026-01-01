@@ -37,27 +37,36 @@ const formatCurrency = (amount: number): string => `₹ ${Math.floor(amount).toL
 
 const getLastDayOfMonth = (year: number, month: number): number => new Date(year, month, 0).getDate();
 
-/**
- * Join-date based billing cycle (SAFE)
- * - Start: join day or last valid day of month
- * - End: next month (join day - 1) or last valid day
- */
-const formatBillingRange = (joiningDate: string, selectedYear: number, selectedMonth: number): string => {
+const formatBillingRange = (
+  joiningDate: string,
+  selectedYear: number,
+  selectedMonth: number
+): string => {
   const joinDate = new Date(joiningDate);
   if (isNaN(joinDate.getTime())) return "—";
 
-  const joinDay = joinDate.getDate();
+  const originalJoinDay = joinDate.getDate();
+  const isFebruary = selectedMonth === 2;
 
-  const startDay = Math.min(joinDay, getLastDayOfMonth(selectedYear, selectedMonth));
+  const lastDayCurrentMonth = getLastDayOfMonth(selectedYear, selectedMonth);
+  const lastDayNextMonth = getLastDayOfMonth(selectedYear, selectedMonth + 1);
 
-  const endDay = Math.min(joinDay - 1, getLastDayOfMonth(selectedYear, selectedMonth + 1));
+  // 🔒 SPECIAL FEB RULE
+  const effectiveJoinDay =
+    isFebruary && originalJoinDay >= 29 ? 28 : originalJoinDay;
+
+  // ✅ START DAY (clamped)
+  const startDay = Math.min(effectiveJoinDay, lastDayCurrentMonth);
+
+  // ✅ END DAY (day before next cycle)
+  let endDay = effectiveJoinDay - 1;
+  if (endDay <= 0) {
+    endDay = lastDayCurrentMonth;
+  }
+  endDay = Math.min(endDay, lastDayNextMonth);
 
   const startDate = new Date(selectedYear, selectedMonth - 1, startDay);
-  const endDate = new Date(
-    selectedYear,
-    selectedMonth,
-    endDay > 0 ? endDay : getLastDayOfMonth(selectedYear, selectedMonth),
-  );
+  const endDate = new Date(selectedYear, selectedMonth, endDay);
 
   const format = (d: Date) =>
     d.toLocaleDateString("en-IN", {
