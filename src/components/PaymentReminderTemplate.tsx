@@ -180,6 +180,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         <div
           style={{
             background: "#fef3c7",
+            color: "#1a1a1a",
             padding: "10px 16px",
             fontWeight: 600,
             fontSize: "14px",
