@@ -17,6 +17,8 @@ export interface ReminderData {
     balance: number;
     dueDate?: string;
   };
+  selectedMonth: number;
+  selectedYear: number;
 }
 
 interface PaymentReminderTemplateProps {
@@ -29,30 +31,21 @@ const formatCurrency = (amount: number): string => {
 
 const formatBillingRange = (
   joiningDate: string,
-  referenceDate: Date = new Date()
+  selectedYear: number,
+  selectedMonth: number
 ): string => {
   const join = new Date(joiningDate);
   if (isNaN(join.getTime())) return "—";
 
   const joinDay = join.getDate();
 
-  const start = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth(),
-    joinDay
-  );
-
-  const end = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth() + 1,
-    joinDay - 1
-  );
+  const start = new Date(selectedYear, selectedMonth - 1, joinDay);
+  const end = new Date(selectedYear, selectedMonth, joinDay - 1);
 
   const format = (d: Date) =>
     d.toLocaleDateString("en-IN", {
       day: "numeric",
       month: "short",
-      year: "numeric",
     });
 
   return `${format(start)} - ${format(end)}`;
@@ -211,7 +204,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                 {formatBillingRange(data.tenant.joiningDate)}
+                 {formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
