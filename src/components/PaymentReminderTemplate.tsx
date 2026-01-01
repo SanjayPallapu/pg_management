@@ -1,13 +1,17 @@
 import { forwardRef } from "react";
 import hostelLogo from "@/assets/hostel-logo.png";
 
+/* =========================
+   Types
+========================= */
+
 export interface ReminderData {
   tenant: {
     name: string;
-    joiningDate: string;
+    joiningDate: string; // ISO date
   };
   stay: {
-    month: string;
+    month: string; // kept for compatibility
     roomNo: string;
     sharingType: string;
   };
@@ -17,30 +21,43 @@ export interface ReminderData {
     balance: number;
     dueDate?: string;
   };
-  selectedMonth: number;
-  selectedYear: number;
+  selectedMonth: number; // 1–12
+  selectedYear: number; // YYYY
 }
 
 interface PaymentReminderTemplateProps {
   data: ReminderData;
 }
 
-const formatCurrency = (amount: number): string => {
-  return `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
-};
+/* =========================
+   Helpers
+========================= */
 
-const formatBillingRange = (
-  joiningDate: string,
-  selectedYear: number,
-  selectedMonth: number
-): string => {
-  const join = new Date(joiningDate);
-  if (isNaN(join.getTime())) return "—";
+const formatCurrency = (amount: number): string => `₹ ${Math.floor(amount).toLocaleString("en-IN")}`;
 
-  const joinDay = join.getDate();
+const getLastDayOfMonth = (year: number, month: number): number => new Date(year, month, 0).getDate();
 
-  const start = new Date(selectedYear, selectedMonth - 1, joinDay);
-  const end = new Date(selectedYear, selectedMonth, joinDay - 1);
+/**
+ * Join-date based billing cycle (SAFE)
+ * - Start: join day or last valid day of month
+ * - End: next month (join day - 1) or last valid day
+ */
+const formatBillingRange = (joiningDate: string, selectedYear: number, selectedMonth: number): string => {
+  const joinDate = new Date(joiningDate);
+  if (isNaN(joinDate.getTime())) return "—";
+
+  const joinDay = joinDate.getDate();
+
+  const startDay = Math.min(joinDay, getLastDayOfMonth(selectedYear, selectedMonth));
+
+  const endDay = Math.min(joinDay - 1, getLastDayOfMonth(selectedYear, selectedMonth + 1));
+
+  const startDate = new Date(selectedYear, selectedMonth - 1, startDay);
+  const endDate = new Date(
+    selectedYear,
+    selectedMonth,
+    endDay > 0 ? endDay : getLastDayOfMonth(selectedYear, selectedMonth),
+  );
 
   const format = (d: Date) =>
     d.toLocaleDateString("en-IN", {
@@ -48,8 +65,12 @@ const formatBillingRange = (
       month: "short",
     });
 
-  return `${format(start)} - ${format(end)}`;
+  return `${format(startDate)} - ${format(endDate)}`;
 };
+
+/* =========================
+   Component
+========================= */
 
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
   const hasPaid = (data.payment.paid || 0) > 0;
@@ -67,15 +88,8 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         flexDirection: "column",
       }}
     >
-      {/* Header with Logo */}
-      <div
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "20px 0 15px",
-          background: "#ffffff",
-        }}
-      >
+      {/* Header */}
+      <div style={{ textAlign: "center", padding: "20px 0 15px" }}>
         <img
           src={hostelLogo}
           alt="Amma Women's Hostel"
@@ -83,20 +97,14 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           loading="eager"
           style={{
             width: "160px",
-            height: "auto",
             margin: "0 auto",
             display: "block",
           }}
         />
       </div>
 
-      {/* Payment Reminder Badge */}
-      <div
-        style={{
-          textAlign: "center",
-          padding: "10px 0",
-        }}
-      >
+      {/* Title */}
+      <div style={{ textAlign: "center", padding: "10px 0" }}>
         <div
           style={{
             display: "inline-flex",
@@ -117,7 +125,6 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
               alignItems: "center",
               justifyContent: "center",
               color: "#ffffff",
-              fontSize: "16px",
               fontWeight: "bold",
             }}
           >
@@ -127,7 +134,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         </div>
       </div>
 
-      {/* Amount Due Card */}
+      {/* Amount Due */}
       <div
         style={{
           margin: "0 20px 12px",
@@ -148,36 +155,25 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         >
           {formatCurrency(data.payment.balance)}
         </div>
-        <div
-          style={{
-            fontSize: "14px",
-            color: "#92400e",
-            fontWeight: 500,
-          }}
-        >
+
+        <div style={{ fontSize: "14px", color: "#92400e", fontWeight: 500 }}>
           {hasPaid ? "Remaining Balance Due" : "Amount Due"}
         </div>
+
         {hasPaid && (
-          <div
-            style={{
-              fontSize: "12px",
-              color: "#166534",
-              marginTop: "4px",
-            }}
-          >
+          <div style={{ fontSize: "12px", color: "#166534", marginTop: "4px" }}>
             {formatCurrency(data.payment.paid || 0)} already paid
           </div>
         )}
       </div>
 
-      {/* Details Card */}
+      {/* Details */}
       <div
         style={{
           margin: "0 20px 12px",
           border: "1px solid #e5e7eb",
           borderRadius: "12px",
           overflow: "hidden",
-          background: "#ffffff",
           flex: 1,
         }}
       >
@@ -187,37 +183,34 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             padding: "10px 16px",
             fontWeight: 600,
             fontSize: "14px",
-            color: "#1a1a1a",
             borderBottom: "1px solid #e5e7eb",
           }}
         >
           Payment Details
         </div>
+
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-              <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px", width: "45%" }}>Tenant Name:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {data.tenant.name}
-              </td>
-            </tr>
-            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-              <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                 {formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}
-              </td>
-            </tr>
-            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-              <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>Room No:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {data.stay.roomNo}
-              </td>
-            </tr>
             <tr>
-              <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>Monthly Rent:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                {formatCurrency(data.payment.amount)}
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Tenant Name:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500 }}>{data.tenant.name}</td>
+            </tr>
+
+            <tr>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>For Period:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500 }}>
+                {formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}
               </td>
+            </tr>
+
+            <tr>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Room No:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500 }}>{data.stay.roomNo}</td>
+            </tr>
+
+            <tr>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Monthly Rent:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500 }}>{formatCurrency(data.payment.amount)}</td>
             </tr>
           </tbody>
         </table>
@@ -228,24 +221,13 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         style={{
           background: "linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)",
           padding: "14px 20px",
+          textAlign: "center",
+          fontSize: "13px",
+          color: "#92400e",
+          fontWeight: 500,
         }}
       >
-        <div
-          style={{
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "13px",
-              color: "#92400e",
-              lineHeight: 1.5,
-              fontWeight: 500,
-            }}
-          >
-            Kindly pay at your earliest convenience. Thank you! 🙏
-          </div>
-        </div>
+        Kindly pay at your earliest convenience. Thank you! 🙏
       </div>
     </div>
   );
