@@ -211,7 +211,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280", fontSize: "13px" }}>For Month:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, fontSize: "13px", color: "#1a1a1a" }}>
-                 {formatBillingRange(data.tenant.joiningDate)}
+                 {data.stay.month}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>

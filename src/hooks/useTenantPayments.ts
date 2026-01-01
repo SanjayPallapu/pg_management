@@ -8,9 +8,14 @@ export const useTenantPayments = () => {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ['tenant-payments'],
     queryFn: async () => {
+      // Only fetch payments from the last 13 months for performance
+      const currentDate = new Date();
+      const cutoffYear = currentDate.getFullYear() - 1;
+      
       const { data, error } = await supabase
         .from('tenant_payments')
         .select('*')
+        .gte('year', cutoffYear)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
@@ -31,6 +36,8 @@ export const useTenantPayments = () => {
         notes: (payment as any).notes || undefined,
       })) as TenantPayment[];
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const upsertPayment = useMutation({

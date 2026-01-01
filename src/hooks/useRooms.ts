@@ -10,18 +10,17 @@ export const useRooms = () => {
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['rooms', isAdmin],
     queryFn: async () => {
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('*')
-        .order('room_no');
+      // Fetch rooms and tenants in parallel for better performance
+      const [roomsResult, tenantsResult] = await Promise.all([
+        supabase.from('rooms').select('*').order('room_no'),
+        supabase.from('tenants').select('*')
+      ]);
 
-      if (roomsError) throw roomsError;
+      if (roomsResult.error) throw roomsResult.error;
+      if (tenantsResult.error) throw tenantsResult.error;
 
-      const { data: tenantsData, error: tenantsError } = await supabase
-        .from('tenants')
-        .select('*');
-
-      if (tenantsError) throw tenantsError;
+      const roomsData = roomsResult.data;
+      const tenantsData = tenantsResult.data;
 
       return roomsData.map(room => ({
         id: room.id,
@@ -51,6 +50,8 @@ export const useRooms = () => {
       })) as Room[];
     },
     enabled: !authLoading,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const updateRoom = useMutation({
