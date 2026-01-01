@@ -97,8 +97,15 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         flexDirection: "column",
       }}
     >
-      {/* Header */}
-      <div style={{ textAlign: "center", padding: "20px 0 15px" }}>
+         {/* Header with Logo */}
+      <div
+        style={{
+          width: "100%",
+          textAlign: "center",
+          padding: "20px 0 15px",
+          background: "#ffffff",
+        }}
+      >
         <img
           src={hostelLogo}
           alt="Amma Women's Hostel"
@@ -106,11 +113,13 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           loading="eager"
           style={{
             width: "160px",
+            height: "auto",
             margin: "0 auto",
             display: "block",
           }}
         />
       </div>
+
 
       {/* Title */}
       <div style={{ textAlign: "center", padding: "10px 0" }}>
