@@ -178,12 +178,45 @@ export const MonthlyRentSheet = ({
       prevMonth = 12;
       prevYear = selectedYear - 1;
     }
-    const overduePayments = payments.filter(p => p.month === prevMonth && p.year === prevYear && p.paymentStatus !== 'Paid');
+    
+    // Get all tenants who were active in the previous month
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
+      ...tenant,
+      roomNo: room.roomNo
+    })));
+    const prevMonthActiveTenants = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)
+    );
+    const prevMonthActiveTenantIds = new Set(prevMonthActiveTenants.map(t => t.id));
+    
+    // Find tenants who were active in prev month but have no payment or unpaid payment
+    let overdueTotal = 0;
+    let overdueCount = 0;
+    
+    prevMonthActiveTenants.forEach(tenant => {
+      if (tenant.isLocked) return; // Skip locked tenants
+      
+      const payment = payments.find(p => 
+        p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear
+      );
+      
+      if (!payment || payment.paymentStatus === 'Pending') {
+        // No payment record or pending = full rent overdue
+        overdueTotal += tenant.monthlyRent;
+        overdueCount++;
+      } else if (payment.paymentStatus === 'Partial') {
+        // Partial payment = remaining amount overdue
+        overdueTotal += (tenant.monthlyRent - (payment.amountPaid || 0));
+        overdueCount++;
+      }
+      // 'Paid' = not overdue, skip
+    });
+    
     return {
-      total: overduePayments.reduce((sum, p) => sum + (p.amount - (p.amountPaid || 0)), 0),
-      count: overduePayments.length
+      total: overdueTotal,
+      count: overdueCount
     };
-  }, [selectedMonth, selectedYear, payments]);
+  }, [selectedMonth, selectedYear, payments, rooms]);
   const stats = useMemo(() => {
     // Exclude locked tenants from stats
     const unlockedTenants = tenantsWithPayments.filter(t => !t.isLocked);
