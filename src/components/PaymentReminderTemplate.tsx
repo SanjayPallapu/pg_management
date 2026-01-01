@@ -240,24 +240,24 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            <tr>
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Tenant Name:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.tenant.name}</td>
             </tr>
 
-            <tr>
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>For Period:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>
                 {formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}
               </td>
             </tr>
 
-            <tr>
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Room No:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.stay.roomNo}</td>
             </tr>
 
-            <tr>
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Monthly Rent:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{formatCurrency(data.payment.amount)}</td>
             </tr>
