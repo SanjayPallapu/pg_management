@@ -154,6 +154,17 @@ export const convertToReceiptData = (
   isFullPayment: boolean,
   remainingBalance?: number
 ): ReceiptData => {
+
+    // Parse forMonth (e.g., "March 2025") to extract month and year
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const parts = forMonth?.trim().split(' ') || [];
+  const monthName = parts[0] || '';
+  const yearString = parts[1] || '';
+  const monthIndex = monthNames.indexOf(monthName);
+  const now = new Date();
+  const selectedMonth = monthIndex >= 0 ? monthIndex + 1 : now.getMonth() + 1;
+  const selectedYear = parseInt(yearString, 10) || now.getFullYear();
+
   return {
     tenant: {
       name: tenantName,
@@ -172,5 +183,7 @@ export const convertToReceiptData = (
       mode: paymentMode === 'upi' ? 'Online' : paymentMode === 'cash' ? 'Cash' : paymentMode,
       date: paymentDate,
     },
+        selectedMonth,
+    selectedYear,
   };
 };
