@@ -149,8 +149,9 @@ export const Reports = ({
                 {pendingTenants.map(tenant => {
               const isPartial = tenant.paymentCategory === 'partial';
               const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
-              const bgClass = tenant.paymentCategory === 'overdue' ? 'bg-overdue-muted border-l-4 border-overdue' : tenant.paymentCategory === 'partial' ? 'bg-partial-muted border-l-4 border-partial' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' : 'bg-not-due-muted border-l-4 border-not-due';
-              const statusLabel = tenant.paymentCategory === 'overdue' ? 'Overdue' : tenant.paymentCategory === 'partial' ? 'Partial' : tenant.paymentCategory === 'advance-not-paid' ? 'Advance Due' : 'Pending';
+              const bgClass = tenant.paymentCategory === 'overdue' ? 'bg-overdue-muted border-l-4 border-overdue' : tenant.paymentCategory === 'partial' ? 'bg-partial-muted border-l-4 border-partial' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' : 'bg-blue-500/10 border-l-4 border-blue-500';
+              const statusLabel = tenant.paymentCategory === 'overdue' ? 'Overdue' : tenant.paymentCategory === 'partial' ? 'Partial' : tenant.paymentCategory === 'advance-not-paid' ? 'Advance Due' : 'Not Yet Due';
+              const textColorClass = tenant.paymentCategory === 'not-due' ? 'text-blue-600 dark:text-blue-400' : '';
               return <div key={tenant.id} className={`flex items-center justify-between p-3 rounded-lg ${bgClass}`}>
                       <div>
                         <div className="font-semibold">
@@ -169,8 +170,8 @@ export const Reports = ({
                           </div>}
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-pending">₹{remaining.toLocaleString()}</div>
-                        <Badge variant="outline" className={`text-xs ${tenant.paymentCategory === 'overdue' ? 'bg-overdue text-overdue-foreground' : tenant.paymentCategory === 'partial' ? 'bg-partial text-partial-foreground' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid text-advance-not-paid-foreground' : 'bg-not-due text-not-due-foreground'}`}>
+                        <div className={`font-medium ${textColorClass || 'text-pending'}`}>₹{remaining.toLocaleString()}</div>
+                        <Badge variant="outline" className={`text-xs ${tenant.paymentCategory === 'overdue' ? 'bg-overdue text-overdue-foreground' : tenant.paymentCategory === 'partial' ? 'bg-partial text-partial-foreground' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid text-advance-not-paid-foreground' : 'bg-blue-500 text-white'}`}>
                           {statusLabel}
                         </Badge>
                       </div>
@@ -182,14 +183,14 @@ export const Reports = ({
                       <div className="text-xs text-muted-foreground">({unlockedPartialTenants.length} tenants, ₹{totalPartialPaid.toLocaleString()} collected)</div>
                     </div>}
 
-                  {unlockedAdvanceNotPaidTenants.length > 0 && <div className="p-3 rounded-lg bg-advance-not-paid-muted">
+                  {unlockedAdvanceNotPaidTenants.length > 0 && <div className="p-3 rounded-lg bg-advance-not-paid-muted border-l-4 border-advance-not-paid">
                       <div className="font-medium text-advance-not-paid">Advance Due: ₹{totalAdvanceNotPaidRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({unlockedAdvanceNotPaidTenants.length} new tenants)</div>
+                      <div className="text-xs text-muted-foreground">({unlockedAdvanceNotPaidTenants.length} tenants - due date passed)</div>
                     </div>}
 
-                  {unlockedNotDueTenants.length > 0 && <div className="p-3 rounded-lg bg-not-due-muted">
-                      <div className="font-medium text-not-due">Not Yet Due: ₹{totalNotYetDueRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({unlockedNotDueTenants.length} tenants)</div>
+                  {unlockedNotDueTenants.length > 0 && <div className="p-3 rounded-lg bg-blue-500/10 border-l-4 border-blue-500">
+                      <div className="font-medium text-blue-600 dark:text-blue-400">Not Yet Due: ₹{totalNotYetDueRent.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">({unlockedNotDueTenants.length} tenants - due date upcoming)</div>
                     </div>}
 
                   {unlockedOverdueTenants.length > 0 && <div className="p-3 rounded-lg bg-overdue-muted">

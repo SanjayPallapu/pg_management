@@ -364,6 +364,36 @@ export const PaymentReconciliation = ({
     });
     return dailyData;
   }, [reconciliationData.paymentDetails, selectedMonth, selectedYear]);
+
+  // Collection schedule by joining date - shows expected collection by day
+  const collectionScheduleData = useMemo(() => {
+    const scheduleByDay: Record<number, { day: number; expected: number; tenants: number }> = {};
+    
+    // Get all pending tenants for current month
+    const allTenants = rooms.flatMap(room => 
+      room.tenants
+        .filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth))
+        .map(tenant => ({ ...tenant, roomNo: room.roomNo }))
+    );
+
+    allTenants.forEach(tenant => {
+      const payment = payments.find(p => 
+        p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+      );
+      
+      // Only count unpaid tenants
+      if (!payment || payment.paymentStatus === 'Pending') {
+        const joinDay = new Date(tenant.startDate).getDate();
+        if (!scheduleByDay[joinDay]) {
+          scheduleByDay[joinDay] = { day: joinDay, expected: 0, tenants: 0 };
+        }
+        scheduleByDay[joinDay].expected += tenant.monthlyRent;
+        scheduleByDay[joinDay].tenants++;
+      }
+    });
+
+    return Object.values(scheduleByDay).sort((a, b) => a.day - b.day);
+  }, [rooms, payments, selectedMonth, selectedYear]);
   const toggleTenantExpanded = (tenantId: string) => {
     setExpandedTenants(prev => {
       const newSet = new Set(prev);
@@ -662,7 +692,35 @@ export const PaymentReconciliation = ({
                 </div>
               </div>}
 
-            {/* Payment Mode Breakdown */}
+            {/* Expected Collection Schedule by Due Date */}
+            {collectionScheduleData.length > 0 && <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
+                <p className="text-xs text-muted-foreground">Amount pending grouped by tenant joining day</p>
+                <div className="h-48 bg-muted/30 rounded-lg p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={collectionScheduleData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={d => `${d}`} />
+                      <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} width={40} />
+                      <Tooltip 
+                        formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Expected']}
+                        labelFormatter={(day) => `Due on ${day}th`}
+                      />
+                      <Bar dataKey="expected" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {collectionScheduleData.slice(0, 6).map(item => (
+                    <div key={item.day} className="p-2 bg-purple-500/10 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Day {item.day}</div>
+                      <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">{item.tenants} tenant(s)</div>
+                    </div>
+                  ))}
+                </div>
+              </div>}
+
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Payment Mode Breakdown</h3>
               <div className="grid grid-cols-2 gap-3">
