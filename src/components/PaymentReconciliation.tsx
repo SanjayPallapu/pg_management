@@ -705,6 +705,8 @@ export const PaymentReconciliation = ({
                       <Tooltip 
                         formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Expected']}
                         labelFormatter={(day) => `Due on ${day}th`}
+                        contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', color: '#000000' }}
+                        labelStyle={{ color: '#000000' }}
                       />
                       <Bar dataKey="expected" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
