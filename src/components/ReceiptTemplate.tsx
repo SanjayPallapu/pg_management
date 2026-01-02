@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import hostelLogo from '@/assets/hostel-logo.png';
+import { formatBillingRange } from './PaymentReminderTemplate';
 
 export interface ReceiptData {
   tenant: {
@@ -19,6 +20,8 @@ export interface ReceiptData {
     mode: string;
     date: string;
   };
+    selectedMonth: number; // 1-12
+  selectedYear: number; // YYYY
 }
 
 interface ReceiptTemplateProps {
@@ -192,8 +195,8 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>For Month:</td>
-                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.stay.month}</td>
+                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>For Period:</td>
+                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Room No:</td>
