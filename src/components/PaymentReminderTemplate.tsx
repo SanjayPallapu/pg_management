@@ -37,7 +37,7 @@ const formatCurrency = (amount: number): string => `₹ ${Math.floor(amount).toL
 
 const getLastDayOfMonth = (year: number, month: number): number => new Date(year, month, 0).getDate();
 
-const formatBillingRange = (
+export const formatBillingRange = (
   joiningDate: string,
   selectedYear: number,
   selectedMonth: number
