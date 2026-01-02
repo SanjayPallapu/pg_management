@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
+import { Input } from '@/components/ui/input';
+import { Search, X } from 'lucide-react';
+import { TenantSearchResults } from './TenantSearchResults';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -10,6 +14,7 @@ interface RoomDirectoryProps {
 
 export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isSelectedCurrentMonth = (() => {
     const now = new Date();
@@ -33,11 +38,33 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     2: '2nd Floor (201-209)',
     3: '3rd Floor (301-305)'
   };
+
   return <div className="space-y-8">
       <div>
-        <h2 className="font-bold tracking-tight text-lg">  Room Directory</h2>
-        <p className="text-muted-foreground">  Overview of all rooms organized by floor</p>
+        <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
+        <p className="text-muted-foreground mb-3">Overview of all rooms organized by floor</p>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tenant by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {searchQuery.trim() && (
+        <TenantSearchResults rooms={rooms} searchQuery={searchQuery} />
+      )}
 
       {([1, 2, 3] as const).map(floor => <div key={floor} className="space-y-4">
           <div className="border-l-4 border-primary pl-4">

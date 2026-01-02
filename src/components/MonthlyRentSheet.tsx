@@ -18,6 +18,7 @@ import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
+import { PreviousOverdueSheet } from './PreviousOverdueSheet';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -46,6 +47,7 @@ export const MonthlyRentSheet = ({
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -480,7 +482,10 @@ export const MonthlyRentSheet = ({
             </div>
           </div>
 
-          {previousMonthOverdue.count > 0 && <div className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive">
+          {previousMonthOverdue.count > 0 && <div 
+              className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive cursor-pointer hover:bg-destructive/20 transition-colors"
+              onClick={() => setPreviousOverdueOpen(true)}
+            >
               <div className="font-semibold text-destructive">
                 Previous Month Overdue: ₹{previousMonthOverdue.total.toLocaleString()}
               </div>
@@ -768,6 +773,12 @@ export const MonthlyRentSheet = ({
         open={reminderDialogOpen} 
         onOpenChange={setReminderDialogOpen} 
         reminderData={reminderData} 
+      />
+
+      {/* Previous Month Overdue Sheet */}
+      <PreviousOverdueSheet
+        open={previousOverdueOpen}
+        onOpenChange={setPreviousOverdueOpen}
       />
 
     </div>;
