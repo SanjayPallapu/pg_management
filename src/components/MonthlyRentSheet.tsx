@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -19,6 +19,7 @@ import { toast } from '@/hooks/use-toast';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { PreviousOverdueSheet } from './PreviousOverdueSheet';
+import { PaymentHistorySheet } from './PaymentHistorySheet';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -48,6 +49,7 @@ export const MonthlyRentSheet = ({
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -465,9 +467,14 @@ export const MonthlyRentSheet = ({
         <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Rent Sheet</CardTitle>
-            <Button onClick={exportToExcel} variant="outline" size="icon">
-              <Download className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History">
+                <History className="h-4 w-4" />
+              </Button>
+              <Button onClick={exportToExcel} variant="outline" size="icon" title="Export Excel">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-4">
@@ -779,6 +786,12 @@ export const MonthlyRentSheet = ({
       <PreviousOverdueSheet
         open={previousOverdueOpen}
         onOpenChange={setPreviousOverdueOpen}
+      />
+
+      {/* Payment History Sheet */}
+      <PaymentHistorySheet
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
       />
 
     </div>;
