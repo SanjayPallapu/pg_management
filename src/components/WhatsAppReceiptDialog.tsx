@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
-import { generateReceiptImage, downloadReceiptImage, convertToReceiptData } from '@/utils/generateReceiptImage';
+import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
 import { supabase } from '@/integrations/supabase/client';
+import { PaymentEntry } from '@/types';
 
 interface ReceiptInputData {
   tenantName: string;
@@ -21,6 +22,8 @@ interface ReceiptInputData {
   amountPaid: number;
   isFullPayment: boolean;
   remainingBalance?: number;
+  paymentEntries?: PaymentEntry[];
+  previousMonthPending?: number;
 }
 
 interface WhatsAppReceiptDialogProps {
@@ -43,20 +46,39 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
 
   useEffect(() => {
     if (receiptData && open) {
-      const data = convertToReceiptData(
-        receiptData.tenantName,
-        receiptData.tenantPhone,
-        receiptData.paymentMode,
-        receiptData.paymentDate,
-        receiptData.joiningDate,
-        receiptData.forMonth,
-        receiptData.roomNo,
-        receiptData.sharingType,
-        receiptData.amount,
-        receiptData.amountPaid,
-        receiptData.isFullPayment,
-        receiptData.remainingBalance
-      );
+      // Parse forMonth to get selectedMonth and selectedYear
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const parts = receiptData.forMonth?.trim().split(' ') || [];
+      const monthName = parts[0] || '';
+      const yearString = parts[1] || '';
+      const monthIndex = monthNames.indexOf(monthName);
+      const now = new Date();
+      const selectedMonth = monthIndex >= 0 ? monthIndex + 1 : now.getMonth() + 1;
+      const selectedYear = parseInt(yearString, 10) || now.getFullYear();
+      
+      const data: ReceiptData = {
+        tenant: {
+          name: receiptData.tenantName,
+          joiningDate: receiptData.joiningDate,
+        },
+        stay: {
+          month: receiptData.forMonth,
+          roomNo: receiptData.roomNo,
+          sharingType: receiptData.sharingType,
+        },
+        payment: {
+          type: receiptData.isFullPayment ? 'FULL' : 'PARTIAL',
+          amount: receiptData.amount,
+          paid: receiptData.amountPaid,
+          balance: receiptData.remainingBalance || 0,
+          mode: receiptData.paymentMode === 'upi' ? 'Online' : receiptData.paymentMode === 'cash' ? 'Cash' : receiptData.paymentMode,
+          date: receiptData.paymentDate,
+        },
+        selectedMonth,
+        selectedYear,
+        paymentEntries: receiptData.paymentEntries,
+        previousMonthPending: receiptData.previousMonthPending,
+      };
       setTemplateData(data);
     }
   }, [receiptData, open]);

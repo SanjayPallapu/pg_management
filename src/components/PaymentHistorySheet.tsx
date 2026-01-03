@@ -9,11 +9,12 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { X, Filter, Calendar, CreditCard } from 'lucide-react';
+import { X, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { PaymentEntry } from '@/types';
 import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
+import { formatBillingRange } from './PaymentReminderTemplate';
 
 interface PaymentHistorySheetProps {
   open: boolean;
@@ -23,18 +24,22 @@ interface PaymentHistorySheetProps {
 type FilterType = 'all' | 'upi' | 'cash';
 type DateFilter = 'all' | 'current-month' | 'last-month' | 'last-3-months';
 
-interface HistoryEntry {
-  id: string;
+interface TenantGroupedPayment {
   tenantId: string;
   tenantName: string;
   roomNo: string;
-  amount: number;
-  date: string;
-  mode: 'upi' | 'cash';
-  type: 'partial' | 'full' | 'remaining';
   month: number;
   year: number;
-  forMonth: string;
+  forPeriod: string;
+  joiningDate: string;
+  entries: Array<{
+    id: string;
+    amount: number;
+    date: string;
+    mode: 'upi' | 'cash';
+    type: 'partial' | 'full' | 'remaining';
+  }>;
+  totalAmount: number;
 }
 
 export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetProps) => {
@@ -45,93 +50,121 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
   
   const [modeFilter, setModeFilter] = useState<FilterType>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   useBackGesture(open, () => onOpenChange(false));
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fullMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  // Build tenant lookup
+  // Build tenant lookup with joining date
   const tenantLookup = useMemo(() => {
-    const lookup: Record<string, { name: string; roomNo: string }> = {};
+    const lookup: Record<string, { name: string; roomNo: string; joiningDate: string }> = {};
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        lookup[tenant.id] = { name: tenant.name, roomNo: room.roomNo };
+        lookup[tenant.id] = { name: tenant.name, roomNo: room.roomNo, joiningDate: tenant.startDate };
       });
     });
     return lookup;
   }, [rooms]);
 
-  // Extract all payment entries from payments
-  const allHistoryEntries = useMemo(() => {
-    const entries: HistoryEntry[] = [];
+  // Group payments by tenant + month
+  const groupedPayments = useMemo(() => {
+    const groups: Map<string, TenantGroupedPayment> = new Map();
     
     payments.forEach(payment => {
       const tenant = tenantLookup[payment.tenantId];
       if (!tenant) return;
       
       const paymentEntries = payment.paymentEntries || [];
-      paymentEntries.forEach((entry: PaymentEntry, index: number) => {
-        entries.push({
-          id: `${payment.id}-${index}`,
-          tenantId: payment.tenantId,
-          tenantName: tenant.name,
-          roomNo: tenant.roomNo,
-          amount: entry.amount,
-          date: entry.date,
-          mode: entry.mode,
-          type: entry.type,
-          month: payment.month,
-          year: payment.year,
-          forMonth: `${months[payment.month - 1]} ${payment.year}`,
+      if (paymentEntries.length === 0) return;
+
+      // Apply date filter on entries
+      let filteredEntries = [...paymentEntries];
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      if (dateFilter === 'current-month') {
+        filteredEntries = filteredEntries.filter(e => {
+          const entryDate = new Date(e.date);
+          return entryDate.getMonth() + 1 === currentMonth && entryDate.getFullYear() === currentYear;
         });
+      } else if (dateFilter === 'last-month') {
+        let lastMonth = currentMonth - 1;
+        let lastYear = currentYear;
+        if (lastMonth === 0) {
+          lastMonth = 12;
+          lastYear -= 1;
+        }
+        filteredEntries = filteredEntries.filter(e => {
+          const entryDate = new Date(e.date);
+          return entryDate.getMonth() + 1 === lastMonth && entryDate.getFullYear() === lastYear;
+        });
+      } else if (dateFilter === 'last-3-months') {
+        const threeMonthsAgo = new Date(currentYear, currentMonth - 4, 1);
+        filteredEntries = filteredEntries.filter(e => new Date(e.date) >= threeMonthsAgo);
+      }
+
+      // Apply mode filter
+      if (modeFilter !== 'all') {
+        filteredEntries = filteredEntries.filter(e => e.mode === modeFilter);
+      }
+
+      if (filteredEntries.length === 0) return;
+
+      const key = `${payment.tenantId}-${payment.month}-${payment.year}`;
+      
+      const forPeriod = formatBillingRange(tenant.joiningDate, payment.year, payment.month);
+      
+      const entries = filteredEntries.map((entry: PaymentEntry, index: number) => ({
+        id: `${payment.id}-${index}`,
+        amount: entry.amount,
+        date: entry.date,
+        mode: entry.mode,
+        type: entry.type,
+      }));
+
+      const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
+
+      groups.set(key, {
+        tenantId: payment.tenantId,
+        tenantName: tenant.name,
+        roomNo: tenant.roomNo,
+        month: payment.month,
+        year: payment.year,
+        forPeriod,
+        joiningDate: tenant.joiningDate,
+        entries,
+        totalAmount,
       });
     });
     
-    // Sort by date descending
-    return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [payments, tenantLookup]);
+    // Sort by most recent first (by latest entry date)
+    return Array.from(groups.values()).sort((a, b) => {
+      const aLatest = Math.max(...a.entries.map(e => new Date(e.date).getTime()));
+      const bLatest = Math.max(...b.entries.map(e => new Date(e.date).getTime()));
+      return bLatest - aLatest;
+    });
+  }, [payments, tenantLookup, modeFilter, dateFilter]);
 
-  // Apply filters
-  const filteredEntries = useMemo(() => {
-    let filtered = [...allHistoryEntries];
-    
-    // Payment mode filter
-    if (modeFilter !== 'all') {
-      filtered = filtered.filter(e => e.mode === modeFilter);
-    }
-    
-    // Date filter
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-    
-    if (dateFilter === 'current-month') {
-      filtered = filtered.filter(e => {
-        const entryDate = new Date(e.date);
-        return entryDate.getMonth() + 1 === currentMonth && entryDate.getFullYear() === currentYear;
-      });
-    } else if (dateFilter === 'last-month') {
-      let lastMonth = currentMonth - 1;
-      let lastYear = currentYear;
-      if (lastMonth === 0) {
-        lastMonth = 12;
-        lastYear -= 1;
+  // Calculate totals from all filtered entries
+  const allEntries = groupedPayments.flatMap(g => g.entries);
+  const totalAmount = allEntries.reduce((sum, e) => sum + e.amount, 0);
+  const upiTotal = allEntries.filter(e => e.mode === 'upi').reduce((sum, e) => sum + e.amount, 0);
+  const cashTotal = allEntries.filter(e => e.mode === 'cash').reduce((sum, e) => sum + e.amount, 0);
+
+  const toggleExpand = (key: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
       }
-      filtered = filtered.filter(e => {
-        const entryDate = new Date(e.date);
-        return entryDate.getMonth() + 1 === lastMonth && entryDate.getFullYear() === lastYear;
-      });
-    } else if (dateFilter === 'last-3-months') {
-      const threeMonthsAgo = new Date(currentYear, currentMonth - 4, 1);
-      filtered = filtered.filter(e => new Date(e.date) >= threeMonthsAgo);
-    }
-    
-    return filtered;
-  }, [allHistoryEntries, modeFilter, dateFilter]);
-
-  const totalAmount = filteredEntries.reduce((sum, e) => sum + e.amount, 0);
-  const upiTotal = filteredEntries.filter(e => e.mode === 'upi').reduce((sum, e) => sum + e.amount, 0);
-  const cashTotal = filteredEntries.filter(e => e.mode === 'cash').reduce((sum, e) => sum + e.amount, 0);
+      return next;
+    });
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -214,63 +247,102 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
             </div>
           </div>
           <div className="text-xs text-muted-foreground mt-2 text-center">
-            {filteredEntries.length} transaction(s)
+            {allEntries.length} transaction(s) • {groupedPayments.length} tenant(s)
           </div>
         </div>
 
-        {/* Transaction List */}
+        {/* Grouped Transaction List */}
         <ScrollArea className={isMobile ? "h-[calc(100vh-320px)]" : "h-[calc(100vh-300px)] mt-2"}>
-          <div className="space-y-2 pr-2">
-            {filteredEntries.map(entry => (
-              <div 
-                key={entry.id}
-                className="p-3 rounded-lg border bg-card"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{entry.tenantName}</span>
-                      <Badge variant="outline" className="text-xs">
-                        Room {entry.roomNo}
-                      </Badge>
+          <div className="space-y-3 pr-2">
+            {groupedPayments.map(group => {
+              const key = `${group.tenantId}-${group.month}-${group.year}`;
+              const isExpanded = expandedCards.has(key) || group.entries.length <= 2;
+              const displayEntries = isExpanded ? group.entries : group.entries.slice(0, 2);
+              
+              return (
+                <div 
+                  key={key}
+                  className="p-3 rounded-lg border bg-card"
+                >
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{group.tenantName}</span>
+                        <Badge variant="outline" className="text-xs">
+                          Room {group.roomNo}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        For Period: {group.forPeriod}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      For: {entry.forMonth}
+                    <div className="text-right">
+                      <div className="font-bold text-paid">₹{group.totalAmount.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-paid">₹{entry.amount.toLocaleString()}</div>
-                    <div className="flex items-center gap-1 justify-end mt-1">
-                      {entry.mode === 'upi' ? (
-                        <UpiLogo className="h-3 w-3" />
-                      ) : (
-                        <CashLogo className="h-3 w-3" />
-                      )}
-                      <span className="text-xs text-muted-foreground capitalize">{entry.mode}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t">
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(entry.date), 'dd MMM yyyy')}
-                  </span>
-                  <Badge 
-                    variant="outline" 
-                    className={
-                      entry.type === 'full' 
-                        ? 'bg-paid/10 text-paid border-paid/30' 
-                        : entry.type === 'remaining'
-                        ? 'bg-blue-500/10 text-blue-600 border-blue-500/30'
-                        : 'bg-partial/10 text-partial border-partial/30'
-                    }
-                  >
-                    {entry.type === 'full' ? 'Full' : entry.type === 'remaining' ? 'Remaining' : 'Partial'}
-                  </Badge>
-                </div>
-              </div>
-            ))}
 
-            {filteredEntries.length === 0 && (
+                  {/* Transaction entries */}
+                  <div className="space-y-1.5 pt-2 border-t">
+                    {displayEntries.map(entry => (
+                      <div key={entry.id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">
+                            {format(new Date(entry.date), 'dd MMM yyyy')}
+                          </span>
+                          <span>–</span>
+                          <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              entry.type === 'full' 
+                                ? 'bg-paid/10 text-paid border-paid/30 text-xs' 
+                                : entry.type === 'remaining'
+                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs'
+                                : 'bg-partial/10 text-partial border-partial/30 text-xs'
+                            }
+                          >
+                            {entry.type === 'full' ? 'Full' : entry.type === 'remaining' ? 'Final' : 'Partial'}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            {entry.mode === 'upi' ? (
+                              <UpiLogo className="h-3 w-3" />
+                            ) : (
+                              <CashLogo className="h-3 w-3" />
+                            )}
+                            <span className="text-xs text-muted-foreground capitalize">{entry.mode}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Expand/Collapse button */}
+                  {group.entries.length > 2 && (
+                    <button
+                      onClick={() => toggleExpand(key)}
+                      className="w-full mt-2 pt-2 border-t flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {isExpanded ? (
+                        <>
+                          <ChevronUp className="h-3 w-3" />
+                          Show less
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3 w-3" />
+                          Show {group.entries.length - 2} more
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {groupedPayments.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 No transactions found
               </div>

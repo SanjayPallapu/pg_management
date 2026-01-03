@@ -161,18 +161,28 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>Tenant Name:</td>
                 <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.tenant.name}</td>
               </tr>
-              {/* Show all payment entries if available */}
-              {data.paymentEntries && data.paymentEntries.length > 1 ? (
-                data.paymentEntries.map((entry, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>
-                      Payment {idx + 1}:
-                    </td>
-                    <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>
-                      ₹{entry.amount.toLocaleString('en-IN')} via {entry.mode === 'upi' ? 'UPI' : 'Cash'} on {entry.date}
-                    </td>
-                  </tr>
-                ))
+              {/* Always show all payment entries with dates */}
+              {data.paymentEntries && data.paymentEntries.length > 0 ? (
+                data.paymentEntries.map((entry, idx) => {
+                  const formattedDate = (() => {
+                    try {
+                      return new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    } catch {
+                      return entry.date;
+                    }
+                  })();
+                  const label = entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Final' : 'Payment';
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                      <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>
+                        {label} ({formattedDate}):
+                      </td>
+                      <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>
+                        ₹{entry.amount.toLocaleString('en-IN')} via {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <>
                   <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
