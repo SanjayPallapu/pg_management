@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -17,9 +17,10 @@ import { PaymentReminderDialog } from './PaymentReminderDialog';
 interface TenantSearchResultsProps {
   rooms: Room[];
   searchQuery: string;
+  onNavigateToRoom?: (room: Room) => void;
 }
 
-export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsProps) => {
+export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: TenantSearchResultsProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
 
@@ -27,6 +28,9 @@ export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsP
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
   const [reminderData, setReminderData] = useState<any>(null);
+  
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const isLongPress = useRef(false);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -113,6 +117,24 @@ export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsP
     setReminderDialogOpen(true);
   };
 
+  const handleLongPressStart = (tenantId: string) => {
+    isLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      const room = rooms.find(r => r.tenants.some(t => t.id === tenantId));
+      if (room && onNavigateToRoom) {
+        onNavigateToRoom(room);
+      }
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   return (
     <>
       <div className="space-y-2 mb-6">
@@ -133,7 +155,16 @@ export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsP
               : 'bg-pending-muted border-l-4 border-pending';
 
           return (
-            <div key={tenant.id} className={`p-4 rounded-xl ${bgClass}`}>
+            <div 
+              key={tenant.id} 
+              className={`p-4 rounded-xl ${bgClass} cursor-pointer select-none`}
+              onTouchStart={() => handleLongPressStart(tenant.id)}
+              onTouchEnd={handleLongPressEnd}
+              onTouchCancel={handleLongPressEnd}
+              onMouseDown={() => handleLongPressStart(tenant.id)}
+              onMouseUp={handleLongPressEnd}
+              onMouseLeave={handleLongPressEnd}
+            >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{tenant.name}</span>
