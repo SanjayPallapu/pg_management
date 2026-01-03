@@ -54,6 +54,13 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
   const [reminderData, setReminderData] = useState<any>(null);
+  const [previousMonthPendingData, setPreviousMonthPendingData] = useState<{
+    month: number;
+    year: number;
+    amount: number;
+    amountPaid: number;
+    remaining: number;
+  } | null>(null);
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -125,8 +132,61 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
     };
   }, [selectedMonth, selectedYear, rooms, payments]);
 
+  // Function to get previous month pending for a tenant (month before prevMonth)
+  const getPreviousMonthPending = (tenantId: string) => {
+    // Calculate the month before prevMonth (which is already one month before selectedMonth)
+    let earlierMonth = prevMonth - 1;
+    let earlierYear = prevYear;
+    if (earlierMonth === 0) {
+      earlierMonth = 12;
+      earlierYear = prevYear - 1;
+    }
+
+    // Find tenant's details
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
+      ...tenant,
+      roomNo: room.roomNo
+    })));
+    const tenant = allTenants.find(t => t.id === tenantId);
+    
+    if (!tenant) return null;
+
+    // Check if tenant was active in that earlier month
+    if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, earlierYear, earlierMonth)) {
+      return null;
+    }
+
+    const payment = payments.find(p => 
+      p.tenantId === tenantId && p.month === earlierMonth && p.year === earlierYear
+    );
+
+    if (!payment || payment.paymentStatus === 'Pending') {
+      return {
+        month: earlierMonth,
+        year: earlierYear,
+        amount: tenant.monthlyRent,
+        amountPaid: 0,
+        remaining: tenant.monthlyRent,
+      };
+    } else if (payment.paymentStatus === 'Partial') {
+      const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
+      return {
+        month: earlierMonth,
+        year: earlierYear,
+        amount: tenant.monthlyRent,
+        amountPaid: payment.amountPaid || 0,
+        remaining,
+      };
+    }
+    
+    return null; // Fully paid
+  };
+
   const handleMarkPaidClick = (tenant: OverdueTenant) => {
     setSelectedTenant(tenant);
+    // Check for previous month pending
+    const prevPending = getPreviousMonthPending(tenant.id);
+    setPreviousMonthPendingData(prevPending);
     setPaymentDialogOpen(true);
   };
 
@@ -139,6 +199,13 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
     year: number;
     monthlyRent: number;
     existingPaid: number;
+    previousMonthPending?: {
+      month: number;
+      year: number;
+      amount: number;
+      amountPaid: number;
+      remaining: number;
+    } | null;
   }) => {
     const totalPaid = data.existingPaid + data.amount;
     const isFullPayment = totalPaid >= data.monthlyRent;
@@ -212,6 +279,8 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 const hasPaymentEntries = tenant.paymentEntries.length > 0;
                 
                 const handleOpenReceipt = () => {
+                  // Get previous month pending for this tenant (month before prevMonth)
+                  const prevPending = getPreviousMonthPending(tenant.id);
                   setReceiptData({
                     tenantName: tenant.name,
                     tenantPhone: tenant.phone,
@@ -221,6 +290,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     roomNo: tenant.roomNo,
                     forMonth: `${months[prevMonth - 1]} ${prevYear}`,
                     paymentEntries: tenant.paymentEntries,
+                    previousMonthPending: prevPending?.remaining || undefined,
                   });
                   setReceiptDialogOpen(true);
                 };
@@ -331,6 +401,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
         tenant={selectedTenant}
         month={prevMonth}
         year={prevYear}
+        previousMonthPending={previousMonthPendingData}
         onConfirmPayment={handleConfirmPayment}
       />
 

@@ -20,6 +20,14 @@ import { cn } from '@/lib/utils';
 import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
 
+interface PreviousMonthPending {
+  month: number;
+  year: number;
+  amount: number;
+  amountPaid: number;
+  remaining: number;
+}
+
 interface OverduePaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +41,7 @@ interface OverduePaymentDialogProps {
   } | null;
   month: number;
   year: number;
+  previousMonthPending?: PreviousMonthPending | null;
   onConfirmPayment: (data: {
     tenantId: string;
     amount: number;
@@ -42,6 +51,7 @@ interface OverduePaymentDialogProps {
     year: number;
     monthlyRent: number;
     existingPaid: number;
+    previousMonthPending?: PreviousMonthPending | null;
   }) => void;
 }
 
@@ -53,6 +63,7 @@ export const OverduePaymentDialog = ({
   tenant,
   month,
   year,
+  previousMonthPending,
   onConfirmPayment,
 }: OverduePaymentDialogProps) => {
   const [step, setStep] = useState<Step>('confirm');
@@ -92,6 +103,7 @@ export const OverduePaymentDialog = ({
       year,
       monthlyRent: tenant.monthlyRent,
       existingPaid: tenant.amountPaid,
+      previousMonthPending: previousMonthPending,
     });
     
     handleOpenChange(false);
@@ -128,6 +140,19 @@ export const OverduePaymentDialog = ({
                       <span>₹{tenant.remaining.toLocaleString()}</span>
                     </div>
                   </div>
+                  
+                  {/* Previous Month Pending Alert */}
+                  {previousMonthPending && previousMonthPending.remaining > 0 && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg space-y-1 mt-2">
+                      <div className="text-sm font-semibold text-destructive flex items-center gap-1">
+                        ⚠️ Previous Month Pending
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{months[previousMonthPending.month - 1]} {previousMonthPending.year}:</span>
+                        <span className="text-destructive font-medium">₹{previousMonthPending.remaining.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>

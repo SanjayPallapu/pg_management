@@ -275,6 +275,40 @@ export const MonthlyRentSheet = ({
       pendingCount: pending.length + partial.length
     };
   }, [tenantsWithPayments]);
+
+  // Helper function to get previous month pending for a tenant
+  const getPreviousMonthPendingForTenant = (tenantId: string): number => {
+    let prevMonth = selectedMonth - 1;
+    let prevYear = selectedYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear = selectedYear - 1;
+    }
+
+    // Find tenant's details
+    const allTenants = rooms.flatMap(room => room.tenants);
+    const tenant = allTenants.find(t => t.id === tenantId);
+    
+    if (!tenant) return 0;
+
+    // Check if tenant was active in that previous month
+    if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)) {
+      return 0;
+    }
+
+    const payment = payments.find(p => 
+      p.tenantId === tenantId && p.month === prevMonth && p.year === prevYear
+    );
+
+    if (!payment || payment.paymentStatus === 'Pending') {
+      return tenant.monthlyRent;
+    } else if (payment.paymentStatus === 'Partial') {
+      return tenant.monthlyRent - (payment.amountPaid || 0);
+    }
+    
+    return 0; // Fully paid
+  };
+
   const handlePaymentToggle = (tenantId: string, tenantName: string, currentStatus: 'Paid' | 'Pending' | 'Partial') => {
     if (currentStatus === 'Pending') {
       const tenant = tenantsWithPayments.find(t => t.id === tenantId);
@@ -355,6 +389,7 @@ export const MonthlyRentSheet = ({
     // Prepare receipt data for WhatsApp
     const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
     const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+    const prevMonthPending = getPreviousMonthPendingForTenant(tenant.id);
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -370,6 +405,7 @@ export const MonthlyRentSheet = ({
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
       tenantId: tenant.id,
       paymentEntries: updatedEntries as any,
+      previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
     setWhatsappDialogOpen(true);
     setPaymentAmountTenant(null);
@@ -413,6 +449,7 @@ export const MonthlyRentSheet = ({
     // Prepare receipt data for WhatsApp
     const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
     const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+    const prevMonthPending = getPreviousMonthPendingForTenant(tenant.id);
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -428,6 +465,7 @@ export const MonthlyRentSheet = ({
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
       tenantId: tenant.id,
       paymentEntries: updatedEntries as any,
+      previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
     setWhatsappDialogOpen(true);
     setPayRemainingTenant(null);
