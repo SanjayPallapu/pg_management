@@ -7,12 +7,21 @@ import { useRooms } from '@/hooks/useRooms';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageCircle, X, History } from 'lucide-react';
+import { Phone, MessageCircle, X, History, Receipt, Bell, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { OverduePaymentDialog } from './OverduePaymentDialog';
 import { PaymentHistorySheet } from './PaymentHistorySheet';
+import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { PaymentReminderDialog } from './PaymentReminderDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { PaymentEntry } from '@/types';
 
 interface PreviousOverdueSheetProps {
   open: boolean;
@@ -29,6 +38,7 @@ interface OverdueTenant {
   amountPaid: number;
   remaining: number;
   status: 'Pending' | 'Partial';
+  paymentEntries: PaymentEntry[];
 }
 
 export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueSheetProps) => {
@@ -40,6 +50,10 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
   const [selectedTenant, setSelectedTenant] = useState<OverdueTenant | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
+  const [reminderData, setReminderData] = useState<any>(null);
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -82,7 +96,8 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
           startDate: tenant.startDate,
           amountPaid: 0,
           remaining: tenant.monthlyRent,
-          status: 'Pending'
+          status: 'Pending',
+          paymentEntries: []
         });
       } else if (payment.paymentStatus === 'Partial') {
         const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
@@ -96,7 +111,8 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
           startDate: tenant.startDate,
           amountPaid: payment.amountPaid || 0,
           remaining,
-          status: 'Partial'
+          status: 'Partial',
+          paymentEntries: (payment.paymentEntries || []) as PaymentEntry[]
         });
       }
     });
@@ -191,56 +207,113 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
             <div className="space-y-3 pr-2">
-              {overdueTenants.map(tenant => (
-                <div 
-                  key={tenant.id} 
-                  className="p-4 rounded-xl bg-advance-not-paid/20 border-l-4 border-advance-not-paid"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{tenant.name}</span>
-                      {tenant.phone && tenant.phone !== '••••••••••' && (
-                        <>
-                          <a 
-                            href={`tel:${tenant.phone}`}
-                            className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                          >
-                            <Phone className="h-4 w-4" />
-                          </a>
-                          <a
-                            href={`https://wa.me/91${tenant.phone}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </a>
-                        </>
-                      )}
+              {overdueTenants.map(tenant => {
+                const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
+                const hasPaymentEntries = tenant.paymentEntries.length > 0;
+                
+                const handleOpenReceipt = () => {
+                  setReceiptData({
+                    tenantName: tenant.name,
+                    tenantPhone: tenant.phone,
+                    monthlyRent: tenant.monthlyRent,
+                    amountPaid: tenant.amountPaid,
+                    joiningDate: tenant.startDate,
+                    roomNo: tenant.roomNo,
+                    forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+                    paymentEntries: tenant.paymentEntries,
+                  });
+                  setReceiptDialogOpen(true);
+                };
+
+                const handleOpenReminder = () => {
+                  setReminderData({
+                    tenantName: tenant.name,
+                    tenantPhone: tenant.phone,
+                    monthlyRent: tenant.monthlyRent,
+                    joiningDate: tenant.startDate,
+                    roomNo: tenant.roomNo,
+                    forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+                  });
+                  setReminderDialogOpen(true);
+                };
+
+                return (
+                  <div 
+                    key={tenant.id} 
+                    className="p-4 rounded-xl bg-advance-not-paid/20 border-l-4 border-advance-not-paid"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{tenant.name}</span>
+                        {hasPhone && (
+                          <>
+                            <a 
+                              href={`tel:${tenant.phone}`}
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                            >
+                              <Phone className="h-4 w-4" />
+                            </a>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                                  <MessageCircle className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-popover">
+                                {hasPaymentEntries && (
+                                  <DropdownMenuItem onClick={handleOpenReceipt}>
+                                    <Receipt className="h-4 w-4 mr-2" />
+                                    Generate Receipt
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={handleOpenReminder}>
+                                  <Bell className="h-4 w-4 mr-2" />
+                                  Payment Reminder
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <a
+                                    href={`https://wa.me/91${tenant.phone}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    Chat with Tenant
+                                  </a>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        )}
+                      </div>
+                      <span className="font-bold text-lg text-advance-not-paid">₹{tenant.remaining.toLocaleString()}</span>
                     </div>
-                    <span className="font-bold text-lg text-advance-not-paid">₹{tenant.remaining.toLocaleString()}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mb-2">Room {tenant.roomNo}</div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
-                    </span>
-                    <Button 
-                      size="sm" 
-                      variant="secondary"
-                      onClick={() => handleMarkPaidClick(tenant)}
-                      disabled={upsertPayment.isPending}
-                    >
-                      Mark Paid
-                    </Button>
-                  </div>
-                  {tenant.status === 'Partial' && (
-                    <div className="text-xs mt-2 text-paid">
-                      Already paid: ₹{tenant.amountPaid.toLocaleString()}
+                    <div className="text-sm text-muted-foreground mb-2">Room {tenant.roomNo}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="secondary"
+                        onClick={() => handleMarkPaidClick(tenant)}
+                        disabled={upsertPayment.isPending}
+                      >
+                        Mark Paid
+                      </Button>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
+                      <div className="text-xs mt-2 text-paid">
+                        Paid: {tenant.paymentEntries.map((entry, idx) => (
+                          <span key={idx}>
+                            {idx > 0 && ' + '}
+                            {format(new Date(entry.date), 'dd MMM')} (₹{entry.amount.toLocaleString()})
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {overdueTenants.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
@@ -264,6 +337,19 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
       <PaymentHistorySheet
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+      />
+
+      <WhatsAppReceiptDialog
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        receiptData={receiptData}
+        onWhatsappSent={() => {}}
+      />
+
+      <PaymentReminderDialog
+        open={reminderDialogOpen}
+        onOpenChange={setReminderDialogOpen}
+        reminderData={reminderData}
       />
     </>
   );

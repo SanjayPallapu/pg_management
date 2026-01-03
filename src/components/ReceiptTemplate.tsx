@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import hostelLogo from '@/assets/hostel-logo.png';
 import { formatBillingRange } from './PaymentReminderTemplate';
+import { PaymentEntry } from '@/types';
 
 export interface ReceiptData {
   tenant: {
@@ -20,8 +21,10 @@ export interface ReceiptData {
     mode: string;
     date: string;
   };
-    selectedMonth: number; // 1-12
+  selectedMonth: number; // 1-12
   selectedYear: number; // YYYY
+  paymentEntries?: PaymentEntry[];
+  previousMonthPending?: number;
 }
 
 interface ReceiptTemplateProps {
@@ -158,14 +161,30 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px', width: '45%' }}>Tenant Name:</td>
                 <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.tenant.name}</td>
               </tr>
-              <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Mode:</td>
-                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.mode}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Date:</td>
-                <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.date}</td>
-              </tr>
+              {/* Show all payment entries if available */}
+              {data.paymentEntries && data.paymentEntries.length > 1 ? (
+                data.paymentEntries.map((entry, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>
+                      Payment {idx + 1}:
+                    </td>
+                    <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>
+                      ₹{entry.amount.toLocaleString('en-IN')} via {entry.mode === 'upi' ? 'UPI' : 'Cash'} on {entry.date}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <>
+                  <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Mode:</td>
+                    <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.mode}</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Payment Date:</td>
+                    <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.payment.date}</td>
+                  </tr>
+                </>
+              )}
               <tr>
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Joining Date:</td>
                 <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.tenant.joiningDate}</td>
@@ -206,10 +225,16 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Sharing Type:</td>
                 <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.stay.sharingType}</td>
               </tr>
-              <tr>
+              <tr style={{ borderBottom: data.previousMonthPending ? '1px solid #f3f4f6' : undefined }}>
                 <td style={{ padding: '6px 12px', color: '#6b7280', fontSize: '12px' }}>Amount:</td>
                 <td style={{ padding: '6px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{formatCurrency(data.payment.amount)}</td>
               </tr>
+              {data.previousMonthPending && data.previousMonthPending > 0 && (
+                <tr>
+                  <td style={{ padding: '6px 12px', color: '#dc2626', fontSize: '12px', fontWeight: 500 }}>Previous Month Pending:</td>
+                  <td style={{ padding: '6px 12px', fontWeight: 600, fontSize: '12px', color: '#dc2626' }}>{formatCurrency(data.previousMonthPending)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
