@@ -78,14 +78,24 @@ export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsP
   if (!searchQuery.trim()) return null;
 
   const handleOpenReceipt = (tenant: typeof searchResults[0]) => {
+    const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+    const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
+    const lastEntry = tenant.paymentEntries[tenant.paymentEntries.length - 1];
+    const remaining = tenant.monthlyRent - tenant.amountPaid;
+    
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
-      monthlyRent: tenant.monthlyRent,
-      amountPaid: tenant.amountPaid,
-      joiningDate: tenant.startDate,
-      roomNo: tenant.roomNo,
+      paymentMode: lastEntry?.mode || 'cash',
+      paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
       forMonth: `${months[selectedMonth - 1]} ${selectedYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: sharingType,
+      amount: tenant.monthlyRent,
+      amountPaid: tenant.amountPaid,
+      isFullPayment: tenant.paymentStatus === 'Paid',
+      remainingBalance: remaining > 0 ? remaining : 0,
       paymentEntries: tenant.paymentEntries,
     });
     setReceiptDialogOpen(true);
@@ -170,12 +180,31 @@ export const TenantSearchResults = ({ rooms, searchQuery }: TenantSearchResultsP
                   )}
                 </div>
                 <span className={`font-bold text-lg ${isPaid ? 'text-paid' : 'text-pending'}`}>
-                  ₹{(isPaid ? tenant.amountPaid : remaining).toLocaleString()}
+                  ₹{tenant.monthlyRent.toLocaleString()}
                 </span>
               </div>
               <div className="text-sm text-muted-foreground">
                 Room {tenant.roomNo} • Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
               </div>
+              {/* Always show payment history breakdown */}
+              {hasPaymentEntries && (
+                <div className="mt-2 space-y-1">
+                  {tenant.paymentEntries.map((entry, idx) => (
+                    <div key={idx} className="text-sm flex items-center gap-2">
+                      <span className={entry.type === 'partial' ? 'text-partial' : 'text-paid'}>
+                        {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        entry.mode === 'upi' 
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      }`}>
+                        {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex items-center gap-2 mt-2">
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   isPaid 

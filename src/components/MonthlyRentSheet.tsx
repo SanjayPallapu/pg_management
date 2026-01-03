@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Room } from '@/types';
+import { Room, PaymentEntry } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,7 @@ export const MonthlyRentSheet = ({
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -75,6 +76,8 @@ export const MonthlyRentSheet = ({
     isFullPayment: boolean;
     remainingBalance?: number;
     tenantId?: string;
+    paymentEntries?: PaymentEntry[];
+    previousMonthPending?: number;
   } | null>(null);
 
   // Handle OS back gesture to close dialogs
@@ -135,7 +138,7 @@ export const MonthlyRentSheet = ({
     return allTenants.filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth));
   }, [rooms, selectedMonth, selectedYear]);
   const tenantsWithPayments = useMemo(() => {
-    return eligibleTenants.map(tenant => {
+    const tenantsData = eligibleTenants.map(tenant => {
       const payment = payments.find(p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
       const joinDate = new Date(tenant.startDate);
       const currentDate = new Date();
@@ -171,10 +174,42 @@ export const MonthlyRentSheet = ({
           amountPaid: 0,
           paymentEntries: []
         },
-        paymentCategory
+        paymentCategory,
+        dueDay: tenantDueDay
       };
     });
+    
+    // Sort by: Paid > Partial > Pending (overdue/advance-not-paid) > Not-due
+    // Within pending categories, sort by due day (earliest first)
+    const categoryOrder: Record<string, number> = {
+      'paid': 1,
+      'partial': 2,
+      'overdue': 3,
+      'advance-not-paid': 4,
+      'not-due': 5
+    };
+    
+    return tenantsData.sort((a, b) => {
+      const aOrder = categoryOrder[a.paymentCategory] || 99;
+      const bOrder = categoryOrder[b.paymentCategory] || 99;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      // Within same category, sort by due day for pending/overdue
+      if (a.paymentCategory === 'overdue' || a.paymentCategory === 'advance-not-paid' || a.paymentCategory === 'not-due') {
+        return a.dueDay - b.dueDay;
+      }
+      return 0;
+    });
   }, [eligibleTenants, selectedMonth, selectedYear, payments]);
+  
+  // Filter tenants based on search query
+  const filteredTenants = useMemo(() => {
+    if (!searchQuery.trim()) return tenantsWithPayments;
+    const query = searchQuery.toLowerCase().trim();
+    return tenantsWithPayments.filter(tenant => 
+      tenant.name.toLowerCase().includes(query) || 
+      tenant.roomNo.toLowerCase().includes(query)
+    );
+  }, [tenantsWithPayments, searchQuery]);
   const previousMonthOverdue = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -326,7 +361,8 @@ export const MonthlyRentSheet = ({
       amountPaid: paymentAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
-      tenantId: tenant.id
+      tenantId: tenant.id,
+      paymentEntries: updatedEntries as any,
     });
     setWhatsappDialogOpen(true);
     setPaymentAmountTenant(null);
@@ -383,7 +419,8 @@ export const MonthlyRentSheet = ({
       amountPaid: payRemainingAmount,
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
-      tenantId: tenant.id
+      tenantId: tenant.id,
+      paymentEntries: updatedEntries as any,
     });
     setWhatsappDialogOpen(true);
     setPayRemainingTenant(null);
@@ -501,8 +538,27 @@ export const MonthlyRentSheet = ({
               </div>
             </div>}
 
+          {/* Search Bar */}
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by tenant name or room..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
           <div className="space-y-2">
-            {tenantsWithPayments.map(tenant => {
+            {filteredTenants.map(tenant => {
             const isPartial = tenant.paymentCategory === 'partial';
             const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;
             const bgClass = tenant.paymentCategory === 'paid' ? 'bg-paid-muted border-l-4 border-paid' : tenant.paymentCategory === 'partial' ? 'bg-partial-muted border-l-4 border-partial' : tenant.paymentCategory === 'overdue' ? 'bg-overdue-muted border-l-4 border-overdue' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' : 'bg-not-due-muted border-l-4 border-not-due';
@@ -525,7 +581,8 @@ export const MonthlyRentSheet = ({
                 amountPaid: tenant.payment.amountPaid || tenant.monthlyRent,
                 isFullPayment: tenant.payment.paymentStatus === 'Paid',
                 remainingBalance: isPartial ? remaining : 0,
-                tenantId: tenant.id
+                tenantId: tenant.id,
+                paymentEntries: tenant.payment.paymentEntries as PaymentEntry[],
               });
               setWhatsappDialogOpen(true);
             };
