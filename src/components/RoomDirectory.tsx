@@ -63,7 +63,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       </div>
 
       {searchQuery.trim() && (
-        <TenantSearchResults rooms={rooms} searchQuery={searchQuery} />
+        <TenantSearchResults rooms={rooms} searchQuery={searchQuery} onNavigateToRoom={onViewDetails} />
       )}
 
       {([1, 2, 3] as const).map(floor => <div key={floor} className="space-y-4">

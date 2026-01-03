@@ -20,6 +20,7 @@ import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { PreviousOverdueSheet } from './PreviousOverdueSheet';
 import { PaymentHistorySheet } from './PaymentHistorySheet';
+import { DeletePaymentDialog } from './DeletePaymentDialog';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -31,10 +32,11 @@ export const MonthlyRentSheet = ({
     selectedMonth,
     selectedYear
   } = useMonthContext();
-  const [confirmAction, setConfirmAction] = useState<{
-    type: 'paid' | 'unpaid';
-    tenantId: string;
-    tenantName: string;
+  const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
+    id: string;
+    name: string;
+    monthlyRent: number;
+    paymentEntries: PaymentEntry[];
   } | null>(null);
   const [paymentAmountTenant, setPaymentAmountTenant] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -83,7 +85,7 @@ export const MonthlyRentSheet = ({
   // Handle OS back gesture to close dialogs
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
-  useBackGesture(confirmAction?.type === 'unpaid', () => setConfirmAction(null));
+  useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   const {
     payments,
     upsertPayment,
@@ -282,11 +284,16 @@ export const MonthlyRentSheet = ({
         setPaymentDate(new Date());
       }
     } else {
-      setConfirmAction({
-        type: 'unpaid',
-        tenantId,
-        tenantName
-      });
+      // For Paid or Partial, open delete payment dialog
+      const tenant = tenantsWithPayments.find(t => t.id === tenantId);
+      if (tenant && tenant.payment.paymentEntries.length > 0) {
+        setDeletePaymentTenant({
+          id: tenantId,
+          name: tenantName,
+          monthlyRent: tenant.monthlyRent,
+          paymentEntries: tenant.payment.paymentEntries,
+        });
+      }
     }
   };
   const handlePayRemaining = (tenantId: string) => {
@@ -426,26 +433,36 @@ export const MonthlyRentSheet = ({
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
   };
-  const confirmPaymentUnpaid = () => {
-    if (confirmAction?.type === 'unpaid') {
-      const tenant = tenantsWithPayments.find(t => t.id === confirmAction.tenantId);
-      if (tenant) {
-        upsertPayment.mutate({
-          tenantId: tenant.id,
-          month: selectedMonth,
-          year: selectedYear,
-          paymentStatus: 'Pending',
-          paymentDate: undefined,
-          amount: tenant.monthlyRent,
-          amountPaid: 0,
-          paymentEntries: []
-        });
-        toast({
-          title: 'Payment status updated to Pending'
-        });
-      }
-    }
-    setConfirmAction(null);
+  const handleDeletePayments = (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
+    if (!deletePaymentTenant) return;
+    
+    const newStatus = newAmountPaid >= deletePaymentTenant.monthlyRent 
+      ? 'Paid' 
+      : newAmountPaid > 0 
+        ? 'Partial' 
+        : 'Pending';
+    
+    const lastEntry = newEntries[newEntries.length - 1];
+    
+    upsertPayment.mutate({
+      tenantId: deletePaymentTenant.id,
+      month: selectedMonth,
+      year: selectedYear,
+      paymentStatus: newStatus,
+      paymentDate: lastEntry?.date || undefined,
+      amount: deletePaymentTenant.monthlyRent,
+      amountPaid: newAmountPaid,
+      paymentEntries: newEntries,
+    });
+    
+    toast({
+      title: `${entriesToDelete.length} payment(s) deleted`,
+      description: newAmountPaid > 0 
+        ? `Balance to pay: ₹${(deletePaymentTenant.monthlyRent - newAmountPaid).toLocaleString()}`
+        : 'Status updated to Pending',
+    });
+    
+    setDeletePaymentTenant(null);
   };
   const exportToExcel = () => {
     const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
@@ -805,21 +822,15 @@ export const MonthlyRentSheet = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmation Dialog for Undoing Paid */}
-      <AlertDialog open={confirmAction?.type === 'unpaid'} onOpenChange={open => !open && setConfirmAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Paid Status?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Do you want to remove the paid status for this rent for {confirmAction?.tenantName}?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPaymentUnpaid}>Yes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Payment Dialog */}
+      <DeletePaymentDialog
+        open={!!deletePaymentTenant}
+        onOpenChange={(open) => !open && setDeletePaymentTenant(null)}
+        tenantName={deletePaymentTenant?.name || ''}
+        monthlyRent={deletePaymentTenant?.monthlyRent || 0}
+        paymentEntries={deletePaymentTenant?.paymentEntries || []}
+        onConfirmDelete={handleDeletePayments}
+      />
 
       {/* WhatsApp Receipt Dialog */}
       <WhatsAppReceiptDialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen} receiptData={receiptData} onWhatsappSent={() => {

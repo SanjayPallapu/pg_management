@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Room, Tenant } from '@/types';
+import { Room, Tenant, PaymentEntry } from '@/types';
 import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { DeletePaymentDialog } from './DeletePaymentDialog';
 import { useNavigate } from 'react-router-dom';
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from '@/utils/dateOnly';
 
@@ -102,10 +103,17 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const [confirmAction, setConfirmAction] = useState<{ type: 'paid' | 'unpaid' | 'delete', tenantId: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'paid' | 'delete', tenantId: string } | null>(null);
+  const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
+    id: string;
+    name: string;
+    monthlyRent: number;
+    paymentEntries: PaymentEntry[];
+  } | null>(null);
 
   // Handle OS back gesture to close sub-dialogs
-  useBackGesture(!!confirmAction, () => setConfirmAction(null));
+  useBackGesture(confirmAction?.type === 'delete', () => setConfirmAction(null));
+  useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   useBackGesture(!!partialPaymentTenant, () => setPartialPaymentTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!markLeftTenantId, () => setMarkLeftTenantId(null));
@@ -250,7 +258,17 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     if (checked) {
       setConfirmAction({ type: 'paid', tenantId });
     } else {
-      setConfirmAction({ type: 'unpaid', tenantId });
+      // Open delete payment dialog
+      const tenant = room.tenants.find(t => t.id === tenantId);
+      const payment = getSelectedMonthPayment(tenantId);
+      if (tenant && payment && payment.paymentEntries.length > 0) {
+        setDeletePaymentTenant({
+          id: tenantId,
+          name: tenant.name,
+          monthlyRent: tenant.monthlyRent,
+          paymentEntries: payment.paymentEntries,
+        });
+      }
     }
   };
 
@@ -263,25 +281,41 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     setConfirmAction(null);
   };
 
-  const confirmPaymentUnpaid = async (tenantId: string) => {
+  const handleDeletePayments = async (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
+    if (!deletePaymentTenant) return;
+    
+    const newStatus = newAmountPaid >= deletePaymentTenant.monthlyRent 
+      ? 'Paid' 
+      : newAmountPaid > 0 
+        ? 'Partial' 
+        : 'Pending';
+    
+    const lastEntry = newEntries[newEntries.length - 1];
+    
     updateTenant.mutate({ 
-      tenantId, 
-      updates: { paymentStatus: 'Pending', paymentDate: undefined } 
+      tenantId: deletePaymentTenant.id, 
+      updates: { paymentStatus: newStatus === 'Paid' ? 'Paid' : 'Pending', paymentDate: lastEntry?.date } 
     });
     
-    const tenant = room.tenants.find(t => t.id === tenantId);
-    if (tenant) {
-      await upsertPayment.mutateAsync({
-        tenantId,
-        month: selectedMonth,
-        year: selectedYear,
-        paymentStatus: 'Pending',
-        amount: tenant.monthlyRent,
-        amountPaid: 0,
-        paymentEntries: [],
-      });
-    }
-    setConfirmAction(null);
+    await upsertPayment.mutateAsync({
+      tenantId: deletePaymentTenant.id,
+      month: selectedMonth,
+      year: selectedYear,
+      paymentStatus: newStatus,
+      paymentDate: lastEntry?.date,
+      amount: deletePaymentTenant.monthlyRent,
+      amountPaid: newAmountPaid,
+      paymentEntries: newEntries,
+    });
+    
+    toast({
+      title: `${entriesToDelete.length} payment(s) deleted`,
+      description: newAmountPaid > 0 
+        ? `Balance to pay: ₹${(deletePaymentTenant.monthlyRent - newAmountPaid).toLocaleString()}`
+        : 'Status updated to Pending',
+    });
+    
+    setDeletePaymentTenant(null);
   };
 
   const handlePartialPaymentConfirm = async (tenantId: string, date: Date) => {
@@ -917,22 +951,6 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={confirmAction?.type === 'unpaid'} onOpenChange={() => setConfirmAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Paid Status</AlertDialogTitle>
-            <AlertDialogDescription>
-              Do you want to remove the paid status for this rent?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmAction && confirmPaymentUnpaid(confirmAction.tenantId)}>
-              Yes
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={confirmAction?.type === 'delete'} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>
