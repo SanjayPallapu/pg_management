@@ -133,9 +133,9 @@ export const OverduePaymentDialog = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleProceedToPayment}>
+              <Button onClick={handleProceedToPayment}>
                 Proceed to Payment
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </>
         ) : (
