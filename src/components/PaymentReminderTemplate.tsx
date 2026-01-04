@@ -46,56 +46,61 @@ export const formatBillingRange = (
   if (isNaN(joinDate.getTime())) return "—";
 
   const joinDay = joinDate.getDate();
-  const isFeb = selectedMonth === 2;
-
   const lastDayCurrent = getLastDayOfMonth(selectedYear, selectedMonth);
-  const lastDayNext = getLastDayOfMonth(selectedYear, selectedMonth + 1);
 
   /* =========================
      START DAY (calendar-safe)
   ========================= */
-
-  let startDay: number;
-
-  if (isFeb && joinDay >= 28) {
-    startDay = 28; // clamp Feb
-  } else {
-    startDay = Math.min(joinDay, lastDayCurrent);
-  }
+  // Start day is the joining day, clamped to the last day of current month
+  const startDay = Math.min(joinDay, lastDayCurrent);
 
   /* =========================
-     END DAY (locked rules)
+     END DAY (same month logic)
   ========================= */
-
   let endDay: number;
+  let endMonth = selectedMonth; // Keep end date in the same month by default
+  let endYear = selectedYear;
 
-  if (isFeb) {
-    // Base end is 27 March
-    let carry = 0;
-
-    if (joinDay === 29) carry = 1;
-    if (joinDay === 30) carry = 2;
-    if (joinDay >= 31) carry = 3;
-
-    endDay = 27 + carry;
-
-    // Cap March to max 30 for billing
-    endDay = Math.min(endDay, 30);
+  if (joinDay === 1) {
+    // If joined on 1st, billing period is 1st to last day of the same month
+    endDay = lastDayCurrent;
   } else {
-    // Normal months
+    // For other days, end is the day before the join day in the SAME month
+    // But if join day > last day of month, end is last day of month
+    // The billing cycle for "15th joiner" in January would be "15 Jan - 14 Feb"
+    // But we need to show ONLY the current month's portion
+    
+    // Actually, the correct logic for "1 Jan - 31 Jan" for someone who joined on 1st Aug:
+    // Start: 1st of selected month
+    // End: last day of selected month (if joined on 1st)
+    
+    // For someone joined on 15th:
+    // Billing cycle: 15th to 14th of next month
+    // So for January: "15 Jan - 14 Feb"
+    
+    // Let's implement this correctly:
     endDay = joinDay - 1;
     if (endDay <= 0) {
+      // If join day is 1, end day is last day of same month
       endDay = lastDayCurrent;
+    } else {
+      // End day is (joinDay - 1) of NEXT month
+      endMonth = selectedMonth + 1;
+      if (endMonth > 12) {
+        endMonth = 1;
+        endYear = selectedYear + 1;
+      }
+      // Clamp to the last day of the end month
+      const lastDayEndMonth = getLastDayOfMonth(endYear, endMonth);
+      endDay = Math.min(endDay, lastDayEndMonth);
     }
-    endDay = Math.min(endDay, lastDayNext);
   }
 
   /* =========================
-     BUILD DATES (NO AUTO FIX)
+     BUILD DATES
   ========================= */
-
   const startDate = new Date(selectedYear, selectedMonth - 1, startDay);
-  const endDate = new Date(selectedYear, selectedMonth, endDay);
+  const endDate = new Date(endYear, endMonth - 1, endDay);
 
   const format = (d: Date) =>
     d.toLocaleDateString("en-IN", {

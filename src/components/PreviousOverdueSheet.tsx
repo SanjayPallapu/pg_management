@@ -303,6 +303,9 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     joiningDate: tenant.startDate,
                     roomNo: tenant.roomNo,
                     forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+                    // Pass the previous month context for billing range calculation
+                    overrideMonth: prevMonth,
+                    overrideYear: prevYear,
                   });
                   setReminderDialogOpen(true);
                 };
