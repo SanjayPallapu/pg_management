@@ -18,6 +18,9 @@ interface ReminderInputData {
   amount: number;
   amountPaid?: number;
   balance: number;
+  // Optional overrides for when called from Previous Overdue sheet
+  overrideMonth?: number;
+  overrideYear?: number;
 }
 
 interface PaymentReminderDialogProps {
@@ -38,6 +41,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
   useEffect(() => {
     if (reminderData && open) {
+      // Use override values if provided (from Previous Overdue sheet), otherwise use context
+      const monthToUse = reminderData.overrideMonth ?? selectedMonth;
+      const yearToUse = reminderData.overrideYear ?? selectedYear;
+      
       setTemplateData({
         tenant: {
           name: reminderData.tenantName,
@@ -53,8 +60,8 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
           paid: reminderData.amountPaid,
           balance: reminderData.balance,
         },
-        selectedMonth,
-        selectedYear,
+        selectedMonth: monthToUse,
+        selectedYear: yearToUse,
       });
     }
   }, [reminderData, open, selectedMonth, selectedYear]);
