@@ -12,6 +12,7 @@ import { SecurityDepositCard } from './SecurityDepositCard';
 import { PaymentModeCard } from './PaymentModeCard';
 import { EmptyBedsSheet } from './EmptyBedsSheet';
 import { TenantLockCard } from './TenantLockCard';
+import { PreviousMonthOverdueCard } from './PreviousMonthOverdueCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -223,6 +224,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Tenant Lock Card */}
           <TenantLockCard rooms={rooms} />
+
+          {/* Previous Month Overdue Card */}
+          <PreviousMonthOverdueCard />
         </div>
 
         {/* Day Guest Card - Separate Row */}
