@@ -1,0 +1,352 @@
+import { useState, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { History, X, ChevronDown, ChevronRight, User } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useMonthContext } from '@/contexts/MonthContext';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { useRooms } from '@/hooks/useRooms';
+import { useBackGesture } from '@/hooks/useBackGesture';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { PaymentEntry } from '@/types';
+import { format } from 'date-fns';
+import { UpiLogo } from '@/components/icons/UpiLogo';
+import { CashLogo } from '@/components/icons/CashLogo';
+
+export const PreviousMonthOverdueCard = () => {
+  const { selectedMonth, selectedYear } = useMonthContext();
+  const { payments } = useTenantPayments();
+  const { rooms } = useRooms();
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
+
+  useBackGesture(sheetOpen, () => setSheetOpen(false));
+
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Calculate previous month
+  const { prevMonth, prevYear } = useMemo(() => {
+    let pMonth = selectedMonth - 1;
+    let pYear = selectedYear;
+    if (pMonth === 0) {
+      pMonth = 12;
+      pYear = selectedYear - 1;
+    }
+    return { prevMonth: pMonth, prevYear: pYear };
+  }, [selectedMonth, selectedYear]);
+
+  // Get payments for previous month that were collected in current month
+  const { collectedData, totalCollected, upiTotal, cashTotal, totalOverdue } = useMemo(() => {
+    // Get all tenants active in previous month
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
+      ...tenant,
+      roomNo: room.roomNo
+    })));
+
+    const tenantsActiveInPrevMonth = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && !tenant.isLocked
+    );
+
+    // Find previous month payments
+    const prevMonthPayments = payments.filter(p => 
+      p.month === prevMonth && p.year === prevYear
+    );
+
+    let total = 0;
+    let totalUpi = 0;
+    let totalCash = 0;
+    let totalOverdueAmount = 0;
+    
+    const details: Array<{
+      tenantId: string;
+      tenantName: string;
+      roomNo: string;
+      monthlyRent: number;
+      amountPaid: number;
+      status: 'Paid' | 'Partial' | 'Pending';
+      entries: PaymentEntry[];
+      currentMonthEntries: PaymentEntry[];
+      remaining: number;
+    }> = [];
+
+    tenantsActiveInPrevMonth.forEach(tenant => {
+      const payment = prevMonthPayments.find(p => p.tenantId === tenant.id);
+      
+      // Calculate overdue for this tenant
+      if (!payment || payment.paymentStatus === 'Pending') {
+        totalOverdueAmount += tenant.monthlyRent;
+      } else if (payment.paymentStatus === 'Partial') {
+        totalOverdueAmount += tenant.monthlyRent - (payment.amountPaid || 0);
+      }
+
+      // Check if payment has entries made in current month
+      if (payment && payment.paymentEntries && payment.paymentEntries.length > 0) {
+        const allEntries = payment.paymentEntries as PaymentEntry[];
+        
+        // Filter entries made in current month
+        const currentMonthEntries = allEntries.filter(entry => {
+          const entryDate = new Date(entry.date);
+          return entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear;
+        });
+
+        if (currentMonthEntries.length > 0) {
+          let entryUpi = 0;
+          let entryCash = 0;
+          
+          currentMonthEntries.forEach(entry => {
+            if (entry.mode === 'upi') {
+              entryUpi += entry.amount;
+              totalUpi += entry.amount;
+            } else {
+              entryCash += entry.amount;
+              totalCash += entry.amount;
+            }
+            total += entry.amount;
+          });
+
+          details.push({
+            tenantId: tenant.id,
+            tenantName: tenant.name,
+            roomNo: tenant.roomNo,
+            monthlyRent: tenant.monthlyRent,
+            amountPaid: payment.amountPaid || 0,
+            status: payment.paymentStatus as 'Paid' | 'Partial' | 'Pending',
+            entries: allEntries,
+            currentMonthEntries,
+            remaining: tenant.monthlyRent - (payment.amountPaid || 0),
+          });
+        }
+      }
+    });
+
+    // Sort by earliest current month entry date
+    details.sort((a, b) => {
+      const aDate = new Date(a.currentMonthEntries[0]?.date || 0);
+      const bDate = new Date(b.currentMonthEntries[0]?.date || 0);
+      return aDate.getTime() - bDate.getTime();
+    });
+
+    return {
+      collectedData: details,
+      totalCollected: total,
+      upiTotal: totalUpi,
+      cashTotal: totalCash,
+      totalOverdue: totalOverdueAmount,
+    };
+  }, [rooms, payments, prevMonth, prevYear, selectedMonth, selectedYear]);
+
+  const toggleTenantExpanded = (tenantId: string) => {
+    setExpandedTenants(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(tenantId)) {
+        newSet.delete(tenantId);
+      } else {
+        newSet.add(tenantId);
+      }
+      return newSet;
+    });
+  };
+
+  if (totalCollected === 0 && totalOverdue === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <Card 
+        className="cursor-pointer transition-all hover:shadow-md border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10"
+        onClick={() => setSheetOpen(true)}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-medium text-muted-foreground">{months[prevMonth - 1]} Overdue</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-2xl font-bold text-paid">₹{totalCollected.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Collected this month</p>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Still pending</p>
+            </div>
+          </div>
+          
+          {totalCollected > 0 && (
+            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/50">
+              <div className="flex items-center gap-1">
+                <UpiLogo className="h-4 w-4" />
+                <span className="text-sm font-medium">₹{upiTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <CashLogo className="h-4 w-4" />
+                <span className="text-sm font-medium">₹{cashTotal.toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+          
+          <p className="text-xs text-muted-foreground mt-2 text-center">Tap for details</p>
+        </CardContent>
+      </Card>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        >
+          <SheetHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base text-amber-600">
+                {months[prevMonth - 1]} Overdue Collections
+              </SheetTitle>
+              <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Payments received in {months[selectedMonth - 1]} for {months[prevMonth - 1]} dues
+            </p>
+          </SheetHeader>
+
+          <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
+            <div className="space-y-4 pr-2">
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-paid/10 rounded-lg">
+                  <div className="text-xs text-muted-foreground">Total Collected</div>
+                  <div className="text-lg font-bold text-paid">₹{totalCollected.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{collectedData.length} tenant(s)</div>
+                </div>
+                <div className="p-3 bg-amber-500/10 rounded-lg">
+                  <div className="text-xs text-muted-foreground">Still Pending</div>
+                  <div className="text-lg font-bold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground mt-1">From {months[prevMonth - 1]}</div>
+                </div>
+              </div>
+
+              {/* Payment Mode Breakdown */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <UpiLogo className="h-4 w-4" />
+                    <span className="text-xs text-muted-foreground">UPI</span>
+                  </div>
+                  <div className="text-lg font-bold">₹{upiTotal.toLocaleString()}</div>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CashLogo className="h-4 w-4" />
+                    <span className="text-xs text-muted-foreground">Cash</span>
+                  </div>
+                  <div className="text-lg font-bold">₹{cashTotal.toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Tenant Details */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Payment Details</h3>
+                {collectedData.map(detail => (
+                  <Collapsible 
+                    key={detail.tenantId} 
+                    open={expandedTenants.has(detail.tenantId)} 
+                    onOpenChange={() => toggleTenantExpanded(detail.tenantId)}
+                  >
+                    <div className="border rounded-lg overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {expandedTenants.has(detail.tenantId) ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-sm">{detail.tenantName}</span>
+                              <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-paid">
+                                ₹{detail.currentMonthEntries.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+                              </span>
+                              <Badge className={
+                                detail.status === 'Paid' 
+                                  ? 'bg-paid text-paid-foreground' 
+                                  : 'bg-partial text-partial-foreground'
+                              }>
+                                {detail.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        <div className="px-3 pb-3 space-y-2 border-t bg-muted/20">
+                          <div className="grid grid-cols-3 gap-2 text-xs pt-2">
+                            <div>
+                              <span className="text-muted-foreground">Monthly Rent:</span>
+                              <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Total Paid:</span>
+                              <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Remaining:</span>
+                              <div className={`font-medium ${detail.remaining > 0 ? 'text-amber-600' : 'text-paid'}`}>
+                                ₹{detail.remaining.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t space-y-1">
+                            <div className="text-xs font-medium text-muted-foreground mb-1">
+                              Paid in {months[selectedMonth - 1]}:
+                            </div>
+                            {detail.currentMonthEntries.map((entry, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {format(new Date(entry.date), 'dd MMM yyyy')}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-1.5 py-0.5 rounded ${
+                                    entry.mode === 'upi' 
+                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                                      : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  }`}>
+                                    {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                  </span>
+                                  <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+                ))}
+
+                {collectedData.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No {months[prevMonth - 1]} dues collected in {months[selectedMonth - 1]} yet
+                  </div>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+};

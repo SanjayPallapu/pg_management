@@ -299,10 +299,13 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                   setReminderData({
                     tenantName: tenant.name,
                     tenantPhone: tenant.phone,
-                    monthlyRent: tenant.monthlyRent,
                     joiningDate: tenant.startDate,
                     roomNo: tenant.roomNo,
                     forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+                    sharingType: '', // Not needed for reminder
+                    amount: tenant.monthlyRent,
+                    amountPaid: tenant.amountPaid,
+                    balance: tenant.remaining,
                     // Pass the previous month context for billing range calculation
                     overrideMonth: prevMonth,
                     overrideYear: prevYear,

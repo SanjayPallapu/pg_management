@@ -42,6 +42,9 @@ export const PaymentReconciliation = ({
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRangeOption>('current');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  // Expected collection date filter: from day X to day Y
+  const [collectionFromDay, setCollectionFromDay] = useState<number>(1);
+  const [collectionToDay, setCollectionToDay] = useState<number>(31);
 
   // Handle OS back gesture to close sheet
   useBackGesture(open, () => onOpenChange(false));
@@ -394,6 +397,22 @@ export const PaymentReconciliation = ({
 
     return Object.values(scheduleByDay).sort((a, b) => a.day - b.day);
   }, [rooms, payments, selectedMonth, selectedYear]);
+
+  // Filtered collection schedule based on date range
+  const filteredCollectionScheduleData = useMemo(() => {
+    return collectionScheduleData.filter(
+      item => item.day >= collectionFromDay && item.day <= collectionToDay
+    );
+  }, [collectionScheduleData, collectionFromDay, collectionToDay]);
+
+  // Total expected in filtered range
+  const filteredExpectedTotal = useMemo(() => {
+    return filteredCollectionScheduleData.reduce((sum, item) => sum + item.expected, 0);
+  }, [filteredCollectionScheduleData]);
+
+  const filteredTenantCount = useMemo(() => {
+    return filteredCollectionScheduleData.reduce((sum, item) => sum + item.tenants, 0);
+  }, [filteredCollectionScheduleData]);
   const toggleTenantExpanded = (tenantId: string) => {
     setExpandedTenants(prev => {
       const newSet = new Set(prev);
@@ -694,11 +713,82 @@ export const PaymentReconciliation = ({
 
             {/* Expected Collection Schedule by Due Date */}
             {collectionScheduleData.length > 0 && <div className="space-y-3">
-                <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
-                <p className="text-xs text-muted-foreground">Amount pending grouped by tenant joining day</p>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
+                    <p className="text-xs text-muted-foreground">Amount pending grouped by tenant joining day</p>
+                  </div>
+                </div>
+                
+                {/* Date Range Filter */}
+                <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/30 rounded-lg">
+                  <span className="text-xs font-medium text-muted-foreground">Filter:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">Day</span>
+                    <Select 
+                      value={collectionFromDay.toString()} 
+                      onValueChange={(v) => setCollectionFromDay(parseInt(v))}
+                    >
+                      <SelectTrigger className="w-16 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                          <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <span className="text-xs text-muted-foreground">to</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">Day</span>
+                    <Select 
+                      value={collectionToDay.toString()} 
+                      onValueChange={(v) => setCollectionToDay(parseInt(v))}
+                    >
+                      <SelectTrigger className="w-16 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                          <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs px-2"
+                    onClick={() => { setCollectionFromDay(1); setCollectionToDay(31); }}
+                  >
+                    Reset
+                  </Button>
+                </div>
+
+                {/* Filtered Total Summary */}
+                <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-muted-foreground">
+                        Expected from Day {collectionFromDay} to Day {collectionToDay}
+                      </div>
+                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        ₹{filteredExpectedTotal.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">Tenants</div>
+                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        {filteredTenantCount}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="h-48 bg-muted/30 rounded-lg p-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={collectionScheduleData}>
+                    <BarChart data={filteredCollectionScheduleData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={d => `${d}`} />
                       <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} width={40} />
@@ -713,7 +803,7 @@ export const PaymentReconciliation = ({
                   </ResponsiveContainer>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  {collectionScheduleData.slice(0, 6).map(item => (
+                  {filteredCollectionScheduleData.slice(0, 6).map(item => (
                     <div key={item.day} className="p-2 bg-purple-500/10 rounded-lg">
                       <div className="text-xs text-muted-foreground">Day {item.day}</div>
                       <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
