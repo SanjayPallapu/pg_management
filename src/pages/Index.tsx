@@ -7,9 +7,10 @@ import { Reports } from '@/components/Reports';
 import { TenantManagement } from '@/components/TenantManagement';
 import { MonthlyRentSheet } from '@/components/MonthlyRentSheet';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
+import { AuditHistorySheet } from '@/components/AuditHistorySheet';
 import { useRooms } from '@/hooks/useRooms';
 import { Room } from '@/types';
-import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut, Shield, User } from 'lucide-react';
+import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut, Shield, User, History, ExternalLink } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,6 +27,7 @@ const Index = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
   // Tab order for swipe navigation
   const tabOrder = ['dashboard', 'rooms', 'rent-sheet', 'reports'];
@@ -80,10 +82,27 @@ const Index = () => {
             />
             <MonthYearPicker />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}
+            >
+              <ExternalLink className="h-3 w-3" />
+              Expenses
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHistorySheetOpen(true)}
+              title="Activity History"
+            >
+              <History className="h-4 w-4" />
+            </Button>
             <ThemeToggle className="rounded-md border-primary" />
             <div className="flex items-center gap-1">
               <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
@@ -137,6 +156,9 @@ const Index = () => {
 
         {/* Tenant Management Dialog */}
         {selectedRoom && <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />}
+
+        {/* Activity History Sheet */}
+        <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
       </div>
     </div>;
 };

@@ -119,8 +119,8 @@ const LeftTenants = () => {
     setEditingTenantId(null);
   };
 
-  const handleDelete = async (tenantId: string) => {
-    await removeTenant.mutateAsync(tenantId);
+  const handleDelete = async (tenantId: string, tenantName?: string) => {
+    await removeTenant.mutateAsync({ tenantId, tenantName });
     toast({ title: 'Tenant deleted successfully' });
     setDeleteConfirm(null);
   };
@@ -315,7 +315,12 @@ const LeftTenants = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
+            <AlertDialogAction onClick={() => {
+              if (deleteConfirm) {
+                const tenantInfo = leftTenants.find(t => t.tenant.id === deleteConfirm);
+                handleDelete(deleteConfirm, tenantInfo?.tenant.name);
+              }
+            }}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

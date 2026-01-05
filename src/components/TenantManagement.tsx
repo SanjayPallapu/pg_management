@@ -193,7 +193,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   };
 
   const confirmRemoveTenant = async (tenantId: string) => {
-    await removeTenant.mutateAsync(tenantId);
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    await removeTenant.mutateAsync({ tenantId, tenantName: tenant?.name });
 
     const updatedTenants = room.tenants.filter(tenant => tenant.id !== tenantId);
     const newStatus = updatedTenants.length === room.capacity ? 'Occupied' : 
