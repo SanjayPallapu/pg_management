@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import appLogo from '@/assets/pg-logo.png';
-
 const Index = () => {
   const {
     rooms,
@@ -31,11 +30,12 @@ const Index = () => {
 
   // Tab order for swipe navigation
   const tabOrder = ['dashboard', 'rooms', 'rent-sheet', 'reports'];
-  
-  const { swipeHandlers } = useSwipeTabs({
+  const {
+    swipeHandlers
+  } = useSwipeTabs({
     tabs: tabOrder,
     currentTab: activeTab,
-    onTabChange: setActiveTab,
+    onTabChange: setActiveTab
   });
   const {
     selectedMonth,
@@ -47,10 +47,7 @@ const Index = () => {
     role
   } = useAuth();
   const navigate = useNavigate();
-  const months =['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
-      
-
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const handleSignOut = async () => {
     const {
       error
@@ -77,33 +74,18 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3 overflow-visible">
-            <img
-              src={appLogo}
-              alt="Amma logo"
-              className="h-14 w-auto"
-              decoding="async"
-            />
+            <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-2">
-            <div className="text-sm text-muted-foreground px-[11px]">
+            <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 ml-[8px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              
-              onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}
-            >
+            <Button variant="ghost" size="icon" onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}>
               <ExternalLink className="h-4 w-4" />
               
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setHistorySheetOpen(true)}
-              title="Activity History"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
             <ThemeToggle className="rounded-md border-primary" />
