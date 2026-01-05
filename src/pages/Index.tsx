@@ -88,7 +88,9 @@ const Index = () => {
             <Button variant="ghost" size="icon" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
-            <ThemeToggle className="rounded-md border-primary" />
+
+
+            
             <div className="flex items-center gap-1">
               <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
                 {isAdmin ? <Shield className="h-4 w-4 text-primary-foreground" /> : <User className="h-4 w-4 text-primary-foreground" />}
