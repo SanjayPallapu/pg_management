@@ -87,9 +87,9 @@ const Index = () => {
               {months[selectedMonth - 1]} {selectedYear}
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="gap-1"
+              
               onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}
             >
               <ExternalLink className="h-3 w-3" />
