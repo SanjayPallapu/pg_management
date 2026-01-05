@@ -88,11 +88,11 @@ const Index = () => {
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               
               onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}
             >
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-4 w-4" />
               
             </Button>
             <Button
