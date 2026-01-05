@@ -86,15 +86,7 @@ const Index = () => {
             <div className="text-sm text-muted-foreground px-[11px]">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1"
-              onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}
-            >
-              <ExternalLink className="h-3 w-3" />
-              Expenses
-            </Button>
+            
             <Button
               variant="ghost"
               size="icon"
