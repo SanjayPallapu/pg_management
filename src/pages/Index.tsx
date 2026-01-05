@@ -77,8 +77,8 @@ const Index = () => {
             <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
             <MonthYearPicker />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 mx-0 ml-[9px]">
+          <div className="flex items-center gap-2 mx-0 px-px pl-0">
+            <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 ml-[9px] mx-0">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
             <Button variant="ghost" size="icon" onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}>
