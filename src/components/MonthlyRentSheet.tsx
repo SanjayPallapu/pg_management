@@ -379,7 +379,9 @@ export const MonthlyRentSheet = ({
       amountPaid: paymentAmount,
       // Store actual paid amount for overpayment tracking
       paymentEntries: updatedEntries,
-      notes
+      notes,
+      tenantName: tenant.name,
+      roomNo: tenant.roomNo,
     });
     toast({
       title: isFullPayment ? 'Payment marked as Paid' : 'Partial payment recorded',
@@ -439,7 +441,9 @@ export const MonthlyRentSheet = ({
       paymentDate: formattedDate,
       amount: tenant.monthlyRent,
       amountPaid: Math.min(totalPaid, tenant.monthlyRent),
-      paymentEntries: updatedEntries
+      paymentEntries: updatedEntries,
+      tenantName: tenant.name,
+      roomNo: tenant.roomNo,
     });
     toast({
       title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',

@@ -1,9 +1,13 @@
+import { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { format } from 'date-fns';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, subMonths } from 'date-fns';
+import { Plus, Pencil, Trash2, Loader2, Search, X, Filter } from 'lucide-react';
 
 interface AuditHistorySheetProps {
   open: boolean;
@@ -67,11 +71,96 @@ const formatChanges = (changes: Record<string, { old: unknown; new: unknown }> |
   });
 };
 
+const formatNewData = (newData: Record<string, unknown> | null, tableName: string) => {
+  if (!newData || tableName !== 'tenant_payments') return null;
+  
+  const { amount, mode, type, status } = newData as { amount?: number; mode?: string; type?: string; status?: string };
+  
+  return (
+    <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
+      {amount !== undefined && (
+        <div>
+          <span className="font-medium">Amount:</span>{' '}
+          <span className="text-paid">₹{Number(amount).toLocaleString()}</span>
+        </div>
+      )}
+      {mode && (
+        <div>
+          <span className="font-medium">Mode:</span>{' '}
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+            mode === 'upi' 
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+              : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+          }`}>
+            {mode === 'upi' ? 'UPI' : 'Cash'}
+          </span>
+        </div>
+      )}
+      {status && (
+        <div>
+          <span className="font-medium">Status:</span>{' '}
+          <span className={status === 'Paid' ? 'text-paid' : status === 'Partial' ? 'text-partial' : 'text-pending'}>
+            {status}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+type DateRangeOption = 'all' | 'today' | 'week' | 'month';
+
 export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps) => {
   const { logs, isLoading } = useAuditLog();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [actionFilter, setActionFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<DateRangeOption>('all');
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      // Search filter - by tenant name/record name
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = log.recordName?.toLowerCase().includes(query);
+        if (!matchesName) return false;
+      }
+
+      // Action filter
+      if (actionFilter !== 'all' && log.action !== actionFilter) {
+        return false;
+      }
+
+      // Date range filter
+      if (dateRange !== 'all') {
+        const logDate = new Date(log.createdAt);
+        const now = new Date();
+        
+        let start: Date;
+        switch (dateRange) {
+          case 'today':
+            start = startOfDay(now);
+            break;
+          case 'week':
+            start = startOfDay(subDays(now, 7));
+            break;
+          case 'month':
+            start = startOfDay(subMonths(now, 1));
+            break;
+          default:
+            start = new Date(0);
+        }
+
+        if (!isWithinInterval(logDate, { start, end: endOfDay(now) })) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [logs, searchQuery, actionFilter, dateRange]);
 
   // Group logs by date
-  const groupedLogs = logs.reduce((acc, log) => {
+  const groupedLogs = filteredLogs.reduce((acc, log) => {
     const date = format(new Date(log.createdAt), 'yyyy-MM-dd');
     if (!acc[date]) {
       acc[date] = [];
@@ -80,6 +169,14 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
     return acc;
   }, {} as Record<string, typeof logs>);
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setActionFilter('all');
+    setDateRange('all');
+  };
+
+  const hasFilters = searchQuery || actionFilter !== 'all' || dateRange !== 'all';
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
@@ -87,14 +184,67 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
           <SheetTitle>Activity History</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-100px)] mt-4 pr-4">
+        {/* Filters */}
+        <div className="space-y-3 mt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by tenant name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Action" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="create">Created</SelectItem>
+                <SelectItem value="update">Updated</SelectItem>
+                <SelectItem value="delete">Deleted</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRangeOption)}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">Last 7 Days</SelectItem>
+                <SelectItem value="month">Last Month</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {hasFilters && (
+              <Button variant="ghost" size="icon" onClick={clearFilters}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <ScrollArea className="h-[calc(100vh-220px)] mt-4 pr-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : logs.length === 0 ? (
+          ) : filteredLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No activity recorded yet
+              {hasFilters ? 'No matching activity found' : 'No activity recorded yet'}
             </div>
           ) : (
             <div className="space-y-6">
@@ -131,6 +281,12 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
                         {log.changes && (
                           <div className="pt-1">
                             {formatChanges(log.changes)}
+                          </div>
+                        )}
+
+                        {log.newData && log.tableName === 'tenant_payments' && (
+                          <div className="pt-1">
+                            {formatNewData(log.newData, log.tableName)}
                           </div>
                         )}
                       </div>

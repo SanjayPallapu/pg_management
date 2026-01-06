@@ -14,6 +14,7 @@ import { EmptyBedsSheet } from './EmptyBedsSheet';
 import { TenantLockCard } from './TenantLockCard';
 import { PreviousMonthOverdueCard } from './PreviousMonthOverdueCard';
 import { TenantMovementCard } from './TenantMovementCard';
+import { TotalCollectedCard } from './TotalCollectedCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -193,6 +194,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <div className="grid gap-4 md:grid-cols-3">
           {/* Payment Mode Card - First */}
           <PaymentModeCard />
+
+          {/* Total Collected Card */}
+          <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
 
           {/* Potential Revenue Card - Clickable */}
           <Card 
