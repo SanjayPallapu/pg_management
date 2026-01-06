@@ -56,7 +56,8 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
           return;
         }
 
-        if (tenant.name.toLowerCase().includes(query)) {
+        // Search by tenant name OR room number
+        if (tenant.name.toLowerCase().includes(query) || room.roomNo.toLowerCase().includes(query)) {
           const payment = payments.find(p => 
             p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
           );

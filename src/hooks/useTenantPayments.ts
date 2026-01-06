@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TenantPayment, PaymentEntry } from '@/types';
+import { useAuditLog } from './useAuditLog';
 
 export const useTenantPayments = () => {
+  const { logAudit } = useAuditLog();
   const queryClient = useQueryClient();
 
   const { data: payments = [], isLoading } = useQuery({
@@ -41,7 +43,7 @@ export const useTenantPayments = () => {
   });
 
   const upsertPayment = useMutation({
-    mutationFn: async (payment: Omit<TenantPayment, 'id'>) => {
+    mutationFn: async (payment: Omit<TenantPayment, 'id'> & { tenantName?: string; roomNo?: string }) => {
       const { error } = await supabase
         .from('tenant_payments')
         .upsert({
@@ -59,6 +61,27 @@ export const useTenantPayments = () => {
         });
 
       if (error) throw error;
+
+      // Log audit for payment
+      const entries = payment.paymentEntries || [];
+      const lastEntry = entries[entries.length - 1];
+      if (lastEntry) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        logAudit.mutate({
+          action: entries.length === 1 ? 'create' : 'update',
+          tableName: 'tenant_payments',
+          recordId: payment.tenantId,
+          recordName: payment.tenantName ? `${payment.tenantName}${payment.roomNo ? ` (Room ${payment.roomNo})` : ''} - ${months[payment.month - 1]} ${payment.year}` : undefined,
+          newData: {
+            amount: lastEntry.amount,
+            mode: lastEntry.mode,
+            type: lastEntry.type,
+            date: lastEntry.date,
+            totalPaid: payment.amountPaid,
+            status: payment.paymentStatus,
+          },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
