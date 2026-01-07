@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserPlus, UserMinus, Phone } from 'lucide-react';
+import { UserPlus, UserMinus, Phone, MessageCircle } from 'lucide-react';
 import { Room, Tenant } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { useMemo } from 'react';
 import { format } from 'date-fns';
 
 interface TenantMovementCardProps {
@@ -115,12 +114,22 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">{tenant.name}</span>
                         {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <a 
-                            href={`tel:${tenant.phone}`}
-                            className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                          >
-                            <Phone className="h-4 w-4" />
-                          </a>
+                          <>
+                            <a 
+                              href={`tel:${tenant.phone}`}
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                            >
+                              <Phone className="h-4 w-4" />
+                            </a>
+                            <a 
+                              href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </a>
+                          </>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">

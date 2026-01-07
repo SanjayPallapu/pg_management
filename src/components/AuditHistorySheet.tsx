@@ -71,41 +71,80 @@ const formatChanges = (changes: Record<string, { old: unknown; new: unknown }> |
   });
 };
 
-const formatNewData = (newData: Record<string, unknown> | null, tableName: string) => {
-  if (!newData || tableName !== 'tenant_payments') return null;
+const formatNewData = (newData: Record<string, unknown> | null, tableName: string, action: string) => {
+  if (!newData) return null;
   
-  const { amount, mode, type, status } = newData as { amount?: number; mode?: string; type?: string; status?: string };
+  if (tableName === 'tenant_payments') {
+    const { amount, mode, type, status, totalPaid, date } = newData as { amount?: number; mode?: string; type?: string; status?: string; totalPaid?: number; date?: string };
+    
+    return (
+      <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
+        {amount !== undefined && (
+          <div>
+            <span className="font-medium">Amount:</span>{' '}
+            <span className="text-paid">₹{Number(amount).toLocaleString()}</span>
+            {type && <span className="ml-1">({type})</span>}
+          </div>
+        )}
+        {mode && (
+          <div>
+            <span className="font-medium">Mode:</span>{' '}
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+              mode === 'upi' 
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            }`}>
+              {mode === 'upi' ? 'UPI' : 'Cash'}
+            </span>
+          </div>
+        )}
+        {totalPaid !== undefined && (
+          <div>
+            <span className="font-medium">Total Paid:</span>{' '}
+            <span className="text-paid">₹{Number(totalPaid).toLocaleString()}</span>
+          </div>
+        )}
+        {status && (
+          <div>
+            <span className="font-medium">Status:</span>{' '}
+            <span className={status === 'Paid' ? 'text-paid' : status === 'Partial' ? 'text-partial' : 'text-pending'}>
+              {status}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
   
-  return (
-    <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
-      {amount !== undefined && (
-        <div>
-          <span className="font-medium">Amount:</span>{' '}
-          <span className="text-paid">₹{Number(amount).toLocaleString()}</span>
-        </div>
-      )}
-      {mode && (
-        <div>
-          <span className="font-medium">Mode:</span>{' '}
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-            mode === 'upi' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
-              : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-          }`}>
-            {mode === 'upi' ? 'UPI' : 'Cash'}
-          </span>
-        </div>
-      )}
-      {status && (
-        <div>
-          <span className="font-medium">Status:</span>{' '}
-          <span className={status === 'Paid' ? 'text-paid' : status === 'Partial' ? 'text-partial' : 'text-pending'}>
-            {status}
-          </span>
-        </div>
-      )}
-    </div>
-  );
+  // For tenants - show more details
+  if (tableName === 'tenants') {
+    const { monthly_rent, room_no, start_date, end_date, phone, is_locked, security_deposit_amount } = newData as any;
+    
+    return (
+      <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
+        {monthly_rent !== undefined && (
+          <div><span className="font-medium">Rent:</span> ₹{Number(monthly_rent).toLocaleString()}</div>
+        )}
+        {room_no && (
+          <div><span className="font-medium">Room:</span> {room_no}</div>
+        )}
+        {start_date && (
+          <div><span className="font-medium">Start Date:</span> {start_date}</div>
+        )}
+        {end_date && (
+          <div><span className="font-medium">End Date:</span> {end_date}</div>
+        )}
+        {is_locked !== undefined && (
+          <div><span className="font-medium">Locked:</span> {is_locked ? 'Yes' : 'No'}</div>
+        )}
+        {security_deposit_amount !== undefined && (
+          <div><span className="font-medium">Security Deposit:</span> ₹{Number(security_deposit_amount).toLocaleString()}</div>
+        )}
+      </div>
+    );
+  }
+  
+  return null;
 };
 
 type DateRangeOption = 'all' | 'today' | 'week' | 'month';
@@ -284,9 +323,9 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
                           </div>
                         )}
 
-                        {log.newData && log.tableName === 'tenant_payments' && (
+                        {log.newData && (
                           <div className="pt-1">
-                            {formatNewData(log.newData, log.tableName)}
+                            {formatNewData(log.newData, log.tableName, log.action)}
                           </div>
                         )}
                       </div>
