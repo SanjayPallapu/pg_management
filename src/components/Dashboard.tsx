@@ -15,6 +15,8 @@ import { TenantLockCard } from './TenantLockCard';
 import { PreviousMonthOverdueCard } from './PreviousMonthOverdueCard';
 import { TenantMovementCard } from './TenantMovementCard';
 import { TotalCollectedCard } from './TotalCollectedCard';
+import { PersonalExpensesCard } from './PersonalExpensesCard';
+import { AllCollectedCard } from './AllCollectedCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -44,22 +46,33 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
       const { data, error } = await supabase
         .from('day_guests')
-        .select('total_amount, payment_status, amount_paid')
-
+        .select('total_amount, payment_status, amount_paid, payment_entries')
         .gte('from_date', startOfMonth.toISOString().split('T')[0])
         .lte('from_date', endOfMonth.toISOString().split('T')[0]);
 
       if (error) {
         console.error('Error fetching day guest stats:', error);
-        return { collected: 0, pending: 0, count: 0 };
+        return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
       }
 
       const collected = data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
- 
       const pending = data.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
+      
+      // Calculate UPI and Cash totals
+      let upi = 0;
+      let cash = 0;
+      data.forEach(g => {
+        const entries = (g.payment_entries as any[]) || [];
+        entries.forEach(entry => {
+          if (entry.mode === 'upi') {
+            upi += entry.amount || 0;
+          } else if (entry.mode === 'cash') {
+            cash += entry.amount || 0;
+          }
+        });
+      });
 
-
-      return { collected, pending, count: data.length };
+      return { collected, pending, count: data.length, upi, cash };
     },
   });
 
@@ -198,6 +211,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           {/* Total Collected Card */}
           <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
 
+          {/* All Collections Card - UPI/Cash breakdown */}
+          <AllCollectedCard rooms={rooms} />
+
           {/* Potential Revenue Card - Clickable */}
           <Card 
             className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
@@ -235,6 +251,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Tenant Movement Card */}
           <TenantMovementCard rooms={rooms} />
+
+          {/* Personal Expenses Card */}
+          <PersonalExpensesCard />
         </div>
 
         {/* Day Guest Card - Separate Row */}
@@ -247,7 +266,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <div>
                 <div className="text-2xl font-bold text-paid">
                   ₹{(dayGuestStats?.collected || 0).toLocaleString()}
@@ -259,6 +278,15 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   ₹{(dayGuestStats?.pending || 0).toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">Pending</p>
+              </div>
+            </div>
+            {/* UPI/Cash breakdown */}
+            <div className="flex justify-center gap-4 text-xs border-t pt-2">
+              <div className="text-blue-600 dark:text-blue-400">
+                UPI: ₹{(dayGuestStats?.upi || 0).toLocaleString()}
+              </div>
+              <div className="text-green-600 dark:text-green-400">
+                Cash: ₹{(dayGuestStats?.cash || 0).toLocaleString()}
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>

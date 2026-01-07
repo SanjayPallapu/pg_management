@@ -21,6 +21,7 @@ import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { PreviousOverdueSheet } from './PreviousOverdueSheet';
 import { PaymentHistorySheet } from './PaymentHistorySheet';
 import { DeletePaymentDialog } from './DeletePaymentDialog';
+import { OverduePaidCard } from './OverduePaidCard';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -596,6 +597,9 @@ export const MonthlyRentSheet = ({
                 {previousMonthOverdue.count} tenant(s) from {months[(selectedMonth === 1 ? 12 : selectedMonth - 1) - 1]?.label}
               </div>
             </div>}
+
+          {/* Overdue Paid Card - shows previous month overdue that was paid this month */}
+          <OverduePaidCard rooms={rooms} />
 
           {/* Search Bar */}
           <div className="mb-4 relative">
