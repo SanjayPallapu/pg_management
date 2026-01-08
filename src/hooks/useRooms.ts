@@ -144,20 +144,6 @@ export const useRooms = () => {
         recordName: `${tenant.name} (Room ${roomNo})`,
         newData: { name: tenant.name, phone: tenant.phone, room: roomNo, rent: tenant.monthlyRent },
       });
-
-      // Auto-create first month payment as "Paid" (advance payment)
-      const startDate = new Date(tenant.startDate);
-      const joinMonth = startDate.getMonth() + 1;
-      const joinYear = startDate.getFullYear();
-
-      const { error: paymentError } = await supabase.from("tenant_payments").insert({
-        tenant_id: tenantData.id,
-        month: joinMonth,
-        year: joinYear,
-        payment_status: "Paid",
-        payment_date: tenant.startDate,
-        amount: tenant.monthlyRent,
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
