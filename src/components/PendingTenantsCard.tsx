@@ -1,0 +1,230 @@
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle } from 'lucide-react';
+import { Room } from '@/types';
+import { useMonthContext } from '@/contexts/MonthContext';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
+
+interface PendingTenantsCardProps {
+  rooms: Room[];
+}
+
+export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
+  const { selectedMonth, selectedYear } = useMonthContext();
+  const { payments } = useTenantPayments();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due'>('overdue');
+  const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
+
+  const { overdueTenants, advanceNotPaidTenants, notDueTenants, partialTenants } = useRentCalculations({
+    selectedMonth,
+    selectedYear,
+    rooms,
+    payments,
+  });
+
+  // Combine overdue + advance-not-paid for "Overdue" tab
+  const overdueCombined = useMemo(() => {
+    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked);
+  }, [overdueTenants, advanceNotPaidTenants]);
+
+  // Not yet due (excluding locked)
+  const notYetDue = useMemo(() => {
+    return notDueTenants.filter(t => !t.isLocked);
+  }, [notDueTenants]);
+
+  const overdueTotal = overdueCombined.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const notYetDueTotal = notYetDue.reduce((sum, t) => sum + t.monthlyRent, 0);
+
+  const currentTenants = activeTab === 'overdue' ? overdueCombined : notYetDue;
+
+  const handleToggleTenant = (tenantId: string) => {
+    const newSet = new Set(selectedTenants);
+    if (newSet.has(tenantId)) {
+      newSet.delete(tenantId);
+    } else {
+      newSet.add(tenantId);
+    }
+    setSelectedTenants(newSet);
+  };
+
+  const selectedTotal = useMemo(() => {
+    return currentTenants
+      .filter(t => selectedTenants.has(t.id))
+      .reduce((sum, t) => sum + t.monthlyRent, 0);
+  }, [currentTenants, selectedTenants]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as 'overdue' | 'not-yet-due');
+    setSelectedTenants(new Set()); // Clear selection when switching tabs
+  };
+
+  return (
+    <>
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent/50"
+        onClick={() => setSheetOpen(true)}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+          <CardTitle className="text-sm font-medium">Pending Tenants</CardTitle>
+          <AlertTriangle className="h-4 w-4 text-pending" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="p-2 rounded-lg bg-pending-muted">
+              <div className="text-xs text-muted-foreground">Overdue</div>
+              <div className="font-bold text-pending">{overdueCombined.length}</div>
+              <div className="text-xs text-muted-foreground">₹{overdueTotal.toLocaleString()}</div>
+            </div>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="text-xs text-muted-foreground">Not Yet Due</div>
+              <div className="font-bold text-blue-600 dark:text-blue-400">{notYetDue.length}</div>
+              <div className="text-xs text-muted-foreground">₹{notYetDueTotal.toLocaleString()}</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 text-center">Tap to select tenants</p>
+        </CardContent>
+      </Card>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Select Pending Tenants</SheetTitle>
+          </SheetHeader>
+
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overdue" className="gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Overdue ({overdueCombined.length})
+              </TabsTrigger>
+              <TabsTrigger value="not-yet-due" className="gap-1">
+                <Clock className="h-3 w-3" />
+                Not Yet Due ({notYetDue.length})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Selected Summary */}
+            {selectedTenants.size > 0 && (
+              <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-semibold">{selectedTenants.size} tenant(s) selected</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-primary">₹{selectedTotal.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Total amount</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <TabsContent value="overdue" className="mt-4">
+              <ScrollArea className="h-[calc(85vh-220px)]">
+                <div className="space-y-2 pr-4">
+                  {overdueCombined.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
+                  ) : (
+                    overdueCombined.map(tenant => (
+                      <TenantSelectItem 
+                        key={tenant.id}
+                        tenant={tenant}
+                        isSelected={selectedTenants.has(tenant.id)}
+                        onToggle={handleToggleTenant}
+                        categoryColor="pending"
+                      />
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="not-yet-due" className="mt-4">
+              <ScrollArea className="h-[calc(85vh-220px)]">
+                <div className="space-y-2 pr-4">
+                  {notYetDue.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No upcoming dues</p>
+                  ) : (
+                    notYetDue.map(tenant => (
+                      <TenantSelectItem 
+                        key={tenant.id}
+                        tenant={tenant}
+                        isSelected={selectedTenants.has(tenant.id)}
+                        onToggle={handleToggleTenant}
+                        categoryColor="blue"
+                      />
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+};
+
+interface TenantSelectItemProps {
+  tenant: TenantWithPayment;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+  categoryColor: 'pending' | 'blue';
+}
+
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor }: TenantSelectItemProps) => {
+  const bgClass = categoryColor === 'pending' 
+    ? 'bg-pending-muted border-pending/30' 
+    : 'bg-blue-500/10 border-blue-500/30';
+
+  return (
+    <div 
+      className={`p-3 rounded-lg border ${bgClass} ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      onClick={() => onToggle(tenant.id)}
+    >
+      <div className="flex items-center gap-3">
+        <Checkbox 
+          checked={isSelected}
+          onCheckedChange={() => onToggle(tenant.id)}
+          className="pointer-events-none"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold truncate">{tenant.name}</span>
+            {tenant.phone && tenant.phone !== '••••••••••' && (
+              <>
+                <a
+                  href={`tel:${tenant.phone}`}
+                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Phone className="h-3 w-3" />
+                </a>
+                <a
+                  href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MessageCircle className="h-3 w-3" />
+                </a>
+              </>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">Room {tenant.roomNo}</p>
+        </div>
+        <Badge className={categoryColor === 'pending' ? 'bg-pending text-pending-foreground' : 'bg-blue-500 text-white'}>
+          ₹{tenant.monthlyRent.toLocaleString()}
+        </Badge>
+      </div>
+    </div>
+  );
+};

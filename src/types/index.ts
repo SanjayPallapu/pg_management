@@ -20,6 +20,7 @@ export interface Tenant {
   paymentDate?: string;
   securityDepositAmount?: number | null;
   securityDepositDate?: string | null;
+  securityDepositMode?: 'upi' | 'cash' | null;
   isLocked?: boolean;
 }
 

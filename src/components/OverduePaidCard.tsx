@@ -27,6 +27,7 @@ interface TenantWithPayment {
   capacity: number;
   amountPaid: number;
   paymentEntries: PaymentEntry[];
+  allPaymentEntries: PaymentEntry[]; // All payment entries for receipt
 }
 
 export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
@@ -74,6 +75,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
               capacity: room.capacity,
               amountPaid: payment.amountPaid || 0,
               paymentEntries: entriesInCurrentMonth,
+              allPaymentEntries: payment.paymentEntries || [], // Store all entries for receipt
             });
           }
         }
@@ -96,7 +98,8 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
   }, 0);
 
   const handleGenerateReceipt = (tenant: TenantWithPayment) => {
-    const lastEntry = tenant.paymentEntries[tenant.paymentEntries.length - 1];
+    // Use all payment entries for the receipt, not just current month entries
+    const lastEntry = tenant.allPaymentEntries[tenant.allPaymentEntries.length - 1];
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -111,7 +114,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
       isFullPayment: tenant.amountPaid >= tenant.monthlyRent,
       remainingBalance: Math.max(0, tenant.monthlyRent - tenant.amountPaid),
       tenantId: tenant.id,
-      paymentEntries: tenant.paymentEntries,
+      paymentEntries: tenant.allPaymentEntries, // Use all entries for full history
     });
     setWhatsappDialogOpen(true);
   };

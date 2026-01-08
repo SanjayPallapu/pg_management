@@ -17,6 +17,8 @@ import { TenantMovementCard } from './TenantMovementCard';
 import { TotalCollectedCard } from './TotalCollectedCard';
 import { PersonalExpensesCard } from './PersonalExpensesCard';
 import { AllCollectedCard } from './AllCollectedCard';
+import { PendingTenantsCard } from './PendingTenantsCard';
+import { CalculatorCard } from './CalculatorCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 
 interface DashboardProps {
@@ -251,6 +253,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Tenant Movement Card */}
           <TenantMovementCard rooms={rooms} />
+
+          {/* Pending Tenants Card */}
+          <PendingTenantsCard rooms={rooms} />
+
+          {/* Calculator Card */}
+          <CalculatorCard />
 
           {/* Personal Expenses Card */}
           <PersonalExpensesCard />

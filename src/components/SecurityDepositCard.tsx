@@ -35,6 +35,7 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [depositDate, setDepositDate] = useState<Date>(new Date());
+  const [depositMode, setDepositMode] = useState<'upi' | 'cash'>('upi');
   const [showEditActions, setShowEditActions] = useState(false);
 
   // Handle OS back gesture to close sub-dialogs
@@ -60,6 +61,24 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const depositedCount = depositedTenants.length;
   const totalTenants = allTenants.length;
 
+  // Calculate UPI and Cash totals for current month deposits
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+  
+  const currentMonthDeposits = depositedTenants.filter(t => {
+    if (!t.securityDepositDate) return false;
+    const depositDate = new Date(t.securityDepositDate);
+    return depositDate.getMonth() + 1 === currentMonth && depositDate.getFullYear() === currentYear;
+  });
+  
+  const currentMonthUpi = currentMonthDeposits
+    .filter(t => (t as any).securityDepositMode === 'upi')
+    .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
+  
+  const currentMonthCash = currentMonthDeposits
+    .filter(t => (t as any).securityDepositMode === 'cash')
+    .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
+
   const handleAddDeposit = async () => {
     if (!depositDialog || depositAmount <= 0) return;
 
@@ -69,12 +88,14 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
         updates: {
           securityDepositAmount: depositAmount,
           securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
+          securityDepositMode: depositMode,
         },
       });
       toast.success(`Deposit of ₹${depositAmount.toLocaleString()} recorded for ${depositDialog.name}`);
       setDepositDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
+      setDepositMode('upi');
     } catch (error) {
       toast.error('Failed to record deposit');
     }
@@ -89,12 +110,14 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
         updates: {
           securityDepositAmount: depositAmount,
           securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
+          securityDepositMode: depositMode,
         },
       });
       toast.success(`Deposit updated to ₹${depositAmount.toLocaleString()} for ${editDialog.name}`);
       setEditDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
+      setDepositMode('upi');
     } catch (error) {
       toast.error('Failed to update deposit');
     }
@@ -138,6 +161,17 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
               <p className="text-xs text-muted-foreground">Tenants deposited</p>
             </div>
           </div>
+          {/* Current month UPI/Cash breakdown */}
+          {(currentMonthUpi > 0 || currentMonthCash > 0) && (
+            <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
+              <div className="text-blue-600 dark:text-blue-400">
+                UPI: ₹{currentMonthUpi.toLocaleString()}
+              </div>
+              <div className="text-green-600 dark:text-green-400">
+                Cash: ₹{currentMonthCash.toLocaleString()}
+              </div>
+            </div>
+          )}
           <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
         </CardContent>
       </Card>
@@ -202,8 +236,17 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                     >
                       <div>
                         <div className="font-medium">{tenant.name}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
                           Room {tenant.roomNo} • {tenant.securityDepositDate && format(new Date(tenant.securityDepositDate), 'dd MMM yyyy')}
+                          {(tenant as any).securityDepositMode && (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              (tenant as any).securityDepositMode === 'upi' 
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            }`}>
+                              {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
