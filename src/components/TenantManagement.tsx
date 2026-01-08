@@ -105,10 +105,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   };
 
   const isTenantPaidForMonth = (tenantId: string) => {
+    const payment = getSelectedMonthPayment(tenantId);
+    if (!payment) return false;          // ⬅️ important change
     return getTenantPaymentStatus(tenantId) === "Paid";
   };
 
   const isTenantPartialForMonth = (tenantId: string) => {
+    const payment = getSelectedMonthPayment(tenantId);
+    if (!payment) return false;
     return getTenantPaymentStatus(tenantId) === "Partial";
   };
 
