@@ -156,7 +156,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       phone: newTenant.phone,
       startDate: newTenant.startDate || new Date().toISOString().split('T')[0],
       monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity),
-      paymentStatus: newTenant.paymentStatus || 'Pending' as const,
+      
+      //paymentStatus: newTenant.paymentStatus || 'Pending' as const,
     };
 
     await addTenant.mutateAsync({ roomNo: room.roomNo, tenant });
