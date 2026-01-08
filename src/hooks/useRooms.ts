@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Room, Tenant } from '@/types';
-import { useAuth } from './useAuth';
-import { useAuditLog } from './useAuditLog';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Room, Tenant } from "@/types";
+import { useAuth } from "./useAuth";
+import { useAuditLog } from "./useAuditLog";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
@@ -10,12 +10,12 @@ export const useRooms = () => {
   const { logAudit } = useAuditLog();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ['rooms', isAdmin],
+    queryKey: ["rooms", isAdmin],
     queryFn: async () => {
       // Fetch rooms and tenants in parallel for better performance
       const [roomsResult, tenantsResult] = await Promise.all([
-        supabase.from('rooms').select('*').order('room_no'),
-        supabase.from('tenants').select('*')
+        supabase.from("rooms").select("*").order("room_no"),
+        supabase.from("tenants").select("*"),
       ]);
 
       if (roomsResult.error) throw roomsResult.error;
@@ -25,31 +25,34 @@ export const useRooms = () => {
       const tenantsData = tenantsResult.data;
 
       // Group tenants by room_id for O(1) lookup instead of O(n) filter per room
-      const tenantsByRoom = tenantsData.reduce((acc, tenant) => {
-        if (!acc[tenant.room_id]) {
-          acc[tenant.room_id] = [];
-        }
-        acc[tenant.room_id].push(tenant);
-        return acc;
-      }, {} as Record<string, typeof tenantsData>);
+      const tenantsByRoom = tenantsData.reduce(
+        (acc, tenant) => {
+          if (!acc[tenant.room_id]) {
+            acc[tenant.room_id] = [];
+          }
+          acc[tenant.room_id].push(tenant);
+          return acc;
+        },
+        {} as Record<string, typeof tenantsData>,
+      );
 
-      return roomsData.map(room => ({
+      return roomsData.map((room) => ({
         id: room.id,
         roomNo: room.room_no,
-        status: room.status as 'Vacant' | 'Occupied' | 'Partially Occupied',
+        status: room.status as "Vacant" | "Occupied" | "Partially Occupied",
         capacity: room.capacity,
         rentAmount: room.rent_amount,
         floor: room.floor as 1 | 2 | 3,
         notes: room.notes || undefined,
-        tenants: (tenantsByRoom[room.id] || []).map(tenant => ({
+        tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
           name: tenant.name,
           // Mask phone number for staff users
-          phone: isAdmin ? tenant.phone : '••••••••••',
+          phone: isAdmin ? tenant.phone : "••••••••••",
           startDate: tenant.start_date,
           endDate: tenant.end_date || undefined,
           monthlyRent: tenant.monthly_rent,
-          paymentStatus: tenant.payment_status as 'Paid' | 'Pending',
+          paymentStatus: tenant.payment_status as "Paid" | "Pending",
           paymentDate: tenant.payment_date || undefined,
           // Hide security deposit info from staff
           securityDepositAmount: isAdmin ? tenant.security_deposit_amount : null,
@@ -66,58 +69,58 @@ export const useRooms = () => {
   const updateRoom = useMutation({
     mutationFn: async (room: Room) => {
       const { data: roomData, error: roomError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('room_no', room.roomNo)
+        .from("rooms")
+        .select("id")
+        .eq("room_no", room.roomNo)
         .single();
 
       if (roomError) throw roomError;
 
       const { error: updateError } = await supabase
-        .from('rooms')
+        .from("rooms")
         .update({
           status: room.status,
           capacity: room.capacity,
           rent_amount: room.rentAmount,
           notes: room.notes,
         })
-        .eq('id', roomData.id);
+        .eq("id", roomData.id);
 
       if (updateError) throw updateError;
 
       return room;
     },
     onMutate: async (newRoom) => {
-      await queryClient.cancelQueries({ queryKey: ['rooms'] });
-      const previousRooms = queryClient.getQueryData(['rooms', isAdmin]);
-      queryClient.setQueryData(['rooms', isAdmin], (old: Room[] | undefined) => {
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
+      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
         if (!old) return old;
-        return old.map(room => room.roomNo === newRoom.roomNo ? newRoom : room);
+        return old.map((room) => (room.roomNo === newRoom.roomNo ? newRoom : room));
       });
       return { previousRooms };
     },
     onError: (_err, _newRoom, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(['rooms', isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
 
   const addTenant = useMutation({
-    mutationFn: async ({ roomNo, tenant }: { roomNo: string; tenant: Omit<Tenant, 'id'> }) => {
+    mutationFn: async ({ roomNo, tenant }: { roomNo: string; tenant: Omit<Tenant, "id"> }) => {
       const { data: roomData, error: roomError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('room_no', roomNo)
+        .from("rooms")
+        .select("id")
+        .eq("room_no", roomNo)
         .single();
 
       if (roomError) throw roomError;
 
       const { data: tenantData, error: insertError } = await supabase
-        .from('tenants')
+        .from("tenants")
         .insert({
           room_id: roomData.id,
           name: tenant.name,
@@ -135,42 +138,32 @@ export const useRooms = () => {
 
       // Log audit for tenant creation
       logAudit.mutate({
-        action: 'create',
-        tableName: 'tenants',
+        action: "create",
+        tableName: "tenants",
         recordId: tenantData.id,
         recordName: `${tenant.name} (Room ${roomNo})`,
         newData: { name: tenant.name, phone: tenant.phone, room: roomNo, rent: tenant.monthlyRent },
       });
-
-      // Auto-create first month payment as "Paid" (advance payment)
-      const startDate = new Date(tenant.startDate);
-      const joinMonth = startDate.getMonth() + 1;
-      const joinYear = startDate.getFullYear();
-
-      const { error: paymentError } = await supabase
-        .from('tenant_payments')
-        .insert({
-          tenant_id: tenantData.id,
-          month: joinMonth,
-          year: joinYear,
-          payment_status: 'Paid',
-          payment_date: tenant.startDate,
-          amount: tenant.monthlyRent,
-        });
-
-      if (paymentError) throw paymentError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-payments"] });
     },
   });
 
   const updateTenant = useMutation({
-    mutationFn: async ({ tenantId, updates, tenantName }: { tenantId: string; updates: Partial<Tenant>; tenantName?: string }) => {
+    mutationFn: async ({
+      tenantId,
+      updates,
+      tenantName,
+    }: {
+      tenantId: string;
+      updates: Partial<Tenant>;
+      tenantName?: string;
+    }) => {
       const updateData: Record<string, unknown> = {};
       const changes: Record<string, { old: unknown; new: unknown }> = {};
-      
+
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.phone !== undefined) updateData.phone = updates.phone;
       if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
@@ -194,18 +187,15 @@ export const useRooms = () => {
         changes.is_locked = { old: !updates.isLocked, new: updates.isLocked };
       }
 
-      const { error } = await supabase
-        .from('tenants')
-        .update(updateData)
-        .eq('id', tenantId);
+      const { error } = await supabase.from("tenants").update(updateData).eq("id", tenantId);
 
       if (error) throw error;
 
       // Log audit for significant updates
       if (Object.keys(changes).length > 0) {
         logAudit.mutate({
-          action: 'update',
-          tableName: 'tenants',
+          action: "update",
+          tableName: "tenants",
           recordId: tenantId,
           recordName: tenantName,
           changes,
@@ -213,62 +203,57 @@ export const useRooms = () => {
       }
     },
     onMutate: async ({ tenantId, updates }) => {
-      await queryClient.cancelQueries({ queryKey: ['rooms'] });
-      const previousRooms = queryClient.getQueryData(['rooms', isAdmin]);
-      queryClient.setQueryData(['rooms', isAdmin], (old: Room[] | undefined) => {
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
+      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
         if (!old) return old;
-        return old.map(room => ({
+        return old.map((room) => ({
           ...room,
-          tenants: room.tenants.map(tenant => 
-            tenant.id === tenantId ? { ...tenant, ...updates } : tenant
-          ),
+          tenants: room.tenants.map((tenant) => (tenant.id === tenantId ? { ...tenant, ...updates } : tenant)),
         }));
       });
       return { previousRooms };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(['rooms', isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
 
   const removeTenant = useMutation({
     mutationFn: async ({ tenantId, tenantName }: { tenantId: string; tenantName?: string }) => {
-      const { error } = await supabase
-        .from('tenants')
-        .delete()
-        .eq('id', tenantId);
+      const { error } = await supabase.from("tenants").delete().eq("id", tenantId);
 
       if (error) throw error;
 
       // Log audit for tenant deletion
       logAudit.mutate({
-        action: 'delete',
-        tableName: 'tenants',
+        action: "delete",
+        tableName: "tenants",
         recordId: tenantId,
         recordName: tenantName,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
 
   const resetRentCycle = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from('tenants')
-        .update({ payment_status: 'Pending' })
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all
+        .from("tenants")
+        .update({ payment_status: "Pending" })
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
 
