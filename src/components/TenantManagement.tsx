@@ -133,7 +133,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     name: '',
     phone: '',
     monthlyRent: getPricePerPerson(room.capacity),
-    paymentStatus: 'Pending',
+    //paymentStatus: 'Pending',
     startDate: new Date().toISOString().split('T')[0]
   });
 
@@ -176,7 +176,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       name: '',
       phone: '',
       monthlyRent: getPricePerPerson(room.capacity),
-      paymentStatus: 'Pending',
+      //paymentStatus: 'Pending',
       startDate: new Date().toISOString().split('T')[0]
     });
 
