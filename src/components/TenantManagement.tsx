@@ -844,13 +844,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                             ) : (
                               <div className="flex items-center space-x-2">
                                 <Switch
-                                  checked={
-                                    !!getSelectedMonthPayment(tenant.id) &&
-                                    getSelectedMonthPayment(tenant.id)?.paymentStatus === "Paid"
-                                  }
+                                  checked={isTenantPaidForMonth(tenant.id)}
                                   onCheckedChange={(checked) => handlePaymentToggle(tenant.id, checked)}
                                 />
                                 <Label>Rent Paid</Label>
+
                               </div>
                             )}
                           </div>
