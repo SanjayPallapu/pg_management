@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X } from 'lucide-react';
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Pencil } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room, PaymentEntry } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -54,6 +55,7 @@ export const MonthlyRentSheet = ({
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -204,11 +206,14 @@ export const MonthlyRentSheet = ({
     });
   }, [eligibleTenants, selectedMonth, selectedYear, payments]);
   
-  // Filter tenants based on search query
+  // Filter tenants based on search query and exclude locked tenants
   const filteredTenants = useMemo(() => {
-    if (!searchQuery.trim()) return tenantsWithPayments;
+    // First, filter out locked tenants
+    const unlockedTenants = tenantsWithPayments.filter(tenant => !tenant.isLocked);
+    
+    if (!searchQuery.trim()) return unlockedTenants;
     const query = searchQuery.toLowerCase().trim();
-    return tenantsWithPayments.filter(tenant => 
+    return unlockedTenants.filter(tenant => 
       tenant.name.toLowerCase().includes(query) || 
       tenant.roomNo.toLowerCase().includes(query)
     );
@@ -319,7 +324,10 @@ export const MonthlyRentSheet = ({
         setPaymentDate(new Date());
       }
     } else {
-      // For Paid or Partial, open delete payment dialog
+      // For Paid or Partial, only allow delete if edit mode is enabled
+      if (!editModeEnabled) {
+        return; // Do nothing if edit mode is off
+      }
       const tenant = tenantsWithPayments.find(t => t.id === tenantId);
       if (tenant && tenant.payment.paymentEntries.length > 0) {
         setDeletePaymentTenant({
@@ -564,7 +572,17 @@ export const MonthlyRentSheet = ({
         <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Rent Sheet</CardTitle>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
+              {/* Edit Mode Toggle */}
+              <div className="flex items-center gap-1.5 mr-2">
+                <Switch
+                  id="edit-mode"
+                  checked={editModeEnabled}
+                  onCheckedChange={setEditModeEnabled}
+                  className="data-[state=checked]:bg-destructive"
+                />
+                <Pencil className={`h-3.5 w-3.5 ${editModeEnabled ? 'text-destructive' : 'text-muted-foreground'}`} />
+              </div>
               <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History">
                 <History className="h-4 w-4" />
               </Button>

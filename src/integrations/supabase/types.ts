@@ -219,6 +219,7 @@ export type Database = {
           room_id: string
           security_deposit_amount: number | null
           security_deposit_date: string | null
+          security_deposit_mode: string | null
           start_date: string
           updated_at: string
         }
@@ -235,6 +236,7 @@ export type Database = {
           room_id: string
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
+          security_deposit_mode?: string | null
           start_date: string
           updated_at?: string
         }
@@ -251,6 +253,7 @@ export type Database = {
           room_id?: string
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
+          security_deposit_mode?: string | null
           start_date?: string
           updated_at?: string
         }

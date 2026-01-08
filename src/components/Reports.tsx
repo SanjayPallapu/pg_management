@@ -145,8 +145,8 @@ export const Reports = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-4">
-            {pendingTenants.length === 0 ? <p className="text-muted-foreground">All tenants have paid rent for {monthNames[selectedMonth - 1]}!</p> : <div className="space-y-2">
-                {pendingTenants.map(tenant => {
+            {pendingTenants.filter(t => !t.isLocked).length === 0 ? <p className="text-muted-foreground">All tenants have paid rent for {monthNames[selectedMonth - 1]}!</p> : <div className="space-y-2">
+                {pendingTenants.filter(t => !t.isLocked).map(tenant => {
               const isPartial = tenant.paymentCategory === 'partial';
               const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
               const bgClass = tenant.paymentCategory === 'overdue' ? 'bg-overdue-muted border-l-4 border-overdue' : tenant.paymentCategory === 'partial' ? 'bg-partial-muted border-l-4 border-partial' : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' : 'bg-blue-500/10 border-l-4 border-blue-500';

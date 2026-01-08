@@ -71,47 +71,93 @@ const formatChanges = (changes: Record<string, { old: unknown; new: unknown }> |
   });
 };
 
-const formatNewData = (newData: Record<string, unknown> | null, tableName: string, action: string) => {
+const formatNewData = (newData: Record<string, unknown> | null, tableName: string, action: string, recordName?: string) => {
   if (!newData) return null;
+  
+  // Generate a descriptive paragraph
+  const generateDescription = () => {
+    const tenantName = recordName?.split(' - ')[0] || 'Unknown';
+    
+    if (tableName === 'tenant_payments') {
+      const { amount, mode, type, status, totalPaid, date } = newData as any;
+      const modeText = mode === 'upi' ? 'UPI' : 'Cash';
+      
+      if (action === 'create') {
+        return `Recorded payment of ₹${Number(amount).toLocaleString()} via ${modeText} for ${tenantName}. Status: ${status}.`;
+      } else if (action === 'update') {
+        return `Updated payment for ${tenantName}. Amount: ₹${Number(amount).toLocaleString()} via ${modeText}. Total paid: ₹${Number(totalPaid).toLocaleString()}. Status: ${status}.`;
+      }
+    }
+    
+    if (tableName === 'tenants') {
+      const { monthly_rent, room_no, start_date, end_date, is_locked, security_deposit_amount } = newData as any;
+      
+      if (action === 'create') {
+        return `Added new tenant ${tenantName} to Room ${room_no}. Rent: ₹${Number(monthly_rent).toLocaleString()}/month.`;
+      } else if (action === 'update') {
+        if (end_date) {
+          return `Marked ${tenantName} as left. End date: ${end_date}.`;
+        }
+        if (is_locked !== undefined) {
+          return `${is_locked ? 'Locked' : 'Unlocked'} tenant ${tenantName}. They will ${is_locked ? 'be excluded from' : 'be included in'} financial calculations.`;
+        }
+        if (security_deposit_amount) {
+          return `Updated security deposit for ${tenantName} to ₹${Number(security_deposit_amount).toLocaleString()}.`;
+        }
+        return `Updated tenant ${tenantName}'s details.`;
+      } else if (action === 'delete') {
+        return `Removed tenant ${tenantName} from the system.`;
+      }
+    }
+    
+    return null;
+  };
+  
+  const description = generateDescription();
   
   if (tableName === 'tenant_payments') {
     const { amount, mode, type, status, totalPaid, date } = newData as { amount?: number; mode?: string; type?: string; status?: string; totalPaid?: number; date?: string };
     
     return (
-      <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
-        {amount !== undefined && (
-          <div>
-            <span className="font-medium">Amount:</span>{' '}
-            <span className="text-paid">₹{Number(amount).toLocaleString()}</span>
-            {type && <span className="ml-1">({type})</span>}
-          </div>
+      <div className="text-xs text-muted-foreground ml-4 space-y-1">
+        {description && (
+          <p className="text-foreground italic mb-2">{description}</p>
         )}
-        {mode && (
-          <div>
-            <span className="font-medium">Mode:</span>{' '}
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-              mode === 'upi' 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
-                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            }`}>
-              {mode === 'upi' ? 'UPI' : 'Cash'}
-            </span>
-          </div>
-        )}
-        {totalPaid !== undefined && (
-          <div>
-            <span className="font-medium">Total Paid:</span>{' '}
-            <span className="text-paid">₹{Number(totalPaid).toLocaleString()}</span>
-          </div>
-        )}
-        {status && (
-          <div>
-            <span className="font-medium">Status:</span>{' '}
-            <span className={status === 'Paid' ? 'text-paid' : status === 'Partial' ? 'text-partial' : 'text-pending'}>
-              {status}
-            </span>
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+          {amount !== undefined && (
+            <div>
+              <span className="font-medium">Amount:</span>{' '}
+              <span className="text-paid">₹{Number(amount).toLocaleString()}</span>
+              {type && <span className="ml-1">({type})</span>}
+            </div>
+          )}
+          {mode && (
+            <div>
+              <span className="font-medium">Mode:</span>{' '}
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                mode === 'upi' 
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                  : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              }`}>
+                {mode === 'upi' ? 'UPI' : 'Cash'}
+              </span>
+            </div>
+          )}
+          {totalPaid !== undefined && (
+            <div>
+              <span className="font-medium">Total Paid:</span>{' '}
+              <span className="text-paid">₹{Number(totalPaid).toLocaleString()}</span>
+            </div>
+          )}
+          {status && (
+            <div>
+              <span className="font-medium">Status:</span>{' '}
+              <span className={status === 'Paid' ? 'text-paid' : status === 'Partial' ? 'text-partial' : 'text-pending'}>
+                {status}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -121,25 +167,30 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
     const { monthly_rent, room_no, start_date, end_date, phone, is_locked, security_deposit_amount } = newData as any;
     
     return (
-      <div className="text-xs text-muted-foreground ml-4 space-y-0.5">
-        {monthly_rent !== undefined && (
-          <div><span className="font-medium">Rent:</span> ₹{Number(monthly_rent).toLocaleString()}</div>
+      <div className="text-xs text-muted-foreground ml-4 space-y-1">
+        {description && (
+          <p className="text-foreground italic mb-2">{description}</p>
         )}
-        {room_no && (
-          <div><span className="font-medium">Room:</span> {room_no}</div>
-        )}
-        {start_date && (
-          <div><span className="font-medium">Start Date:</span> {start_date}</div>
-        )}
-        {end_date && (
-          <div><span className="font-medium">End Date:</span> {end_date}</div>
-        )}
-        {is_locked !== undefined && (
-          <div><span className="font-medium">Locked:</span> {is_locked ? 'Yes' : 'No'}</div>
-        )}
-        {security_deposit_amount !== undefined && (
-          <div><span className="font-medium">Security Deposit:</span> ₹{Number(security_deposit_amount).toLocaleString()}</div>
-        )}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+          {monthly_rent !== undefined && (
+            <div><span className="font-medium">Rent:</span> ₹{Number(monthly_rent).toLocaleString()}</div>
+          )}
+          {room_no && (
+            <div><span className="font-medium">Room:</span> {room_no}</div>
+          )}
+          {start_date && (
+            <div><span className="font-medium">Start:</span> {start_date}</div>
+          )}
+          {end_date && (
+            <div><span className="font-medium">End:</span> {end_date}</div>
+          )}
+          {is_locked !== undefined && (
+            <div><span className="font-medium">Locked:</span> {is_locked ? '🔒 Yes' : 'No'}</div>
+          )}
+          {security_deposit_amount !== undefined && security_deposit_amount > 0 && (
+            <div><span className="font-medium">Deposit:</span> ₹{Number(security_deposit_amount).toLocaleString()}</div>
+          )}
+        </div>
       </div>
     );
   }
@@ -325,7 +376,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
 
                         {log.newData && (
                           <div className="pt-1">
-                            {formatNewData(log.newData, log.tableName, log.action)}
+                            {formatNewData(log.newData, log.tableName, log.action, log.recordName || undefined)}
                           </div>
                         )}
                       </div>
