@@ -16,7 +16,7 @@ export interface Tenant {
   startDate: string;
   endDate?: string;
   monthlyRent: number;
-  paymentStatus: 'Paid' | 'Pending';
+  paymentStatus?: 'Paid' | 'Pending';
   paymentDate?: string;
   securityDepositAmount?: number | null;
   securityDepositDate?: string | null;
