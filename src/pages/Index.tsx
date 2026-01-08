@@ -1,60 +1,56 @@
-import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSwipeTabs } from '@/hooks/useSwipeTabs';
-import { Dashboard } from '@/components/Dashboard';
-import { RoomDirectory } from '@/components/RoomDirectory';
-import { Reports } from '@/components/Reports';
-import { TenantManagement } from '@/components/TenantManagement';
-import { MonthlyRentSheet } from '@/components/MonthlyRentSheet';
-import { MonthYearPicker } from '@/components/MonthYearPicker';
-import { AuditHistorySheet } from '@/components/AuditHistorySheet';
-import { useRooms } from '@/hooks/useRooms';
-import { Room } from '@/types';
-import { LayoutDashboard, Building, FileBarChart, Receipt, LogOut, Shield, User, History, ExternalLink } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { useMonthContext } from '@/contexts/MonthContext';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import appLogo from '@/assets/pg-logo.png';
+import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSwipeTabs } from "@/hooks/useSwipeTabs";
+import { Dashboard } from "@/components/Dashboard";
+import { RoomDirectory } from "@/components/RoomDirectory";
+import { Reports } from "@/components/Reports";
+import { TenantManagement } from "@/components/TenantManagement";
+import { MonthlyRentSheet } from "@/components/MonthlyRentSheet";
+import { MonthYearPicker } from "@/components/MonthYearPicker";
+import { AuditHistorySheet } from "@/components/AuditHistorySheet";
+import { useRooms } from "@/hooks/useRooms";
+import { Room } from "@/types";
+import {
+  LayoutDashboard,
+  Building,
+  FileBarChart,
+  Receipt,
+  LogOut,
+  Shield,
+  User,
+  History,
+  ExternalLink,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useMonthContext } from "@/contexts/MonthContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import appLogo from "@/assets/pg-logo.png";
 const Index = () => {
-  const {
-    rooms,
-    isLoading
-  } = useRooms();
+  const { rooms, isLoading } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
   // Tab order for swipe navigation
-  const tabOrder = ['dashboard', 'rooms', 'rent-sheet', 'reports'];
-  const {
-    swipeHandlers
-  } = useSwipeTabs({
+  const tabOrder = ["dashboard", "rooms", "rent-sheet", "reports"];
+  const { swipeHandlers } = useSwipeTabs({
     tabs: tabOrder,
     currentTab: activeTab,
-    onTabChange: setActiveTab
+    onTabChange: setActiveTab,
   });
-  const {
-    selectedMonth,
-    selectedYear
-  } = useMonthContext();
-  const {
-    signOut,
-    isAdmin,
-    role
-  } = useAuth();
+  const { selectedMonth, selectedYear } = useMonthContext();
+  const { signOut, isAdmin, role } = useAuth();
   const navigate = useNavigate();
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const handleSignOut = async () => {
-    const {
-      error
-    } = await signOut();
+    const { error } = await signOut();
     // Navigate to auth page regardless of error (session may already be invalid)
-    toast.success('Signed out successfully');
-    navigate('/auth');
+    toast.success("Signed out successfully");
+    navigate("/auth");
   };
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
@@ -64,13 +60,14 @@ const Index = () => {
   // Update selected room when rooms data changes
   useEffect(() => {
     if (selectedRoom) {
-      const updatedRoom = rooms.find(r => r.roomNo === selectedRoom.roomNo);
+      const updatedRoom = rooms.find((r) => r.roomNo === selectedRoom.roomNo);
       if (updatedRoom) {
         setSelectedRoom(updatedRoom);
       }
     }
   }, [rooms, selectedRoom]);
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3 overflow-visible">
@@ -81,19 +78,26 @@ const Index = () => {
             <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 ml-[9px] mx-0">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
-            <Button variant="ghost" size="icon" onClick={() => window.open('https://pocket-parenthood-pro.vercel.app/bills', '_blank')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
+            >
               <ExternalLink className="h-4 w-4" />
-              
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
 
+            <ThemeToggle className="rounded-md border-primary" />
 
-            
             <div className="flex items-center gap-1">
               <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-                {isAdmin ? <Shield className="h-4 w-4 text-primary-foreground" /> : <User className="h-4 w-4 text-primary-foreground" />}
+                {isAdmin ? (
+                  <Shield className="h-4 w-4 text-primary-foreground" />
+                ) : (
+                  <User className="h-4 w-4 text-primary-foreground" />
+                )}
               </div>
               <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
                 <LogOut className="h-4 w-4" />
@@ -142,11 +146,14 @@ const Index = () => {
         </Tabs>
 
         {/* Tenant Management Dialog */}
-        {selectedRoom && <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />}
+        {selectedRoom && (
+          <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+        )}
 
         {/* Activity History Sheet */}
         <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
       </div>
-    </div>;
+    </div>
+  );
 };
 export default Index;
