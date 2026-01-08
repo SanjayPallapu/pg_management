@@ -133,7 +133,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     name: '',
     phone: '',
     monthlyRent: getPricePerPerson(room.capacity),
-    //paymentStatus: 'Pending',
+    paymentStatus: 'Pending',
     startDate: new Date().toISOString().split('T')[0]
   });
 
@@ -155,7 +155,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       name: newTenant.name,
       phone: newTenant.phone,
       startDate: newTenant.startDate || new Date().toISOString().split('T')[0],
-      monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity)
+      monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity),
+      paymentStatus: newTenant.paymentStatus || 'Pending' as const,
     };
 
     await addTenant.mutateAsync({ roomNo: room.roomNo, tenant });
@@ -174,7 +175,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       name: '',
       phone: '',
       monthlyRent: getPricePerPerson(room.capacity),
-      //paymentStatus: 'Pending',
+      paymentStatus: 'Pending',
       startDate: new Date().toISOString().split('T')[0]
     });
 
