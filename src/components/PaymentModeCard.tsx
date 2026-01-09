@@ -94,13 +94,17 @@ export const PaymentModeCard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
           <CardTitle className="text-sm font-medium">Payment Mode</CardTitle>
-          <button 
-            onClick={() => setReconciliationOpen(true)}
-            className="p-1 rounded hover:bg-muted transition-colors"
-            title="View Reconciliation"
-          >
+          <div>
+            <ThemeToggle className="rounded-md border-primary" />
+            <button 
+              onClick={() => setReconciliationOpen(true)}
+              className="p-1 rounded hover:bg-muted transition-colors"
+              title="View Reconciliation"
+            >
             <FileSearch className="h-4 w-4 text-muted-foreground" />
           </button>
+          </div>
+          
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <div className="flex items-center justify-between">
