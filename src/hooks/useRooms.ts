@@ -3,18 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Room, Tenant } from "@/types";
 import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
+import { usePropertyContext } from "@/contexts/PropertyContext";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { logAudit } = useAuditLog();
+  const { selectedProperty } = usePropertyContext();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ["rooms", isAdmin],
+    queryKey: ["rooms", isAdmin, selectedProperty?.id],
     queryFn: async () => {
-      // Fetch rooms and tenants in parallel for better performance
+      if (!selectedProperty?.id) return [];
+      
+      // Fetch rooms filtered by property and tenants in parallel
       const [roomsResult, tenantsResult] = await Promise.all([
-        supabase.from("rooms").select("*").order("room_no"),
+        supabase.from("rooms").select("*").eq("property_id", selectedProperty.id).order("room_no"),
         supabase.from("tenants").select("*"),
       ]);
 
@@ -62,7 +66,7 @@ export const useRooms = () => {
         })),
       })) as Room[];
     },
-    enabled: !authLoading,
+    enabled: !authLoading && !!selectedProperty?.id,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes (reduced for fresher data)
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
@@ -93,8 +97,8 @@ export const useRooms = () => {
     },
     onMutate: async (newRoom) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
-      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, selectedProperty?.id]);
+      queryClient.setQueryData(["rooms", isAdmin, selectedProperty?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => (room.roomNo === newRoom.roomNo ? newRoom : room));
       });
@@ -102,7 +106,7 @@ export const useRooms = () => {
     },
     onError: (_err, _newRoom, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin, selectedProperty?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
@@ -205,8 +209,8 @@ export const useRooms = () => {
     },
     onMutate: async ({ tenantId, updates }) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
-      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, selectedProperty?.id]);
+      queryClient.setQueryData(["rooms", isAdmin, selectedProperty?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => ({
           ...room,
@@ -217,7 +221,7 @@ export const useRooms = () => {
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin, selectedProperty?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
