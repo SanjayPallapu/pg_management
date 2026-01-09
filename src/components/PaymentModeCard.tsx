@@ -9,6 +9,7 @@ import { useRooms } from '@/hooks/useRooms';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { FileSearch } from 'lucide-react';
 import { PaymentReconciliation } from './PaymentReconciliation';
 
