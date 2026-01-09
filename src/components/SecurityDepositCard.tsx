@@ -260,10 +260,11 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                               variant="outline" 
                               size="sm"
                               className="h-7 px-2"
-                              onClick={(e) => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                                 setDepositAmount(tenant.securityDepositAmount || 5000);
                                 setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
+                                setDepositMode((tenant.securityDepositMode as 'upi' | 'cash') || 'upi');
                                 setEditDialog(tenant);
                               }}
                             >
@@ -353,6 +354,27 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
               />
             </div>
             <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={depositMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setDepositMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={depositMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setDepositMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
+            </div>
+            <div>
               <Label>Deposit Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -426,6 +448,27 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                 className="mt-2"
                 placeholder="Enter amount"
               />
+            </div>
+            <div>
+              <Label>Payment Mode</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={depositMode === 'upi' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setDepositMode('upi')}
+                >
+                  UPI/Online
+                </Button>
+                <Button
+                  type="button"
+                  variant={depositMode === 'cash' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setDepositMode('cash')}
+                >
+                  Cash
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Deposit Date</Label>

@@ -99,9 +99,22 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
 
     // 4. Security deposits (current month only)
     const securityUpi: PaymentBreakdown = { upi: 0, cash: 0 };
-    // Note: Security deposits don't have UPI/Cash mode tracking yet
-    // We'll need to add this feature to the SecurityDepositCard
-    // For now, we'll show 0 until the mode is tracked
+    
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
+        
+        const depositDate = new Date(tenant.securityDepositDate);
+        if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
+          const mode = tenant.securityDepositMode;
+          if (mode === 'upi') {
+            securityUpi.upi += tenant.securityDepositAmount;
+          } else if (mode === 'cash') {
+            securityUpi.cash += tenant.securityDepositAmount;
+          }
+        }
+      });
+    });
 
     return {
       tenant: tenantUpi,
@@ -142,6 +155,10 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
               <span className="text-muted-foreground">Day Guest</span>
               <span>₹{stats.dayGuest.upi.toLocaleString()}</span>
             </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Security</span>
+              <span>₹{stats.security.upi.toLocaleString()}</span>
+            </div>
           </div>
 
           {/* Cash Column */}
@@ -160,6 +177,10 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Day Guest</span>
               <span>₹{stats.dayGuest.cash.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Security</span>
+              <span>₹{stats.security.cash.toLocaleString()}</span>
             </div>
           </div>
         </div>
