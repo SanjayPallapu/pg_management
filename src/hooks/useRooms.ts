@@ -57,6 +57,7 @@ export const useRooms = () => {
           // Hide security deposit info from staff
           securityDepositAmount: isAdmin ? tenant.security_deposit_amount : null,
           securityDepositDate: isAdmin ? tenant.security_deposit_date : null,
+          securityDepositMode: isAdmin ? tenant.security_deposit_mode : null,
           isLocked: (tenant as any).is_locked || false,
         })),
       })) as Room[];
