@@ -118,33 +118,6 @@ export type Database = {
           },
         ]
       }
-      properties: {
-        Row: {
-          address: string | null
-          created_at: string
-          id: string
-          logo_url: string | null
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          address?: string | null
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       rooms: {
         Row: {
           capacity: number
@@ -152,7 +125,6 @@ export type Database = {
           floor: number
           id: string
           notes: string | null
-          property_id: string
           rent_amount: number
           room_no: string
           status: string
@@ -164,7 +136,6 @@ export type Database = {
           floor: number
           id?: string
           notes?: string | null
-          property_id: string
           rent_amount: number
           room_no: string
           status: string
@@ -176,21 +147,12 @@ export type Database = {
           floor?: number
           id?: string
           notes?: string | null
-          property_id?: string
           rent_amount?: number
           room_no?: string
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "rooms_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tenant_payments: {
         Row: {
