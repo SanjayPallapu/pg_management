@@ -14,6 +14,7 @@ import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
+import { PropertyProvider } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
@@ -70,29 +71,31 @@ const App = () => {
               <SplashScreen key="splash" />
             </AnimatePresence>
           ) : (
-            <MonthProvider>
-              <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/day-guest/:roomId" element={
-                  <ProtectedRoute>
-                    <DayGuest />
-                  </ProtectedRoute>
-                } />
-                <Route path="/left-tenants" element={
-                  <ProtectedRoute>
-                    <LeftTenants />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-                          </MonthProvider>
+            <PropertyProvider>
+              <MonthProvider>
+                <BrowserRouter>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/day-guest/:roomId" element={
+                    <ProtectedRoute>
+                      <DayGuest />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/left-tenants" element={
+                    <ProtectedRoute>
+                      <LeftTenants />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+              </MonthProvider>
+            </PropertyProvider>
           )}
         </TooltipProvider>
       </QueryClientProvider>

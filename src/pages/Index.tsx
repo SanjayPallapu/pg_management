@@ -8,6 +8,7 @@ import { TenantManagement } from "@/components/TenantManagement";
 import { MonthlyRentSheet } from "@/components/MonthlyRentSheet";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
 import { AuditHistorySheet } from "@/components/AuditHistorySheet";
+import { PropertySwitcher } from "@/components/PropertySwitcher";
 import { useRooms } from "@/hooks/useRooms";
 import { Room } from "@/types";
 import {
@@ -70,8 +71,9 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3 overflow-visible">
+          <div className="flex items-center gap-2 overflow-visible">
             <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
+            <PropertySwitcher />
             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-2 mx-0 px-px pl-0">
