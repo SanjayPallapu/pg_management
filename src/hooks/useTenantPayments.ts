@@ -38,8 +38,8 @@ export const useTenantPayments = () => {
         notes: (payment as any).notes || undefined,
       })) as TenantPayment[];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 30 * 1000, // Cache for 30 seconds for faster perceived loads
+    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
   });
 
   const upsertPayment = useMutation({

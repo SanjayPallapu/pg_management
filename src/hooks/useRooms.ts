@@ -63,8 +63,8 @@ export const useRooms = () => {
       })) as Room[];
     },
     enabled: !authLoading,
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes (reduced for fresher data)
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 30 * 1000, // Cache for 30 seconds for faster perceived loads
+    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
   });
 
   const updateRoom = useMutation({
