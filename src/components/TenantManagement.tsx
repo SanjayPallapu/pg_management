@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
+import { MarkLeftDialog } from "./MarkLeftDialog";
 import { useNavigate } from "react-router-dom";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 
@@ -60,8 +61,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
-  const [markLeftTenantId, setMarkLeftTenantId] = useState<string | null>(null);
-  const [markLeftDate, setMarkLeftDate] = useState<Date>(new Date());
+  const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -133,7 +133,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   useBackGesture(!!partialPaymentTenant, () => setPartialPaymentTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
-  useBackGesture(!!markLeftTenantId, () => setMarkLeftTenantId(null));
+  useBackGesture(!!markLeftTenant, () => setMarkLeftTenant(null));
 
   const getPricePerPerson = (capacity: number) => {
     const priceMap: { [key: number]: number } = {
@@ -782,10 +782,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                   variant="outline"
                                   size="sm"
                                   className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                                  onClick={() => {
-                                    setMarkLeftTenantId(tenant.id);
-                                    setMarkLeftDate(new Date());
-                                  }}
+                                  onClick={() => setMarkLeftTenant(tenant)}
                                 >
                                   <LogOut className="h-4 w-4 mr-1" />
                                   Mark Left
@@ -1168,44 +1165,58 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Mark Left Date Picker Dialog */}
-      <AlertDialog open={!!markLeftTenantId} onOpenChange={(open) => !open && setMarkLeftTenantId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Select Leave Date</AlertDialogTitle>
-            <AlertDialogDescription>
-              Choose the date when {room.tenants.find((t) => t.id === markLeftTenantId)?.name} left the room.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <Calendar
-              mode="single"
-              selected={markLeftDate}
-              onSelect={(date) => date && setMarkLeftDate(date)}
-              className={cn("rounded-md border pointer-events-auto mx-auto")}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setMarkLeftTenantId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (markLeftTenantId) {
-                  const tenant = room.tenants.find((t) => t.id === markLeftTenantId);
-                  const formattedDate = format(markLeftDate, "yyyy-MM-dd");
-                  handleUpdateTenant(markLeftTenantId, { endDate: formattedDate });
-                  toast({
-                    title: "Tenant marked as left",
-                    description: `${tenant?.name} marked as left on ${format(markLeftDate, "dd MMM yyyy")}`,
-                  });
-                  setMarkLeftTenantId(null);
-                }
-              }}
-            >
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Mark Left Dialog with Settlement */}
+      <MarkLeftDialog
+        open={!!markLeftTenant}
+        onOpenChange={(open) => !open && setMarkLeftTenant(null)}
+        tenant={markLeftTenant}
+        currentMonthPayment={markLeftTenant ? getSelectedMonthPayment(markLeftTenant.id) || null : null}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onConfirm={async (data) => {
+          if (!markLeftTenant) return;
+          
+          // Update tenant with end date
+          await handleUpdateTenant(markLeftTenant.id, { endDate: data.endDate });
+          
+          // If there's a settlement amount, record it as a payment
+          if (data.settlementAmount > 0) {
+            const existingPayment = getSelectedMonthPayment(markLeftTenant.id);
+            const previousPaid = existingPayment?.amountPaid || 0;
+            const totalPaid = previousPaid + data.settlementAmount;
+            const isFullPayment = totalPaid >= markLeftTenant.monthlyRent;
+            
+            const newEntry = {
+              amount: data.settlementAmount,
+              date: data.endDate,
+              type: isFullPayment ? ("full" as const) : ("partial" as const),
+              mode: data.settlementMode,
+            };
+            
+            const existingEntries = existingPayment?.paymentEntries || [];
+            const updatedEntries = [...existingEntries, newEntry];
+            
+            await upsertPayment.mutateAsync({
+              tenantId: markLeftTenant.id,
+              month: selectedMonth,
+              year: selectedYear,
+              paymentStatus: isFullPayment ? "Paid" : "Partial",
+              paymentDate: data.endDate,
+              amount: markLeftTenant.monthlyRent,
+              amountPaid: totalPaid,
+              paymentEntries: updatedEntries,
+              notes: data.settlementNotes,
+            });
+          }
+          
+          toast({
+            title: "Tenant marked as left",
+            description: `${markLeftTenant.name} has been settled and marked as left`,
+          });
+          
+          setMarkLeftTenant(null);
+        }}
+      />
 
       {/* WhatsApp Receipt Dialog */}
       <WhatsAppReceiptDialog
