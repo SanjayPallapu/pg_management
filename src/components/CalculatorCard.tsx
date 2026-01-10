@@ -68,11 +68,97 @@ export const CalculatorCard = () => {
     }
   };
 
+  // Safe mathematical expression evaluator - no eval()
+  const safeEvaluate = (expr: string): number => {
+    // Replace × with * and ÷ with /
+    const sanitized = expr.replace(/×/g, '*').replace(/÷/g, '/').trim();
+    
+    // Strict validation: only allow digits, operators, parentheses, decimal points, and spaces
+    if (!/^[0-9+\-*/().\s]+$/.test(sanitized)) {
+      throw new Error('Invalid characters in expression');
+    }
+    
+    // Tokenize the expression
+    const tokens: (number | string)[] = [];
+    let i = 0;
+    while (i < sanitized.length) {
+      if (sanitized[i] === ' ') {
+        i++;
+        continue;
+      }
+      
+      // Parse numbers (including decimals)
+      if (/[0-9.]/.test(sanitized[i])) {
+        let numStr = '';
+        while (i < sanitized.length && /[0-9.]/.test(sanitized[i])) {
+          numStr += sanitized[i];
+          i++;
+        }
+        const num = parseFloat(numStr);
+        if (isNaN(num)) throw new Error('Invalid number');
+        tokens.push(num);
+      } else if (['+', '-', '*', '/', '(', ')'].includes(sanitized[i])) {
+        tokens.push(sanitized[i]);
+        i++;
+      } else {
+        throw new Error('Invalid character');
+      }
+    }
+    
+    // Simple recursive descent parser
+    let pos = 0;
+    
+    const parseExpression = (): number => {
+      let result = parseTerm();
+      while (pos < tokens.length && (tokens[pos] === '+' || tokens[pos] === '-')) {
+        const op = tokens[pos++];
+        const right = parseTerm();
+        result = op === '+' ? result + right : result - right;
+      }
+      return result;
+    };
+    
+    const parseTerm = (): number => {
+      let result = parseFactor();
+      while (pos < tokens.length && (tokens[pos] === '*' || tokens[pos] === '/')) {
+        const op = tokens[pos++];
+        const right = parseFactor();
+        if (op === '/' && right === 0) throw new Error('Division by zero');
+        result = op === '*' ? result * right : result / right;
+      }
+      return result;
+    };
+    
+    const parseFactor = (): number => {
+      // Handle unary minus
+      if (tokens[pos] === '-') {
+        pos++;
+        return -parseFactor();
+      }
+      
+      if (tokens[pos] === '(') {
+        pos++; // consume '('
+        const result = parseExpression();
+        if (tokens[pos] !== ')') throw new Error('Mismatched parentheses');
+        pos++; // consume ')'
+        return result;
+      }
+      
+      if (typeof tokens[pos] === 'number') {
+        return tokens[pos++] as number;
+      }
+      
+      throw new Error('Unexpected token');
+    };
+    
+    const result = parseExpression();
+    if (pos !== tokens.length) throw new Error('Invalid expression');
+    return result;
+  };
+
   const handleEquals = () => {
     try {
-      // Replace × with * and ÷ with /
-      const evalExpr = expression.replace(/×/g, '*').replace(/÷/g, '/');
-      const result = eval(evalExpr);
+      const result = safeEvaluate(expression);
       const formattedResult = Number.isFinite(result) 
         ? parseFloat(result.toFixed(8)).toString() 
         : 'Error';
