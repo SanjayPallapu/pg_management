@@ -82,8 +82,47 @@ export const useTenantPayments = () => {
           },
         });
       }
+      
+      return payment;
     },
-    onSuccess: () => {
+    onMutate: async (newPayment) => {
+      await queryClient.cancelQueries({ queryKey: ['tenant-payments'] });
+      const previousPayments = queryClient.getQueryData<TenantPayment[]>(['tenant-payments']);
+      
+      queryClient.setQueryData<TenantPayment[]>(['tenant-payments'], (old = []) => {
+        const existingIndex = old.findIndex(
+          p => p.tenantId === newPayment.tenantId && p.month === newPayment.month && p.year === newPayment.year
+        );
+        
+        const optimisticPayment: TenantPayment = {
+          id: existingIndex >= 0 ? old[existingIndex].id : `temp-${Date.now()}`,
+          tenantId: newPayment.tenantId,
+          month: newPayment.month,
+          year: newPayment.year,
+          paymentStatus: newPayment.paymentStatus,
+          paymentDate: newPayment.paymentDate,
+          amount: newPayment.amount,
+          amountPaid: newPayment.amountPaid,
+          paymentEntries: newPayment.paymentEntries,
+          notes: newPayment.notes,
+        };
+        
+        if (existingIndex >= 0) {
+          const updated = [...old];
+          updated[existingIndex] = optimisticPayment;
+          return updated;
+        }
+        return [optimisticPayment, ...old];
+      });
+      
+      return { previousPayments };
+    },
+    onError: (_err, _newPayment, context) => {
+      if (context?.previousPayments) {
+        queryClient.setQueryData(['tenant-payments'], context.previousPayments);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
     },
   });

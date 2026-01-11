@@ -8,6 +8,7 @@ import { TenantManagement } from "@/components/TenantManagement";
 import { MonthlyRentSheet } from "@/components/MonthlyRentSheet";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
 import { AuditHistorySheet } from "@/components/AuditHistorySheet";
+import { DashboardSkeleton, RentSheetSkeleton } from "@/components/skeletons";
 import { useRooms } from "@/hooks/useRooms";
 import { Room } from "@/types";
 import {
@@ -28,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import appLogo from "@/assets/pg-logo.png";
+
 const Index = () => {
   const { rooms, isLoading } = useRooms();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -126,7 +128,7 @@ const Index = () => {
 
           <div {...swipeHandlers} className="touch-pan-y">
             <TabsContent value="dashboard" className="space-y-6 mt-6">
-              <Dashboard rooms={rooms} onStartRentCycle={() => {}} />
+              {isLoading ? <DashboardSkeleton /> : <Dashboard rooms={rooms} onStartRentCycle={() => {}} />}
             </TabsContent>
 
             <TabsContent value="rooms" className="space-y-6 mt-6">
@@ -134,7 +136,7 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="rent-sheet" className="space-y-6 mt-6">
-              <MonthlyRentSheet rooms={rooms} />
+              {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-6 mt-6">

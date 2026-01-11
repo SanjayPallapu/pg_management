@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Pencil } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -38,9 +38,12 @@ import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
+import { MONTHS } from "@/constants/pricing";
+
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
+
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
