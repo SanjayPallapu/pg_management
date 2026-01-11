@@ -97,6 +97,16 @@ export default {
           foreground: "hsl(var(--partial-foreground))",
           muted: "hsl(var(--partial-muted))",
         },
+        upi: {
+          DEFAULT: "hsl(var(--upi))",
+          foreground: "hsl(var(--upi-foreground))",
+          muted: "hsl(var(--upi-muted))",
+        },
+        cash: {
+          DEFAULT: "hsl(var(--cash))",
+          foreground: "hsl(var(--cash-foreground))",
+          muted: "hsl(var(--cash-muted))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -80,6 +80,15 @@ All colors MUST be HSL.
     --partial-foreground: 0 0% 100%;
     --partial-muted: 30 90% 95%;
 
+    /* Payment mode colors - UPI blue, Cash green */
+    --upi: 217 91% 60%;
+    --upi-foreground: 210 40% 98%;
+    --upi-muted: 217 91% 95%;
+
+    --cash: 142 76% 36%;
+    --cash-foreground: 355 7% 97%;
+    --cash-muted: 142 76% 95%;
+
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -167,6 +176,15 @@ All colors MUST be HSL.
     --partial: 30 80% 50%;
     --partial-foreground: 0 0% 100%;
     --partial-muted: 30 50% 20%;
+
+    /* Dark mode payment mode colors */
+    --upi: 217 80% 50%;
+    --upi-foreground: 217 91% 95%;
+    --upi-muted: 217 40% 20%;
+
+    --cash: 142 70% 35%;
+    --cash-foreground: 142 76% 95%;
+    --cash-muted: 142 40% 18%;
 
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
