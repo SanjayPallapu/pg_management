@@ -20,6 +20,7 @@ import { AllCollectedCard } from './AllCollectedCard';
 import { PendingTenantsCard } from './PendingTenantsCard';
 import { CalculatorCard } from './CalculatorCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
+import { getPricePerBed } from '@/constants/pricing';
 
 interface DashboardProps {
   rooms: Room[];
@@ -83,20 +84,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   // Check if viewing current month
   const today = new Date();
   const isCurrentMonth = selectedMonth === (today.getMonth() + 1) && selectedYear === today.getFullYear();
-  
-  // Count only tenants active in the selected month (and still active today if current month)
-  // Also calculate empty beds and potential additional revenue per room
-  // Fixed per-bed rates by sharing type
-  const getPerBedRate = (capacity: number): number => {
-    switch (capacity) {
-      case 5: return 4000;
-      case 4: return 4500;
-      case 3: return 5000;
-      case 2: return 6000;
-      case 1: return 11500;
-      default: return 4000;
-    }
-  };
 
   const roomStats = rooms.map(room => {
     const activeTenants = room.tenants.filter(t => {
@@ -111,7 +98,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     // Ensure we don't count more occupied than capacity
     const occupied = Math.min(activeCount, room.capacity);
     const emptyBeds = Math.max(0, room.capacity - occupied);
-    const perBedRent = getPerBedRate(room.capacity);
+    const perBedRent = getPricePerBed(room.capacity);
     const potentialAdditionalRent = emptyBeds * perBedRent;
     
     return {
@@ -134,7 +121,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const vacantRooms = roomStats.filter(r => r.isEmpty).length;
   
   // Max monthly revenue if all beds filled (using fixed per-bed rates)
-  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPerBedRate(room.capacity)), 0);
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPricePerBed(room.capacity)), 0);
 
   const stats: DashboardStats = {
     totalRooms: rooms.length,
