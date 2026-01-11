@@ -102,14 +102,47 @@ export const useDayGuests = (roomId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (newGuest) => {
+      await queryClient.cancelQueries({ queryKey: ['day-guests'] });
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      
+      const optimisticGuest: DayGuest = {
+        id: `temp-${Date.now()}`,
+        room_id: newGuest.room_id,
+        guest_name: newGuest.guest_name,
+        mobile_number: newGuest.mobile_number || null,
+        id_proof: newGuest.id_proof || null,
+        from_date: newGuest.from_date,
+        to_date: newGuest.to_date,
+        number_of_days: newGuest.number_of_days,
+        per_day_rate: newGuest.per_day_rate,
+        total_amount: newGuest.total_amount,
+        payment_status: (newGuest.payment_status as 'Paid' | 'Pending') || 'Pending',
+        amount_paid: 0,
+        payment_entries: null,
+        notes: newGuest.notes || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) => 
+        [optimisticGuest, ...old]
+      );
+      
+      return { previousGuests };
+    },
+    onError: (_err, _newGuest, context) => {
+      if (context?.previousGuests) {
+        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+      }
+      toast.error('Failed to add day guest');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
       queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
-      toast.success('Day guest added successfully');
     },
-    onError: (error) => {
-      console.error('Error adding day guest:', error);
-      toast.error('Failed to add day guest');
+    onSuccess: () => {
+      toast.success('Day guest added successfully');
     },
   });
 
@@ -132,13 +165,29 @@ export const useDayGuests = (roomId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (updatedGuest) => {
+      await queryClient.cancelQueries({ queryKey: ['day-guests'] });
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) =>
+        old.map(guest => 
+          guest.id === updatedGuest.id 
+            ? { ...guest, ...updatedGuest, updated_at: new Date().toISOString() } 
+            : guest
+        )
+      );
+      
+      return { previousGuests };
+    },
+    onError: (_err, _updatedGuest, context) => {
+      if (context?.previousGuests) {
+        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+      }
+      toast.error('Failed to update day guest');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
       queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
-    },
-    onError: (error) => {
-      console.error('Error updating day guest:', error);
-      toast.error('Failed to update day guest');
     },
   });
 
@@ -147,14 +196,28 @@ export const useDayGuests = (roomId?: string) => {
       const { error } = await supabase.from('day_guests').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async (idToDelete) => {
+      await queryClient.cancelQueries({ queryKey: ['day-guests'] });
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) =>
+        old.filter(guest => guest.id !== idToDelete)
+      );
+      
+      return { previousGuests };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousGuests) {
+        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+      }
+      toast.error('Failed to delete day guest');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'] });
       queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
-      toast.success('Day guest deleted successfully');
     },
-    onError: (error) => {
-      console.error('Error deleting day guest:', error);
-      toast.error('Failed to delete day guest');
+    onSuccess: () => {
+      toast.success('Day guest deleted successfully');
     },
   });
 
