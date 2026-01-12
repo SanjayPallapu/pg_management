@@ -403,9 +403,9 @@ export const RoomCard = ({
             </button> : <div />}
         
           <button type="button" onClick={() => {
-          if (!isExpanded) setIsExpanded(true);
-          onViewDetails(room);
-        }} className="text-xs text-primary hover:underline font-medium">
+            // Removed setIsExpanded to show instantly
+            onViewDetails(room);
+          }} className="text-xs text-primary hover:underline font-medium">
             Manage Room
           </button>
         </div>
