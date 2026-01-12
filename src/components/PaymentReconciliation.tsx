@@ -19,6 +19,7 @@ import { format, getDaysInMonth, subMonths } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
 interface PaymentReconciliationProps {
   open: boolean;
@@ -45,6 +46,9 @@ export const PaymentReconciliation = ({
   // Expected collection date filter: from day X to day Y
   const [collectionFromDay, setCollectionFromDay] = useState<number>(1);
   const [collectionToDay, setCollectionToDay] = useState<number>(31);
+  // Day detail sheet state
+  const [selectedDueDay, setSelectedDueDay] = useState<number | null>(null);
+  const [dueDaySheetOpen, setDueDaySheetOpen] = useState(false);
 
   // Handle OS back gesture to close sheet
   useBackGesture(open, () => onOpenChange(false));
@@ -804,11 +808,18 @@ export const PaymentReconciliation = ({
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {filteredCollectionScheduleData.slice(0, 6).map(item => (
-                    <div key={item.day} className="p-2 bg-purple-500/10 rounded-lg">
+                    <button 
+                      key={item.day} 
+                      className="p-2 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedDueDay(item.day);
+                        setDueDaySheetOpen(true);
+                      }}
+                    >
                       <div className="text-xs text-muted-foreground">Day {item.day}</div>
                       <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">{item.tenants} tenant(s)</div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>}
@@ -938,6 +949,17 @@ export const PaymentReconciliation = ({
           </div>
         </ScrollArea>
         </div>
+
+        {/* Tenant Details Sheet for Day Click */}
+        <TenantsByDueDaySheet
+          open={dueDaySheetOpen}
+          onOpenChange={setDueDaySheetOpen}
+          day={selectedDueDay}
+          rooms={rooms}
+          payments={payments}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+        />
       </SheetContent>
     </Sheet>;
 };

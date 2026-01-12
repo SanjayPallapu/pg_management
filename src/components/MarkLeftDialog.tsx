@@ -15,11 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { Tenant, TenantPayment, PaymentEntry } from "@/types";
 import { parseDateOnly } from "@/utils/dateOnly";
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift } from "lucide-react";
 
 interface MarkLeftDialogProps {
   open: boolean;
@@ -33,6 +34,8 @@ interface MarkLeftDialogProps {
     settlementAmount: number;
     settlementMode: "upi" | "cash";
     settlementNotes: string;
+    clearPending: boolean;
+    discountGiven: boolean;
   }) => void;
 }
 
@@ -50,6 +53,10 @@ export const MarkLeftDialog = ({
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [settlementMode, setSettlementMode] = useState<"upi" | "cash">("upi");
   const [step, setStep] = useState<"date" | "calculation" | "confirm">("date");
+  
+  // New confirmation options
+  const [clearPending, setClearPending] = useState<boolean>(false);
+  const [discountGiven, setDiscountGiven] = useState<boolean>(false);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -60,6 +67,8 @@ export const MarkLeftDialog = ({
       setDiscountAmount(0);
       setSettlementMode("upi");
       setStep("date");
+      setClearPending(false);
+      setDiscountGiven(false);
     }
   }, [open, tenant]);
 
@@ -127,7 +136,11 @@ export const MarkLeftDialog = ({
     let settlementDue = 0;
     let refundDue = 0;
     
-    if (isFullyPaid) {
+    if (clearPending) {
+      // User chose to clear/waive pending amount
+      settlementDue = 0;
+      refundDue = 0;
+    } else if (isFullyPaid) {
       // If fully paid, check if refund is due
       const refund = tenant.monthlyRent - proRataRent - discountAmount;
       if (refund > 0) {
@@ -159,23 +172,36 @@ export const MarkLeftDialog = ({
       isPartiallyPaid,
       paymentStatus,
     };
-  }, [tenant, billingInfo, leaveDate, perDayRate, discountAmount, currentMonthPayment]);
+  }, [tenant, billingInfo, leaveDate, perDayRate, discountAmount, currentMonthPayment, clearPending]);
 
   const handleProceedToCalculation = () => {
     setStep("calculation");
+  };
+
+  const handleProceedToConfirm = () => {
+    setStep("confirm");
   };
 
   const handleConfirmSettlement = () => {
     if (!tenant || !calculation) return;
 
     const formattedDate = format(leaveDate, "yyyy-MM-dd");
-    const notes = `Left on ${format(leaveDate, "dd MMM yyyy")}. Days stayed: ${calculation.daysStayed}. Pro-rata: ₹${calculation.proRataRent}${calculation.discountAmount > 0 ? `. Discount: ₹${calculation.discountAmount}` : ""}`;
+    let notes = `Left on ${format(leaveDate, "dd MMM yyyy")}. Days stayed: ${calculation.daysStayed}. Pro-rata: ₹${calculation.proRataRent}`;
+    
+    if (clearPending) {
+      notes += `. Pending amount cleared/waived.`;
+    }
+    if (discountGiven || discountAmount > 0) {
+      notes += `. Discount: ₹${discountAmount}`;
+    }
 
     onConfirm({
       endDate: formattedDate,
-      settlementAmount: calculation.settlementDue,
+      settlementAmount: clearPending ? 0 : calculation.settlementDue,
       settlementMode,
       settlementNotes: notes,
+      clearPending,
+      discountGiven: discountGiven || discountAmount > 0,
     });
   };
 
@@ -199,7 +225,7 @@ export const MarkLeftDialog = ({
           <AlertDialogDescription>
             {step === "date" && "Select the date when the tenant left."}
             {step === "calculation" && "Review and adjust the settlement calculation."}
-            {step === "confirm" && "Confirm the settlement details."}
+            {step === "confirm" && "Confirm how to handle the pending amount."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -378,6 +404,104 @@ export const MarkLeftDialog = ({
           </div>
         )}
 
+        {step === "confirm" && calculation && (
+          <div className="py-4 space-y-4">
+            {/* Final Summary */}
+            <div className="p-4 rounded-lg bg-muted space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Tenant:</span>
+                <span className="font-medium">{tenant.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Leave Date:</span>
+                <span className="font-medium">{format(leaveDate, "dd MMM yyyy")}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Days Stayed:</span>
+                <span className="font-medium">{calculation.daysStayed} days</span>
+              </div>
+              {calculation.settlementDue > 0 && !clearPending && (
+                <div className="flex justify-between text-sm text-destructive">
+                  <span>Pending Amount:</span>
+                  <span className="font-medium">₹{calculation.settlementDue.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Settlement Options */}
+            <div className="space-y-4">
+              <div className="text-sm font-medium">How to handle pending amount?</div>
+
+              {/* Option 1: Clear/Waive Pending */}
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  <Ban className="h-5 w-5 text-destructive" />
+                  <div>
+                    <div className="font-medium text-sm">Clear Pending Amount</div>
+                    <div className="text-xs text-muted-foreground">
+                      Don't show in rent sheet, reports. Amount is waived/not taken.
+                    </div>
+                  </div>
+                </div>
+                <Switch
+                  checked={clearPending}
+                  onCheckedChange={(checked) => {
+                    setClearPending(checked);
+                    if (checked) setDiscountGiven(false);
+                  }}
+                />
+              </div>
+
+              {/* Option 2: Discount Given */}
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  <Gift className="h-5 w-5 text-green-600" />
+                  <div>
+                    <div className="font-medium text-sm">Discount Given</div>
+                    <div className="text-xs text-muted-foreground">
+                      Mark as settled with a discount. Amount is cleared.
+                    </div>
+                  </div>
+                </div>
+                <Switch
+                  checked={discountGiven}
+                  onCheckedChange={(checked) => {
+                    setDiscountGiven(checked);
+                    if (checked) setClearPending(false);
+                  }}
+                />
+              </div>
+
+              {/* Summary of choice */}
+              {(clearPending || discountGiven) && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="font-medium">
+                      {clearPending 
+                        ? "Pending amount will be cleared and hidden from reports."
+                        : "Discount applied. Amount will be marked as settled."}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!clearPending && !discountGiven && calculation.settlementDue > 0 && (
+                <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+                  <div className="flex items-center gap-2 text-warning">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="font-medium text-sm">
+                      Pending amount ₹{calculation.settlementDue.toLocaleString()} will remain in reports.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <AlertDialogFooter>
           {step === "date" && (
             <>
@@ -392,7 +516,17 @@ export const MarkLeftDialog = ({
               <Button variant="outline" onClick={() => setStep("date")}>
                 Back
               </Button>
-              <AlertDialogAction onClick={handleConfirmSettlement}>
+              <AlertDialogAction onClick={handleProceedToConfirm}>
+                Continue to Confirm
+              </AlertDialogAction>
+            </>
+          )}
+          {step === "confirm" && (
+            <>
+              <Button variant="outline" onClick={() => setStep("calculation")}>
+                Back
+              </Button>
+              <AlertDialogAction onClick={handleConfirmSettlement} className="bg-destructive hover:bg-destructive/90">
                 Confirm & Mark Left
               </AlertDialogAction>
             </>

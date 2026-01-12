@@ -46,6 +46,7 @@ export const PersonalExpensesCard = () => {
   const groceries = expenseData?.breakdown?.groceries?.total || 0;
   const utilityBills = expenseData?.breakdown?.bills?.total || 0;
   const familyExpenses = expenseData?.familyExpenses || 0;
+  const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBill || 0;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
@@ -79,6 +80,15 @@ export const PersonalExpensesCard = () => {
                 ₹{utilityBills.toLocaleString()}
               </span>
             </div>
+
+            {currentBill > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Current Bill</span>
+                <span className="font-medium text-orange-600 dark:text-orange-400">
+                  ₹{currentBill.toLocaleString()}
+                </span>
+              </div>
+            )}
             
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Family Expenses</span>

@@ -9,6 +9,9 @@ import { MonthlyRentSheet } from "@/components/MonthlyRentSheet";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
 import { AuditHistorySheet } from "@/components/AuditHistorySheet";
 import { DashboardSkeleton, RentSheetSkeleton } from "@/components/skeletons";
+import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { Room } from "@/types";
 import {
@@ -36,6 +39,9 @@ const Index = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
+
+  // Pull to refresh
+  const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 
   // Tab order for swipe navigation
   const tabOrder = ["dashboard", "rooms", "rent-sheet", "reports"];
@@ -77,6 +83,7 @@ const Index = () => {
             <MonthYearPicker />
           </div>
           <div className="flex items-center gap-2 mx-0 px-px pl-0">
+            <NetworkStatusIndicator />
             <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 ml-[9px] mx-0">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
@@ -126,7 +133,10 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div {...swipeHandlers} className="touch-pan-y">
+          <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
+            {/* Pull to Refresh Indicator */}
+            <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
+
             <TabsContent value="dashboard" className="space-y-6 mt-6">
               {isLoading ? <DashboardSkeleton /> : <Dashboard rooms={rooms} onStartRentCycle={() => {}} />}
             </TabsContent>
