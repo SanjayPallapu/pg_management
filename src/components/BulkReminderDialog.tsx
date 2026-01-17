@@ -50,11 +50,23 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
   const [includeAmount, setIncludeAmount] = useState(true);
   const [includeMonth, setIncludeMonth] = useState(true);
 
-  // Get all pending tenants
+  // Get all pending tenants (excluding left tenants)
   const pendingTenants = useMemo(() => {
     const allTenants = rooms.flatMap((room) =>
       room.tenants
-        .filter((tenant) => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth))
+        .filter((tenant) => {
+          // Must be active in current month
+          if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return false;
+          // Exclude tenants who have already left (end_date is set and in the past or today)
+          if (tenant.endDate) {
+            const endDate = new Date(tenant.endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            if (endDate <= today) return false;
+          }
+          return true;
+        })
         .filter((tenant) => tenant.phone && tenant.phone !== "••••••••••") // Only tenants with visible phone
         .map((tenant) => {
           const payment = payments.find(
@@ -78,11 +90,23 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     return allTenants.filter((t) => t.paymentStatus !== "Paid");
   }, [rooms, payments, selectedMonth, selectedYear]);
 
-  // Get all tenants for custom message
+  // Get all tenants for custom message (excluding left tenants)
   const allTenants = useMemo(() => {
     return rooms.flatMap((room) =>
       room.tenants
-        .filter((tenant) => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth))
+        .filter((tenant) => {
+          // Must be active in current month
+          if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return false;
+          // Exclude tenants who have already left (end_date is set and in the past or today)
+          if (tenant.endDate) {
+            const endDate = new Date(tenant.endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            if (endDate <= today) return false;
+          }
+          return true;
+        })
         .filter((tenant) => tenant.phone && tenant.phone !== "••••••••••")
         .map((tenant) => {
           const payment = payments.find(

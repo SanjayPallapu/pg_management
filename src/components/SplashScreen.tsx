@@ -5,7 +5,7 @@ import appLogo from "@/assets/pg-logo.png";
 const SplashScreen = () => {
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] overflow-hidden"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden"
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.05 }}
