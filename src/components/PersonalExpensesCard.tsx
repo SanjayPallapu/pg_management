@@ -82,14 +82,12 @@ export const PersonalExpensesCard = () => {
               </span>
             </div>
 
-            {currentBill > 0 && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Current Bill</span>
-                <span className="font-medium text-orange-600 dark:text-orange-400">
-                  ₹{currentBill.toLocaleString()}
-                </span>
-              </div>
-            )}
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Current Bills</span>
+              <span className="font-medium text-orange-600 dark:text-orange-400">
+                ₹{currentBill.toLocaleString()}
+              </span>
+            </div>
             
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Family Expenses</span>
