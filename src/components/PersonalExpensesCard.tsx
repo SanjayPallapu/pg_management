@@ -42,11 +42,12 @@ export const PersonalExpensesCard = () => {
     );
   }
 
-  const grandTotal = expenseData?.grandTotal || 0;
   const groceries = expenseData?.breakdown?.groceries?.total || 0;
   const utilityBills = expenseData?.breakdown?.bills?.total || 0;
   const familyExpenses = expenseData?.familyExpenses || 0;
   const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBill || 0;
+  // Grand total should include current bill
+  const grandTotal = (expenseData?.grandTotal || 0) + currentBill;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">

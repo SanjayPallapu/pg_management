@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -37,6 +37,7 @@ import { PreviousOverdueSheet } from "./PreviousOverdueSheet";
 import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
+import { BulkReminderDialog } from "./BulkReminderDialog";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { MONTHS } from "@/constants/pricing";
 
@@ -66,6 +67,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [reminderData, setReminderData] = useState<{
@@ -620,6 +622,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Rent Sheet</CardTitle>
             <div className="flex gap-1 items-center">
+              {/* Bulk Reminder Button */}
+              <Button onClick={() => setBulkReminderOpen(true)} variant="outline" size="icon" title="Bulk WhatsApp Reminders" className="text-cash hover:text-cash hover:bg-cash-muted">
+                <Users className="h-4 w-4" />
+              </Button>
               {/* Edit Mode Toggle */}
               <div className="flex items-center gap-1.5 mr-2">
                 <Switch
@@ -1105,6 +1111,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
       {/* Payment History Sheet */}
       <PaymentHistorySheet open={historyOpen} onOpenChange={setHistoryOpen} />
+
+      {/* Bulk Reminder Dialog */}
+      <BulkReminderDialog open={bulkReminderOpen} onOpenChange={setBulkReminderOpen} rooms={rooms} />
     </div>
   );
 };
