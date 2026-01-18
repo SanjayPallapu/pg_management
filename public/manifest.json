@@ -4,7 +4,7 @@
   "description": "Professional PG management system to track rooms, tenants, and rent collection",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1297fc",
+  "background_color": "#0361db",
   "theme_color": "#0EA5E9",
   "icons": [
     {
