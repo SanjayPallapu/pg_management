@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Room, Tenant, TenantPayment } from '@/types';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 
 export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
 
@@ -49,14 +49,10 @@ export const useRentCalculations = ({
           // Tenant must be active in the selected month (joined before end of month AND not left before month started)
           if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return false;
           
-          // Exclude tenants who have already left (end_date is set and in the past or today)
-          if (tenant.endDate) {
-            const endDate = new Date(tenant.endDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            endDate.setHours(0, 0, 0, 0);
-            if (endDate <= today) return false;
-          }
+          // Exclude tenants who have already left (end_date is set and is today or in the past)
+          // Use the proper date-only comparison function to avoid timezone issues
+          if (hasTenantLeftNow(tenant.endDate)) return false;
+          
           return true;
         })
         .map(tenant => {
