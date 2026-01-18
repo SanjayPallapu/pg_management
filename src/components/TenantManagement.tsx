@@ -1179,10 +1179,37 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           // Update tenant with end date
           await handleUpdateTenant(markLeftTenant.id, { endDate: data.endDate });
           
-          // If there's a settlement amount, record it as a payment
-          if (data.settlementAmount > 0) {
-            const existingPayment = getSelectedMonthPayment(markLeftTenant.id);
-            const previousPaid = existingPayment?.amountPaid || 0;
+          const existingPayment = getSelectedMonthPayment(markLeftTenant.id);
+          const previousPaid = existingPayment?.amountPaid || 0;
+          
+          // If clearPending is true, mark payment as "Paid" to exclude from rent sheet
+          if (data.clearPending) {
+            await upsertPayment.mutateAsync({
+              tenantId: markLeftTenant.id,
+              month: selectedMonth,
+              year: selectedYear,
+              paymentStatus: "Paid",
+              paymentDate: data.endDate,
+              amount: markLeftTenant.monthlyRent,
+              amountPaid: markLeftTenant.monthlyRent, // Mark as fully paid
+              paymentEntries: existingPayment?.paymentEntries || [],
+              notes: data.settlementNotes,
+            });
+          } else if (data.discountGiven) {
+            // Discount given - also mark as Paid
+            await upsertPayment.mutateAsync({
+              tenantId: markLeftTenant.id,
+              month: selectedMonth,
+              year: selectedYear,
+              paymentStatus: "Paid",
+              paymentDate: data.endDate,
+              amount: markLeftTenant.monthlyRent,
+              amountPaid: markLeftTenant.monthlyRent, // Mark as fully paid (with discount)
+              paymentEntries: existingPayment?.paymentEntries || [],
+              notes: data.settlementNotes,
+            });
+          } else if (data.settlementAmount > 0) {
+            // Normal settlement - record payment
             const totalPaid = previousPaid + data.settlementAmount;
             const isFullPayment = totalPaid >= markLeftTenant.monthlyRent;
             
