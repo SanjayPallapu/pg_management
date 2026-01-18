@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -30,14 +31,24 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
     payments,
   });
 
-  // Combine overdue + advance-not-paid for "Overdue" tab
+  // Helper to check if tenant has left
+  const isLeftTenant = (tenant: { endDate?: string }) => {
+    if (!tenant.endDate) return false;
+    const endDate = new Date(tenant.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate <= today;
+  };
+
+  // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants)
   const overdueCombined = useMemo(() => {
-    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked);
+    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked && !isLeftTenant(t));
   }, [overdueTenants, advanceNotPaidTenants]);
 
-  // Not yet due (excluding locked)
+  // Not yet due (excluding locked and left)
   const notYetDue = useMemo(() => {
-    return notDueTenants.filter(t => !t.isLocked);
+    return notDueTenants.filter(t => !t.isLocked && !isLeftTenant(t));
   }, [notDueTenants]);
 
   const overdueTotal = overdueCombined.reduce((sum, t) => sum + t.monthlyRent, 0);

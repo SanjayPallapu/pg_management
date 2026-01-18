@@ -47,7 +47,17 @@ export const useRentCalculations = ({
       room.tenants
         .filter(tenant => {
           // Tenant must be active in the selected month (joined before end of month AND not left before month started)
-          return isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth);
+          if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return false;
+          
+          // Exclude tenants who have already left (end_date is set and in the past or today)
+          if (tenant.endDate) {
+            const endDate = new Date(tenant.endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            if (endDate <= today) return false;
+          }
+          return true;
         })
         .map(tenant => {
           const payment = payments.find(
