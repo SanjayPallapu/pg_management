@@ -23,22 +23,6 @@ export const PersonalExpensesCard = () => {
     retry: 2,
   });
 
-  // Fetch current bills separately (unpaid bills total)
-  const { data: billsData } = useQuery({
-    queryKey: ['current-bills'],
-    queryFn: async () => {
-      const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-current-bills`
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch current bills');
-      }
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-  });
-
   if (isLoading) {
     return (
       <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
@@ -62,8 +46,8 @@ export const PersonalExpensesCard = () => {
   const groceries = expenseData?.breakdown?.groceries?.total || 0;
   const utilityBills = expenseData?.breakdown?.bills?.total || 0;
   const familyExpenses = expenseData?.familyExpenses || 0;
-  // Current bill from dedicated API, or from summary response, or from breakdown
-  const currentBill = billsData?.totalCurrentBill || expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBill || 0;
+  // Current bill from summary response breakdown
+  const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBill || 0;
   // Grand total should include current bill
   const grandTotal = (expenseData?.grandTotal || 0) + currentBill;
 
