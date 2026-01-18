@@ -37,9 +37,20 @@ export const Reports = ({ rooms }: ReportsProps) => {
     payments
   });
 
-  // Filter tenants active in selected month for accurate counts
+  // Filter tenants active in selected month for accurate counts (excluding left tenants)
   const getActiveTenantsInMonth = (room: Room) => 
-    room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth));
+    room.tenants.filter(t => {
+      if (!isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)) return false;
+      // Exclude tenants who have already left (end_date is set and in the past or today)
+      if (t.endDate) {
+        const endDate = new Date(t.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        if (endDate <= today) return false;
+      }
+      return true;
+    });
   
   const vacantRooms = rooms.filter(room => getActiveTenantsInMonth(room).length === 0);
   const partiallyOccupiedRooms = rooms.filter(room => {
