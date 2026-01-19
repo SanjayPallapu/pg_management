@@ -19,6 +19,7 @@ import { PersonalExpensesCard } from './PersonalExpensesCard';
 import { AllCollectedCard } from './AllCollectedCard';
 import { PendingTenantsCard } from './PendingTenantsCard';
 import { CalculatorCard } from './CalculatorCard';
+import { KeyNumbersCard } from './KeyNumbersCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { getPricePerBed } from '@/constants/pricing';
 
@@ -246,6 +247,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Calculator Card */}
           <CalculatorCard />
+
+          {/* Key Numbers Card */}
+          <KeyNumbersCard />
 
           {/* Personal Expenses Card */}
           <PersonalExpensesCard />

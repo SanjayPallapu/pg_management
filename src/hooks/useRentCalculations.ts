@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Room, Tenant, TenantPayment } from '@/types';
-import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
+import { calculateProRataRent } from '@/utils/proRataRent';
 
 export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
 
@@ -10,6 +11,9 @@ export interface TenantWithPayment extends Tenant {
   paymentDate?: string;
   amountPaid?: number;
   isLocked?: boolean;
+  effectiveRent?: number;
+  daysStayed?: number;
+  isProRata?: boolean;
 }
 
 interface UseRentCalculationsProps {
@@ -80,12 +84,26 @@ export const useRentCalculations = ({
           // Tenant's due day = joining day (1–31)
           const tenantDueDay = joinDate.getDate();
           
+          // Calculate pro-rata rent for mid-month leavers
+          const amountPaid = payment?.amountPaid || 0;
+          const { effectiveRent, daysStayed, isProRata } = calculateProRataRent(
+            tenant.monthlyRent,
+            tenant.startDate,
+            tenant.endDate,
+            selectedYear,
+            selectedMonth,
+            amountPaid
+          );
+          
           let paymentCategory: PaymentCategory;
           
-          if (payment?.paymentStatus === 'Paid') {
+          // For pro-rata: check if paid amount meets effective rent (not full monthly rent)
+          const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+          
+          if (payment?.paymentStatus === 'Paid' || (amountPaid >= targetRent && targetRent > 0)) {
             paymentCategory = 'paid';
           }
-          else if (payment?.paymentStatus === 'Partial') {
+          else if (payment?.paymentStatus === 'Partial' || (amountPaid > 0 && amountPaid < targetRent)) {
             paymentCategory = 'partial';
           }
           else if (isPastMonth) {
@@ -112,7 +130,10 @@ export const useRentCalculations = ({
             roomNo: room.roomNo,
             paymentCategory,
             paymentDate: payment?.paymentDate,
-            amountPaid: payment?.amountPaid || 0,
+            amountPaid,
+            effectiveRent,
+            daysStayed,
+            isProRata,
           };
         })
     );
@@ -129,17 +150,19 @@ export const useRentCalculations = ({
     const unlockedPaid = paidTenants.filter(t => !t.isLocked);
     const unlockedPartial = partialTenants.filter(t => !t.isLocked);
     
-    const totalRent = unlockedTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
+    // Use effective rent (pro-rata) for totals
+    const totalRent = unlockedTenants.reduce((sum, t) => sum + (t.effectiveRent || t.monthlyRent), 0);
     // Use actual amount paid (includes extras/overpayments) for rent collected
-    const rentCollected = unlockedPaid.reduce((sum, t) => sum + (t.amountPaid || t.monthlyRent), 0) + 
+    const rentCollected = unlockedPaid.reduce((sum, t) => sum + (t.amountPaid || t.effectiveRent || t.monthlyRent), 0) + 
                           unlockedPartial.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
     const totalPending = unlockedTenants
       .filter(t => t.paymentCategory !== 'paid')
       .reduce((sum, t) => {
+        const targetRent = t.effectiveRent || t.monthlyRent;
         if (t.paymentCategory === 'partial') {
-          return sum + (t.monthlyRent - (t.amountPaid || 0));
+          return sum + Math.max(0, targetRent - (t.amountPaid || 0));
         }
-        return sum + t.monthlyRent;
+        return sum + targetRent;
       }, 0);
 
     return {
