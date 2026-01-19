@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, AlertTriangle } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -38,8 +38,7 @@ import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
 import { BulkReminderDialog } from "./BulkReminderDialog";
-import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
-import { isTenantActiveInMonth, hasTenantLeftNow } from "@/utils/dateOnly";
+import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { MONTHS } from "@/constants/pricing";
 
 interface MonthlyRentSheetProps {
@@ -69,7 +68,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
-  const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [reminderData, setReminderData] = useState<{
@@ -256,14 +254,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       (tenant) => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query),
     );
   }, [tenantsWithPayments, searchQuery]);
-
-  // Count left tenants still in rent sheet (for cleanup button badge)
-  const leftTenantsCount = useMemo(() => {
-    return tenantsWithPayments.filter(
-      (tenant) => !tenant.isLocked && hasTenantLeftNow(tenant.endDate)
-    ).length;
-  }, [tenantsWithPayments]);
-
   const previousMonthOverdue = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -630,26 +620,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <Card>
         <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">Rent Sheet</CardTitle>
-              {/* Left Tenants Cleanup Button */}
-              {leftTenantsCount > 0 && (
-                <Button 
-                  onClick={() => setCleanupSheetOpen(true)} 
-                  variant="outline" 
-                  size="sm"
-                  className="h-7 text-xs gap-1 text-pending border-pending hover:bg-pending/10"
-                >
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {leftTenantsCount} left
-                </Button>
-              )}
-            </div>
+            <CardTitle className="text-lg">Rent Sheet</CardTitle>
             <div className="flex gap-1 items-center">
               {/* Bulk Reminder Button */}
-              <Button onClick={() => setBulkReminderOpen(true)} variant="outline" size="icon" title="Bulk WhatsApp Reminders" className="text-cash hover:text-cash hover:bg-cash-muted">
-                <Users className="h-4 w-4" />
-              </Button>
+
               {/* Edit Mode Toggle */}
               <div className="flex items-center gap-1.5 mr-2">
                 <Switch
@@ -659,6 +633,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   className="data-[state=checked]:bg-destructive"
                 />
               </div>
+              <Button
+                onClick={() => setBulkReminderOpen(true)}
+                variant="outline"
+                size="icon"
+                title="Bulk WhatsApp Reminders"
+                className="text-cash hover:text-cash hover:bg-cash-muted"
+              >
+                <Users className="h-4 w-4" />
+              </Button>
               <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History">
                 <History className="h-4 w-4" />
               </Button>
@@ -1138,9 +1121,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
       {/* Bulk Reminder Dialog */}
       <BulkReminderDialog open={bulkReminderOpen} onOpenChange={setBulkReminderOpen} rooms={rooms} />
-
-      {/* Left Tenants Cleanup Sheet */}
-      <LeftTenantsCleanupSheet open={cleanupSheetOpen} onOpenChange={setCleanupSheetOpen} rooms={rooms} />
     </div>
   );
 };
