@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -38,6 +38,7 @@ import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
 import { BulkReminderDialog } from "./BulkReminderDialog";
+import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { MONTHS } from "@/constants/pricing";
 
@@ -68,6 +69,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
+  const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [reminderData, setReminderData] = useState<{
@@ -254,6 +256,24 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       (tenant) => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query),
     );
   }, [tenantsWithPayments, searchQuery]);
+
+  // Count left tenants still in the rent sheet (not locked)
+  const leftTenantsCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return tenantsWithPayments.filter((tenant) => {
+      if (tenant.isLocked) return false;
+      if (!tenant.endDate) return false;
+      
+      const endDate = new Date(tenant.endDate);
+      endDate.setHours(0, 0, 0, 0);
+      
+      // Tenant has left if endDate is today or in the past
+      return endDate <= today;
+    }).length;
+  }, [tenantsWithPayments]);
+
   const previousMonthOverdue = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -620,7 +640,21 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <Card>
         <CardHeader className="pb-3 px-3 pt-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Rent Sheet</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">Rent Sheet</CardTitle>
+              {leftTenantsCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCleanupSheetOpen(true)}
+                  className="h-7 px-2 text-xs text-destructive border-destructive/50 hover:bg-destructive/10"
+                  title="Left Tenants Cleanup"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                  {leftTenantsCount} left
+                </Button>
+              )}
+            </div>
             <div className="flex gap-1 items-center">
               {/* Bulk Reminder Button */}
 
@@ -1121,6 +1155,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
       {/* Bulk Reminder Dialog */}
       <BulkReminderDialog open={bulkReminderOpen} onOpenChange={setBulkReminderOpen} rooms={rooms} />
+
+      {/* Left Tenants Cleanup Sheet */}
+      <LeftTenantsCleanupSheet 
+        open={cleanupSheetOpen} 
+        onOpenChange={setCleanupSheetOpen} 
+        rooms={rooms} 
+      />
     </div>
   );
 };

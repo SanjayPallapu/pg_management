@@ -5,13 +5,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Phone, MessageCircle, Receipt, MessageSquare, CheckCircle } from 'lucide-react';
+import { Phone, MessageCircle, Receipt, MessageSquare, CheckCircle, X } from 'lucide-react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { PreviousOverdueSheet } from './PreviousOverdueSheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OverduePaidCardProps {
   rooms: Room[];
@@ -30,12 +32,26 @@ interface TenantWithPayment {
   allPaymentEntries: PaymentEntry[]; // All payment entries for receipt
 }
 
+interface StillPendingTenant {
+  id: string;
+  name: string;
+  phone: string;
+  roomNo: string;
+  monthlyRent: number;
+  startDate: string;
+  amountPaid: number;
+  remaining: number;
+  status: 'Pending' | 'Partial';
+}
+
 export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
+  const [stillPendingSheetOpen, setStillPendingSheetOpen] = useState(false);
 
   // Calculate previous month
   const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
@@ -85,6 +101,57 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
     return results;
   }, [rooms, payments, prevMonth, prevYear, selectedMonth, selectedYear]);
 
+  // Calculate still pending tenants (from previous month)
+  const stillPendingTenants = useMemo(() => {
+    const results: StillPendingTenant[] = [];
+
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        if (tenant.isLocked) return;
+        
+        // Check if tenant was active in previous month
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)) {
+          return;
+        }
+
+        const payment = payments.find(
+          p => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear
+        );
+
+        if (!payment || payment.paymentStatus === 'Pending') {
+          results.push({
+            id: tenant.id,
+            name: tenant.name,
+            phone: tenant.phone,
+            roomNo: room.roomNo,
+            monthlyRent: tenant.monthlyRent,
+            startDate: tenant.startDate,
+            amountPaid: 0,
+            remaining: tenant.monthlyRent,
+            status: 'Pending',
+          });
+        } else if (payment.paymentStatus === 'Partial') {
+          const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
+          results.push({
+            id: tenant.id,
+            name: tenant.name,
+            phone: tenant.phone,
+            roomNo: room.roomNo,
+            monthlyRent: tenant.monthlyRent,
+            startDate: tenant.startDate,
+            amountPaid: payment.amountPaid || 0,
+            remaining,
+            status: 'Partial',
+          });
+        }
+      });
+    });
+
+    return results;
+  }, [rooms, payments, prevMonth, prevYear]);
+
+  const stillPendingTotal = stillPendingTenants.reduce((sum, t) => sum + t.remaining, 0);
+
   const totalCollected = overduePaidTenants.reduce((sum, t) => {
     return sum + t.paymentEntries.reduce((pSum, e) => pSum + e.amount, 0);
   }, 0);
@@ -119,7 +186,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
     setWhatsappDialogOpen(true);
   };
 
-  if (overduePaidTenants.length === 0) {
+  if (overduePaidTenants.length === 0 && stillPendingTenants.length === 0) {
     return null;
   }
 
@@ -151,25 +218,67 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
       </Card>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="h-[80vh]">
+        <SheetContent 
+          side={isMobile ? "right" : "bottom"} 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[80vh]"}
+        >
           <SheetHeader>
-            <SheetTitle>
-              {months[prevMonth - 1]} Overdue - Collected in {months[selectedMonth - 1]}
-            </SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-orange-500">
+                {months[prevMonth - 1]} Overdue Collections
+              </SheetTitle>
+              {isMobile && (
+                <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground text-left">
+              Payments received in {months[selectedMonth - 1]} for {months[prevMonth - 1]} dues
+            </p>
           </SheetHeader>
           
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="p-3 rounded-lg bg-blue-500/10 text-center">
-              <p className="text-xs text-muted-foreground">UPI</p>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Total Collected</p>
+              <p className="text-xl font-bold text-paid">₹{totalCollected.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{overduePaidTenants.length} tenant(s)</p>
+            </div>
+            <div 
+              className="p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (stillPendingTenants.length > 0) {
+                  setStillPendingSheetOpen(true);
+                }
+              }}
+            >
+              <p className="text-xs text-muted-foreground">Still Pending</p>
+              <p className="text-xl font-bold text-pending">₹{stillPendingTotal.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">From {months[prevMonth - 1]}</p>
+            </div>
+          </div>
+
+          {/* UPI/Cash breakdown */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="p-3 rounded-lg bg-blue-500/10">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="text-blue-600 dark:text-blue-400 text-[10px]">UPI •</span> UPI
+              </p>
               <p className="text-lg font-bold text-blue-600 dark:text-blue-400">₹{upiTotal.toLocaleString()}</p>
             </div>
-            <div className="p-3 rounded-lg bg-green-500/10 text-center">
-              <p className="text-xs text-muted-foreground">Cash</p>
+            <div className="p-3 rounded-lg bg-green-500/10">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="text-green-600 dark:text-green-400 text-[10px]">💵</span> Cash
+              </p>
               <p className="text-lg font-bold text-green-600 dark:text-green-400">₹{cashTotal.toLocaleString()}</p>
             </div>
           </div>
 
-          <ScrollArea className="h-[calc(80vh-180px)] mt-4">
+          <h3 className="font-semibold mt-4 mb-2">Payment Details</h3>
+
+          <ScrollArea className={isMobile ? "h-[calc(100vh-380px)]" : "h-[calc(80vh-320px)]"}>
             <div className="space-y-3 pr-4">
               {overduePaidTenants.map(tenant => (
                 <div
@@ -212,7 +321,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Room {tenant.roomNo} • For Period: {months[prevMonth - 1]} {prevYear}
+                        Room {tenant.roomNo}
                       </p>
                     </div>
                     <Badge className="bg-paid text-paid-foreground">
@@ -240,6 +349,85 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                   </div>
                 </div>
               ))}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      {/* Still Pending Sheet */}
+      <Sheet open={stillPendingSheetOpen} onOpenChange={setStillPendingSheetOpen}>
+        <SheetContent 
+          side={isMobile ? "right" : "bottom"} 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[70vh]"}
+        >
+          <SheetHeader>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-pending">
+                Still Pending from {months[prevMonth - 1]}
+              </SheetTitle>
+              {isMobile && (
+                <Button variant="ghost" size="icon" onClick={() => setStillPendingSheetOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground text-left">
+              {stillPendingTenants.length} tenant(s) • Total: ₹{stillPendingTotal.toLocaleString()}
+            </p>
+          </SheetHeader>
+
+          <ScrollArea className={isMobile ? "h-[calc(100vh-150px)]" : "h-[calc(70vh-120px)]"}>
+            <div className="space-y-3 pr-4 mt-4">
+              {stillPendingTenants.map(tenant => (
+                <div
+                  key={tenant.id}
+                  className="p-4 rounded-lg border bg-pending-muted border-pending/30"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{tenant.name}</span>
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <>
+                            <a
+                              href={`tel:${tenant.phone}`}
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                            >
+                              <Phone className="h-4 w-4" />
+                            </a>
+                            <a
+                              href={`https://wa.me/91${tenant.phone}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Room {tenant.roomNo}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {tenant.status === 'Partial' 
+                          ? `Paid: ₹${tenant.amountPaid.toLocaleString()} • Pending: ₹${tenant.remaining.toLocaleString()}`
+                          : `Full rent pending`
+                        }
+                      </p>
+                    </div>
+                    <span className="font-bold text-lg text-pending">
+                      ₹{tenant.remaining.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {stillPendingTenants.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No pending amounts from {months[prevMonth - 1]}!
+                </div>
+              )}
             </div>
           </ScrollArea>
         </SheetContent>

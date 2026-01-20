@@ -82,7 +82,23 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     return total;
   }, [payments, rooms, selectedMonth, selectedYear]);
 
-  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue;
+  // Calculate security deposits collected this month
+  const securityDeposits = useMemo(() => {
+    let total = 0;
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
+        
+        const depositDate = new Date(tenant.securityDepositDate);
+        if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
+          total += tenant.securityDepositAmount;
+        }
+      });
+    });
+    return total;
+  }, [rooms, selectedMonth, selectedYear]);
+
+  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits;
 
   return (
     <Card className="bg-gradient-to-r from-paid/10 to-paid/5 border-paid/20">
@@ -104,6 +120,10 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
           <div className="flex justify-between">
             <span>Day Guest Revenue</span>
             <span>₹{dayGuestRevenue.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Security Deposits</span>
+            <span>₹{securityDeposits.toLocaleString()}</span>
           </div>
         </div>
       </CardContent>
