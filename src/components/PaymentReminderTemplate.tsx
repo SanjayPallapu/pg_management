@@ -270,18 +270,25 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         </table>
       </div>
 
-      {/* Footer */}
+      {/* Footer Message */}
       <div
         style={{
           background: "linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)",
-          padding: "14px 20px",
-          textAlign: "center",
-          fontSize: "13px",
-          color: "#92400e",
-          fontWeight: 500,
+          padding: "16px 20px",
+          textAlign: "left",
+          fontSize: "12px",
+          color: "#1a1a1a",
+          fontWeight: 400,
+          lineHeight: 1.5,
         }}
       >
-        Kindly pay at your earliest convenience. Thank you! 🙏
+        <p style={{ margin: 0 }}>
+          Hi <strong>{data.tenant.name}</strong>, this is a payment reminder for{" "}
+          <strong>{formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}</strong> rent @Amma Women's Hostel.
+        </p>
+        <p style={{ margin: "8px 0 0 0", color: "#92400e" }}>
+          Please let me know once the payment is done. Thank you! 🙏
+        </p>
       </div>
     </div>
   );
