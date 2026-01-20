@@ -46,8 +46,8 @@ export const PersonalExpensesCard = () => {
   const groceries = expenseData?.breakdown?.groceries?.total || 0;
   const utilityBills = expenseData?.breakdown?.bills?.total || 0;
   const familyExpenses = expenseData?.familyExpenses || 0;
-  // Current bill from summary response breakdown
-  const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBill || 0;
+  // Current bills from summary response breakdown (note: API uses "currentBills" plural)
+  const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBills || 0;
   // Grand total should include current bill
   const grandTotal = (expenseData?.grandTotal || 0) + currentBill;
 

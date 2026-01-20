@@ -107,13 +107,20 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
   };
 
   const handleOpenReminder = (tenant: typeof searchResults[0]) => {
+    const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+    const sharingType = room ? `${room.capacity} Sharing` : "N/A";
+    const amountPaid = tenant.amountPaid || 0;
+    const balance = tenant.monthlyRent - amountPaid;
     setReminderData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
-      monthlyRent: tenant.monthlyRent,
       joiningDate: tenant.startDate,
-      roomNo: tenant.roomNo,
       forMonth: `${months[selectedMonth - 1]} ${selectedYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: sharingType,
+      amount: tenant.monthlyRent,
+      amountPaid: amountPaid > 0 ? amountPaid : undefined,
+      balance: balance,
     });
     setReminderDialogOpen(true);
   };
