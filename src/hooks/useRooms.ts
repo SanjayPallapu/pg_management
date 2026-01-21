@@ -183,6 +183,7 @@ export const useRooms = () => {
         changes.security_deposit = { old: null, new: updates.securityDepositAmount };
       }
       if (updates.securityDepositDate !== undefined) updateData.security_deposit_date = updates.securityDepositDate;
+      if (updates.securityDepositMode !== undefined) updateData.security_deposit_mode = updates.securityDepositMode;
       if (updates.isLocked !== undefined) {
         updateData.is_locked = updates.isLocked;
         changes.is_locked = { old: !updates.isLocked, new: updates.isLocked };

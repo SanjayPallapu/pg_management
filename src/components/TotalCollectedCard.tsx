@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, PaymentEntry } from '@/types';
 import { useMemo } from 'react';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 
 interface TotalCollectedCardProps {
   rooms: Room[];
@@ -52,7 +52,8 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     })));
     
     const prevMonthActiveTenants = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) &&
+      !hasTenantLeftNow(tenant.endDate)
     );
 
     let total = 0;
