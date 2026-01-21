@@ -13,6 +13,7 @@ import { Wallet, CheckCircle, XCircle, IndianRupee, CalendarIcon, X, SquarePen }
 import { Room, Tenant } from '@/types';
 import { useRooms } from '@/hooks/useRooms';
 import { useAuth } from '@/hooks/useAuth';
+import { useMonthContext } from '@/contexts/MonthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -61,22 +62,23 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const depositedCount = depositedTenants.length;
   const totalTenants = allTenants.length;
 
-  // Calculate UPI and Cash totals for current month deposits
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
+  // Calculate UPI and Cash totals for selected month deposits (not just current month)
+  const { selectedMonth: ctxMonth, selectedYear: ctxYear } = useMonthContext();
   
-  const currentMonthDeposits = depositedTenants.filter(t => {
+  const selectedMonthDeposits = depositedTenants.filter(t => {
     if (!t.securityDepositDate) return false;
     const depositDate = new Date(t.securityDepositDate);
-    return depositDate.getMonth() + 1 === currentMonth && depositDate.getFullYear() === currentYear;
+    return depositDate.getMonth() + 1 === ctxMonth && depositDate.getFullYear() === ctxYear;
   });
   
-  const currentMonthUpi = currentMonthDeposits
-    .filter(t => (t as any).securityDepositMode === 'upi')
+  const selectedMonthTotal = selectedMonthDeposits.reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
+  
+  const selectedMonthUpi = selectedMonthDeposits
+    .filter(t => t.securityDepositMode === 'upi')
     .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
   
-  const currentMonthCash = currentMonthDeposits
-    .filter(t => (t as any).securityDepositMode === 'cash')
+  const selectedMonthCash = selectedMonthDeposits
+    .filter(t => t.securityDepositMode === 'cash')
     .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
 
   const handleAddDeposit = async () => {
@@ -161,14 +163,14 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
               <p className="text-xs text-muted-foreground">Tenants deposited</p>
             </div>
           </div>
-          {/* Current month UPI/Cash breakdown */}
-          {(currentMonthUpi > 0 || currentMonthCash > 0) && (
+          {/* Selected month UPI/Cash breakdown */}
+          {(selectedMonthUpi > 0 || selectedMonthCash > 0) && (
             <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
               <div className="text-blue-600 dark:text-blue-400">
-                UPI: ₹{currentMonthUpi.toLocaleString()}
+                UPI: ₹{selectedMonthUpi.toLocaleString()}
               </div>
               <div className="text-green-600 dark:text-green-400">
-                Cash: ₹{currentMonthCash.toLocaleString()}
+                Cash: ₹{selectedMonthCash.toLocaleString()}
               </div>
             </div>
           )}

@@ -22,11 +22,14 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
   const { dayGuests } = useDayGuests();
 
   const stats = useMemo(() => {
-    // 1. Actual tenants (current month rent)
+    // 1. Actual tenants (current month rent) - exclude locked tenants
     const tenantUpi: PaymentBreakdown = { upi: 0, cash: 0 };
     
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
+        // Skip locked tenants
+        if (tenant.isLocked) return;
+        
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return;
         }
@@ -54,6 +57,9 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
+        // Skip locked tenants
+        if (tenant.isLocked) return;
+        
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)) {
           return;
         }

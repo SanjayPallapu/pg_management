@@ -164,7 +164,22 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
               </Badge>
             </div>
 
-            <ScrollArea className="h-[calc(80vh-220px)]">
+            {/* Action buttons at top for visibility */}
+            <div className="flex justify-between gap-2 py-4 border-b sticky top-0 bg-background z-10">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkLock}
+                disabled={selectedIds.size === 0 || isLocking}
+                className="gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                Lock {selectedIds.size} Tenant{selectedIds.size !== 1 ? 's' : ''}
+              </Button>
+            </div>
+
+            <ScrollArea className="h-[calc(80vh-280px)]">
               <div className="space-y-2 py-4">
                 {leftTenantsInSheet.map(tenant => (
                   <div
@@ -193,20 +208,6 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                 ))}
               </div>
             </ScrollArea>
-
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkLock}
-                disabled={selectedIds.size === 0 || isLocking}
-                className="gap-2"
-              >
-                <Lock className="h-4 w-4" />
-                Lock {selectedIds.size} Tenant{selectedIds.size !== 1 ? 's' : ''}
-              </Button>
-            </div>
           </>
         )}
       </SheetContent>

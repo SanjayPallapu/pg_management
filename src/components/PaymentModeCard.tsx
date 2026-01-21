@@ -5,19 +5,24 @@ import { UpiLogo } from '@/components/icons/UpiLogo';
 import { CashLogo } from '@/components/icons/CashLogo';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { useRooms } from '@/hooks/useRooms';
-import { PaymentEntry } from '@/types';
+import { Room, PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FileSearch } from 'lucide-react';
 import { PaymentReconciliation } from './PaymentReconciliation';
+
+interface PaymentModeCardProps {
+  rooms: Room[];
+}
+
 interface PaymentDetail {
   tenantName: string;
   amount: number;
   date: string;
 }
-export const PaymentModeCard = () => {
+
+export const PaymentModeCard = ({ rooms }: PaymentModeCardProps) => {
   const {
     selectedMonth,
     selectedYear
@@ -25,9 +30,6 @@ export const PaymentModeCard = () => {
   const {
     payments
   } = useTenantPayments();
-  const {
-    rooms
-  } = useRooms();
   const [reconciliationOpen, setReconciliationOpen] = useState(false);
   const stats = useMemo(() => {
     // Get eligible tenant IDs for the selected month
