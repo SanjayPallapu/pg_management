@@ -105,13 +105,24 @@ export const RoomCard = ({
     return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
   })();
 
-  // Filter day guests for current month
+  // Filter day guests for current month - only show guests whose stay is not over
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
   const endOfMonth = new Date(selectedYear, selectedMonth, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize to start of day
+  
   const currentGuests = dayGuests.filter(guest => {
     const fromDate = new Date(guest.from_date);
     const toDate = new Date(guest.to_date);
-    return fromDate <= endOfMonth && toDate >= startOfMonth;
+    // Only show in room card if guest is currently staying (today is between from_date and to_date inclusive)
+    // For past months, show all guests that were present during that month
+    if (isSelectedCurrentMonth) {
+      // Current month: only show active guests (to_date >= today)
+      return fromDate <= today && toDate >= today;
+    } else {
+      // Other months: show guests that overlapped with that month
+      return fromDate <= endOfMonth && toDate >= startOfMonth;
+    }
   });
   const guestsPaidCount = currentGuests.filter(g => g.payment_status === 'Paid').length;
   const getStatusColor = (status: string) => {

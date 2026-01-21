@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Lock, AlertTriangle } from 'lucide-react';
+import { Lock, AlertTriangle, IndianRupee, Calendar } from 'lucide-react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { hasTenantLeftNow, isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
@@ -22,9 +23,11 @@ interface LeftTenantsCleanupSheetProps {
 export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenantsCleanupSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { updateTenant } = useRooms();
+  const { payments } = useTenantPayments();
   const { logAudit } = useAuditLog();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLocking, setIsLocking] = useState(false);
+  const [filterRoom, setFilterRoom] = useState<string | null>(null);
 
   // Find left tenants that are still active in the rent sheet for this month
   // (active in month BUT already left - endDate is today or in the past)
@@ -36,6 +39,9 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
       monthlyRent: number;
       endDate: string;
       isLocked: boolean;
+      paymentStatus: 'Paid' | 'Partial' | 'Pending';
+      amountPaid: number;
+      balance: number;
     }> = [];
 
     rooms.forEach(room => {
@@ -55,6 +61,15 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           return;
         }
 
+        // Get payment status for this tenant
+        const payment = payments.find(
+          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+        );
+
+        const amountPaid = payment?.amountPaid || 0;
+        const balance = Math.max(0, tenant.monthlyRent - amountPaid);
+        const paymentStatus = payment?.paymentStatus || 'Pending';
+
         tenants.push({
           id: tenant.id,
           name: tenant.name,
@@ -62,12 +77,27 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           monthlyRent: tenant.monthlyRent,
           endDate: tenant.endDate!,
           isLocked: tenant.isLocked || false,
+          paymentStatus: paymentStatus as 'Paid' | 'Partial' | 'Pending',
+          amountPaid,
+          balance,
         });
       });
     });
 
     return tenants;
-  }, [rooms, selectedMonth, selectedYear]);
+  }, [rooms, selectedMonth, selectedYear, payments]);
+
+  // Get unique room numbers for filtering
+  const uniqueRooms = useMemo(() => {
+    const roomSet = new Set(leftTenantsInSheet.map(t => t.roomNo));
+    return Array.from(roomSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [leftTenantsInSheet]);
+
+  // Filtered tenants based on room filter
+  const filteredTenants = useMemo(() => {
+    if (!filterRoom) return leftTenantsInSheet;
+    return leftTenantsInSheet.filter(t => t.roomNo === filterRoom);
+  }, [leftTenantsInSheet, filterRoom]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
@@ -82,10 +112,10 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   };
 
   const selectAll = () => {
-    if (selectedIds.size === leftTenantsInSheet.length) {
+    if (selectedIds.size === filteredTenants.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(leftTenantsInSheet.map(t => t.id)));
+      setSelectedIds(new Set(filteredTenants.map(t => t.id)));
     }
   };
 
@@ -135,9 +165,27 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
     }
   };
 
+  // Calculate totals for selected tenants
+  const selectedStats = useMemo(() => {
+    const selected = leftTenantsInSheet.filter(t => selectedIds.has(t.id));
+    return {
+      count: selected.length,
+      totalBalance: selected.reduce((sum, t) => sum + t.balance, 0),
+      totalPaid: selected.reduce((sum, t) => sum + t.amountPaid, 0),
+    };
+  }, [leftTenantsInSheet, selectedIds]);
+
+  const getPaymentBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Paid': return 'bg-paid text-paid-foreground';
+      case 'Partial': return 'bg-partial text-partial-foreground';
+      default: return 'bg-pending text-pending-foreground';
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[80vh]">
+      <SheetContent side="bottom" className="h-[85vh]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-pending" />
@@ -155,17 +203,58 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between py-4 border-b">
+            {/* Room Filter */}
+            {uniqueRooms.length > 1 && (
+              <div className="flex gap-2 py-3 overflow-x-auto border-b">
+                <Button 
+                  variant={filterRoom === null ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setFilterRoom(null)}
+                  className="shrink-0"
+                >
+                  All
+                </Button>
+                {uniqueRooms.map(roomNo => (
+                  <Button
+                    key={roomNo}
+                    variant={filterRoom === roomNo ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterRoom(roomNo)}
+                    className="shrink-0"
+                  >
+                    Room {roomNo}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between py-3 border-b">
               <Button variant="outline" size="sm" onClick={selectAll}>
-                {selectedIds.size === leftTenantsInSheet.length ? 'Deselect All' : 'Select All'}
+                {selectedIds.size === filteredTenants.length ? 'Deselect All' : 'Select All'}
               </Button>
               <Badge variant="secondary">
                 {selectedIds.size} selected
               </Badge>
             </div>
 
+            {/* Stats for selected tenants */}
+            {selectedIds.size > 0 && (
+              <div className="grid grid-cols-2 gap-2 py-3 border-b text-sm">
+                <div className="flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4 text-paid" />
+                  <span className="text-muted-foreground">Paid:</span>
+                  <span className="font-medium text-paid">₹{selectedStats.totalPaid.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4 text-pending" />
+                  <span className="text-muted-foreground">Balance:</span>
+                  <span className="font-medium text-pending">₹{selectedStats.totalBalance.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+
             {/* Action buttons at top for visibility */}
-            <div className="flex justify-between gap-2 py-4 border-b sticky top-0 bg-background z-10">
+            <div className="flex justify-between gap-2 py-3 border-b sticky top-0 bg-background z-10">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
@@ -179,9 +268,9 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
               </Button>
             </div>
 
-            <ScrollArea className="h-[calc(80vh-280px)]">
+            <ScrollArea className="h-[calc(85vh-320px)]">
               <div className="space-y-2 py-4">
-                {leftTenantsInSheet.map(tenant => (
+                {filteredTenants.map(tenant => (
                   <div
                     key={tenant.id}
                     className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -194,14 +283,24 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                       onCheckedChange={() => toggleSelection(tenant.id)}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium truncate">{tenant.name}</span>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs shrink-0">
                           {tenant.roomNo}
                         </Badge>
+                        <Badge className={`text-xs shrink-0 ${getPaymentBadgeClass(tenant.paymentStatus)}`}>
+                          {tenant.paymentStatus}
+                        </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Left on {format(parseDateOnly(tenant.endDate), 'dd MMM yyyy')} • ₹{tenant.monthlyRent.toLocaleString()}
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Left: {format(parseDateOnly(tenant.endDate), 'dd MMM')}
+                        </span>
+                        <span className="text-paid">₹{tenant.amountPaid.toLocaleString()} paid</span>
+                        {tenant.balance > 0 && (
+                          <span className="text-pending">₹{tenant.balance.toLocaleString()} due</span>
+                        )}
                       </div>
                     </div>
                   </div>

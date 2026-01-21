@@ -5,7 +5,7 @@ import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useDayGuests } from '@/hooks/useDayGuests';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 
 interface AllCollectedCardProps {
   rooms: Room[];
@@ -29,6 +29,9 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
       room.tenants.forEach(tenant => {
         // Skip locked tenants
         if (tenant.isLocked) return;
+        
+        // Skip tenants who have already left
+        if (hasTenantLeftNow(tenant.endDate)) return;
         
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return;
