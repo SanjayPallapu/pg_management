@@ -196,7 +196,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         {/* Bottom Cards Row */}
         <div className="grid gap-4 md:grid-cols-3">
           {/* Payment Mode Card - First */}
-          <PaymentModeCard />
+          <PaymentModeCard rooms={rooms} />
 
           {/* Total Collected Card */}
           <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
