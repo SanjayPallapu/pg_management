@@ -26,6 +26,7 @@ import { OverduePaidCard } from "./OverduePaidCard";
 import { BulkReminderDialog } from "./BulkReminderDialog";
 import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
+import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 interface MonthlyRentSheetProps {
   rooms: Room[];
@@ -159,10 +160,24 @@ export const MonthlyRentSheet = ({
       const isPastMonth = selectedYear < currentYear || selectedYear === currentYear && selectedMonth < currentMonth;
       const isFutureMonth = selectedYear > currentYear || selectedYear === currentYear && selectedMonth > currentMonth;
       const tenantDueDay = joinDate.getDate();
+      
+      // Calculate pro-rata rent for mid-month leavers
+      const amountPaid = payment?.amountPaid || 0;
+      const { effectiveRent, daysStayed, isProRata } = calculateProRataRent(
+        tenant.monthlyRent,
+        tenant.startDate,
+        tenant.endDate,
+        selectedYear,
+        selectedMonth,
+        amountPaid
+      );
+      
+      const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+      
       let paymentCategory: "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
-      if (payment?.paymentStatus === "Paid") {
+      if (payment?.paymentStatus === "Paid" || (amountPaid >= targetRent && targetRent > 0)) {
         paymentCategory = "paid";
-      } else if (payment?.paymentStatus === "Partial") {
+      } else if (payment?.paymentStatus === "Partial" || (amountPaid > 0 && amountPaid < targetRent)) {
         paymentCategory = "partial";
       } else if (isPastMonth) {
         paymentCategory = "overdue";
@@ -185,7 +200,10 @@ export const MonthlyRentSheet = ({
           paymentEntries: []
         },
         paymentCategory,
-        dueDay: tenantDueDay
+        dueDay: tenantDueDay,
+        effectiveRent,
+        daysStayed,
+        isProRata
       };
     });
 
@@ -343,7 +361,22 @@ export const MonthlyRentSheet = ({
   const handlePayRemaining = (tenantId: string) => {
     const tenant = tenantsWithPayments.find(t => t.id === tenantId);
     if (tenant) {
-      const remaining = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
+      const amountPaid = tenant.payment.amountPaid || 0;
+      
+      // Calculate pro-rata if tenant is leaving mid-month
+      const { effectiveRent, daysStayed, isProRata } = calculateProRataRent(
+        tenant.monthlyRent,
+        tenant.startDate,
+        tenant.endDate,
+        selectedYear,
+        selectedMonth,
+        amountPaid
+      );
+      
+      // Use pro-rata remaining if applicable, otherwise use normal calculation
+      const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+      const remaining = Math.max(0, targetRent - amountPaid);
+      
       setPayRemainingTenant(tenantId);
       setPayRemainingAmount(remaining);
       setPayRemainingDate(new Date());
@@ -431,7 +464,12 @@ export const MonthlyRentSheet = ({
     const formattedDate = format(payRemainingDate, "yyyy-MM-dd");
     const previousPaid = tenant.payment.amountPaid || 0;
     const totalPaid = previousPaid + payRemainingAmount;
-    const isFullPayment = totalPaid >= tenant.monthlyRent;
+    
+    // Use pro-rata effective rent if applicable
+    const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
+      ? tenant.effectiveRent 
+      : tenant.monthlyRent;
+    const isFullPayment = totalPaid >= targetRent;
 
     // Add remaining payment entry
     const newEntry = {
@@ -449,15 +487,17 @@ export const MonthlyRentSheet = ({
       year: selectedYear,
       paymentStatus: status,
       paymentDate: formattedDate,
-      amount: tenant.monthlyRent,
-      amountPaid: Math.min(totalPaid, tenant.monthlyRent),
+      amount: targetRent,
+      amountPaid: Math.min(totalPaid, targetRent),
       paymentEntries: updatedEntries,
       tenantName: tenant.name,
       roomNo: tenant.roomNo
     });
     toast({
       title: isFullPayment ? "Payment completed" : "Partial payment recorded",
-      description: isFullPayment ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded` : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`
+      description: isFullPayment 
+        ? `Full payment of ₹${targetRent.toLocaleString()} recorded${tenant.isProRata ? ` (${tenant.daysStayed} days)` : ''}` 
+        : `₹${totalPaid.toLocaleString()} paid • ₹${(targetRent - totalPaid).toLocaleString()} remaining`
     });
 
     // Prepare receipt data for WhatsApp
@@ -624,7 +664,11 @@ export const MonthlyRentSheet = ({
           <div className="space-y-2">
             {filteredTenants.map(tenant => {
             const isPartial = tenant.paymentCategory === "partial";
-            const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;
+            // Use pro-rata effective rent if applicable
+            const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
+              ? tenant.effectiveRent 
+              : tenant.monthlyRent;
+            const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
             const bgClass = tenant.paymentCategory === "paid" ? "bg-paid-muted border-l-4 border-paid" : tenant.paymentCategory === "partial" ? "bg-partial-muted border-l-4 border-partial" : tenant.paymentCategory === "overdue" ? "bg-overdue-muted border-l-4 border-overdue" : tenant.paymentCategory === "advance-not-paid" ? "bg-advance-not-paid-muted border-l-4 border-advance-not-paid" : "bg-not-due-muted border-l-4 border-not-due";
             const statusLabel = tenant.paymentCategory === "paid" ? "Paid" : tenant.paymentCategory === "partial" ? "Due" : tenant.paymentCategory === "overdue" ? "Overdue" : tenant.paymentCategory === "advance-not-paid" ? "Advance Due" : "Pending";
             const whatsappSent = (tenant.payment as any).whatsappSent;
@@ -654,7 +698,7 @@ export const MonthlyRentSheet = ({
               const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
               const sharingType = room ? `${room.capacity} Sharing` : "N/A";
               const amountPaid = tenant.payment.amountPaid || 0;
-              const balance = tenant.monthlyRent - amountPaid;
+              const balance = targetRent - amountPaid;
               setReminderData({
                 tenantName: tenant.name,
                 tenantPhone: tenant.phone,
@@ -713,6 +757,9 @@ export const MonthlyRentSheet = ({
                       <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
                       <span className="mx-2">•</span>
                       <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
+                      {tenant.isProRata && tenant.daysStayed && (
+                        <span className="text-xs text-muted-foreground ml-2">({tenant.daysStayed} days)</span>
+                      )}
                     </div>}
 
                   <div className="flex justify-between items-end">
@@ -832,12 +879,33 @@ export const MonthlyRentSheet = ({
               {payRemainingTenant && (() => {
               const tenant = tenantsWithPayments.find(t => t.id === payRemainingTenant);
               if (tenant) {
-                const remaining = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
+                // Use pro-rata effective rent if applicable
+                const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
+                  ? tenant.effectiveRent 
+                  : tenant.monthlyRent;
+                const remaining = targetRent - (tenant.payment.amountPaid || 0);
                 const newTotal = (tenant.payment.amountPaid || 0) + payRemainingAmount;
+                
+                // Show pro-rata info if applicable
+                if (tenant.isProRata && tenant.daysStayed) {
+                  return (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Pro-rata: {tenant.daysStayed} days @ ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{targetRent.toLocaleString()}
+                      </p>
+                      {payRemainingAmount < remaining && (
+                        <p className="text-sm text-partial">
+                          Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹{(targetRent - newTotal).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
+                
                 if (payRemainingAmount < remaining) {
                   return <p className="text-sm text-partial mt-2">
                           Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹
-                          {(tenant.monthlyRent - newTotal).toLocaleString()}
+                          {(targetRent - newTotal).toLocaleString()}
                         </p>;
                 }
               }
