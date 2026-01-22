@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { Tenant, TenantPayment, PaymentEntry } from "@/types";
 import { parseDateOnly } from "@/utils/dateOnly";
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift, Plus } from "lucide-react";
 
 interface MarkLeftDialogProps {
   open: boolean;
@@ -51,6 +51,7 @@ export const MarkLeftDialog = ({
   const [leaveDate, setLeaveDate] = useState<Date>(new Date());
   const [perDayRate, setPerDayRate] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [bonusAmount, setBonusAmount] = useState<number>(0);
   const [settlementMode, setSettlementMode] = useState<"upi" | "cash">("upi");
   const [step, setStep] = useState<"date" | "calculation" | "confirm">("date");
   
@@ -65,6 +66,7 @@ export const MarkLeftDialog = ({
       // Calculate default per day rate (monthly rent / 30)
       setPerDayRate(Math.round(tenant.monthlyRent / 30));
       setDiscountAmount(0);
+      setBonusAmount(0);
       setSettlementMode("upi");
       setStep("date");
       setClearPending(false);
@@ -132,32 +134,32 @@ export const MarkLeftDialog = ({
     // Pro-rata rent calculation
     const proRataRent = daysStayed * perDayRate;
     
+    // Calculate extra paid (if amountPaid > proRataRent, the difference is extra)
+    let extraPaid = 0;
+    if (amountPaid > proRataRent) {
+      extraPaid = amountPaid - proRataRent;
+    }
+    
     // Settlement amount
     let settlementDue = 0;
     let refundDue = 0;
+    
+    // Total due = pro-rata + bonus - discount
+    const totalDue = proRataRent + bonusAmount - discountAmount;
     
     if (clearPending) {
       // User chose to clear/waive pending amount
       settlementDue = 0;
       refundDue = 0;
-    } else if (isFullyPaid) {
-      // If fully paid, check if refund is due
-      const refund = tenant.monthlyRent - proRataRent - discountAmount;
-      if (refund > 0) {
-        refundDue = refund;
-      }
-    } else if (isPartiallyPaid) {
-      // If partially paid, calculate remaining
-      const totalDue = proRataRent - discountAmount;
-      const remaining = totalDue - amountPaid;
-      if (remaining > 0) {
-        settlementDue = remaining;
-      } else if (remaining < 0) {
-        refundDue = Math.abs(remaining);
+    } else if (amountPaid >= totalDue) {
+      // If paid amount covers total due, check for refund
+      const excess = amountPaid - totalDue;
+      if (excess > 0) {
+        refundDue = excess;
       }
     } else {
-      // Pending - full pro-rata minus discount
-      settlementDue = Math.max(0, proRataRent - discountAmount);
+      // Amount paid is less than total due
+      settlementDue = totalDue - amountPaid;
     }
 
     return {
@@ -165,14 +167,17 @@ export const MarkLeftDialog = ({
       totalDaysInCycle,
       proRataRent,
       amountPaid,
+      bonusAmount,
       discountAmount,
+      extraPaid,
+      totalDue,
       settlementDue,
       refundDue,
       isFullyPaid,
       isPartiallyPaid,
       paymentStatus,
     };
-  }, [tenant, billingInfo, leaveDate, perDayRate, discountAmount, currentMonthPayment, clearPending]);
+  }, [tenant, billingInfo, leaveDate, perDayRate, discountAmount, bonusAmount, currentMonthPayment, clearPending]);
 
   const handleProceedToCalculation = () => {
     setStep("calculation");
@@ -188,11 +193,17 @@ export const MarkLeftDialog = ({
     const formattedDate = format(leaveDate, "yyyy-MM-dd");
     let notes = `Left on ${format(leaveDate, "dd MMM yyyy")}. Days stayed: ${calculation.daysStayed}. Pro-rata: ₹${calculation.proRataRent}`;
     
+    if (bonusAmount > 0) {
+      notes += `. Bonus/Extra: ₹${bonusAmount}`;
+    }
     if (clearPending) {
       notes += `. Pending amount cleared/waived.`;
     }
     if (discountGiven || discountAmount > 0) {
       notes += `. Discount: ₹${discountAmount}`;
+    }
+    if (calculation.extraPaid > 0) {
+      notes += `. Extra paid (advance): ₹${calculation.extraPaid}`;
     }
 
     onConfirm({
@@ -322,6 +333,24 @@ export const MarkLeftDialog = ({
               </p>
             </div>
 
+            {/* Bonus/Extra */}
+            <div>
+              <Label className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Bonus/Extra Amount (Optional)
+              </Label>
+              <Input
+                type="number"
+                value={bonusAmount}
+                onChange={(e) => setBonusAmount(parseInt(e.target.value) || 0)}
+                className="mt-1"
+                placeholder="0"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Add extra charges (e.g., electricity, damages)
+              </p>
+            </div>
+
             {/* Discount */}
             <div>
               <Label className="flex items-center gap-2">
@@ -346,16 +375,32 @@ export const MarkLeftDialog = ({
                 <span>Pro-rata Rent ({calculation.daysStayed} days × ₹{perDayRate}):</span>
                 <span>₹{calculation.proRataRent.toLocaleString()}</span>
               </div>
+              {calculation.bonusAmount > 0 && (
+                <div className="flex justify-between text-sm text-amber-600">
+                  <span>Bonus/Extra:</span>
+                  <span>+ ₹{calculation.bonusAmount.toLocaleString()}</span>
+                </div>
+              )}
               {calculation.discountAmount > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
+                <div className="flex justify-between text-sm text-emerald-600">
                   <span>Discount:</span>
                   <span>- ₹{calculation.discountAmount.toLocaleString()}</span>
                 </div>
               )}
+              <div className="flex justify-between text-sm font-medium border-t pt-1 mt-1">
+                <span>Total Due:</span>
+                <span>₹{calculation.totalDue.toLocaleString()}</span>
+              </div>
               {calculation.amountPaid > 0 && (
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Already Paid:</span>
                   <span>- ₹{calculation.amountPaid.toLocaleString()}</span>
+                </div>
+              )}
+              {calculation.extraPaid > 0 && (
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>Extra Paid (Advance):</span>
+                  <span>₹{calculation.extraPaid.toLocaleString()}</span>
                 </div>
               )}
               <Separator className="my-2" />
@@ -365,7 +410,7 @@ export const MarkLeftDialog = ({
                   <span>₹{calculation.settlementDue.toLocaleString()}</span>
                 </div>
               ) : calculation.refundDue > 0 ? (
-                <div className="flex justify-between font-semibold text-lg text-green-600">
+                <div className="flex justify-between font-semibold text-lg text-emerald-600">
                   <span>Refund Due:</span>
                   <span>₹{calculation.refundDue.toLocaleString()}</span>
                 </div>
