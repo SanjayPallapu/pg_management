@@ -45,15 +45,14 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
       prevYear = selectedYear - 1;
     }
 
-    // Get tenants who were active in the previous month
+    // Get tenants who were active in the previous month (include left tenants for paid amounts)
     const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
       ...tenant,
       roomNo: room.roomNo
     })));
     
     const prevMonthActiveTenants = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) &&
-      !hasTenantLeftNow(tenant.endDate)
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)
     );
 
     let total = 0;

@@ -23,6 +23,7 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
 
   const stats = useMemo(() => {
     // 1. Actual tenants (current month rent) - exclude locked tenants
+    // Include left tenants' paid amounts (they were active in this month and paid)
     const tenantUpi: PaymentBreakdown = { upi: 0, cash: 0 };
     
     rooms.forEach(room => {
@@ -30,9 +31,7 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
         // Skip locked tenants
         if (tenant.isLocked) return;
         
-        // Skip tenants who have already left
-        if (hasTenantLeftNow(tenant.endDate)) return;
-        
+        // Check if tenant was active in the selected month (even if they left after)
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return;
         }
