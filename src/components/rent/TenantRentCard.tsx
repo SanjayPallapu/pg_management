@@ -21,8 +21,12 @@ interface TenantRentCardProps {
     phone: string;
     roomNo: string;
     startDate: string;
+    endDate?: string;
     monthlyRent: number;
     isLocked?: boolean;
+    effectiveRent?: number;
+    daysStayed?: number;
+    isProRata?: boolean;
     payment: {
       paymentStatus: "Paid" | "Pending" | "Partial";
       amountPaid?: number;
@@ -50,7 +54,11 @@ export const TenantRentCard = ({
   onPaymentReminder,
 }: TenantRentCardProps) => {
   const isPartial = tenant.paymentCategory === "partial";
-  const remaining = isPartial ? tenant.monthlyRent - (tenant.payment.amountPaid || 0) : 0;
+  // Use pro-rata effective rent if applicable
+  const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
+    ? tenant.effectiveRent 
+    : tenant.monthlyRent;
+  const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
   const bgClass = getPaymentCardClass(tenant.paymentCategory);
 
   const statusLabel =
@@ -139,6 +147,9 @@ export const TenantRentCard = ({
           <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
           <span className="mx-2">•</span>
           <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
+          {tenant.isProRata && tenant.daysStayed && (
+            <span className="text-xs text-muted-foreground ml-2">({tenant.daysStayed} days)</span>
+          )}
         </div>
       )}
 

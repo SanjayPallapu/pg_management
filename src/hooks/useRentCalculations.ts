@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Room, Tenant, TenantPayment } from '@/types';
-import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
 
 export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
@@ -14,6 +14,7 @@ export interface TenantWithPayment extends Tenant {
   effectiveRent?: number;
   daysStayed?: number;
   isProRata?: boolean;
+  hasLeftNow?: boolean;
 }
 
 interface UseRentCalculationsProps {
@@ -46,18 +47,12 @@ export const useRentCalculations = ({
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
 
-    // Get all eligible tenants with their payment category
-    const eligibleTenants: TenantWithPayment[] = rooms.flatMap(room =>
+    // Get all tenants active in the selected month (including left tenants for collection totals)
+    const allActiveTenants: TenantWithPayment[] = rooms.flatMap(room =>
       room.tenants
         .filter(tenant => {
-          // Tenant must be active in the selected month (joined before end of month AND not left before month started)
-          if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return false;
-          
-          // Exclude tenants who have already left (end_date is set and is today or in the past)
-          // Use the proper date-only comparison function to avoid timezone issues
-          if (hasTenantLeftNow(tenant.endDate)) return false;
-          
-          return true;
+          // Tenant must have been active in the selected month
+          return isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth);
         })
         .map(tenant => {
           const payment = payments.find(
@@ -65,6 +60,7 @@ export const useRentCalculations = ({
           );
 
           const joinDate = new Date(tenant.startDate);
+          const hasLeftNow = hasTenantLeftNow(tenant.endDate);
 
           const today = new Date();
           const todayDate = today.getDate();
@@ -134,27 +130,38 @@ export const useRentCalculations = ({
             effectiveRent,
             daysStayed,
             isProRata,
+            hasLeftNow, // Track if tenant has left
           };
         })
     );
 
-    // Filter by category
+    // For display purposes (pending/overdue lists), exclude left tenants
+    const eligibleTenants = allActiveTenants.filter(t => !t.hasLeftNow);
+
+    // Filter by category (for display lists - excludes left tenants)
     const paidTenants = eligibleTenants.filter(t => t.paymentCategory === 'paid');
     const partialTenants = eligibleTenants.filter(t => t.paymentCategory === 'partial');
     const overdueTenants = eligibleTenants.filter(t => t.paymentCategory === 'overdue');
     const advanceNotPaidTenants = eligibleTenants.filter(t => t.paymentCategory === 'advance-not-paid');
     const notDueTenants = eligibleTenants.filter(t => t.paymentCategory === 'not-due');
 
-    // Calculate totals - exclude locked tenants
+    // Calculate totals - use allActiveTenants to INCLUDE left tenants' payments in collection totals
+    // But exclude locked tenants from calculations
+    const unlockedAllTenants = allActiveTenants.filter(t => !t.isLocked);
+    const unlockedPaidAll = unlockedAllTenants.filter(t => t.paymentCategory === 'paid');
+    const unlockedPartialAll = unlockedAllTenants.filter(t => t.paymentCategory === 'partial');
+    
+    // For totalRent and pendingRent, only count tenants who haven't left yet
     const unlockedTenants = eligibleTenants.filter(t => !t.isLocked);
-    const unlockedPaid = paidTenants.filter(t => !t.isLocked);
-    const unlockedPartial = partialTenants.filter(t => !t.isLocked);
     
     // Use effective rent (pro-rata) for totals
     const totalRent = unlockedTenants.reduce((sum, t) => sum + (t.effectiveRent || t.monthlyRent), 0);
-    // Use actual amount paid (includes extras/overpayments) for rent collected
-    const rentCollected = unlockedPaid.reduce((sum, t) => sum + (t.amountPaid || t.effectiveRent || t.monthlyRent), 0) + 
-                          unlockedPartial.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+    
+    // Use actual amount paid (includes extras/overpayments) for rent collected - from ALL active tenants (including left ones)
+    const rentCollected = unlockedPaidAll.reduce((sum, t) => sum + (t.amountPaid || t.effectiveRent || t.monthlyRent), 0) + 
+                          unlockedPartialAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+    
+    // Pending rent only counts non-left tenants
     const totalPending = unlockedTenants
       .filter(t => t.paymentCategory !== 'paid')
       .reduce((sum, t) => {
