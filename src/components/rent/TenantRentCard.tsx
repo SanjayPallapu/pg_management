@@ -130,7 +130,7 @@ export const TenantRentCard = ({
             </DropdownMenu>
           )}
         </div>
-        {isPartial ? (
+      {isPartial ? (
           <Badge className="bg-overdue text-overdue-foreground">₹{remaining.toLocaleString()}</Badge>
         ) : (
           <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>
@@ -141,6 +141,16 @@ export const TenantRentCard = ({
         Room {tenant.roomNo}
         {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
       </div>
+
+      {/* Pro-rata visual indicator for mid-month leavers */}
+      {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
+        <div className="text-xs bg-muted/50 rounded px-2 py-1 mb-2 flex items-center gap-1">
+          <span className="text-muted-foreground">Pro-rata:</span>
+          <span className="font-medium">
+            {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{tenant.effectiveRent.toLocaleString()}
+          </span>
+        </div>
+      )}
 
       {isPartial && (
         <div className="text-sm font-medium mb-2">

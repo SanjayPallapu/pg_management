@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp } from 'lucide-react';
+import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus } from 'lucide-react';
 import { Room, DashboardStats } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -20,6 +20,7 @@ import { AllCollectedCard } from './AllCollectedCard';
 import { PendingTenantsCard } from './PendingTenantsCard';
 import { CalculatorCard } from './CalculatorCard';
 import { KeyNumbersCard } from './KeyNumbersCard';
+import { SettlementSummarySheet } from './SettlementSummarySheet';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { getPricePerBed } from '@/constants/pricing';
 
@@ -33,6 +34,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const { payments } = useTenantPayments();
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
+  const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
@@ -120,6 +122,18 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const totalPotentialAdditionalRevenue = roomStats.reduce((sum, r) => sum + r.potentialAdditionalRent, 0);
   const fullyOccupiedRooms = roomStats.filter(r => r.isFull).length;
   const vacantRooms = roomStats.filter(r => r.isEmpty).length;
+  
+  // Current revenue from present tenants (sum of their monthly rents)
+  const currentMonthlyRevenue = rooms.reduce((sum, room) => {
+    const activeTenants = room.tenants.filter(t => {
+      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
+      if (isCurrentMonth) {
+        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
+      }
+      return activeInSelectedMonth;
+    });
+    return sum + activeTenants.reduce((s, t) => s + t.monthlyRent, 0);
+  }, 0);
   
   // Max monthly revenue if all beds filled (using fixed per-bed rates)
   const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPricePerBed(room.capacity)), 0);
@@ -210,20 +224,31 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             onClick={() => setEmptyBedsSheetOpen(true)}
           >
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
+                </div>
+              </div>
+              
+              {/* Current vs Max revenue comparison */}
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
-                  </div>
-                  <div className="text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {totalEmptyBeds} empty beds can add ₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}
-                  </p>
+                  <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-paid">+₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</p>
+                  <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Max capacity</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="text-sm font-semibold text-pending">
+                  +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()} possible
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {totalEmptyBeds} beds empty
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
@@ -250,6 +275,21 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Key Numbers Card */}
           <KeyNumbersCard />
+
+          {/* Settlement Summary Card */}
+          <Card 
+            className="cursor-pointer transition-colors hover:bg-accent/50"
+            onClick={() => setSettlementSheetOpen(true)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
+                <UserMinus className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-lg font-bold">Settlement Summary</div>
+              <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
+            </CardContent>
+          </Card>
 
           {/* Personal Expenses Card */}
           <PersonalExpensesCard />
@@ -300,6 +340,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         roomStats={roomStats}
         totalEmptyBeds={totalEmptyBeds}
         totalPotentialRevenue={totalPotentialAdditionalRevenue}
+      />
+      <SettlementSummarySheet
+        open={settlementSheetOpen}
+        onOpenChange={setSettlementSheetOpen}
+        rooms={rooms}
       />
     </>
   );
