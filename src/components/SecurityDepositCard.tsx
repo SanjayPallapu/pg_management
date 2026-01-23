@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Search } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -28,6 +29,7 @@ interface TenantWithRoom extends Tenant {
 
 export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Handle OS back gesture to close sheet
   useBackGesture(sheetOpen, () => setSheetOpen(false));
@@ -57,6 +59,16 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
 
   const depositedTenants = allTenants.filter(t => t.securityDepositAmount && t.securityDepositAmount > 0);
   const notDepositedTenants = allTenants.filter(t => !t.securityDepositAmount || t.securityDepositAmount === 0);
+  
+  // Filter not deposited tenants by search
+  const filteredNotDepositedTenants = useMemo(() => {
+    if (!searchQuery.trim()) return notDepositedTenants;
+    const query = searchQuery.toLowerCase();
+    return notDepositedTenants.filter(t => 
+      t.name.toLowerCase().includes(query) || 
+      t.roomNo.toLowerCase().includes(query)
+    );
+  }, [notDepositedTenants, searchQuery]);
   
   const totalDeposited = depositedTenants.reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
   const depositedCount = depositedTenants.length;
@@ -295,11 +307,23 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
             {/* Not Deposited Tenants */}
             {notDepositedTenants.length > 0 && (
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Not Deposited ({notDepositedTenants.length})
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    Not Deposited ({notDepositedTenants.length})
+                  </h3>
+                  <div className="relative flex-1 max-w-[200px]">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search tenant..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-8 pl-7 text-sm"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  {notDepositedTenants.map(tenant => (
+                  {filteredNotDepositedTenants.map(tenant => (
                     <div 
                       key={tenant.id} 
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
@@ -322,6 +346,11 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                       )}
                     </div>
                   ))}
+                  {searchQuery && filteredNotDepositedTenants.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      No tenants found for "{searchQuery}"
+                    </div>
+                  )}
                 </div>
               </div>
             )}

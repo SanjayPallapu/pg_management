@@ -52,6 +52,8 @@ interface OverduePaymentDialogProps {
     monthlyRent: number;
     existingPaid: number;
     previousMonthPending?: PreviousMonthPending | null;
+    discount?: number;
+    notes?: string;
   }) => void;
 }
 
@@ -71,6 +73,7 @@ export const OverduePaymentDialog = ({
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [dateOpen, setDateOpen] = useState(false);
+  const [discount, setDiscount] = useState<number>(0);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -80,6 +83,7 @@ export const OverduePaymentDialog = ({
       setPaymentAmount(0);
       setPaymentDate(new Date());
       setPaymentMode('upi');
+      setDiscount(0);
     }
     onOpenChange(isOpen);
   };
@@ -94,6 +98,12 @@ export const OverduePaymentDialog = ({
   const handleConfirmPayment = () => {
     if (!tenant) return;
     
+    // Build notes string for discount
+    let notes = '';
+    if (discount > 0) {
+      notes = `Discount: ₹${discount}`;
+    }
+    
     onConfirmPayment({
       tenantId: tenant.id,
       amount: paymentAmount,
@@ -104,6 +114,8 @@ export const OverduePaymentDialog = ({
       monthlyRent: tenant.monthlyRent,
       existingPaid: tenant.amountPaid,
       previousMonthPending: previousMonthPending,
+      discount: discount > 0 ? discount : undefined,
+      notes: notes || undefined,
     });
     
     handleOpenChange(false);
@@ -209,7 +221,42 @@ export const OverduePaymentDialog = ({
                       ₹2,000
                     </Button>
                   )}
+                  {tenant.remaining > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Set to remaining minus discount
+                        const discountedAmount = tenant.remaining - discount;
+                        setPaymentAmount(Math.max(0, discountedAmount));
+                      }}
+                      className="text-xs"
+                    >
+                      Apply Discount
+                    </Button>
+                  )}
                 </div>
+              </div>
+
+              {/* Discount */}
+              <div className="space-y-2">
+                <Label htmlFor="discount">Discount (₹)</Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  value={discount || ''}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    setDiscount(val);
+                  }}
+                  placeholder="0"
+                  className="text-lg"
+                />
+                {discount > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    New Due: ₹{(tenant.remaining - discount).toLocaleString()} (after ₹{discount} discount)
+                  </div>
+                )}
               </div>
 
               {/* Payment Date */}
