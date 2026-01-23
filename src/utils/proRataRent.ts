@@ -2,6 +2,7 @@ import { parseDateOnly } from './dateOnly';
 
 /**
  * Calculate pro-rata rent for a tenant who left mid-month.
+ * Uses joining date to leave date for accurate calculation.
  * 
  * @param monthlyRent - The tenant's full monthly rent
  * @param startDate - The tenant's join date (YYYY-MM-DD)
@@ -18,10 +19,10 @@ export const calculateProRataRent = (
   year: number,
   month: number,
   amountAlreadyPaid: number = 0
-): { effectiveRent: number; daysStayed: number; isProRata: boolean } => {
+): { effectiveRent: number; daysStayed: number; isProRata: boolean; dailyRate: number } => {
   // If no end date, return full monthly rent
   if (!endDate) {
-    return { effectiveRent: monthlyRent, daysStayed: 30, isProRata: false };
+    return { effectiveRent: monthlyRent, daysStayed: 30, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
   const joinDate = parseDateOnly(startDate);
@@ -34,29 +35,32 @@ export const calculateProRataRent = (
   const isLeavingThisMonth = leaveDate.getMonth() + 1 === month && leaveDate.getFullYear() === year;
   
   if (!isLeavingThisMonth) {
-    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false };
+    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
   // Option A: If tenant already paid full monthly rent or more, skip pro-rata
   if (amountAlreadyPaid >= monthlyRent) {
-    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false };
+    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
   // Calculate days stayed in this month
   // Start date for calculation is either 1st of month or join date (whichever is later)
   const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
   
-  // Days stayed = leave date - effective start (leave date is exclusive - they left on that day)
-  const daysStayed = Math.max(1, Math.ceil((leaveDate.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24)));
+  // Days stayed = leave date - effective start
+  // leave date is the last day of stay (inclusive), so we add 1
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysStayed = Math.max(1, Math.floor((leaveDate.getTime() - effectiveStart.getTime()) / msPerDay) + 1);
   
   // Pro-rata calculation: (daily rate × days stayed)
   // Using 30 as the standard month for daily rate calculation
-  const dailyRate = monthlyRent / 30;
-  const effectiveRent = Math.round(dailyRate * daysStayed);
+  const dailyRate = Math.round(monthlyRent / 30);
+  const effectiveRent = dailyRate * daysStayed;
 
   return { 
     effectiveRent: Math.min(effectiveRent, monthlyRent), // Cap at monthly rent
     daysStayed, 
-    isProRata: true 
+    isProRata: true,
+    dailyRate
   };
 };
