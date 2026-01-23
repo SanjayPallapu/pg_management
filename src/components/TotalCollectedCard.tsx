@@ -6,14 +6,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, PaymentEntry } from '@/types';
 import { useMemo } from 'react';
-import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
 interface TotalCollectedCardProps {
   rooms: Room[];
-  rentCollected: number;
+  rentCollected: number; // Keep for backward compat, but we'll calculate our own
 }
 
-export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardProps) => {
+export const TotalCollectedCard = ({ rooms }: TotalCollectedCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
 
@@ -35,6 +35,37 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
   });
+
+  // Calculate THIS MONTH rent collected by summing actual payment entries
+  // This matches how AllCollectedCard calculates - using actual entries, not amountPaid field
+  const thisMonthRent = useMemo(() => {
+    let total = 0;
+    
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        // Skip locked tenants
+        if (tenant.isLocked) return;
+        
+        // Check if tenant was active in the selected month
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
+          return;
+        }
+
+        const payment = payments.find(
+          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+        );
+
+        if (payment?.paymentEntries) {
+          // Sum all payment entries for this month's payment
+          (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
+            total += entry.amount;
+          });
+        }
+      });
+    });
+
+    return total;
+  }, [rooms, payments, selectedMonth, selectedYear]);
 
   // Calculate previous month overdue collections (collected this month)
   const overdueCollected = useMemo(() => {
@@ -137,7 +168,7 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     return { total, upi, cash };
   }, [rooms, selectedMonth, selectedYear]);
 
-  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits.total + extraAmounts;
+  const totalCollected = thisMonthRent + overdueCollected + dayGuestRevenue + securityDeposits.total + extraAmounts;
 
   return (
     <Card className="bg-gradient-to-r from-paid/10 to-paid/5 border-paid/20">
@@ -150,7 +181,7 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
           <div className="flex justify-between">
             <span>This Month Rent</span>
-            <span>₹{rentCollected.toLocaleString()}</span>
+            <span>₹{thisMonthRent.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span>Overdue Collections</span>
