@@ -11,8 +11,23 @@ import {
 import { PaymentEntry } from "@/types";
 import { PaymentEntryDisplay, getPaymentCardClass } from "@/components/payment";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 type PaymentCategory = "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
+
+// Helper to parse discount and extra from notes
+const parseNotesInfo = (notes?: string) => {
+  if (!notes) return { discount: 0, extra: 0, extraReason: '' };
+  
+  const discountMatch = notes.match(/Discount:\s*₹?(\d+)/i);
+  const extraMatch = notes.match(/Extra\s*₹?(\d+):\s*([^|]+)/i);
+  
+  return {
+    discount: discountMatch ? parseInt(discountMatch[1]) : 0,
+    extra: extraMatch ? parseInt(extraMatch[1]) : 0,
+    extraReason: extraMatch ? extraMatch[2].trim() : ''
+  };
+};
 
 interface TenantRentCardProps {
   tenant: {
@@ -60,6 +75,12 @@ export const TenantRentCard = ({
     : tenant.monthlyRent;
   const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
   const bgClass = getPaymentCardClass(tenant.paymentCategory);
+
+  // Parse discount and extra from notes
+  const { discount, extra, extraReason } = useMemo(
+    () => parseNotesInfo(tenant.payment.notes),
+    [tenant.payment.notes]
+  );
 
   const statusLabel =
     tenant.paymentCategory === "paid"
@@ -170,10 +191,19 @@ export const TenantRentCard = ({
           </div>
           {/* Display payment entries using shared component */}
           <PaymentEntryDisplay entries={tenant.payment.paymentEntries} />
-          {/* Display overpayment notes */}
-          {tenant.payment.notes && (
-            <div className="text-xs text-primary font-medium mt-1">
-              📝 {tenant.payment.notes}
+          {/* Display discount and extra amounts if present */}
+          {(discount > 0 || extra > 0) && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {discount > 0 && (
+                <span className="text-xs font-medium text-primary">
+                  📋 Discount: ₹{discount.toLocaleString()}
+                </span>
+              )}
+              {extra > 0 && (
+                <span className="text-xs font-medium text-upi">
+                  ➕ Extra: ₹{extra.toLocaleString()}{extraReason ? ` (${extraReason})` : ''}
+                </span>
+              )}
             </div>
           )}
         </div>

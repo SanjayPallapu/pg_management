@@ -71,6 +71,20 @@ const formatChanges = (changes: Record<string, { old: unknown; new: unknown }> |
   });
 };
 
+// Helper to parse discount and extra from notes
+const parseNotesInfo = (notes?: string) => {
+  if (!notes) return { discount: 0, extra: 0, extraReason: '' };
+  
+  const discountMatch = notes.match(/Discount:\s*₹?(\d+)/i);
+  const extraMatch = notes.match(/Extra\s*₹?(\d+):\s*([^|]+)/i);
+  
+  return {
+    discount: discountMatch ? parseInt(discountMatch[1]) : 0,
+    extra: extraMatch ? parseInt(extraMatch[1]) : 0,
+    extraReason: extraMatch ? extraMatch[2].trim() : ''
+  };
+};
+
 const formatNewData = (newData: Record<string, unknown> | null, tableName: string, action: string, recordName?: string) => {
   if (!newData) return null;
   
@@ -79,14 +93,23 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
     const tenantName = recordName?.split(' - ')[0] || 'Unknown';
     
     if (tableName === 'tenant_payments') {
-      const { amount, mode, type, status, totalPaid, date } = newData as any;
+      const { amount, mode, type, status, totalPaid, date, isPreviousMonth, notes } = newData as any;
       const modeText = mode === 'upi' ? 'UPI' : 'Cash';
+      const { discount, extra, extraReason } = parseNotesInfo(notes);
       
+      let description = '';
       if (action === 'create') {
-        return `Recorded payment of ₹${Number(amount).toLocaleString()} via ${modeText} for ${tenantName}. Status: ${status}.`;
+        description = `Recorded payment of ₹${Number(amount).toLocaleString()} via ${modeText} for ${tenantName}. Status: ${status}.`;
       } else if (action === 'update') {
-        return `Updated payment for ${tenantName}. Amount: ₹${Number(amount).toLocaleString()} via ${modeText}. Total paid: ₹${Number(totalPaid).toLocaleString()}. Status: ${status}.`;
+        description = `Updated payment for ${tenantName}. Amount: ₹${Number(amount).toLocaleString()} via ${modeText}. Total paid: ₹${Number(totalPaid).toLocaleString()}. Status: ${status}.`;
       }
+      
+      // Add previous month indicator
+      if (isPreviousMonth) {
+        description += ' (Previous Month)';
+      }
+      
+      return description;
     }
     
     if (tableName === 'tenants') {
@@ -116,7 +139,12 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
   const description = generateDescription();
   
   if (tableName === 'tenant_payments') {
-    const { amount, mode, type, status, totalPaid, date } = newData as { amount?: number; mode?: string; type?: string; status?: string; totalPaid?: number; date?: string };
+    const { amount, mode, type, status, totalPaid, date, isPreviousMonth, notes } = newData as { 
+      amount?: number; mode?: string; type?: string; status?: string; 
+      totalPaid?: number; date?: string; isPreviousMonth?: boolean; notes?: string;
+    };
+    
+    const { discount, extra, extraReason } = parseNotesInfo(notes);
     
     return (
       <div className="text-xs text-muted-foreground ml-4 space-y-1">
@@ -156,6 +184,24 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
                 {status}
               </span>
             </div>
+          )}
+        </div>
+        {/* Show previous month, discount, and extra indicators */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {isPreviousMonth && (
+            <Badge variant="outline" className="text-[10px] bg-pending/20 text-pending border-pending/30">
+              Previous Month
+            </Badge>
+          )}
+          {discount > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-primary/20 text-primary border-primary/30">
+              Discount: ₹{discount.toLocaleString()}
+            </Badge>
+          )}
+          {extra > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-upi/20 text-upi border-upi/30">
+              Extra: ₹{extra.toLocaleString()}{extraReason ? ` (${extraReason})` : ''}
+            </Badge>
           )}
         </div>
       </div>
