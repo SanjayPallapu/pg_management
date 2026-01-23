@@ -114,9 +114,11 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     return totalExtra;
   }, [payments, rooms, selectedMonth, selectedYear]);
 
-  // Calculate security deposits collected this month
+  // Calculate security deposits collected this month with UPI/Cash breakdown
   const securityDeposits = useMemo(() => {
     let total = 0;
+    let upi = 0;
+    let cash = 0;
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
         if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
@@ -124,13 +126,18 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
         const depositDate = new Date(tenant.securityDepositDate);
         if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
           total += tenant.securityDepositAmount;
+          if (tenant.securityDepositMode === 'upi') {
+            upi += tenant.securityDepositAmount;
+          } else if (tenant.securityDepositMode === 'cash') {
+            cash += tenant.securityDepositAmount;
+          }
         }
       });
     });
-    return total;
+    return { total, upi, cash };
   }, [rooms, selectedMonth, selectedYear]);
 
-  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits + extraAmounts;
+  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits.total + extraAmounts;
 
   return (
     <Card className="bg-gradient-to-r from-paid/10 to-paid/5 border-paid/20">
@@ -153,9 +160,18 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
             <span>Day Guest Revenue</span>
             <span>₹{dayGuestRevenue.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span>Security Deposits</span>
-            <span>₹{securityDeposits.toLocaleString()}</span>
+            <div className="flex items-center gap-2">
+              <span>₹{securityDeposits.total.toLocaleString()}</span>
+              {(securityDeposits.upi > 0 || securityDeposits.cash > 0) && (
+                <span className="text-[10px]">
+                  (<span className="text-blue-600 dark:text-blue-400">U:{securityDeposits.upi.toLocaleString()}</span>
+                  {' / '}
+                  <span className="text-green-600 dark:text-green-400">C:{securityDeposits.cash.toLocaleString()}</span>)
+                </span>
+              )}
+            </div>
           </div>
           {extraAmounts > 0 && (
             <div className="flex justify-between">

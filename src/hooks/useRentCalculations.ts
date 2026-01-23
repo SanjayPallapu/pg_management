@@ -157,8 +157,9 @@ export const useRentCalculations = ({
     // Use effective rent (pro-rata) for totals
     const totalRent = unlockedTenants.reduce((sum, t) => sum + (t.effectiveRent || t.monthlyRent), 0);
     
-    // Use actual amount paid (includes extras/overpayments) for rent collected - from ALL active tenants (including left ones)
-    const rentCollected = unlockedPaidAll.reduce((sum, t) => sum + (t.amountPaid || t.effectiveRent || t.monthlyRent), 0) + 
+    // CRITICAL: Use ACTUAL amount_paid from DB (what tenant actually paid), NOT calculated effective rent
+    // This ensures Divya's ₹1800 payment shows as ₹1800 in totals, not ₹1667 (pro-rata)
+    const rentCollected = unlockedPaidAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0) + 
                           unlockedPartialAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
     
     // Pending rent only counts non-left tenants

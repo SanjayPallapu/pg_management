@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wallet } from 'lucide-react';
@@ -5,6 +6,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 
 export const PersonalExpensesCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(false);
 
   // Fetch monthly summary data
   const { data: expenseData, isLoading, error } = useQuery({
@@ -48,8 +50,9 @@ export const PersonalExpensesCard = () => {
   const familyExpenses = expenseData?.familyExpenses || 0;
   // Current bills from summary response breakdown (note: API uses "currentBills" plural)
   const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBills || 0;
-  // Grand total should include current bill
-  const grandTotal = (expenseData?.grandTotal || 0) + currentBill;
+  // Grand total should include current bill, optionally include family expenses
+  const baseTotal = (expenseData?.grandTotal || 0) + currentBill;
+  const grandTotal = includeFamilyExpenses ? baseTotal : baseTotal - familyExpenses;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
@@ -92,8 +95,25 @@ export const PersonalExpensesCard = () => {
             </div>
             
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Family Expenses</span>
-              <span className="font-medium text-purple-600 dark:text-purple-400">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Family Expenses</span>
+                {/* Toggle dot to include/exclude from grand total */}
+                <button 
+                  type="button"
+                  onClick={() => setIncludeFamilyExpenses(!includeFamilyExpenses)}
+                  className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                    includeFamilyExpenses 
+                      ? 'bg-purple-500 border-purple-500' 
+                      : 'bg-transparent border-muted-foreground hover:border-purple-400'
+                  }`}
+                  title={includeFamilyExpenses ? 'Click to exclude from total' : 'Click to include in total'}
+                />
+              </div>
+              <span className={`font-medium ${
+                includeFamilyExpenses 
+                  ? 'text-purple-600 dark:text-purple-400' 
+                  : 'text-muted-foreground'
+              }`}>
                 ₹{familyExpenses.toLocaleString()}
               </span>
             </div>
