@@ -82,6 +82,38 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     return total;
   }, [payments, rooms, selectedMonth, selectedYear]);
 
+  // Calculate extra amounts from payment notes (Discount & Extra)
+  const extraAmounts = useMemo(() => {
+    let totalExtra = 0;
+    
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
+      ...tenant,
+      roomNo: room.roomNo
+    })));
+    
+    const currentMonthTenants = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
+    );
+
+    currentMonthTenants.forEach(tenant => {
+      if (tenant.isLocked) return;
+
+      const payment = payments.find(p => 
+        p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+      );
+
+      if (!payment || !payment.notes) return;
+
+      // Parse Extra from notes (format: "Extra: ₹X")
+      const extraMatch = payment.notes.match(/Extra:\s*₹?([\d,]+)/);
+      if (extraMatch) {
+        totalExtra += parseInt(extraMatch[1].replace(/,/g, '')) || 0;
+      }
+    });
+
+    return totalExtra;
+  }, [payments, rooms, selectedMonth, selectedYear]);
+
   // Calculate security deposits collected this month
   const securityDeposits = useMemo(() => {
     let total = 0;
@@ -98,7 +130,7 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
     return total;
   }, [rooms, selectedMonth, selectedYear]);
 
-  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits;
+  const totalCollected = rentCollected + overdueCollected + dayGuestRevenue + securityDeposits + extraAmounts;
 
   return (
     <Card className="bg-gradient-to-r from-paid/10 to-paid/5 border-paid/20">
@@ -125,6 +157,12 @@ export const TotalCollectedCard = ({ rooms, rentCollected }: TotalCollectedCardP
             <span>Security Deposits</span>
             <span>₹{securityDeposits.toLocaleString()}</span>
           </div>
+          {extraAmounts > 0 && (
+            <div className="flex justify-between">
+              <span>Extra Amounts</span>
+              <span>₹{extraAmounts.toLocaleString()}</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

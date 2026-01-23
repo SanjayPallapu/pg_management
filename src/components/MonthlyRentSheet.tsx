@@ -50,6 +50,8 @@ export const MonthlyRentSheet = ({
   const [payRemainingTenant, setPayRemainingTenant] = useState<string | null>(null);
   const [payRemainingAmount, setPayRemainingAmount] = useState<number>(0);
   const [payRemainingDate, setPayRemainingDate] = useState<Date>(new Date());
+  const [payRemainingDiscount, setPayRemainingDiscount] = useState<number>(0);
+  const [payRemainingExtra, setPayRemainingExtra] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("upi");
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<"upi" | "cash">("upi");
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
@@ -380,6 +382,8 @@ export const MonthlyRentSheet = ({
       setPayRemainingTenant(tenantId);
       setPayRemainingAmount(remaining);
       setPayRemainingDate(new Date());
+      setPayRemainingDiscount(0);
+      setPayRemainingExtra(0);
     }
   };
   const confirmPaymentAmount = () => {
@@ -463,17 +467,21 @@ export const MonthlyRentSheet = ({
     if (!tenant) return;
     const formattedDate = format(payRemainingDate, "yyyy-MM-dd");
     const previousPaid = tenant.payment.amountPaid || 0;
-    const totalPaid = previousPaid + payRemainingAmount;
+    
+    // Calculate final amount: base amount - discount + extra
+    const finalAmount = payRemainingAmount - payRemainingDiscount + payRemainingExtra;
+    const totalPaid = previousPaid + finalAmount;
     
     // Use pro-rata effective rent if applicable
     const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
       ? tenant.effectiveRent 
       : tenant.monthlyRent;
-    const isFullPayment = totalPaid >= targetRent;
+    const adjustedTarget = targetRent - payRemainingDiscount + payRemainingExtra;
+    const isFullPayment = totalPaid >= adjustedTarget;
 
     // Add remaining payment entry
     const newEntry = {
-      amount: payRemainingAmount,
+      amount: finalAmount,
       date: formattedDate,
       type: isFullPayment ? "remaining" as const : "partial" as const,
       mode: remainingPaymentMode
@@ -481,23 +489,34 @@ export const MonthlyRentSheet = ({
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
     const status = isFullPayment ? "Paid" : "Partial";
+    
+    // Build notes for discount/extra
+    let notes = (tenant.payment as any).notes || '';
+    if (payRemainingDiscount > 0) {
+      notes += (notes ? ' | ' : '') + `Discount: ₹${payRemainingDiscount.toLocaleString()}`;
+    }
+    if (payRemainingExtra > 0) {
+      notes += (notes ? ' | ' : '') + `Extra: ₹${payRemainingExtra.toLocaleString()}`;
+    }
+    
     upsertPayment.mutate({
       tenantId: tenant.id,
       month: selectedMonth,
       year: selectedYear,
       paymentStatus: status,
       paymentDate: formattedDate,
-      amount: targetRent,
-      amountPaid: Math.min(totalPaid, targetRent),
+      amount: adjustedTarget,
+      amountPaid: Math.min(totalPaid, adjustedTarget),
       paymentEntries: updatedEntries,
       tenantName: tenant.name,
-      roomNo: tenant.roomNo
+      roomNo: tenant.roomNo,
+      notes: notes || undefined
     });
     toast({
       title: isFullPayment ? "Payment completed" : "Partial payment recorded",
       description: isFullPayment 
-        ? `Full payment of ₹${targetRent.toLocaleString()} recorded${tenant.isProRata ? ` (${tenant.daysStayed} days)` : ''}` 
-        : `₹${totalPaid.toLocaleString()} paid • ₹${(targetRent - totalPaid).toLocaleString()} remaining`
+        ? `Full payment of ₹${finalAmount.toLocaleString()} recorded${tenant.isProRata ? ` (${tenant.daysStayed} days)` : ''}${payRemainingDiscount > 0 ? ` (Discount: ₹${payRemainingDiscount})` : ''}${payRemainingExtra > 0 ? ` (Extra: ₹${payRemainingExtra})` : ''}` 
+        : `₹${totalPaid.toLocaleString()} paid • ₹${(adjustedTarget - totalPaid).toLocaleString()} remaining`
     });
 
     // Prepare receipt data for WhatsApp
@@ -514,9 +533,9 @@ export const MonthlyRentSheet = ({
       roomNo: tenant.roomNo,
       sharingType: sharingType,
       amount: tenant.monthlyRent,
-      amountPaid: payRemainingAmount,
+      amountPaid: finalAmount,
       isFullPayment: isFullPayment,
-      remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
+      remainingBalance: isFullPayment ? 0 : adjustedTarget - totalPaid,
       tenantId: tenant.id,
       paymentEntries: updatedEntries as any,
       previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined
@@ -524,6 +543,8 @@ export const MonthlyRentSheet = ({
     setWhatsappDialogOpen(true);
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
+    setPayRemainingDiscount(0);
+    setPayRemainingExtra(0);
   };
   const handleDeletePayments = (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
     if (!deletePaymentTenant) return;
@@ -912,6 +933,57 @@ export const MonthlyRentSheet = ({
               return null;
             })()}
             </div>
+            
+            {/* Discount and Extra Amount boxes */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Discount (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={payRemainingDiscount || ''} 
+                  onChange={e => setPayRemainingDiscount(parseInt(e.target.value) || 0)} 
+                  className="mt-1"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Extra Amount (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={payRemainingExtra || ''} 
+                  onChange={e => setPayRemainingExtra(parseInt(e.target.value) || 0)} 
+                  className="mt-1"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            
+            {/* Show final calculation */}
+            {(payRemainingDiscount > 0 || payRemainingExtra > 0) && (
+              <div className="p-2 bg-muted rounded text-xs">
+                <div className="flex justify-between">
+                  <span>Base Amount:</span>
+                  <span>₹{payRemainingAmount.toLocaleString()}</span>
+                </div>
+                {payRemainingDiscount > 0 && (
+                  <div className="flex justify-between text-paid">
+                    <span>Discount:</span>
+                    <span>-₹{payRemainingDiscount.toLocaleString()}</span>
+                  </div>
+                )}
+                {payRemainingExtra > 0 && (
+                  <div className="flex justify-between text-pending">
+                    <span>Extra:</span>
+                    <span>+₹{payRemainingExtra.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold border-t pt-1 mt-1">
+                  <span>Final Amount:</span>
+                  <span>₹{(payRemainingAmount - payRemainingDiscount + payRemainingExtra).toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            
             <div>
               <Label>Payment Mode</Label>
               <div className="flex gap-2 mt-2">
