@@ -4,10 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wallet } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 
-export const PersonalExpensesCard = () => {
+interface PersonalExpensesCardProps {
+  totalCollected?: number;
+}
+
+export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(false);
   const [includeCurrentBills, setIncludeCurrentBills] = useState(true);
+  const [includePgRent, setIncludePgRent] = useState(true);
+
+  const PG_RENT = 150000;
 
   // Fetch monthly summary data
   const { data: expenseData, isLoading, error } = useQuery({
@@ -52,10 +59,14 @@ export const PersonalExpensesCard = () => {
   // Current bills from summary response breakdown (note: API uses "currentBills" plural)
   const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBills || 0;
   
-  // Calculate grand total from actual components: groceries + utility bills + optional current bills + optional family expenses
-  const baseTotal = groceries + utilityBills;
-  const totalWithCurrentBills = includeCurrentBills ? baseTotal + currentBill : baseTotal;
-  const grandTotal = includeFamilyExpenses ? totalWithCurrentBills + familyExpenses : totalWithCurrentBills;
+  // Calculate grand total from actual components: groceries + utility bills + optional current bills + optional PG rent + optional family expenses
+  let grandTotal = groceries + utilityBills;
+  if (includeCurrentBills) grandTotal += currentBill;
+  if (includePgRent) grandTotal += PG_RENT;
+  if (includeFamilyExpenses) grandTotal += familyExpenses;
+
+  // Calculate balance: Total Collected - Grand Total
+  const balance = totalCollected - grandTotal;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
@@ -112,6 +123,29 @@ export const PersonalExpensesCard = () => {
                 ₹{currentBill.toLocaleString()}
               </span>
             </div>
+
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">PG Rent</span>
+                <button 
+                  type="button"
+                  onClick={() => setIncludePgRent(!includePgRent)}
+                  className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                    includePgRent 
+                      ? 'bg-red-500 border-red-500' 
+                      : 'bg-transparent border-muted-foreground hover:border-red-400'
+                  }`}
+                  title={includePgRent ? 'Click to exclude from total' : 'Click to include in total'}
+                />
+              </div>
+              <span className={`font-medium ${
+                includePgRent 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : 'text-muted-foreground'
+              }`}>
+                -₹{PG_RENT.toLocaleString()}
+              </span>
+            </div>
             
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
@@ -136,6 +170,23 @@ export const PersonalExpensesCard = () => {
                 ₹{familyExpenses.toLocaleString()}
               </span>
             </div>
+          </div>
+
+          {/* Balance Section */}
+          <div className="border-t border-purple-500/20 pt-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-muted-foreground">Balance</span>
+              <span className={`text-lg font-bold ${
+                balance >= 0 
+                  ? 'text-paid' 
+                  : 'text-destructive'
+              }`}>
+                {balance >= 0 ? '+' : ''}₹{balance.toLocaleString()}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground text-right">
+              Collected ₹{totalCollected.toLocaleString()} - Expenses
+            </p>
           </div>
         </div>
       </CardContent>
