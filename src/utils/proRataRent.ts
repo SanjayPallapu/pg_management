@@ -47,10 +47,15 @@ export const calculateProRataRent = (
   // Start date for calculation is either 1st of month or join date (whichever is later)
   const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
   
-  // Days stayed = leave date - effective start
-  // leave date is the last day of stay (inclusive), so we add 1
+  // Days stayed = leave date - effective start + 1 (inclusive of both dates)
+  // Formula: leaveDay - startDay + 1 (e.g., 21 - 2 + 1 = 20 days)
+  // Use noon times to avoid timezone edge cases
+  const startNoon = new Date(effectiveStart);
+  startNoon.setHours(12, 0, 0, 0);
+  const leaveNoon = new Date(leaveDate);
+  leaveNoon.setHours(12, 0, 0, 0);
   const msPerDay = 1000 * 60 * 60 * 24;
-  const daysStayed = Math.max(1, Math.floor((leaveDate.getTime() - effectiveStart.getTime()) / msPerDay) + 1);
+  const daysStayed = Math.max(1, Math.round((leaveNoon.getTime() - startNoon.getTime()) / msPerDay) + 1);
   
   // Pro-rata calculation: (daily rate × days stayed)
   // Using 30 as the standard month for daily rate calculation
