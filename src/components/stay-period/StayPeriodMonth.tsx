@@ -58,10 +58,12 @@ export const StayPeriodMonth = ({
         ))}
 
         {days.map((day) => {
-          const isStartDay = isSameDay(day, highlightStart);
           const isJoinDay = isSameDay(day, joinDate);
           const isLeaveDay = !!leaveDate && isSameDay(day, leaveDate);
-          const isStayDay = isWithinInterval(day, { start: highlightStart, end: highlightEnd });
+          
+          // Only highlight if within the actual stay range
+          const isInStayRange = isWithinInterval(day, { start: highlightStart, end: highlightEnd });
+          const isStartHighlight = isSameDay(day, highlightStart);
 
           const dayPayments = getPaymentsForDay(day);
           const hasPayment = dayPayments.length > 0;
@@ -69,13 +71,13 @@ export const StayPeriodMonth = ({
           const dateKey = format(day, 'yyyy-MM-dd');
 
           const title =
-            isStartDay
-              ? `${isJoinDay ? 'Joined' : 'Period Start'}: ${format(day, 'd MMM')}`
+            isJoinDay
+              ? `Joined: ${format(day, 'd MMM')}`
               : isLeaveDay
                 ? `Left: ${format(day, 'd MMM')}`
                 : hasPayment
                   ? `Payment on ${format(day, 'd MMM')} - Click to view`
-                  : isStayDay
+                  : isInStayRange
                     ? 'Stay day'
                     : '';
 
@@ -83,10 +85,10 @@ export const StayPeriodMonth = ({
             <div
               className={cn(
                 'aspect-square flex items-center justify-center rounded-sm transition-colors relative',
-                isStartDay && 'bg-primary text-primary-foreground font-bold ring-2 ring-primary/50',
-                isLeaveDay && !isStartDay && 'bg-destructive text-destructive-foreground font-bold ring-2 ring-destructive/50',
-                isStayDay && !isStartDay && !isLeaveDay && 'bg-primary/20 text-primary',
-                !isStayDay && 'text-muted-foreground/50',
+                isJoinDay && 'bg-primary text-primary-foreground font-bold ring-2 ring-primary/50',
+                isLeaveDay && !isJoinDay && 'bg-destructive text-destructive-foreground font-bold ring-2 ring-destructive/50',
+                isInStayRange && !isJoinDay && !isLeaveDay && 'bg-primary/20 text-primary',
+                !isInStayRange && 'text-muted-foreground/50',
                 hasPayment && 'cursor-pointer hover:ring-2 hover:ring-cash'
               )}
               onClick={() => hasPayment && onSelectDay(day)}
