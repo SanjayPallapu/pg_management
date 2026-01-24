@@ -164,13 +164,14 @@ export const StayPeriodIndicator = ({
           const dayContent = (
             <div
               className={cn(
-                "aspect-square flex items-center justify-center rounded-sm transition-colors relative",
+                "aspect-square flex items-center justify-center rounded-sm transition-all duration-150 relative",
                 isStartDay && "bg-primary text-primary-foreground font-bold ring-2 ring-primary/50",
                 isLeaveDay && !isStartDay && "bg-destructive text-destructive-foreground font-bold ring-2 ring-destructive/50",
                 isStayDay && !isStartDay && !isLeaveDay && "bg-primary/20 text-primary",
                 !isStayDay && "text-muted-foreground/50",
-                hasPayment && "cursor-pointer hover:ring-2 hover:ring-cash",
-                canSelectAsStart && "cursor-pointer hover:bg-primary/40 hover:text-primary-foreground"
+                // All cells get consistent hover when selectable
+                (canSelectAsStart || hasPayment) && "cursor-pointer hover:bg-primary/40 hover:text-primary-foreground hover:ring-2 hover:ring-primary/30",
+                hasPayment && "hover:ring-cash"
               )}
               onClick={handleDayClick}
               title={

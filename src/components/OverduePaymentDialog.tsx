@@ -163,6 +163,7 @@ export const OverduePaymentDialog = ({
                         dailyRate={tenant.proRataInfo.dailyRate}
                         effectiveRent={tenant.proRataInfo.effectiveRent}
                         paymentEntries={tenant.paymentEntries}
+                        allowCustomStart
                       />
                     )}
                     {tenant.amountPaid > 0 && (

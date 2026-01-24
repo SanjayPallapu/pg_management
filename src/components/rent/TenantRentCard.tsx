@@ -196,6 +196,7 @@ export const TenantRentCard = ({
                 dailyRate={Math.round(tenant.monthlyRent / 30)}
                 effectiveRent={tenant.effectiveRent}
                 paymentEntries={tenant.payment.paymentEntries}
+                allowCustomStart
                 compact
               />
             </div>
