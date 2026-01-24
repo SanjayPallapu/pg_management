@@ -7,6 +7,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 export const PersonalExpensesCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(false);
+  const [includeCurrentBills, setIncludeCurrentBills] = useState(true);
 
   // Fetch monthly summary data
   const { data: expenseData, isLoading, error } = useQuery({
@@ -51,9 +52,10 @@ export const PersonalExpensesCard = () => {
   // Current bills from summary response breakdown (note: API uses "currentBills" plural)
   const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBills || 0;
   
-  // Calculate grand total from actual components: groceries + utility bills + current bills + optional family expenses
-  const baseTotal = groceries + utilityBills + currentBill;
-  const grandTotal = includeFamilyExpenses ? baseTotal + familyExpenses : baseTotal;
+  // Calculate grand total from actual components: groceries + utility bills + optional current bills + optional family expenses
+  const baseTotal = groceries + utilityBills;
+  const totalWithCurrentBills = includeCurrentBills ? baseTotal + currentBill : baseTotal;
+  const grandTotal = includeFamilyExpenses ? totalWithCurrentBills + familyExpenses : totalWithCurrentBills;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
@@ -89,8 +91,24 @@ export const PersonalExpensesCard = () => {
             </div>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Current Bills</span>
-              <span className="font-medium text-orange-600 dark:text-orange-400">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Current Bills</span>
+                <button 
+                  type="button"
+                  onClick={() => setIncludeCurrentBills(!includeCurrentBills)}
+                  className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                    includeCurrentBills 
+                      ? 'bg-orange-500 border-orange-500' 
+                      : 'bg-transparent border-muted-foreground hover:border-orange-400'
+                  }`}
+                  title={includeCurrentBills ? 'Click to exclude from total' : 'Click to include in total'}
+                />
+              </div>
+              <span className={`font-medium ${
+                includeCurrentBills 
+                  ? 'text-orange-600 dark:text-orange-400' 
+                  : 'text-muted-foreground'
+              }`}>
                 ₹{currentBill.toLocaleString()}
               </span>
             </div>
