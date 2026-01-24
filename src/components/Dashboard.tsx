@@ -245,7 +245,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               
               <div className="flex items-center justify-between pt-2 border-t">
                 <div className="text-sm font-semibold text-pending">
-                  +₹{Math.round(totalPotentialAdditionalRevenue).toLocaleString()} possible
+                  +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {totalEmptyBeds} beds empty
