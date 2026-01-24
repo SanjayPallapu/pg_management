@@ -340,6 +340,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           {/* Tenant Movement Card - Below Pending Tenants */}
           <TenantMovementCard rooms={rooms} />
 
+          {/* Personal Expenses Card - Above December Overdue */}
+          <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
+
           {/* Previous Month Overdue Card */}
           <PreviousMonthOverdueCard />
 
@@ -382,9 +385,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
           {/* Security Deposit Card - Below Day Guest Revenue */}
           <SecurityDepositCard rooms={rooms} />
-
-          {/* Personal Expenses Card - Below Security Deposits */}
-          <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
 
           {/* Calculator Card */}
           <CalculatorCard />
