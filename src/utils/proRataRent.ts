@@ -1,53 +1,5 @@
 import { parseDateOnly } from './dateOnly';
 
-const msPerDay = 1000 * 60 * 60 * 24;
-
-const toNoon = (d: Date) => {
-  const copy = new Date(d);
-  copy.setHours(12, 0, 0, 0);
-  return copy;
-};
-
-// Creates a date in a given month, clamping day-of-month to the last valid day.
-// Example: clamp(2026, 1(Feb), 31) => 2026-02-28
-const makeClampedDate = (year: number, monthIndex: number, day: number) => {
-  const targetMonth = new Date(year, monthIndex, 1).getMonth();
-  const d = new Date(year, monthIndex, day);
-  if (d.getMonth() !== targetMonth) {
-    // last day of target month
-    return new Date(year, monthIndex + 1, 0);
-  }
-  return d;
-};
-
-/**
- * Billing cycle rule:
- * - If join day is 1: calendar month
- * - Else: tenant-specific monthly cycle anchored on join day
- *   - If tenant joined in selected month: [joinDate .. day-before(joinDay next month)]
- *   - Else: [joinDay prev month .. day-before(joinDay in selected month)]
- */
-const getBillingCycle = (joinDate: Date, year: number, month: number) => {
-  const joinDay = joinDate.getDate();
-  const joinedThisMonth = joinDate.getFullYear() === year && joinDate.getMonth() + 1 === month;
-
-  if (joinDay === 1) {
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0);
-    return { start, end };
-  }
-
-  const start = joinedThisMonth
-    ? new Date(joinDate)
-    : makeClampedDate(year, month - 2, joinDay);
-
-  const nextCycleStart = makeClampedDate(year, joinedThisMonth ? month : month - 1, joinDay);
-  const end = new Date(nextCycleStart);
-  end.setDate(end.getDate() - 1);
-
-  return { start, end };
-};
-
 /**
  * Calculate pro-rata rent for a tenant who left mid-month.
  * Uses joining date to leave date for accurate calculation.
@@ -68,49 +20,41 @@ export const calculateProRataRent = (
   month: number,
   amountAlreadyPaid: number = 0
 ): { effectiveRent: number; daysStayed: number; isProRata: boolean; dailyRate: number } => {
-  const joinDate = parseDateOnly(startDate);
-
-  const { start: cycleStart, end: cycleEnd } = getBillingCycle(joinDate, year, month);
-  const cycleDays = Math.max(1, Math.round((toNoon(cycleEnd).getTime() - toNoon(cycleStart).getTime()) / msPerDay) + 1);
-
-  // If no end date, return full monthly rent (no pro-rata)
+  // If no end date, return full monthly rent
   if (!endDate) {
-    return {
-      effectiveRent: monthlyRent,
-      daysStayed: cycleDays,
-      isProRata: false,
-      dailyRate: Math.round(monthlyRent / 30),
-    };
+    return { effectiveRent: monthlyRent, daysStayed: 30, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
+  const joinDate = parseDateOnly(startDate);
   const leaveDate = parseDateOnly(endDate);
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0); // Last day of month
+  const daysInMonth = monthEnd.getDate();
 
-  // Check if leave date falls within this billing cycle
-  const leaveNoon = toNoon(leaveDate);
-  const isLeavingThisCycle = leaveNoon >= toNoon(cycleStart) && leaveNoon <= toNoon(cycleEnd);
-
-  if (!isLeavingThisCycle) {
-    return {
-      effectiveRent: monthlyRent,
-      daysStayed: cycleDays,
-      isProRata: false,
-      dailyRate: Math.round(monthlyRent / 30),
-    };
+  // Check if leave date falls within this billing month
+  const isLeavingThisMonth = leaveDate.getMonth() + 1 === month && leaveDate.getFullYear() === year;
+  
+  if (!isLeavingThisMonth) {
+    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
   // Option A: If tenant already paid full monthly rent or more, skip pro-rata
   if (amountAlreadyPaid >= monthlyRent) {
-    return { effectiveRent: monthlyRent, daysStayed: cycleDays, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
+    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
-  // Calculate days stayed in this billing cycle
-  // Start date for calculation is either cycle start or join date (whichever is later)
-  const effectiveStart = joinDate > cycleStart ? joinDate : cycleStart;
+  // Calculate days stayed in this month
+  // Start date for calculation is either 1st of month or join date (whichever is later)
+  const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
   
   // Days stayed = leave date - effective start + 1 (inclusive of both dates)
   // Formula: leaveDay - startDay + 1 (e.g., 21 - 2 + 1 = 20 days)
   // Use noon times to avoid timezone edge cases
-  const startNoon = toNoon(effectiveStart);
+  const startNoon = new Date(effectiveStart);
+  startNoon.setHours(12, 0, 0, 0);
+  const leaveNoon = new Date(leaveDate);
+  leaveNoon.setHours(12, 0, 0, 0);
+  const msPerDay = 1000 * 60 * 60 * 24;
   const daysStayed = Math.max(1, Math.round((leaveNoon.getTime() - startNoon.getTime()) / msPerDay) + 1);
   
   // Pro-rata calculation: (daily rate × days stayed)
