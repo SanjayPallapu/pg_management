@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react';
-import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isSameDay, isWithinInterval, parseISO } from 'date-fns';
+import { useMemo, useState, useEffect } from 'react';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isSameDay, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PaymentEntry } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { CalendarDays } from 'lucide-react';
 
 interface StayPeriodIndicatorProps {
   startDate: string;
@@ -14,6 +17,8 @@ interface StayPeriodIndicatorProps {
   effectiveRent?: number;
   paymentEntries?: PaymentEntry[];
   compact?: boolean;
+  allowCustomStart?: boolean;
+  onCustomStartChange?: (customStart: string | null, recalculatedDays: number) => void;
 }
 
 export const StayPeriodIndicator = ({
@@ -26,15 +31,22 @@ export const StayPeriodIndicator = ({
   effectiveRent,
   paymentEntries = [],
   compact = false,
+  allowCustomStart = false,
+  onCustomStartChange,
 }: StayPeriodIndicatorProps) => {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Use custom start date if set, otherwise use the original startDate
+  const activeStartDate = customStartDate ? format(customStartDate, 'yyyy-MM-dd') : startDate;
 
   const calendarData = useMemo(() => {
     const monthStart = startOfMonth(new Date(year, month - 1));
     const monthEnd = endOfMonth(new Date(year, month - 1));
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
-    const joinDate = parseISO(startDate);
+    const joinDate = parseISO(activeStartDate);
     const leaveDate = endDate ? parseISO(endDate) : null;
     
     // Check if join date falls within this month
@@ -65,6 +77,9 @@ export const StayPeriodIndicator = ({
       }
       paymentsByDate.get(dateKey)!.push(entry);
     });
+
+    // Calculate days stayed based on effective dates
+    const calculatedDays = differenceInDays(effectiveEnd, effectiveStart) + 1;
     
     return {
       days,
@@ -78,10 +93,25 @@ export const StayPeriodIndicator = ({
       startDayOffset,
       monthName: format(monthStart, 'MMMM yyyy'),
       paymentsByDate,
+      calculatedDays,
     };
-  }, [startDate, endDate, year, month, paymentEntries]);
+  }, [activeStartDate, endDate, year, month, paymentEntries]);
 
-  const { days, leaveDate, effectiveStart, effectiveEnd, displayStartDay, isJoinInThisMonth, isLeaveInThisMonth, startDayOffset, monthName, paymentsByDate } = calendarData;
+  const { days, leaveDate, effectiveStart, effectiveEnd, displayStartDay, isJoinInThisMonth, isLeaveInThisMonth, startDayOffset, monthName, paymentsByDate, calculatedDays } = calendarData;
+  
+  // Notify parent of custom start changes
+  useEffect(() => {
+    if (customStartDate && onCustomStartChange) {
+      onCustomStartChange(format(customStartDate, 'yyyy-MM-dd'), calculatedDays);
+    }
+  }, [customStartDate, calculatedDays, onCustomStartChange]);
+
+  const handleResetCustomStart = () => {
+    setCustomStartDate(null);
+    if (onCustomStartChange) {
+      onCustomStartChange(null, daysStayed || 0);
+    }
+  };
   
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -89,6 +119,10 @@ export const StayPeriodIndicator = ({
     const dateKey = format(day, 'yyyy-MM-dd');
     return paymentsByDate.get(dateKey) || [];
   };
+
+  // Calculate displayed values (use custom if set)
+  const displayDays = customStartDate ? calculatedDays : daysStayed;
+  const displayRent = customStartDate && dailyRate ? calculatedDays * dailyRate : effectiveRent;
 
   return (
     <div className={cn("bg-muted/30 rounded-lg space-y-2", compact ? "p-2" : "p-3")}>
@@ -173,11 +207,60 @@ export const StayPeriodIndicator = ({
         })}
       </div>
       
+      {/* Custom Start Date Selector */}
+      {allowCustomStart && !compact && (
+        <div className="flex items-center justify-center gap-2 pt-1 border-t border-border/50">
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-7 text-xs gap-1.5"
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                {customStartDate ? format(customStartDate, 'd MMM') : 'Custom Start'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={customStartDate || undefined}
+                onSelect={(date) => {
+                  setCustomStartDate(date || null);
+                  setIsCalendarOpen(false);
+                }}
+                defaultMonth={new Date(year, month - 1)}
+                disabled={(date) => {
+                  // Disable dates after leave date or after current month
+                  const monthEnd = endOfMonth(new Date(year, month - 1));
+                  const monthStart = startOfMonth(new Date(year, month - 1));
+                  if (date > monthEnd || date < monthStart) return true;
+                  if (leaveDate && date > leaveDate) return true;
+                  return false;
+                }}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {customStartDate && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 text-xs text-muted-foreground"
+              onClick={handleResetCustomStart}
+            >
+              Reset
+            </Button>
+          )}
+        </div>
+      )}
+      
       {/* Legend */}
       <div className={cn("flex items-center justify-center gap-3 pt-1 border-t border-border/50", compact ? "text-[8px]" : "text-[10px]")}>
         <div className="flex items-center gap-1">
           <div className={cn("rounded-sm bg-primary", compact ? "w-2 h-2" : "w-3 h-3")} />
-          <span className="text-muted-foreground">{isJoinInThisMonth ? 'Join' : 'Start'}</span>
+          <span className="text-muted-foreground">{customStartDate ? 'Custom' : (isJoinInThisMonth ? 'Join' : 'Start')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className={cn("rounded-sm bg-primary/20", compact ? "w-2 h-2" : "w-3 h-3")} />
@@ -198,9 +281,9 @@ export const StayPeriodIndicator = ({
       </div>
       
       {/* Pro-rata summary */}
-      {daysStayed && dailyRate && effectiveRent && (
+      {displayDays && dailyRate && displayRent && (
         <div className={cn("text-center text-muted-foreground pt-1 border-t border-border/50", compact ? "text-[10px]" : "text-xs")}>
-          <span className="font-medium text-foreground">{daysStayed} days</span> × ₹{dailyRate.toLocaleString()}/day = <span className="font-semibold text-primary">₹{effectiveRent.toLocaleString()}</span>
+          <span className="font-medium text-foreground">{displayDays} days</span> × ₹{dailyRate.toLocaleString()}/day = <span className="font-semibold text-primary">₹{displayRent.toLocaleString()}</span>
         </div>
       )}
     </div>
