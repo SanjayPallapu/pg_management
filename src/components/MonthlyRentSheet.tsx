@@ -28,6 +28,7 @@ import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
+import { StayPeriodIndicator } from "./StayPeriodIndicator";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -910,10 +911,17 @@ export const MonthlyRentSheet = ({
                 // Show pro-rata info if applicable
                 if (tenant.isProRata && tenant.daysStayed) {
                   return (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Pro-rata: {tenant.daysStayed} days @ ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{targetRent.toLocaleString()}
-                      </p>
+                    <div className="mt-2 space-y-2">
+                      {/* Visual Stay Period Calendar */}
+                      <StayPeriodIndicator
+                        startDate={tenant.startDate}
+                        endDate={tenant.endDate}
+                        year={selectedYear}
+                        month={selectedMonth}
+                        daysStayed={tenant.daysStayed}
+                        dailyRate={Math.round(tenant.monthlyRent / 30)}
+                        effectiveRent={targetRent}
+                      />
                       {payRemainingAmount < remaining && (
                         <p className="text-sm text-partial">
                           Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹{(targetRent - newTotal).toLocaleString()}

@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
+import { StayPeriodIndicator } from './StayPeriodIndicator';
 
 interface PreviousMonthPending {
   month: number;
@@ -38,6 +39,8 @@ interface OverduePaymentDialogProps {
     monthlyRent: number;
     remaining: number;
     amountPaid: number;
+    startDate?: string;
+    endDate?: string;
     proRataInfo?: {
       effectiveRent: number;
       daysStayed: number;
@@ -147,10 +150,17 @@ export const OverduePaymentDialog = ({
                       <span>₹{tenant.monthlyRent.toLocaleString()}</span>
                     </div>
                     {/* Pro-rata breakdown */}
-                    {tenant.proRataInfo && (
-                      <div className="text-xs text-muted-foreground py-1">
-                        Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
-                      </div>
+                    {/* Visual Stay Period Calendar */}
+                    {tenant.proRataInfo && tenant.startDate && (
+                      <StayPeriodIndicator
+                        startDate={tenant.startDate}
+                        endDate={tenant.endDate}
+                        year={year}
+                        month={month}
+                        daysStayed={tenant.proRataInfo.daysStayed}
+                        dailyRate={tenant.proRataInfo.dailyRate}
+                        effectiveRent={tenant.proRataInfo.effectiveRent}
+                      />
                     )}
                     {tenant.amountPaid > 0 && (
                       <div className="flex justify-between text-sm text-paid">
