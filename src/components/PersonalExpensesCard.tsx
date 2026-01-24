@@ -10,8 +10,8 @@ interface PersonalExpensesCardProps {
 
 export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(false);
-  const [includeCurrentBills, setIncludeCurrentBills] = useState(true);
+  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(true);
+  const [includeCurrentBills, setIncludeCurrentBills] = useState(false);
   const [includePgRent, setIncludePgRent] = useState(true);
 
   const PG_RENT = 150000;
