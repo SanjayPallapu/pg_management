@@ -37,13 +37,21 @@ export const StayPeriodIndicator = ({
     const joinDate = parseISO(startDate);
     const leaveDate = endDate ? parseISO(endDate) : null;
     
-    // Calculate effective stay period within this month
-    const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
-    const effectiveEnd = leaveDate && leaveDate < monthEnd ? leaveDate : monthEnd;
-    
-    // The "start day" to highlight - either the join date if in this month, or 1st of month
-    const displayStartDay = joinDate >= monthStart && joinDate <= monthEnd ? joinDate : monthStart;
+    // Check if join date falls within this month
     const isJoinInThisMonth = joinDate >= monthStart && joinDate <= monthEnd;
+    
+    // Check if leave date falls within this month
+    const isLeaveInThisMonth = leaveDate && leaveDate >= monthStart && leaveDate <= monthEnd;
+    
+    // The ACTUAL start day for highlighting - use join date if in this month
+    // For cross-month stays (joined last month, leaving this month), start from 1st
+    const effectiveStart = isJoinInThisMonth ? joinDate : monthStart;
+    
+    // The end day for highlighting - use leave date if in this month, else month end
+    const effectiveEnd = isLeaveInThisMonth ? leaveDate : monthEnd;
+    
+    // Display start is same as effective start for highlighting purposes
+    const displayStartDay = effectiveStart;
     
     // Get weekday offset for first day of month (0 = Sunday)
     const startDayOffset = getDay(monthStart);
@@ -66,13 +74,14 @@ export const StayPeriodIndicator = ({
       effectiveEnd,
       displayStartDay,
       isJoinInThisMonth,
+      isLeaveInThisMonth,
       startDayOffset,
       monthName: format(monthStart, 'MMMM yyyy'),
       paymentsByDate,
     };
   }, [startDate, endDate, year, month, paymentEntries]);
 
-  const { days, leaveDate, effectiveStart, effectiveEnd, displayStartDay, isJoinInThisMonth, startDayOffset, monthName, paymentsByDate } = calendarData;
+  const { days, leaveDate, effectiveStart, effectiveEnd, displayStartDay, isJoinInThisMonth, isLeaveInThisMonth, startDayOffset, monthName, paymentsByDate } = calendarData;
   
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
