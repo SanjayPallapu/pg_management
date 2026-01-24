@@ -3,9 +3,7 @@ import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isSameDay,
 import { cn } from '@/lib/utils';
 import { PaymentEntry } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { CalendarDays } from 'lucide-react';
 
 interface StayPeriodIndicatorProps {
   startDate: string;
@@ -36,7 +34,6 @@ export const StayPeriodIndicator = ({
 }: StayPeriodIndicatorProps) => {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Use custom start date if set, otherwise use the original startDate
   const activeStartDate = customStartDate ? format(customStartDate, 'yyyy-MM-dd') : startDate;
@@ -152,6 +149,17 @@ export const StayPeriodIndicator = ({
           const dayPayments = getPaymentsForDay(day);
           const hasPayment = dayPayments.length > 0;
           
+          // Check if this day can be selected as custom start (before or on leave date)
+          const canSelectAsStart = allowCustomStart && (!leaveDate || day <= leaveDate);
+          
+          const handleDayClick = () => {
+            if (hasPayment) {
+              setSelectedDay(day);
+            } else if (canSelectAsStart) {
+              setCustomStartDate(day);
+            }
+          };
+          
           const dayContent = (
             <div
               className={cn(
@@ -160,13 +168,15 @@ export const StayPeriodIndicator = ({
                 isLeaveDay && !isStartDay && "bg-destructive text-destructive-foreground font-bold ring-2 ring-destructive/50",
                 isStayDay && !isStartDay && !isLeaveDay && "bg-primary/20 text-primary",
                 !isStayDay && "text-muted-foreground/50",
-                hasPayment && "cursor-pointer hover:ring-2 hover:ring-cash"
+                hasPayment && "cursor-pointer hover:ring-2 hover:ring-cash",
+                canSelectAsStart && !hasPayment && "cursor-pointer hover:bg-primary/40 hover:text-primary-foreground"
               )}
-              onClick={() => hasPayment && setSelectedDay(day)}
+              onClick={handleDayClick}
               title={
-                isStartDay ? `${isJoinInThisMonth ? 'Joined' : 'Period Start'}: ${format(day, 'd MMM')}` :
+                isStartDay ? `${customStartDate ? 'Custom Start' : (isJoinInThisMonth ? 'Joined' : 'Period Start')}: ${format(day, 'd MMM')}` :
                 isLeaveDay ? `Left: ${format(day, 'd MMM')}` :
                 hasPayment ? `Payment on ${format(day, 'd MMM')} - Click to view` :
+                canSelectAsStart ? `Click to set ${format(day, 'd MMM')} as start date` :
                 isStayDay ? 'Stay day' : ''
               }
             >
@@ -183,7 +193,7 @@ export const StayPeriodIndicator = ({
                 <PopoverTrigger asChild>
                   {dayContent}
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-2 text-xs" align="center">
+                <PopoverContent className="w-auto p-2 text-xs pointer-events-auto" align="center">
                   <div className="font-medium mb-1">{format(day, 'd MMMM yyyy')}</div>
                   <div className="space-y-1">
                     {dayPayments.map((entry, idx) => (
@@ -207,52 +217,24 @@ export const StayPeriodIndicator = ({
         })}
       </div>
       
-      {/* Custom Start Date Selector */}
-      {allowCustomStart && !compact && (
-        <div className="flex items-center justify-center gap-2 pt-1 border-t border-border/50">
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-7 text-xs gap-1.5"
-              >
-                <CalendarDays className="h-3.5 w-3.5" />
-                {customStartDate ? format(customStartDate, 'd MMM') : 'Custom Start'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                mode="single"
-                selected={customStartDate || undefined}
-                onSelect={(date) => {
-                  setCustomStartDate(date || null);
-                  setIsCalendarOpen(false);
-                }}
-                defaultMonth={new Date(year, month - 1)}
-                disabled={(date) => {
-                  // Disable dates after leave date or after current month
-                  const monthEnd = endOfMonth(new Date(year, month - 1));
-                  const monthStart = startOfMonth(new Date(year, month - 1));
-                  if (date > monthEnd || date < monthStart) return true;
-                  if (leaveDate && date > leaveDate) return true;
-                  return false;
-                }}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          {customStartDate && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 text-xs text-muted-foreground"
-              onClick={handleResetCustomStart}
-            >
-              Reset
-            </Button>
-          )}
+      {/* Custom Start Reset Button */}
+      {allowCustomStart && customStartDate && !compact && (
+        <div className="flex items-center justify-center pt-1 border-t border-border/50">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 text-xs text-muted-foreground"
+            onClick={handleResetCustomStart}
+          >
+            Reset to Original ({format(parseISO(startDate), 'd MMM')})
+          </Button>
+        </div>
+      )}
+      
+      {/* Instruction for custom start */}
+      {allowCustomStart && !customStartDate && !compact && (
+        <div className="text-center text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+          Tap any date to set custom start
         </div>
       )}
       
