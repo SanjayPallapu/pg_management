@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { format } from "date-fns";
@@ -774,6 +775,38 @@ export const MonthlyRentSheet = ({
                     Room {tenant.roomNo}
                     {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
                   </div>
+                  {/* Pro-rata visual indicator for mid-month leavers */}
+                  {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 mb-2 flex items-center justify-between hover:bg-muted/70 transition-colors">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3 text-primary" />
+                            <span className="text-muted-foreground">Pro-rata:</span>
+                            <span className="font-medium">
+                              {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{tenant.effectiveRent.toLocaleString()}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">▼</span>
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="mb-2">
+                          <StayPeriodIndicator
+                            startDate={tenant.startDate}
+                            endDate={tenant.endDate}
+                            year={selectedYear}
+                            month={selectedMonth}
+                            daysStayed={tenant.daysStayed}
+                            dailyRate={Math.round(tenant.monthlyRent / 30)}
+                            effectiveRent={tenant.effectiveRent}
+                            paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
+                            compact
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
                   {isPartial && <div className="text-sm font-medium mb-2">
                       <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
@@ -921,6 +954,7 @@ export const MonthlyRentSheet = ({
                         daysStayed={tenant.daysStayed}
                         dailyRate={Math.round(tenant.monthlyRent / 30)}
                         effectiveRent={targetRent}
+                        paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
                       />
                       {payRemainingAmount < remaining && (
                         <p className="text-sm text-partial">
