@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Phone, MessageCircle, Receipt, MessageSquare, Bell } from "lucide-react";
+import { Phone, MessageCircle, Receipt, MessageSquare, Bell, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,10 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PaymentEntry } from "@/types";
 import { PaymentEntryDisplay, getPaymentCardClass } from "@/components/payment";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { StayPeriodIndicator } from "@/components/StayPeriodIndicator";
 
 type PaymentCategory = "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
 
@@ -51,6 +53,8 @@ interface TenantRentCardProps {
     };
     paymentCategory: PaymentCategory;
   };
+  selectedMonth: number;
+  selectedYear: number;
   whatsappSent?: boolean;
   editModeEnabled?: boolean;
   onMarkPaid: (tenantId: string, tenantName: string, currentStatus: "Paid" | "Pending" | "Partial") => void;
@@ -61,6 +65,8 @@ interface TenantRentCardProps {
 
 export const TenantRentCard = ({
   tenant,
+  selectedMonth,
+  selectedYear,
   whatsappSent = false,
   editModeEnabled = false,
   onMarkPaid,
@@ -68,6 +74,7 @@ export const TenantRentCard = ({
   onGenerateReceipt,
   onPaymentReminder,
 }: TenantRentCardProps) => {
+  const [showCalendar, setShowCalendar] = useState(false);
   const isPartial = tenant.paymentCategory === "partial";
   // Use pro-rata effective rent if applicable
   const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
@@ -165,12 +172,35 @@ export const TenantRentCard = ({
 
       {/* Pro-rata visual indicator for mid-month leavers */}
       {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
-        <div className="text-xs bg-muted/50 rounded px-2 py-1 mb-2 flex items-center gap-1">
-          <span className="text-muted-foreground">Pro-rata:</span>
-          <span className="font-medium">
-            {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{tenant.effectiveRent.toLocaleString()}
-          </span>
-        </div>
+        <Collapsible open={showCalendar} onOpenChange={setShowCalendar}>
+          <CollapsibleTrigger asChild>
+            <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 mb-2 flex items-center justify-between hover:bg-muted/70 transition-colors">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-primary" />
+                <span className="text-muted-foreground">Pro-rata:</span>
+                <span className="font-medium">
+                  {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹{tenant.effectiveRent.toLocaleString()}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">{showCalendar ? '▲' : '▼'}</span>
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="mb-2">
+              <StayPeriodIndicator
+                startDate={tenant.startDate}
+                endDate={tenant.endDate}
+                year={selectedYear}
+                month={selectedMonth}
+                daysStayed={tenant.daysStayed}
+                dailyRate={Math.round(tenant.monthlyRent / 30)}
+                effectiveRent={tenant.effectiveRent}
+                paymentEntries={tenant.payment.paymentEntries}
+                compact
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {isPartial && (

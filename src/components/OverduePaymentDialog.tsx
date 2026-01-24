@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
 import { StayPeriodIndicator } from './StayPeriodIndicator';
+import { PaymentEntry } from '@/types';
 
 interface PreviousMonthPending {
   month: number;
@@ -41,6 +42,7 @@ interface OverduePaymentDialogProps {
     amountPaid: number;
     startDate?: string;
     endDate?: string;
+    paymentEntries?: PaymentEntry[];
     proRataInfo?: {
       effectiveRent: number;
       daysStayed: number;
@@ -160,6 +162,7 @@ export const OverduePaymentDialog = ({
                         daysStayed={tenant.proRataInfo.daysStayed}
                         dailyRate={tenant.proRataInfo.dailyRate}
                         effectiveRent={tenant.proRataInfo.effectiveRent}
+                        paymentEntries={tenant.paymentEntries}
                       />
                     )}
                     {tenant.amountPaid > 0 && (
