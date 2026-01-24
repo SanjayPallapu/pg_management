@@ -209,7 +209,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
         {/* Bottom Cards Row */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Payment Mode Card - First */}
+          {/* Personal Expenses Card - First (receives rentCollected for balance calculation) */}
+          <PersonalExpensesCard totalCollected={rentCollected} />
+
+          {/* Payment Mode Card */}
           <PaymentModeCard rooms={rooms} />
 
           {/* Total Collected Card */}
@@ -290,9 +293,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
             </CardContent>
           </Card>
-
-          {/* Personal Expenses Card */}
-          <PersonalExpensesCard />
         </div>
 
         {/* Day Guest Card - Separate Row */}
