@@ -149,8 +149,9 @@ export const StayPeriodIndicator = ({
           const dayPayments = getPaymentsForDay(day);
           const hasPayment = dayPayments.length > 0;
           
-          // Check if this day can be selected as custom start (before or on leave date)
-          const canSelectAsStart = allowCustomStart && (!leaveDate || day <= leaveDate);
+          // All days are clickable when allowCustomStart is true (for setting custom start)
+          // Days with payments also show payment popover on click
+          const canSelectAsStart = allowCustomStart;
           
           const handleDayClick = () => {
             if (hasPayment) {
@@ -169,7 +170,7 @@ export const StayPeriodIndicator = ({
                 isStayDay && !isStartDay && !isLeaveDay && "bg-primary/20 text-primary",
                 !isStayDay && "text-muted-foreground/50",
                 hasPayment && "cursor-pointer hover:ring-2 hover:ring-cash",
-                canSelectAsStart && !hasPayment && "cursor-pointer hover:bg-primary/40 hover:text-primary-foreground"
+                canSelectAsStart && "cursor-pointer hover:bg-primary/40 hover:text-primary-foreground"
               )}
               onClick={handleDayClick}
               title={
