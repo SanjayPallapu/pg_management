@@ -50,9 +50,10 @@ export const PersonalExpensesCard = () => {
   const familyExpenses = expenseData?.familyExpenses || 0;
   // Current bills from summary response breakdown (note: API uses "currentBills" plural)
   const currentBill = expenseData?.currentBill || expenseData?.breakdown?.bills?.currentBills || 0;
-  // Grand total should include current bill, optionally include family expenses
-  const baseTotal = (expenseData?.grandTotal || 0) + currentBill;
-  const grandTotal = includeFamilyExpenses ? baseTotal : baseTotal - familyExpenses;
+  
+  // Calculate grand total from actual components: groceries + utility bills + current bills + optional family expenses
+  const baseTotal = groceries + utilityBills + currentBill;
+  const grandTotal = includeFamilyExpenses ? baseTotal + familyExpenses : baseTotal;
 
   return (
     <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
