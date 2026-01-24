@@ -38,6 +38,11 @@ interface OverduePaymentDialogProps {
     monthlyRent: number;
     remaining: number;
     amountPaid: number;
+    proRataInfo?: {
+      effectiveRent: number;
+      daysStayed: number;
+      dailyRate: number;
+    };
   } | null;
   month: number;
   year: number;
@@ -125,7 +130,7 @@ export const OverduePaymentDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden">
         {step === 'confirm' ? (
           <>
             <AlertDialogHeader>
@@ -141,6 +146,12 @@ export const OverduePaymentDialog = ({
                       <span>Monthly Rent:</span>
                       <span>₹{tenant.monthlyRent.toLocaleString()}</span>
                     </div>
+                    {/* Pro-rata breakdown */}
+                    {tenant.proRataInfo && (
+                      <div className="text-xs text-muted-foreground py-1">
+                        Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
+                      </div>
+                    )}
                     {tenant.amountPaid > 0 && (
                       <div className="flex justify-between text-sm text-paid">
                         <span>Already Paid:</span>
@@ -184,7 +195,7 @@ export const OverduePaymentDialog = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             
-            <div className="space-y-4 py-4">
+            <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-2">
               {/* Payment Amount */}
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>

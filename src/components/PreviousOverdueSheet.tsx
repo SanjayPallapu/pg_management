@@ -4,7 +4,8 @@ import { useBackGesture } from '@/hooks/useBackGesture';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
-import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
+import { calculateProRataRent } from '@/utils/proRataRent';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Phone, MessageCircle, X, History, Receipt, Bell, ChevronDown } from 'lucide-react';
@@ -35,10 +36,16 @@ interface OverdueTenant {
   roomNo: string;
   monthlyRent: number;
   startDate: string;
+  endDate?: string;
   amountPaid: number;
   remaining: number;
   status: 'Pending' | 'Partial';
   paymentEntries: PaymentEntry[];
+  proRataInfo?: {
+    effectiveRent: number;
+    daysStayed: number;
+    dailyRate: number;
+  };
 }
 
 export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueSheetProps) => {
@@ -138,41 +145,71 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
       }
     });
 
-    // Left tenants with unpaid dues
+    // Left tenants who were active in previous month but have now left
     leftTenants.forEach(tenant => {
       const payment = payments.find(p => 
         p.tenantId === tenant.id && p.month === pMonth && p.year === pYear
       );
 
+      // Calculate pro-rata for tenants who left IN the previous month
+      const leftInPrevMonth = tenantLeftInMonth(tenant.endDate, pYear, pMonth);
+      let effectiveRent = tenant.monthlyRent;
+      let proRataInfo: { effectiveRent: number; daysStayed: number; dailyRate: number } | undefined;
+
+      if (leftInPrevMonth && tenant.endDate) {
+        const proRata = calculateProRataRent(
+          tenant.monthlyRent,
+          tenant.startDate,
+          tenant.endDate,
+          pYear,
+          pMonth,
+          payment?.amountPaid || 0
+        );
+        if (proRata.isProRata) {
+          effectiveRent = proRata.effectiveRent;
+          proRataInfo = {
+            effectiveRent: proRata.effectiveRent,
+            daysStayed: proRata.daysStayed,
+            dailyRate: proRata.dailyRate,
+          };
+        }
+      }
+
       if (!payment || payment.paymentStatus === 'Pending') {
-        leftTotal += tenant.monthlyRent;
+        leftTotal += effectiveRent;
         leftUnpaidList.push({
           id: tenant.id,
           name: tenant.name,
           phone: tenant.phone,
           roomNo: tenant.roomNo,
-          monthlyRent: tenant.monthlyRent,
+          monthlyRent: effectiveRent, // Use effective rent for calculation
           startDate: tenant.startDate,
+          endDate: tenant.endDate,
           amountPaid: 0,
-          remaining: tenant.monthlyRent,
+          remaining: effectiveRent,
           status: 'Pending',
-          paymentEntries: []
+          paymentEntries: [],
+          proRataInfo,
         });
       } else if (payment.paymentStatus === 'Partial') {
-        const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
-        leftTotal += remaining;
-        leftUnpaidList.push({
-          id: tenant.id,
-          name: tenant.name,
-          phone: tenant.phone,
-          roomNo: tenant.roomNo,
-          monthlyRent: tenant.monthlyRent,
-          startDate: tenant.startDate,
-          amountPaid: payment.amountPaid || 0,
-          remaining,
-          status: 'Partial',
-          paymentEntries: (payment.paymentEntries || []) as PaymentEntry[]
-        });
+        const remaining = effectiveRent - (payment.amountPaid || 0);
+        if (remaining > 0) {
+          leftTotal += remaining;
+          leftUnpaidList.push({
+            id: tenant.id,
+            name: tenant.name,
+            phone: tenant.phone,
+            roomNo: tenant.roomNo,
+            monthlyRent: effectiveRent, // Use effective rent for calculation
+            startDate: tenant.startDate,
+            endDate: tenant.endDate,
+            amountPaid: payment.amountPaid || 0,
+            remaining,
+            status: 'Partial',
+            paymentEntries: (payment.paymentEntries || []) as PaymentEntry[],
+            proRataInfo,
+          });
+        }
       }
     });
 
@@ -490,7 +527,18 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                             </div>
                             <span className="font-bold text-lg text-destructive">₹{tenant.remaining.toLocaleString()}</span>
                           </div>
-                          <div className="text-sm text-muted-foreground mb-2">Room {tenant.roomNo}</div>
+                          <div className="text-sm text-muted-foreground mb-2">
+                            Room {tenant.roomNo}
+                            {tenant.endDate && (
+                              <span className="ml-2">• Left: {format(new Date(tenant.endDate), 'dd MMM yyyy')}</span>
+                            )}
+                          </div>
+                          {/* Pro-rata breakdown for left tenants */}
+                          {tenant.proRataInfo && (
+                            <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/30 rounded">
+                              Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">
                               Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
