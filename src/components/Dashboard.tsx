@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus, ChevronDown, Wallet, Users, Settings } from 'lucide-react';
 import { Room, DashboardStats, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -35,6 +36,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
+  
+  // Collapsible section states
+  const [financialsOpen, setFinancialsOpen] = useState(true);
+  const [tenantsOpen, setTenantsOpen] = useState(true);
+  const [toolsOpen, setToolsOpen] = useState(false);
   
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
@@ -286,130 +292,169 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Bottom Cards Row */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Payment Mode Card */}
-          <PaymentModeCard rooms={rooms} />
+        {/* Financial Section - Collapsible */}
+        <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-sm">Financials</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              {/* Payment Mode Card */}
+              <PaymentModeCard rooms={rooms} />
 
-          {/* Total Collected Card */}
-          <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+              {/* Total Collected Card */}
+              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
 
-          {/* All Collections Card - UPI/Cash breakdown */}
-          <AllCollectedCard rooms={rooms} />
+              {/* All Collections Card - UPI/Cash breakdown */}
+              <AllCollectedCard rooms={rooms} />
 
-          {/* Potential Revenue Card - Clickable */}
-          <Card 
-            className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
-            onClick={() => setEmptyBedsSheetOpen(true)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
-                </div>
-              </div>
-              
-              {/* Current vs Max revenue comparison */}
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div>
-                  <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Max capacity</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between pt-2 border-t">
-                <div className="text-sm font-semibold text-pending">
-                  +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {totalEmptyBeds} beds empty
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
-            </CardContent>
-          </Card>
-
-          {/* Pending Tenants Card - Below If PG Gets Full */}
-          <PendingTenantsCard rooms={rooms} />
-
-          {/* Tenant Movement Card - Below Pending Tenants */}
-          <TenantMovementCard rooms={rooms} />
-
-          {/* Personal Expenses Card - Above December Overdue */}
-          <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
-
-          {/* Previous Month Overdue Card */}
-          <PreviousMonthOverdueCard />
-
-          {/* Day Guest Card - Below December Overdue */}
-          <Card 
-            className="cursor-pointer transition-colors hover:bg-accent/50"
-            onClick={() => setDayGuestSheetOpen(true)}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-              <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <div className="text-2xl font-bold text-paid">
-                    ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+              {/* Potential Revenue Card - Clickable */}
+              <Card 
+                className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
+                onClick={() => setEmptyBedsSheetOpen(true)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">Collected</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-pending">
-                    ₹{(dayGuestStats?.pending || 0).toLocaleString()}
+                  
+                  {/* Current vs Max revenue comparison */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">Max capacity</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                </div>
-              </div>
-              {/* UPI/Cash breakdown */}
-              <div className="flex justify-center gap-4 text-xs border-t pt-2">
-                <div className="text-blue-600 dark:text-blue-400">
-                  UPI: ₹{(dayGuestStats?.upi || 0).toLocaleString()}
-                </div>
-                <div className="text-green-600 dark:text-green-400">
-                  Cash: ₹{(dayGuestStats?.cash || 0).toLocaleString()}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
-            </CardContent>
-          </Card>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="text-sm font-semibold text-pending">
+                      +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {totalEmptyBeds} beds empty
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
+                </CardContent>
+              </Card>
 
-          {/* Security Deposit Card - Below Day Guest Revenue */}
-          <SecurityDepositCard rooms={rooms} />
+              {/* Personal Expenses Card */}
+              <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
 
-          {/* Calculator Card */}
-          <CalculatorCard />
+              {/* Security Deposit Card - Below PG Expenses */}
+              <SecurityDepositCard rooms={rooms} />
 
-          {/* Key Numbers Card */}
-          <KeyNumbersCard />
+              {/* Previous Month Overdue Card */}
+              <PreviousMonthOverdueCard />
 
-          {/* Tenant Lock Card - Below Key Numbers */}
-          <TenantLockCard rooms={rooms} />
+              {/* Day Guest Card */}
+              <Card 
+                className="cursor-pointer transition-colors hover:bg-accent/50"
+                onClick={() => setDayGuestSheetOpen(true)}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+                  <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
+                  <UserPlus className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-2xl font-bold text-paid">
+                        ₹{(dayGuestStats?.collected || 0).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Collected</p>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-pending">
+                        ₹{(dayGuestStats?.pending || 0).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Pending</p>
+                    </div>
+                  </div>
+                  {/* UPI/Cash breakdown */}
+                  <div className="flex justify-center gap-4 text-xs border-t pt-2">
+                    <div className="text-blue-600 dark:text-blue-400">
+                      UPI: ₹{(dayGuestStats?.upi || 0).toLocaleString()}
+                    </div>
+                    <div className="text-green-600 dark:text-green-400">
+                      Cash: ₹{(dayGuestStats?.cash || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
+                </CardContent>
+              </Card>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-          {/* Settlement Summary Card */}
-          <Card 
-            className="cursor-pointer transition-colors hover:bg-accent/50"
-            onClick={() => setSettlementSheetOpen(true)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
-                <UserMinus className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-lg font-bold">Settlement Summary</div>
-              <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Tenants Section - Collapsible */}
+        <Collapsible open={tenantsOpen} onOpenChange={setTenantsOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-sm">Tenants</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${tenantsOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              {/* Pending Tenants Card */}
+              <PendingTenantsCard rooms={rooms} />
+
+              {/* Tenant Movement Card */}
+              <TenantMovementCard rooms={rooms} />
+
+              {/* Settlement Summary Card */}
+              <Card 
+                className="cursor-pointer transition-colors hover:bg-accent/50"
+                onClick={() => setSettlementSheetOpen(true)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
+                    <UserMinus className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-lg font-bold">Settlement Summary</div>
+                  <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
+                </CardContent>
+              </Card>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Tools Section - Collapsible (collapsed by default) */}
+        <Collapsible open={toolsOpen} onOpenChange={setToolsOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+            <div className="flex items-center gap-2">
+              <Settings className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-sm">Tools & Admin</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Calculator Card */}
+              <CalculatorCard />
+
+              {/* Key Numbers Card */}
+              <KeyNumbersCard />
+
+              {/* Tenant Lock Card */}
+              <TenantLockCard rooms={rooms} />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />
