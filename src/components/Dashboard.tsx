@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus } from 'lucide-react';
-import { Room, DashboardStats } from '@/types';
+import { Room, DashboardStats, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
@@ -138,6 +138,85 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   // Max monthly revenue if all beds filled (using fixed per-bed rates)
   const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPricePerBed(room.capacity)), 0);
 
+  // Calculate total collected (same logic as TotalCollectedCard) for PersonalExpensesCard
+  const totalCollectedForExpenses = useMemo(() => {
+    // This month rent from payment entries
+    let thisMonthRent = 0;
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        if (tenant.isLocked) return;
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
+        
+        const payment = payments.find(
+          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+        );
+        if (payment?.paymentEntries) {
+          (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
+            thisMonthRent += entry.amount;
+          });
+        }
+      });
+    });
+
+    // Overdue collections (previous month payments made in current month)
+    let overdueCollected = 0;
+    let prevMonth = selectedMonth - 1;
+    let prevYear = selectedYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear = selectedYear - 1;
+    }
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({ ...tenant, roomNo: room.roomNo })));
+    const prevMonthActiveTenants = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)
+    );
+    prevMonthActiveTenants.forEach(tenant => {
+      if (tenant.isLocked) return;
+      const payment = payments.find(p => 
+        p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear
+      );
+      if (!payment) return;
+      const entries = (payment.paymentEntries || []) as PaymentEntry[];
+      entries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        if (entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear) {
+          overdueCollected += entry.amount;
+        }
+      });
+    });
+
+    // Extra amounts from notes
+    let extraAmounts = 0;
+    const currentMonthTenants = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
+    );
+    currentMonthTenants.forEach(tenant => {
+      if (tenant.isLocked) return;
+      const payment = payments.find(p => 
+        p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+      );
+      if (!payment || !payment.notes) return;
+      const extraMatch = payment.notes.match(/Extra:\s*₹?([\d,]+)/);
+      if (extraMatch) {
+        extraAmounts += parseInt(extraMatch[1].replace(/,/g, '')) || 0;
+      }
+    });
+
+    // Security deposits this month
+    let securityDeposits = 0;
+    rooms.forEach(room => {
+      room.tenants.forEach(tenant => {
+        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
+        const depositDate = new Date(tenant.securityDepositDate);
+        if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
+          securityDeposits += tenant.securityDepositAmount;
+        }
+      });
+    });
+
+    return thisMonthRent + overdueCollected + (dayGuestStats?.collected || 0) + securityDeposits + extraAmounts;
+  }, [rooms, payments, selectedMonth, selectedYear, dayGuestStats]);
+
   const stats: DashboardStats = {
     totalRooms: rooms.length,
     occupiedCount: fullyOccupiedRooms,
@@ -209,9 +288,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
         {/* Bottom Cards Row */}
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Personal Expenses Card - First (receives rentCollected for balance calculation) */}
-          <PersonalExpensesCard totalCollected={rentCollected} />
-
           {/* Payment Mode Card */}
           <PaymentModeCard rooms={rooms} />
 
@@ -258,11 +334,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             </CardContent>
           </Card>
 
+          {/* Pending Tenants Card - Below If PG Gets Full */}
+          <PendingTenantsCard rooms={rooms} />
+
           {/* Security Deposit Card */}
           <SecurityDepositCard rooms={rooms} />
 
-          {/* Tenant Lock Card */}
-          <TenantLockCard rooms={rooms} />
+          {/* Personal Expenses Card - Below Security Deposits */}
+          <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
 
           {/* Previous Month Overdue Card */}
           <PreviousMonthOverdueCard />
@@ -270,14 +349,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           {/* Tenant Movement Card */}
           <TenantMovementCard rooms={rooms} />
 
-          {/* Pending Tenants Card */}
-          <PendingTenantsCard rooms={rooms} />
-
           {/* Calculator Card */}
           <CalculatorCard />
 
           {/* Key Numbers Card */}
           <KeyNumbersCard />
+
+          {/* Tenant Lock Card - Below Key Numbers */}
+          <TenantLockCard rooms={rooms} />
 
           {/* Settlement Summary Card */}
           <Card 
@@ -295,7 +374,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Day Guest Card - Separate Row */}
+        {/* Day Guest Card - Above Calendar (separate row at top of bottom section) */}
         <Card 
           className="cursor-pointer transition-colors hover:bg-accent/50"
           onClick={() => setDayGuestSheetOpen(true)}
