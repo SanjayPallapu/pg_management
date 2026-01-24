@@ -792,7 +792,7 @@ export const MonthlyRentSheet = ({
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="mb-2">
-                          <StayPeriodIndicator
+                      <StayPeriodIndicator
                             startDate={tenant.startDate}
                             endDate={tenant.endDate}
                             year={selectedYear}
@@ -801,6 +801,7 @@ export const MonthlyRentSheet = ({
                             dailyRate={Math.round(tenant.monthlyRent / 30)}
                             effectiveRent={tenant.effectiveRent}
                             paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
+                            allowCustomStart
                             compact
                           />
                         </div>
@@ -955,6 +956,7 @@ export const MonthlyRentSheet = ({
                         dailyRate={Math.round(tenant.monthlyRent / 30)}
                         effectiveRent={targetRent}
                         paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
+                        allowCustomStart
                       />
                       {payRemainingAmount < remaining && (
                         <p className="text-sm text-partial">
