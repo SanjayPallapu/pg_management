@@ -888,12 +888,12 @@ export const MonthlyRentSheet = ({
 
       {/* Pay Remaining Dialog */}
       <AlertDialog open={!!payRemainingTenant} onOpenChange={() => setPayRemainingTenant(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
           <AlertDialogHeader>
             <AlertDialogTitle>Pay Remaining Amount</AlertDialogTitle>
             <AlertDialogDescription>Enter amount and select payment date.</AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
             <div>
               <Label>Amount (₹)</Label>
               <Input type="number" value={payRemainingAmount} onChange={e => setPayRemainingAmount(parseInt(e.target.value) || 0)} className="mt-2" />
