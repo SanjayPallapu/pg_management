@@ -164,6 +164,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     paymentStatus: "Pending",
     startDate: new Date().toISOString().split("T")[0],
   });
+  const [includeSecurityDeposit, setIncludeSecurityDeposit] = useState(false);
+  const FIXED_SECURITY_DEPOSIT = 2000;
 
   const getFloorName = (floor: number) => {
     const floorNames = { 1: "1st Floor", 2: "2nd Floor", 3: "3rd Floor" };
@@ -211,9 +213,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       roomNo: room.roomNo,
       sharingType: `${room.capacity} Sharing`,
       monthlyRent: tenant.monthlyRent,
-      securityDeposit: undefined, // Can be added later if security deposit is collected
+      securityDeposit: includeSecurityDeposit ? FIXED_SECURITY_DEPOSIT : undefined,
     });
     setWelcomeDialogOpen(true);
+    // Reset security deposit toggle for next tenant
+    setIncludeSecurityDeposit(false);
 
     setNewTenant({
       name: "",
@@ -950,6 +954,19 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                       required
                     />
                   </div>
+                </div>
+
+                {/* Security Deposit Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                  <div className="flex flex-col">
+                    <Label htmlFor="securityDeposit" className="cursor-pointer">Include Security Deposit</Label>
+                    <span className="text-xs text-muted-foreground">Fixed amount: ₹{FIXED_SECURITY_DEPOSIT.toLocaleString()}</span>
+                  </div>
+                  <Switch
+                    id="securityDeposit"
+                    checked={includeSecurityDeposit}
+                    onCheckedChange={setIncludeSecurityDeposit}
+                  />
                 </div>
 
                 <Button onClick={handleAddTenant} disabled={!newTenant.name || !newTenant.phone} className="w-full">
