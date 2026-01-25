@@ -20,7 +20,8 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Room, Tenant, PaymentEntry } from "@/types";
-import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut } from "lucide-react";
+import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut, PartyPopper } from "lucide-react";
+import { differenceInDays } from "date-fns";
 import { useRooms } from "@/hooks/useRooms";
 import { toast } from "@/hooks/use-toast";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
@@ -33,7 +34,16 @@ import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { useNavigate } from "react-router-dom";
-import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
+
+// Helper to check if tenant joined within last 5 days
+const isNewTenant = (startDate: string): boolean => {
+  const joinDate = parseDateOnly(startDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysSinceJoining = differenceInDays(today, joinDate);
+  return daysSinceJoining >= 0 && daysSinceJoining <= 5;
+};
 
 interface TenantManagementProps {
   room: Room;
@@ -734,7 +744,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                             </div>
                           ) : (
                             <>
-                              <div className="font-medium text-lg">{tenant.name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="font-medium text-lg">{tenant.name}</div>
+                                {isNewTenant(tenant.startDate) && !tenant.endDate && (
+                                  <Badge className="h-5 px-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 animate-pulse">
+                                    NEW
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="text-sm text-muted-foreground">{tenant.phone}</div>
                               <div className="text-xs text-muted-foreground">
                                 Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}
@@ -798,6 +815,29 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                 <Badge variant="outline" className={getTenantStyles(tenant).badge}>
                                   {getPaymentStatusForMonth(tenant.id)}
                                 </Badge>
+                              )}
+                              {/* Send Welcome button for new tenants */}
+                              {isNewTenant(tenant.startDate) && !tenant.endDate && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-pink-600 border-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/20 gap-1"
+                                  onClick={() => {
+                                    setWelcomeData({
+                                      tenantName: tenant.name,
+                                      tenantPhone: tenant.phone,
+                                      joiningDate: tenant.startDate,
+                                      roomNo: room.roomNo,
+                                      sharingType: `${room.capacity} Sharing`,
+                                      monthlyRent: tenant.monthlyRent,
+                                      securityDeposit: undefined,
+                                    });
+                                    setWelcomeDialogOpen(true);
+                                  }}
+                                >
+                                  <PartyPopper className="h-3.5 w-3.5" />
+                                  Welcome
+                                </Button>
                               )}
                             </>
                           )}
