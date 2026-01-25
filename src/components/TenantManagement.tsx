@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
+import { WelcomeDialog } from "./WelcomeDialog";
 import { useNavigate } from "react-router-dom";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 
@@ -62,6 +63,16 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [welcomeData, setWelcomeData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    roomNo: string;
+    sharingType: string;
+    monthlyRent: number;
+    securityDeposit?: number;
+  } | null>(null);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -191,6 +202,18 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       tenants: updatedTenants,
       status: newStatus as any,
     });
+
+    // Prepare welcome data and show dialog
+    setWelcomeData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      joiningDate: tenant.startDate,
+      roomNo: room.roomNo,
+      sharingType: `${room.capacity} Sharing`,
+      monthlyRent: tenant.monthlyRent,
+      securityDeposit: undefined, // Can be added later if security deposit is collected
+    });
+    setWelcomeDialogOpen(true);
 
     setNewTenant({
       name: "",
@@ -1259,6 +1282,13 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             });
           }
         }}
+      />
+
+      {/* Welcome Dialog for new tenants */}
+      <WelcomeDialog
+        open={welcomeDialogOpen}
+        onOpenChange={setWelcomeDialogOpen}
+        welcomeData={welcomeData}
       />
     </Dialog>
   );
