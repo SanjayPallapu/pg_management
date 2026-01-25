@@ -2,10 +2,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Loader2, PartyPopper, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { WelcomeTemplate, type WelcomeData } from '@/components/WelcomeTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+
+const FIXED_SECURITY_DEPOSIT = 2000;
 
 interface WelcomeInputData {
   tenantName: string;
@@ -29,9 +33,19 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const welcomeRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<WelcomeData | null>(null);
+  const [includeSecurityDeposit, setIncludeSecurityDeposit] = useState(false);
 
   useBackGesture(open, () => onOpenChange(false));
 
+  // Initialize security deposit toggle based on incoming data
+  useEffect(() => {
+    if (welcomeData && open) {
+      // If security deposit was already included, set toggle on
+      setIncludeSecurityDeposit(!!welcomeData.securityDeposit && welcomeData.securityDeposit > 0);
+    }
+  }, [welcomeData, open]);
+
+  // Update template data whenever security deposit toggle changes
   useEffect(() => {
     if (welcomeData && open) {
       const joinDate = new Date(welcomeData.joiningDate);
@@ -50,13 +64,15 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
         },
         payment: {
           monthlyRent: welcomeData.monthlyRent,
-          securityDeposit: welcomeData.securityDeposit,
+          securityDeposit: includeSecurityDeposit ? FIXED_SECURITY_DEPOSIT : undefined,
         },
         selectedMonth,
         selectedYear,
       });
+      // Clear generated image when toggle changes
+      setGeneratedImage(null);
     }
-  }, [welcomeData, open]);
+  }, [welcomeData, open, includeSecurityDeposit]);
 
   const generateWelcome = useCallback(async () => {
     if (!welcomeData || !templateData || !welcomeRef.current) {
@@ -96,7 +112,8 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       let phone = welcomeData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      const message = `Hi ${welcomeData.tenantName}! 🎉\n\nWelcome to Amma Women's Hostel! We're happy to have you with us.\n\nRoom: ${welcomeData.roomNo} (${welcomeData.sharingType})\nMonthly Rent: ₹${welcomeData.monthlyRent.toLocaleString('en-IN')}${welcomeData.securityDeposit ? `\nSecurity Advance: ₹${welcomeData.securityDeposit.toLocaleString('en-IN')}` : ''}\n\nPlease let me know once the payment is completed. Feel free to reach out if you have any questions!\n\nThank you! 🙏\n- Amma Women's Hostel`;
+      const depositText = includeSecurityDeposit ? `\nSecurity Advance: ₹${FIXED_SECURITY_DEPOSIT.toLocaleString('en-IN')}` : '';
+      const message = `Hi ${welcomeData.tenantName}! 🎉\n\nWelcome to Amma Women's Hostel! We're happy to have you with us.\n\nRoom: ${welcomeData.roomNo} (${welcomeData.sharingType})\nMonthly Rent: ₹${welcomeData.monthlyRent.toLocaleString('en-IN')}${depositText}\n\nPlease let me know once the payment${includeSecurityDeposit ? ' and advance are' : ' is'} completed. Feel free to reach out if you have any questions!\n\nThank you! 🙏\n- Amma Women's Hostel`;
 
       await navigator.clipboard.writeText(displayPhone);
       toast({
@@ -127,6 +144,7 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
   const handleClose = () => {
     setGeneratedImage(null);
     setTemplateData(null);
+    setIncludeSecurityDeposit(false);
     onOpenChange(false);
   };
 
@@ -152,6 +170,19 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
 
           {welcomeData && (
             <div className="py-4 space-y-4">
+              {/* Security Deposit Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg border border-pink-200 bg-pink-50/50 dark:border-pink-900 dark:bg-pink-950/20">
+                <div className="flex flex-col">
+                  <Label htmlFor="includeDeposit" className="cursor-pointer font-medium">Include Security Deposit</Label>
+                  <span className="text-xs text-muted-foreground">Fixed amount: ₹{FIXED_SECURITY_DEPOSIT.toLocaleString()}</span>
+                </div>
+                <Switch
+                  id="includeDeposit"
+                  checked={includeSecurityDeposit}
+                  onCheckedChange={setIncludeSecurityDeposit}
+                />
+              </div>
+
               {/* Summary Card */}
               <div className="rounded-lg p-4 text-sm space-y-2 border border-border bg-pink-50/50 dark:bg-pink-950/20">
                 <div className="flex justify-between">
@@ -166,10 +197,10 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
                   <span className="text-muted-foreground">Monthly Rent:</span>
                   <span className="font-semibold text-pink-600">₹{welcomeData.monthlyRent.toLocaleString('en-IN')}</span>
                 </div>
-                {welcomeData.securityDeposit && welcomeData.securityDeposit > 0 && (
+                {includeSecurityDeposit && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Security Deposit:</span>
-                    <span className="font-semibold">₹{welcomeData.securityDeposit.toLocaleString('en-IN')}</span>
+                    <span className="font-semibold text-purple-600">₹{FIXED_SECURITY_DEPOSIT.toLocaleString('en-IN')}</span>
                   </div>
                 )}
               </div>
