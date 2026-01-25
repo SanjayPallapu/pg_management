@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wallet } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
+
+const STORAGE_KEY = "pg-expenses-toggles";
 
 interface PersonalExpensesCardProps {
   totalCollected?: number;
@@ -10,9 +12,37 @@ interface PersonalExpensesCardProps {
 
 export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(true);
-  const [includeCurrentBills, setIncludeCurrentBills] = useState(false);
-  const [includePgRent, setIncludePgRent] = useState(true);
+  
+  // Load initial states from localStorage or use defaults
+  const getInitialState = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Failed to load toggle states:", e);
+    }
+    return { familyExpenses: true, currentBills: false, pgRent: true };
+  };
+  
+  const initialState = getInitialState();
+  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(initialState.familyExpenses);
+  const [includeCurrentBills, setIncludeCurrentBills] = useState(initialState.currentBills);
+  const [includePgRent, setIncludePgRent] = useState(initialState.pgRent);
+
+  // Persist toggle states to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        familyExpenses: includeFamilyExpenses,
+        currentBills: includeCurrentBills,
+        pgRent: includePgRent
+      }));
+    } catch (e) {
+      console.error("Failed to save toggle states:", e);
+    }
+  }, [includeFamilyExpenses, includeCurrentBills, includePgRent]);
 
   const PG_RENT = 150000;
 
