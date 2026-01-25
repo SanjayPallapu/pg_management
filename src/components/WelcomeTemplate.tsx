@@ -35,11 +35,12 @@ interface WelcomeTemplateProps {
 const formatCurrency = (amount: number): string => `₹${Math.floor(amount).toLocaleString("en-IN")}`;
 
 /* =========================
-   Component
+   Component - Futuristic Design
 ========================= */
 
 export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(({ data }, ref) => {
   const billingPeriod = formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth);
+  const hasSecurityDeposit = data.payment.securityDeposit && data.payment.securityDeposit > 0;
 
   return (
     <div
@@ -47,41 +48,51 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
       style={{
         width: "500px",
         height: "700px",
-        background: "linear-gradient(180deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%)",
+        background: "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)",
         fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         position: "relative",
-        border: "3px solid #f9a8d4",
-        borderRadius: "16px",
+        borderRadius: "20px",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
       }}
     >
-      {/* Decorative corner flowers - Top Right */}
+      {/* Animated gradient orbs */}
       <div
         style={{
           position: "absolute",
-          top: "0",
-          right: "0",
-          width: "100px",
-          height: "100px",
-          background: "linear-gradient(225deg, #f472b6 0%, transparent 70%)",
-          borderRadius: "0 14px 0 100px",
-          opacity: 0.3,
+          top: "-50px",
+          right: "-50px",
+          width: "200px",
+          height: "200px",
+          background: "radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(40px)",
         }}
       />
-
-      {/* Decorative corner flowers - Bottom Left */}
       <div
         style={{
           position: "absolute",
-          bottom: "0",
-          left: "0",
-          width: "120px",
-          height: "120px",
-          background: "linear-gradient(45deg, #f472b6 0%, transparent 70%)",
-          borderRadius: "0 100px 0 14px",
-          opacity: 0.3,
+          bottom: "-80px",
+          left: "-60px",
+          width: "250px",
+          height: "250px",
+          background: "radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(50px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "40%",
+          right: "-30px",
+          width: "150px",
+          height: "150px",
+          background: "radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(30px)",
         }}
       />
 
@@ -90,21 +101,33 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "25px 0 15px",
+          padding: "30px 0 20px",
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        <img
-          src={hostelLogo}
-          alt="Amma Women's Hostel"
-          crossOrigin="anonymous"
-          loading="eager"
+        <div
           style={{
-            width: "140px",
-            height: "auto",
-            margin: "0 auto",
-            display: "block",
+            background: "rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "16px",
+            padding: "16px",
+            display: "inline-block",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
           }}
-        />
+        >
+          <img
+            src={hostelLogo}
+            alt="Amma Women's Hostel"
+            crossOrigin="anonymous"
+            loading="eager"
+            style={{
+              width: "120px",
+              height: "auto",
+              display: "block",
+            }}
+          />
+        </div>
       </div>
 
       {/* Welcome Content */}
@@ -114,160 +137,228 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           flex: 1,
           display: "flex",
           flexDirection: "column",
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        {/* Greeting */}
-        <div style={{ marginBottom: "20px" }}>
-          <h2
+        {/* Welcome Badge */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "15px",
+          }}
+        >
+          <div
             style={{
-              fontSize: "24px",
-              fontWeight: 600,
-              color: "#831843",
-              marginBottom: "10px",
-              fontStyle: "italic",
+              background: "linear-gradient(90deg, #ec4899, #8b5cf6)",
+              padding: "8px 24px",
+              borderRadius: "30px",
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#fff",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
             }}
           >
-            Hi {data.tenant.name},
+            ✨ Welcome Aboard ✨
+          </div>
+        </div>
+
+        {/* Greeting */}
+        <div style={{ marginBottom: "20px", textAlign: "center" }}>
+          <h2
+            style={{
+              fontSize: "28px",
+              fontWeight: 700,
+              background: "linear-gradient(90deg, #f472b6, #c084fc, #60a5fa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              marginBottom: "8px",
+            }}
+          >
+            Hi {data.tenant.name}!
           </h2>
           <p
             style={{
-              fontSize: "16px",
-              color: "#1a1a1a",
-              lineHeight: 1.6,
+              fontSize: "15px",
+              color: "rgba(255, 255, 255, 0.8)",
+              lineHeight: 1.5,
               margin: 0,
             }}
           >
             Welcome to Amma Women's Hostel!
             <br />
-            We're happy to have you with us.
+            We're thrilled to have you with us.
           </p>
         </div>
 
-        {/* Rent Period */}
-        <div style={{ marginBottom: "18px" }}>
-          <p
+        {/* Info Cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+          {/* Room & Sharing Card */}
+          <div
             style={{
-              fontSize: "15px",
-              color: "#1a1a1a",
-              lineHeight: 1.7,
-              margin: 0,
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(10px)",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            Your rent period will start from
-            <br />
-            <strong style={{ fontSize: "17px", color: "#831843" }}>{billingPeriod}.</strong>
-          </p>
-        </div>
+            <div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+                Your Room
+              </div>
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff" }}>
+                Room {data.stay.roomNo}
+              </div>
+            </div>
+            <div
+              style={{
+                background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                padding: "8px 16px",
+                borderRadius: "10px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#fff",
+              }}
+            >
+              {data.stay.sharingType}
+            </div>
+          </div>
 
-        {/* Payment Details */}
-        <div style={{ marginBottom: "18px" }}>
-          <p
+          {/* Billing Period Card */}
+          <div
             style={{
-              fontSize: "15px",
-              color: "#1a1a1a",
-              lineHeight: 1.8,
-              margin: 0,
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(10px)",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
-            <strong>Monthly rent amount:</strong> {formatCurrency(data.payment.monthlyRent)}
-            <br />
-            {data.payment.securityDeposit && data.payment.securityDeposit > 0 && (
-              <>
-                <strong>Security advance:</strong> {formatCurrency(data.payment.securityDeposit)}
-              </>
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+              Rent Period
+            </div>
+            <div style={{ fontSize: "17px", fontWeight: 600, color: "#a78bfa" }}>
+              {billingPeriod}
+            </div>
+          </div>
+
+          {/* Payment Details Card */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2))",
+              backdropFilter: "blur(10px)",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              border: "1px solid rgba(236, 72, 153, 0.3)",
+            }}
+          >
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
+              Payment Details
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: hasSecurityDeposit ? "10px" : "0" }}>
+              <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Monthly Rent</span>
+              <span style={{ fontSize: "20px", fontWeight: 700, color: "#f472b6" }}>
+                {formatCurrency(data.payment.monthlyRent)}
+              </span>
+            </div>
+            {hasSecurityDeposit && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "10px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Security Advance</span>
+                <span style={{ fontSize: "18px", fontWeight: 600, color: "#c084fc" }}>
+                  {formatCurrency(data.payment.securityDeposit!)}
+                </span>
+              </div>
             )}
-          </p>
+          </div>
         </div>
 
-        {/* Room Info */}
+        {/* Request Message */}
         <div
           style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            borderRadius: "12px",
+            padding: "14px 18px",
             marginBottom: "20px",
-            padding: "12px 16px",
-            background: "rgba(255, 255, 255, 0.6)",
-            borderRadius: "10px",
-            border: "1px solid #f9a8d4",
+            borderLeft: "3px solid #8b5cf6",
           }}
         >
           <p
             style={{
-              fontSize: "14px",
-              color: "#1a1a1a",
-              margin: 0,
-            }}
-          >
-            <strong>Room:</strong> {data.stay.roomNo} • <strong>Sharing:</strong> {data.stay.sharingType}
-          </p>
-        </div>
-
-        {/* Request Message */}
-        <div style={{ marginBottom: "20px" }}>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#1a1a1a",
+              fontSize: "13px",
+              color: "rgba(255, 255, 255, 0.7)",
               lineHeight: 1.6,
               margin: 0,
             }}
           >
-            Please let me know once the payment and advance are completed. If you have any questions, feel free to ask.
+            Please let me know once the payment{hasSecurityDeposit ? " and advance are" : " is"} completed. Feel free to reach out if you have any questions!
           </p>
         </div>
 
         {/* Thank You */}
-        <div style={{ marginTop: "auto", paddingBottom: "30px" }}>
+        <div style={{ marginTop: "auto", paddingBottom: "30px", textAlign: "center" }}>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "rgba(255, 255, 255, 0.6)",
+              margin: "0 0 5px 0",
+            }}
+          >
+            Thank you!
+          </p>
           <p
             style={{
               fontSize: "16px",
               fontWeight: 600,
-              color: "#831843",
+              background: "linear-gradient(90deg, #f472b6, #a78bfa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
               margin: 0,
-              lineHeight: 1.8,
             }}
           >
-            Thank you,
-            <br />
-            <span style={{ fontStyle: "italic" }}>@Amma Women's Hostel</span>
+            @Amma Women's Hostel
           </p>
         </div>
       </div>
 
-      {/* Decorative hearts scattered */}
+      {/* Decorative elements */}
       <div
         style={{
           position: "absolute",
-          top: "80px",
-          right: "25px",
+          top: "100px",
+          right: "20px",
+          fontSize: "20px",
+          opacity: 0.4,
+        }}
+      >
+        ✨
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "120px",
+          left: "20px",
           fontSize: "16px",
-          color: "#f472b6",
-          opacity: 0.5,
+          opacity: 0.3,
         }}
       >
-        💕
+        💜
       </div>
       <div
         style={{
           position: "absolute",
-          bottom: "150px",
-          left: "25px",
+          bottom: "60px",
+          right: "30px",
           fontSize: "14px",
-          color: "#f472b6",
-          opacity: 0.4,
+          opacity: 0.3,
         }}
       >
-        💖
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          bottom: "80px",
-          right: "40px",
-          fontSize: "12px",
-          color: "#f472b6",
-          opacity: 0.4,
-        }}
-      >
-        💗
+        🏠
       </div>
     </div>
   );
