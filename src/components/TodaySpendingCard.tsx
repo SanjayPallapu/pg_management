@@ -1,8 +1,20 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { CalendarDays, Loader2, ChevronDown, ChevronUp, ShoppingCart, Receipt, Users } from "lucide-react";
 import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface SpendingItem {
+  id: string;
+  name?: string;
+  bill_type?: string;
+  bill_name?: string;
+  expense_name?: string;
+  price?: number;
+  amount?: number;
+  category?: string;
+}
 
 interface TodaySpendingResponse {
   date: string;
@@ -13,6 +25,18 @@ interface TodaySpendingResponse {
     familyExpenses: number;
     sharedTotal: number;
     grandTotal: number;
+  };
+  items: {
+    groceries: SpendingItem[];
+    bills: SpendingItem[];
+    otherBills: SpendingItem[];
+    familyExpenses: SpendingItem[];
+  };
+  itemCounts: {
+    groceries: number;
+    bills: number;
+    otherBills: number;
+    familyExpenses: number;
   };
 }
 
@@ -58,6 +82,15 @@ export const TodaySpendingCard = () => {
   }
 
   const totals = data?.totals || { groceries: 0, bills: 0, familyExpenses: 0, grandTotal: 0 };
+  const items = data?.items || { groceries: [], bills: [], otherBills: [], familyExpenses: [] };
+
+  const getItemName = (item: SpendingItem): string => {
+    return item.name || item.bill_type || item.bill_name || item.expense_name || "Unknown";
+  };
+
+  const getItemAmount = (item: SpendingItem): number => {
+    return item.price || item.amount || 0;
+  };
 
   return (
     <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20">
@@ -95,40 +128,124 @@ export const TodaySpendingCard = () => {
           </div>
         )}
 
-        {/* Expanded grid */}
+        {/* Expanded view with detailed items */}
         {isExpanded && (
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            {/* Groceries */}
-            <div className="bg-amber-500/10 rounded-xl p-3">
-              <span className="text-xs text-muted-foreground block mb-1">Groceries</span>
-              <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                ₹{totals.groceries.toLocaleString()}
-              </span>
+          <div className="mt-2 space-y-3">
+            {/* Category totals */}
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+                <ShoppingCart className="h-3 w-3 mx-auto mb-1 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs text-muted-foreground block">Groceries</span>
+                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                  ₹{totals.groceries.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+                <Receipt className="h-3 w-3 mx-auto mb-1 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs text-muted-foreground block">Bills</span>
+                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                  ₹{totals.bills.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+                <Users className="h-3 w-3 mx-auto mb-1 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs text-muted-foreground block">Family</span>
+                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                  ₹{totals.familyExpenses.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-amber-500/20 rounded-lg p-2 text-center">
+                <CalendarDays className="h-3 w-3 mx-auto mb-1 text-amber-700 dark:text-amber-300" />
+                <span className="text-xs text-muted-foreground block">Total</span>
+                <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                  ₹{totals.grandTotal.toLocaleString()}
+                </span>
+              </div>
             </div>
 
-            {/* Bills */}
-            <div className="bg-amber-500/10 rounded-xl p-3">
-              <span className="text-xs text-muted-foreground block mb-1">Bills</span>
-              <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                ₹{totals.bills.toLocaleString()}
-              </span>
-            </div>
+            {/* Scrollable detailed items list */}
+            <ScrollArea className="h-[200px] rounded-lg border border-amber-500/20 bg-background/50">
+              <div className="p-3 space-y-3">
+                {/* Groceries items */}
+                {items.groceries.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <ShoppingCart className="h-3 w-3 text-green-600 dark:text-green-400" />
+                      <span className="text-xs font-medium text-green-600 dark:text-green-400">Groceries</span>
+                    </div>
+                    <div className="space-y-1">
+                      {items.groceries.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm py-1 px-2 rounded bg-green-500/5">
+                          <span className="text-foreground truncate max-w-[60%]">{getItemName(item)}</span>
+                          <span className="font-medium text-green-600 dark:text-green-400">₹{getItemAmount(item).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Family */}
-            <div className="bg-amber-500/10 rounded-xl p-3">
-              <span className="text-xs text-muted-foreground block mb-1">Family</span>
-              <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                ₹{totals.familyExpenses.toLocaleString()}
-              </span>
-            </div>
+                {/* Bills items */}
+                {items.bills.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Receipt className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Bills</span>
+                    </div>
+                    <div className="space-y-1">
+                      {items.bills.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm py-1 px-2 rounded bg-blue-500/5">
+                          <span className="text-foreground truncate max-w-[60%]">{getItemName(item)}</span>
+                          <span className="font-medium text-blue-600 dark:text-blue-400">₹{getItemAmount(item).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Total */}
-            <div className="bg-amber-500/20 rounded-xl p-3">
-              <span className="text-xs text-muted-foreground block mb-1">Total</span>
-              <span className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                ₹{totals.grandTotal.toLocaleString()}
-              </span>
-            </div>
+                {/* Other Bills items */}
+                {items.otherBills.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Receipt className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Other Bills</span>
+                    </div>
+                    <div className="space-y-1">
+                      {items.otherBills.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm py-1 px-2 rounded bg-purple-500/5">
+                          <span className="text-foreground truncate max-w-[60%]">{getItemName(item)}</span>
+                          <span className="font-medium text-purple-600 dark:text-purple-400">₹{getItemAmount(item).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Family Expenses items */}
+                {items.familyExpenses.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Users className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                      <span className="text-xs font-medium text-orange-600 dark:text-orange-400">Family</span>
+                    </div>
+                    <div className="space-y-1">
+                      {items.familyExpenses.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm py-1 px-2 rounded bg-orange-500/5">
+                          <span className="text-foreground truncate max-w-[60%]">{getItemName(item)}</span>
+                          <span className="font-medium text-orange-600 dark:text-orange-400">₹{getItemAmount(item).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {items.groceries.length === 0 && items.bills.length === 0 && items.otherBills.length === 0 && items.familyExpenses.length === 0 && (
+                  <div className="text-center py-4 text-muted-foreground text-sm">
+                    No spending recorded today
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
           </div>
         )}
       </CardContent>
