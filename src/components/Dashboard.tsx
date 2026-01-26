@@ -17,6 +17,7 @@ import { PreviousMonthOverdueCard } from './PreviousMonthOverdueCard';
 import { TenantMovementCard } from './TenantMovementCard';
 import { TotalCollectedCard } from './TotalCollectedCard';
 import { PersonalExpensesCard } from './PersonalExpensesCard';
+import { TodaySpendingCard } from './TodaySpendingCard';
 import { AllCollectedCard } from './AllCollectedCard';
 import { PendingTenantsCard } from './PendingTenantsCard';
 import { CalculatorCard } from './CalculatorCard';
@@ -348,6 +349,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
                 </CardContent>
               </Card>
+
+              {/* Today's Spending Card - Above PG Expenses */}
+              <TodaySpendingCard />
 
               {/* Personal Expenses Card */}
               <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
