@@ -1,7 +1,8 @@
 import { forwardRef } from "react";
-import hostelLogo from "@/assets/hostel-logo-transparent.png";
+import ammaLogo from "@/assets/amma-logo-transparent.png";
 import flowersTop from "@/assets/welcome-flowers-top.png";
 import flowersBottom from "@/assets/welcome-flowers-bottom.png";
+import cornerHearts from "@/assets/welcome-corner-hearts.png";
 import { formatBillingRange } from "./PaymentReminderTemplate";
 
 /* =========================
@@ -50,26 +51,25 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
       style={{
         width: "500px",
         height: "700px",
-        background: "linear-gradient(180deg, #fff5f8 0%, #ffeef4 50%, #ffe4ed 100%)",
+        background: "linear-gradient(180deg, #fdf2f8 0%, #fce7f3 30%, #fbcfe8 70%, #f9a8d4 100%)",
         fontFamily: "'Georgia', 'Times New Roman', serif",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         position: "relative",
-        borderRadius: "20px",
-        boxShadow: "0 8px 32px rgba(219, 39, 119, 0.15)",
+        borderRadius: "16px",
       }}
     >
-      {/* Decorative border */}
+      {/* Decorative pink border */}
       <div
         style={{
           position: "absolute",
-          top: "10px",
-          left: "10px",
-          right: "10px",
-          bottom: "10px",
-          border: "2px solid rgba(236, 72, 153, 0.3)",
-          borderRadius: "16px",
+          top: "12px",
+          left: "12px",
+          right: "12px",
+          bottom: "12px",
+          border: "3px solid rgba(236, 72, 153, 0.35)",
+          borderRadius: "12px",
           pointerEvents: "none",
         }}
       />
@@ -81,36 +81,53 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          top: "-10px",
-          right: "-10px",
-          width: "180px",
-          height: "180px",
+          top: "-5px",
+          right: "-5px",
+          width: "160px",
+          height: "160px",
           objectFit: "contain",
-          transform: "rotate(0deg)",
-          opacity: 0.95,
+          opacity: 1,
         }}
       />
 
-      {/* Bottom Left Flowers */}
+      {/* Bottom Right Flowers */}
       <img
         src={flowersBottom}
         alt=""
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          bottom: "-15px",
-          left: "-15px",
+          bottom: "-10px",
+          right: "-10px",
           width: "200px",
           height: "200px",
           objectFit: "contain",
-          opacity: 0.95,
+          opacity: 1,
         }}
       />
 
-      {/* Scattered hearts */}
-      <div style={{ position: "absolute", top: "200px", left: "25px", fontSize: "16px", color: "#ec4899", opacity: 0.5 }}>💕</div>
-      <div style={{ position: "absolute", top: "320px", right: "30px", fontSize: "14px", color: "#ec4899", opacity: 0.4 }}>💗</div>
-      <div style={{ position: "absolute", bottom: "220px", right: "45px", fontSize: "12px", color: "#ec4899", opacity: 0.35 }}>💕</div>
+      {/* Bottom Left Corner Hearts */}
+      <img
+        src={cornerHearts}
+        alt=""
+        crossOrigin="anonymous"
+        style={{
+          position: "absolute",
+          bottom: "-5px",
+          left: "-5px",
+          width: "120px",
+          height: "120px",
+          objectFit: "contain",
+          opacity: 0.9,
+          transform: "rotate(180deg)",
+        }}
+      />
+
+      {/* Scattered hearts decorations */}
+      <div style={{ position: "absolute", top: "180px", left: "30px", fontSize: "18px", color: "#f472b6", opacity: 0.6 }}>💕</div>
+      <div style={{ position: "absolute", top: "280px", right: "35px", fontSize: "14px", color: "#f472b6", opacity: 0.5 }}>💗</div>
+      <div style={{ position: "absolute", top: "400px", left: "25px", fontSize: "12px", color: "#f9a8d4", opacity: 0.5 }}>💕</div>
+      <div style={{ position: "absolute", bottom: "250px", right: "40px", fontSize: "16px", color: "#f472b6", opacity: 0.45 }}>💗</div>
 
       {/* Header with Centered Logo */}
       <div
@@ -119,18 +136,18 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          padding: "35px 0 25px",
+          padding: "30px 0 20px",
           position: "relative",
           zIndex: 1,
         }}
       >
         <img
-          src={hostelLogo}
+          src={ammaLogo}
           alt="Amma Women's Hostel"
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "160px",
+            width: "180px",
             height: "auto",
             display: "block",
           }}
@@ -149,23 +166,23 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         }}
       >
         {/* Greeting */}
-        <div style={{ marginBottom: "22px" }}>
+        <div style={{ marginBottom: "18px" }}>
           <h2
             style={{
-              fontSize: "28px",
+              fontSize: "26px",
               fontWeight: 700,
-              color: "#9d174d",
-              marginBottom: "14px",
-              fontStyle: "italic",
+              color: "#831843",
+              marginBottom: "12px",
+              fontStyle: "normal",
             }}
           >
             Hi {data.tenant.name},
           </h2>
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "17px",
               color: "#374151",
-              lineHeight: 1.75,
+              lineHeight: 1.7,
               margin: 0,
             }}
           >
@@ -176,28 +193,28 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         </div>
 
         {/* Rent Period */}
-        <div style={{ marginBottom: "22px" }}>
+        <div style={{ marginBottom: "18px" }}>
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "17px",
               color: "#374151",
-              lineHeight: 1.85,
+              lineHeight: 1.8,
               margin: 0,
             }}
           >
             Your rent period will start from
             <br />
-            <strong style={{ fontSize: "19px", color: "#9d174d" }}>{billingPeriod}.</strong>
+            <strong style={{ fontSize: "18px", color: "#831843" }}>{billingPeriod}.</strong>
           </p>
         </div>
 
         {/* Payment Details */}
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "22px" }}>
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "17px",
               color: "#374151",
-              lineHeight: 2.1,
+              lineHeight: 2,
               margin: 0,
             }}
           >
@@ -212,12 +229,12 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         </div>
 
         {/* Request Message */}
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "22px" }}>
           <p
             style={{
-              fontSize: "15px",
+              fontSize: "16px",
               color: "#4b5563",
-              lineHeight: 1.75,
+              lineHeight: 1.7,
               margin: 0,
             }}
           >
@@ -226,19 +243,19 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         </div>
 
         {/* Thank You */}
-        <div style={{ marginTop: "auto", paddingBottom: "45px" }}>
+        <div style={{ marginTop: "auto", paddingBottom: "50px" }}>
           <p
             style={{
               fontSize: "18px",
               fontWeight: 700,
-              color: "#9d174d",
+              color: "#831843",
               margin: 0,
-              lineHeight: 1.85,
+              lineHeight: 1.8,
             }}
           >
             Thank you,
             <br />
-            <span style={{ fontStyle: "italic" }}>@Amma Women's Hostel</span>
+            <span style={{ fontWeight: 600 }}>@Amma Women's Hostel</span>
           </p>
         </div>
       </div>
