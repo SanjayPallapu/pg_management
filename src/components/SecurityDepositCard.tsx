@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search } from 'lucide-react';
+import { Search, MessageCircle, Receipt, Phone } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Wallet, CheckCircle, XCircle, IndianRupee, CalendarIcon, X, SquarePen } from 'lucide-react';
 import { Room, Tenant } from '@/types';
@@ -18,6 +19,8 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { SecurityDepositReceiptDialog } from './SecurityDepositReceiptDialog';
+import { SecurityDepositReceiptData } from './SecurityDepositReceiptTemplate';
 
 interface SecurityDepositCardProps {
   rooms: Room[];
@@ -40,7 +43,8 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
   const [depositDate, setDepositDate] = useState<Date>(new Date());
   const [depositMode, setDepositMode] = useState<'upi' | 'cash'>('upi');
   const [showEditActions, setShowEditActions] = useState(false);
-
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{ data: SecurityDepositReceiptData; phone: string } | null>(null);
   // Handle OS back gesture to close sub-dialogs
   useBackGesture(!!depositDialog, () => setDepositDialog(null));
   useBackGesture(!!removeDialog, () => setRemoveDialog(null));
@@ -243,7 +247,38 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  {depositedTenants.map(tenant => (
+                  {depositedTenants.map(tenant => {
+                    const openReceiptDialog = () => {
+                      // Find room capacity for sharing type
+                      const room = rooms.find(r => r.roomNo === tenant.roomNo);
+                      setReceiptData({
+                        data: {
+                          tenant: {
+                            name: tenant.name,
+                            joiningDate: tenant.startDate,
+                          },
+                          room: {
+                            roomNo: tenant.roomNo,
+                            sharingType: room ? `${room.capacity} Sharing` : 'N/A',
+                          },
+                          deposit: {
+                            amount: tenant.securityDepositAmount || 0,
+                            date: tenant.securityDepositDate || new Date().toISOString(),
+                            mode: (tenant.securityDepositMode as 'upi' | 'cash') || 'cash',
+                          },
+                        },
+                        phone: tenant.phone,
+                      });
+                      setReceiptDialogOpen(true);
+                    };
+
+                    const openWhatsAppChat = () => {
+                      const phone = tenant.phone.replace(/\D/g, '');
+                      const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                      window.open(`https://wa.me/${formattedPhone}`, '_blank');
+                    };
+
+                    return (
                     <div 
                       key={tenant.id} 
                       className="flex items-center justify-between p-3 rounded-lg bg-paid-muted border"
@@ -264,6 +299,39 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* Call badge */}
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <a 
+                            href={`tel:${tenant.phone}`}
+                            className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                            title={`Call ${tenant.name}`}
+                          >
+                            <Phone className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        {/* WhatsApp dropdown menu */}
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button 
+                                className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                title="WhatsApp options"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={openReceiptDialog} className="gap-2">
+                                <Receipt className="h-4 w-4" />
+                                Generate Receipt
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat with Tenant
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                         <Badge variant="secondary" className="bg-paid text-paid-foreground">
                           <IndianRupee className="h-3 w-3 mr-1" />
                           {tenant.securityDepositAmount?.toLocaleString()}
@@ -299,7 +367,7 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                         )}
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             )}
@@ -536,6 +604,14 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Security Deposit Receipt Dialog */}
+      <SecurityDepositReceiptDialog
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        data={receiptData?.data || null}
+        tenantPhone={receiptData?.phone}
+      />
     </>
   );
 };

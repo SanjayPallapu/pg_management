@@ -2,7 +2,6 @@ import { forwardRef } from "react";
 import ammaLogo from "@/assets/amma-logo-transparent.png";
 import flowersTop from "@/assets/welcome-flowers-top.png";
 import flowersBottom from "@/assets/welcome-flowers-bottom.png";
-import cornerHearts from "@/assets/welcome-corner-hearts.png";
 import { formatBillingRange } from "./PaymentReminderTemplate";
 
 /* =========================
@@ -51,7 +50,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
       style={{
         width: "500px",
         height: "700px",
-        background: "linear-gradient(180deg, #fdf2f8 0%, #fce7f3 30%, #fbcfe8 70%, #f9a8d4 100%)",
+        background: "#ffffff",
         fontFamily: "'Georgia', 'Times New Roman', serif",
         overflow: "hidden",
         display: "flex",
@@ -90,44 +89,21 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         }}
       />
 
-      {/* Bottom Right Flowers */}
+      {/* Bottom Right Flowers - moved down */}
       <img
         src={flowersBottom}
         alt=""
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          bottom: "-10px",
-          right: "-10px",
-          width: "200px",
-          height: "200px",
+          bottom: "-20px",
+          right: "-15px",
+          width: "180px",
+          height: "180px",
           objectFit: "contain",
           opacity: 1,
         }}
       />
-
-      {/* Bottom Left Corner Hearts */}
-      <img
-        src={cornerHearts}
-        alt=""
-        crossOrigin="anonymous"
-        style={{
-          position: "absolute",
-          bottom: "-5px",
-          left: "-5px",
-          width: "120px",
-          height: "120px",
-          objectFit: "contain",
-          opacity: 0.9,
-          transform: "rotate(180deg)",
-        }}
-      />
-
-      {/* Scattered hearts decorations */}
-      <div style={{ position: "absolute", top: "180px", left: "30px", fontSize: "18px", color: "#f472b6", opacity: 0.6 }}>💕</div>
-      <div style={{ position: "absolute", top: "280px", right: "35px", fontSize: "14px", color: "#f472b6", opacity: 0.5 }}>💗</div>
-      <div style={{ position: "absolute", top: "400px", left: "25px", fontSize: "12px", color: "#f9a8d4", opacity: 0.5 }}>💕</div>
-      <div style={{ position: "absolute", bottom: "250px", right: "40px", fontSize: "16px", color: "#f472b6", opacity: 0.45 }}>💗</div>
 
       {/* Header with Centered Logo */}
       <div
