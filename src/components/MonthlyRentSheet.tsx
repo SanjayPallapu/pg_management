@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon, Wallet } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -766,6 +766,18 @@ export const MonthlyRentSheet = ({
                                 <Bell className="h-4 w-4" />
                                 Payment Reminder
                               </DropdownMenuItem>}
+                            {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  // Scroll to security deposit card - we'll use a custom event
+                                  window.dispatchEvent(new CustomEvent('openSecurityDeposit', { detail: { tenantId: tenant.id } }));
+                                }} 
+                                className="gap-2"
+                              >
+                                <Wallet className="h-4 w-4" />
+                                Security Deposit
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>}
                     </div>
