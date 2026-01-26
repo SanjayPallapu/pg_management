@@ -59,53 +59,39 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         borderRadius: "16px",
       }}
     >
-      {/* Decorative pink border */}
-      <div
-        style={{
-          position: "absolute",
-          top: "12px",
-          left: "12px",
-          right: "12px",
-          bottom: "12px",
-          border: "3px solid rgba(236, 72, 153, 0.35)",
-          borderRadius: "12px",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Top Right Flowers */}
+      {/* Top Right Flowers - smaller and positioned on edge */}
       <img
         src={flowersTop}
         alt=""
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          top: "-5px",
-          right: "-5px",
-          width: "160px",
-          height: "160px",
+          top: "-8px",
+          right: "-8px",
+          width: "130px",
+          height: "130px",
           objectFit: "contain",
           opacity: 1,
         }}
       />
 
-      {/* Bottom Right Flowers - moved down */}
+      {/* Bottom Right Flowers - smaller, positioned on edge, moved left */}
       <img
         src={flowersBottom}
         alt=""
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          bottom: "-20px",
-          right: "-15px",
-          width: "180px",
-          height: "180px",
+          bottom: "-12px",
+          right: "5px",
+          width: "150px",
+          height: "150px",
           objectFit: "contain",
           opacity: 1,
         }}
       />
 
-      {/* Header with Centered Logo */}
+      {/* Header with Centered Logo - increased size */}
       <div
         style={{
           width: "100%",
@@ -123,7 +109,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "180px",
+            width: "210px",
             height: "auto",
             display: "block",
           }}
@@ -168,7 +154,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           </p>
         </div>
 
-        {/* Rent Period */}
+        {/* Rent Period - updated text */}
         <div style={{ marginBottom: "18px" }}>
           <p
             style={{
@@ -178,9 +164,10 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
               margin: 0,
             }}
           >
-            Your rent period will start from
+            Your rent period will start from{" "}
+            <strong style={{ fontSize: "18px", color: "#831843" }}>{billingPeriod}</strong>,
             <br />
-            <strong style={{ fontSize: "18px", color: "#831843" }}>{billingPeriod}.</strong>
+            and you need to pay rent every month on this date.
           </p>
         </div>
 

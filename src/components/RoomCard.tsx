@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -327,6 +327,15 @@ export const RoomCard = ({
                           <DropdownMenuItem onClick={openPaymentReminder} className="gap-2">
                             <Bell className="h-4 w-4" />
                             Payment Reminder
+                          </DropdownMenuItem>
+                        )}
+                        {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                          <DropdownMenuItem 
+                            onClick={() => navigate('/', { state: { openSecurityDeposit: true, tenantId: tenant.id } })} 
+                            className="gap-2"
+                          >
+                            <Wallet className="h-4 w-4" />
+                            Security Deposit
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
