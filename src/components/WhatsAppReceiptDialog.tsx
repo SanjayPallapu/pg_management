@@ -140,10 +140,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       let phone = receiptData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      const message = receiptData.isFullPayment
-        ? `Hi ${receiptData.tenantName},\n\nYour rent payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth} has been received successfully.\n\nThank you!\n- Amma Women's Hostel`
-        : `Hi ${receiptData.tenantName},\n\nWe have received your partial payment of ₹${Math.floor(receiptData.amountPaid).toLocaleString('en-IN')} for ${receiptData.forMonth}.\n\nRemaining balance: ₹${Math.floor(receiptData.remainingBalance || 0).toLocaleString('en-IN')}\n\nPlease pay the remaining amount at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
-
       // Copy phone number to clipboard for easy search
       await navigator.clipboard.writeText(displayPhone);
 
@@ -157,20 +153,17 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       // Small delay so user sees the toast
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Use Web Share API to share image
+      // Use Web Share API to share image only (no text)
       const navAny = navigator as any;
       if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
-        await navAny.share({
-          text: message,
-          files: [file],
-        });
+        await navAny.share({ files: [file] });
         // Mark as sent after successful share
         onWhatsappSent?.();
       } else {
-        // Fallback: download and open WhatsApp
+        // Fallback: download and open WhatsApp chat (no pre-filled text)
         downloadReceiptImage(generatedImage, receiptData.tenantName);
         if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.location.href = `https://wa.me/${phone}`;
         // Also mark as sent for fallback
         onWhatsappSent?.();
       }

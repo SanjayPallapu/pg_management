@@ -94,8 +94,6 @@ export const SecurityDepositReceiptDialog = ({
       let phone = tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      const message = `Hi ${data.tenant.name},\n\nYour security deposit of ₹${Math.floor(data.deposit.amount).toLocaleString('en-IN')} has been received successfully.\n\nThis amount is refundable upon vacating the hostel.\n\nThank you!\n- Amma Women's Hostel`;
-
       // Copy phone number to clipboard for easy search
       await navigator.clipboard.writeText(displayPhone);
 
@@ -109,18 +107,15 @@ export const SecurityDepositReceiptDialog = ({
       // Small delay so user sees the toast
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Use Web Share API to share image
+      // Use Web Share API to share image only (no text)
       const navAny = navigator as any;
       if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
-        await navAny.share({
-          text: message,
-          files: [file],
-        });
+        await navAny.share({ files: [file] });
       } else {
-        // Fallback: download and open WhatsApp
+        // Fallback: download and open WhatsApp chat (no pre-filled text)
         downloadReceiptImage(generatedImage, `${data.tenant.name}-deposit`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.location.href = `https://wa.me/${phone}`;
       }
     } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);
