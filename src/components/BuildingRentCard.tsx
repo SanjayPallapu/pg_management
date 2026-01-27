@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Building, Phone, MessageCircle, Receipt, ChevronDown, Settings, History, Copy, Check } from 'lucide-react';
+import { Building, Phone, MessageCircle, Receipt, Settings, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { BuildingRentReceiptDialog } from './BuildingRentReceiptDialog';
@@ -29,7 +22,6 @@ export const BuildingRentCard = () => {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const forMonth = `${months[selectedMonth - 1]} ${selectedYear}`;
 
@@ -40,19 +32,15 @@ export const BuildingRentCard = () => {
     window.location.href = `tel:${settings.whatsappNumber}`;
   };
 
-  const handleChat = () => {
-    window.open(`https://wa.me/91${settings.whatsappNumber}`, '_blank');
-  };
-
-  const copyPhoneNumber = async () => {
+  const handleChat = async () => {
+    // Auto copy phone number when clicking WhatsApp
     try {
       await navigator.clipboard.writeText(settings.whatsappNumber);
-      setCopied(true);
       toast.success('Phone number copied!');
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Failed to copy');
+      // Silent fail for copy
     }
+    window.open(`https://wa.me/91${settings.whatsappNumber}`, '_blank');
   };
 
   return (
@@ -96,49 +84,38 @@ export const BuildingRentCard = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Badges */}
           <div className="flex items-center gap-2">
-            {/* Call Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
+            {/* Call Badge */}
+            <Badge
+              variant="secondary"
+              className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
               onClick={handleCall}
             >
-              <Phone className="h-4 w-4 mr-1" />
+              <Phone className="h-3.5 w-3.5 mr-1" />
               Call
-            </Button>
+            </Badge>
 
-            {/* Copy Number Button */}
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={copyPhoneNumber}>
-              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-            </Button>
+            {/* Chat Badge */}
+            <Badge
+              variant="secondary"
+              className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
+              onClick={handleChat}
+            >
+              <MessageCircle className="h-3.5 w-3.5 mr-1" />
+              Chat
+            </Badge>
 
-            {/* Dropdown Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default" size="sm" className="flex-1">
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  Actions
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-popover">
-                <DropdownMenuItem onClick={() => setReceiptDialogOpen(true)}>
-                  <Receipt className="h-4 w-4 mr-2" />
-                  Generate Receipt
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleChat}>
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Chat on WhatsApp
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setHistorySheetOpen(true)}>
-                  <History className="h-4 w-4 mr-2" />
-                  Payment History
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Receipt Button */}
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-1"
+              onClick={() => setReceiptDialogOpen(true)}
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              Receipt
+            </Button>
           </div>
         </CardContent>
       </Card>
