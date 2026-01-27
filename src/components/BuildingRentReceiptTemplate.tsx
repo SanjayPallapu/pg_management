@@ -29,324 +29,200 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
         width: '600px',
         backgroundColor: '#ffffff',
         fontFamily: 'Arial, sans-serif',
-        position: 'relative',
-        border: '3px solid #1a365d',
-        borderRadius: '12px',
-        overflow: 'hidden',
+        padding: '40px 50px',
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
-          padding: '25px 30px',
-          textAlign: 'center',
-        }}
-      >
+      {/* Header with Building Icon */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+        {/* Building Icon SVG */}
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <rect x="5" y="20" width="25" height="35" fill="#3B82F6" rx="2" />
+          <rect x="30" y="10" width="25" height="45" fill="#1E40AF" rx="2" />
+          <rect x="10" y="25" width="5" height="6" fill="#93C5FD" />
+          <rect x="20" y="25" width="5" height="6" fill="#93C5FD" />
+          <rect x="10" y="35" width="5" height="6" fill="#93C5FD" />
+          <rect x="20" y="35" width="5" height="6" fill="#93C5FD" />
+          <rect x="10" y="45" width="5" height="6" fill="#93C5FD" />
+          <rect x="20" y="45" width="5" height="6" fill="#93C5FD" />
+          <rect x="35" y="15" width="5" height="6" fill="#93C5FD" />
+          <rect x="45" y="15" width="5" height="6" fill="#93C5FD" />
+          <rect x="35" y="25" width="5" height="6" fill="#93C5FD" />
+          <rect x="45" y="25" width="5" height="6" fill="#93C5FD" />
+          <rect x="35" y="35" width="5" height="6" fill="#93C5FD" />
+          <rect x="45" y="35" width="5" height="6" fill="#93C5FD" />
+          <rect x="35" y="45" width="5" height="6" fill="#93C5FD" />
+          <rect x="45" y="45" width="5" height="6" fill="#93C5FD" />
+        </svg>
         <h1
           style={{
             fontSize: '28px',
             fontWeight: 'bold',
-            color: '#ffffff',
+            color: '#1E3A5F',
             margin: 0,
-            letterSpacing: '3px',
-            textTransform: 'uppercase',
+            letterSpacing: '2px',
           }}
         >
-          Building Rent Receipt
+          BUILDING RENT RECEIPT
         </h1>
-        <p style={{ fontSize: '14px', color: '#cbd5e0', margin: '8px 0 0 0' }}>
-          {data.forMonth}
-        </p>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: '25px 30px' }}>
-        {/* Date */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginBottom: '20px',
-          }}
-        >
+      {/* Blue line under header */}
+      <div style={{ height: '3px', backgroundColor: '#2563EB', marginBottom: '30px' }} />
+
+      {/* Date and Month Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px' }}>
+        <div style={{ fontSize: '14px', color: '#4B5563' }}>
+          <span style={{ fontWeight: '600' }}>Date:</span> {formatDate(data.date)}
+        </div>
+        <div style={{ fontSize: '14px', color: '#4B5563' }}>
+          <span style={{ fontWeight: '600' }}>For Month:</span> {data.forMonth}
+        </div>
+      </div>
+
+      {/* From Field */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+            From:
+          </span>
           <span
             style={{
-              backgroundColor: '#edf2f7',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              color: '#4a5568',
-              fontWeight: '500',
+              flex: 1,
+              fontSize: '16px',
+              color: '#1E3A5F',
+              fontWeight: '600',
+              borderBottom: '1px solid #9CA3AF',
+              paddingBottom: '5px',
             }}
           >
-            Date: {formatDate(data.date)}
+            {data.receivedFrom}
           </span>
         </div>
+      </div>
 
-        {/* From/To Section */}
-        <div
-          style={{
-            backgroundColor: '#f7fafc',
-            borderRadius: '10px',
-            padding: '20px',
-            marginBottom: '20px',
-            border: '1px solid #e2e8f0',
-          }}
-        >
-          <div
+      {/* To Field */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+            To:
+          </span>
+          <span
             style={{
-              display: 'flex',
-              marginBottom: '15px',
-              alignItems: 'center',
+              flex: 1,
+              fontSize: '16px',
+              color: '#1E3A5F',
+              fontWeight: '600',
+              borderBottom: '1px solid #9CA3AF',
+              paddingBottom: '5px',
             }}
           >
-            <span
-              style={{
-                width: '130px',
-                fontSize: '14px',
-                color: '#718096',
-                fontWeight: '600',
-              }}
-            >
-              Received From:
-            </span>
-            <span
-              style={{
-                fontSize: '16px',
-                color: '#1a365d',
-                fontWeight: '700',
-              }}
-            >
-              {data.receivedFrom}
-            </span>
-          </div>
-          <div
+            {data.paidTo}
+          </span>
+        </div>
+      </div>
+
+      {/* Building Rent Field */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+            Building Rent:
+          </span>
+          <span
             style={{
-              display: 'flex',
-              alignItems: 'center',
+              flex: 1,
+              fontSize: '16px',
+              color: '#1E3A5F',
+              fontWeight: '700',
+              borderBottom: '1px solid #9CA3AF',
+              paddingBottom: '5px',
             }}
           >
-            <span
-              style={{
-                width: '130px',
-                fontSize: '14px',
-                color: '#718096',
-                fontWeight: '600',
-              }}
-            >
-              Paid To:
-            </span>
-            <span
-              style={{
-                fontSize: '16px',
-                color: '#1a365d',
-                fontWeight: '700',
-              }}
-            >
-              {data.paidTo}
-            </span>
+            ₹{formatIndianCurrency(data.amount)} ({numberToWords(data.amount)})
+          </span>
+        </div>
+      </div>
+
+      {/* UPI/Cash Split if applicable */}
+      {data.upiAmount > 0 && data.cashAmount > 0 && (
+        <div style={{ marginBottom: '20px', marginLeft: '130px' }}>
+          <div style={{ display: 'flex', gap: '30px', fontSize: '14px', color: '#4B5563' }}>
+            <span>UPI: ₹{formatIndianCurrency(data.upiAmount)}</span>
+            <span>Cash: ₹{formatIndianCurrency(data.cashAmount)}</span>
           </div>
         </div>
+      )}
 
-        {/* Amount Box */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
-            borderRadius: '12px',
-            padding: '25px',
-            textAlign: 'center',
-            marginBottom: '20px',
-          }}
-        >
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#a0aec0',
-              margin: '0 0 8px 0',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-            }}
-          >
-            Total Amount
-          </p>
-          <p
-            style={{
-              fontSize: '42px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              margin: 0,
-            }}
-          >
-            ₹{formatIndianCurrency(data.amount)}
-          </p>
-          <p
-            style={{
-              fontSize: '14px',
-              color: '#cbd5e0',
-              margin: '10px 0 0 0',
-              fontStyle: 'italic',
-            }}
-          >
-            {numberToWords(data.amount)}
-          </p>
-        </div>
+      {/* Mode of Payment with badges */}
+      <div style={{ marginBottom: '25px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500' }}>
+            Mode of Payment:
+          </span>
 
-        {/* Payment Mode Split */}
-        {(data.upiAmount > 0 || data.cashAmount > 0) && (
-          <div
-            style={{
-              display: 'flex',
-              gap: '15px',
-              justifyContent: 'center',
-              marginBottom: '20px',
-            }}
-          >
-            {data.upiAmount > 0 && (
-              <div
-                style={{
-                  backgroundColor: '#ebf8ff',
-                  border: '2px solid #90cdf4',
-                  borderRadius: '10px',
-                  padding: '15px 25px',
-                  textAlign: 'center',
-                  flex: 1,
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: '12px',
-                    color: '#2b6cb0',
-                    margin: '0 0 6px 0',
-                    textTransform: 'uppercase',
-                    fontWeight: '700',
-                    letterSpacing: '1px',
-                  }}
-                >
-                  UPI Payment
-                </p>
-                <p
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 'bold',
-                    color: '#2c5282',
-                    margin: 0,
-                  }}
-                >
-                  ₹{formatIndianCurrency(data.upiAmount)}
-                </p>
-              </div>
-            )}
-            {data.cashAmount > 0 && (
-              <div
-                style={{
-                  backgroundColor: '#f0fff4',
-                  border: '2px solid #9ae6b4',
-                  borderRadius: '10px',
-                  padding: '15px 25px',
-                  textAlign: 'center',
-                  flex: 1,
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: '12px',
-                    color: '#276749',
-                    margin: '0 0 6px 0',
-                    textTransform: 'uppercase',
-                    fontWeight: '700',
-                    letterSpacing: '1px',
-                  }}
-                >
-                  Cash Payment
-                </p>
-                <p
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 'bold',
-                    color: '#22543d',
-                    margin: 0,
-                  }}
-                >
-                  ₹{formatIndianCurrency(data.cashAmount)}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Purpose */}
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '15px',
-            backgroundColor: '#faf5ff',
-            borderRadius: '8px',
-            border: '1px solid #e9d8fd',
-            marginBottom: '25px',
-          }}
-        >
-          <p style={{ fontSize: '14px', color: '#553c9a', margin: 0 }}>
-            <strong>Purpose:</strong> Building Rent for {data.forMonth}
-          </p>
-        </div>
-
-        {/* Stamps Row */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0 10px',
-          }}
-        >
-          {/* PAID Stamp */}
-          <div
-            style={{
-              border: '4px solid #c53030',
-              borderRadius: '6px',
-              padding: '10px 30px',
-              transform: 'rotate(-5deg)',
-            }}
-          >
-            <span
-              style={{
-                color: '#c53030',
-                fontWeight: 'bold',
-                fontSize: '24px',
-                letterSpacing: '4px',
-              }}
-            >
-              PAID
-            </span>
-          </div>
-
-          {/* Signature area */}
-          <div style={{ textAlign: 'center' }}>
+          {/* UPI Badge */}
+          {data.upiAmount > 0 && (
             <div
               style={{
-                borderTop: '2px solid #a0aec0',
-                width: '160px',
-                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#1F2937',
+                color: '#fff',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
               }}
-            />
-            <span style={{ fontSize: '13px', color: '#718096' }}>
-              Authorized Signature
-            </span>
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <polygon points="5,4 12,12 5,20" fill="#FF9800" />
+                <polygon points="12,4 19,12 12,20" fill="#4CAF50" />
+              </svg>
+              UPI
+            </div>
+          )}
+
+          {/* Cash Badge */}
+          {data.cashAmount > 0 && (
+            <div
+              style={{
+                backgroundColor: '#1F2937',
+                color: '#fff',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
+              }}
+            >
+              CASH
+            </div>
+          )}
+
+          {/* PAID Badge */}
+          <div
+            style={{
+              backgroundColor: '#2563EB',
+              color: '#fff',
+              padding: '8px 20px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              border: '2px solid #1E40AF',
+            }}
+          >
+            PAID
           </div>
         </div>
       </div>
 
+      {/* Bottom blue line */}
+      <div style={{ height: '3px', backgroundColor: '#2563EB', marginTop: '20px' }} />
+
       {/* Footer */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #2c5282 0%, #1a365d 100%)',
-          padding: '15px 30px',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ fontSize: '12px', color: '#cbd5e0', margin: 0 }}>
-          Thank you for your payment • This is a computer-generated receipt
+      <div style={{ textAlign: 'center', marginTop: '15px' }}>
+        <p style={{ fontSize: '11px', color: '#9CA3AF', margin: 0 }}>
+          This is a computer-generated receipt
         </p>
       </div>
     </div>
