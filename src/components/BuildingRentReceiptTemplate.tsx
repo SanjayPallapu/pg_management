@@ -15,6 +15,9 @@ interface BuildingRentReceiptTemplateProps {
   data: BuildingRentReceiptData;
 }
 
+// Fixed building rent amount - always displayed as 1,50,000
+const FIXED_BUILDING_RENT = 150000;
+
 export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplateProps) => {
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -114,21 +117,25 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               paddingBottom: "5px",
             }}
           >
-            ₹{formatIndianCurrency(data.amount)} ({numberToWords(data.amount)})
+            ₹{formatIndianCurrency(FIXED_BUILDING_RENT)} ({numberToWords(FIXED_BUILDING_RENT)})
           </span>
         </div>
       </div>
 
-      {/* UPI/Cash Split if applicable */}
-      {data.upiAmount > 0 && data.cashAmount > 0 && (
+      {/* UPI/Cash Split - always show actual amounts paid */}
+      {(data.upiAmount > 0 || data.cashAmount > 0) && (
         <div style={{ marginBottom: "20px", marginLeft: "130px" }}>
           <div style={{ display: "flex", gap: "30px", fontSize: "15px", color: "#1E3A5F" }}>
-            <span>
-              <strong>UPI:</strong> <strong>₹{formatIndianCurrency(data.upiAmount)}</strong>
-            </span>
-            <span>
-              <strong>Cash:</strong> <strong>₹{formatIndianCurrency(data.cashAmount)}</strong>
-            </span>
+            {data.upiAmount > 0 && (
+              <span>
+                <strong>UPI:</strong> <strong>₹{formatIndianCurrency(data.upiAmount)}</strong>
+              </span>
+            )}
+            {data.cashAmount > 0 && (
+              <span>
+                <strong>Cash:</strong> <strong>₹{formatIndianCurrency(data.cashAmount)}</strong>
+              </span>
+            )}
           </div>
         </div>
       )}
