@@ -104,8 +104,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       let phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      const message = `Hi ${reminderData.tenantName},\n\nThis is a gentle reminder for your rent payment of ₹${Math.floor(reminderData.balance).toLocaleString('en-IN')} for ${reminderData.forMonth}.\n\nPlease make the payment at your earliest convenience.\n\nThank you!\n- Amma Women's Hostel`;
-
       await navigator.clipboard.writeText(displayPhone);
       toast({ 
         title: `📱 Search: ${reminderData.tenantName}`, 
@@ -117,11 +115,13 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
       const navAny = navigator as any;
       if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
-        await navAny.share({ text: message, files: [file] });
+        // Share only the image file, no text
+        await navAny.share({ files: [file] });
       } else {
+        // Fallback: download image and open WhatsApp chat (no pre-filled text)
         downloadReceiptImage(generatedImage, `reminder-${reminderData.tenantName}`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.location.href = `https://wa.me/${phone}`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {

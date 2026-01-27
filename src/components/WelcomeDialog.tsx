@@ -112,9 +112,6 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       let phone = welcomeData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      const depositText = includeSecurityDeposit ? `\nSecurity Advance: ₹${FIXED_SECURITY_DEPOSIT.toLocaleString('en-IN')}` : '';
-      const message = `Hi ${welcomeData.tenantName}! 🎉\n\nWelcome to Amma Women's Hostel! We're happy to have you with us.\n\nRoom: ${welcomeData.roomNo} (${welcomeData.sharingType})\nMonthly Rent: ₹${welcomeData.monthlyRent.toLocaleString('en-IN')}${depositText}\n\nPlease let me know once the payment${includeSecurityDeposit ? ' and advance are' : ' is'} completed. Feel free to reach out if you have any questions!\n\nThank you! 🙏\n- Amma Women's Hostel`;
-
       await navigator.clipboard.writeText(displayPhone);
       toast({
         title: `📱 Search: ${welcomeData.tenantName}`,
@@ -126,11 +123,13 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
 
       const navAny = navigator as any;
       if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
-        await navAny.share({ text: message, files: [file] });
+        // Share only the image file, no text
+        await navAny.share({ files: [file] });
       } else {
+        // Fallback: download image and open WhatsApp chat (no pre-filled text)
         downloadReceiptImage(generatedImage, `welcome-${welcomeData.tenantName}`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.location.href = `https://wa.me/${phone}`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
