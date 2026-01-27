@@ -1,7 +1,10 @@
 import { numberToWords, formatIndianCurrency } from '@/utils/numberToWords';
+import receiptHeader from '@/assets/receipt-header.png';
+import receiptFooter from '@/assets/receipt-footer.png';
 
 export interface BuildingRentReceiptData {
   receivedFrom: string;
+  paidTo: string;
   amount: number;
   upiAmount: number;
   cashAmount: number;
@@ -19,174 +22,340 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
     const day = d.getDate().toString().padStart(2, '0');
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
     const year = d.getFullYear();
-    return `${day} / ${month} / ${year}`;
+    return `${day}-${month}-${year}`;
   };
 
   return (
     <div
       style={{
         width: '600px',
-        padding: '40px',
-        backgroundColor: '#f5f5f5',
-        fontFamily: 'Georgia, serif',
+        backgroundColor: '#ffffff',
+        fontFamily: 'Arial, sans-serif',
+        position: 'relative',
       }}
     >
-      <div
+      {/* Header Image */}
+      <img
+        src={receiptHeader}
+        alt="Header"
         style={{
-          backgroundColor: '#ffffff',
-          border: '2px solid #d1d5db',
-          padding: '30px',
-          position: 'relative',
+          width: '100%',
+          height: 'auto',
+          display: 'block',
         }}
-      >
-        {/* Inner border */}
+      />
+
+      {/* Content */}
+      <div style={{ padding: '20px 30px' }}>
+        {/* Title */}
         <div
           style={{
-            border: '1px solid #e5e7eb',
-            padding: '25px',
+            textAlign: 'center',
+            marginBottom: '20px',
           }}
         >
-          {/* Header */}
-          <div
+          <h1
             style={{
-              textAlign: 'center',
-              borderBottom: '2px solid #1e3a8a',
-              paddingBottom: '15px',
-              marginBottom: '25px',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#1a365d',
+              margin: 0,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              borderBottom: '2px solid #e2e8f0',
+              paddingBottom: '10px',
             }}
           >
-            <h1
+            Building Rent Receipt
+          </h1>
+          <p style={{ fontSize: '14px', color: '#718096', margin: '8px 0 0 0' }}>
+            {data.forMonth}
+          </p>
+        </div>
+
+        {/* Receipt Details */}
+        <div
+          style={{
+            backgroundColor: '#f7fafc',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px',
+          }}
+        >
+          {/* Date */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginBottom: '15px',
+            }}
+          >
+            <span
               style={{
-                fontSize: '28px',
-                fontWeight: 'bold',
-                color: '#1e3a8a',
-                margin: 0,
-                letterSpacing: '4px',
+                backgroundColor: '#edf2f7',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                fontSize: '13px',
+                color: '#4a5568',
               }}
             >
-              RECEIPT
-            </h1>
+              Date: {formatDate(data.date)}
+            </span>
           </div>
 
-          {/* Receipt Content */}
-          <div style={{ lineHeight: '2.2' }}>
-            <div style={{ marginBottom: '15px' }}>
-              <span style={{ color: '#4b5563', fontWeight: '500' }}>Received From:</span>
-              <span style={{ marginLeft: '20px', color: '#1e3a8a', fontWeight: '600' }}>
-                Mr. {data.receivedFrom}
-              </span>
-            </div>
-
-            <div style={{ marginBottom: '15px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
-              <span style={{ color: '#4b5563', fontWeight: '500' }}>The Sum of Rupees:</span>
-              <span style={{ marginLeft: '20px', color: '#1e3a8a', fontWeight: '500', fontStyle: 'italic' }}>
-                {numberToWords(data.amount).replace(' Only', '')} Only
-              </span>
-            </div>
-
-            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-              <span style={{ color: '#4b5563', fontWeight: '500' }}>For Building Rent ({data.forMonth}):</span>
+          {/* From/To */}
+          <div style={{ marginBottom: '20px' }}>
+            <div
+              style={{
+                display: 'flex',
+                marginBottom: '12px',
+                alignItems: 'flex-start',
+              }}
+            >
               <span
                 style={{
-                  marginLeft: '20px',
-                  color: '#1e3a8a',
-                  fontWeight: 'bold',
-                  fontSize: '32px',
+                  width: '110px',
+                  fontSize: '14px',
+                  color: '#718096',
+                  fontWeight: '500',
                 }}
               >
-                Rs. {formatIndianCurrency(data.amount)}/-
+                Received From:
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  color: '#2d3748',
+                  fontWeight: '600',
+                }}
+              >
+                {data.receivedFrom}
               </span>
             </div>
-
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '15px',
-                borderTop: '1px solid #e5e7eb',
-                borderBottom: '1px solid #e5e7eb',
-                padding: '12px 0',
+                alignItems: 'flex-start',
               }}
             >
-              <div>
-                <span style={{ color: '#4b5563', fontWeight: '500' }}>UPI Amount:</span>
-                <span style={{ marginLeft: '10px', color: '#2563eb', fontWeight: '600' }}>
-                  {data.upiAmount > 0 ? `₹${formatIndianCurrency(data.upiAmount)}` : '-'}
-                </span>
-              </div>
-              <div>
-                <span style={{ color: '#4b5563', fontWeight: '500' }}>Cash:</span>
-                <span style={{ marginLeft: '10px', color: '#16a34a', fontWeight: '600' }}>
-                  {data.cashAmount > 0 ? `₹${formatIndianCurrency(data.cashAmount)}` : '-'}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <span style={{ color: '#4b5563', fontWeight: '500' }}>Amount Paid In Words:</span>
-              <span style={{ marginLeft: '15px', color: '#1e3a8a', fontStyle: 'italic' }}>
-                {numberToWords(data.amount).replace(' Only', '')} Rupees
+              <span
+                style={{
+                  width: '110px',
+                  fontSize: '14px',
+                  color: '#718096',
+                  fontWeight: '500',
+                }}
+              >
+                Paid To:
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  color: '#2d3748',
+                  fontWeight: '600',
+                }}
+              >
+                {data.paidTo}
               </span>
             </div>
+          </div>
 
-            <div style={{ marginBottom: '30px' }}>
-              <span style={{ color: '#4b5563', fontWeight: '500' }}>Date:</span>
-              <span style={{ marginLeft: '15px', color: '#374151', fontStyle: 'italic' }}>
-                {formatDate(data.date)}
-              </span>
-            </div>
+          {/* Amount Box */}
+          <div
+            style={{
+              backgroundColor: '#1a365d',
+              borderRadius: '8px',
+              padding: '20px',
+              textAlign: 'center',
+              marginBottom: '15px',
+            }}
+          >
+            <p
+              style={{
+                fontSize: '12px',
+                color: '#a0aec0',
+                margin: '0 0 5px 0',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+              }}
+            >
+              Total Amount
+            </p>
+            <p
+              style={{
+                fontSize: '36px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                margin: 0,
+              }}
+            >
+              ₹{formatIndianCurrency(data.amount)}
+            </p>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#cbd5e0',
+                margin: '8px 0 0 0',
+                fontStyle: 'italic',
+              }}
+            >
+              {numberToWords(data.amount)}
+            </p>
+          </div>
 
-            {/* Stamps */}
+          {/* Payment Mode Split */}
+          {(data.upiAmount > 0 || data.cashAmount > 0) && (
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-end',
-                marginTop: '30px',
+                gap: '15px',
+                justifyContent: 'center',
               }}
             >
-              {/* PAID Stamp */}
-              <div
-                style={{
-                  border: '3px solid #dc2626',
-                  borderRadius: '8px',
-                  padding: '8px 20px',
-                  color: '#dc2626',
-                  fontWeight: 'bold',
-                  fontSize: '18px',
-                  transform: 'rotate(-5deg)',
-                }}
-              >
-                PAID
-              </div>
-
-              {/* Approved Stamp */}
-              <div
-                style={{
-                  border: '3px solid #1e3a8a',
-                  borderRadius: '50%',
-                  width: '100px',
-                  height: '100px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  transform: 'rotate(5deg)',
-                }}
-              >
-                <span style={{ fontSize: '8px', color: '#1e3a8a', fontWeight: '500' }}>
-                  PROPERTY MANAGEMENT
-                </span>
-                <span style={{ fontSize: '12px', color: '#1e3a8a', fontWeight: 'bold' }}>
-                  APPROVED
-                </span>
-                <span style={{ fontSize: '6px', color: '#1e3a8a' }}>★ ★ ★ ★ ★ ★ ★ ★</span>
-              </div>
+              {data.upiAmount > 0 && (
+                <div
+                  style={{
+                    backgroundColor: '#ebf8ff',
+                    border: '1px solid #90cdf4',
+                    borderRadius: '6px',
+                    padding: '10px 20px',
+                    textAlign: 'center',
+                    flex: 1,
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: '11px',
+                      color: '#2b6cb0',
+                      margin: '0 0 4px 0',
+                      textTransform: 'uppercase',
+                      fontWeight: '600',
+                    }}
+                  >
+                    UPI
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      color: '#2c5282',
+                      margin: 0,
+                    }}
+                  >
+                    ₹{formatIndianCurrency(data.upiAmount)}
+                  </p>
+                </div>
+              )}
+              {data.cashAmount > 0 && (
+                <div
+                  style={{
+                    backgroundColor: '#f0fff4',
+                    border: '1px solid #9ae6b4',
+                    borderRadius: '6px',
+                    padding: '10px 20px',
+                    textAlign: 'center',
+                    flex: 1,
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: '11px',
+                      color: '#276749',
+                      margin: '0 0 4px 0',
+                      textTransform: 'uppercase',
+                      fontWeight: '600',
+                    }}
+                  >
+                    Cash
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      color: '#22543d',
+                      margin: 0,
+                    }}
+                  >
+                    ₹{formatIndianCurrency(data.cashAmount)}
+                  </p>
+                </div>
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Purpose */}
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '15px',
+            backgroundColor: '#faf5ff',
+            borderRadius: '6px',
+            border: '1px solid #e9d8fd',
+          }}
+        >
+          <p style={{ fontSize: '13px', color: '#553c9a', margin: 0 }}>
+            <strong>Purpose:</strong> Building Rent for {data.forMonth}
+          </p>
+        </div>
+
+        {/* Stamps Row */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '25px',
+            padding: '0 10px',
+          }}
+        >
+          {/* PAID Stamp */}
+          <div
+            style={{
+              border: '3px solid #c53030',
+              borderRadius: '4px',
+              padding: '8px 25px',
+              transform: 'rotate(-5deg)',
+            }}
+          >
+            <span
+              style={{
+                color: '#c53030',
+                fontWeight: 'bold',
+                fontSize: '20px',
+                letterSpacing: '3px',
+              }}
+            >
+              PAID
+            </span>
+          </div>
+
+          {/* Signature area */}
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                borderTop: '1px solid #a0aec0',
+                width: '150px',
+                marginBottom: '5px',
+              }}
+            />
+            <span style={{ fontSize: '12px', color: '#718096' }}>
+              Authorized Signature
+            </span>
           </div>
         </div>
       </div>
+
+      {/* Footer Image */}
+      <img
+        src={receiptFooter}
+        alt="Footer"
+        style={{
+          width: '100%',
+          height: 'auto',
+          display: 'block',
+        }}
+      />
     </div>
   );
 };
