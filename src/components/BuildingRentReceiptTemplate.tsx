@@ -1,6 +1,4 @@
 import { numberToWords, formatIndianCurrency } from '@/utils/numberToWords';
-import receiptHeader from '@/assets/receipt-header.png';
-import receiptFooter from '@/assets/receipt-footer.png';
 
 export interface BuildingRentReceiptData {
   receivedFrom: string;
@@ -32,257 +30,250 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
         backgroundColor: '#ffffff',
         fontFamily: 'Arial, sans-serif',
         position: 'relative',
+        border: '3px solid #1a365d',
+        borderRadius: '12px',
+        overflow: 'hidden',
       }}
     >
-      {/* Header Image */}
-      <img
-        src={receiptHeader}
-        alt="Header"
+      {/* Header */}
+      <div
         style={{
-          width: '100%',
-          height: 'auto',
-          display: 'block',
+          background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
+          padding: '25px 30px',
+          textAlign: 'center',
         }}
-      />
+      >
+        <h1
+          style={{
+            fontSize: '28px',
+            fontWeight: 'bold',
+            color: '#ffffff',
+            margin: 0,
+            letterSpacing: '3px',
+            textTransform: 'uppercase',
+          }}
+        >
+          Building Rent Receipt
+        </h1>
+        <p style={{ fontSize: '14px', color: '#cbd5e0', margin: '8px 0 0 0' }}>
+          {data.forMonth}
+        </p>
+      </div>
 
       {/* Content */}
-      <div style={{ padding: '20px 30px' }}>
-        {/* Title */}
+      <div style={{ padding: '25px 30px' }}>
+        {/* Date */}
         <div
           style={{
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'flex-end',
             marginBottom: '20px',
           }}
         >
-          <h1
+          <span
             style={{
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#1a365d',
-              margin: 0,
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              borderBottom: '2px solid #e2e8f0',
-              paddingBottom: '10px',
+              backgroundColor: '#edf2f7',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              color: '#4a5568',
+              fontWeight: '500',
             }}
           >
-            Building Rent Receipt
-          </h1>
-          <p style={{ fontSize: '14px', color: '#718096', margin: '8px 0 0 0' }}>
-            {data.forMonth}
-          </p>
+            Date: {formatDate(data.date)}
+          </span>
         </div>
 
-        {/* Receipt Details */}
+        {/* From/To Section */}
         <div
           style={{
             backgroundColor: '#f7fafc',
-            borderRadius: '8px',
+            borderRadius: '10px',
             padding: '20px',
             marginBottom: '20px',
+            border: '1px solid #e2e8f0',
           }}
         >
-          {/* Date */}
           <div
             style={{
               display: 'flex',
-              justifyContent: 'flex-end',
               marginBottom: '15px',
+              alignItems: 'center',
             }}
           >
             <span
               style={{
-                backgroundColor: '#edf2f7',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                fontSize: '13px',
-                color: '#4a5568',
+                width: '130px',
+                fontSize: '14px',
+                color: '#718096',
+                fontWeight: '600',
               }}
             >
-              Date: {formatDate(data.date)}
+              Received From:
+            </span>
+            <span
+              style={{
+                fontSize: '16px',
+                color: '#1a365d',
+                fontWeight: '700',
+              }}
+            >
+              {data.receivedFrom}
             </span>
           </div>
-
-          {/* From/To */}
-          <div style={{ marginBottom: '20px' }}>
-            <div
-              style={{
-                display: 'flex',
-                marginBottom: '12px',
-                alignItems: 'flex-start',
-              }}
-            >
-              <span
-                style={{
-                  width: '110px',
-                  fontSize: '14px',
-                  color: '#718096',
-                  fontWeight: '500',
-                }}
-              >
-                Received From:
-              </span>
-              <span
-                style={{
-                  fontSize: '15px',
-                  color: '#2d3748',
-                  fontWeight: '600',
-                }}
-              >
-                {data.receivedFrom}
-              </span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-              }}
-            >
-              <span
-                style={{
-                  width: '110px',
-                  fontSize: '14px',
-                  color: '#718096',
-                  fontWeight: '500',
-                }}
-              >
-                Paid To:
-              </span>
-              <span
-                style={{
-                  fontSize: '15px',
-                  color: '#2d3748',
-                  fontWeight: '600',
-                }}
-              >
-                {data.paidTo}
-              </span>
-            </div>
-          </div>
-
-          {/* Amount Box */}
           <div
             style={{
-              backgroundColor: '#1a365d',
-              borderRadius: '8px',
-              padding: '20px',
-              textAlign: 'center',
-              marginBottom: '15px',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            <p
+            <span
               style={{
-                fontSize: '12px',
-                color: '#a0aec0',
-                margin: '0 0 5px 0',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
+                width: '130px',
+                fontSize: '14px',
+                color: '#718096',
+                fontWeight: '600',
               }}
             >
-              Total Amount
-            </p>
-            <p
+              Paid To:
+            </span>
+            <span
               style={{
-                fontSize: '36px',
-                fontWeight: 'bold',
-                color: '#ffffff',
-                margin: 0,
+                fontSize: '16px',
+                color: '#1a365d',
+                fontWeight: '700',
               }}
             >
-              ₹{formatIndianCurrency(data.amount)}
-            </p>
-            <p
-              style={{
-                fontSize: '13px',
-                color: '#cbd5e0',
-                margin: '8px 0 0 0',
-                fontStyle: 'italic',
-              }}
-            >
-              {numberToWords(data.amount)}
-            </p>
+              {data.paidTo}
+            </span>
           </div>
-
-          {/* Payment Mode Split */}
-          {(data.upiAmount > 0 || data.cashAmount > 0) && (
-            <div
-              style={{
-                display: 'flex',
-                gap: '15px',
-                justifyContent: 'center',
-              }}
-            >
-              {data.upiAmount > 0 && (
-                <div
-                  style={{
-                    backgroundColor: '#ebf8ff',
-                    border: '1px solid #90cdf4',
-                    borderRadius: '6px',
-                    padding: '10px 20px',
-                    textAlign: 'center',
-                    flex: 1,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: '11px',
-                      color: '#2b6cb0',
-                      margin: '0 0 4px 0',
-                      textTransform: 'uppercase',
-                      fontWeight: '600',
-                    }}
-                  >
-                    UPI
-                  </p>
-                  <p
-                    style={{
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      color: '#2c5282',
-                      margin: 0,
-                    }}
-                  >
-                    ₹{formatIndianCurrency(data.upiAmount)}
-                  </p>
-                </div>
-              )}
-              {data.cashAmount > 0 && (
-                <div
-                  style={{
-                    backgroundColor: '#f0fff4',
-                    border: '1px solid #9ae6b4',
-                    borderRadius: '6px',
-                    padding: '10px 20px',
-                    textAlign: 'center',
-                    flex: 1,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: '11px',
-                      color: '#276749',
-                      margin: '0 0 4px 0',
-                      textTransform: 'uppercase',
-                      fontWeight: '600',
-                    }}
-                  >
-                    Cash
-                  </p>
-                  <p
-                    style={{
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      color: '#22543d',
-                      margin: 0,
-                    }}
-                  >
-                    ₹{formatIndianCurrency(data.cashAmount)}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
+
+        {/* Amount Box */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
+            borderRadius: '12px',
+            padding: '25px',
+            textAlign: 'center',
+            marginBottom: '20px',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '12px',
+              color: '#a0aec0',
+              margin: '0 0 8px 0',
+              textTransform: 'uppercase',
+              letterSpacing: '2px',
+            }}
+          >
+            Total Amount
+          </p>
+          <p
+            style={{
+              fontSize: '42px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              margin: 0,
+            }}
+          >
+            ₹{formatIndianCurrency(data.amount)}
+          </p>
+          <p
+            style={{
+              fontSize: '14px',
+              color: '#cbd5e0',
+              margin: '10px 0 0 0',
+              fontStyle: 'italic',
+            }}
+          >
+            {numberToWords(data.amount)}
+          </p>
+        </div>
+
+        {/* Payment Mode Split */}
+        {(data.upiAmount > 0 || data.cashAmount > 0) && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '15px',
+              justifyContent: 'center',
+              marginBottom: '20px',
+            }}
+          >
+            {data.upiAmount > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#ebf8ff',
+                  border: '2px solid #90cdf4',
+                  borderRadius: '10px',
+                  padding: '15px 25px',
+                  textAlign: 'center',
+                  flex: 1,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: '#2b6cb0',
+                    margin: '0 0 6px 0',
+                    textTransform: 'uppercase',
+                    fontWeight: '700',
+                    letterSpacing: '1px',
+                  }}
+                >
+                  UPI Payment
+                </p>
+                <p
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: 'bold',
+                    color: '#2c5282',
+                    margin: 0,
+                  }}
+                >
+                  ₹{formatIndianCurrency(data.upiAmount)}
+                </p>
+              </div>
+            )}
+            {data.cashAmount > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#f0fff4',
+                  border: '2px solid #9ae6b4',
+                  borderRadius: '10px',
+                  padding: '15px 25px',
+                  textAlign: 'center',
+                  flex: 1,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: '#276749',
+                    margin: '0 0 6px 0',
+                    textTransform: 'uppercase',
+                    fontWeight: '700',
+                    letterSpacing: '1px',
+                  }}
+                >
+                  Cash Payment
+                </p>
+                <p
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: 'bold',
+                    color: '#22543d',
+                    margin: 0,
+                  }}
+                >
+                  ₹{formatIndianCurrency(data.cashAmount)}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Purpose */}
         <div
@@ -290,11 +281,12 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
             textAlign: 'center',
             padding: '15px',
             backgroundColor: '#faf5ff',
-            borderRadius: '6px',
+            borderRadius: '8px',
             border: '1px solid #e9d8fd',
+            marginBottom: '25px',
           }}
         >
-          <p style={{ fontSize: '13px', color: '#553c9a', margin: 0 }}>
+          <p style={{ fontSize: '14px', color: '#553c9a', margin: 0 }}>
             <strong>Purpose:</strong> Building Rent for {data.forMonth}
           </p>
         </div>
@@ -305,16 +297,15 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginTop: '25px',
             padding: '0 10px',
           }}
         >
           {/* PAID Stamp */}
           <div
             style={{
-              border: '3px solid #c53030',
-              borderRadius: '4px',
-              padding: '8px 25px',
+              border: '4px solid #c53030',
+              borderRadius: '6px',
+              padding: '10px 30px',
               transform: 'rotate(-5deg)',
             }}
           >
@@ -322,8 +313,8 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               style={{
                 color: '#c53030',
                 fontWeight: 'bold',
-                fontSize: '20px',
-                letterSpacing: '3px',
+                fontSize: '24px',
+                letterSpacing: '4px',
               }}
             >
               PAID
@@ -334,28 +325,30 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
           <div style={{ textAlign: 'center' }}>
             <div
               style={{
-                borderTop: '1px solid #a0aec0',
-                width: '150px',
-                marginBottom: '5px',
+                borderTop: '2px solid #a0aec0',
+                width: '160px',
+                marginBottom: '8px',
               }}
             />
-            <span style={{ fontSize: '12px', color: '#718096' }}>
+            <span style={{ fontSize: '13px', color: '#718096' }}>
               Authorized Signature
             </span>
           </div>
         </div>
       </div>
 
-      {/* Footer Image */}
-      <img
-        src={receiptFooter}
-        alt="Footer"
+      {/* Footer */}
+      <div
         style={{
-          width: '100%',
-          height: 'auto',
-          display: 'block',
+          background: 'linear-gradient(135deg, #2c5282 0%, #1a365d 100%)',
+          padding: '15px 30px',
+          textAlign: 'center',
         }}
-      />
+      >
+        <p style={{ fontSize: '12px', color: '#cbd5e0', margin: 0 }}>
+          Thank you for your payment • This is a computer-generated receipt
+        </p>
+      </div>
     </div>
   );
 };
