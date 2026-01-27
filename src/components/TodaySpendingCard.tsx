@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, Loader2, ChevronDown, ChevronUp, ShoppingCart, Receipt, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+import { DateSelector } from "./DateSelector";
 interface SpendingItem {
   id: string;
   name?: string;
@@ -42,13 +42,14 @@ interface TodaySpendingResponse {
 
 export const TodaySpendingCard = () => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const today = format(new Date(), "yyyy-MM-dd");
-
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateString = format(selectedDate, "yyyy-MM-dd");
+  const isToday = format(new Date(), "yyyy-MM-dd") === dateString;
   const { data, isLoading, error } = useQuery<TodaySpendingResponse>({
-    queryKey: ["today-spending", today],
+    queryKey: ["today-spending", dateString],
     queryFn: async () => {
       const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-todays-spending-api?date=${today}`
+        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-todays-spending-api?date=${dateString}`
       );
       
       if (!response.ok) {
@@ -101,13 +102,15 @@ export const TodaySpendingCard = () => {
             <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
               <CalendarDays className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             </div>
-            <span className="font-semibold text-amber-700 dark:text-amber-300">Today's Spending</span>
+            <span className="font-semibold text-amber-700 dark:text-amber-300">
+              {isToday ? "Today's Spending" : "Spending"}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{format(new Date(), "MMM d, yyyy")}</span>
+          <div className="flex items-center gap-1">
+            <DateSelector date={selectedDate} onDateChange={setSelectedDate} />
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 rounded-md hover:bg-amber-500/20 transition-colors"
+              className="p-1 rounded-md hover:bg-amber-500/20 transition-colors ml-1"
             >
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />

@@ -59,17 +59,17 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         borderRadius: "16px",
       }}
     >
-      {/* Top Right Flowers - smaller and positioned on edge */}
+      {/* Top Right Flowers - positioned on edge, moved left */}
       <img
         src={flowersTop}
         alt=""
         crossOrigin="anonymous"
         style={{
           position: "absolute",
-          top: "-8px",
-          right: "-8px",
-          width: "130px",
-          height: "130px",
+          top: "-5px",
+          right: "15px",
+          width: "120px",
+          height: "120px",
           objectFit: "contain",
           opacity: 1,
         }}
@@ -158,7 +158,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         <div style={{ marginBottom: "18px" }}>
           <p
             style={{
-              fontSize: "17px",
+              fontSize: "16px",
               color: "#374151",
               lineHeight: 1.8,
               margin: 0,
