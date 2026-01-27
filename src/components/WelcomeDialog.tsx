@@ -151,7 +151,7 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
   return (
     <>
       {templateData && (
-        <div style={{ position: 'fixed', left: '-10000px', top: '0', visibility: 'hidden' }} aria-hidden="true">
+        <div style={{ position: 'fixed', left: '0', top: '0', transform: 'translateX(-200vw)', zIndex: -1, pointerEvents: 'none' }} aria-hidden="true">
           <WelcomeTemplate ref={welcomeRef} data={templateData} />
         </div>
       )}

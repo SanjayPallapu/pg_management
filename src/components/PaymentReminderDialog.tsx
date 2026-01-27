@@ -156,7 +156,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   return (
     <>
       {templateData && (
-        <div style={{ position: 'fixed', left: '-10000px', top: '0', visibility: 'hidden' }} aria-hidden="true">
+        <div style={{ position: 'fixed', left: '0', top: '0', transform: 'translateX(-200vw)', zIndex: -1, pointerEvents: 'none' }} aria-hidden="true">
           <PaymentReminderTemplate ref={reminderRef} data={templateData} />
         </div>
       )}
