@@ -84,14 +84,15 @@ const convertImagesToDataUrl = async (element: HTMLElement): Promise<void> => {
 };
 
 export const generateReceiptImage = async (element: HTMLElement): Promise<string> => {
-  // Clone the element and position it for capture
+  // Clone the element and position it for capture - completely offscreen
   const clone = element.cloneNode(true) as HTMLElement;
   clone.style.position = 'fixed';
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.zIndex = '99999';
+  clone.style.left = '-9999px';
+  clone.style.top = '-9999px';
+  clone.style.zIndex = '-9999';
   clone.style.pointerEvents = 'none';
-  clone.style.opacity = '0'; // Hide visually but keep layout
+  clone.style.visibility = 'visible';
+  clone.style.opacity = '1';
 
   document.body.appendChild(clone);
 
@@ -104,9 +105,6 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
 
     // Additional wait for rendering
     await new Promise((resolve) => setTimeout(resolve, 250));
-
-    // Make visible for capture
-    clone.style.opacity = '1';
 
     const rect = clone.getBoundingClientRect();
     const width = Math.max(1, Math.ceil(rect.width));
