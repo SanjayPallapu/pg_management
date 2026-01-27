@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Phone, MessageCircle, Receipt, Settings, History } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Building, Phone, MessageCircle, Receipt, Settings, History, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { BuildingRentReceiptDialog } from './BuildingRentReceiptDialog';
@@ -13,6 +14,7 @@ import { useBuildingRentHistory } from '@/hooks/useBuildingRentHistory';
 import { formatIndianCurrency } from '@/utils/numberToWords';
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const COLLAPSE_KEY = 'buildingRentCard_collapsed';
 
 export const BuildingRentCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
@@ -22,6 +24,14 @@ export const BuildingRentCard = () => {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = localStorage.getItem(COLLAPSE_KEY);
+    return saved !== 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_KEY, (!isOpen).toString());
+  }, [isOpen]);
 
   const forMonth = `${months[selectedMonth - 1]} ${selectedYear}`;
 
@@ -46,78 +56,87 @@ export const BuildingRentCard = () => {
   return (
     <>
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              Building Rent
-            </CardTitle>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setHistorySheetOpen(true)}>
-                <History className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSettingsDialogOpen(true)}>
-                <Settings className="h-4 w-4" />
-              </Button>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Building Rent
+                  </CardTitle>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                </button>
+              </CollapsibleTrigger>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setHistorySheetOpen(true)}>
+                  <History className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSettingsDialogOpen(true)}>
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Amount Display */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Monthly Rent</span>
-            <span className="text-xl font-bold">₹{formatIndianCurrency(settings.amount)}</span>
-          </div>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-3">
+              {/* Amount Display */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Monthly Rent</span>
+                <span className="text-xl font-bold">₹{formatIndianCurrency(settings.amount)}</span>
+              </div>
 
-          {/* Payment status for current month */}
-          {currentMonthPayment && (
-            <Badge variant="secondary" className="bg-paid-muted text-paid w-full justify-center py-1">
-              Paid for {forMonth}
-            </Badge>
-          )}
+              {/* Payment status for current month */}
+              {currentMonthPayment && (
+                <Badge variant="secondary" className="bg-paid-muted text-paid w-full justify-center py-1">
+                  Paid for {forMonth}
+                </Badge>
+              )}
 
-          {/* To/From Info */}
-          <div className="text-xs text-muted-foreground bg-muted rounded-lg p-2">
-            <div className="flex justify-between">
-              <span>From: {settings.receivedFrom.split(' ')[0]}</span>
-              <span>To: {settings.paidTo}</span>
-            </div>
-          </div>
+              {/* To/From Info */}
+              <div className="text-xs text-muted-foreground bg-muted rounded-lg p-2">
+                <div className="flex justify-between">
+                  <span>From: {settings.receivedFrom.split(' ')[0]}</span>
+                  <span>To: {settings.paidTo}</span>
+                </div>
+              </div>
 
-          {/* Action Badges */}
-          <div className="flex items-center gap-2">
-            {/* Call Badge */}
-            <Badge
-              variant="secondary"
-              className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
-              onClick={handleCall}
-            >
-              <Phone className="h-3.5 w-3.5 mr-1" />
-              Call
-            </Badge>
+              {/* Action Badges */}
+              <div className="flex items-center gap-2">
+                {/* Call Badge */}
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
+                  onClick={handleCall}
+                >
+                  <Phone className="h-3.5 w-3.5 mr-1" />
+                  Call
+                </Badge>
 
-            {/* Chat Badge */}
-            <Badge
-              variant="secondary"
-              className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
-              onClick={handleChat}
-            >
-              <MessageCircle className="h-3.5 w-3.5 mr-1" />
-              Chat
-            </Badge>
+                {/* Chat Badge */}
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-secondary/80 py-1.5 px-3"
+                  onClick={handleChat}
+                >
+                  <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                  Chat
+                </Badge>
 
-            {/* Receipt Button */}
-            <Button
-              variant="default"
-              size="sm"
-              className="flex-1"
-              onClick={() => setReceiptDialogOpen(true)}
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              Receipt
-            </Button>
-          </div>
-        </CardContent>
+                {/* Receipt Button */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setReceiptDialogOpen(true)}
+                >
+                  <Receipt className="h-4 w-4 mr-1" />
+                  Receipt
+                </Button>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       {/* Dialogs */}
