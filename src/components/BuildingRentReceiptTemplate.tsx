@@ -50,7 +50,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       </div>
 
       {/* Blue line under header */}
-      <div style={{ height: "2px", backgroundColor: "#080200", marginBottom: "30px" }} />
+      <div style={{ height: "3px", backgroundColor: "#2563EB", marginBottom: "30px" }} />
 
       {/* Date and Month Row */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "25px" }}>
@@ -198,7 +198,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       </div>
 
       {/* Bottom blue line */}
-      <div style={{ height: "2px", backgroundColor: "#080200", marginTop: "20px" }} />
+      <div style={{ height: "2px", backgroundColor: "#2563EB", marginTop: "20px" }} />
 
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "15px" }}>
