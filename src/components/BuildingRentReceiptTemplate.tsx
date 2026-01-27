@@ -1,4 +1,5 @@
 import { numberToWords, formatIndianCurrency } from '@/utils/numberToWords';
+import buildingLogo from '@/assets/building-logo.jpeg';
 
 export interface BuildingRentReceiptData {
   receivedFrom: string;
@@ -32,31 +33,17 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
         padding: '40px 50px',
       }}
     >
-      {/* Header with Building Icon */}
+      {/* Header with Building Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
-        {/* Building Icon SVG */}
-        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-          <rect x="5" y="20" width="25" height="35" fill="#3B82F6" rx="2" />
-          <rect x="30" y="10" width="25" height="45" fill="#1E40AF" rx="2" />
-          <rect x="10" y="25" width="5" height="6" fill="#93C5FD" />
-          <rect x="20" y="25" width="5" height="6" fill="#93C5FD" />
-          <rect x="10" y="35" width="5" height="6" fill="#93C5FD" />
-          <rect x="20" y="35" width="5" height="6" fill="#93C5FD" />
-          <rect x="10" y="45" width="5" height="6" fill="#93C5FD" />
-          <rect x="20" y="45" width="5" height="6" fill="#93C5FD" />
-          <rect x="35" y="15" width="5" height="6" fill="#93C5FD" />
-          <rect x="45" y="15" width="5" height="6" fill="#93C5FD" />
-          <rect x="35" y="25" width="5" height="6" fill="#93C5FD" />
-          <rect x="45" y="25" width="5" height="6" fill="#93C5FD" />
-          <rect x="35" y="35" width="5" height="6" fill="#93C5FD" />
-          <rect x="45" y="35" width="5" height="6" fill="#93C5FD" />
-          <rect x="35" y="45" width="5" height="6" fill="#93C5FD" />
-          <rect x="45" y="45" width="5" height="6" fill="#93C5FD" />
-        </svg>
+        <img 
+          src={buildingLogo} 
+          alt="Building Logo" 
+          style={{ width: '70px', height: '70px', objectFit: 'contain' }}
+        />
         <h1
           style={{
             fontSize: '28px',
-            fontWeight: 'bold',
+            fontWeight: '800',
             color: '#1E3A5F',
             margin: 0,
             letterSpacing: '2px',
@@ -71,18 +58,18 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
 
       {/* Date and Month Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px' }}>
-        <div style={{ fontSize: '14px', color: '#4B5563' }}>
-          <span style={{ fontWeight: '600' }}>Date:</span> {formatDate(data.date)}
+        <div style={{ fontSize: '15px', color: '#1E3A5F' }}>
+          <span style={{ fontWeight: '700' }}>Date:</span> <strong>{formatDate(data.date)}</strong>
         </div>
-        <div style={{ fontSize: '14px', color: '#4B5563' }}>
-          <span style={{ fontWeight: '600' }}>For Month:</span> {data.forMonth}
+        <div style={{ fontSize: '15px', color: '#1E3A5F' }}>
+          <span style={{ fontWeight: '700' }}>For Month:</span> <strong>{data.forMonth}</strong>
         </div>
       </div>
 
       {/* From Field */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '700', width: '130px' }}>
             From:
           </span>
           <span
@@ -90,8 +77,8 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               flex: 1,
               fontSize: '16px',
               color: '#1E3A5F',
-              fontWeight: '600',
-              borderBottom: '1px solid #9CA3AF',
+              fontWeight: '800',
+              borderBottom: '2px solid #9CA3AF',
               paddingBottom: '5px',
             }}
           >
@@ -103,7 +90,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       {/* To Field */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '700', width: '130px' }}>
             To:
           </span>
           <span
@@ -111,8 +98,8 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               flex: 1,
               fontSize: '16px',
               color: '#1E3A5F',
-              fontWeight: '600',
-              borderBottom: '1px solid #9CA3AF',
+              fontWeight: '800',
+              borderBottom: '2px solid #9CA3AF',
               paddingBottom: '5px',
             }}
           >
@@ -124,7 +111,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       {/* Building Rent Field */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500', width: '130px' }}>
+          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '700', width: '130px' }}>
             Building Rent:
           </span>
           <span
@@ -132,8 +119,8 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               flex: 1,
               fontSize: '16px',
               color: '#1E3A5F',
-              fontWeight: '700',
-              borderBottom: '1px solid #9CA3AF',
+              fontWeight: '800',
+              borderBottom: '2px solid #9CA3AF',
               paddingBottom: '5px',
             }}
           >
@@ -145,69 +132,71 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       {/* UPI/Cash Split if applicable */}
       {data.upiAmount > 0 && data.cashAmount > 0 && (
         <div style={{ marginBottom: '20px', marginLeft: '130px' }}>
-          <div style={{ display: 'flex', gap: '30px', fontSize: '14px', color: '#4B5563' }}>
-            <span>UPI: ₹{formatIndianCurrency(data.upiAmount)}</span>
-            <span>Cash: ₹{formatIndianCurrency(data.cashAmount)}</span>
+          <div style={{ display: 'flex', gap: '30px', fontSize: '15px', color: '#1E3A5F' }}>
+            <span><strong>UPI:</strong> <strong>₹{formatIndianCurrency(data.upiAmount)}</strong></span>
+            <span><strong>Cash:</strong> <strong>₹{formatIndianCurrency(data.cashAmount)}</strong></span>
           </div>
         </div>
       )}
 
       {/* Mode of Payment with badges */}
       <div style={{ marginBottom: '25px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '500' }}>
-            Mode of Payment:
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ fontSize: '16px', color: '#1E3A5F', fontWeight: '700' }}>
+              Mode of Payment:
+            </span>
 
-          {/* UPI Badge */}
-          {data.upiAmount > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                backgroundColor: '#1F2937',
-                color: '#fff',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <polygon points="5,4 12,12 5,20" fill="#FF9800" />
-                <polygon points="12,4 19,12 12,20" fill="#4CAF50" />
-              </svg>
-              UPI
-            </div>
-          )}
+            {/* UPI Badge */}
+            {data.upiAmount > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#1F2937',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <polygon points="5,4 12,12 5,20" fill="#FF9800" />
+                  <polygon points="12,4 19,12 12,20" fill="#4CAF50" />
+                </svg>
+                UPI
+              </div>
+            )}
 
-          {/* Cash Badge */}
-          {data.cashAmount > 0 && (
-            <div
-              style={{
-                backgroundColor: '#1F2937',
-                color: '#fff',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              CASH
-            </div>
-          )}
+            {/* Cash Badge */}
+            {data.cashAmount > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#1F2937',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                }}
+              >
+                CASH
+              </div>
+            )}
+          </div>
 
-          {/* PAID Badge */}
+          {/* PAID Badge - moved to right */}
           <div
             style={{
               backgroundColor: '#2563EB',
               color: '#fff',
-              padding: '8px 20px',
+              padding: '8px 24px',
               borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '700',
-              letterSpacing: '1px',
+              fontSize: '18px',
+              fontWeight: '800',
+              letterSpacing: '2px',
               border: '2px solid #1E40AF',
             }}
           >
