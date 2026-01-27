@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet, PartyPopper } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useDayGuests } from '@/hooks/useDayGuests';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
+import { WelcomeDialog } from './WelcomeDialog';
 import { format, differenceInDays } from 'date-fns';
 import { isTenantActiveInMonth, isTenantActiveNow, tenantJoinedInMonth, tenantLeftInMonth, parseDateOnly } from '@/utils/dateOnly';
 
@@ -55,6 +56,15 @@ export const RoomCard = ({
     amount: number;
     amountPaid?: number;
     balance: number;
+  } | null>(null);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [welcomeData, setWelcomeData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    roomNo: string;
+    sharingType: string;
+    monthlyRent: number;
   } | null>(null);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
@@ -338,6 +348,25 @@ export const RoomCard = ({
                             Security Deposit
                           </DropdownMenuItem>
                         )}
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setWelcomeData({
+                                tenantName: tenant.name,
+                                tenantPhone: tenant.phone,
+                                joiningDate: tenant.startDate,
+                                roomNo: room.roomNo,
+                                sharingType: `${room.capacity} Sharing`,
+                                monthlyRent: tenant.monthlyRent,
+                              });
+                              setWelcomeDialogOpen(true);
+                            }} 
+                            className="gap-2"
+                          >
+                            <PartyPopper className="h-4 w-4" />
+                            Welcome
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <Badge variant="outline" className={isPaid ? 'bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80' : isPartial ? 'bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80' : 'bg-pending text-pending-foreground text-xs'} onClick={isPaid || isPartial ? handlePaidClick : undefined}>
@@ -466,6 +495,13 @@ export const RoomCard = ({
         open={reminderDialogOpen} 
         onOpenChange={setReminderDialogOpen} 
         reminderData={reminderData} 
+      />
+      
+      {/* Welcome Dialog */}
+      <WelcomeDialog 
+        open={welcomeDialogOpen} 
+        onOpenChange={setWelcomeDialogOpen} 
+        welcomeData={welcomeData} 
       />
     </Card>;
 };

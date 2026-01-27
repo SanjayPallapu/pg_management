@@ -253,9 +253,11 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         <div 
           style={{ 
             position: 'fixed',
-            left: '-10000px',
+            left: '0',
             top: '0',
-            visibility: 'hidden',
+            transform: 'translateX(-200vw)',
+            zIndex: -1,
+            pointerEvents: 'none',
           }}
           aria-hidden="true"
         >

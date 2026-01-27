@@ -36,12 +36,44 @@ interface WelcomeTemplateProps {
 
 const formatCurrency = (amount: number): string => `₹${Math.floor(amount).toLocaleString("en-IN")}`;
 
+// Format joining date to "January 21" format
+const formatStartDate = (joiningDate: string): string => {
+  const date = new Date(joiningDate);
+  if (isNaN(date.getTime())) return "—";
+  
+  const day = date.getDate();
+  const monthName = date.toLocaleDateString("en-IN", { month: "long" });
+  
+  return `${monthName} ${day}`;
+};
+
+// Get ordinal suffix for day (1st, 2nd, 3rd, 4th, etc.)
+const getOrdinalSuffix = (day: number): string => {
+  if (day >= 11 && day <= 13) return 'th';
+  switch (day % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+};
+
+// Format the day with ordinal suffix
+const formatDayWithSuffix = (joiningDate: string): string => {
+  const date = new Date(joiningDate);
+  if (isNaN(date.getTime())) return "—";
+  
+  const day = date.getDate();
+  return `${day}${getOrdinalSuffix(day)}`;
+};
+
 /* =========================
    Component - Premium Floral Theme
 ========================= */
 
 export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(({ data }, ref) => {
-  const billingPeriod = formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth);
+  const startDateText = formatStartDate(data.tenant.joiningDate);
+  const dayWithSuffix = formatDayWithSuffix(data.tenant.joiningDate);
   const hasSecurityDeposit = data.payment.securityDeposit && data.payment.securityDeposit > 0;
 
   return (
@@ -164,10 +196,11 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
               margin: 0,
             }}
           >
-            Your rent period will start from{" "}
-            <strong style={{ fontSize: "18px", color: "#831843" }}>{billingPeriod}</strong>,
+            Your rent period will start on{" "}
+            <strong style={{ fontSize: "18px", color: "#831843" }}>{startDateText}</strong>,
             <br />
-            and you need to pay rent every month on this date.
+            and you need to make the payment on the{" "}
+            <strong style={{ color: "#831843" }}>{dayWithSuffix}</strong> of every month.
           </p>
         </div>
 

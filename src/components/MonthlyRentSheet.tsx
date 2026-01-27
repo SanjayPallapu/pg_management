@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon, Wallet } from "lucide-react";
+import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon, Wallet, PartyPopper } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,6 +26,7 @@ import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
 import { BulkReminderDialog } from "./BulkReminderDialog";
 import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
+import { WelcomeDialog } from "./WelcomeDialog";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
@@ -64,8 +65,17 @@ export const MonthlyRentSheet = ({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
   const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
+  const [welcomeData, setWelcomeData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    roomNo: string;
+    sharingType: string;
+    monthlyRent: number;
+  } | null>(null);
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -778,6 +788,24 @@ export const MonthlyRentSheet = ({
                                 Security Deposit
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+                                setWelcomeData({
+                                  tenantName: tenant.name,
+                                  tenantPhone: tenant.phone,
+                                  joiningDate: tenant.startDate,
+                                  roomNo: tenant.roomNo,
+                                  sharingType: room ? `${room.capacity} Sharing` : '',
+                                  monthlyRent: tenant.monthlyRent,
+                                });
+                                setWelcomeDialogOpen(true);
+                              }}
+                              className="gap-2"
+                            >
+                              <PartyPopper className="h-4 w-4" />
+                              Welcome
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>}
                     </div>
@@ -1093,5 +1121,12 @@ export const MonthlyRentSheet = ({
 
       {/* Left Tenants Cleanup Sheet */}
       <LeftTenantsCleanupSheet open={cleanupSheetOpen} onOpenChange={setCleanupSheetOpen} rooms={rooms} />
+
+      {/* Welcome Dialog */}
+      <WelcomeDialog 
+        open={welcomeDialogOpen} 
+        onOpenChange={setWelcomeDialogOpen} 
+        welcomeData={welcomeData} 
+      />
     </div>;
 };

@@ -84,15 +84,19 @@ const convertImagesToDataUrl = async (element: HTMLElement): Promise<void> => {
 };
 
 export const generateReceiptImage = async (element: HTMLElement): Promise<string> => {
-  // Clone the element and position it for capture - completely offscreen
+  // Clone the element and position it for capture
+  // IMPORTANT: Do NOT use visibility:hidden - it prevents html-to-image from capturing content
   const clone = element.cloneNode(true) as HTMLElement;
   clone.style.position = 'fixed';
-  clone.style.left = '-9999px';
-  clone.style.top = '-9999px';
-  clone.style.zIndex = '-9999';
+  clone.style.left = '0';
+  clone.style.top = '0';
+  clone.style.zIndex = '9999';
   clone.style.pointerEvents = 'none';
+  // Keep visibility visible but make it non-interactive
   clone.style.visibility = 'visible';
   clone.style.opacity = '1';
+  // Use transform to move it offscreen after rendering
+  clone.style.transform = 'translateX(-200vw)';
 
   document.body.appendChild(clone);
 
@@ -104,7 +108,13 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
     await waitForImages(clone);
 
     // Additional wait for rendering
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // Temporarily move to visible area for capture
+    clone.style.transform = 'translateX(0)';
+    
+    // Wait for reflow
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const rect = clone.getBoundingClientRect();
     const width = Math.max(1, Math.ceil(rect.width));
