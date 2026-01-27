@@ -49,23 +49,23 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
         </h1>
       </div>
 
-      {/* Blue line under header */}
-      <div style={{ height: "3px", backgroundColor: "#2563EB", marginBottom: "30px" }} />
+      {/* Black line under header */}
+      <div style={{ height: "2px", backgroundColor: "#000000", marginBottom: "30px" }} />
 
       {/* Date and Month Row */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "25px" }}>
         <div style={{ fontSize: "15px", color: "#1E3A5F" }}>
-          <span style={{ fontWeight: "700" }}>Date:</span> <strong>{formatDate(data.date)}</strong>
+          <span style={{ fontWeight: "700", color: "#000000" }}>Date:</span> <strong>{formatDate(data.date)}</strong>
         </div>
         <div style={{ fontSize: "15px", color: "#1E3A5F" }}>
-          <span style={{ fontWeight: "700" }}>For Month:</span> <strong>{data.forMonth}</strong>
+          <span style={{ fontWeight: "700", color: "#000000" }}>For Month:</span> <strong>{data.forMonth}</strong>
         </div>
       </div>
 
       {/* From Field */}
       <div style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", alignItems: "baseline" }}>
-          <span style={{ fontSize: "16px", color: "#1E3A5F", fontWeight: "700", width: "130px" }}>From:</span>
+          <span style={{ fontSize: "16px", color: "#000000", fontWeight: "700", width: "130px" }}>From:</span>
           <span
             style={{
               flex: 1,
@@ -84,7 +84,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       {/* To Field */}
       <div style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", alignItems: "baseline" }}>
-          <span style={{ fontSize: "16px", color: "#1E3A5F", fontWeight: "700", width: "130px" }}>To:</span>
+          <span style={{ fontSize: "16px", color: "#000000", fontWeight: "700", width: "130px" }}>To:</span>
           <span
             style={{
               flex: 1,
@@ -103,7 +103,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       {/* Building Rent Field */}
       <div style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", alignItems: "baseline" }}>
-          <span style={{ fontSize: "16px", color: "#1E3A5F", fontWeight: "700", width: "130px" }}>Building Rent:</span>
+          <span style={{ fontSize: "16px", color: "#000000", fontWeight: "700", width: "130px" }}>Building Rent:</span>
           <span
             style={{
               flex: 1,
@@ -137,7 +137,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
       <div style={{ marginBottom: "25px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <span style={{ fontSize: "16px", color: "#1E3A5F", fontWeight: "700" }}>Mode of Payment:</span>
+            <span style={{ fontSize: "16px", color: "#000000", fontWeight: "700" }}>Mode of Payment:</span>
 
             {/* UPI Badge */}
             {data.upiAmount > 0 && (
@@ -197,13 +197,8 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
         </div>
       </div>
 
-      {/* Bottom blue line */}
-      <div style={{ height: "2px", backgroundColor: "#2563EB", marginTop: "20px" }} />
-
-      {/* Footer */}
-      <div style={{ textAlign: "center", marginTop: "15px" }}>
-        <p style={{ fontSize: "11px", color: "#9CA3AF", margin: 0 }}>This is a computer-generated receipt</p>
-      </div>
+      {/* Bottom black line */}
+      <div style={{ height: "2px", backgroundColor: "#000000", marginTop: "20px" }} />
     </div>
   );
 };
