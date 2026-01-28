@@ -11,8 +11,22 @@ interface CalculationHistory {
   timestamp: Date;
 }
 
-export const CalculatorCard = () => {
-  const [sheetOpen, setSheetOpen] = useState(false);
+interface CalculatorCardProps {
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+  hideCard?: boolean;
+}
+
+export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }: CalculatorCardProps = {}) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const sheetOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setSheetOpen = (open: boolean) => {
+    if (onExternalOpenChange) {
+      onExternalOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
+  };
   const [display, setDisplay] = useState('0');
   const [expression, setExpression] = useState('');
   const [history, setHistory] = useState<CalculationHistory[]>([]);
@@ -235,25 +249,27 @@ export const CalculatorCard = () => {
 
   return (
     <>
-      <Card 
-        className="cursor-pointer transition-colors hover:bg-accent/50"
-        onClick={() => setSheetOpen(true)}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-          <CardTitle className="text-sm font-medium">Calculator</CardTitle>
-          <Calculator className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="text-2xl font-bold font-mono">
-            {history.length > 0 ? history[0].result : '0'}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {history.length > 0 
-              ? `Last: ${history[0].expression}` 
-              : 'Tap to open calculator'}
-          </p>
-        </CardContent>
-      </Card>
+      {!hideCard && (
+        <Card 
+          className="cursor-pointer transition-colors hover:bg-accent/50"
+          onClick={() => setSheetOpen(true)}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+            <CardTitle className="text-sm font-medium">Calculator</CardTitle>
+            <Calculator className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold font-mono">
+              {history.length > 0 ? history[0].result : '0'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {history.length > 0 
+                ? `Last: ${history[0].expression}` 
+                : 'Tap to open calculator'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" className="h-[80vh]">

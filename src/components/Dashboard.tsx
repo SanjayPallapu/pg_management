@@ -38,6 +38,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
+  const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   
   // Collapsible section states
   const [financialsOpen, setFinancialsOpen] = useState(true);
@@ -247,7 +248,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Capacity</span>
-                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <Building 
+                      className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
+                      onClick={() => setCalculatorSheetOpen(true)}
+                    />
                   </div>
                   <div className="text-2xl font-bold">{totalOccupied}/{totalCapacity}</div>
                   <p className="text-xs text-muted-foreground">{stats.totalRooms} rooms across 3 floors</p>
@@ -477,6 +481,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         open={settlementSheetOpen}
         onOpenChange={setSettlementSheetOpen}
         rooms={rooms}
+      />
+      {/* Hidden calculator triggered by building icon */}
+      <CalculatorCard 
+        externalOpen={calculatorSheetOpen} 
+        onExternalOpenChange={setCalculatorSheetOpen}
+        hideCard
       />
     </>
   );
