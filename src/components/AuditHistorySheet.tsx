@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, subMonths } from 'date-fns';
-import { Plus, Pencil, Trash2, Loader2, Search, X, Filter } from 'lucide-react';
-
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, subMonths, parseISO } from 'date-fns';
+import { Plus, Pencil, Trash2, Loader2, Search, X, CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 interface AuditHistorySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -152,6 +154,12 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
           <p className="text-foreground italic mb-2">{description}</p>
         )}
         <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+          {date && (
+            <div>
+              <span className="font-medium">Payment Date:</span>{' '}
+              <span className="text-foreground">{format(parseISO(date), 'dd MMM yyyy')}</span>
+            </div>
+          )}
           {amount !== undefined && (
             <div>
               <span className="font-medium">Amount:</span>{' '}
@@ -244,13 +252,19 @@ const formatNewData = (newData: Record<string, unknown> | null, tableName: strin
   return null;
 };
 
-type DateRangeOption = 'all' | 'today' | 'week' | 'month';
+type DateRangeOption = 'all' | 'today' | 'week' | 'month' | 'custom';
 
+interface DateRange {
+  from: Date | undefined;
+  to: Date | undefined;
+}
 export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps) => {
   const { logs, isLoading } = useAuditLog();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<DateRangeOption>('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
@@ -272,6 +286,8 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
         const now = new Date();
         
         let start: Date;
+        let end: Date = endOfDay(now);
+        
         switch (dateRange) {
           case 'today':
             start = startOfDay(now);
@@ -282,18 +298,23 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
           case 'month':
             start = startOfDay(subMonths(now, 1));
             break;
+          case 'custom':
+            if (!customDateRange.from) return true;
+            start = startOfDay(customDateRange.from);
+            end = customDateRange.to ? endOfDay(customDateRange.to) : endOfDay(customDateRange.from);
+            break;
           default:
             start = new Date(0);
         }
 
-        if (!isWithinInterval(logDate, { start, end: endOfDay(now) })) {
+        if (!isWithinInterval(logDate, { start, end })) {
           return false;
         }
       }
 
       return true;
     });
-  }, [logs, searchQuery, actionFilter, dateRange]);
+  }, [logs, searchQuery, actionFilter, dateRange, customDateRange]);
 
   // Group logs by date
   const groupedLogs = filteredLogs.reduce((acc, log) => {
@@ -309,9 +330,33 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
     setSearchQuery('');
     setActionFilter('all');
     setDateRange('all');
+    setCustomDateRange({ from: undefined, to: undefined });
   };
 
   const hasFilters = searchQuery || actionFilter !== 'all' || dateRange !== 'all';
+
+  const handleDateRangeChange = (value: string) => {
+    const newValue = value as DateRangeOption;
+    setDateRange(newValue);
+    if (newValue === 'custom') {
+      setCalendarOpen(true);
+    }
+  };
+
+  const getDateRangeLabel = () => {
+    if (dateRange === 'custom' && customDateRange.from) {
+      if (customDateRange.to && customDateRange.from.getTime() !== customDateRange.to.getTime()) {
+        return `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`;
+      }
+      return format(customDateRange.from, 'MMM d, yyyy');
+    }
+    switch (dateRange) {
+      case 'today': return 'Today';
+      case 'week': return 'Last 7 Days';
+      case 'month': return 'Last Month';
+      default: return 'All Time';
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -353,17 +398,59 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
               </SelectContent>
             </Select>
 
-            <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRangeOption)}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Date" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">Last 7 Days</SelectItem>
-                <SelectItem value="month">Last Month</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "flex-1 justify-start text-left font-normal",
+                    dateRange === 'custom' && customDateRange.from && "text-foreground"
+                  )}
+                  onClick={() => setCalendarOpen(true)}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <span className="truncate">{getDateRangeLabel()}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="p-2 border-b">
+                  <Select value={dateRange} onValueChange={handleDateRangeChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">Last 7 Days</SelectItem>
+                      <SelectItem value="month">Last Month</SelectItem>
+                      <SelectItem value="custom">Custom Date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {dateRange === 'custom' && (
+                  <Calendar
+                    mode="range"
+                    selected={{ from: customDateRange.from, to: customDateRange.to }}
+                    onSelect={(range) => {
+                      setCustomDateRange({ from: range?.from, to: range?.to });
+                    }}
+                    numberOfMonths={1}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                )}
+                {dateRange === 'custom' && customDateRange.from && (
+                  <div className="p-2 border-t">
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => setCalendarOpen(false)}
+                    >
+                      Apply Filter
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
 
             {hasFilters && (
               <Button variant="ghost" size="icon" onClick={clearFilters}>
