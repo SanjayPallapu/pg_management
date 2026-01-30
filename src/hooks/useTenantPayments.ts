@@ -67,11 +67,17 @@ export const useTenantPayments = () => {
       const lastEntry = entries[entries.length - 1];
       if (lastEntry) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        // Always include tenant name - use 'Unknown' as fallback for display purposes
+        const tenantDisplay = payment.tenantName 
+          ? `${payment.tenantName}${payment.roomNo ? ` (Room ${payment.roomNo})` : ''}`
+          : 'Unknown Tenant';
+        const recordName = `${tenantDisplay} - ${months[payment.month - 1]} ${payment.year}`;
+        
         logAudit.mutate({
           action: entries.length === 1 ? 'create' : 'update',
           tableName: 'tenant_payments',
           recordId: payment.tenantId,
-          recordName: payment.tenantName ? `${payment.tenantName}${payment.roomNo ? ` (Room ${payment.roomNo})` : ''} - ${months[payment.month - 1]} ${payment.year}` : undefined,
+          recordName,
           newData: {
             amount: lastEntry.amount,
             mode: lastEntry.mode,
@@ -79,6 +85,7 @@ export const useTenantPayments = () => {
             date: lastEntry.date,
             totalPaid: payment.amountPaid,
             status: payment.paymentStatus,
+            notes: payment.notes,
           },
         });
       }
