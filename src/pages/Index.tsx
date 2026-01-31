@@ -15,7 +15,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
-import { SubscriptionBadge } from "@/components/subscription";
+import { SubscriptionBadge, SubscriptionDetailsSheet } from "@/components/subscription";
 import { Room } from "@/types";
 import {
   LayoutDashboard,
@@ -26,6 +26,7 @@ import {
   Shield,
   User,
   History,
+  CreditCard,
   ExternalLink,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -42,6 +43,7 @@ const Index = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
   // Pull to refresh
@@ -105,6 +107,15 @@ const Index = () => {
               <History className="h-4 w-4" />
             </Button>
             <SubscriptionBadge />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 flex-shrink-0" 
+              onClick={() => setSubscriptionSheetOpen(true)} 
+              title="Subscription Details"
+            >
+              <CreditCard className="h-4 w-4" />
+            </Button>
             <div className="h-8 w-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
               {isAdmin ? (
                 <Shield className="h-4 w-4 text-primary-foreground" />
@@ -168,6 +179,9 @@ const Index = () => {
 
         {/* Activity History Sheet */}
         <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
+
+        {/* Subscription Details Sheet */}
+        <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
       </div>
     </div>
   );
