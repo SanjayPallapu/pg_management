@@ -142,6 +142,81 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pgs: {
+        Row: {
+          address: string | null
+          created_at: string
+          floors: number | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          floors?: number | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          floors?: number | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           address: string | null
@@ -176,6 +251,7 @@ export type Database = {
           floor: number
           id: string
           notes: string | null
+          pg_id: string | null
           property_id: string
           rent_amount: number
           room_no: string
@@ -188,6 +264,7 @@ export type Database = {
           floor: number
           id?: string
           notes?: string | null
+          pg_id?: string | null
           property_id: string
           rent_amount: number
           room_no: string
@@ -200,6 +277,7 @@ export type Database = {
           floor?: number
           id?: string
           notes?: string | null
+          pg_id?: string | null
           property_id?: string
           rent_amount?: number
           room_no?: string
@@ -208,6 +286,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "rooms_pg_id_fkey"
+            columns: ["pg_id"]
+            isOneToOne: false
+            referencedRelation: "pgs"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "rooms_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -215,6 +300,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          expires_at: string | null
+          features: Json | null
+          id: string
+          max_pgs: number
+          max_tenants_per_pg: number
+          payment_approved_at: string | null
+          payment_proof_url: string | null
+          payment_requested_at: string | null
+          plan: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          max_pgs?: number
+          max_tenants_per_pg?: number
+          payment_approved_at?: string | null
+          payment_proof_url?: string | null
+          payment_requested_at?: string | null
+          plan?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          max_pgs?: number
+          max_tenants_per_pg?: number
+          payment_approved_at?: string | null
+          payment_proof_url?: string | null
+          payment_requested_at?: string | null
+          plan?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       tenant_payments: {
         Row: {
@@ -366,6 +502,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff"
+      subscription_status: "free" | "pending" | "active" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -494,6 +631,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff"],
+      subscription_status: ["free", "pending", "active", "expired"],
     },
   },
 } as const

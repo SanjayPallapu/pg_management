@@ -13,6 +13,9 @@ import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
+import { usePG } from "@/contexts/PGContext";
+import { PGSwitcher, PGSetupWizard } from "@/components/pg";
+import { SubscriptionBadge } from "@/components/subscription";
 import { Room } from "@/types";
 import {
   LayoutDashboard,
@@ -35,6 +38,7 @@ import appLogo from "@/assets/pg-logo.png";
 
 const Index = () => {
   const { rooms, isLoading } = useRooms();
+  const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG } = usePG();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -60,10 +64,6 @@ const Index = () => {
     toast.success("Signed out successfully");
     navigate("/auth");
   };
-  const handleViewDetails = (room: Room) => {
-    setSelectedRoom(room);
-    setIsDialogOpen(true);
-  };
 
   // Update selected room when rooms data changes
   useEffect(() => {
@@ -74,17 +74,40 @@ const Index = () => {
       }
     }
   }, [rooms, selectedRoom]);
+
+  const handleViewDetails = (room: Room) => {
+    setSelectedRoom(room);
+    setIsDialogOpen(true);
+  };
+
+  // Show setup wizard for new users
+  if (needsSetup && !pgLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <PGSetupWizard onComplete={() => refreshPGs()} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3 overflow-visible">
-            <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
-            <MonthYearPicker />
+            {currentPG?.logoUrl ? (
+              <img src={currentPG.logoUrl} alt={currentPG.name} className="h-14 w-auto rounded" decoding="async" />
+            ) : (
+              <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
+            )}
+            <div className="flex flex-col gap-1">
+              <PGSwitcher />
+              <MonthYearPicker />
+            </div>
           </div>
-          <div className="flex items-center gap-2 mx-0 px-px pl-0">
+          <div className="flex items-center gap-2">
             <NetworkStatusIndicator />
-            <div className="text-sm text-muted-foreground px-[11px] pl-0 pr-0 pt-0 pb-0 mr-0 ml-[9px] mx-0">
+            <SubscriptionBadge />
+            <div className="text-sm text-muted-foreground">
               {months[selectedMonth - 1]} {selectedYear}
             </div>
             <Button
