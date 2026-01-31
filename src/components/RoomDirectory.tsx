@@ -4,13 +4,14 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X, Plus } from 'lucide-react';
+import { Search, X, Plus, Loader2 } from 'lucide-react';
 import { TenantSearchResults } from './TenantSearchResults';
 import { usePG } from '@/contexts/PGContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { getPricePerBed } from '@/constants/pricing';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -32,6 +33,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingFloor, setIsAddingFloor] = useState(false);
+  const [addingRoomToFloor, setAddingRoomToFloor] = useState<number | null>(null);
 
   const isSelectedCurrentMonth = (() => {
     const now = new Date();
@@ -86,6 +88,41 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       toast.error('Failed to add floor');
     } finally {
       setIsAddingFloor(false);
+    }
+  };
+
+  const handleAddRoom = async (floor: number) => {
+    if (!currentPG) return;
+    setAddingRoomToFloor(floor);
+    try {
+      // Get existing rooms on this floor to determine next room number
+      const roomsOnFloor = rooms.filter(r => r.floor === floor);
+      const existingRoomNos = roomsOnFloor.map(r => parseInt(r.roomNo.slice(-1)) || 0);
+      const nextRoomNum = existingRoomNos.length > 0 ? Math.max(...existingRoomNos) + 1 : 1;
+      const roomNo = `${floor}0${nextRoomNum}`;
+      
+      const capacity = 3; // Default capacity
+      const { error } = await supabase
+        .from('rooms')
+        .insert({
+          pg_id: currentPG.id,
+          property_id: currentPG.id,
+          room_no: roomNo,
+          floor: floor,
+          capacity: capacity,
+          rent_amount: getPricePerBed(capacity) * capacity,
+          status: 'Vacant',
+        });
+      
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success(`Room ${roomNo} added`);
+    } catch (err) {
+      console.error('Error adding room:', err);
+      toast.error('Failed to add room');
+    } finally {
+      setAddingRoomToFloor(null);
     }
   };
 
@@ -149,9 +186,21 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             {roomsOnFloor.map(room => (
               <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />
             ))}
-            {roomsOnFloor.length === 0 && (
-              <p className="text-sm text-muted-foreground col-span-full">No rooms on this floor yet</p>
-            )}
+            {/* Add Room Card */}
+            <button
+              onClick={() => handleAddRoom(floor)}
+              disabled={addingRoomToFloor === floor}
+              className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors min-h-[120px] disabled:opacity-50"
+            >
+              {addingRoomToFloor === floor ? (
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              ) : (
+                <>
+                  <Plus className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Add Room</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       ))}

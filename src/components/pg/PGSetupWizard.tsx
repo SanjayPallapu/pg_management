@@ -47,14 +47,14 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
   const [pgCount, setPgCount] = useState(1);
   const [currentPgIndex, setCurrentPgIndex] = useState(0);
   const [pgs, setPgs] = useState<PGBrandingData[]>([{
-    name: 'Amma Women\'s Hostel',
+    name: '',
     address: '',
-    logoType: 'upload',
+    logoType: 'generate',
     logoStyle: 'modern',
-    logoColor: '#EC4899',
-    logoUrl: ammaLogo,
+    logoColor: '#8B5CF6',
+    logoUrl: undefined,
     floors: 3,
-    roomsPerFloor: 9,
+    roomsPerFloor: 4,
   }]);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -87,7 +87,7 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
         logoStyle: 'modern' as const,
         logoColor: '#8B5CF6',
         floors: 3,
-        roomsPerFloor: 9,
+        roomsPerFloor: 4,
       }
     );
     setPgs(newPgs);
