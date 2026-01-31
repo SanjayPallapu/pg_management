@@ -79,6 +79,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const { refreshPGs, subscription, refreshSubscription } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
 
@@ -86,6 +87,22 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   // If subscription is pending, show pending step
   const effectiveStep = isPending ? 'pending' : step;
+
+  const handleCheckStatus = async () => {
+    setIsCheckingStatus(true);
+    try {
+      await refreshSubscription();
+      if (subscription?.status === 'active') {
+        toast.success('Your subscription is now active!');
+      } else {
+        toast.info('Payment is still under review');
+      }
+    } catch (err) {
+      toast.error('Failed to check status');
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
 
   const handleSetupComplete = () => {
     refreshPGs();
@@ -451,8 +468,16 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 <MessageCircle className="h-4 w-4" />
                 Contact Admin for Quick Activation
               </Button>
-              <Button variant="ghost" onClick={() => refreshSubscription()}>
-                Check Status
+              <Button 
+                variant="ghost" 
+                onClick={handleCheckStatus}
+                disabled={isCheckingStatus}
+              >
+                {isCheckingStatus ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Checking...</>
+                ) : (
+                  'Check Status'
+                )}
               </Button>
             </div>
           </motion.div>
