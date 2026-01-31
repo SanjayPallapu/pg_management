@@ -1,20 +1,37 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X } from 'lucide-react';
+import { Search, X, Plus } from 'lucide-react';
 import { TenantSearchResults } from './TenantSearchResults';
+import { usePG } from '@/contexts/PGContext';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface RoomDirectoryProps {
   rooms: Room[];
   onViewDetails: (room: Room) => void;
 }
 
+const getFloorName = (floor: number, roomsOnFloor: Room[]): string => {
+  if (roomsOnFloor.length === 0) return `Floor ${floor}`;
+  const roomNos = roomsOnFloor.map(r => r.roomNo).sort();
+  const first = roomNos[0];
+  const last = roomNos[roomNos.length - 1];
+  const ordinal = floor === 1 ? '1st' : floor === 2 ? '2nd' : floor === 3 ? '3rd' : `${floor}th`;
+  return `${ordinal} Floor (${first}-${last})`;
+};
+
 export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { currentPG, refreshPGs } = usePG();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddingFloor, setIsAddingFloor] = useState(false);
 
   const isSelectedCurrentMonth = (() => {
     const now = new Date();
@@ -28,21 +45,69 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         : isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
     ).length;
 
-  const roomsByFloor = {
-    1: rooms.filter(room => room.floor === 1).sort((a, b) => a.roomNo.localeCompare(b.roomNo)),
-    2: rooms.filter(room => room.floor === 2).sort((a, b) => a.roomNo.localeCompare(b.roomNo)),
-    3: rooms.filter(room => room.floor === 3).sort((a, b) => a.roomNo.localeCompare(b.roomNo))
-  };
-  const floorNames = {
-    1: '1st Floor (101-109)',
-    2: '2nd Floor (201-209)',
-    3: '3rd Floor (301-305)'
+  // Dynamically determine floors from actual room data
+  const floorData = useMemo(() => {
+    const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
+    // If no rooms, use PG floors setting or default to 1
+    const pgFloors = currentPG?.floors || 3;
+    const allFloors = floorsFromRooms.length > 0 
+      ? floorsFromRooms 
+      : Array.from({ length: pgFloors }, (_, i) => i + 1);
+    
+    return allFloors.map(floor => {
+      const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
+      return {
+        floor,
+        rooms: roomsOnFloor,
+        name: getFloorName(floor, roomsOnFloor),
+      };
+    });
+  }, [rooms, currentPG?.floors]);
+
+  const handleAddFloor = async () => {
+    if (!currentPG) return;
+    setIsAddingFloor(true);
+    try {
+      const maxFloor = Math.max(...floorData.map(f => f.floor), 0);
+      const newFloorCount = maxFloor + 1;
+      
+      const { error } = await supabase
+        .from('pgs')
+        .update({ floors: newFloorCount })
+        .eq('id', currentPG.id);
+      
+      if (error) throw error;
+      
+      await refreshPGs();
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success(`Floor ${newFloorCount} added`);
+    } catch (err) {
+      console.error('Error adding floor:', err);
+      toast.error('Failed to add floor');
+    } finally {
+      setIsAddingFloor(false);
+    }
   };
 
-  return <div className="space-y-8">
+  return (
+    <div className="space-y-8">
       <div>
-        <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
-        <p className="text-muted-foreground mb-3">Overview of all rooms organized by floor</p>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
+            <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddFloor}
+            disabled={isAddingFloor}
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Add Floor
+          </Button>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -66,22 +131,30 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         <TenantSearchResults rooms={rooms} searchQuery={searchQuery} onNavigateToRoom={onViewDetails} />
       )}
 
-      {([1, 2, 3] as const).map(floor => <div key={floor} className="space-y-4">
+      {floorData.map(({ floor, rooms: roomsOnFloor, name }) => (
+        <div key={floor} className="space-y-4">
           <div className="border-l-4 border-primary pl-4">
-            <h3 className="font-semibold text-lg">{floorNames[floor]}</h3>
+            <h3 className="font-semibold text-lg">{name}</h3>
             <p className="text-sm text-muted-foreground">
-              {roomsByFloor[floor].filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
-              {roomsByFloor[floor].filter(r => {
+              {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
+              {roomsOnFloor.filter(r => {
                 const c = occupiedCountForMonth(r);
                 return c > 0 && c < r.capacity;
               }).length} partially occupied,{' '}
-              {roomsByFloor[floor].filter(r => occupiedCountForMonth(r) === 0).length} vacant
+              {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
             </p>
           </div>
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {roomsByFloor[floor].map(room => <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />)}
+            {roomsOnFloor.map(room => (
+              <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />
+            ))}
+            {roomsOnFloor.length === 0 && (
+              <p className="text-sm text-muted-foreground col-span-full">No rooms on this floor yet</p>
+            )}
           </div>
-        </div>)}
-    </div>;
+        </div>
+      ))}
+    </div>
+  );
 };
