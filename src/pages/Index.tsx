@@ -124,27 +124,25 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Horizontal scrollable tabs */}
-          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-            <TabsList className="inline-flex w-max min-w-full gap-1 bg-muted/50 p-1 rounded-lg">
-              <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="text-sm">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="rooms" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
-                <Building className="h-4 w-4" />
-                <span className="text-sm">Rooms</span>
-              </TabsTrigger>
-              <TabsTrigger value="rent-sheet" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
-                <Receipt className="h-4 w-4" />
-                <span className="text-sm">Rent</span>
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
-                <FileBarChart className="h-4 w-4" />
-                <span className="text-sm">Reports</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {/* Tabs - fixed width grid */}
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-2 py-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="rooms" className="flex items-center gap-1.5 px-2 py-2">
+              <Building className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Rooms</span>
+            </TabsTrigger>
+            <TabsTrigger value="rent-sheet" className="flex items-center gap-1.5 px-2 py-2">
+              <Receipt className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Rent</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-1.5 px-2 py-2">
+              <FileBarChart className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Reports</span>
+            </TabsTrigger>
+          </TabsList>
 
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
