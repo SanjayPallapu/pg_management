@@ -156,7 +156,12 @@ export const PGProvider = ({ children }: PGProviderProps) => {
     : pgs.length < 1;
 
   const isProUser = subscription?.status === 'active' && subscription?.plan === 'pro';
-  const needsSetup = pgs.length === 0;
+  
+  // User needs setup if:
+  // 1. No PGs created yet, AND subscription is active
+  // 2. OR subscription is not active (needs payment approval)
+  const needsSubscription = !subscription || subscription.status === 'free' || subscription.status === 'pending';
+  const needsSetup = pgs.length === 0 || needsSubscription;
 
   const value: PGContextType = {
     pgs,

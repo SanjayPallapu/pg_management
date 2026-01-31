@@ -10,23 +10,29 @@ import {
   Bell,
   BarChart3,
   Smartphone,
-  Shield,
   Crown,
   Check,
   ChevronRight,
   Sparkles,
-  Image,
-  Calendar,
+  Copy,
+  Upload,
+  Loader2,
+  MessageCircle,
+  Wallet,
+  CreditCard,
+  Clock,
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID } from '@/types/pg';
+import { useSubscription } from '@/hooks/useSubscription';
+import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID, PAYMENT_METHODS, ADMIN_WHATSAPP } from '@/types/pg';
+import { toast } from 'sonner';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-type Step = 'welcome' | 'features' | 'plans' | 'setup';
+type Step = 'welcome' | 'features' | 'plans' | 'payment' | 'pending' | 'setup';
 
 const FEATURES = [
   {
@@ -61,17 +67,82 @@ const FEATURES = [
   },
 ];
 
+const PAYMENT_ICONS = {
+  upi: Smartphone,
+  gpay: Wallet,
+  phonepe: CreditCard,
+  paytm: Smartphone,
+};
+
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [step, setStep] = useState<Step>('welcome');
-  const { refreshPGs } = usePG();
+  const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const { refreshPGs, subscription, refreshSubscription } = usePG();
+  const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+
+  const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
+
+  // If subscription is pending, show pending step
+  const effectiveStep = isPending ? 'pending' : step;
 
   const handleSetupComplete = () => {
     refreshPGs();
     onComplete();
   };
 
+  const copyUPI = () => {
+    navigator.clipboard.writeText(ADMIN_UPI_ID);
+    toast.success('UPI ID copied!');
+  };
+
+  const handleMethodSelect = (methodId: string) => {
+    setSelectedMethod(methodId);
+    
+    const amount = currentPlan.price;
+    const upiUrl = `upi://pay?pa=${ADMIN_UPI_ID}&pn=PG%20Manager&am=${amount}&cu=INR&tn=${selectedPlan}%20Plan`;
+    
+    if (methodId !== 'upi') {
+      window.open(upiUrl, '_blank');
+    } else {
+      copyUPI();
+    }
+  };
+
+  const openWhatsApp = () => {
+    const message = `Hi, I have paid ₹${currentPlan.price} for ${currentPlan.name} Plan subscription. Please verify and activate my account.`;
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = await uploadPaymentScreenshot(file);
+    if (url) {
+      setScreenshotUrl(url);
+      toast.success('Screenshot uploaded!');
+    }
+  };
+
+  const handleSubmitPayment = async () => {
+    if (!selectedMethod) {
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    await createPaymentRequest.mutateAsync({
+      amount: currentPlan.price,
+      paymentMethod: selectedMethod,
+      screenshotUrl: screenshotUrl || undefined,
+    });
+
+    await refreshSubscription();
+  };
+
   const renderStep = () => {
-    switch (step) {
+    switch (effectiveStep) {
       case 'welcome':
         return (
           <motion.div
@@ -161,7 +232,10 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Manual Plan */}
-              <Card className="relative">
+              <Card 
+                className={`relative cursor-pointer transition-all ${selectedPlan === 'manual' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+                onClick={() => setSelectedPlan('manual')}
+              >
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-bold mb-2">Manual</h3>
                   <div className="text-3xl font-bold mb-4">
@@ -181,18 +255,14 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                       <Check className="h-4 w-4 text-primary" /> AI logo generator
                     </li>
                   </ul>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setStep('setup')}
-                  >
-                    Start with Manual
-                  </Button>
                 </CardContent>
               </Card>
 
               {/* Automatic Plan */}
-              <Card className="relative border-primary ring-2 ring-primary/20">
+              <Card 
+                className={`relative cursor-pointer transition-all ${selectedPlan === 'automatic' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+                onClick={() => setSelectedPlan('automatic')}
+              >
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                     <Crown className="h-3 w-3 mr-1" /> Best Value
@@ -219,19 +289,172 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                       <Check className="h-4 w-4 text-primary" /> Multi-admin support
                     </li>
                   </ul>
-                  <Button 
-                    className="w-full"
-                    onClick={() => setStep('setup')}
-                  >
-                    Start with Automatic
-                  </Button>
                 </CardContent>
               </Card>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Pay via UPI to 9390418552@kotak811 • Admin will activate manually
-            </p>
+            <Button 
+              size="lg" 
+              onClick={() => setStep('payment')} 
+              className="w-full"
+            >
+              Continue to Payment - ₹{currentPlan.price}
+            </Button>
+          </motion.div>
+        );
+
+      case 'payment':
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6 max-w-md mx-auto"
+          >
+            <div className="text-center mb-4">
+              <Badge variant="secondary" className="mb-4">
+                <CreditCard className="h-3 w-3 mr-1" /> Payment
+              </Badge>
+              <h2 className="text-2xl font-bold">{currentPlan.name} Plan - ₹{currentPlan.price}/month</h2>
+            </div>
+
+            {/* UPI Details */}
+            <div className="text-center p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">Pay to UPI ID</p>
+              <div className="flex items-center justify-center gap-2">
+                <code className="text-lg font-mono font-bold">{ADMIN_UPI_ID}</code>
+                <Button variant="ghost" size="icon" onClick={copyUPI}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-2xl font-bold text-primary mt-2">₹{currentPlan.price}</p>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="grid grid-cols-2 gap-3">
+              {PAYMENT_METHODS.map((method) => {
+                const Icon = PAYMENT_ICONS[method.id as keyof typeof PAYMENT_ICONS];
+                return (
+                  <Card
+                    key={method.id}
+                    className={`cursor-pointer transition-all ${selectedMethod === method.id ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+                    onClick={() => handleMethodSelect(method.id)}
+                  >
+                    <CardContent className="py-4 text-center">
+                      <Icon className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <p className="font-medium text-sm">{method.name}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Screenshot Upload */}
+            {selectedMethod && (
+              <div className="space-y-3">
+                <p className="text-sm text-center text-muted-foreground">
+                  After payment, upload screenshot for quick verification
+                </p>
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  {screenshotUrl ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={screenshotUrl} 
+                        alt="Payment proof" 
+                        className="h-32 mx-auto object-contain rounded"
+                      />
+                      <Button variant="outline" size="sm" asChild>
+                        <label className="cursor-pointer">
+                          Change
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleScreenshotUpload}
+                          />
+                        </label>
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block">
+                      {isUploading ? (
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            Upload payment screenshot
+                          </p>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleScreenshotUpload}
+                        disabled={isUploading}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <Button 
+                  onClick={handleSubmitPayment} 
+                  className="w-full"
+                  disabled={createPaymentRequest.isPending}
+                >
+                  {createPaymentRequest.isPending ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                  ) : (
+                    <>Submit Payment Request</>
+                  )}
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={openWhatsApp} 
+                  className="w-full gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Contact Admin on WhatsApp
+                </Button>
+              </div>
+            )}
+
+            <Button variant="ghost" onClick={() => setStep('plans')} className="w-full">
+              Back to Plans
+            </Button>
+          </motion.div>
+        );
+
+      case 'pending':
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center space-y-6 max-w-md mx-auto"
+          >
+            <div className="h-20 w-20 rounded-full bg-amber-100 dark:bg-amber-900/30 mx-auto flex items-center justify-center">
+              <Clock className="h-10 w-10 text-amber-600" />
+            </div>
+            
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Payment Under Review</h1>
+              <p className="text-muted-foreground">
+                Your payment is being reviewed by admin. You'll get access once approved.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-4">
+              <Button onClick={openWhatsApp} variant="outline" className="gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Contact Admin for Quick Activation
+              </Button>
+              <Button variant="ghost" onClick={() => refreshSubscription()}>
+                Check Status
+              </Button>
+            </div>
           </motion.div>
         );
 
