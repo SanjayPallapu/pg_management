@@ -24,11 +24,14 @@ export const MonthYearPicker = () => {
   const currentDate = new Date();
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
 
+  const monthLabel = months.find(m => m.value === selectedMonth)?.label?.slice(0, 3) || '';
+
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Calendar className="h-5 w-5" />
+        <Button variant="outline" className="gap-1.5 px-2 h-10">
+          <Calendar className="h-4 w-4" />
+          <span className="text-xs font-medium">{monthLabel} {selectedYear}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-4" align="start">
