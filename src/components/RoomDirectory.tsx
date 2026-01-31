@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { getPricePerBed } from '@/constants/pricing';
+import { AddRoomsDialog } from './AddRoomsDialog';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -33,7 +34,8 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingFloor, setIsAddingFloor] = useState(false);
-  const [addingRoomToFloor, setAddingRoomToFloor] = useState<number | null>(null);
+  const [addRoomsDialogOpen, setAddRoomsDialogOpen] = useState(false);
+  const [selectedFloorForRooms, setSelectedFloorForRooms] = useState<number>(1);
 
   const isSelectedCurrentMonth = (() => {
     const now = new Date();
@@ -91,39 +93,9 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     }
   };
 
-  const handleAddRoom = async (floor: number) => {
-    if (!currentPG) return;
-    setAddingRoomToFloor(floor);
-    try {
-      // Get existing rooms on this floor to determine next room number
-      const roomsOnFloor = rooms.filter(r => r.floor === floor);
-      const existingRoomNos = roomsOnFloor.map(r => parseInt(r.roomNo.slice(-1)) || 0);
-      const nextRoomNum = existingRoomNos.length > 0 ? Math.max(...existingRoomNos) + 1 : 1;
-      const roomNo = `${floor}0${nextRoomNum}`;
-      
-      const capacity = 3; // Default capacity
-      const { error } = await supabase
-        .from('rooms')
-        .insert({
-          pg_id: currentPG.id,
-          property_id: currentPG.id,
-          room_no: roomNo,
-          floor: floor,
-          capacity: capacity,
-          rent_amount: getPricePerBed(capacity) * capacity,
-          status: 'Vacant',
-        });
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      toast.success(`Room ${roomNo} added`);
-    } catch (err) {
-      console.error('Error adding room:', err);
-      toast.error('Failed to add room');
-    } finally {
-      setAddingRoomToFloor(null);
-    }
+  const openAddRoomsDialog = (floor: number) => {
+    setSelectedFloorForRooms(floor);
+    setAddRoomsDialogOpen(true);
   };
 
   return (
@@ -170,40 +142,53 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
       {floorData.map(({ floor, rooms: roomsOnFloor, name }) => (
         <div key={floor} className="space-y-4">
-          <div className="border-l-4 border-primary pl-4">
-            <h3 className="font-semibold text-lg">{name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
-              {roomsOnFloor.filter(r => {
-                const c = occupiedCountForMonth(r);
-                return c > 0 && c < r.capacity;
-              }).length} partially occupied,{' '}
-              {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
-            </p>
+          <div className="flex items-center justify-between">
+            <div className="border-l-4 border-primary pl-4">
+              <h3 className="font-semibold text-lg">{name}</h3>
+              <p className="text-sm text-muted-foreground">
+                {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
+                {roomsOnFloor.filter(r => {
+                  const c = occupiedCountForMonth(r);
+                  return c > 0 && c < r.capacity;
+                }).length} partially occupied,{' '}
+                {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openAddRoomsDialog(floor)}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              Add Rooms
+            </Button>
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {roomsOnFloor.map(room => (
-              <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />
-            ))}
-            {/* Add Room Card */}
-            <button
-              onClick={() => handleAddRoom(floor)}
-              disabled={addingRoomToFloor === floor}
-              className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors min-h-[120px] disabled:opacity-50"
-            >
-              {addingRoomToFloor === floor ? (
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              ) : (
-                <>
-                  <Plus className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Add Room</span>
-                </>
-              )}
-            </button>
-          </div>
+          {roomsOnFloor.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {roomsOnFloor.map(room => (
+                <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 border-2 border-dashed border-muted-foreground/30 rounded-lg">
+              <p className="text-muted-foreground mb-3">No rooms on this floor yet</p>
+              <Button variant="outline" onClick={() => openAddRoomsDialog(floor)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Rooms ({floor}01 - {floor}09)
+              </Button>
+            </div>
+          )}
         </div>
       ))}
+
+      <AddRoomsDialog
+        open={addRoomsDialogOpen}
+        onOpenChange={setAddRoomsDialogOpen}
+        floor={selectedFloorForRooms}
+        existingRoomNos={rooms.map(r => r.roomNo)}
+      />
     </div>
   );
 };
