@@ -66,19 +66,20 @@ export interface PGBrandingData {
 
 // Subscription plan definitions
 export const SUBSCRIPTION_PLANS = {
-  free: {
-    name: 'Free',
-    price: 0,
-    maxPgs: 1,
-    maxTenantsPerPg: 10,
+  manual: {
+    name: 'Manual',
+    price: 499, // Monthly in INR
+    maxPgs: -1, // Unlimited
+    maxTenantsPerPg: -1, // Unlimited
     features: {
       autoReminders: false,
       dailyReports: false,
-      aiLogo: false,
+      aiLogo: true,
     },
+    description: 'Manual reminders via WhatsApp',
   },
-  pro: {
-    name: 'Pro',
+  automatic: {
+    name: 'Automatic',
     price: 999, // Monthly in INR
     maxPgs: -1, // Unlimited
     maxTenantsPerPg: -1, // Unlimited
@@ -87,12 +88,16 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
+    description: 'Automated image reminders & reports',
   },
 } as const;
 
+export const ADMIN_UPI_ID = '9390418552@kotak811';
+export const ADMIN_WHATSAPP = '919390418552';
+
 export const PAYMENT_METHODS = [
-  { id: 'upi', name: 'UPI', icon: 'Smartphone' },
-  { id: 'whatsapp', name: 'WhatsApp Pay', icon: 'MessageCircle' },
   { id: 'gpay', name: 'Google Pay', icon: 'Wallet' },
   { id: 'phonepe', name: 'PhonePe', icon: 'CreditCard' },
+  { id: 'paytm', name: 'Paytm', icon: 'Smartphone' },
+  { id: 'upi', name: 'Any UPI', icon: 'Smartphone' },
 ] as const;

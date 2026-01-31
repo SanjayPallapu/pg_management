@@ -3,23 +3,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
   Crown, 
   Check, 
   Upload, 
   Smartphone, 
-  MessageCircle, 
   Wallet, 
   CreditCard,
   Loader2,
-  ExternalLink,
-  Clock
+  Clock,
+  Copy,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS, PAYMENT_METHODS } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, PAYMENT_METHODS, ADMIN_UPI_ID, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
 
 interface UpgradeDialogProps {
@@ -29,39 +28,48 @@ interface UpgradeDialogProps {
 
 const PAYMENT_ICONS = {
   upi: Smartphone,
-  whatsapp: MessageCircle,
   gpay: Wallet,
   phonepe: CreditCard,
+  paytm: Smartphone,
 };
-
-const UPI_ID = 'yourupi@bank'; // Replace with actual UPI ID
-const WHATSAPP_NUMBER = '919989568666'; // Replace with actual WhatsApp number
-const WHATSAPP_MESSAGE = "Hi, I want to upgrade my PG Management App to Pro Plan. My payment is complete.";
 
 export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const { subscription } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+  const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [step, setStep] = useState<'plan' | 'payment' | 'confirm'>('plan');
 
+  const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
+
+  const copyUPI = () => {
+    navigator.clipboard.writeText(ADMIN_UPI_ID);
+    toast.success('UPI ID copied!');
+  };
+
   const handleMethodSelect = (methodId: string) => {
     setSelectedMethod(methodId);
     
-    // Open payment app/link
-    if (methodId === 'whatsapp') {
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`, '_blank');
-    } else if (methodId === 'gpay') {
-      window.open(`upi://pay?pa=${UPI_ID}&pn=PG%20Management&am=${SUBSCRIPTION_PLANS.pro.price}&cu=INR`, '_blank');
+    const amount = currentPlan.price;
+    const upiUrl = `upi://pay?pa=${ADMIN_UPI_ID}&pn=PG%20Manager&am=${amount}&cu=INR&tn=${selectedPlan}%20Plan`;
+    
+    if (methodId === 'gpay') {
+      window.open(upiUrl, '_blank');
     } else if (methodId === 'phonepe') {
-      window.open(`phonepe://pay?pa=${UPI_ID}&pn=PG%20Management&am=${SUBSCRIPTION_PLANS.pro.price}&cu=INR`, '_blank');
+      window.open(upiUrl, '_blank');
+    } else if (methodId === 'paytm') {
+      window.open(upiUrl, '_blank');
     } else if (methodId === 'upi') {
-      // Show UPI ID to copy
-      navigator.clipboard.writeText(UPI_ID);
-      toast.success('UPI ID copied to clipboard!');
+      copyUPI();
     }
     
     setStep('confirm');
+  };
+
+  const openWhatsApp = () => {
+    const message = `Hi, I have paid ₹${currentPlan.price} for ${currentPlan.name} Plan subscription. Please verify and activate my account.`;
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +90,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
     }
 
     await createPaymentRequest.mutateAsync({
-      amount: SUBSCRIPTION_PLANS.pro.price,
+      amount: currentPlan.price,
       paymentMethod: selectedMethod,
       screenshotUrl: screenshotUrl || undefined,
     });
@@ -104,9 +112,13 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             <div className="h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-900/30 mx-auto flex items-center justify-center mb-4">
               <Clock className="h-8 w-8 text-amber-600" />
             </div>
-            <p className="text-muted-foreground">
-              Your payment is being reviewed. You'll be notified once your Pro plan is activated.
+            <p className="text-muted-foreground mb-4">
+              Your payment is being reviewed. Contact admin on WhatsApp for quick activation.
             </p>
+            <Button onClick={openWhatsApp} variant="outline" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Contact Admin
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -115,53 +127,33 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />
-            Upgrade to Pro
+            Subscribe to Pro
           </DialogTitle>
           <DialogDescription>
-            Unlock unlimited PGs, automated reminders, and more
+            Unlock unlimited PGs and all features
           </DialogDescription>
         </DialogHeader>
 
         {step === 'plan' && (
           <div className="space-y-4">
-            {/* Free Plan */}
-            <Card className="border-muted">
+            {/* Manual Plan */}
+            <Card 
+              className={`cursor-pointer transition-all ${selectedPlan === 'manual' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+              onClick={() => setSelectedPlan('manual')}
+            >
               <CardContent className="pt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold">Free Plan</h3>
-                  <Badge variant="secondary">Current</Badge>
-                </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4" /> 1 PG
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4" /> 10 tenants max
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4" /> Manual reminders
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Pro Plan */}
-            <Card className="border-primary ring-2 ring-primary/20">
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-amber-500" />
-                    Pro Plan
-                  </h3>
+                  <h3 className="font-semibold">Manual Plan</h3>
                   <div className="text-right">
-                    <span className="text-2xl font-bold">₹{SUBSCRIPTION_PLANS.pro.price}</span>
+                    <span className="text-2xl font-bold">₹{SUBSCRIPTION_PLANS.manual.price}</span>
                     <span className="text-muted-foreground text-sm">/month</span>
                   </div>
                 </div>
+                <p className="text-sm text-muted-foreground mb-3">{SUBSCRIPTION_PLANS.manual.description}</p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> PGs
@@ -170,13 +162,46 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                     <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" /> Automated image reminders
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" /> Daily activity reports
+                    <Check className="h-4 w-4 text-primary" /> Manual WhatsApp reminders
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> AI logo generator
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Automatic Plan */}
+            <Card 
+              className={`cursor-pointer transition-all relative ${selectedPlan === 'automatic' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+              onClick={() => setSelectedPlan('automatic')}
+            >
+              <div className="absolute -top-2 right-4">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+                  Best Value
+                </Badge>
+              </div>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    Automatic Plan
+                    <Crown className="h-4 w-4 text-amber-500" />
+                  </h3>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold">₹{SUBSCRIPTION_PLANS.automatic.price}</span>
+                    <span className="text-muted-foreground text-sm">/month</span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">{SUBSCRIPTION_PLANS.automatic.description}</p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> Everything in Manual
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> <strong>Automated</strong> image reminders
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> Daily activity reports
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> Multi-admin support
@@ -186,15 +211,26 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             </Card>
 
             <Button onClick={() => setStep('payment')} className="w-full">
-              Continue to Payment
+              Continue to Payment - ₹{currentPlan.price}
             </Button>
           </div>
         )}
 
         {step === 'payment' && (
           <div className="space-y-4">
+            <div className="text-center p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">Pay to UPI ID</p>
+              <div className="flex items-center justify-center gap-2">
+                <code className="text-lg font-mono font-bold">{ADMIN_UPI_ID}</code>
+                <Button variant="ghost" size="icon" onClick={copyUPI}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-2xl font-bold text-primary mt-2">₹{currentPlan.price}</p>
+            </div>
+
             <p className="text-sm text-muted-foreground text-center">
-              Select your preferred payment method
+              Select payment app to pay instantly
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -206,7 +242,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                     className="cursor-pointer hover:border-primary transition-all"
                     onClick={() => handleMethodSelect(method.id)}
                   >
-                    <CardContent className="pt-4 text-center">
+                    <CardContent className="py-4 text-center">
                       <Icon className="h-8 w-8 mx-auto mb-2 text-primary" />
                       <p className="font-medium text-sm">{method.name}</p>
                     </CardContent>
@@ -224,8 +260,9 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
         {step === 'confirm' && (
           <div className="space-y-4">
             <div className="text-center py-4">
-              <p className="text-muted-foreground">
-                After completing payment, upload your screenshot or click "I have paid"
+              <p className="font-medium mb-2">After payment, upload screenshot or contact admin</p>
+              <p className="text-sm text-muted-foreground">
+                Admin will verify payment and activate your account
               </p>
             </div>
 
@@ -258,7 +295,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                       <>
                         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground">
-                          Upload payment screenshot (optional)
+                          Upload payment screenshot
                         </p>
                       </>
                     )}
@@ -281,8 +318,17 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                 {createPaymentRequest.isPending ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
                 ) : (
-                  <>I have paid</>
+                  <>Submit Payment Request</>
                 )}
+              </Button>
+
+              <Button 
+                variant="outline" 
+                onClick={openWhatsApp} 
+                className="w-full gap-2"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Contact Admin on WhatsApp
               </Button>
 
               <Button variant="ghost" onClick={() => setStep('payment')} className="w-full">

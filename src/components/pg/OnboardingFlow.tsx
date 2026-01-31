@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID } from '@/types/pg';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -156,54 +156,16 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 <Crown className="h-3 w-3 mr-1" /> Pricing
               </Badge>
               <h2 className="text-2xl font-bold">Choose your plan</h2>
-              <p className="text-muted-foreground mt-2">Start free, upgrade when you need more</p>
+              <p className="text-muted-foreground mt-2">Unlock unlimited PGs and features</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Free Plan */}
+              {/* Manual Plan */}
               <Card className="relative">
                 <CardContent className="pt-6">
-                  <h3 className="text-xl font-bold mb-2">Free</h3>
+                  <h3 className="text-xl font-bold mb-2">Manual</h3>
                   <div className="text-3xl font-bold mb-4">
-                    ₹0 <span className="text-sm font-normal text-muted-foreground">/month</span>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> 1 PG
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Up to 10 tenants
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Manual reminders
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Basic receipts
-                    </li>
-                  </ul>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setStep('setup')}
-                  >
-                    Start Free
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Pro Plan */}
-              <Card className="relative border-primary ring-2 ring-primary/20">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary">
-                    <Crown className="h-3 w-3 mr-1" /> Recommended
-                  </Badge>
-                </div>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    Pro <Crown className="h-5 w-5 text-amber-500" />
-                  </h3>
-                  <div className="text-3xl font-bold mb-4">
-                    ₹{SUBSCRIPTION_PLANS.pro.price} <span className="text-sm font-normal text-muted-foreground">/month</span>
+                    ₹{SUBSCRIPTION_PLANS.manual.price} <span className="text-sm font-normal text-muted-foreground">/month</span>
                   </div>
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center gap-2 text-sm">
@@ -213,13 +175,45 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                       <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
                     </li>
                     <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary" /> Manual WhatsApp reminders
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary" /> AI logo generator
+                    </li>
+                  </ul>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setStep('setup')}
+                  >
+                    Start with Manual
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Automatic Plan */}
+              <Card className="relative border-primary ring-2 ring-primary/20">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+                    <Crown className="h-3 w-3 mr-1" /> Best Value
+                  </Badge>
+                </div>
+                <CardContent className="pt-6">
+                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    Automatic <Crown className="h-5 w-5 text-amber-500" />
+                  </h3>
+                  <div className="text-3xl font-bold mb-4">
+                    ₹{SUBSCRIPTION_PLANS.automatic.price} <span className="text-sm font-normal text-muted-foreground">/month</span>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary" /> Everything in Manual
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary" /> <strong>Automated</strong> image reminders
                     </li>
                     <li className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary" /> Daily activity reports
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> AI logo generator
                     </li>
                     <li className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary" /> Multi-admin support
@@ -229,14 +223,14 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                     className="w-full"
                     onClick={() => setStep('setup')}
                   >
-                    Start with Pro
+                    Start with Automatic
                   </Button>
                 </CardContent>
               </Card>
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              You can upgrade anytime from the dashboard
+              Pay via UPI to 9390418552@kotak811 • Admin will activate manually
             </p>
           </motion.div>
         );
