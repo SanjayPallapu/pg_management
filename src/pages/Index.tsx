@@ -87,39 +87,37 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-4">
-        {/* Header - Single line layout */}
-        <div className="flex items-center justify-between mb-4 gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        {/* Header - Horizontal scrollable */}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-4">
+          <div className="inline-flex items-center gap-2 min-w-max">
             {currentPG?.logoUrl ? (
               <img src={currentPG.logoUrl} alt={currentPG.name} className="h-10 w-10 rounded object-cover flex-shrink-0" decoding="async" />
             ) : (
               <img src={appLogo} alt="Amma logo" className="h-10 w-10 flex-shrink-0" decoding="async" />
             )}
             <PGSwitcher />
-            <MonthYearPicker />
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <NetworkStatusIndicator />
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 flex-shrink-0"
               onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
             >
               <ExternalLink className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setHistorySheetOpen(true)} title="Activity History">
+            <MonthYearPicker />
+            <NetworkStatusIndicator />
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
             <SubscriptionBadge />
-            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
+            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
               {isAdmin ? (
                 <Shield className="h-4 w-4 text-primary-foreground" />
               ) : (
                 <User className="h-4 w-4 text-primary-foreground" />
               )}
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut} title="Sign Out">
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSignOut} title="Sign Out">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
