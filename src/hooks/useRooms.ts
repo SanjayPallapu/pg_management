@@ -3,18 +3,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { Room, Tenant } from "@/types";
 import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
+import { usePG } from "@/contexts/PGContext";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
   const { isAdmin, isLoading: authLoading } = useAuth();
+  const { currentPG } = usePG();
   const { logAudit } = useAuditLog();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ["rooms", isAdmin],
+    queryKey: ["rooms", isAdmin, currentPG?.id],
     queryFn: async () => {
-      // Fetch rooms and tenants in parallel for better performance
+      // Don't fetch if no PG is selected
+      if (!currentPG?.id) {
+        return [];
+      }
+
+      // Fetch rooms filtered by current PG, and tenants in parallel
       const [roomsResult, tenantsResult] = await Promise.all([
-        supabase.from("rooms").select("*").order("room_no"),
+        supabase
+          .from("rooms")
+          .select("*")
+          .eq("pg_id", currentPG.id)
+          .order("room_no"),
         supabase.from("tenants").select("*"),
       ]);
 
@@ -24,17 +35,22 @@ export const useRooms = () => {
       const roomsData = roomsResult.data;
       const tenantsData = tenantsResult.data;
 
-      // Group tenants by room_id for O(1) lookup instead of O(n) filter per room
-      const tenantsByRoom = tenantsData.reduce(
-        (acc, tenant) => {
-          if (!acc[tenant.room_id]) {
-            acc[tenant.room_id] = [];
-          }
-          acc[tenant.room_id].push(tenant);
-          return acc;
-        },
-        {} as Record<string, typeof tenantsData>,
-      );
+      // Create a set of room IDs from this PG for filtering tenants
+      const roomIds = new Set(roomsData.map(r => r.id));
+
+      // Group tenants by room_id, only for rooms in this PG
+      const tenantsByRoom = tenantsData
+        .filter(tenant => roomIds.has(tenant.room_id))
+        .reduce(
+          (acc, tenant) => {
+            if (!acc[tenant.room_id]) {
+              acc[tenant.room_id] = [];
+            }
+            acc[tenant.room_id].push(tenant);
+            return acc;
+          },
+          {} as Record<string, typeof tenantsData>,
+        );
 
       return roomsData.map((room) => ({
         id: room.id,
@@ -62,9 +78,9 @@ export const useRooms = () => {
         })),
       })) as Room[];
     },
-    enabled: !authLoading,
-    staleTime: 30 * 1000, // Cache for 30 seconds for faster perceived loads
-    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
+    enabled: !authLoading && !!currentPG?.id,
+    staleTime: 30 * 1000,
+    gcTime: 2 * 60 * 1000,
   });
 
   const updateRoom = useMutation({
