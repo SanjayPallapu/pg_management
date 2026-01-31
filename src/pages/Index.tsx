@@ -14,7 +14,7 @@ import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
-import { PGSwitcher, PGSetupWizard } from "@/components/pg";
+import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { SubscriptionBadge } from "@/components/subscription";
 import { Room } from "@/types";
 import {
@@ -80,13 +80,9 @@ const Index = () => {
     setIsDialogOpen(true);
   };
 
-  // Show setup wizard for new users
+  // Show onboarding flow for new users without PGs
   if (needsSetup && !pgLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <PGSetupWizard onComplete={() => refreshPGs()} />
-      </div>
-    );
+    return <OnboardingFlow onComplete={() => refreshPGs()} />;
   }
 
   return (
