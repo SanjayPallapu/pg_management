@@ -28,10 +28,23 @@ interface SubscriptionDetailsSheetProps {
 export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDetailsSheetProps) => {
   const { subscription, pgs, isProUser } = usePG();
 
+  // Default subscription values when no subscription exists
+  const displaySubscription = subscription || {
+    plan: 'free' as const,
+    status: 'free' as const,
+    maxPgs: 1,
+    maxTenantsPerPg: 20,
+    features: {
+      aiLogo: false,
+      autoReminders: false,
+      dailyReports: false,
+    },
+    expiresAt: undefined,
+    paymentApprovedAt: undefined,
+  };
+
   const getStatusBadge = () => {
-    if (!subscription) return null;
-    
-    switch (subscription.status) {
+    switch (displaySubscription.status) {
       case 'active':
         return (
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground border-0">
@@ -40,7 +53,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
         );
       case 'pending':
         return (
-          <Badge variant="outline" className="text-warning border-warning/50">
+          <Badge variant="outline" className="text-amber-600 border-amber-300">
             <Clock className="h-3 w-3 mr-1" /> Pending Approval
           </Badge>
         );
@@ -63,8 +76,6 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
     const message = `Hi, I need help with my PG Manager subscription.`;
     window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
   };
-
-  if (!subscription) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -89,13 +100,13 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               </div>
               
               <div className="text-3xl font-bold capitalize mb-2">
-                {subscription.plan} Plan
+                {displaySubscription.plan} Plan
               </div>
               
-              {isProUser && subscription.expiresAt && (
+              {isProUser && displaySubscription.expiresAt && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  Expires: {format(new Date(subscription.expiresAt), 'dd MMM yyyy')}
+                  Expires: {format(new Date(displaySubscription.expiresAt), 'dd MMM yyyy')}
                 </div>
               )}
             </CardContent>
@@ -113,7 +124,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <span className="text-sm">PGs Created</span>
                   </div>
                   <span className="font-semibold">
-                    {pgs.length} / {subscription.maxPgs === -1 ? '∞' : subscription.maxPgs}
+                    {pgs.length} / {displaySubscription.maxPgs === -1 ? '∞' : displaySubscription.maxPgs}
                   </span>
                 </div>
                 
@@ -123,7 +134,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <span className="text-sm">Tenants per PG</span>
                   </div>
                   <span className="font-semibold">
-                    {subscription.maxTenantsPerPg === -1 ? 'Unlimited' : subscription.maxTenantsPerPg}
+                    {displaySubscription.maxTenantsPerPg === -1 ? 'Unlimited' : displaySubscription.maxTenantsPerPg}
                   </span>
                 </div>
               </div>
@@ -141,7 +152,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <Sparkles className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">AI Logo Generator</span>
                   </div>
-                  {subscription.features?.aiLogo ? (
+                  {displaySubscription.features?.aiLogo ? (
                     <Check className="h-4 w-4 text-primary" />
                   ) : (
                     <X className="h-4 w-4 text-muted-foreground" />
@@ -153,7 +164,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <Bell className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Auto Reminders</span>
                   </div>
-                  {subscription.features?.autoReminders ? (
+                  {displaySubscription.features?.autoReminders ? (
                     <Check className="h-4 w-4 text-primary" />
                   ) : (
                     <X className="h-4 w-4 text-muted-foreground" />
@@ -165,7 +176,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Daily Reports</span>
                   </div>
-                  {subscription.features?.dailyReports ? (
+                  {displaySubscription.features?.dailyReports ? (
                     <Check className="h-4 w-4 text-primary" />
                   ) : (
                     <X className="h-4 w-4 text-muted-foreground" />
@@ -176,7 +187,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           </Card>
 
           {/* Dates Card */}
-          {subscription.paymentApprovedAt && (
+          {displaySubscription.paymentApprovedAt && (
             <Card>
               <CardContent className="pt-4">
                 <h3 className="font-semibold mb-4">Subscription History</h3>
@@ -184,13 +195,13 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Started</span>
-                    <span>{format(new Date(subscription.paymentApprovedAt), 'dd MMM yyyy')}</span>
+                    <span>{format(new Date(displaySubscription.paymentApprovedAt), 'dd MMM yyyy')}</span>
                   </div>
                   
-                  {subscription.expiresAt && (
+                  {displaySubscription.expiresAt && (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Expires</span>
-                      <span>{format(new Date(subscription.expiresAt), 'dd MMM yyyy')}</span>
+                      <span>{format(new Date(displaySubscription.expiresAt), 'dd MMM yyyy')}</span>
                     </div>
                   )}
                 </div>
