@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -77,14 +77,27 @@ const PAYMENT_ICONS = {
 };
 
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
+  const { refreshPGs, subscription, refreshSubscription, pgs } = usePG();
+  const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+  const { signOut, isAdmin } = useAuth();
+
   const [step, setStep] = useState<Step>('welcome');
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
-  const { refreshPGs, subscription, refreshSubscription } = usePG();
-  const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
-  const { signOut } = useAuth();
+
+  // Admins skip the payment flow entirely - go straight to setup
+  // Active subscribers also skip to setup
+  const isSubscriptionActive = subscription?.status === 'active';
+  const shouldSkipToSetup = isAdmin || isSubscriptionActive;
+
+  // Effect to redirect admins/active subscribers to setup
+  useEffect(() => {
+    if (shouldSkipToSetup && step !== 'setup') {
+      setStep('setup');
+    }
+  }, [shouldSkipToSetup, step]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -93,15 +106,24 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
 
-  // If subscription is pending, show pending step
-  const effectiveStep = isPending ? 'pending' : step;
+  // Determine effective step:
+  // 1. Admin users or active subscribers go to setup
+  // 2. Pending subscription shows pending step
+  // 3. Otherwise show current step in flow
+  const effectiveStep = shouldSkipToSetup ? 'setup' : (isPending ? 'pending' : step);
 
   const handleCheckStatus = async () => {
     setIsCheckingStatus(true);
     try {
       await refreshSubscription();
-      if (subscription?.status === 'active') {
-        toast.success('Your subscription is now active!');
+      // After refresh, check the NEW subscription status
+      const { data } = await import('@/integrations/supabase/client').then(m => 
+        m.supabase.from('subscriptions').select('status').maybeSingle()
+      );
+      
+      if (data?.status === 'active') {
+        toast.success('Your subscription is now active! Redirecting to setup...');
+        setStep('setup');
       } else {
         toast.info('Payment is still under review');
       }
