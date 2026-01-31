@@ -55,9 +55,8 @@ const Index = () => {
     onTabChange: setActiveTab,
   });
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { signOut, isAdmin, role } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const handleSignOut = async () => {
     const { error } = await signOut();
     // Navigate to auth page regardless of error (session may already be invalid)
@@ -87,70 +86,67 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3 overflow-visible">
+      <div className="container mx-auto px-4 py-4">
+        {/* Header - Single line layout */}
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {currentPG?.logoUrl ? (
-              <img src={currentPG.logoUrl} alt={currentPG.name} className="h-14 w-auto rounded" decoding="async" />
+              <img src={currentPG.logoUrl} alt={currentPG.name} className="h-10 w-10 rounded object-cover flex-shrink-0" decoding="async" />
             ) : (
-              <img src={appLogo} alt="Amma logo" className="h-14 w-auto" decoding="async" />
+              <img src={appLogo} alt="Amma logo" className="h-10 w-10 flex-shrink-0" decoding="async" />
             )}
-            <div className="flex flex-col gap-1">
-              <PGSwitcher />
-              <MonthYearPicker />
-            </div>
+            <PGSwitcher />
+            <MonthYearPicker />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <NetworkStatusIndicator />
-            <SubscriptionBadge />
-            <div className="text-sm text-muted-foreground">
-              {months[selectedMonth - 1]} {selectedYear}
-            </div>
             <Button
               variant="ghost"
               size="icon"
+              className="h-8 w-8"
               onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
             >
               <ExternalLink className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setHistorySheetOpen(true)} title="Activity History">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
-
-            <div className="flex items-center gap-1">
-              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-                {isAdmin ? (
-                  <Shield className="h-4 w-4 text-primary-foreground" />
-                ) : (
-                  <User className="h-4 w-4 text-primary-foreground" />
-                )}
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
-                <LogOut className="h-4 w-4" />
-              </Button>
+            <SubscriptionBadge />
+            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
+              {isAdmin ? (
+                <Shield className="h-4 w-4 text-primary-foreground" />
+              ) : (
+                <User className="h-4 w-4 text-primary-foreground" />
+              )}
             </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut} title="Sign Out">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="sticky top-0 z-50 bg-background grid w-full grid-cols-4 lg:w-[500px] shadow-sm border-b">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="rooms" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              Rooms
-            </TabsTrigger>
-            <TabsTrigger value="rent-sheet" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              Rent Sheet
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileBarChart className="h-4 w-4" />
-              Reports
-            </TabsTrigger>
-          </TabsList>
+          {/* Horizontal scrollable tabs */}
+          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+            <TabsList className="inline-flex w-max min-w-full gap-1 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="text-sm">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="rooms" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
+                <Building className="h-4 w-4" />
+                <span className="text-sm">Rooms</span>
+              </TabsTrigger>
+              <TabsTrigger value="rent-sheet" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
+                <Receipt className="h-4 w-4" />
+                <span className="text-sm">Rent</span>
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="flex items-center gap-1.5 px-3 py-2 whitespace-nowrap">
+                <FileBarChart className="h-4 w-4" />
+                <span className="text-sm">Reports</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
