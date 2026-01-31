@@ -90,11 +90,6 @@ const Index = () => {
         {/* Header - Horizontal scrollable */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-4">
           <div className="inline-flex items-center gap-2 min-w-max">
-            {currentPG?.logoUrl ? (
-              <img src={currentPG.logoUrl} alt={currentPG.name} className="h-10 w-10 rounded object-cover flex-shrink-0" decoding="async" />
-            ) : (
-              <img src={appLogo} alt="Amma logo" className="h-10 w-10 flex-shrink-0" decoding="async" />
-            )}
             <PGSwitcher />
             <Button
               variant="ghost"
