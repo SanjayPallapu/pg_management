@@ -34,7 +34,7 @@ interface PGProviderProps {
 const CURRENT_PG_KEY = 'currentPgId';
 
 export const PGProvider = ({ children }: PGProviderProps) => {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
   const [pgs, setPgs] = useState<PG[]>([]);
   const [currentPG, setCurrentPG] = useState<PG | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -160,7 +160,8 @@ export const PGProvider = ({ children }: PGProviderProps) => {
   // User needs setup if:
   // 1. No PGs created yet, AND subscription is active
   // 2. OR subscription is not active (needs payment approval)
-  const needsSubscription = !subscription || subscription.status === 'free' || subscription.status === 'pending';
+  // Admin users bypass subscription requirements entirely
+  const needsSubscription = isAdmin ? false : (!subscription || subscription.status === 'free' || subscription.status === 'pending');
   const needsSetup = pgs.length === 0 || needsSubscription;
 
   const value: PGContextType = {
