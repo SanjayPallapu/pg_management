@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,19 +8,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building, ChevronDown, Plus, Check, Crown } from 'lucide-react';
+import { Building, ChevronDown, Plus, Check, Crown, ImageIcon } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PGSetupWizard } from './PGSetupWizard';
 import { Badge } from '@/components/ui/badge';
+import { LogoUpdateDialog } from './LogoUpdateDialog';
 
 export const PGSwitcher = () => {
   const { pgs, currentPG, selectPG, canCreatePG, isProUser } = usePG();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showLogoDialog, setShowLogoDialog] = useState(false);
+  const [selectedPGForLogo, setSelectedPGForLogo] = useState<string | null>(null);
 
   if (pgs.length === 0) {
     return null;
   }
+
+  const handleUpdateLogo = (pgId: string) => {
+    setSelectedPGForLogo(pgId);
+    setShowLogoDialog(true);
+  };
 
   return (
     <>
@@ -50,29 +58,37 @@ export const PGSwitcher = () => {
           <DropdownMenuSeparator />
           
           {pgs.map((pg) => (
-            <DropdownMenuItem
-              key={pg.id}
-              onClick={() => selectPG(pg.id)}
-              className="cursor-pointer"
-            >
-              <div className="flex items-center gap-2 w-full">
-                {pg.logoUrl ? (
-                  <img 
-                    src={pg.logoUrl} 
-                    alt={pg.name} 
-                    className="h-6 w-6 rounded object-cover"
-                  />
-                ) : (
-                  <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
-                    <Building className="h-3 w-3 text-primary" />
-                  </div>
-                )}
-                <span className="truncate flex-1">{pg.name}</span>
-                {currentPG?.id === pg.id && (
-                  <Check className="h-4 w-4 text-primary" />
-                )}
-              </div>
-            </DropdownMenuItem>
+            <div key={pg.id}>
+              <DropdownMenuItem
+                onClick={() => selectPG(pg.id)}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  {pg.logoUrl ? (
+                    <img 
+                      src={pg.logoUrl} 
+                      alt={pg.name} 
+                      className="h-6 w-6 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
+                      <Building className="h-3 w-3 text-primary" />
+                    </div>
+                  )}
+                  <span className="truncate flex-1">{pg.name}</span>
+                  {currentPG?.id === pg.id && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleUpdateLogo(pg.id)}
+                className="cursor-pointer pl-8 text-xs text-muted-foreground"
+              >
+                <ImageIcon className="h-3 w-3 mr-2" />
+                Update Logo
+              </DropdownMenuItem>
+            </div>
           ))}
           
           <DropdownMenuSeparator />
@@ -95,6 +111,12 @@ export const PGSwitcher = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <LogoUpdateDialog 
+        open={showLogoDialog} 
+        onOpenChange={setShowLogoDialog}
+        pgId={selectedPGForLogo}
+      />
     </>
   );
 };

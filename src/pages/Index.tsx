@@ -91,7 +91,6 @@ const Index = () => {
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-4">
           <div className="inline-flex items-center gap-2 min-w-max">
             <PGSwitcher />
-            <SubscriptionBadge />
             <MonthYearPicker />
             <Button
               variant="ghost"
@@ -105,6 +104,7 @@ const Index = () => {
             <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
             </Button>
+            <SubscriptionBadge />
             <div className="h-8 w-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
               {isAdmin ? (
                 <Shield className="h-4 w-4 text-primary-foreground" />
