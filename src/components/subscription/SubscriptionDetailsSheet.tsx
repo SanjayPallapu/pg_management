@@ -211,6 +211,24 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
           <Separator />
 
+          {/* Subscribe/Upgrade Button */}
+          {!isProUser && (
+            <Button 
+              onClick={() => {
+                onOpenChange(false);
+                // Open upgrade dialog or navigate to subscription
+                const message = `Hi, I want to subscribe to the Pro plan for PG Manager.`;
+                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+              }} 
+              className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+            >
+              <Crown className="h-4 w-4" />
+              Subscribe to Pro
+            </Button>
+          )}
+
+          <Separator />
+
           {/* Contact Admin */}
           <Button 
             variant="outline" 
