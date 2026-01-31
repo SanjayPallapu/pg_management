@@ -95,14 +95,17 @@ const Index = () => {
           <div className="inline-flex items-center gap-2 min-w-max">
             <PGSwitcher />
             <MonthYearPicker />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 flex-shrink-0"
-              onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
+            {/* External link - admin only */}
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+                onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            )}
             <NetworkStatusIndicator />
             <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setHistorySheetOpen(true)} title="Activity History">
               <History className="h-4 w-4" />
