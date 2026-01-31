@@ -252,7 +252,7 @@ export type Database = {
           id: string
           notes: string | null
           pg_id: string | null
-          property_id: string
+          property_id: string | null
           rent_amount: number
           room_no: string
           status: string
@@ -265,7 +265,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pg_id?: string | null
-          property_id: string
+          property_id?: string | null
           rent_amount: number
           room_no: string
           status: string
@@ -278,7 +278,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pg_id?: string | null
-          property_id?: string
+          property_id?: string | null
           rent_amount?: number
           room_no?: string
           status?: string
@@ -290,13 +290,6 @@ export type Database = {
             columns: ["pg_id"]
             isOneToOne: false
             referencedRelation: "pgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rooms_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
