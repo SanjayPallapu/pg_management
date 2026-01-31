@@ -18,7 +18,7 @@ import { PGProvider } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
-// Protected route component
+// Protected route component that wraps children with PGProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, hasRole, isLoading } = useAuth();
 
@@ -34,12 +34,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  return <>{children}</>;
+  return <PGProvider>{children}</PGProvider>;
 };
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Inner app component that handles splash screen logic
+const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -59,44 +60,49 @@ const App = () => {
     }
   }, []);
 
+  if (showSplash) {
+    return (
+      <AnimatePresence mode="wait">
+        <SplashScreen key="splash" />
+      </AnimatePresence>
+    );
+  }
+
+  return (
+    <MonthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          } />
+          <Route path="/day-guest/:roomId" element={
+            <ProtectedRoute>
+              <DayGuest />
+            </ProtectedRoute>
+          } />
+          <Route path="/left-tenants" element={
+            <ProtectedRoute>
+              <LeftTenants />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </MonthProvider>
+  );
+};
+
+const App = () => {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-
-          {showSplash ? (
-            <AnimatePresence mode="wait">
-              <SplashScreen key="splash" />
-            </AnimatePresence>
-          ) : (
-            <PGProvider>
-              <MonthProvider>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <Index />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/day-guest/:roomId" element={
-                      <ProtectedRoute>
-                        <DayGuest />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/left-tenants" element={
-                      <ProtectedRoute>
-                        <LeftTenants />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </MonthProvider>
-            </PGProvider>
-          )}
+          <AppContent />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
