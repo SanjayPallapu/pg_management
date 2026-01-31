@@ -21,10 +21,12 @@ import {
   Wallet,
   CreditCard,
   Clock,
+  LogOut,
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
 import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID, PAYMENT_METHODS, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
 
@@ -82,6 +84,12 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const { refreshPGs, subscription, refreshSubscription } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.reload();
+  };
 
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
 
@@ -478,6 +486,14 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 ) : (
                   'Check Status'
                 )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-muted-foreground gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
               </Button>
             </div>
           </motion.div>
