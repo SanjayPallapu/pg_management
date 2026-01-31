@@ -54,7 +54,6 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
         
         roomsToAdd.push({
           pg_id: currentPG.id,
-          property_id: currentPG.id,
           room_no: roomNo,
           floor: floor,
           capacity: cap,
