@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ import {
 import { usePG } from '@/contexts/PGContext';
 import { format } from 'date-fns';
 import { ADMIN_WHATSAPP } from '@/types/pg';
+import { UpgradeDialog } from './UpgradeDialog';
 
 interface SubscriptionDetailsSheetProps {
   open: boolean;
@@ -27,6 +29,7 @@ interface SubscriptionDetailsSheetProps {
 
 export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDetailsSheetProps) => {
   const { subscription, pgs, isProUser } = usePG();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Default subscription values when no subscription exists
   const displaySubscription = subscription || {
@@ -216,9 +219,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
             <Button 
               onClick={() => {
                 onOpenChange(false);
-                // Open upgrade dialog or navigate to subscription
-                const message = `Hi, I want to subscribe to the Pro plan for PG Manager.`;
-                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+                setShowUpgrade(true);
               }} 
               className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
@@ -226,6 +227,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               Subscribe to Pro
             </Button>
           )}
+          
+          <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
 
           <Separator />
 
