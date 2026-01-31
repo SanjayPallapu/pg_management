@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { 
   Crown, 
   Building, 
@@ -15,10 +16,11 @@ import {
   MessageCircle,
   Sparkles,
   Bell,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
-import { format } from 'date-fns';
+import { format, differenceInDays, differenceInHours } from 'date-fns';
 import { ADMIN_WHATSAPP } from '@/types/pg';
 import { UpgradeDialog } from './UpgradeDialog';
 
@@ -106,12 +108,36 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 {displaySubscription.plan} Plan
               </div>
               
-              {isProUser && displaySubscription.expiresAt && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  Expires: {format(new Date(displaySubscription.expiresAt), 'dd MMM yyyy')}
-                </div>
-              )}
+              {isProUser && displaySubscription.expiresAt && (() => {
+                const expiresAt = new Date(displaySubscription.expiresAt);
+                const now = new Date();
+                const daysLeft = differenceInDays(expiresAt, now);
+                const hoursLeft = differenceInHours(expiresAt, now) % 24;
+                const isExpiringSoon = daysLeft <= 7;
+                const totalDays = 30; // Assuming 30-day subscription
+                const progressValue = Math.max(0, Math.min(100, ((totalDays - daysLeft) / totalDays) * 100));
+                
+                return (
+                  <div className={`p-3 rounded-lg ${isExpiringSoon ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' : 'bg-muted'}`}>
+                    {isExpiringSoon && (
+                      <div className="flex items-center gap-2 text-amber-600 mb-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-sm font-medium">Expiring Soon!</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>Expires: {format(expiresAt, 'dd MMM yyyy')}</span>
+                      </div>
+                      <Badge variant={isExpiringSoon ? 'outline' : 'secondary'} className={isExpiringSoon ? 'border-amber-400 text-amber-600' : ''}>
+                        {daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h left` : 'Expired'}
+                      </Badge>
+                    </div>
+                    <Progress value={progressValue} className="h-2" />
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
