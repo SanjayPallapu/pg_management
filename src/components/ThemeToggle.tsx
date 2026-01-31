@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface ThemeToggleProps {
   className?: string;
@@ -10,27 +11,14 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
-  const [isDark, setIsDark] = useState(true);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
-    // Check initial theme from localStorage or document
-    const savedTheme = localStorage.getItem("theme");
-    const isDarkMode = savedTheme === "dark" || document.documentElement.classList.contains("dark");
-    setIsDark(isDarkMode);
   }, []);
 
   const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-
-    if (newIsDark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   if (!mounted) {
@@ -40,6 +28,8 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       </Button>
     );
   }
+
+  const isDark = theme === "dark";
 
   return (
     <Button
