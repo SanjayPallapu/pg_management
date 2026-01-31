@@ -15,7 +15,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
-import { SubscriptionBadge, SubscriptionDetailsSheet } from "@/components/subscription";
+import { SubscriptionBadge, SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { Room } from "@/types";
 import {
   LayoutDashboard,
@@ -45,6 +45,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
+  const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
 
   // Pull to refresh
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
@@ -123,6 +124,16 @@ const Index = () => {
                 <User className="h-4 w-4 text-primary-foreground" />
               )}
             </div>
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 flex-shrink-0 text-xs"
+                onClick={() => setAdminApprovalOpen(true)}
+              >
+                Approvals
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSignOut} title="Sign Out">
               <LogOut className="h-4 w-4" />
             </Button>
@@ -182,6 +193,9 @@ const Index = () => {
 
         {/* Subscription Details Sheet */}
         <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
+
+        {/* Admin Payment Approval Sheet */}
+        <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
       </div>
     </div>
   );
