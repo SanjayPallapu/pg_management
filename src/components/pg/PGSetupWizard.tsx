@@ -1,22 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Building, Upload, Wand2, ChevronRight, ChevronLeft, Check, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Building, Upload, Wand2, ChevronRight, ChevronLeft, Check, Loader2, Plus, Trash2, Database, Sparkles } from 'lucide-react';
 import { PGBrandingData } from '@/types/pg';
 import { usePGSetup } from '@/hooks/usePGSetup';
 import { usePG } from '@/contexts/PGContext';
 import { toast } from 'sonner';
+import ammaLogo from '@/assets/amma-logo-transparent.png';
 
 interface PGSetupWizardProps {
   onComplete: () => void;
   isAddingNew?: boolean;
 }
 
-type Step = 'count' | 'branding' | 'structure' | 'complete';
+type Step = 'migrate' | 'count' | 'branding' | 'structure' | 'complete';
 
 const LOGO_STYLES = [
   { id: 'modern', label: 'Modern', description: 'Clean, contemporary design' },
@@ -36,21 +37,42 @@ const LOGO_COLORS = [
 
 export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizardProps) => {
   const { subscription, canCreatePG } = usePG();
-  const { createPG, generateAILogo, uploadLogo, isGeneratingLogo } = usePGSetup();
+  const { createPG, generateAILogo, uploadLogo, isGeneratingLogo, checkExistingData, migrateExistingRooms, isMigrating } = usePGSetup();
   
-  const [step, setStep] = useState<Step>(isAddingNew ? 'branding' : 'count');
+  const [step, setStep] = useState<Step>(isAddingNew ? 'branding' : 'migrate');
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [existingRoomCount, setExistingRoomCount] = useState(0);
+  const [isCheckingData, setIsCheckingData] = useState(!isAddingNew);
+  
   const [pgCount, setPgCount] = useState(1);
   const [currentPgIndex, setCurrentPgIndex] = useState(0);
   const [pgs, setPgs] = useState<PGBrandingData[]>([{
-    name: '',
+    name: 'Amma Women\'s Hostel',
     address: '',
-    logoType: 'generate',
+    logoType: 'upload',
     logoStyle: 'modern',
-    logoColor: '#8B5CF6',
+    logoColor: '#EC4899',
+    logoUrl: ammaLogo,
     floors: 3,
     roomsPerFloor: 9,
   }]);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Check for existing data on mount
+  useEffect(() => {
+    if (!isAddingNew) {
+      checkExistingData().then(({ hasExistingData, roomCount }) => {
+        setHasExistingData(hasExistingData);
+        setExistingRoomCount(roomCount);
+        setIsCheckingData(false);
+        
+        // If no existing data, skip to count step
+        if (!hasExistingData) {
+          setStep('count');
+        }
+      });
+    }
+  }, [isAddingNew]);
 
   const maxPgs = subscription?.maxPgs ?? 1;
   const canAddMore = maxPgs === -1 || pgCount < maxPgs;
@@ -107,6 +129,23 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
     }
   };
 
+  const handleMigrateExisting = async () => {
+    const currentPg = pgs[0];
+    if (!currentPg.name) {
+      toast.error('Please enter PG name');
+      return;
+    }
+
+    await migrateExistingRooms.mutateAsync({
+      name: currentPg.name,
+      address: currentPg.address,
+      logoUrl: currentPg.logoUrl,
+    });
+    
+    setStep('complete');
+    setTimeout(onComplete, 1500);
+  };
+
   const handleComplete = async () => {
     setIsCreating(true);
     try {
@@ -129,8 +168,94 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
 
   const currentPg = pgs[currentPgIndex];
 
+  if (isCheckingData) {
+    return (
+      <Card className="w-full max-w-lg mx-auto">
+        <CardContent className="pt-8 pb-8 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-muted-foreground">Checking for existing data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const renderStep = () => {
     switch (step) {
+      case 'migrate':
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-6">
+              <div className="h-16 w-16 rounded-full bg-primary/10 mx-auto flex items-center justify-center mb-4">
+                <Database className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold">Existing Data Found!</h2>
+              <p className="text-muted-foreground mt-2">
+                We found <strong>{existingRoomCount} rooms</strong> with existing tenant data.
+              </p>
+            </div>
+
+            <Card className="border-primary">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <img src={ammaLogo} alt="Amma Logo" className="h-16 w-16 object-contain" />
+                  <div>
+                    <h3 className="font-semibold">Amma Women's Hostel</h3>
+                    <p className="text-sm text-muted-foreground">{existingRoomCount} rooms • 3 floors</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="pgName">PG Name</Label>
+                    <Input
+                      id="pgName"
+                      value={currentPg.name}
+                      onChange={(e) => updateCurrentPg({ name: e.target.value })}
+                      placeholder="e.g., Amma Women's Hostel"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pgAddress">Address (Optional)</Label>
+                    <Input
+                      id="pgAddress"
+                      value={currentPg.address || ''}
+                      onChange={(e) => updateCurrentPg({ address: e.target.value })}
+                      placeholder="Enter address"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleMigrateExisting}
+                disabled={isMigrating || !currentPg.name}
+                className="w-full"
+              >
+                {isMigrating ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Migrating...</>
+                ) : (
+                  <><Sparkles className="h-4 w-4 mr-2" /> Import Existing Data</>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => setStep('count')}
+                className="w-full"
+              >
+                Start Fresh Instead
+              </Button>
+            </div>
+          </motion.div>
+        );
+
       case 'count':
         return (
           <motion.div
@@ -177,8 +302,13 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
               </p>
             )}
 
-            <div className="flex justify-end mt-8">
-              <Button onClick={() => setStep('branding')}>
+            <div className="flex justify-between mt-8">
+              {hasExistingData && (
+                <Button variant="outline" onClick={() => setStep('migrate')}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                </Button>
+              )}
+              <Button onClick={() => setStep('branding')} className={!hasExistingData ? 'ml-auto' : ''}>
                 Continue <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -482,9 +612,10 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building className="h-5 w-5" />
-          {isAddingNew ? 'Add New PG' : 'PG Setup Wizard'}
+          {isAddingNew ? 'Add New PG' : 'PG Setup'}
         </CardTitle>
         <CardDescription>
+          {step === 'migrate' && 'Import your existing data'}
           {step === 'count' && 'Tell us about your properties'}
           {step === 'branding' && 'Brand your PG'}
           {step === 'structure' && 'Define your PG structure'}
