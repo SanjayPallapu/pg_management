@@ -1,12 +1,12 @@
 export interface Room {
-  id?: string;
+  id: string;
   roomNo: string;
   status: 'Vacant' | 'Occupied' | 'Partially Occupied';
   capacity: number;
   tenants: Tenant[];
   rentAmount: number;
   notes?: string;
-  floor: 1 | 2 | 3;
+  floor: number;
 }
 
 export interface Tenant {
