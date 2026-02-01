@@ -65,18 +65,19 @@ export const PGProvider = ({ children }: PGProviderProps) => {
         name: pg.name,
         address: pg.address || undefined,
         logoUrl: pg.logo_url || undefined,
-        floors: pg.floors,
+        floors: pg.floors || 3,
         createdAt: pg.created_at,
         updatedAt: pg.updated_at,
       }));
 
       setPgs(mappedPGs);
 
-      // Restore or set current PG
+      // Get currently selected PG ID
       const savedPgId = localStorage.getItem(CURRENT_PG_KEY);
       const savedPG = mappedPGs.find(pg => pg.id === savedPgId);
       
       if (savedPG) {
+        // IMPORTANT: Always update currentPG with fresh data to reflect floor changes
         setCurrentPG(savedPG);
       } else if (mappedPGs.length > 0) {
         setCurrentPG(mappedPGs[0]);

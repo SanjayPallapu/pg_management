@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet, PartyPopper } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet, PartyPopper, Edit2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -26,10 +26,12 @@ const isNewTenant = (startDate: string): boolean => {
 interface RoomCardProps {
   room: Room;
   onViewDetails: (room: Room) => void;
+  onEditRoom?: (room: Room) => void;
 }
 export const RoomCard = ({
   room,
-  onViewDetails
+  onViewDetails,
+  onEditRoom
 }: RoomCardProps) => {
   const {
     payments,
@@ -450,31 +452,70 @@ export const RoomCard = ({
           </div>}
 
 
-        {/* Day Guest Button - only show for current month & if beds available */}
-        {isSelectedCurrentMonth && occupiedCount < room.capacity && <div className="pt-2 border-t border-border/50">
-            <Button variant="outline" size="sm" onClick={() => navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`)} className="w-full h-10 flex items-center justify-center gap-2 border-dashed">
-              <UserPlus className="h-4 w-4" />
-              <span>Day Guest</span>
-            </Button>
-          </div>}
+        {/* Action buttons for current month */}
+        {isSelectedCurrentMonth && occupiedCount < room.capacity && (
+          <div className="pt-2 border-t border-border/50 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => onViewDetails(room)} 
+                className="h-10 flex items-center justify-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Add Tenant</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`)} 
+                className="h-10 flex items-center justify-center gap-2 border-dashed"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span>Day Guest</span>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-2">
-          {tenantsForDisplay.length > 0 ? <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
-              {isExpanded ? <>
-                  <ChevronUp className="h-4 w-4" />
-                  <span>Collapse</span>
-                </> : <>
-                  <ChevronDown className="h-4 w-4" />
-                  <span>Expand tenants</span>
-                </>}
-            </button> : <div />}
-        
-          <button type="button" onClick={() => {
-            // Removed setIsExpanded to show instantly
-            onViewDetails(room);
-          }} className="text-xs text-primary hover:underline font-medium">
-            Manage Room
-          </button>
+          <div className="flex items-center gap-2">
+            {tenantsForDisplay.length > 0 ? (
+              <button type="button" onClick={() => setIsExpanded(prev => !prev)} className="flex items-center gap-1 text-xs text-muted-foreground">
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    <span>Collapse</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    <span>Expand tenants</span>
+                  </>
+                )}
+              </button>
+            ) : null}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {onEditRoom && tenantsForDisplay.length === 0 && (
+              <button 
+                type="button" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditRoom(room);
+                }} 
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button type="button" onClick={() => {
+              onViewDetails(room);
+            }} className="text-xs text-primary hover:underline font-medium">
+              Manage Room
+            </button>
+          </div>
         </div>
 
       </CardContent>

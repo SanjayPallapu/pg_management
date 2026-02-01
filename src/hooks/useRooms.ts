@@ -109,8 +109,8 @@ export const useRooms = () => {
     },
     onMutate: async (newRoom) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
-      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
+      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => (room.roomNo === newRoom.roomNo ? newRoom : room));
       });
@@ -118,11 +118,12 @@ export const useRooms = () => {
     },
     onError: (_err, _newRoom, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Immediate refetch for faster UX
+      queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
     },
   });
 
@@ -163,8 +164,9 @@ export const useRooms = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
-      queryClient.invalidateQueries({ queryKey: ["tenant-payments"] });
+      // Immediate refetch for faster UX
+      queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ["tenant-payments"], refetchType: 'active' });
     },
   });
 
@@ -222,8 +224,8 @@ export const useRooms = () => {
     },
     onMutate: async ({ tenantId, updates }) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin]);
-      queryClient.setQueryData(["rooms", isAdmin], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
+      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => ({
           ...room,
@@ -234,11 +236,12 @@ export const useRooms = () => {
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin], context.previousRooms);
+        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Immediate refetch for faster UX
+      queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
     },
   });
 
@@ -257,7 +260,8 @@ export const useRooms = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Immediate refetch for faster UX
+      queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
     },
   });
 
@@ -271,7 +275,8 @@ export const useRooms = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Immediate refetch for faster UX
+      queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
     },
   });
 

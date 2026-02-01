@@ -72,7 +72,10 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       
       if (error) throw error;
       
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      // Immediate refetch for faster UX
+      await queryClient.invalidateQueries({ queryKey: ['rooms'], refetchType: 'active' });
+      await queryClient.refetchQueries({ queryKey: ['rooms'] });
+      
       toast.success(`Added ${roomsToAdd.length} rooms (${roomsToAdd[0].room_no} to ${roomsToAdd[roomsToAdd.length - 1].room_no})`);
       onOpenChange(false);
     } catch (err) {

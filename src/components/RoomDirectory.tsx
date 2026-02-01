@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X, Plus, Loader2 } from 'lucide-react';
+import { Search, X, Plus, Settings2, Trash2, Edit2 } from 'lucide-react';
 import { TenantSearchResults } from './TenantSearchResults';
 import { usePG } from '@/contexts/PGContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { getPricePerBed } from '@/constants/pricing';
 import { AddRoomsDialog } from './AddRoomsDialog';
+import { RoomEditDialog } from './RoomEditDialog';
+import { FloorManagementSheet } from './FloorManagementSheet';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -33,21 +35,22 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const { currentPG, refreshPGs } = usePG();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAddingFloor, setIsAddingFloor] = useState(false);
   const [addRoomsDialogOpen, setAddRoomsDialogOpen] = useState(false);
   const [selectedFloorForRooms, setSelectedFloorForRooms] = useState<number>(1);
+  const [floorManagementOpen, setFloorManagementOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
-  const isSelectedCurrentMonth = (() => {
+  const isSelectedCurrentMonth = useMemo(() => {
     const now = new Date();
     return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
-  })();
+  }, [selectedMonth, selectedYear]);
 
-  const occupiedCountForMonth = (room: Room) =>
+  const occupiedCountForMonth = useCallback((room: Room) =>
     room.tenants.filter(t =>
       isSelectedCurrentMonth
         ? isTenantActiveNow(t.startDate, t.endDate)
         : isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-    ).length;
+    ).length, [isSelectedCurrentMonth, selectedMonth, selectedYear]);
 
   // Dynamically determine floors from actual room data
   const floorData = useMemo(() => {
@@ -58,7 +61,11 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       ? floorsFromRooms 
       : Array.from({ length: pgFloors }, (_, i) => i + 1);
     
-    return allFloors.map(floor => {
+    // Also include floors from PG setting that might be empty
+    const maxFloor = Math.max(...floorsFromRooms, pgFloors);
+    const combinedFloors = Array.from({ length: maxFloor }, (_, i) => i + 1);
+    
+    return combinedFloors.map(floor => {
       const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
       return {
         floor,
@@ -68,35 +75,10 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     });
   }, [rooms, currentPG?.floors]);
 
-  const handleAddFloor = async () => {
-    if (!currentPG) return;
-    setIsAddingFloor(true);
-    try {
-      const maxFloor = Math.max(...floorData.map(f => f.floor), 0);
-      const newFloorCount = maxFloor + 1;
-      
-      const { error } = await supabase
-        .from('pgs')
-        .update({ floors: newFloorCount })
-        .eq('id', currentPG.id);
-      
-      if (error) throw error;
-      
-      await refreshPGs();
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      toast.success(`Floor ${newFloorCount} added`);
-    } catch (err) {
-      console.error('Error adding floor:', err);
-      toast.error('Failed to add floor');
-    } finally {
-      setIsAddingFloor(false);
-    }
-  };
-
-  const openAddRoomsDialog = (floor: number) => {
+  const openAddRoomsDialog = useCallback((floor: number) => {
     setSelectedFloorForRooms(floor);
     setAddRoomsDialogOpen(true);
-  };
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -109,12 +91,11 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleAddFloor}
-            disabled={isAddingFloor}
+            onClick={() => setFloorManagementOpen(true)}
             className="flex items-center gap-1"
           >
-            <Plus className="h-4 w-4" />
-            Add Floor
+            <Settings2 className="h-4 w-4" />
+            Manage Floors
           </Button>
         </div>
         <div className="relative">
@@ -168,7 +149,12 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           {roomsOnFloor.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {roomsOnFloor.map(room => (
-                <RoomCard key={room.roomNo} room={room} onViewDetails={onViewDetails} />
+                <RoomCard 
+                  key={room.roomNo} 
+                  room={room} 
+                  onViewDetails={onViewDetails}
+                  onEditRoom={setEditingRoom}
+                />
               ))}
             </div>
           ) : (
@@ -188,6 +174,18 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         onOpenChange={setAddRoomsDialogOpen}
         floor={selectedFloorForRooms}
         existingRoomNos={rooms.map(r => r.roomNo)}
+      />
+      
+      <RoomEditDialog
+        open={!!editingRoom}
+        onOpenChange={(open) => !open && setEditingRoom(null)}
+        room={editingRoom}
+      />
+      
+      <FloorManagementSheet
+        open={floorManagementOpen}
+        onOpenChange={setFloorManagementOpen}
+        rooms={rooms}
       />
     </div>
   );
