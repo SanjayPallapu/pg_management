@@ -85,14 +85,6 @@ export const useRooms = () => {
 
   const updateRoom = useMutation({
     mutationFn: async (room: Room) => {
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .select("id")
-        .eq("room_no", room.roomNo)
-        .single();
-
-      if (roomError) throw roomError;
-
       const { error: updateError } = await supabase
         .from("rooms")
         .update({
@@ -101,7 +93,7 @@ export const useRooms = () => {
           rent_amount: room.rentAmount,
           notes: room.notes,
         })
-        .eq("id", roomData.id);
+        .eq("id", room.id);
 
       if (updateError) throw updateError;
 
@@ -128,19 +120,12 @@ export const useRooms = () => {
   });
 
   const addTenant = useMutation({
-    mutationFn: async ({ roomNo, tenant }: { roomNo: string; tenant: Omit<Tenant, "id"> }) => {
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .select("id")
-        .eq("room_no", roomNo)
-        .single();
-
-      if (roomError) throw roomError;
+    mutationFn: async ({ roomId, roomNo, tenant }: { roomId: string; roomNo: string; tenant: Omit<Tenant, "id"> }) => {
 
       const { data: tenantData, error: insertError } = await supabase
         .from("tenants")
         .insert({
-          room_id: roomData.id,
+          room_id: roomId,
           name: tenant.name,
           phone: tenant.phone,
           start_date: tenant.startDate,

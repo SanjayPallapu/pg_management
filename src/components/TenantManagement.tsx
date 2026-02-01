@@ -199,21 +199,34 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       paymentStatus: newTenant.paymentStatus || ("Pending" as const),
     };
 
-    await addTenant.mutateAsync({ roomNo: room.roomNo, tenant });
+    try {
+      await addTenant.mutateAsync({ roomId: room.id, roomNo: room.roomNo, tenant });
+    } catch (err: any) {
+      toast({
+        title: "Failed to add tenant",
+        description: err?.message || "Please try again",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const updatedTenants = [...room.tenants, { ...tenant, id: Date.now().toString() }];
-    const newStatus =
-      updatedTenants.length === room.capacity
-        ? "Occupied"
-        : updatedTenants.length === 0
-          ? "Vacant"
-          : "Partially Occupied";
+    // Best-effort status update (don't block tenant creation UX if this fails)
+    try {
+      const optimisticCount = room.tenants.length + 1;
+      const newStatus =
+        optimisticCount === room.capacity
+          ? "Occupied"
+          : optimisticCount === 0
+            ? "Vacant"
+            : "Partially Occupied";
 
-    await updateRoom.mutateAsync({
-      ...room,
-      tenants: updatedTenants,
-      status: newStatus as any,
-    });
+      await updateRoom.mutateAsync({
+        ...room,
+        status: newStatus as any,
+      });
+    } catch {
+      // Ignore: rooms query refetch will recompute status in UI anyway.
+    }
 
     // Prepare welcome data and show dialog
     setWelcomeData({
