@@ -132,8 +132,9 @@ export const RoomCard = ({
   today.setHours(0, 0, 0, 0); // Normalize to start of day
   
   const currentGuests = dayGuests.filter(guest => {
-    const fromDate = new Date(guest.from_date);
-    const toDate = new Date(guest.to_date);
+    // Date-only strings must be parsed as local dates to avoid timezone shifts
+    const fromDate = parseDateOnly(guest.from_date);
+    const toDate = parseDateOnly(guest.to_date);
     // Only show in room card if guest is currently staying (today is between from_date and to_date inclusive)
     // For past months, show all guests that were present during that month
     if (isSelectedCurrentMonth) {
