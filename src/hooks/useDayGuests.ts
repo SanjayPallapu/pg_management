@@ -138,8 +138,9 @@ export const useDayGuests = (roomId?: string) => {
       toast.error('Failed to add day guest');
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['day-guests'] });
-      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
+      // Invalidate all day-guests queries (with and without roomId)
+      queryClient.invalidateQueries({ queryKey: ['day-guests'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'], refetchType: 'active' });
     },
     onSuccess: () => {
       toast.success('Day guest added successfully');
@@ -186,8 +187,9 @@ export const useDayGuests = (roomId?: string) => {
       toast.error('Failed to update day guest');
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['day-guests'] });
-      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
+      // Invalidate all day-guests queries (with and without roomId)
+      queryClient.invalidateQueries({ queryKey: ['day-guests'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'], refetchType: 'active' });
     },
   });
 
@@ -213,8 +215,9 @@ export const useDayGuests = (roomId?: string) => {
       toast.error('Failed to delete day guest');
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['day-guests'] });
-      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'] });
+      // Invalidate all day-guests queries (with and without roomId)
+      queryClient.invalidateQueries({ queryKey: ['day-guests'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['day-guest-stats'], refetchType: 'active' });
     },
     onSuccess: () => {
       toast.success('Day guest deleted successfully');

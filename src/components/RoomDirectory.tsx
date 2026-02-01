@@ -15,6 +15,7 @@ import { getPricePerBed } from '@/constants/pricing';
 import { AddRoomsDialog } from './AddRoomsDialog';
 import { RoomEditDialog } from './RoomEditDialog';
 import { FloorManagementSheet } from './FloorManagementSheet';
+import { useDayGuests } from '@/hooks/useDayGuests';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -39,6 +40,21 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [selectedFloorForRooms, setSelectedFloorForRooms] = useState<number>(1);
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  
+  // Fetch all day guests once at directory level to avoid N+1 queries
+  const { dayGuests: allDayGuests } = useDayGuests();
+  
+  // Group day guests by room_id for efficient lookup
+  const dayGuestsByRoom = useMemo(() => {
+    const map: Record<string, typeof allDayGuests> = {};
+    allDayGuests.forEach(guest => {
+      if (!map[guest.room_id]) {
+        map[guest.room_id] = [];
+      }
+      map[guest.room_id].push(guest);
+    });
+    return map;
+  }, [allDayGuests]);
 
   const isSelectedCurrentMonth = useMemo(() => {
     const now = new Date();
@@ -154,6 +170,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   room={room} 
                   onViewDetails={onViewDetails}
                   onEditRoom={setEditingRoom}
+                  dayGuests={dayGuestsByRoom[room.id] || []}
                 />
               ))}
             </div>

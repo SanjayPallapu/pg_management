@@ -8,7 +8,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { useDayGuests } from '@/hooks/useDayGuests';
+import { DayGuest } from '@/hooks/useDayGuests';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { WelcomeDialog } from './WelcomeDialog';
@@ -27,11 +27,13 @@ interface RoomCardProps {
   room: Room;
   onViewDetails: (room: Room) => void;
   onEditRoom?: (room: Room) => void;
+  dayGuests?: DayGuest[];
 }
 export const RoomCard = ({
   room,
   onViewDetails,
-  onEditRoom
+  onEditRoom,
+  dayGuests = []
 }: RoomCardProps) => {
   const {
     payments,
@@ -43,9 +45,6 @@ export const RoomCard = ({
   } = useMonthContext();
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
-  const {
-    dayGuests
-  } = useDayGuests(room.id);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
