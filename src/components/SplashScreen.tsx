@@ -103,7 +103,7 @@ const SplashScreen = () => {
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
             }}
           >
-            <img src="/icon-512.png" alt="PG Management" className="h-36 w-auto rounded-3xl scale-110" />
+            <img src="/icon-512.png" alt="PG Management" className="h-44 w-auto rounded-3xl scale-110" />
           </div>
         </motion.div>
 
