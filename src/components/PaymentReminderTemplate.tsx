@@ -37,11 +37,7 @@ const formatCurrency = (amount: number): string => `₹ ${Math.floor(amount).toL
 
 const getLastDayOfMonth = (year: number, month: number): number => new Date(year, month, 0).getDate();
 
-export const formatBillingRange = (
-  joiningDate: string,
-  selectedYear: number,
-  selectedMonth: number
-): string => {
+export const formatBillingRange = (joiningDate: string, selectedYear: number, selectedMonth: number): string => {
   const joinDate = new Date(joiningDate);
   if (isNaN(joinDate.getTime())) return "—";
 
@@ -69,15 +65,15 @@ export const formatBillingRange = (
     // But if join day > last day of month, end is last day of month
     // The billing cycle for "15th joiner" in January would be "15 Jan - 14 Feb"
     // But we need to show ONLY the current month's portion
-    
+
     // Actually, the correct logic for "1 Jan - 31 Jan" for someone who joined on 1st Aug:
     // Start: 1st of selected month
     // End: last day of selected month (if joined on 1st)
-    
+
     // For someone joined on 15th:
     // Billing cycle: 15th to 14th of next month
     // So for January: "15 Jan - 14 Feb"
-    
+
     // Let's implement this correctly:
     endDay = joinDay - 1;
     if (endDay <= 0) {
@@ -111,7 +107,6 @@ export const formatBillingRange = (
   return `${format(startDate)} - ${format(endDate)}`;
 };
 
-
 /* =========================
    Component
 ========================= */
@@ -132,7 +127,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         flexDirection: "column",
       }}
     >
-         {/* Header with Logo */}
+      {/* Header with Logo */}
       <div
         style={{
           width: "100%",
@@ -154,7 +149,6 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           }}
         />
       </div>
-
 
       {/* Title */}
       <div style={{ textAlign: "center", padding: "10px 0" }}>
@@ -264,7 +258,9 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
 
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Monthly Rent:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{formatCurrency(data.payment.amount)}</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>
+                {formatCurrency(data.payment.amount)}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -282,10 +278,6 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           lineHeight: 1.5,
         }}
       >
-        <p style={{ margin: 0 }}>
-          Hi <strong>{data.tenant.name}</strong>, this is a payment reminder for{" "}
-          <strong>{formatBillingRange(data.tenant.joiningDate, data.selectedYear, data.selectedMonth)}</strong> rent @Amma Women's Hostel.
-        </p>
         <p style={{ margin: "8px 0 0 0", color: "#92400e" }}>
           Please let me know once the payment is done. Thank you! 🙏
         </p>
