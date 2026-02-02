@@ -98,12 +98,12 @@ const SplashScreen = () => {
           <motion.div className="absolute inset-0 rounded-3xl bg-blue-400/30 blur-3xl animate-pulse" />
 
           <div
-            className="relative flex h-32 w-32 items-center justify-center rounded-3xl shadow-2xl overflow-visible"
+            className="relative flex items-center justify-center"
             style={{
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
             }}
           >
-            <img src="/icon-512.png" alt="Amma Management" className="h-36 w-auto" />
+            <img src="/icon-512.png" alt="PG Management" className="h-36 w-auto rounded-3xl" />
           </div>
         </motion.div>
 
