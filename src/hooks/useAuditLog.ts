@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 interface AuditLog {
   id: string;
@@ -26,13 +27,18 @@ interface LogAuditParams {
 
 export const useAuditLog = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
+  // Filter audit logs by the current user's ID to ensure data isolation
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['audit-logs'],
+    queryKey: ['audit-logs', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(200);
 
@@ -51,6 +57,7 @@ export const useAuditLog = () => {
         createdAt: log.created_at,
       })) as AuditLog[];
     },
+    enabled: !!user?.id,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 60 * 1000, // 1 minute
   });

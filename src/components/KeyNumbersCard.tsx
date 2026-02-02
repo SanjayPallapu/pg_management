@@ -31,19 +31,16 @@ export const KeyNumbersCard = () => {
   const isLongPress = useRef(false);
 
   const { data: keyNumbers = [], isLoading } = useQuery({
-    queryKey: ['key-numbers', currentPG?.id],
+    queryKey: ['key-numbers'],
     queryFn: async () => {
-      if (!currentPG?.id) return [];
       const { data, error } = await supabase
         .from('key_numbers')
         .select('*')
-        .eq('pg_id', currentPG.id)
         .order('room_number', { ascending: true });
       
       if (error) throw error;
       return data as KeyNumber[];
     },
-    enabled: !!currentPG?.id,
   });
 
   const addKeyNumber = useMutation({

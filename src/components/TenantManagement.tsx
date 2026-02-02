@@ -20,7 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Room, Tenant, PaymentEntry } from "@/types";
-import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut, PartyPopper, Phone, MessageCircle, MessageSquare, Bell, Receipt, Wallet } from "lucide-react";
+import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut, PartyPopper, Phone, MessageCircle, MessageSquare, Bell, Receipt, Wallet, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { differenceInDays } from "date-fns";
 import { useRooms } from "@/hooks/useRooms";
@@ -705,6 +705,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                 .map((tenant) => {
                   const isEditing = editingTenantId === tenant.id;
                   const payment = getSelectedMonthPayment(tenant.id);
+                  const isPaid = isTenantPaidForMonth(tenant.id);
                   const isPartial = isTenantPartialForMonth(tenant.id);
                   const remaining = isPartial ? tenant.monthlyRent - (payment?.amountPaid || 0) : 0;
 
@@ -1122,8 +1123,19 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                   />
                 </div>
 
-                <Button onClick={handleAddTenant} disabled={!newTenant.name || !newTenant.phone} className="w-full">
-                  Add Tenant
+                <Button 
+                  onClick={handleAddTenant} 
+                  disabled={!newTenant.name || !newTenant.phone || addTenant.isPending} 
+                  className="w-full"
+                >
+                  {addTenant.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Tenant'
+                  )}
                 </Button>
               </div>
             </div>
