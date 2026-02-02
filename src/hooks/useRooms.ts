@@ -66,17 +66,19 @@ export const useRooms = () => {
         tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
           name: tenant.name,
-          // Mask phone number for staff users
-          phone: isAdmin ? tenant.phone : "••••••••••",
+          // In a multi-user system, each user sees their own PG data
+          // RLS ensures users only access their own PG's rooms/tenants
+          // So phone masking is not needed - all data belongs to current user
+          phone: tenant.phone,
           startDate: tenant.start_date,
           endDate: tenant.end_date || undefined,
           monthlyRent: tenant.monthly_rent,
           paymentStatus: tenant.payment_status as "Paid" | "Pending",
           paymentDate: tenant.payment_date || undefined,
-          // Hide security deposit info from staff
-          securityDepositAmount: isAdmin ? tenant.security_deposit_amount : null,
-          securityDepositDate: isAdmin ? tenant.security_deposit_date : null,
-          securityDepositMode: isAdmin ? tenant.security_deposit_mode : null,
+          // Security deposit info is visible to the PG owner
+          securityDepositAmount: tenant.security_deposit_amount,
+          securityDepositDate: tenant.security_deposit_date,
+          securityDepositMode: tenant.security_deposit_mode,
           isLocked: (tenant as any).is_locked || false,
         })),
       })) as Room[];
@@ -150,9 +152,53 @@ export const useRooms = () => {
         recordName: `${tenant.name} (Room ${roomNo})`,
         newData: { name: tenant.name, phone: tenant.phone, room: roomNo, rent: tenant.monthlyRent },
       });
+
+      return tenantData;
+    },
+    onMutate: async ({ roomId, roomNo, tenant }) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
+      
+      // Snapshot the previous value
+      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
+      
+      // Optimistically update with a temp ID
+      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
+        if (!old) return old;
+        return old.map((room) => {
+          if (room.id === roomId) {
+            const newTenantCount = room.tenants.length + 1;
+            const newStatus = newTenantCount >= room.capacity 
+              ? "Occupied" 
+              : newTenantCount === 0 
+                ? "Vacant" 
+                : "Partially Occupied";
+            return {
+              ...room,
+              status: newStatus as any,
+              tenants: [
+                ...room.tenants,
+                {
+                  ...tenant,
+                  id: `temp-${Date.now()}`, // Temp ID, will be replaced on refetch
+                } as Tenant,
+              ],
+            };
+          }
+          return room;
+        });
+      });
+      
+      return { previousRooms };
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousRooms) {
+        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
+      }
     },
     onSuccess: () => {
-      // Immediate refetch for faster UX
+      // Immediate refetch to get the real ID from the server
       queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: 'active' });
       queryClient.invalidateQueries({ queryKey: ["tenant-payments"], refetchType: 'active' });
     },
