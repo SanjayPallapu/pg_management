@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Key, Copy, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePG } from '@/contexts/PGContext';
 
 interface KeyNumber {
   id: string;
@@ -16,6 +17,7 @@ interface KeyNumber {
 
 export const KeyNumbersCard = () => {
   const queryClient = useQueryClient();
+  const { currentPG } = usePG();
   const [isExpanded, setIsExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [newSerial, setNewSerial] = useState('');
@@ -29,23 +31,27 @@ export const KeyNumbersCard = () => {
   const isLongPress = useRef(false);
 
   const { data: keyNumbers = [], isLoading } = useQuery({
-    queryKey: ['key-numbers'],
+    queryKey: ['key-numbers', currentPG?.id],
     queryFn: async () => {
+      if (!currentPG?.id) return [];
       const { data, error } = await supabase
         .from('key_numbers')
         .select('*')
+        .eq('pg_id', currentPG.id)
         .order('room_number', { ascending: true });
       
       if (error) throw error;
       return data as KeyNumber[];
     },
+    enabled: !!currentPG?.id,
   });
 
   const addKeyNumber = useMutation({
     mutationFn: async ({ serial_number, room_number }: { serial_number: string; room_number: string }) => {
+      if (!currentPG?.id) throw new Error('No PG selected');
       const { error } = await supabase
         .from('key_numbers')
-        .insert({ serial_number, room_number });
+        .insert({ serial_number, room_number, pg_id: currentPG.id });
       if (error) throw error;
     },
     onSuccess: () => {

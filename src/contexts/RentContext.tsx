@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TenantPayment } from '@/types';
+import { usePG } from '@/contexts/PGContext';
 
 interface RentContextType {
   rentRecords: TenantPayment[];
@@ -35,15 +36,48 @@ export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProv
   const [rentRecords, setRentRecords] = useState<TenantPayment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { currentPG } = usePG();
 
   const fetchRentForMonth = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
+      if (!currentPG?.id) {
+        setRentRecords([]);
+        return;
+      }
+
+      const { data: roomIdsData, error: roomIdsError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('pg_id', currentPG.id);
+
+      if (roomIdsError) throw roomIdsError;
+
+      const roomIds = (roomIdsData || []).map(r => r.id);
+      if (roomIds.length === 0) {
+        setRentRecords([]);
+        return;
+      }
+
+      const { data: tenantIdsData, error: tenantIdsError } = await supabase
+        .from('tenants')
+        .select('id')
+        .in('room_id', roomIds);
+
+      if (tenantIdsError) throw tenantIdsError;
+
+      const tenantIds = (tenantIdsData || []).map(t => t.id);
+      if (tenantIds.length === 0) {
+        setRentRecords([]);
+        return;
+      }
+
       const { data, error: fetchError } = await supabase
         .from('tenant_payments')
         .select('*')
+        .in('tenant_id', tenantIds)
         .eq('month', selectedMonth)
         .eq('year', selectedYear)
         .order('tenant_id', { ascending: true });
@@ -68,7 +102,7 @@ export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProv
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, currentPG?.id]);
 
   const togglePaid = useCallback(
     async (tenantId: string, roomId?: string) => {

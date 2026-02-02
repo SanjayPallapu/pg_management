@@ -28,10 +28,20 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
 
   const handleAddRooms = async () => {
     if (!currentPG) return;
+
+    const floorStr = String(floor);
+    const getRoomIndex = (value: string) => {
+      const digits = value.replace(/\D/g, '');
+      if (!digits) return 1;
+      if (digits.startsWith(floorStr) && digits.length > floorStr.length) {
+        return parseInt(digits.slice(floorStr.length), 10) || 1;
+      }
+      return parseInt(digits, 10) || 1;
+    };
     
-    // Parse room numbers - support formats like "101" or "101-109"
-    const startNum = parseInt(roomStart.replace(/\D/g, '')) || parseInt(roomStart.slice(-2)) || 1;
-    const endNum = parseInt(roomEnd.replace(/\D/g, '')) || parseInt(roomEnd.slice(-2)) || startNum;
+    // Parse room numbers - support formats like "201" or "01"
+    const startNum = getRoomIndex(roomStart);
+    const endNum = getRoomIndex(roomEnd) || startNum;
     
     if (startNum > endNum) {
       toast.error('Start room number must be less than or equal to end room number');
@@ -87,8 +97,17 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
   };
 
   // Generate preview of rooms to be added
-  const startNum = parseInt(roomStart.replace(/\D/g, '')) || 1;
-  const endNum = parseInt(roomEnd.replace(/\D/g, '')) || startNum;
+  const floorStr = String(floor);
+  const getRoomIndex = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return 1;
+    if (digits.startsWith(floorStr) && digits.length > floorStr.length) {
+      return parseInt(digits.slice(floorStr.length), 10) || 1;
+    }
+    return parseInt(digits, 10) || 1;
+  };
+  const startNum = getRoomIndex(roomStart);
+  const endNum = getRoomIndex(roomEnd) || startNum;
   const roomCount = Math.max(0, endNum - startNum + 1);
   const previewRooms = Array.from({ length: Math.min(roomCount, 5) }, (_, i) => 
     `${floor}${(startNum + i).toString().padStart(2, '0')}`
@@ -139,6 +158,21 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
                 <SelectItem value="3">3 Sharing</SelectItem>
                 <SelectItem value="4">4 Sharing</SelectItem>
                 <SelectItem value="5">5 Sharing</SelectItem>
+                <SelectItem value="6">6 Sharing</SelectItem>
+                <SelectItem value="7">7 Sharing</SelectItem>
+                <SelectItem value="8">8 Sharing</SelectItem>
+                <SelectItem value="9">9 Sharing</SelectItem>
+                <SelectItem value="10">10 Sharing</SelectItem>
+                <SelectItem value="11">11 Sharing</SelectItem>
+                <SelectItem value="12">12 Sharing</SelectItem>
+                <SelectItem value="13">13 Sharing</SelectItem>
+                <SelectItem value="14">14 Sharing</SelectItem>
+                <SelectItem value="15">15 Sharing</SelectItem>
+                <SelectItem value="16">16 Sharing</SelectItem>
+                <SelectItem value="17">17 Sharing</SelectItem>
+                <SelectItem value="18">18 Sharing</SelectItem>
+                <SelectItem value="19">19 Sharing</SelectItem>
+                <SelectItem value="20">20 Sharing</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">

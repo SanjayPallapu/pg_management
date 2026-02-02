@@ -55,15 +55,19 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
   const [rejectNotes, setRejectNotes] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   // Fetch all pending payment requests
   const { data: paymentRequests, isLoading, refetch } = useQuery({
-    queryKey: ['admin-payment-requests'],
+    queryKey: ['admin-payment-requests', page],
     queryFn: async () => {
+      const end = page * pageSize - 1;
       const { data, error } = await supabase
         .from('payment_requests')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, end);
 
       if (error) throw error;
       return data as PaymentRequest[];
@@ -95,6 +99,7 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
 
   const pendingRequests = paymentRequests?.filter(r => r.status === 'pending') || [];
   const processedRequests = paymentRequests?.filter(r => r.status !== 'pending') || [];
+  const canLoadMore = (paymentRequests?.length || 0) >= page * pageSize;
 
   if (!isAdmin) {
     return null;
@@ -249,6 +254,17 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
                         </Card>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {canLoadMore && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPage(p => p + 1)}
+                    >
+                      Load more
+                    </Button>
                   </div>
                 )}
               </>

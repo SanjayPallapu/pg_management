@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { DayGuest } from '@/hooks/useDayGuests';
@@ -43,6 +44,8 @@ export const RoomCard = ({
     selectedMonth,
     selectedYear
   } = useMonthContext();
+  const { isAdmin, isStaff } = useAuth();
+  const canManageTenants = isAdmin || isStaff;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
@@ -453,7 +456,7 @@ export const RoomCard = ({
 
 
         {/* Action buttons for current month */}
-        {isSelectedCurrentMonth && occupiedCount < room.capacity && (
+        {canManageTenants && isSelectedCurrentMonth && occupiedCount < room.capacity && (
           <div className="pt-2 border-t border-border/50 space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <Button 

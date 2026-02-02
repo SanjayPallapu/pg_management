@@ -51,9 +51,12 @@ serve(async (req) => {
       );
     }
 
-    // Get user emails from auth.users
-    const userIds = subscriptions.map(s => s.user_id);
-    const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+    // Get user emails only for affected users (avoid scanning all users)
+    const userIds = [...new Set(subscriptions.map(s => s.user_id))];
+    const { data: users, error: usersError } = await supabase
+      .from('auth.users')
+      .select('id, email')
+      .in('id', userIds);
 
     if (usersError) {
       console.error("Error fetching users:", usersError);
@@ -61,7 +64,7 @@ serve(async (req) => {
     }
 
     const userEmailMap = new Map(
-      users.users.map(u => [u.id, u.email])
+      (users || []).map(u => [u.id, u.email])
     );
 
     // Calculate days left and prepare reminder data

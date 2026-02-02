@@ -20,20 +20,22 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Room, Tenant, PaymentEntry } from "@/types";
-import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut, PartyPopper } from "lucide-react";
+import { MapPin, User, CreditCard, Plus, Trash2, ChevronUp, ChevronDown, CalendarIcon, LogOut, PartyPopper, Phone, MessageCircle, MessageSquare, Bell, Receipt, Wallet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { differenceInDays } from "date-fns";
 import { useRooms } from "@/hooks/useRooms";
 import { toast } from "@/hooks/use-toast";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
+import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
-import { useNavigate } from "react-router-dom";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
 
 // Helper to check if tenant joined within last 5 days
@@ -55,7 +57,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isStaff } = useAuth();
+  const canManageTenants = isAdmin || isStaff;
   const navigate = useNavigate();
 
   // Handle OS back gesture to close dialog
@@ -74,6 +77,18 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderData, setReminderData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    forMonth: string;
+    roomNo: string;
+    sharingType: string;
+    amount: number;
+    amountPaid?: number;
+    balance: number;
+  } | null>(null);
   const [welcomeData, setWelcomeData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -621,7 +636,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                     size="icon"
                     className="h-6 w-6"
                     onClick={() => handleCapacityChange(true)}
-                    disabled={room.capacity >= 5}
+                    disabled={room.capacity >= 20}
                   >
                     <ChevronUp className="h-3 w-3" />
                   </Button>
@@ -658,7 +673,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                   </Button>
                 )}
               </div>
-              {isAdmin && (
+              {canManageTenants && (
                 <Button
                   variant={isEditMode ? "default" : "outline"}
                   size="sm"
@@ -672,8 +687,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               )}
             </div>
 
-            {isAdmin && !isEditMode && (
+            {canManageTenants && !isEditMode && (
               <div className="text-xs text-muted-foreground">Click Edit to enable long-press editing</div>
+            )}
+
+            {!canManageTenants && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                You don’t have permission to add or edit tenants.
+              </div>
             )}
 
             {activeTenants.length === 0 ? (
@@ -829,28 +850,107 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                   {getPaymentStatusForMonth(tenant.id)}
                                 </Badge>
                               )}
-                              {/* Send Welcome button for new tenants */}
-                              {isNewTenant(tenant.startDate) && !tenant.endDate && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-pink-600 border-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/20 gap-1"
-                                  onClick={() => {
-                                    setWelcomeData({
-                                      tenantName: tenant.name,
-                                      tenantPhone: tenant.phone,
-                                      joiningDate: tenant.startDate,
-                                      roomNo: room.roomNo,
-                                      sharingType: `${room.capacity} Sharing`,
-                                      monthlyRent: tenant.monthlyRent,
-                                      securityDeposit: undefined,
-                                    });
-                                    setWelcomeDialogOpen(true);
-                                  }}
-                                >
-                                  <PartyPopper className="h-3.5 w-3.5" />
-                                  Welcome
-                                </Button>
+                              
+                              {/* Action badges */}
+                              {tenant.phone && tenant.phone !== '••••••••••' && (
+                                <div className="flex items-center gap-1">
+                                  {/* Call badge */}
+                                  <a 
+                                    href={`tel:${tenant.phone}`}
+                                    className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                                    title={`Call ${tenant.name}`}
+                                  >
+                                    <Phone className="h-4 w-4" />
+                                  </a>
+                                  
+                                  {/* WhatsApp dropdown menu */}
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button 
+                                        className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                        title="WhatsApp options"
+                                      >
+                                        <MessageCircle className="h-4 w-4" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      {(isPaid || isPartial) && (
+                                        <DropdownMenuItem onClick={() => {
+                                          const lastEntry = payment?.paymentEntries?.[payment.paymentEntries.length - 1];
+                                          setReceiptData({
+                                            tenantName: tenant.name,
+                                            tenantPhone: tenant.phone,
+                                            paymentMode: lastEntry?.mode || 'cash',
+                                            paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+                                            joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                                            forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                                            roomNo: room.roomNo,
+                                            sharingType: `${room.capacity} Sharing`,
+                                            amount: tenant.monthlyRent,
+                                            amountPaid: payment?.amountPaid || tenant.monthlyRent,
+                                            isFullPayment: isPaid,
+                                            remainingBalance: isPartial ? remaining : 0,
+                                            tenantId: tenant.id,
+                                          });
+                                          setWhatsappDialogOpen(true);
+                                        }} className="gap-2">
+                                          <Receipt className="h-4 w-4" />
+                                          Generate Receipt
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem onClick={() => {
+                                        const phone = tenant.phone.replace(/\D/g, '');
+                                        const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                                        window.open(`https://wa.me/${formattedPhone}`, '_blank');
+                                      }} className="gap-2">
+                                        <MessageSquare className="h-4 w-4" />
+                                        Chat with Tenant
+                                      </DropdownMenuItem>
+                                      {!isPaid && (
+                                        <DropdownMenuItem onClick={() => {
+                                          setReminderData({
+                                            tenantName: tenant.name,
+                                            tenantPhone: tenant.phone,
+                                            joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+                                            forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                                            roomNo: room.roomNo,
+                                            sharingType: `${room.capacity} Sharing`,
+                                            amount: tenant.monthlyRent,
+                                            amountPaid: payment?.amountPaid,
+                                            balance: isPartial ? remaining : tenant.monthlyRent,
+                                          });
+                                          setReminderDialogOpen(true);
+                                        }} className="gap-2">
+                                          <Bell className="h-4 w-4" />
+                                          Payment Reminder
+                                        </DropdownMenuItem>
+                                      )}
+                                      {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                                        <DropdownMenuItem onClick={() => {
+                                          navigate('/', { state: { openSecurityDeposit: true, tenantId: tenant.id } });
+                                        }} className="gap-2">
+                                          <Wallet className="h-4 w-4" />
+                                          Security Deposit
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem onClick={() => {
+                                        setWelcomeData({
+                                          tenantName: tenant.name,
+                                          tenantPhone: tenant.phone,
+                                          joiningDate: tenant.startDate,
+                                          roomNo: room.roomNo,
+                                          sharingType: `${room.capacity} Sharing`,
+                                          monthlyRent: tenant.monthlyRent,
+                                          securityDeposit: undefined,
+                                        });
+                                        setWelcomeDialogOpen(true);
+                                      }} className="gap-2">
+                                        <PartyPopper className="h-4 w-4" />
+                                        Welcome
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               )}
                             </>
                           )}
@@ -955,7 +1055,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           </div>
 
           {/* Add New Tenant - Admin Only */}
-          {isAdmin && availableBeds > 0 && (
+          {canManageTenants && availableBeds > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -1352,6 +1452,13 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             });
           }
         }}
+      />
+
+      {/* Payment Reminder Dialog */}
+      <PaymentReminderDialog
+        open={reminderDialogOpen}
+        onOpenChange={setReminderDialogOpen}
+        reminderData={reminderData}
       />
 
       {/* Welcome Dialog for new tenants */}

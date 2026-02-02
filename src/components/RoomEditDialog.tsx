@@ -137,6 +137,21 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
                   <SelectItem value="3">3 Sharing</SelectItem>
                   <SelectItem value="4">4 Sharing</SelectItem>
                   <SelectItem value="5">5 Sharing</SelectItem>
+                  <SelectItem value="6">6 Sharing</SelectItem>
+                  <SelectItem value="7">7 Sharing</SelectItem>
+                  <SelectItem value="8">8 Sharing</SelectItem>
+                  <SelectItem value="9">9 Sharing</SelectItem>
+                  <SelectItem value="10">10 Sharing</SelectItem>
+                  <SelectItem value="11">11 Sharing</SelectItem>
+                  <SelectItem value="12">12 Sharing</SelectItem>
+                  <SelectItem value="13">13 Sharing</SelectItem>
+                  <SelectItem value="14">14 Sharing</SelectItem>
+                  <SelectItem value="15">15 Sharing</SelectItem>
+                  <SelectItem value="16">16 Sharing</SelectItem>
+                  <SelectItem value="17">17 Sharing</SelectItem>
+                  <SelectItem value="18">18 Sharing</SelectItem>
+                  <SelectItem value="19">19 Sharing</SelectItem>
+                  <SelectItem value="20">20 Sharing</SelectItem>
                 </SelectContent>
               </Select>
               {room.tenants.length > parseInt(capacity) && (

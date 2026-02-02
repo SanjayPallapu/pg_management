@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
+import { usePG } from '@/contexts/PGContext';
 
 export interface PaymentEntry {
   amount: number;
@@ -46,17 +47,24 @@ export interface CreateDayGuestInput {
 export const useDayGuests = (roomId?: string) => {
   const queryClient = useQueryClient();
   const { isAdmin, isLoading: authLoading } = useAuth();
+  const { currentPG } = usePG();
 
   const { data: dayGuests = [], isLoading } = useQuery({
-    queryKey: ['day-guests', roomId, isAdmin],
+    queryKey: ['day-guests', roomId, isAdmin, currentPG?.id],
     queryFn: async () => {
+      if (!roomId && !currentPG?.id) {
+        return [];
+      }
+
       let query = supabase
         .from('day_guests')
-        .select('*')
+        .select('*, rooms!inner(pg_id)')
         .order('from_date', { ascending: false });
 
       if (roomId) {
         query = query.eq('room_id', roomId);
+      } else if (currentPG?.id) {
+        query = query.eq('rooms.pg_id', currentPG.id);
       }
 
       const { data, error } = await query;
@@ -67,16 +75,19 @@ export const useDayGuests = (roomId?: string) => {
       }
 
       // Map the data to our DayGuest type with masked values for staff
-      return (data || []).map(item => ({
-        ...item,
+      return (data || []).map(item => {
+        const { rooms: _rooms, ...rest } = item as typeof item & { rooms?: unknown };
+        return {
+          ...rest,
         // Mask sensitive data for staff users
-        mobile_number: isAdmin ? item.mobile_number : (item.mobile_number ? '••••••••••' : null),
-        id_proof: isAdmin ? item.id_proof : (item.id_proof ? '••••••••' : null),
-        payment_status: item.payment_status as 'Paid' | 'Pending',
-        payment_entries: (item.payment_entries as unknown) as PaymentEntry[] | null,
-      })) as DayGuest[];
+          mobile_number: isAdmin ? rest.mobile_number : (rest.mobile_number ? '••••••••••' : null),
+          id_proof: isAdmin ? rest.id_proof : (rest.id_proof ? '••••••••' : null),
+          payment_status: rest.payment_status as 'Paid' | 'Pending',
+          payment_entries: (rest.payment_entries as unknown) as PaymentEntry[] | null,
+        };
+      }) as DayGuest[];
     },
-    enabled: !authLoading,
+    enabled: !authLoading && (!!roomId || !!currentPG?.id),
   });
 
   const addDayGuest = useMutation({

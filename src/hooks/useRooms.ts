@@ -19,28 +19,31 @@ export const useRooms = () => {
         return [];
       }
 
-      // Fetch rooms filtered by current PG, and tenants in parallel
-      const [roomsResult, tenantsResult] = await Promise.all([
-        supabase
-          .from("rooms")
-          .select("*")
-          .eq("pg_id", currentPG.id)
-          .order("room_no"),
-        supabase.from("tenants").select("*"),
-      ]);
+      // Fetch rooms filtered by current PG
+      const { data: roomsData, error: roomsError } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("pg_id", currentPG.id)
+        .order("room_no");
 
-      if (roomsResult.error) throw roomsResult.error;
-      if (tenantsResult.error) throw tenantsResult.error;
+      if (roomsError) throw roomsError;
 
-      const roomsData = roomsResult.data;
-      const tenantsData = tenantsResult.data;
+      if (!roomsData || roomsData.length === 0) {
+        return [];
+      }
 
-      // Create a set of room IDs from this PG for filtering tenants
-      const roomIds = new Set(roomsData.map(r => r.id));
+      const roomIds = roomsData.map(r => r.id);
 
-      // Group tenants by room_id, only for rooms in this PG
-      const tenantsByRoom = tenantsData
-        .filter(tenant => roomIds.has(tenant.room_id))
+      // Fetch tenants only for rooms in this PG
+      const { data: tenantsData, error: tenantsError } = await supabase
+        .from("tenants")
+        .select("*")
+        .in("room_id", roomIds);
+
+      if (tenantsError) throw tenantsError;
+
+      // Group tenants by room_id
+      const tenantsByRoom = (tenantsData || [])
         .reduce(
           (acc, tenant) => {
             if (!acc[tenant.room_id]) {
@@ -252,10 +255,22 @@ export const useRooms = () => {
 
   const resetRentCycle = useMutation({
     mutationFn: async () => {
+      if (!currentPG?.id) return;
+
+      const { data: roomIdsData, error: roomIdsError } = await supabase
+        .from("rooms")
+        .select("id")
+        .eq("pg_id", currentPG.id);
+
+      if (roomIdsError) throw roomIdsError;
+
+      const roomIds = (roomIdsData || []).map(r => r.id);
+      if (roomIds.length === 0) return;
+
       const { error } = await supabase
         .from("tenants")
         .update({ payment_status: "Pending" })
-        .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all
+        .in("room_id", roomIds);
 
       if (error) throw error;
     },

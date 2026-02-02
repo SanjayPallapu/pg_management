@@ -2,21 +2,48 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TenantPayment, PaymentEntry } from '@/types';
 import { useAuditLog } from './useAuditLog';
+import { usePG } from '@/contexts/PGContext';
 
 export const useTenantPayments = () => {
   const { logAudit } = useAuditLog();
   const queryClient = useQueryClient();
+  const { currentPG } = usePG();
 
   const { data: payments = [], isLoading } = useQuery({
-    queryKey: ['tenant-payments'],
+    queryKey: ['tenant-payments', currentPG?.id],
     queryFn: async () => {
+      if (!currentPG?.id) {
+        return [];
+      }
+
       // Only fetch payments from the last 13 months for performance
       const currentDate = new Date();
       const cutoffYear = currentDate.getFullYear() - 1;
+
+      const { data: roomIdsData, error: roomIdsError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('pg_id', currentPG.id);
+
+      if (roomIdsError) throw roomIdsError;
+
+      const roomIds = (roomIdsData || []).map(r => r.id);
+      if (roomIds.length === 0) return [];
+
+      const { data: tenantIdsData, error: tenantIdsError } = await supabase
+        .from('tenants')
+        .select('id')
+        .in('room_id', roomIds);
+
+      if (tenantIdsError) throw tenantIdsError;
+
+      const tenantIds = (tenantIdsData || []).map(t => t.id);
+      if (tenantIds.length === 0) return [];
       
       const { data, error } = await supabase
         .from('tenant_payments')
         .select('*')
+        .in('tenant_id', tenantIds)
         .gte('year', cutoffYear)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
@@ -38,6 +65,7 @@ export const useTenantPayments = () => {
         notes: (payment as any).notes || undefined,
       })) as TenantPayment[];
     },
+    enabled: !!currentPG?.id,
     staleTime: 30 * 1000, // Cache for 30 seconds for faster perceived loads
     gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
   });
