@@ -21,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { PreviousOverdueSheet } from "./PreviousOverdueSheet";
+import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
 import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
@@ -672,15 +673,10 @@ export const MonthlyRentSheet = ({
             </div>
           </div>
 
-          {previousMonthOverdue.count > 0 && <div className="mb-4 p-3 bg-destructive/10 rounded-lg border border-destructive cursor-pointer hover:bg-destructive/20 transition-colors" onClick={() => setPreviousOverdueOpen(true)}>
-              <div className="font-semibold text-destructive">
-                Previous Month Overdue: ₹{previousMonthOverdue.total.toLocaleString()}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {previousMonthOverdue.count} tenant(s) from{" "}
-                {months[(selectedMonth === 1 ? 12 : selectedMonth - 1) - 1]?.label}
-              </div>
-            </div>}
+          {/* Previous Month Overdue Card - Interactive */}
+          <div className="mb-4">
+            <PreviousMonthOverdueCard />
+          </div>
 
           {/* Overdue Paid Card - shows previous month overdue that was paid this month */}
           <OverduePaidCard rooms={rooms} />
