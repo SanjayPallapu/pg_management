@@ -11,30 +11,24 @@ import { toast } from 'sonner';
 import { Room } from '@/types';
 import { getPricePerBed } from '@/constants/pricing';
 import { usePG } from '@/contexts/PGContext';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 interface RoomEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   room: Room | null;
 }
-
-export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps) => {
+export const RoomEditDialog = ({
+  open,
+  onOpenChange,
+  room
+}: RoomEditDialogProps) => {
   const queryClient = useQueryClient();
-  const { currentPG } = usePG();
+  const {
+    currentPG
+  } = usePG();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
   const [capacity, setCapacity] = useState('3');
   const [rentAmount, setRentAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -47,27 +41,26 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       setNotes(room.notes || '');
     }
   }, [room]);
-
   const handleSave = async () => {
     if (!room) return;
-    
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('rooms')
-        .update({
-          capacity: parseInt(capacity),
-          rent_amount: parseInt(rentAmount),
-          notes: notes || null,
-        })
-        .eq('id', room.id);
-      
+      const {
+        error
+      } = await supabase.from('rooms').update({
+        capacity: parseInt(capacity),
+        rent_amount: parseInt(rentAmount),
+        notes: notes || null
+      }).eq('id', room.id);
       if (error) throw error;
-      
+
       // Immediate refetch for faster UX
-      await queryClient.invalidateQueries({ queryKey: ['rooms', undefined, currentPG?.id] });
-      await queryClient.refetchQueries({ queryKey: ['rooms'] });
-      
+      await queryClient.invalidateQueries({
+        queryKey: ['rooms', undefined, currentPG?.id]
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['rooms']
+      });
       toast.success(`Room ${room.roomNo} updated`);
       onOpenChange(false);
     } catch (err) {
@@ -77,23 +70,22 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       setIsSaving(false);
     }
   };
-
   const handleDelete = async () => {
     if (!room) return;
-    
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('rooms')
-        .delete()
-        .eq('id', room.id);
-      
+      const {
+        error
+      } = await supabase.from('rooms').delete().eq('id', room.id);
       if (error) throw error;
-      
+
       // Immediate refetch for faster UX
-      await queryClient.invalidateQueries({ queryKey: ['rooms', undefined, currentPG?.id] });
-      await queryClient.refetchQueries({ queryKey: ['rooms'] });
-      
+      await queryClient.invalidateQueries({
+        queryKey: ['rooms', undefined, currentPG?.id]
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['rooms']
+      });
       toast.success(`Room ${room.roomNo} deleted`);
       setShowDeleteConfirm(false);
       onOpenChange(false);
@@ -104,27 +96,22 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       setIsDeleting(false);
     }
   };
-
   const handleCapacityChange = (newCapacity: string) => {
     setCapacity(newCapacity);
     // Auto-update rent based on pricing
     const cap = parseInt(newCapacity);
     setRentAmount((getPricePerBed(cap) * cap).toString());
   };
-
   const canDelete = room && room.tenants.length === 0;
-
   if (!room) return null;
-
-  return (
-    <>
+  return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Room {room.roomNo}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 pt-[5px] pb-0">
             <div className="space-y-2">
               <Label htmlFor="capacity">Room Capacity</Label>
               <Select value={capacity} onValueChange={handleCapacityChange}>
@@ -154,22 +141,14 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
                   <SelectItem value="20">20 Sharing</SelectItem>
                 </SelectContent>
               </Select>
-              {room.tenants.length > parseInt(capacity) && (
-                <p className="text-xs text-destructive">
+              {room.tenants.length > parseInt(capacity) && <p className="text-xs text-destructive">
                   Warning: Current tenants ({room.tenants.length}) exceed new capacity
-                </p>
-              )}
+                </p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="rentAmount">Total Room Rent (₹)</Label>
-              <Input
-                id="rentAmount"
-                type="number"
-                value={rentAmount}
-                onChange={(e) => setRentAmount(e.target.value)}
-                placeholder="15000"
-              />
+              <Input id="rentAmount" type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} placeholder="15000" />
               <p className="text-xs text-muted-foreground">
                 Per bed: ₹{Math.floor(parseInt(rentAmount || '0') / parseInt(capacity)).toLocaleString()}
               </p>
@@ -177,29 +156,18 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
-              <Input
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any special notes about this room..."
-              />
+              <Input id="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special notes about this room..." />
             </div>
 
-            {canDelete && (
-              <div className="pt-4 border-t">
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full"
-                >
+            {canDelete && <div className="pt-4 border-t">
+                <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="w-full">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Room
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Only empty rooms can be deleted
                 </p>
-              </div>
-            )}
+              </div>}
           </div>
 
           <DialogFooter>
@@ -207,14 +175,10 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
+              {isSaving ? <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
+                </> : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -230,23 +194,14 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? (
-                <>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Deleting...
-                </>
-              ) : (
-                'Delete'
-              )}
+                </> : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 };
