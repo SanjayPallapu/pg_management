@@ -27,6 +27,7 @@ import { KeyNumbersCard } from './KeyNumbersCard';
 import { BuildingRentCard } from './BuildingRentCard';
 import { SettlementSummarySheet } from './SettlementSummarySheet';
 import { DayGuestRevenueCard } from './DayGuestRevenueCard';
+import { OverduePaidCard } from './OverduePaidCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { getPricePerBed } from '@/constants/pricing';
 
@@ -375,6 +376,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Previous Month Overdue Card */}
               <PreviousMonthOverdueCard />
+
+              {/* Overdue Collected Card - shows previous month overdue paid this month */}
+              <OverduePaidCard rooms={rooms} />
 
               {/* Building Rent Card */}
               <BuildingRentCard />
