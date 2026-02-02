@@ -595,7 +595,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               }}
               className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
             >
-              <Settings className="h-3 w-3" />
               Manage Room
             </button>
           </div>
