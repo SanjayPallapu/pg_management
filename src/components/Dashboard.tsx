@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus, ChevronDown, Wallet, Users, Settings } from 'lucide-react';
 import { Room, DashboardStats, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { usePG } from '@/contexts/PGContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { useQuery } from '@tanstack/react-query';
@@ -36,6 +37,7 @@ interface DashboardProps {
 
 export const Dashboard = ({ rooms }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { currentPG } = usePG();
   const { payments } = useTenantPayments();
   const { isAdmin } = useAuth();
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
@@ -55,16 +57,19 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     payments,
   });
 
-  // Fetch day guest stats for selected month
+  // Fetch day guest stats for selected month - filtered by current PG
   const { data: dayGuestStats } = useQuery({
-    queryKey: ['day-guest-stats', selectedMonth, selectedYear],
+    queryKey: ['day-guest-stats', selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
+      if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
+
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
       const { data, error } = await supabase
         .from('day_guests')
-        .select('total_amount, payment_status, amount_paid, payment_entries')
+        .select('total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id)')
+        .eq('rooms.pg_id', currentPG.id)
         .gte('from_date', startOfMonth.toISOString().split('T')[0])
         .lte('from_date', endOfMonth.toISOString().split('T')[0]);
 
@@ -92,6 +97,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
       return { collected, pending, count: data.length, upi, cash };
     },
+    enabled: !!currentPG?.id,
   });
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
