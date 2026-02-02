@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Home, Key, DoorOpen, Users } from "lucide-react";
-import appLogo from "@/assets/pg-logo.png";
+import appLogo from "@/assets/icon-512.png";
 
 const SplashScreen = () => {
   return (
