@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet, PartyPopper, Edit2 } from 'lucide-react';
+import { User, CreditCard, FileText, Users, ChevronUp, ChevronDown, UserPlus, UserCheck, MessageCircle, Phone, Receipt, MessageSquare, Bell, Sparkles, Wallet, PartyPopper, Settings } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -510,12 +510,13 @@ export const RoomCard = ({
                 }} 
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
-                <Edit2 className="h-3.5 w-3.5" />
+                <Settings className="h-3.5 w-3.5" />
               </button>
             )}
             <button type="button" onClick={() => {
               onViewDetails(room);
-            }} className="text-xs text-primary hover:underline font-medium">
+            }} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+              <Settings className="h-3 w-3" />
               Manage Room
             </button>
           </div>
