@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Home, Key, DoorOpen, Users } from "lucide-react";
-import appLogo from "@/assets/icon-512.png";
 
 const SplashScreen = () => {
   return (
@@ -104,7 +103,7 @@ const SplashScreen = () => {
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
             }}
           >
-            <img src={appLogo} alt="Amma Management" className="h-36 w-auto" />
+            <img src="/icon-512.png" alt="Amma Management" className="h-36 w-auto" />
           </div>
         </motion.div>
 
