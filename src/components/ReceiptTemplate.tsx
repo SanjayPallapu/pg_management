@@ -1,5 +1,4 @@
 import { forwardRef } from 'react';
-import hostelLogo from '@/assets/hostel-logo.png';
 import { formatBillingRange } from './PaymentReminderTemplate';
 import { PaymentEntry } from '@/types';
 
@@ -25,6 +24,8 @@ export interface ReceiptData {
   selectedYear: number; // YYYY
   paymentEntries?: PaymentEntry[];
   previousMonthPending?: number;
+  pgLogoUrl?: string;
+  pgName?: string;
 }
 
 interface ReceiptTemplateProps {
@@ -38,6 +39,8 @@ const formatCurrency = (amount: number): string => {
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
   ({ data }, ref) => {
     const isFullPayment = data.payment.type === 'FULL';
+    const logoUrl = data.pgLogoUrl || '/icon-512.png';
+    const pgName = data.pgName || 'PG Management';
     
     return (
       <div
@@ -49,7 +52,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           overflow: 'hidden',
         }}
       >
-        {/* Header with Logo - cropped */}
+        {/* Header with PG Logo */}
         <div style={{ 
           width: '100%', 
           textAlign: 'center',
@@ -57,8 +60,8 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           background: '#ffffff'
         }}>
           <img 
-            src={hostelLogo}
-            alt="Amma Women's Hostel"
+            src={logoUrl}
+            alt={pgName}
             crossOrigin="anonymous"
             loading="eager"
             style={{
@@ -66,6 +69,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
               height: 'auto',
               margin: '0 auto',
               display: 'block',
+              background: 'white',
             }}
           />
         </div>

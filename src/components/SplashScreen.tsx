@@ -8,36 +8,20 @@ const SplashScreen = () => {
   
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
+      style={{
+        backgroundImage: `url(${logoUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
     >
-      {/* Background Grid */}
-      <div className="absolute inset-0 opacity-20">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
-            backgroundSize: "50px 50px",
-          }}
-        />
-      </div>
-
-      {/* Gradient Orbs */}
-      <motion.div
-        className="absolute top-1/4 -left-20 w-96 h-96 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur-3xl"
-        animate={{ x: [0, 50, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="absolute bottom-1/4 -right-20 w-80 h-80 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl"
-        animate={{ x: [0, -40, 0], y: [0, -20, 0], scale: [1.2, 1, 1.2] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Floating Particles */}
       {[...Array(20)].map((_, i) => (

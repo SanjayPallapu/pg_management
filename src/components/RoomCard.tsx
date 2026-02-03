@@ -30,6 +30,7 @@ import { Room } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
+import { usePG } from "@/contexts/PGContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { DayGuest } from "@/hooks/useDayGuests";
@@ -63,6 +64,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const { payments, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin, isStaff } = useAuth();
+  const { currentPG } = usePG();
   const canManageTenants = isAdmin || isStaff;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -102,6 +104,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     isFullPayment: boolean;
     remainingBalance?: number;
     tenantId: string;
+    pgLogoUrl?: string;
+    pgName?: string;
   } | null>(null);
   const months = [
     {
@@ -289,6 +293,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   isFullPayment: isPaid,
                   remainingBalance: isPartial ? tenant.monthlyRent - (payment?.amountPaid || 0) : 0,
                   tenantId: tenant.id,
+                  pgLogoUrl: currentPG?.logoUrl,
+                  pgName: currentPG?.name,
                 });
                 setWhatsappDialogOpen(true);
               };
