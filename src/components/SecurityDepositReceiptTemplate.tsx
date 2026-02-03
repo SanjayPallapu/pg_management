@@ -1,5 +1,4 @@
 import { forwardRef } from 'react';
-import hostelLogo from '@/assets/hostel-logo.png';
 import { format } from 'date-fns';
 
 export interface SecurityDepositReceiptData {
@@ -16,6 +15,9 @@ export interface SecurityDepositReceiptData {
     date: string;
     mode: 'upi' | 'cash';
   };
+  // PG Branding
+  pgName?: string;
+  pgLogoUrl?: string;
 }
 
 interface SecurityDepositReceiptTemplateProps {
@@ -44,6 +46,9 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
       }
     })();
 
+    const pgName = data.pgName || "PG Management";
+    const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
+
     return (
       <div
         ref={ref}
@@ -62,8 +67,8 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
           background: '#ffffff'
         }}>
           <img 
-            src={hostelLogo}
-            alt="Amma Women's Hostel"
+            src={pgLogoUrl}
+            alt={pgName}
             crossOrigin="anonymous"
             loading="eager"
             style={{
@@ -71,8 +76,18 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
               height: 'auto',
               margin: '0 auto',
               display: 'block',
+              maxHeight: '90px',
+              objectFit: 'contain',
             }}
           />
+          <div style={{ 
+            fontSize: '14px', 
+            fontWeight: 600, 
+            color: '#4b5563', 
+            marginTop: '8px' 
+          }}>
+            {pgName}
+          </div>
         </div>
 
         {/* Security Deposit Badge */}

@@ -1,7 +1,14 @@
 import { motion } from "framer-motion";
 import { Home, Key, DoorOpen, Users } from "lucide-react";
+import { usePG } from "@/contexts/PGContext";
 
 const SplashScreen = () => {
+  const { currentPG } = usePG();
+  
+  // Use PG logo if available, otherwise use default
+  const logoUrl = currentPG?.logoUrl || "/icon-512.png";
+  const pgName = currentPG?.name || "PG Management";
+  
   return (
     <motion.div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden"
@@ -103,17 +110,25 @@ const SplashScreen = () => {
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3)",
             }}
           >
-            <img src="/icon-512.png" alt="PG Management" className="h-36 w-auto rounded-3xl scale-110" />
+            <img 
+              src={logoUrl} 
+              alt={pgName}
+              className="h-36 w-auto rounded-3xl scale-110 object-contain"
+              style={{
+                // Remove white background for non-default logos
+                mixBlendMode: currentPG?.logoUrl ? 'normal' : 'normal',
+              }}
+            />
           </div>
         </motion.div>
 
         <motion.h1
-          className="text-3xl font-bold text-white"
+          className="text-3xl font-bold text-white text-center"
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          PG Management
+          {pgName}
         </motion.h1>
 
         <motion.p

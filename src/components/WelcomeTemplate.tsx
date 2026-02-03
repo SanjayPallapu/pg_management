@@ -1,8 +1,6 @@
 import { forwardRef } from "react";
-import ammaLogo from "@/assets/amma-logo-transparent.png";
 import flowersTop from "@/assets/welcome-flowers-top.png";
 import flowersBottom from "@/assets/welcome-flowers-bottom.png";
-import { formatBillingRange } from "./PaymentReminderTemplate";
 
 /* =========================
    Types
@@ -24,6 +22,9 @@ export interface WelcomeData {
   };
   selectedMonth: number; // 1–12
   selectedYear: number; // YYYY
+  // PG Branding
+  pgName?: string;
+  pgLogoUrl?: string;
 }
 
 interface WelcomeTemplateProps {
@@ -75,6 +76,8 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
   const startDateText = formatStartDate(data.tenant.joiningDate);
   const dayWithSuffix = formatDayWithSuffix(data.tenant.joiningDate);
   const hasSecurityDeposit = data.payment.securityDeposit && data.payment.securityDeposit > 0;
+  const pgName = data.pgName || "PG Management";
+  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
   return (
     <div
@@ -123,11 +126,12 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         }}
       />
 
-      {/* Header with Centered Logo - increased size */}
+      {/* Header with Centered Logo */}
       <div
         style={{
           width: "100%",
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
           padding: "30px 0 20px",
@@ -136,16 +140,26 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
         }}
       >
         <img
-          src={ammaLogo}
-          alt="Amma Women's Hostel"
+          src={pgLogoUrl}
+          alt={pgName}
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "210px",
+            width: "180px",
             height: "auto",
             display: "block",
+            maxHeight: "100px",
+            objectFit: "contain",
           }}
         />
+        <div style={{ 
+          fontSize: "16px", 
+          fontWeight: 600, 
+          color: "#831843", 
+          marginTop: "8px" 
+        }}>
+          {pgName}
+        </div>
       </div>
 
       {/* Welcome Content */}
@@ -159,7 +173,6 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           zIndex: 1,
         }}
       >
-        {/* Greeting */}
         <div style={{ marginBottom: "18px" }}>
           <h2
             style={{
@@ -180,7 +193,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
               margin: 0,
             }}
           >
-            Welcome to Amma Women's Hostel!
+            Welcome to {pgName}!
             <br />
             We're happy to have you with us.
           </p>
@@ -238,7 +251,6 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           </p>
         </div>
 
-        {/* Thank You */}
         <div style={{ marginTop: "auto", paddingBottom: "50px" }}>
           <p
             style={{
@@ -251,7 +263,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
           >
             Thank you,
             <br />
-            <span style={{ fontWeight: 600 }}>@Amma Women's Hostel</span>
+            <span style={{ fontWeight: 600 }}>@{pgName}</span>
           </p>
         </div>
       </div>

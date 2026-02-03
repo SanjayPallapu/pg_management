@@ -389,7 +389,19 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                         )}
                         {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                           <DropdownMenuItem
-                            onClick={() => navigate("/", { state: { openSecurityDeposit: true, tenantId: tenant.id } })}
+                            onClick={() => {
+                              // Navigate to index with state to open security deposit dialog
+                              navigate("/", { 
+                                state: { 
+                                  openSecurityDeposit: true, 
+                                  tenantId: tenant.id,
+                                  tenantName: tenant.name,
+                                  tenantPhone: tenant.phone,
+                                  roomNo: room.roomNo,
+                                  roomCapacity: room.capacity
+                                } 
+                              });
+                            }}
                             className="gap-2"
                           >
                             <Wallet className="h-4 w-4" />

@@ -1,5 +1,4 @@
 import { forwardRef } from "react";
-import hostelLogo from "@/assets/hostel-logo.png";
 
 /* =========================
    Types
@@ -23,6 +22,9 @@ export interface ReminderData {
   };
   selectedMonth: number; // 1–12
   selectedYear: number; // YYYY
+  // PG Branding
+  pgName?: string;
+  pgLogoUrl?: string;
 }
 
 interface PaymentReminderTemplateProps {
@@ -113,6 +115,8 @@ export const formatBillingRange = (joiningDate: string, selectedYear: number, se
 
 export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminderTemplateProps>(({ data }, ref) => {
   const hasPaid = (data.payment.paid || 0) > 0;
+  const pgName = data.pgName || "PG Management";
+  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
   return (
     <div
@@ -137,8 +141,8 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         }}
       >
         <img
-          src={hostelLogo}
-          alt="Amma Women's Hostel"
+          src={pgLogoUrl}
+          alt={pgName}
           crossOrigin="anonymous"
           loading="eager"
           style={{
@@ -146,8 +150,18 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             height: "auto",
             margin: "0 auto",
             display: "block",
+            maxHeight: "80px",
+            objectFit: "contain",
           }}
         />
+        <div style={{ 
+          fontSize: "14px", 
+          fontWeight: 600, 
+          color: "#4b5563", 
+          marginTop: "8px" 
+        }}>
+          {pgName}
+        </div>
       </div>
 
       {/* Title */}
