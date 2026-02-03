@@ -38,8 +38,8 @@ const formatCurrency = (amount: number): string => {
 
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(({ data }, ref) => {
   const isFullPayment = data.payment.type === "FULL";
-  const logoUrl = data.pgLogoUrl || "/icon-512.png";
   const pgName = data.pgName || "PG Management";
+  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
   return (
     <div
