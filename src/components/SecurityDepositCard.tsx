@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -28,9 +29,12 @@ interface SecurityDepositCardProps {
 
 interface TenantWithRoom extends Tenant {
   roomNo: string;
+  roomCapacity?: number;
 }
 
 export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -58,8 +62,45 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
     room.tenants.map(tenant => ({
       ...tenant,
       roomNo: room.roomNo,
+      roomCapacity: room.capacity,
     }))
   );
+
+  // Handle navigation state for opening security deposit
+  useEffect(() => {
+    const state = location.state as { openSecurityDeposit?: boolean; tenantId?: string } | null;
+    if (state?.openSecurityDeposit && state?.tenantId) {
+      // Find the tenant
+      const tenant = allTenants.find(t => t.id === state.tenantId);
+      if (tenant) {
+        setSheetOpen(true);
+        // Small delay to ensure sheet is open before opening dialog
+        setTimeout(() => {
+          setDepositDialog(tenant);
+        }, 100);
+      }
+      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, allTenants, navigate, location.pathname]);
+
+  // Listen for custom event from MonthlyRentSheet
+  useEffect(() => {
+    const handleOpenSecurityDeposit = (event: CustomEvent<{ tenantId: string }>) => {
+      const tenant = allTenants.find(t => t.id === event.detail.tenantId);
+      if (tenant) {
+        setSheetOpen(true);
+        setTimeout(() => {
+          setDepositDialog(tenant);
+        }, 100);
+      }
+    };
+
+    window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+    return () => {
+      window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+    };
+  }, [allTenants]);
 
   const depositedTenants = allTenants.filter(t => t.securityDepositAmount && t.securityDepositAmount > 0);
   const notDepositedTenants = allTenants.filter(t => !t.securityDepositAmount || t.securityDepositAmount === 0);

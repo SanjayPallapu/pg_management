@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,13 +17,24 @@ const authSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const signupSchema = z.object({
+  email: z.string().trim().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  fullName: z.string().min(2, 'Please enter your name'),
+  phone: z.string().min(10, 'Please enter a valid phone number'),
+  city: z.string().min(2, 'Please enter your city'),
+});
+
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signOut } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string; phone?: string; city?: string }>({});
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && hasRole) {
@@ -30,7 +42,7 @@ const Auth = () => {
     }
   }, [isAuthenticated, hasRole, isLoading, navigate]);
 
-  const validateForm = () => {
+  const validateSignInForm = () => {
     try {
       authSchema.parse({ email, password });
       setErrors({});
@@ -48,9 +60,30 @@ const Auth = () => {
     }
   };
 
+  const validateSignUpForm = () => {
+    try {
+      signupSchema.parse({ email, password, fullName, phone, city });
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: { email?: string; password?: string; fullName?: string; phone?: string; city?: string } = {};
+        err.errors.forEach((e) => {
+          if (e.path[0] === 'email') newErrors.email = e.message;
+          if (e.path[0] === 'password') newErrors.password = e.message;
+          if (e.path[0] === 'fullName') newErrors.fullName = e.message;
+          if (e.path[0] === 'phone') newErrors.phone = e.message;
+          if (e.path[0] === 'city') newErrors.city = e.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateSignInForm()) return;
 
     setIsSubmitting(true);
     const { error } = await signIn(email, password);
@@ -69,19 +102,36 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateSignUpForm()) return;
 
     setIsSubmitting(true);
-    const { error } = await signUp(email, password);
-    setIsSubmitting(false);
-
+    const { error, data } = await signUp(email, password);
+    
     if (error) {
+      setIsSubmitting(false);
       if (error.message.includes('already registered')) {
         toast.error('This email is already registered. Please sign in instead.');
       } else {
         toast.error(error.message);
       }
+    } else if (data?.user) {
+      // Create profile after successful signup
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          full_name: fullName,
+          phone: phone,
+          city: city,
+        });
+      
+      setIsSubmitting(false);
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+      }
+      toast.success('Account created! You can now sign in.');
     } else {
+      setIsSubmitting(false);
       toast.success('Account created! You can now sign in.');
     }
   };
@@ -186,6 +236,48 @@ const Auth = () => {
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-fullname">Full Name</Label>
+                  <Input
+                    id="signup-fullname"
+                    type="text"
+                    placeholder="Your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-city">City</Label>
+                  <Input
+                    id="signup-city"
+                    type="text"
+                    placeholder="Your city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.city && (
+                    <p className="text-sm text-destructive">{errors.city}</p>
+                  )}
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input

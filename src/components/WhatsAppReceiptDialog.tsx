@@ -24,6 +24,8 @@ interface ReceiptInputData {
   remainingBalance?: number;
   paymentEntries?: PaymentEntry[];
   previousMonthPending?: number;
+  pgLogoUrl?: string;
+  pgName?: string;
 }
 
 interface WhatsAppReceiptDialogProps {
@@ -78,6 +80,8 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         selectedYear,
         paymentEntries: receiptData.paymentEntries,
         previousMonthPending: receiptData.previousMonthPending,
+        pgLogoUrl: receiptData.pgLogoUrl,
+        pgName: receiptData.pgName,
       };
       setTemplateData(data);
     }
