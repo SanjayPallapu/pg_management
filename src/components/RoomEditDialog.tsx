@@ -58,13 +58,10 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
         .eq("id", room.id);
       if (error) throw error;
 
-      // Immediate refetch for faster UX
-      await queryClient.invalidateQueries({
-        queryKey: ["rooms", undefined, currentPG?.id],
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["rooms"],
-      });
+      // Invalidate all room queries to ensure data is refreshed
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      await queryClient.refetchQueries({ queryKey: ["rooms"], type: "active" });
+      
       toast.success(`Room ${room.roomNo} updated`);
       onOpenChange(false);
     } catch (err) {

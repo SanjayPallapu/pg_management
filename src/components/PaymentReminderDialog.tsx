@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { usePG } from '@/contexts/PGContext';
 
 interface ReminderInputData {
   tenantName: string;
@@ -30,6 +31,7 @@ interface PaymentReminderDialogProps {
 }
 
 export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: PaymentReminderDialogProps) => {
+  const { currentPG } = usePG();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -41,7 +43,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
   useEffect(() => {
     if (reminderData && open) {
-      // Use override values if provided (from Previous Overdue sheet), otherwise use context
       const monthToUse = reminderData.overrideMonth ?? selectedMonth;
       const yearToUse = reminderData.overrideYear ?? selectedYear;
       
@@ -62,9 +63,11 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         },
         selectedMonth: monthToUse,
         selectedYear: yearToUse,
+        pgName: currentPG?.name,
+        pgLogoUrl: currentPG?.logoUrl,
       });
     }
-  }, [reminderData, open, selectedMonth, selectedYear]);
+  }, [reminderData, open, selectedMonth, selectedYear, currentPG]);
 
   const generateReminder = useCallback(async () => {
     if (!reminderData || !templateData || !reminderRef.current) {

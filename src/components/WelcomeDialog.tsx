@@ -8,6 +8,7 @@ import { Loader2, PartyPopper, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { WelcomeTemplate, type WelcomeData } from '@/components/WelcomeTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { usePG } from '@/contexts/PGContext';
 
 const FIXED_SECURITY_DEPOSIT = 2000;
 
@@ -28,6 +29,7 @@ interface WelcomeDialogProps {
 }
 
 export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialogProps) => {
+  const { currentPG } = usePG();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -45,7 +47,6 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
     }
   }, [welcomeData, open]);
 
-  // Update template data whenever security deposit toggle changes
   useEffect(() => {
     if (welcomeData && open) {
       const joinDate = new Date(welcomeData.joiningDate);
@@ -68,11 +69,12 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
         },
         selectedMonth,
         selectedYear,
+        pgName: currentPG?.name,
+        pgLogoUrl: currentPG?.logoUrl,
       });
-      // Clear generated image when toggle changes
       setGeneratedImage(null);
     }
-  }, [welcomeData, open, includeSecurityDeposit]);
+  }, [welcomeData, open, includeSecurityDeposit, currentPG]);
 
   const generateWelcome = useCallback(async () => {
     if (!welcomeData || !templateData || !welcomeRef.current) {
