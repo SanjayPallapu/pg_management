@@ -1,13 +1,10 @@
 import { motion } from "framer-motion";
 import { Home, Key, DoorOpen, Users } from "lucide-react";
-import { usePG } from "@/contexts/PGContext";
 
 const SplashScreen = () => {
-  const { currentPG } = usePG();
-  
-  // Use PG logo if available, otherwise use default
-  const logoUrl = currentPG?.logoUrl || "/icon-512.png";
-  const pgName = currentPG?.name || "PG Management";
+  // Use default branding since splash shows before auth/PG context is available
+  const logoUrl = "/icon-512.png";
+  const pgName = "PG Management";
   
   return (
     <motion.div
@@ -114,10 +111,6 @@ const SplashScreen = () => {
               src={logoUrl} 
               alt={pgName}
               className="h-36 w-auto rounded-3xl scale-110 object-contain"
-              style={{
-                // Remove white background for non-default logos
-                mixBlendMode: currentPG?.logoUrl ? 'normal' : 'normal',
-              }}
             />
           </div>
         </motion.div>
