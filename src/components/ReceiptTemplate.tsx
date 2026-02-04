@@ -52,6 +52,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       }}
     >
       {/* Header with PG Logo */}
+      {/* Header with PG Logo */}
       <div
         style={{
           width: "100%",
@@ -60,38 +61,36 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           background: "#ffffff",
         }}
       >
-        <div style={{ textAlign: "center", padding: "15px 0 10px" }}>
-          {pgLogoUrl && (
-            <img
-              src={pgLogoUrl}
-              alt={pgName || "PG Logo"}
-              crossOrigin="anonymous"
-              loading="eager"
-              style={{
-                width: "160px",
-                height: "auto",
-                margin: "0 auto",
-                display: "block",
-                maxHeight: "80px",
-                objectFit: "contain",
-              }}
-            />
-          )}
-        
-          {pgName && (
-            <div
-              style={{
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "#4b5563",
-                marginTop: pgLogoUrl ? "8px" : "0",
-              }}
-            >
-              {pgName}
-            </div>
-          )}
-        </div>
+        {pgLogoUrl && (
+          <img
+            src={pgLogoUrl}
+            alt={pgName || "PG Logo"}
+            crossOrigin="anonymous"
+            loading="eager"
+            style={{
+              width: "160px",
+              height: "auto",
+              margin: "0 auto",
+              display: "block",
+              maxHeight: "80px",
+              objectFit: "contain",
+            }}
+          />
+        )}
 
+        {pgName && (
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "#4b5563",
+              marginTop: pgLogoUrl ? "8px" : "0",
+            }}
+          >
+            {pgName}
+          </div>
+        )}
+      </div>
 
       {/* Payment Successful Badge */}
       <div
