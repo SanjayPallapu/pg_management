@@ -4,11 +4,12 @@ import { useBackGesture } from '@/hooks/useBackGesture';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
+import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageCircle, X, History, Receipt, Bell, ChevronDown } from 'lucide-react';
+import { Phone, MessageCircle, X, History, Receipt, Bell, CreditCard } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -23,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PaymentEntry } from '@/types';
-
 interface PreviousOverdueSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,6 +52,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();
+  const { currentPG } = usePG();
   const isMobile = useIsMobile();
 
   const [selectedTenant, setSelectedTenant] = useState<OverdueTenant | null>(null);
@@ -397,6 +398,9 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     forMonth: `${months[prevMonth - 1]} ${prevYear}`,
                     paymentEntries: tenant.paymentEntries,
                     previousMonthPending: prevPending?.remaining || undefined,
+                    // Add PG branding for previous month data
+                    pgName: currentPG?.name,
+                    pgLogoUrl: currentPG?.logoUrl,
                   });
                   setReceiptDialogOpen(true);
                 };
@@ -415,6 +419,9 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     // Pass the previous month context for billing range calculation
                     overrideMonth: prevMonth,
                     overrideYear: prevYear,
+                    // Add PG branding
+                    pgName: currentPG?.name,
+                    pgLogoUrl: currentPG?.logoUrl,
                   });
                   setReminderDialogOpen(true);
                 };
@@ -431,27 +438,27 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                           <>
                             <a 
                               href={`tel:${tenant.phone}`}
-                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
                             >
                               <Phone className="h-4 w-4" />
                             </a>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                                <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10">
                                   <MessageCircle className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="bg-popover">
+                                <DropdownMenuItem onClick={handleOpenReminder}>
+                                  <Bell className="h-4 w-4 mr-2" />
+                                  Payment Reminder
+                                </DropdownMenuItem>
                                 {hasPaymentEntries && (
                                   <DropdownMenuItem onClick={handleOpenReceipt}>
                                     <Receipt className="h-4 w-4 mr-2" />
                                     Generate Receipt
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem onClick={handleOpenReminder}>
-                                  <Bell className="h-4 w-4 mr-2" />
-                                  Payment Reminder
-                                </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                   <a
                                     href={`https://wa.me/91${tenant.phone}`}
@@ -470,17 +477,27 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                       <span className="font-bold text-lg text-advance-not-paid">₹{tenant.remaining.toLocaleString()}</span>
                     </div>
                     <div className="text-sm text-muted-foreground mb-2">Room {tenant.roomNo}</div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
+                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3">
+                      <div>Rent: <span className="text-foreground font-medium">₹{tenant.monthlyRent.toLocaleString()}</span></div>
+                      <div>Paid: <span className="text-paid font-medium">₹{tenant.amountPaid.toLocaleString()}</span></div>
+                      <div>Balance: <span className="text-advance-not-paid font-medium">₹{tenant.remaining.toLocaleString()}</span></div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        tenant.status === 'Pending' 
+                          ? 'bg-advance-not-paid/20 text-advance-not-paid' 
+                          : 'bg-partial/20 text-partial'
+                      }`}>
+                        {tenant.status}
                       </span>
                       <Button 
                         size="sm" 
-                        variant="secondary"
                         onClick={() => handleMarkPaidClick(tenant)}
                         disabled={upsertPayment.isPending}
+                        className="gap-1"
                       >
-                        Mark Paid
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Pay Now
                       </Button>
                     </div>
                     {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
@@ -519,7 +536,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                               {hasPhone && (
                                 <a 
                                   href={`tel:${tenant.phone}`}
-                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 >
                                   <Phone className="h-4 w-4" />
                                 </a>
@@ -539,17 +556,23 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                               Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
                             </div>
                           )}
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
-                              Joined: {format(new Date(tenant.startDate), 'dd MMM yyyy')}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              tenant.status === 'Pending' 
+                                ? 'bg-destructive/20 text-destructive' 
+                                : 'bg-partial/20 text-partial'
+                            }`}>
+                              {tenant.status}
                             </span>
                             <Button 
                               size="sm" 
                               variant="destructive"
                               onClick={() => handleMarkPaidClick(tenant)}
                               disabled={upsertPayment.isPending}
+                              className="gap-1"
                             >
-                              Mark Paid
+                              <CreditCard className="h-3.5 w-3.5" />
+                              Pay Now
                             </Button>
                           </div>
                           {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (

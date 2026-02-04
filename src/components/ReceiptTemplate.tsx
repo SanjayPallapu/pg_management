@@ -39,7 +39,8 @@ const formatCurrency = (amount: number): string => {
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(({ data }, ref) => {
   const isFullPayment = data.payment.type === "FULL";
   const pgName = data.pgName || "PG Management";
-  const pgLogoUrl = data.pgLogoUrl;
+  // Use the same fallback as PaymentReminderTemplate for consistency
+  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
   return (
     <div
@@ -51,12 +52,12 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         overflow: "hidden",
       }}
     >
-      {/* Header with PG Logo */}
+      {/* Header with PG Logo - matching PaymentReminderTemplate layout */}
       <div
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "15px 0 10px",
+          padding: "20px 0 15px",
           background: "#ffffff",
         }}
       >
