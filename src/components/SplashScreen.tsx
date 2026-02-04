@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import appLogo from "@/assets/hostel-logo-transparent.png";
+import appLogo from "@/assets/icon-512.png";
 
 interface SplashScreenProps {
   pgLogoUrl?: string;
