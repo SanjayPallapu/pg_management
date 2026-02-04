@@ -111,14 +111,36 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
     }
   }, [location.state, allTenants, navigate, location.pathname]);
 
-  // Listen for custom event from MonthlyRentSheet
+  // Listen for custom event from RoomCard/MonthlyRentSheet
   useEffect(() => {
-    const handleOpenSecurityDeposit = (event: CustomEvent<{ tenantId: string }>) => {
+    const handleOpenSecurityDeposit = (event: CustomEvent<{ 
+      tenantId: string;
+      tenantName?: string;
+      tenantPhone?: string;
+      roomNo?: string;
+      roomCapacity?: number;
+    }>) => {
       const tenant = allTenants.find(t => t.id === event.detail.tenantId);
       if (tenant) {
         setSheetOpen(true);
         setTimeout(() => {
           setDepositDialog(tenant);
+        }, 100);
+      } else if (event.detail.tenantName && event.detail.roomNo) {
+        // Create temporary tenant object from event data
+        const tempTenant: TenantWithRoom = {
+          id: event.detail.tenantId,
+          name: event.detail.tenantName,
+          phone: event.detail.tenantPhone || '',
+          roomNo: event.detail.roomNo,
+          roomCapacity: event.detail.roomCapacity,
+          startDate: '',
+          monthlyRent: 0,
+          paymentStatus: 'Pending',
+        };
+        setSheetOpen(true);
+        setTimeout(() => {
+          setDepositDialog(tempTenant);
         }, 100);
       }
     };

@@ -775,8 +775,17 @@ export const MonthlyRentSheet = ({
                             {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                               <DropdownMenuItem 
                                 onClick={() => {
-                                  // Scroll to security deposit card - we'll use a custom event
-                                  window.dispatchEvent(new CustomEvent('openSecurityDeposit', { detail: { tenantId: tenant.id } }));
+                                  const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+                                  // Dispatch custom event to open security deposit dialog directly
+                                  window.dispatchEvent(new CustomEvent('openSecurityDeposit', { 
+                                    detail: { 
+                                      tenantId: tenant.id,
+                                      tenantName: tenant.name,
+                                      tenantPhone: tenant.phone,
+                                      roomNo: tenant.roomNo,
+                                      roomCapacity: room?.capacity
+                                    } 
+                                  }));
                                 }} 
                                 className="gap-2"
                               >

@@ -4,10 +4,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, X, ChevronDown, ChevronRight, User, Phone, MessageCircle } from 'lucide-react';
+import { History, X, ChevronDown, ChevronRight, User, Phone, MessageCircle, Receipt, Bell, CreditCard } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { usePG } from '@/contexts/PGContext';
 import { useRooms } from '@/hooks/useRooms';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -16,6 +18,10 @@ import { PaymentEntry } from '@/types';
 import { format } from 'date-fns';
 import { UpiLogo } from '@/components/icons/UpiLogo';
 import { CashLogo } from '@/components/icons/CashLogo';
+import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
+import { PaymentReminderDialog } from './PaymentReminderDialog';
+import { OverduePaymentDialog } from './OverduePaymentDialog';
+import { toast } from '@/hooks/use-toast';
 
 interface StillPendingTenant {
   id: string;
@@ -28,16 +34,27 @@ interface StillPendingTenant {
   status: 'Pending' | 'Partial';
   hasLeft: boolean;
   endDate?: string;
+  startDate: string;
+  paymentEntries: PaymentEntry[];
 }
 
 export const PreviousMonthOverdueCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { payments } = useTenantPayments();
+  const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();
+  const { currentPG } = usePG();
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
+  
+  // Dialog states for still pending sheet
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [selectedPendingTenant, setSelectedPendingTenant] = useState<StillPendingTenant | null>(null);
+  const [receiptData, setReceiptData] = useState<any>(null);
+  const [reminderData, setReminderData] = useState<any>(null);
 
   useBackGesture(sheetOpen, () => setSheetOpen(false));
   useBackGesture(pendingSheetOpen, () => setPendingSheetOpen(false));
@@ -106,6 +123,8 @@ export const PreviousMonthOverdueCard = () => {
           status: 'Pending',
           hasLeft,
           endDate: tenant.endDate,
+          startDate: tenant.startDate,
+          paymentEntries: [],
         });
       } else if (payment.paymentStatus === 'Partial') {
         const remaining = tenant.monthlyRent - (payment.amountPaid || 0);
@@ -121,6 +140,8 @@ export const PreviousMonthOverdueCard = () => {
           status: 'Partial',
           hasLeft,
           endDate: tenant.endDate,
+          startDate: tenant.startDate,
+          paymentEntries: (payment.paymentEntries || []) as PaymentEntry[],
         });
       }
 
@@ -183,6 +204,109 @@ export const PreviousMonthOverdueCard = () => {
       }
       return newSet;
     });
+  };
+  
+  // Handler for payment confirmation
+  const handleConfirmPayment = (data: {
+    tenantId: string;
+    amount: number;
+    date: string;
+    mode: 'upi' | 'cash';
+    month: number;
+    year: number;
+    monthlyRent: number;
+    existingPaid: number;
+    discount?: number;
+    notes?: string;
+  }) => {
+    const discount = data.discount || 0;
+    const effectiveMonthlyRent = data.monthlyRent - discount;
+    const totalPaid = data.existingPaid + data.amount;
+    const isFullPayment = totalPaid >= effectiveMonthlyRent;
+
+    // Get existing payment entries
+    const existingPayment = payments.find(p => 
+      p.tenantId === data.tenantId && p.month === data.month && p.year === data.year
+    );
+    const existingEntries = (existingPayment?.paymentEntries || []) as PaymentEntry[];
+    const existingNotes = existingPayment?.notes || '';
+
+    const newEntry: PaymentEntry = {
+      amount: data.amount,
+      date: data.date,
+      type: isFullPayment ? 'full' : 'partial',
+      mode: data.mode
+    };
+
+    // Combine notes
+    let notes = existingNotes;
+    if (data.notes) {
+      notes = existingNotes ? `${existingNotes} | ${data.notes}` : data.notes;
+    }
+
+    upsertPayment.mutate({
+      tenantId: data.tenantId,
+      month: data.month,
+      year: data.year,
+      paymentStatus: isFullPayment ? 'Paid' : 'Partial',
+      paymentDate: data.date,
+      amount: data.monthlyRent,
+      amountPaid: isFullPayment ? effectiveMonthlyRent : totalPaid,
+      paymentEntries: [...existingEntries, newEntry],
+      notes: notes || undefined,
+    });
+
+    toast({
+      title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',
+      description: `₹${data.amount.toLocaleString()} paid via ${data.mode.toUpperCase()} for ${months[data.month - 1]} ${data.year}${discount > 0 ? ` (Discount: ₹${discount})` : ''}`
+    });
+  };
+  
+  const handleOpenPaymentDialog = (tenant: StillPendingTenant) => {
+    setSelectedPendingTenant(tenant);
+    setPaymentDialogOpen(true);
+  };
+  
+  const handleOpenReminder = (tenant: StillPendingTenant) => {
+    setReminderData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      joiningDate: tenant.startDate,
+      forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: '', // Not needed for reminder
+      amount: tenant.monthlyRent,
+      amountPaid: tenant.amountPaid > 0 ? tenant.amountPaid : undefined,
+      balance: tenant.remaining,
+      overrideMonth: prevMonth,
+      overrideYear: prevYear,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+    setReminderDialogOpen(true);
+  };
+  
+  const handleOpenReceipt = (tenant: StillPendingTenant) => {
+    if (tenant.paymentEntries.length === 0) return;
+    const lastEntry = tenant.paymentEntries[tenant.paymentEntries.length - 1];
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: lastEntry?.mode || 'cash',
+      paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+      joiningDate: tenant.startDate,
+      forMonth: `${months[prevMonth - 1]} ${prevYear}`,
+      roomNo: tenant.roomNo,
+      sharingType: '',
+      amount: tenant.monthlyRent,
+      amountPaid: tenant.amountPaid,
+      isFullPayment: false,
+      remainingBalance: tenant.remaining,
+      paymentEntries: tenant.paymentEntries,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+    setReceiptDialogOpen(true);
   };
 
   if (totalCollected === 0 && totalOverdue === 0) {
@@ -421,6 +545,7 @@ export const PreviousMonthOverdueCard = () => {
 
               {stillPendingTenants.map(tenant => {
                 const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
+                const hasPaymentEntries = tenant.paymentEntries.length > 0;
                 
                 return (
                   <div 
@@ -444,14 +569,35 @@ export const PreviousMonthOverdueCard = () => {
                             >
                               <Phone className="h-4 w-4" />
                             </a>
-                            <a 
-                              href={`https://wa.me/91${tenant.phone.replace(/\D/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </a>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                                  <MessageCircle className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-popover">
+                                <DropdownMenuItem onClick={() => handleOpenReminder(tenant)}>
+                                  <Bell className="h-4 w-4 mr-2" />
+                                  Payment Reminder
+                                </DropdownMenuItem>
+                                {hasPaymentEntries && (
+                                  <DropdownMenuItem onClick={() => handleOpenReceipt(tenant)}>
+                                    <Receipt className="h-4 w-4 mr-2" />
+                                    Generate Receipt
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem asChild>
+                                  <a
+                                    href={`https://wa.me/91${tenant.phone.replace(/\D/g, '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    Chat with Tenant
+                                  </a>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </>
                         )}
                       </div>
@@ -459,14 +605,14 @@ export const PreviousMonthOverdueCard = () => {
                     
                     <div className="text-xs text-muted-foreground mb-2">Room {tenant.roomNo}</div>
                     
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="grid grid-cols-3 gap-2 text-xs mb-3">
                       <div>
                         <span className="text-muted-foreground">Rent:</span>
                         <div className="font-medium">₹{tenant.monthlyRent.toLocaleString()}</div>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Paid:</span>
-                        <div className="font-medium">₹{tenant.amountPaid.toLocaleString()}</div>
+                        <div className="font-medium text-paid">₹{tenant.amountPaid.toLocaleString()}</div>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Balance:</span>
@@ -474,11 +620,33 @@ export const PreviousMonthOverdueCard = () => {
                       </div>
                     </div>
                     
-                    <Badge 
-                      className={`mt-2 ${tenant.status === 'Partial' ? 'bg-partial text-partial-foreground' : 'bg-pending text-pending-foreground'}`}
-                    >
-                      {tenant.status}
-                    </Badge>
+                    <div className="flex items-center justify-between">
+                      <Badge 
+                        className={tenant.status === 'Partial' ? 'bg-partial text-partial-foreground' : 'bg-pending text-pending-foreground'}
+                      >
+                        {tenant.status}
+                      </Badge>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleOpenPaymentDialog(tenant)}
+                        disabled={upsertPayment.isPending}
+                        className="gap-1"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Pay Now
+                      </Button>
+                    </div>
+                    
+                    {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
+                      <div className="text-xs mt-2 text-paid">
+                        Paid: {tenant.paymentEntries.map((entry, idx) => (
+                          <span key={idx}>
+                            {idx > 0 && ' + '}
+                            {format(new Date(entry.date), 'dd MMM')} (₹{entry.amount.toLocaleString()})
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -492,6 +660,41 @@ export const PreviousMonthOverdueCard = () => {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+      
+      {/* Payment Dialog for pending tenants */}
+      <OverduePaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        tenant={selectedPendingTenant ? {
+          id: selectedPendingTenant.id,
+          name: selectedPendingTenant.name,
+          roomNo: selectedPendingTenant.roomNo,
+          monthlyRent: selectedPendingTenant.monthlyRent,
+          remaining: selectedPendingTenant.remaining,
+          amountPaid: selectedPendingTenant.amountPaid,
+          startDate: selectedPendingTenant.startDate,
+          endDate: selectedPendingTenant.endDate,
+          paymentEntries: selectedPendingTenant.paymentEntries,
+        } : null}
+        month={prevMonth}
+        year={prevYear}
+        onConfirmPayment={handleConfirmPayment}
+      />
+      
+      {/* Receipt Dialog */}
+      <WhatsAppReceiptDialog
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        receiptData={receiptData}
+        onWhatsappSent={() => {}}
+      />
+      
+      {/* Payment Reminder Dialog */}
+      <PaymentReminderDialog
+        open={reminderDialogOpen}
+        onOpenChange={setReminderDialogOpen}
+        reminderData={reminderData}
+      />
     </>
   );
 };

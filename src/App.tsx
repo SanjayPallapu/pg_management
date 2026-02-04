@@ -14,7 +14,7 @@ import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
-import { PGProvider } from "@/contexts/PGContext";
+import { PGProvider, usePG } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
@@ -39,6 +39,62 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const queryClient = new QueryClient();
 
+// Component to provide PG context for splash screen
+const SplashWithPGContext = ({ onComplete }: { onComplete: () => void }) => {
+  const { currentPG, isLoading } = usePG();
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      sessionStorage.setItem("hasSeenSplash", "true");
+      onComplete();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+  
+  // While loading PG context, show default logo
+  // Once loaded, show PG-specific logo if available
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+  
+  return <SplashScreen pgLogoUrl={currentPG?.logoUrl} pgName={currentPG?.name} />;
+};
+
+// Simple default splash for unauthenticated users
+const DefaultSplash = ({ onComplete }: { onComplete: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      sessionStorage.setItem("hasSeenSplash", "true");
+      onComplete();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+  
+  return <SplashScreen />;
+};
+
+// Wrapper to determine if we should show PG-branded splash (authenticated) or default splash
+const AuthAwareSplash = ({ onComplete }: { onComplete: () => void }) => {
+  const { isAuthenticated, hasRole, isLoading } = useAuth();
+  
+  // If still checking auth, show default splash
+  if (isLoading) {
+    return <DefaultSplash onComplete={onComplete} />;
+  }
+  
+  // If authenticated with role, wrap in PGProvider to get PG branding
+  if (isAuthenticated && hasRole) {
+    return (
+      <PGProvider>
+        <SplashWithPGContext onComplete={onComplete} />
+      </PGProvider>
+    );
+  }
+  
+  // Not authenticated - show default app splash
+  return <DefaultSplash onComplete={onComplete} />;
+};
+
 // Inner app component that handles splash screen logic
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -50,20 +106,13 @@ const AppContent = () => {
     
     if (hasSeen && !forceSplash) {
       setShowSplash(false);
-    } else {
-      const timer = setTimeout(() => {
-        sessionStorage.setItem("hasSeenSplash", "true");
-        setShowSplash(false);
-      }, 4000);
-
-      return () => clearTimeout(timer);
     }
   }, []);
 
   if (showSplash) {
     return (
       <AnimatePresence mode="wait">
-        <SplashScreen key="splash" />
+        <AuthAwareSplash key="splash" onComplete={() => setShowSplash(false)} />
       </AnimatePresence>
     );
   }
