@@ -46,6 +46,10 @@ interface PaymentRequest {
   notes: string | null;
   created_at: string;
   user_email?: string;
+  // Profile info
+  full_name?: string;
+  phone?: string;
+  city?: string;
 }
 
 export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprovalProps) => {
@@ -58,7 +62,7 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
-  // Fetch all pending payment requests
+  // Fetch all pending payment requests with profile info
   const { data: paymentRequests, isLoading, refetch } = useQuery({
     queryKey: ['admin-payment-requests', page],
     queryFn: async () => {
@@ -70,7 +74,22 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
         .range(0, end);
 
       if (error) throw error;
-      return data as PaymentRequest[];
+      
+      // Fetch profile info for each user
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, phone, city')
+        .in('user_id', userIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      return data.map(request => ({
+        ...request,
+        full_name: profileMap.get(request.user_id)?.full_name || null,
+        phone: profileMap.get(request.user_id)?.phone || null,
+        city: profileMap.get(request.user_id)?.city || null,
+      })) as PaymentRequest[];
     },
     enabled: open && isAdmin,
   });
@@ -149,10 +168,16 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
                                   <User className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm font-mono text-muted-foreground">
-                                    {request.user_id.slice(0, 8)}...
+                                  <span className="text-sm font-medium">
+                                    {request.full_name || 'Unknown User'}
                                   </span>
                                 </div>
+                                {request.phone && (
+                                  <p className="text-xs text-muted-foreground mb-1">📱 {request.phone}</p>
+                                )}
+                                {request.city && (
+                                  <p className="text-xs text-muted-foreground mb-1">📍 {request.city}</p>
+                                )}
                                 <p className="font-semibold text-lg">₹{request.amount}</p>
                                 <p className="text-sm text-muted-foreground capitalize">
                                   via {request.payment_method}
