@@ -74,6 +74,14 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
             objectFit: "contain",
           }}
         />
+        <div style={{ 
+          fontSize: "14px", 
+          fontWeight: 600, 
+          color: "#4b5563", 
+          marginTop: "8px" 
+        }}>
+          {pgName}
+        </div>
       </div>
 
       {/* Payment Successful Badge */}

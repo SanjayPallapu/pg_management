@@ -13,7 +13,7 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
 
-  const { data: dayGuestStats } = useQuery({
+  const { data: dayGuestStats, isLoading } = useQuery({
     queryKey: ['day-guest-revenue', selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
@@ -53,6 +53,8 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
       return { collected, pending, count: data.length, upi, cash };
     },
     enabled: !!currentPG?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 2 * 60 * 1000, // 2 minutes
   });
 
   return (

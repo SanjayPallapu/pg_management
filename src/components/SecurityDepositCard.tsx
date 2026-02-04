@@ -68,17 +68,44 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
 
   // Handle navigation state for opening security deposit
   useEffect(() => {
-    const state = location.state as { openSecurityDeposit?: boolean; tenantId?: string } | null;
+    const state = location.state as { 
+      openSecurityDeposit?: boolean; 
+      tenantId?: string;
+      tenantName?: string;
+      tenantPhone?: string;
+      roomNo?: string;
+      roomCapacity?: number;
+    } | null;
+    
     if (state?.openSecurityDeposit && state?.tenantId) {
-      // Find the tenant
+      // First open the sheet
+      setSheetOpen(true);
+      
+      // Try to find the tenant
       const tenant = allTenants.find(t => t.id === state.tenantId);
+      
       if (tenant) {
-        setSheetOpen(true);
         // Small delay to ensure sheet is open before opening dialog
         setTimeout(() => {
           setDepositDialog(tenant);
-        }, 100);
+        }, 150);
+      } else if (state.tenantName && state.roomNo) {
+        // If tenant not found in current data, create a temporary tenant object from state
+        const tempTenant: TenantWithRoom = {
+          id: state.tenantId,
+          name: state.tenantName,
+          phone: state.tenantPhone || '',
+          roomNo: state.roomNo,
+          roomCapacity: state.roomCapacity,
+          startDate: '',
+          monthlyRent: 0,
+          paymentStatus: 'Pending',
+        };
+        setTimeout(() => {
+          setDepositDialog(tempTenant);
+        }, 150);
       }
+      
       // Clear the state to prevent re-triggering
       navigate(location.pathname, { replace: true, state: {} });
     }
