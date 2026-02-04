@@ -38,8 +38,9 @@ const formatCurrency = (amount: number): string => {
 
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(({ data }, ref) => {
   const isFullPayment = data.payment.type === "FULL";
-  const pgName = data.pgName;
-  const pgLogoUrl = data.pgLogoUrl;
+  // Keep defaults consistent with PaymentReminderTemplate, but callers should pass current PG branding.
+  const pgName = data.pgName || "PG Management";
+  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
   return (
     <div
