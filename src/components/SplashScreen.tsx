@@ -1,7 +1,16 @@
 import { motion } from "framer-motion";
 import appLogo from "@/assets/hostel-logo-transparent.png";
 
-const SplashScreen = () => {
+interface SplashScreenProps {
+  pgLogoUrl?: string;
+  pgName?: string;
+}
+
+const SplashScreen = ({ pgLogoUrl, pgName }: SplashScreenProps) => {
+  // Use PG logo if available, otherwise fall back to app logo
+  const logoToShow = pgLogoUrl || appLogo;
+  const titleToShow = pgName || "PG Management";
+
   return (
     <motion.div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-background"
@@ -11,7 +20,7 @@ const SplashScreen = () => {
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
       {/* Main Center Content */}
-      <div className="relative z-10 flex flex-col items-center">
+      <div className="relative z-10 flex flex-col items-center px-4">
         <motion.div
           className="relative mb-8"
           initial={{ scale: 0, rotate: -180 }}
@@ -20,9 +29,10 @@ const SplashScreen = () => {
         >
           {/* Logo without any background or border */}
           <img 
-            src={appLogo} 
-            alt="PG Management"
+            src={logoToShow} 
+            alt={titleToShow}
             className="h-40 w-40 object-contain"
+            crossOrigin="anonymous"
           />
         </motion.div>
 
@@ -32,7 +42,7 @@ const SplashScreen = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          PG Management
+          {titleToShow}
         </motion.h1>
 
         <motion.p

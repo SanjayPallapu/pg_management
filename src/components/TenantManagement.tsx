@@ -960,9 +960,17 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                       {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                                         <DropdownMenuItem
                                           onClick={() => {
-                                            navigate("/", {
-                                              state: { openSecurityDeposit: true, tenantId: tenant.id },
+                                            // Dispatch custom event to open security deposit dialog directly
+                                            const event = new CustomEvent('openSecurityDeposit', { 
+                                              detail: { 
+                                                tenantId: tenant.id,
+                                                tenantName: tenant.name,
+                                                tenantPhone: tenant.phone,
+                                                roomNo: room.roomNo,
+                                                roomCapacity: room.capacity
+                                              } 
                                             });
+                                            window.dispatchEvent(event);
                                           }}
                                           className="gap-2"
                                         >

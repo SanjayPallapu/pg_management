@@ -396,10 +396,9 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                         {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                           <DropdownMenuItem
                             onClick={() => {
-                              // Navigate to index with state to open security deposit dialog
-                              navigate("/", { 
-                                state: { 
-                                  openSecurityDeposit: true, 
+                              // Dispatch custom event to open security deposit dialog directly
+                              const event = new CustomEvent('openSecurityDeposit', { 
+                                detail: { 
                                   tenantId: tenant.id,
                                   tenantName: tenant.name,
                                   tenantPhone: tenant.phone,
@@ -407,6 +406,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                                   roomCapacity: room.capacity
                                 } 
                               });
+                              window.dispatchEvent(event);
                             }}
                             className="gap-2"
                           >
