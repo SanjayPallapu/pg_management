@@ -8,6 +8,7 @@ import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate'
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentEntry } from '@/types';
+import { usePG } from '@/contexts/PGContext';
 
 interface ReceiptInputData {
   tenantName: string;
@@ -36,6 +37,7 @@ interface WhatsAppReceiptDialogProps {
 }
 
 export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhatsappSent }: WhatsAppReceiptDialogProps) => {
+  const { currentPG } = usePG();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -48,6 +50,9 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
 
   useEffect(() => {
     if (receiptData && open) {
+      const effectivePgName = receiptData.pgName ?? currentPG?.name;
+      const effectivePgLogoUrl = receiptData.pgLogoUrl ?? currentPG?.logoUrl;
+
       // Parse forMonth to get selectedMonth and selectedYear
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       const parts = receiptData.forMonth?.trim().split(' ') || [];
@@ -80,12 +85,12 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         selectedYear,
         paymentEntries: receiptData.paymentEntries,
         previousMonthPending: receiptData.previousMonthPending,
-        pgLogoUrl: receiptData.pgLogoUrl,
-        pgName: receiptData.pgName,
+        pgLogoUrl: effectivePgLogoUrl,
+        pgName: effectivePgName,
       };
       setTemplateData(data);
     }
-  }, [receiptData, open]);
+  }, [receiptData, open, currentPG?.logoUrl, currentPG?.name]);
 
   const generateReceipt = useCallback(async () => {
     if (!receiptData || !templateData || !receiptRef.current) {
