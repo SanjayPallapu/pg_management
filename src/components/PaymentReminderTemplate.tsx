@@ -136,7 +136,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "20px 0 15px",
+          padding: "20px 0 4px",
           background: "#ffffff",
         }}
       >
