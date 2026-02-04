@@ -57,7 +57,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "15px 0 10px",
+          padding: "13px 0 2px",
           background: "#ffffff",
         }}
       >
@@ -67,11 +67,11 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "160px",
+            width: "220px",
             height: "auto",
             margin: "0 auto",
             display: "block",
-            maxHeight: "80px",
+            maxHeight: "120px",
             objectFit: "contain",
           }}
         />
