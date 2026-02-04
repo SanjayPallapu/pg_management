@@ -136,7 +136,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "10px 0 4px",
+          padding: "20px 0 15px",
           background: "#ffffff",
         }}
       >
@@ -146,11 +146,11 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "160px",
+            width: "260px",
             height: "auto",
             margin: "0 auto",
             display: "block",
-            maxHeight: "80px",
+            maxHeight: "140px",
             objectFit: "contain",
           }}
         />
@@ -167,7 +167,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
       </div>
 
       {/* Title */}
-      <div style={{ textAlign: "center", padding: "5px 0" }}>
+      <div style={{ textAlign: "center", padding: "10px 0" }}>
         <div
           style={{
             display: "inline-flex",
