@@ -39,8 +39,7 @@ const formatCurrency = (amount: number): string => {
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(({ data }, ref) => {
   const isFullPayment = data.payment.type === "FULL";
   const pgName = data.pgName || "PG Management";
-  // Use the same fallback as PaymentReminderTemplate for consistency
-  const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
+  const pgLogoUrl = data.pgLogoUrl;
 
   return (
     <div
@@ -52,38 +51,47 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         overflow: "hidden",
       }}
     >
-      {/* Header with PG Logo - matching PaymentReminderTemplate layout */}
+      {/* Header with PG Logo */}
       <div
         style={{
           width: "100%",
           textAlign: "center",
-          padding: "20px 0 15px",
+          padding: "15px 0 10px",
           background: "#ffffff",
         }}
       >
-        <img
-          src={pgLogoUrl}
-          alt={pgName}
-          crossOrigin="anonymous"
-          loading="eager"
-          style={{
-            width: "160px",
-            height: "auto",
-            margin: "0 auto",
-            display: "block",
-            maxHeight: "80px",
-            objectFit: "contain",
-          }}
-        />
-        <div style={{ 
-          fontSize: "14px", 
-          fontWeight: 600, 
-          color: "#4b5563", 
-          marginTop: "8px" 
-        }}>
-          {pgName}
+        <div style={{ textAlign: "center", padding: "15px 0 10px" }}>
+          {pgLogoUrl && (
+            <img
+              src={pgLogoUrl}
+              alt={pgName || "PG Logo"}
+              crossOrigin="anonymous"
+              loading="eager"
+              style={{
+                width: "160px",
+                height: "auto",
+                margin: "0 auto",
+                display: "block",
+                maxHeight: "80px",
+                objectFit: "contain",
+              }}
+            />
+          )}
+        
+          {pgName && (
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#4b5563",
+                marginTop: pgLogoUrl ? "8px" : "0",
+              }}
+            >
+              {pgName}
+            </div>
+          )}
         </div>
-      </div>
+
 
       {/* Payment Successful Badge */}
       <div
