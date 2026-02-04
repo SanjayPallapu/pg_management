@@ -146,20 +146,22 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
           crossOrigin="anonymous"
           loading="eager"
           style={{
-            width: "160px",
+            width: "220px",
             height: "auto",
             margin: "0 auto",
             display: "block",
-            maxHeight: "80px",
+            maxHeight: "120px",
             objectFit: "contain",
           }}
         />
-        <div style={{ 
-          fontSize: "14px", 
-          fontWeight: 600, 
-          color: "#4b5563", 
-          marginTop: "8px" 
-        }}>
+        <div
+          style={{
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "#4b5563",
+            marginTop: "8px",
+          }}
+        >
           {pgName}
         </div>
       </div>
