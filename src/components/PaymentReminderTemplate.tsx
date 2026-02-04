@@ -167,7 +167,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
       </div>
 
       {/* Title */}
-      <div style={{ textAlign: "center", padding: "10px 0" }}>
+      <div style={{ textAlign: "center", padding: "0px 0" }}>
         <div
           style={{
             display: "inline-flex",
