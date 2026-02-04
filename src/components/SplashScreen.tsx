@@ -28,10 +28,10 @@ const SplashScreen = ({ pgLogoUrl, pgName }: SplashScreenProps) => {
           transition={{ type: "spring", stiffness: 120, damping: 15 }}
         >
           {/* Logo without any background or border */}
-          <img 
-            src={logoToShow} 
+          <img
+            src={logoToShow}
             alt={titleToShow}
-            className="h-40 w-40 object-contain"
+            className="h-40 w-40 object-contain rounded-2xl shadow-lg"
             crossOrigin="anonymous"
           />
         </motion.div>
