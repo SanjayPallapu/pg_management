@@ -1,44 +1,50 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { z } from 'zod';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import appLogo from '@/assets/pg-logo.png';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import appLogo from "@/assets/splash-uploaded-logo.png";
 
 const authSchema = z.object({
-  email: z.string().trim().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const signupSchema = z.object({
-  email: z.string().trim().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  fullName: z.string().min(2, 'Please enter your name'),
-  phone: z.string().min(10, 'Please enter a valid phone number'),
-  city: z.string().min(2, 'Please enter your city'),
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  fullName: z.string().min(2, "Please enter your name"),
+  phone: z.string().min(10, "Please enter a valid phone number"),
+  city: z.string().min(2, "Please enter your city"),
 });
 
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signOut } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string; phone?: string; city?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    fullName?: string;
+    phone?: string;
+    city?: string;
+  }>({});
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && hasRole) {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
   }, [isAuthenticated, hasRole, isLoading, navigate]);
 
@@ -51,8 +57,8 @@ const Auth = () => {
       if (err instanceof z.ZodError) {
         const newErrors: { email?: string; password?: string } = {};
         err.errors.forEach((e) => {
-          if (e.path[0] === 'email') newErrors.email = e.message;
-          if (e.path[0] === 'password') newErrors.password = e.message;
+          if (e.path[0] === "email") newErrors.email = e.message;
+          if (e.path[0] === "password") newErrors.password = e.message;
         });
         setErrors(newErrors);
       }
@@ -69,11 +75,11 @@ const Auth = () => {
       if (err instanceof z.ZodError) {
         const newErrors: { email?: string; password?: string; fullName?: string; phone?: string; city?: string } = {};
         err.errors.forEach((e) => {
-          if (e.path[0] === 'email') newErrors.email = e.message;
-          if (e.path[0] === 'password') newErrors.password = e.message;
-          if (e.path[0] === 'fullName') newErrors.fullName = e.message;
-          if (e.path[0] === 'phone') newErrors.phone = e.message;
-          if (e.path[0] === 'city') newErrors.city = e.message;
+          if (e.path[0] === "email") newErrors.email = e.message;
+          if (e.path[0] === "password") newErrors.password = e.message;
+          if (e.path[0] === "fullName") newErrors.fullName = e.message;
+          if (e.path[0] === "phone") newErrors.phone = e.message;
+          if (e.path[0] === "city") newErrors.city = e.message;
         });
         setErrors(newErrors);
       }
@@ -90,13 +96,13 @@ const Auth = () => {
     setIsSubmitting(false);
 
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password');
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password");
       } else {
         toast.error(error.message);
       }
     } else {
-      toast.success('Signed in successfully');
+      toast.success("Signed in successfully");
     }
   };
 
@@ -106,33 +112,31 @@ const Auth = () => {
 
     setIsSubmitting(true);
     const { error, data } = await signUp(email, password);
-    
+
     if (error) {
       setIsSubmitting(false);
-      if (error.message.includes('already registered')) {
-        toast.error('This email is already registered. Please sign in instead.');
+      if (error.message.includes("already registered")) {
+        toast.error("This email is already registered. Please sign in instead.");
       } else {
         toast.error(error.message);
       }
     } else if (data?.user) {
       // Create profile after successful signup
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: data.user.id,
-          full_name: fullName,
-          phone: phone,
-          city: city,
-        });
-      
+      const { error: profileError } = await supabase.from("profiles").insert({
+        user_id: data.user.id,
+        full_name: fullName,
+        phone: phone,
+        city: city,
+      });
+
       setIsSubmitting(false);
       if (profileError) {
-        console.error('Error creating profile:', profileError);
+        console.error("Error creating profile:", profileError);
       }
-      toast.success('Account created! You can now sign in.');
+      toast.success("Account created! You can now sign in.");
     } else {
       setIsSubmitting(false);
-      toast.success('Account created! You can now sign in.');
+      toast.success("Account created! You can now sign in.");
     }
   };
 
@@ -163,11 +167,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handlePendingSignOut}
-            >
+            <Button variant="outline" className="w-full" onClick={handlePendingSignOut}>
               Sign Out
             </Button>
           </CardContent>
@@ -204,9 +204,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
@@ -218,9 +216,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password}</p>
-                  )}
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
@@ -229,7 +225,7 @@ const Auth = () => {
                       Signing in...
                     </>
                   ) : (
-                    'Sign In'
+                    "Sign In"
                   )}
                 </Button>
               </form>
@@ -246,9 +242,7 @@ const Auth = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.fullName && (
-                    <p className="text-sm text-destructive">{errors.fullName}</p>
-                  )}
+                  {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-phone">Phone Number</Label>
@@ -260,9 +254,7 @@ const Auth = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone}</p>
-                  )}
+                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-city">City</Label>
@@ -274,9 +266,7 @@ const Auth = () => {
                     onChange={(e) => setCity(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.city && (
-                    <p className="text-sm text-destructive">{errors.city}</p>
-                  )}
+                  {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
@@ -288,9 +278,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
@@ -302,9 +290,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isSubmitting}
                   />
-                  {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password}</p>
-                  )}
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
@@ -313,7 +299,7 @@ const Auth = () => {
                       Creating account...
                     </>
                   ) : (
-                    'Create Account'
+                    "Create Account"
                   )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
