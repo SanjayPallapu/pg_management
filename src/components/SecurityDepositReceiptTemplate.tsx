@@ -59,12 +59,12 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
           overflow: 'hidden',
         }}
       >
-        {/* Header with Logo */}
-        <div style={{ 
-          width: '100%', 
+        {/* Header with Logo (kept in-sync with PaymentReminderTemplate) */}
+        <div style={{
+          width: '100%',
           textAlign: 'center',
-          padding: '15px 0 10px',
-          background: '#ffffff'
+          padding: '20px 0 1px',
+          background: '#ffffff',
         }}>
           <img 
             src={pgLogoUrl}
@@ -72,11 +72,11 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
             crossOrigin="anonymous"
             loading="eager"
             style={{
-              width: '180px',
+              width: '260px',
               height: 'auto',
               margin: '0 auto',
               display: 'block',
-              maxHeight: '90px',
+              maxHeight: '140px',
               objectFit: 'contain',
             }}
           />
@@ -84,7 +84,7 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
             fontSize: '14px', 
             fontWeight: 600, 
             color: '#4b5563', 
-            marginTop: '8px' 
+            marginTop: '4px' 
           }}>
             {pgName}
           </div>

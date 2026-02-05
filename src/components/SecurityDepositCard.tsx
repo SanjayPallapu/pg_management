@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Room, Tenant } from '@/types';
 import { useRooms } from '@/hooks/useRooms';
 import { useAuth } from '@/hooks/useAuth';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { usePG } from '@/contexts/PGContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,10 @@ import { SecurityDepositReceiptData } from './SecurityDepositReceiptTemplate';
 
 interface SecurityDepositCardProps {
   rooms: Room[];
+  /** When false, renders no visible summary card (only sheets/dialogs). */
+  showSummaryCard?: boolean;
+  /** Enables responding to external triggers (CustomEvent / navigation state). */
+  enableExternalTriggers?: boolean;
 }
 
 interface TenantWithRoom extends Tenant {
@@ -32,9 +37,14 @@ interface TenantWithRoom extends Tenant {
   roomCapacity?: number;
 }
 
-export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
+export const SecurityDepositCard = ({
+  rooms,
+  showSummaryCard = true,
+  enableExternalTriggers = false,
+}: SecurityDepositCardProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentPG } = usePG();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -66,8 +76,15 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
     }))
   );
 
+  // Keep latest tenants list for event callbacks (prevents stale-closure bugs)
+  const allTenantsRef = useRef<TenantWithRoom[]>([]);
+  useEffect(() => {
+    allTenantsRef.current = allTenants;
+  }, [allTenants]);
+
   // Handle navigation state for opening security deposit
   useEffect(() => {
+    if (!enableExternalTriggers) return;
     const state = location.state as { 
       openSecurityDeposit?: boolean; 
       tenantId?: string;
@@ -109,10 +126,11 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
       // Clear the state to prevent re-triggering
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, allTenants, navigate, location.pathname]);
+  }, [enableExternalTriggers, location.state, allTenants, navigate, location.pathname]);
 
   // Listen for custom event from RoomCard/MonthlyRentSheet
   useEffect(() => {
+    if (!enableExternalTriggers) return;
     const handleOpenSecurityDeposit = (event: CustomEvent<{ 
       tenantId: string;
       tenantName?: string;
@@ -126,9 +144,9 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
        // Always open sheet first
        setSheetOpen(true);
        
-       // Try to find the tenant in allTenants, otherwise use event data
-       setTimeout(() => {
-         const tenant = allTenants.find(t => t.id === detail.tenantId);
+        // Try to find the tenant in latest data, otherwise use event data
+        setTimeout(() => {
+          const tenant = allTenantsRef.current.find(t => t.id === detail.tenantId);
          if (tenant) {
            setDepositDialog(tenant);
          } else if (detail.tenantName && detail.roomNo) {
@@ -148,11 +166,11 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
        }, 150);
     };
 
-    window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
-    return () => {
-      window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
-    };
-   }, []); // Empty dependency - we'll lookup allTenants inside the callback
+     window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+     return () => {
+       window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+     };
+    }, [enableExternalTriggers]);
 
   const depositedTenants = allTenants.filter(t => t.securityDepositAmount && t.securityDepositAmount > 0);
   const notDepositedTenants = allTenants.filter(t => !t.securityDepositAmount || t.securityDepositAmount === 0);
@@ -253,39 +271,41 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
 
   return (
     <>
-      <Card 
-        className="cursor-pointer transition-colors hover:bg-accent/50"
-        onClick={() => setSheetOpen(true)}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-          <CardTitle className="text-sm font-medium">Security Deposits</CardTitle>
-          <Wallet className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold">₹{totalDeposited.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Total collected</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold">{depositedCount}/{totalTenants}</div>
-              <p className="text-xs text-muted-foreground">Tenants deposited</p>
-            </div>
-          </div>
-          {/* Selected month UPI/Cash breakdown */}
-          {(selectedMonthUpi > 0 || selectedMonthCash > 0) && (
-            <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
-              <div className="text-blue-600 dark:text-blue-400">
-                UPI: ₹{selectedMonthUpi.toLocaleString()}
+      {showSummaryCard && (
+        <Card 
+          className="cursor-pointer transition-colors hover:bg-accent/50"
+          onClick={() => setSheetOpen(true)}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+            <CardTitle className="text-sm font-medium">Security Deposits</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">₹{totalDeposited.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Total collected</p>
               </div>
-              <div className="text-green-600 dark:text-green-400">
-                Cash: ₹{selectedMonthCash.toLocaleString()}
+              <div className="text-right">
+                <div className="text-2xl font-bold">{depositedCount}/{totalTenants}</div>
+                <p className="text-xs text-muted-foreground">Tenants deposited</p>
               </div>
             </div>
-          )}
-          <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
-        </CardContent>
-      </Card>
+            {/* Selected month UPI/Cash breakdown */}
+            {(selectedMonthUpi > 0 || selectedMonthCash > 0) && (
+              <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
+                <div className="text-blue-600 dark:text-blue-400">
+                  UPI: ₹{selectedMonthUpi.toLocaleString()}
+                </div>
+                <div className="text-green-600 dark:text-green-400">
+                  Cash: ₹{selectedMonthCash.toLocaleString()}
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
@@ -359,6 +379,8 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
                             date: tenant.securityDepositDate || new Date().toISOString(),
                             mode: (tenant.securityDepositMode as 'upi' | 'cash') || 'cash',
                           },
+                          pgName: currentPG?.name,
+                          pgLogoUrl: currentPG?.logoUrl,
                         },
                         phone: tenant.phone,
                       });
