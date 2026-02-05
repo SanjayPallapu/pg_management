@@ -64,14 +64,26 @@ export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCar
       return response.json();
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+     gcTime: 2 * 60 * 1000, // 2 minutes gc
     retry: 2,
   });
 
   if (isLoading) {
     return (
       <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
-        <CardContent className="p-4 flex items-center justify-center h-32">
-          <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+         <CardContent className="p-4">
+           <div className="flex items-center justify-between mb-2">
+             <span className="text-sm font-medium flex items-center gap-2">
+               <span>💰</span>
+               PG Expenses
+             </span>
+             <Wallet className="h-4 w-4 text-purple-500" />
+           </div>
+           <div className="h-6 w-24 bg-muted animate-pulse rounded mb-2" />
+           <div className="space-y-1">
+             <div className="h-4 w-full bg-muted animate-pulse rounded" />
+             <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+           </div>
         </CardContent>
       </Card>
     );

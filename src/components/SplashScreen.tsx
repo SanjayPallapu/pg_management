@@ -1,78 +1,52 @@
-import { motion } from "framer-motion";
-import appLogo from "@/assets/pg-logo.png";
-
-interface SplashScreenProps {
-  pgLogoUrl?: string;
-  pgName?: string;
-}
-
-const SplashScreen = ({ pgLogoUrl, pgName }: SplashScreenProps) => {
-  // Use PG logo if available, otherwise fall back to app logo
-  const logoToShow = pgLogoUrl || appLogo;
-  const titleToShow = pgName || "PG Management";
-
+ import { motion } from "framer-motion";
+ import splashLogo from "@/assets/splash-logo.png";
+ 
+ const SplashScreen = () => {
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background"
+       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white"
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
+       exit={{ opacity: 0 }}
+       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      {/* Main Center Content */}
-      <div className="relative z-10 flex flex-col items-center px-4">
+       {/* Logo with smooth scale animation */}
+       <motion.div
+         initial={{ scale: 0.8, opacity: 0 }}
+         animate={{ scale: 1, opacity: 1 }}
+         transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
+       >
+         <img
+           src={splashLogo}
+           alt="Hostel Building App"
+           className="w-56 h-56 object-contain"
+         />
+       </motion.div>
+ 
+       {/* Animated loader dots */}
+       <motion.div
+         className="flex gap-2 mt-8"
+         initial={{ opacity: 0 }}
+         animate={{ opacity: 1 }}
+         transition={{ delay: 0.4 }}
+       >
+         {[0, 1, 2].map((i) => (
         <motion.div
-          className="relative mb-8"
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 15 }}
-        >
-          {/* Logo without any background or border */}
-          <img
-            src={logoToShow}
-            alt={titleToShow}
-            className="h-40 w-40 object-contain rounded-2xl shadow-lg"
-            crossOrigin="anonymous"
+             key={i}
+             className="w-2.5 h-2.5 rounded-full bg-primary"
+             animate={{
+               y: [0, -8, 0],
+               opacity: [0.5, 1, 0.5],
+             }}
+             transition={{
+               duration: 0.6,
+               repeat: Infinity,
+               delay: i * 0.15,
+               ease: "easeInOut",
+             }}
           />
-        </motion.div>
-
-        <motion.h1
-          className="text-3xl font-bold text-foreground text-center"
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          {titleToShow}
-        </motion.h1>
-
-        <motion.p
-          className="mt-3 text-xl text-muted-foreground"
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          Simple. Smart. Secure.
-        </motion.p>
-
-        {/* Loader Bar */}
-        <div className="mt-10 w-48 h-1 bg-muted overflow-hidden rounded-full">
-          <motion.div
-            className="h-full bg-primary"
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ duration: 1.4, repeat: Infinity }}
-            style={{ width: "50%" }}
-          />
-        </div>
-
-        <motion.p
-          className="mt-4 text-sm text-muted-foreground"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          Loading your dashboard...
-        </motion.p>
-      </div>
+         ))}
+       </motion.div>
     </motion.div>
   );
 };

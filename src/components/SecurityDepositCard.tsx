@@ -120,36 +120,39 @@ export const SecurityDepositCard = ({ rooms }: SecurityDepositCardProps) => {
       roomNo?: string;
       roomCapacity?: number;
     }>) => {
-      const tenant = allTenants.find(t => t.id === event.detail.tenantId);
-      if (tenant) {
-        setSheetOpen(true);
-        setTimeout(() => {
-          setDepositDialog(tenant);
-        }, 100);
-      } else if (event.detail.tenantName && event.detail.roomNo) {
+       const detail = event.detail;
+       if (!detail?.tenantId) return;
+       
+       // Always open sheet first
+       setSheetOpen(true);
+       
+       // Try to find the tenant in allTenants, otherwise use event data
+       setTimeout(() => {
+         const tenant = allTenants.find(t => t.id === detail.tenantId);
+         if (tenant) {
+           setDepositDialog(tenant);
+         } else if (detail.tenantName && detail.roomNo) {
         // Create temporary tenant object from event data
         const tempTenant: TenantWithRoom = {
-          id: event.detail.tenantId,
-          name: event.detail.tenantName,
-          phone: event.detail.tenantPhone || '',
-          roomNo: event.detail.roomNo,
-          roomCapacity: event.detail.roomCapacity,
+             id: detail.tenantId,
+             name: detail.tenantName,
+             phone: detail.tenantPhone || '',
+             roomNo: detail.roomNo,
+             roomCapacity: detail.roomCapacity,
           startDate: '',
           monthlyRent: 0,
           paymentStatus: 'Pending',
         };
-        setSheetOpen(true);
-        setTimeout(() => {
           setDepositDialog(tempTenant);
-        }, 100);
-      }
+         }
+       }, 150);
     };
 
     window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
     return () => {
       window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
     };
-  }, [allTenants]);
+   }, []); // Empty dependency - we'll lookup allTenants inside the callback
 
   const depositedTenants = allTenants.filter(t => t.securityDepositAmount && t.securityDepositAmount > 0);
   const notDepositedTenants = allTenants.filter(t => !t.securityDepositAmount || t.securityDepositAmount === 0);

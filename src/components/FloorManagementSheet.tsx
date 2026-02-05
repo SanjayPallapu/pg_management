@@ -34,12 +34,16 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
 
   // Get floor data from rooms
-  const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
+   const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
+   const hasGroundFloor = floorsFromRooms.includes(0);
   const pgFloors = currentPG?.floors || 3;
   
   // Use the higher of actual floors or PG setting
   const maxFloor = Math.max(...floorsFromRooms, pgFloors);
-  const allFloors = Array.from({ length: maxFloor }, (_, i) => i + 1);
+   // Include floor 0 (Ground) if it exists in rooms, then 1 to maxFloor
+   const allFloors = hasGroundFloor 
+     ? [0, ...Array.from({ length: maxFloor }, (_, i) => i + 1)]
+     : Array.from({ length: maxFloor }, (_, i) => i + 1);
 
   const getFloorStats = (floor: number) => {
     const roomsOnFloor = rooms.filter(r => r.floor === floor);
@@ -56,7 +60,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
     setIsAddingFloor(true);
     
     try {
-      const newFloorCount = maxFloor + 1;
+       const newFloorCount = maxFloor + 1;
       
       const { error } = await supabase
         .from('pgs')
@@ -77,6 +81,13 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
       setIsAddingFloor(false);
     }
   };
+ 
+   const handleAddGroundFloor = async () => {
+     if (!currentPG || hasGroundFloor) return;
+     // Ground floor doesn't increase floor count - it's floor 0
+     // Just show a message to add rooms on ground floor
+     toast.info('Ground Floor enabled! Add rooms with floor 0 to use it.');
+   };
 
   const handleDeleteFloor = async (floor: number) => {
     if (!currentPG) return;
@@ -114,10 +125,11 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
     }
   };
 
-  const getOrdinal = (n: number) => {
+   const getFloorLabel = (n: number) => {
+     if (n === 0) return 'Ground Floor';
     const suffixes = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
-    return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+     return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + ' Floor';
   };
 
   return (
@@ -145,7 +157,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                   className="flex items-center justify-between p-4 border rounded-lg bg-card"
                 >
                   <div>
-                    <h4 className="font-semibold">{getOrdinal(floor)} Floor</h4>
+                     <h4 className="font-semibold">{getFloorLabel(floor)}</h4>
                     <p className="text-sm text-muted-foreground">
                       {stats.rooms} rooms • {stats.tenants} tenants
                     </p>
@@ -172,6 +184,18 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
               );
             })}
 
+             {/* Add Ground Floor button - only show if no ground floor exists */}
+             {!hasGroundFloor && (
+               <Button
+                 variant="outline"
+                 onClick={handleAddGroundFloor}
+                 className="w-full border-dashed mb-2"
+               >
+                 <Plus className="h-4 w-4 mr-2" />
+                 Add Ground Floor (Floor 0)
+               </Button>
+             )}
+ 
             <Button
               variant="outline"
               onClick={handleAddFloor}
@@ -186,7 +210,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Floor {maxFloor + 1}
+                   Add {getFloorLabel(maxFloor + 1)}
                 </>
               )}
             </Button>
@@ -197,7 +221,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
       <AlertDialog open={showDeleteConfirm !== null} onOpenChange={() => setShowDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {getOrdinal(showDeleteConfirm || 0)} Floor?</AlertDialogTitle>
+             <AlertDialogTitle>Delete {getFloorLabel(showDeleteConfirm || 0)}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will remove the floor from your property. You can add it back later.
             </AlertDialogDescription>
