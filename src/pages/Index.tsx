@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import appLogo from "@/assets/pg-logo.png";
+import { SecurityDepositCard } from "@/components/SecurityDepositCard";
 
 const Index = () => {
   const { rooms, isLoading } = useRooms();
@@ -185,6 +186,9 @@ const Index = () => {
             </TabsContent>
           </div>
         </Tabs>
+
+        {/* Always-mounted host to ensure Security Deposit opens from any tab */}
+        <SecurityDepositCard rooms={rooms} showSummaryCard={false} enableExternalTriggers />
 
         {/* Tenant Management Dialog */}
         {selectedRoom && (

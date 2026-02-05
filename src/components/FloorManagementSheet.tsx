@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Trash2, Edit2, Plus, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePG } from '@/contexts/PGContext';
@@ -31,7 +32,14 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   const queryClient = useQueryClient();
   const [isAddingFloor, setIsAddingFloor] = useState(false);
   const [deletingFloor, setDeletingFloor] = useState<number | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+
+  type DeleteFlow = {
+    floor: number;
+    step: 1 | 2 | 3 | 4;
+    typed: string;
+    checked: boolean;
+  };
+  const [deleteFlow, setDeleteFlow] = useState<DeleteFlow | null>(null);
 
   // Get floor data from rooms
    const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
@@ -121,7 +129,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
       toast.error('Failed to delete floor');
     } finally {
       setDeletingFloor(null);
-      setShowDeleteConfirm(null);
+      setDeleteFlow(null);
     }
   };
 
@@ -169,7 +177,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => setShowDeleteConfirm(floor)}
+                        onClick={() => setDeleteFlow({ floor, step: 1, typed: '', checked: false })}
                         disabled={deletingFloor === floor}
                       >
                         {deletingFloor === floor ? (
@@ -218,22 +226,113 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={showDeleteConfirm !== null} onOpenChange={() => setShowDeleteConfirm(null)}>
+      <AlertDialog open={deleteFlow !== null} onOpenChange={(o) => !o && setDeleteFlow(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-             <AlertDialogTitle>Delete {getFloorLabel(showDeleteConfirm || 0)}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {deleteFlow?.step === 1 && `Step 1/4: Delete ${getFloorLabel(deleteFlow.floor)}?`}
+              {deleteFlow?.step === 2 && `Step 2/4: Type DELETE`}
+              {deleteFlow?.step === 3 && `Step 3/4: Confirm understanding`}
+              {deleteFlow?.step === 4 && `Step 4/4: Final confirmation`}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the floor from your property. You can add it back later.
+              {deleteFlow?.step === 1 && (
+                <>This action removes the top floor from your property settings. This can’t be undone.</>
+              )}
+              {deleteFlow?.step === 2 && (
+                <>To continue, type <b>DELETE</b> below.</>
+              )}
+              {deleteFlow?.step === 3 && (
+                <>Please confirm you understand what this will do.</>
+              )}
+              {deleteFlow?.step === 4 && (
+                <>Last step: click <b>Delete Floor</b> to proceed.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {deleteFlow?.step === 2 && (
+            <div className="space-y-2">
+              <Label htmlFor="delete-confirm">Type DELETE</Label>
+              <Input
+                id="delete-confirm"
+                value={deleteFlow.typed}
+                onChange={(e) => setDeleteFlow((p) => (p ? { ...p, typed: e.target.value } : p))}
+                placeholder="DELETE"
+                autoFocus
+              />
+            </div>
+          )}
+
+          {deleteFlow?.step === 3 && (
+            <div className="flex items-start gap-3 rounded-md border p-3 bg-muted/30">
+              <Checkbox
+                id="understand"
+                checked={deleteFlow.checked}
+                onCheckedChange={(v) => setDeleteFlow((p) => (p ? { ...p, checked: Boolean(v) } : p))}
+              />
+              <Label htmlFor="understand" className="leading-relaxed">
+                I understand this removes <b>{getFloorLabel(deleteFlow.floor)}</b> (only possible if it has no rooms).
+              </Label>
+            </div>
+          )}
+
+          {deleteFlow?.step === 4 && (
+            <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+              <div className="text-sm">
+                Floor: <b>{getFloorLabel(deleteFlow.floor)}</b>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Requirement: typed DELETE + checked understanding.
+              </div>
+            </div>
+          )}
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => showDeleteConfirm && handleDeleteFloor(showDeleteConfirm)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete Floor
-            </AlertDialogAction>
+
+            {/* Back */}
+            {deleteFlow && deleteFlow.step > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setDeleteFlow((p) => (p ? { ...p, step: (p.step - 1) as DeleteFlow['step'] } : p))
+                }
+              >
+                Back
+              </Button>
+            )}
+
+            {/* Continue / Delete */}
+            {deleteFlow?.step !== 4 ? (
+              <AlertDialogAction
+                onClick={() =>
+                  setDeleteFlow((p) => (p ? { ...p, step: (p.step + 1) as DeleteFlow['step'] } : p))
+                }
+                disabled={
+                  deleteFlow?.step === 2
+                    ? deleteFlow.typed.trim().toUpperCase() !== 'DELETE'
+                    : deleteFlow?.step === 3
+                      ? !deleteFlow.checked
+                      : false
+                }
+              >
+                Continue
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction
+                onClick={() => deleteFlow && handleDeleteFloor(deleteFlow.floor)}
+                disabled={
+                  deletingFloor === deleteFlow.floor ||
+                  deleteFlow.typed.trim().toUpperCase() !== 'DELETE' ||
+                  !deleteFlow.checked
+                }
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletingFloor === deleteFlow.floor ? 'Deleting…' : 'Delete Floor'}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
