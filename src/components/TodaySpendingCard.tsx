@@ -58,19 +58,35 @@ export const TodaySpendingCard = () => {
       
       return response.json();
     },
-    staleTime: 60000,
+     staleTime: 5 * 60 * 1000, // 5 minutes cache
+     gcTime: 2 * 60 * 1000, // 2 minutes gc
     retry: 2,
   });
+   
+   // Simplified loading state - show placeholder immediately
+   if (isLoading) {
+     return (
+       <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20">
+         <CardContent className="p-4">
+           <div className="flex items-center justify-between mb-2">
+             <div className="flex items-center gap-2">
+               <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                 <CalendarDays className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+               </div>
+               <span className="font-semibold text-amber-700 dark:text-amber-300">
+                 {isToday ? "Today's Spending" : "Spending"}
+               </span>
+             </div>
+           </div>
+           <div className="flex justify-between items-center pt-2">
+             <span className="text-sm text-muted-foreground">Loading...</span>
+             <div className="h-6 w-16 bg-muted animate-pulse rounded" />
+           </div>
+         </CardContent>
+       </Card>
+     );
+   }
 
-  if (isLoading) {
-    return (
-      <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20">
-        <CardContent className="p-4 flex items-center justify-center h-20">
-          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (error) {
     return (
