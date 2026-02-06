@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wallet } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
 
-const STORAGE_KEY = "pg-expenses-toggles";
+const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
+const DEFAULT_TOGGLES = { familyExpenses: true, currentBills: false, pgRent: true };
+
+const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${year}-${month}`;
 
 interface PersonalExpensesCardProps {
   totalCollected?: number;
@@ -13,38 +16,45 @@ interface PersonalExpensesCardProps {
 export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   
-  // Load initial states from localStorage or use defaults
-  const getInitialState = () => {
+  // Load toggle states for the current month
+  const getMonthState = useCallback((month: number, year: number) => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
+      const stored = localStorage.getItem(getStorageKey(month, year));
+      if (stored) return JSON.parse(stored);
     } catch (e) {
       console.error("Failed to load toggle states:", e);
     }
-    return { familyExpenses: true, currentBills: false, pgRent: true };
-  };
+    return { ...DEFAULT_TOGGLES };
+  }, []);
   
-  const initialState = getInitialState();
-  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(initialState.familyExpenses);
-  const [includeCurrentBills, setIncludeCurrentBills] = useState(initialState.currentBills);
-  const [includePgRent, setIncludePgRent] = useState(initialState.pgRent);
+  const [includeFamilyExpenses, setIncludeFamilyExpenses] = useState(() => getMonthState(selectedMonth, selectedYear).familyExpenses);
+  const [includeCurrentBills, setIncludeCurrentBills] = useState(() => getMonthState(selectedMonth, selectedYear).currentBills);
+  const [includePgRent, setIncludePgRent] = useState(() => getMonthState(selectedMonth, selectedYear).pgRent);
 
-  // Persist toggle states to localStorage and notify BalanceCard
+  // When month changes, load the toggle state for that month
+  useEffect(() => {
+    const state = getMonthState(selectedMonth, selectedYear);
+    setIncludeFamilyExpenses(state.familyExpenses);
+    setIncludeCurrentBills(state.currentBills);
+    setIncludePgRent(state.pgRent);
+  }, [selectedMonth, selectedYear, getMonthState]);
+
+  // Persist toggle states to month-specific localStorage and notify BalanceCard
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      localStorage.setItem(getStorageKey(selectedMonth, selectedYear), JSON.stringify({
         familyExpenses: includeFamilyExpenses,
         currentBills: includeCurrentBills,
         pgRent: includePgRent
       }));
       // Dispatch custom event so BalanceCard updates dynamically
-      window.dispatchEvent(new CustomEvent('expenses-toggles-changed'));
+      window.dispatchEvent(new CustomEvent('expenses-toggles-changed', { 
+        detail: { month: selectedMonth, year: selectedYear } 
+      }));
     } catch (e) {
       console.error("Failed to save toggle states:", e);
     }
-  }, [includeFamilyExpenses, includeCurrentBills, includePgRent]);
+  }, [includeFamilyExpenses, includeCurrentBills, includePgRent, selectedMonth, selectedYear]);
 
   const PG_RENT = 150000;
 

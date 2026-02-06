@@ -90,81 +90,88 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4">
-        {/* Header - Horizontal scrollable */}
-        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-4">
-          <div className="inline-flex items-center gap-2 min-w-max">
-            <PGSwitcher />
-            <MonthYearPicker />
-            {/* External link - admin only */}
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 flex-shrink-0"
-                onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            )}
-            <NetworkStatusIndicator />
-            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setHistorySheetOpen(true)} title="Activity History">
-              <History className="h-4 w-4" />
-            </Button>
-            <SubscriptionBadge />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 flex-shrink-0" 
-              onClick={() => setSubscriptionSheetOpen(true)} 
-              title="Subscription Details"
-            >
-              <CreditCard className="h-4 w-4" />
-            </Button>
-            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
-              {isAdmin ? (
-                <Shield className="h-4 w-4 text-primary-foreground" />
-              ) : (
-                <User className="h-4 w-4 text-primary-foreground" />
+      {/* Sticky Header + Tabs */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm transition-all duration-300">
+        <div className="container mx-auto px-4 pt-3 pb-2">
+          {/* Header - Horizontal scrollable */}
+          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-2">
+            <div className="inline-flex items-center gap-2 min-w-max">
+              <PGSwitcher />
+              <MonthYearPicker />
+              {/* External link - admin only */}
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
               )}
-            </div>
-            {isAdmin && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 flex-shrink-0 text-xs"
-                onClick={() => setAdminApprovalOpen(true)}
-              >
-                Approvals
+              <NetworkStatusIndicator />
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setHistorySheetOpen(true)} title="Activity History">
+                <History className="h-4 w-4" />
               </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSignOut} title="Sign Out">
-              <LogOut className="h-4 w-4" />
-            </Button>
+              <SubscriptionBadge />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 flex-shrink-0" 
+                onClick={() => setSubscriptionSheetOpen(true)} 
+                title="Subscription Details"
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                {isAdmin ? (
+                  <Shield className="h-4 w-4 text-primary-foreground" />
+                ) : (
+                  <User className="h-4 w-4 text-primary-foreground" />
+                )}
+              </div>
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 flex-shrink-0 text-xs"
+                  onClick={() => setAdminApprovalOpen(true)}
+                >
+                  Approvals
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSignOut} title="Sign Out">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* Tabs - fixed width grid */}
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-2 py-2">
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="rooms" className="flex items-center gap-1.5 px-2 py-2">
+                <Building className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Rooms</span>
+              </TabsTrigger>
+              <TabsTrigger value="rent-sheet" className="flex items-center gap-1.5 px-2 py-2">
+                <Receipt className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Rent</span>
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="flex items-center gap-1.5 px-2 py-2">
+                <FileBarChart className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Reports</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Tabs - fixed width grid */}
-          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-2 py-2">
-              <LayoutDashboard className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="rooms" className="flex items-center gap-1.5 px-2 py-2">
-              <Building className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Rooms</span>
-            </TabsTrigger>
-            <TabsTrigger value="rent-sheet" className="flex items-center gap-1.5 px-2 py-2">
-              <Receipt className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Rent</span>
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-1.5 px-2 py-2">
-              <FileBarChart className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Reports</span>
-            </TabsTrigger>
-          </TabsList>
-
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
