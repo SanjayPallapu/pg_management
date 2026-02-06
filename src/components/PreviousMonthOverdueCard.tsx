@@ -313,6 +313,30 @@ export const PreviousMonthOverdueCard = () => {
     return null;
   }
 
+  // Show skeleton while data is being computed (rooms not yet loaded)
+  if (rooms.length === 0) {
+    return (
+      <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <History className="h-4 w-4 text-amber-600" />
+            <div className="h-4 w-28 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="h-7 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-20 bg-muted animate-pulse rounded mt-1" />
+            </div>
+            <div>
+              <div className="h-7 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-20 bg-muted animate-pulse rounded mt-1" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card 

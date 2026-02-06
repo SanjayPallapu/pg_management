@@ -36,7 +36,6 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
       const collected = data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
       const pending = data.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
       
-      // Calculate UPI and Cash totals
       let upi = 0;
       let cash = 0;
       data.forEach(g => {
@@ -53,9 +52,33 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
       return { collected, pending, count: data.length, upi, cash };
     },
     enabled: !!currentPG?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 2 * 60 * 1000,
+    placeholderData: { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 },
   });
+
+  if (isLoading) {
+    return (
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+          <CardTitle className="text-sm font-medium">Day Guest Revenue</CardTitle>
+          <UserPlus className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="h-7 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-14 bg-muted animate-pulse rounded mt-1" />
+            </div>
+            <div>
+              <div className="h-7 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-14 bg-muted animate-pulse rounded mt-1" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>

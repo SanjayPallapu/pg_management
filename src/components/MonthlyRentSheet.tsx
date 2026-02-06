@@ -69,6 +69,7 @@ export const MonthlyRentSheet = ({
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
+  const [hideLeftTenants, setHideLeftTenants] = useState(true);
   const [welcomeData, setWelcomeData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -243,14 +244,26 @@ export const MonthlyRentSheet = ({
     });
   }, [eligibleTenants, selectedMonth, selectedYear, payments]);
 
-  // Filter tenants based on search query and exclude locked tenants
+  // Filter tenants based on search query, exclude locked tenants, and optionally hide left tenants
   const filteredTenants = useMemo(() => {
-    // First, filter out locked tenants
-    const unlockedTenants = tenantsWithPayments.filter(tenant => !tenant.isLocked);
-    if (!searchQuery.trim()) return unlockedTenants;
+    let filtered = tenantsWithPayments.filter(tenant => !tenant.isLocked);
+    
+    // Hide left tenants if toggle is on
+    if (hideLeftTenants) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(tenant => {
+        if (!tenant.endDate) return true;
+        const endDate = new Date(tenant.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate > today;
+      });
+    }
+    
+    if (!searchQuery.trim()) return filtered;
     const query = searchQuery.toLowerCase().trim();
-    return unlockedTenants.filter(tenant => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query));
-  }, [tenantsWithPayments, searchQuery]);
+    return filtered.filter(tenant => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query));
+  }, [tenantsWithPayments, searchQuery, hideLeftTenants]);
 
   // Count left tenants still in the rent sheet (not locked)
   const leftTenantsCount = useMemo(() => {
@@ -643,7 +656,11 @@ export const MonthlyRentSheet = ({
                 </Button>}
             </div>
             <div className="flex gap-1 items-center">
-              {/* Bulk Reminder Button */}
+              {/* Hide Left Tenants Toggle */}
+              <div className="flex items-center gap-1.5 mr-2" title="Hide left tenants">
+                <Label htmlFor="hide-left" className="text-[10px] text-muted-foreground whitespace-nowrap">Left</Label>
+                <Switch id="hide-left" checked={hideLeftTenants} onCheckedChange={setHideLeftTenants} className="data-[state=checked]:bg-amber-500" />
+              </div>
 
               {/* Edit Mode Toggle */}
               <div className="flex items-center gap-1.5 mr-2">
