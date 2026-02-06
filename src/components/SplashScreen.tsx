@@ -111,7 +111,7 @@ const SplashScreen = () => {
         <motion.img
           src={splashLogo}
           alt="App logo"
-          className="w-56 h-56 object-contain"
+          className="w-72 h-72 object-contain"
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -119,7 +119,7 @@ const SplashScreen = () => {
 
       {/* Title text */}
       <motion.h1
-        className="text-2xl font-bold text-foreground mt-6 tracking-wide"
+        className="text-3xl font-extrabold text-foreground mt-6 tracking-wide"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
@@ -129,7 +129,7 @@ const SplashScreen = () => {
 
       {/* Tagline */}
       <motion.p
-        className="text-base text-muted-foreground mt-2 tracking-widest"
+        className="text-lg font-semibold text-foreground mt-2 tracking-widest"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}

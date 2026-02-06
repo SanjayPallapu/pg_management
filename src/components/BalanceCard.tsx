@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Scale } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -10,6 +10,8 @@ import { usePG } from '@/contexts/PGContext';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
+const STORAGE_KEY = "pg-expenses-toggles";
+
 /**
  * Admin-only Balance Card
  * Shows: Previous Month Balance + Present Month Total Collected - Grand Total (PG Expenses)
@@ -19,6 +21,23 @@ export const BalanceCard = () => {
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const { currentPG } = usePG();
+
+  // Read toggle states from localStorage and listen for changes
+  const readToggles = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e) { /* ignore */ }
+    return { familyExpenses: true, currentBills: false, pgRent: true };
+  }, []);
+
+  const [toggles, setToggles] = useState(readToggles);
+
+  useEffect(() => {
+    const handler = () => setToggles(readToggles());
+    window.addEventListener('expenses-toggles-changed', handler);
+    return () => window.removeEventListener('expenses-toggles-changed', handler);
+  }, [readToggles]);
 
   // Previous month info
   const { prevMonth, prevYear } = useMemo(() => {
@@ -164,13 +183,18 @@ export const BalanceCard = () => {
     return thisMonthRent + overdueCollected + dgRevenue + secDep + extra;
   };
 
-  // Calculate expenses for a month
+  // Calculate expenses for a month using toggle states
   const calcExpenses = (expData: any) => {
     if (!expData) return 0;
     const groceries = expData?.breakdown?.groceries?.total || 0;
     const utilityBills = expData?.breakdown?.bills?.total || 0;
     const familyExpenses = expData?.familyExpenses || 0;
-    return groceries + utilityBills + familyExpenses + PG_RENT;
+    const currentBill = expData?.currentBill || expData?.breakdown?.bills?.currentBills || 0;
+    let total = groceries + utilityBills;
+    if (toggles.currentBills) total += currentBill;
+    if (toggles.pgRent) total += PG_RENT;
+    if (toggles.familyExpenses) total += familyExpenses;
+    return total;
   };
 
   // Previous month balance

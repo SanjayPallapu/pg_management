@@ -31,7 +31,7 @@ export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCar
   const [includeCurrentBills, setIncludeCurrentBills] = useState(initialState.currentBills);
   const [includePgRent, setIncludePgRent] = useState(initialState.pgRent);
 
-  // Persist toggle states to localStorage
+  // Persist toggle states to localStorage and notify BalanceCard
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -39,6 +39,8 @@ export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCar
         currentBills: includeCurrentBills,
         pgRent: includePgRent
       }));
+      // Dispatch custom event so BalanceCard updates dynamically
+      window.dispatchEvent(new CustomEvent('expenses-toggles-changed'));
     } catch (e) {
       console.error("Failed to save toggle states:", e);
     }
