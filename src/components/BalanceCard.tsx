@@ -183,28 +183,35 @@ export const BalanceCard = () => {
     return thisMonthRent + overdueCollected + dgRevenue + secDep + extra;
   };
 
-  // Calculate expenses for a month using toggle states
-  const calcExpenses = (expData: any) => {
+  // Calculate expenses for a month - toggles only apply to CURRENT month
+  const calcExpenses = (expData: any, applyToggles: boolean) => {
     if (!expData) return 0;
     const groceries = expData?.breakdown?.groceries?.total || 0;
     const utilityBills = expData?.breakdown?.bills?.total || 0;
     const familyExpenses = expData?.familyExpenses || 0;
     const currentBill = expData?.currentBill || expData?.breakdown?.bills?.currentBills || 0;
-    let total = groceries + utilityBills;
-    if (toggles.currentBills) total += currentBill;
-    if (toggles.pgRent) total += PG_RENT;
-    if (toggles.familyExpenses) total += familyExpenses;
-    return total;
+    
+    if (applyToggles) {
+      // Current month: respect toggle states
+      let total = groceries + utilityBills;
+      if (toggles.currentBills) total += currentBill;
+      if (toggles.pgRent) total += PG_RENT;
+      if (toggles.familyExpenses) total += familyExpenses;
+      return total;
+    } else {
+      // Previous month: always include all expenses (no toggles)
+      return groceries + utilityBills + currentBill + PG_RENT + familyExpenses;
+    }
   };
 
-  // Previous month balance
+  // Previous month balance - NO toggles applied
   const prevTotalCollected = calcTotalCollected(prevMonth, prevYear, prevDayGuestRevenue);
-  const prevExpenses = calcExpenses(prevExpenseData);
+  const prevExpenses = calcExpenses(prevExpenseData, false);
   const previousMonthBalance = prevTotalCollected - prevExpenses;
 
   // Current month total collected
   const currentTotalCollected = calcTotalCollected(selectedMonth, selectedYear, dayGuestRevenue);
-  const currentExpenses = calcExpenses(currentExpenseData);
+  const currentExpenses = calcExpenses(currentExpenseData, true);
 
   // Grand total balance = previous month balance + current collected - current expenses
   const grandTotal = previousMonthBalance + currentTotalCollected - currentExpenses;
