@@ -119,33 +119,37 @@ const SplashScreen = () => {
 
       {/* Title text */}
       <motion.h1
-        className="text-3xl font-extrabold text-foreground mt-6 tracking-wide"
+        className="text-3xl font-extrabold text-white mt-6 tracking-wide"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
+        style={{ color: '#ffffff' }}
       >
         PG Management
       </motion.h1>
 
       {/* Tagline */}
       <motion.p
-        className="text-lg font-semibold text-foreground mt-2 tracking-widest"
+        className="text-lg font-semibold text-white mt-2 tracking-widest"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
+        style={{ color: '#ffffff' }}
       >
         Simple. Smart. Secure.
       </motion.p>
 
       {/* Progress bar */}
       <motion.div
-        className="mt-8 w-48 h-1 bg-muted rounded-full overflow-hidden"
+        className="mt-8 w-48 h-1 rounded-full overflow-hidden"
+        style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
         <motion.div
-          className="h-full bg-primary rounded-full"
+          className="h-full rounded-full"
+          style={{ backgroundColor: '#ffffff' }}
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
           transition={{ duration: 2, ease: "easeInOut", delay: 0.9 }}
@@ -154,7 +158,8 @@ const SplashScreen = () => {
 
       {/* Loading text */}
       <motion.p
-        className="text-xs text-muted-foreground mt-3"
+        className="text-xs mt-3"
+        style={{ color: 'rgba(255,255,255,0.7)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}

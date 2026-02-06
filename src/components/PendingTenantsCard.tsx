@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -218,15 +219,37 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor }: Tenan
                 >
                   <Phone className="h-3 w-3" />
                 </a>
-                <a
-                  href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MessageCircle className="h-3 w-3" />
-                </a>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                      <MessageCircle className="h-3 w-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${tenant.name}, this is a payment reminder for your rent of ₹${tenant.monthlyRent.toLocaleString()}. Please let me know once the payment is done. Thank you!`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Bell className="h-4 w-4" />
+                        Payment Reminder
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Chat with Tenant
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
           </div>

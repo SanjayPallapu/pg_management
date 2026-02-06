@@ -366,6 +366,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 </CardContent>
               </Card>
 
+              {/* Balance Card - Admin only (above Today's Spending) */}
+              {isAdmin && <BalanceCard />}
+
               {/* Today's Spending Card - Admin only */}
               {isAdmin && <TodaySpendingCard />}
 
@@ -388,9 +391,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               {isAdmin && (
                 <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} />
               )}
-
-              {/* Balance Card - Admin only */}
-              {isAdmin && <BalanceCard />}
             </div>
           </CollapsibleContent>
         </Collapsible>
