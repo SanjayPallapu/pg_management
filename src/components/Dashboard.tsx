@@ -28,6 +28,7 @@ import { BuildingRentCard } from './BuildingRentCard';
 import { SettlementSummarySheet } from './SettlementSummarySheet';
 import { DayGuestRevenueCard } from './DayGuestRevenueCard';
 import { OverduePaidCard } from './OverduePaidCard';
+import { BalanceCard } from './BalanceCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { getPricePerBed } from '@/constants/pricing';
 
@@ -387,6 +388,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               {isAdmin && (
                 <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} />
               )}
+
+              {/* Balance Card - Admin only */}
+              {isAdmin && <BalanceCard />}
             </div>
           </CollapsibleContent>
         </Collapsible>
