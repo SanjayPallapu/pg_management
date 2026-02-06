@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Scale } from 'lucide-react';
+import { Scale, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePG } from '@/contexts/PGContext';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = { familyExpenses: true, currentBills: false, pgRent: true };
@@ -24,28 +25,29 @@ export const BalanceCard = () => {
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const { currentPG } = usePG();
+  const [isOpen, setIsOpen] = useState(true);
 
-  // Read toggle states for CURRENT selected month only, listen for changes
-  const readToggles = useCallback(() => {
+  // Read toggle states for any month (stored per month/year)
+  const getMonthToggles = useCallback((month: number, year: number) => {
     try {
-      const stored = localStorage.getItem(getStorageKey(selectedMonth, selectedYear));
+      const stored = localStorage.getItem(getStorageKey(month, year));
       if (stored) return JSON.parse(stored);
     } catch (e) { /* ignore */ }
     return { ...DEFAULT_TOGGLES };
-  }, [selectedMonth, selectedYear]);
+  }, []);
 
-  const [toggles, setToggles] = useState(readToggles);
+  const [toggles, setToggles] = useState(() => getMonthToggles(selectedMonth, selectedYear));
 
   useEffect(() => {
     // Re-read toggles when month changes
-    setToggles(readToggles());
-  }, [readToggles]);
+    setToggles(getMonthToggles(selectedMonth, selectedYear));
+  }, [getMonthToggles, selectedMonth, selectedYear]);
 
   useEffect(() => {
-    const handler = () => setToggles(readToggles());
+    const handler = () => setToggles(getMonthToggles(selectedMonth, selectedYear));
     window.addEventListener('expenses-toggles-changed', handler);
     return () => window.removeEventListener('expenses-toggles-changed', handler);
-  }, [readToggles]);
+  }, [getMonthToggles, selectedMonth, selectedYear]);
 
   // Previous month info
   const { prevMonth, prevYear } = useMemo(() => {
@@ -192,19 +194,24 @@ export const BalanceCard = () => {
   };
 
   // Calculate expenses for a month - toggles only apply to CURRENT month
-  const calcExpenses = (expData: any, applyToggles: boolean) => {
+  const calcExpenses = (
+    expData: any,
+    applyToggles: boolean,
+    overrideToggles?: { familyExpenses: boolean; currentBills: boolean; pgRent: boolean }
+  ) => {
     if (!expData) return 0;
     const groceries = expData?.breakdown?.groceries?.total || 0;
     const utilityBills = expData?.breakdown?.bills?.total || 0;
     const familyExpenses = expData?.familyExpenses || 0;
     const currentBill = expData?.currentBill || expData?.breakdown?.bills?.currentBills || 0;
-    
+    const effectiveToggles = overrideToggles || toggles;
+
     if (applyToggles) {
       // Current month: respect toggle states
       let total = groceries + utilityBills;
-      if (toggles.currentBills) total += currentBill;
-      if (toggles.pgRent) total += PG_RENT;
-      if (toggles.familyExpenses) total += familyExpenses;
+      if (effectiveToggles.currentBills) total += currentBill;
+      if (effectiveToggles.pgRent) total += PG_RENT;
+      if (effectiveToggles.familyExpenses) total += familyExpenses;
       return total;
     } else {
       // Previous month: always include all expenses (no toggles)
@@ -214,7 +221,8 @@ export const BalanceCard = () => {
 
   // Previous month balance - NO toggles applied
   const prevTotalCollected = calcTotalCollected(prevMonth, prevYear, prevDayGuestRevenue);
-  const prevExpenses = calcExpenses(prevExpenseData, false);
+  const prevMonthToggles = getMonthToggles(prevMonth, prevYear);
+  const prevExpenses = calcExpenses(prevExpenseData, true, prevMonthToggles);
   const previousMonthBalance = prevTotalCollected - prevExpenses;
 
   // Current month total collected
@@ -229,36 +237,49 @@ export const BalanceCard = () => {
   return (
     <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Scale className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Balance Overview</span>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {/* Previous month balance */}
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">{months[prevMonth - 1]} Balance</span>
-            <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-paid' : 'text-destructive'}`}>
-              {previousMonthBalance >= 0 ? '+' : ''}₹{previousMonthBalance.toLocaleString()}
-            </span>
-          </div>
-
-          {/* Current month collected */}
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">{months[selectedMonth - 1]} Collected</span>
-            <span className="font-medium text-paid">+₹{currentTotalCollected.toLocaleString()}</span>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">Balance Overview</span>
+            </div>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label={isOpen ? 'Collapse balance overview' : 'Expand balance overview'}
+              >
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            </CollapsibleTrigger>
           </div>
 
-          {/* Current month expenses */}
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">{months[selectedMonth - 1]} Expenses</span>
-            <span className="font-medium text-destructive">-₹{currentExpenses.toLocaleString()}</span>
-          </div>
+          <CollapsibleContent>
+            <div className="space-y-2">
+              {/* Previous month balance */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">{months[prevMonth - 1]} Balance</span>
+                <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-paid' : 'text-destructive'}`}>
+                  {previousMonthBalance >= 0 ? '+' : ''}₹{previousMonthBalance.toLocaleString()}
+                </span>
+              </div>
 
-          {/* Grand Total */}
-          <div className="border-t pt-2 mt-2">
+              {/* Current month collected */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">{months[selectedMonth - 1]} Collected</span>
+                <span className="font-medium text-paid">+₹{currentTotalCollected.toLocaleString()}</span>
+              </div>
+
+              {/* Current month expenses */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">{months[selectedMonth - 1]} Expenses</span>
+                <span className="font-medium text-destructive">-₹{currentExpenses.toLocaleString()}</span>
+              </div>
+            </div>
+          </CollapsibleContent>
+
+          {/* Grand Total (always visible) */}
+          <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold">Grand Total</span>
               <span className={`text-xl font-bold ${grandTotal >= 0 ? 'text-paid' : 'text-destructive'}`}>
@@ -266,7 +287,7 @@ export const BalanceCard = () => {
               </span>
             </div>
           </div>
-        </div>
+        </Collapsible>
       </CardContent>
     </Card>
   );
