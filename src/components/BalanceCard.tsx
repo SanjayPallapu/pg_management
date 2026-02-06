@@ -10,7 +10,10 @@ import { usePG } from '@/contexts/PGContext';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 
-const STORAGE_KEY = "pg-expenses-toggles";
+const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
+const DEFAULT_TOGGLES = { familyExpenses: true, currentBills: false, pgRent: true };
+
+const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${year}-${month}`;
 
 /**
  * Admin-only Balance Card
@@ -22,16 +25,21 @@ export const BalanceCard = () => {
   const { rooms } = useRooms();
   const { currentPG } = usePG();
 
-  // Read toggle states from localStorage and listen for changes
+  // Read toggle states for CURRENT selected month only, listen for changes
   const readToggles = useCallback(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(getStorageKey(selectedMonth, selectedYear));
       if (stored) return JSON.parse(stored);
     } catch (e) { /* ignore */ }
-    return { familyExpenses: true, currentBills: false, pgRent: true };
-  }, []);
+    return { ...DEFAULT_TOGGLES };
+  }, [selectedMonth, selectedYear]);
 
   const [toggles, setToggles] = useState(readToggles);
+
+  useEffect(() => {
+    // Re-read toggles when month changes
+    setToggles(readToggles());
+  }, [readToggles]);
 
   useEffect(() => {
     const handler = () => setToggles(readToggles());
