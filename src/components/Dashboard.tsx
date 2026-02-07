@@ -249,6 +249,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     <>
       <div className="space-y-6">
 
+        {/* Balance Card - above everything */}
+        <BalanceCard />
+
         {/* Split KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
@@ -366,14 +369,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 </CardContent>
               </Card>
 
-              {/* Balance Card - Admin only (above Today's Spending) */}
-              {isAdmin && <BalanceCard />}
+              {/* Today's Spending Card */}
+              <TodaySpendingCard />
 
-              {/* Today's Spending Card - Admin only */}
-              {isAdmin && <TodaySpendingCard />}
-
-              {/* Personal Expenses Card - Admin only */}
-              {isAdmin && <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />}
+              {/* Personal Expenses Card */}
+              <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
 
               {/* Security Deposit Card - Below PG Expenses */}
               <SecurityDepositCard rooms={rooms} />
