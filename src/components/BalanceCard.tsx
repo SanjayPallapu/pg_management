@@ -10,6 +10,7 @@ import { usePG } from '@/contexts/PGContext';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Skeleton } from '@/components/ui/skeleton';
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = {
   familyExpenses: true,
@@ -28,10 +29,12 @@ export const BalanceCard = () => {
     selectedYear
   } = useMonthContext();
   const {
-    payments
+    payments,
+    isLoading: paymentsLoading
   } = useTenantPayments();
   const {
-    rooms
+    rooms,
+    isLoading: roomsLoading
   } = useRooms();
   const {
     currentPG
@@ -251,6 +254,10 @@ export const BalanceCard = () => {
   // Grand total balance = previous month balance + current collected - current expenses
   const grandTotal = previousMonthBalance + currentTotalCollected - currentExpenses;
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Show loading state while core data is loading to prevent wrong data flash
+  const isDataLoading = paymentsLoading || roomsLoading;
+
   return <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
       <CardContent className="p-4">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -266,39 +273,59 @@ export const BalanceCard = () => {
             </CollapsibleTrigger>
           </div>
 
-          <CollapsibleContent>
-            <div className="space-y-2">
-              {/* Previous month balance */}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">{months[prevMonth - 1]} Balance</span>
-                <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-paid' : 'text-destructive'}`}>
-                  {previousMonthBalance >= 0 ? '+' : ''}₹{previousMonthBalance.toLocaleString()}
-                </span>
+          {isDataLoading ? (
+            <>
+              <CollapsibleContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
+                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
+                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
+                </div>
+              </CollapsibleContent>
+              <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-7 w-28" />
+                </div>
               </div>
+            </>
+          ) : (
+            <>
+              <CollapsibleContent>
+                <div className="space-y-2">
+                  {/* Previous month balance */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{months[prevMonth - 1]} Balance</span>
+                    <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-paid' : 'text-destructive'}`}>
+                      {previousMonthBalance >= 0 ? '+' : ''}₹{previousMonthBalance.toLocaleString()}
+                    </span>
+                  </div>
 
-              {/* Current month collected */}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">{months[selectedMonth - 1]} Collected</span>
-                <span className="font-medium text-paid">+₹{currentTotalCollected.toLocaleString()}</span>
+                  {/* Current month collected */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{months[selectedMonth - 1]} Collected</span>
+                    <span className="font-medium text-paid">+₹{currentTotalCollected.toLocaleString()}</span>
+                  </div>
+
+                  {/* Current month expenses */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{months[selectedMonth - 1]} Expenses</span>
+                    <span className="font-medium text-destructive">-₹{currentExpenses.toLocaleString()}</span>
+                  </div>
+                </div>
+              </CollapsibleContent>
+
+              {/* Grand Total (always visible) */}
+              <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold">Balance</span>
+                  <span className={`text-xl font-bold ${grandTotal >= 0 ? 'text-paid' : 'text-destructive'}`}>
+                    {grandTotal >= 0 ? '+' : ''}₹{grandTotal.toLocaleString()}
+                  </span>
+                </div>
               </div>
-
-              {/* Current month expenses */}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">{months[selectedMonth - 1]} Expenses</span>
-                <span className="font-medium text-destructive">-₹{currentExpenses.toLocaleString()}</span>
-              </div>
-            </div>
-          </CollapsibleContent>
-
-          {/* Grand Total (always visible) */}
-          <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold">Balance</span>
-              <span className={`text-xl font-bold ${grandTotal >= 0 ? 'text-paid' : 'text-destructive'}`}>
-                {grandTotal >= 0 ? '+' : ''}₹{grandTotal.toLocaleString()}
-              </span>
-            </div>
-          </div>
+            </>
+          )}
         </Collapsible>
       </CardContent>
     </Card>;

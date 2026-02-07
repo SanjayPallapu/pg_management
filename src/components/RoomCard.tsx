@@ -321,10 +321,28 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 setReminderDialogOpen(true);
               };
               const isNew = isNewTenant(tenant.startDate);
+              
+              // Determine tenant payment category for color coding
+              const getTenantBgClass = () => {
+                if (tenant.isLocked) return '';
+                if (isPaid) return 'bg-paid/10 border border-paid/30 rounded-lg px-2 py-1.5';
+                if (isPartial) return 'bg-partial/10 border border-partial/30 rounded-lg px-2 py-1.5';
+                // Check if due date has passed (tenant's join day in the current month)
+                const joinDay = parseDateOnly(tenant.startDate).getDate();
+                const today = new Date();
+                const isCurrentMonth = selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
+                if (isCurrentMonth && today.getDate() < joinDay) {
+                  // Not yet due - light blue
+                  return 'bg-not-due/10 border border-not-due/30 rounded-lg px-2 py-1.5';
+                }
+                // Overdue / pending - red
+                return 'bg-overdue/10 border border-overdue/30 rounded-lg px-2 py-1.5';
+              };
+              
               return (
                 <div
                   key={tenant.id}
-                  className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 ${leftThisMonth ? "opacity-60" : ""}`}
+                  className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 ${leftThisMonth ? "opacity-60" : ""} ${getTenantBgClass()}`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />

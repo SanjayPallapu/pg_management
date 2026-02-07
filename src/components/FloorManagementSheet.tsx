@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { Room } from '@/types';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -306,10 +305,11 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
 
             {/* Continue / Delete */}
             {deleteFlow?.step !== 4 ? (
-              <AlertDialogAction
-                onClick={() =>
-                  setDeleteFlow((p) => (p ? { ...p, step: (p.step + 1) as DeleteFlow['step'] } : p))
-                }
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setDeleteFlow((p) => (p ? { ...p, step: (p.step + 1) as DeleteFlow['step'] } : p));
+                }}
                 disabled={
                   deleteFlow?.step === 2
                     ? deleteFlow.typed.trim().toUpperCase() !== 'DELETE'
@@ -319,7 +319,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                 }
               >
                 Continue
-              </AlertDialogAction>
+              </Button>
             ) : (
               <Button
                 onClick={(e) => {
