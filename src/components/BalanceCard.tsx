@@ -10,10 +10,12 @@ import { usePG } from '@/contexts/PGContext';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
-const DEFAULT_TOGGLES = { familyExpenses: true, currentBills: false, pgRent: true };
-
+const DEFAULT_TOGGLES = {
+  familyExpenses: true,
+  currentBills: false,
+  pgRent: true
+};
 const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${year}-${month}`;
 
 /**
@@ -21,10 +23,19 @@ const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${
  * Shows: Previous Month Balance + Present Month Total Collected - Grand Total (PG Expenses)
  */
 export const BalanceCard = () => {
-  const { selectedMonth, selectedYear } = useMonthContext();
-  const { payments } = useTenantPayments();
-  const { rooms } = useRooms();
-  const { currentPG } = usePG();
+  const {
+    selectedMonth,
+    selectedYear
+  } = useMonthContext();
+  const {
+    payments
+  } = useTenantPayments();
+  const {
+    rooms
+  } = useRooms();
+  const {
+    currentPG
+  } = usePG();
   const [isOpen, setIsOpen] = useState(true);
 
   // Read toggle states for any month (stored per month/year)
@@ -32,17 +43,16 @@ export const BalanceCard = () => {
     try {
       const stored = localStorage.getItem(getStorageKey(month, year));
       if (stored) return JSON.parse(stored);
-    } catch (e) { /* ignore */ }
-    return { ...DEFAULT_TOGGLES };
+    } catch (e) {/* ignore */}
+    return {
+      ...DEFAULT_TOGGLES
+    };
   }, []);
-
   const [toggles, setToggles] = useState(() => getMonthToggles(selectedMonth, selectedYear));
-
   useEffect(() => {
     // Re-read toggles when month changes
     setToggles(getMonthToggles(selectedMonth, selectedYear));
   }, [getMonthToggles, selectedMonth, selectedYear]);
-
   useEffect(() => {
     const handler = () => setToggles(getMonthToggles(selectedMonth, selectedYear));
     window.addEventListener('expenses-toggles-changed', handler);
@@ -50,85 +60,93 @@ export const BalanceCard = () => {
   }, [getMonthToggles, selectedMonth, selectedYear]);
 
   // Previous month info
-  const { prevMonth, prevYear } = useMemo(() => {
+  const {
+    prevMonth,
+    prevYear
+  } = useMemo(() => {
     let pM = selectedMonth - 1;
     let pY = selectedYear;
-    if (pM === 0) { pM = 12; pY -= 1; }
-    return { prevMonth: pM, prevYear: pY };
+    if (pM === 0) {
+      pM = 12;
+      pY -= 1;
+    }
+    return {
+      prevMonth: pM,
+      prevYear: pY
+    };
   }, [selectedMonth, selectedYear]);
 
   // Fetch PG expenses for CURRENT month
-  const { data: currentExpenseData } = useQuery({
+  const {
+    data: currentExpenseData
+  } = useQuery({
     queryKey: ['personal-expenses-balance', selectedMonth, selectedYear],
     queryFn: async () => {
       const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-      const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`
-      );
+      const response = await fetch(`https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`);
       if (!response.ok) return null;
       return response.json();
     },
     staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    gcTime: 2 * 60 * 1000
   });
 
   // Fetch PG expenses for PREVIOUS month (for previous balance calc)
-  const { data: prevExpenseData } = useQuery({
+  const {
+    data: prevExpenseData
+  } = useQuery({
     queryKey: ['personal-expenses-balance', prevMonth, prevYear],
     queryFn: async () => {
       const monthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
-      const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`
-      );
+      const response = await fetch(`https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`);
       if (!response.ok) return null;
       return response.json();
     },
     staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    gcTime: 2 * 60 * 1000
   });
 
   // Day guest revenue for current month
-  const { data: dayGuestRevenue = 0 } = useQuery({
+  const {
+    data: dayGuestRevenue = 0
+  } = useQuery({
     queryKey: ['day-guest-revenue-balance', selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return 0;
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
-      const { data, error } = await supabase
-        .from('day_guests')
-        .select('amount_paid, rooms!inner(pg_id)')
-        .eq('rooms.pg_id', currentPG.id)
-        .gte('from_date', startOfMonth.toISOString().split('T')[0])
-        .lte('from_date', endOfMonth.toISOString().split('T')[0]);
+      const {
+        data,
+        error
+      } = await supabase.from('day_guests').select('amount_paid, rooms!inner(pg_id)').eq('rooms.pg_id', currentPG.id).gte('from_date', startOfMonth.toISOString().split('T')[0]).lte('from_date', endOfMonth.toISOString().split('T')[0]);
       if (error) return 0;
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
     enabled: !!currentPG?.id,
     staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    gcTime: 2 * 60 * 1000
   });
 
   // Day guest revenue for previous month
-  const { data: prevDayGuestRevenue = 0 } = useQuery({
+  const {
+    data: prevDayGuestRevenue = 0
+  } = useQuery({
     queryKey: ['day-guest-revenue-balance', prevMonth, prevYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return 0;
       const startOfMonth = new Date(prevYear, prevMonth - 1, 1);
       const endOfMonth = new Date(prevYear, prevMonth, 0);
-      const { data, error } = await supabase
-        .from('day_guests')
-        .select('amount_paid, rooms!inner(pg_id)')
-        .eq('rooms.pg_id', currentPG.id)
-        .gte('from_date', startOfMonth.toISOString().split('T')[0])
-        .lte('from_date', endOfMonth.toISOString().split('T')[0]);
+      const {
+        data,
+        error
+      } = await supabase.from('day_guests').select('amount_paid, rooms!inner(pg_id)').eq('rooms.pg_id', currentPG.id).gte('from_date', startOfMonth.toISOString().split('T')[0]).lte('from_date', endOfMonth.toISOString().split('T')[0]);
       if (error) return 0;
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
     enabled: !!currentPG?.id,
     staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    gcTime: 2 * 60 * 1000
   });
-
   const PG_RENT = 150000;
 
   // Calculate total collected for a given month
@@ -150,7 +168,10 @@ export const BalanceCard = () => {
     // Overdue collections
     let pM = targetMonth - 1;
     let pY = targetYear;
-    if (pM === 0) { pM = 12; pY -= 1; }
+    if (pM === 0) {
+      pM = 12;
+      pY -= 1;
+    }
     let overdueCollected = 0;
     const allTenants = rooms.flatMap(room => room.tenants);
     const prevActive = allTenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, pY, pM));
@@ -189,23 +210,21 @@ export const BalanceCard = () => {
       const m = (payment as any).notes.match(/Extra:\s*₹?([\d,]+)/);
       if (m) extra += parseInt(m[1].replace(/,/g, '')) || 0;
     });
-
     return thisMonthRent + overdueCollected + dgRevenue + secDep + extra;
   };
 
   // Calculate expenses for a month - toggles only apply to CURRENT month
-  const calcExpenses = (
-    expData: any,
-    applyToggles: boolean,
-    overrideToggles?: { familyExpenses: boolean; currentBills: boolean; pgRent: boolean }
-  ) => {
+  const calcExpenses = (expData: any, applyToggles: boolean, overrideToggles?: {
+    familyExpenses: boolean;
+    currentBills: boolean;
+    pgRent: boolean;
+  }) => {
     if (!expData) return 0;
     const groceries = expData?.breakdown?.groceries?.total || 0;
     const utilityBills = expData?.breakdown?.bills?.total || 0;
     const familyExpenses = expData?.familyExpenses || 0;
     const currentBill = expData?.currentBill || expData?.breakdown?.bills?.currentBills || 0;
     const effectiveToggles = overrideToggles || toggles;
-
     if (applyToggles) {
       // Current month: respect toggle states
       let total = groceries + utilityBills;
@@ -231,11 +250,8 @@ export const BalanceCard = () => {
 
   // Grand total balance = previous month balance + current collected - current expenses
   const grandTotal = previousMonthBalance + currentTotalCollected - currentExpenses;
-
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  return (
-    <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+  return <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
       <CardContent className="p-4">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <div className="flex items-center justify-between mb-3">
@@ -244,11 +260,7 @@ export const BalanceCard = () => {
               <span className="text-sm font-medium text-muted-foreground">Balance Overview</span>
             </div>
             <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                aria-label={isOpen ? 'Collapse balance overview' : 'Expand balance overview'}
-              >
+              <button type="button" className="h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label={isOpen ? 'Collapse balance overview' : 'Expand balance overview'}>
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
             </CollapsibleTrigger>
@@ -281,7 +293,7 @@ export const BalanceCard = () => {
           {/* Grand Total (always visible) */}
           <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold">Grand Total</span>
+              <span className="text-sm font-semibold">Balance</span>
               <span className={`text-xl font-bold ${grandTotal >= 0 ? 'text-paid' : 'text-destructive'}`}>
                 {grandTotal >= 0 ? '+' : ''}₹{grandTotal.toLocaleString()}
               </span>
@@ -289,6 +301,5 @@ export const BalanceCard = () => {
           </div>
         </Collapsible>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
