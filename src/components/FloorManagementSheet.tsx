@@ -321,17 +321,21 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                 Continue
               </AlertDialogAction>
             ) : (
-              <AlertDialogAction
-                onClick={() => deleteFlow && handleDeleteFloor(deleteFlow.floor)}
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (deleteFlow) handleDeleteFloor(deleteFlow.floor);
+                }}
                 disabled={
+                  !deleteFlow ||
                   deletingFloor === deleteFlow.floor ||
                   deleteFlow.typed.trim().toUpperCase() !== 'DELETE' ||
                   !deleteFlow.checked
                 }
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deletingFloor === deleteFlow.floor ? 'Deleting…' : 'Delete Floor'}
-              </AlertDialogAction>
+                {deleteFlow && deletingFloor === deleteFlow.floor ? 'Deleting…' : 'Delete Floor'}
+              </Button>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>

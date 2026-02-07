@@ -33,7 +33,8 @@ const SplashScreen = () => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-transparent overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+      style={{ backgroundColor: 'hsl(var(--background))' }}
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -44,7 +45,7 @@ const SplashScreen = () => {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(1200px 800px at 50% 30%, hsl(var(--primary) / 0.18) 0%, transparent 55%), linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.92) 100%)",
+            "radial-gradient(1200px 800px at 50% 30%, hsl(var(--primary) / 0.18) 0%, transparent 55%)",
         }}
       />
 
@@ -104,6 +105,7 @@ const SplashScreen = () => {
 
       {/* Logo - larger */}
       <motion.div
+        className="relative z-10"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
@@ -111,7 +113,7 @@ const SplashScreen = () => {
         <motion.img
           src={splashLogo}
           alt="App logo"
-          className="w-72 h-72 object-contain"
+          className="w-80 h-80 object-contain"
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -119,29 +121,29 @@ const SplashScreen = () => {
 
       {/* Title text */}
       <motion.h1
-        className="text-3xl font-extrabold text-white mt-6 tracking-wide"
+        className="relative z-10 text-3xl font-extrabold mt-6 tracking-wide"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        style={{ color: '#ffffff' }}
+        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
       >
         PG Management
       </motion.h1>
 
       {/* Tagline */}
       <motion.p
-        className="text-lg font-semibold text-white mt-2 tracking-widest"
+        className="relative z-10 text-lg font-semibold mt-2 tracking-widest"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        style={{ color: '#ffffff' }}
+        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
       >
         Simple. Smart. Secure.
       </motion.p>
 
       {/* Progress bar */}
       <motion.div
-        className="mt-8 w-48 h-1 rounded-full overflow-hidden"
+        className="relative z-10 mt-8 w-48 h-1 rounded-full overflow-hidden"
         style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -158,7 +160,7 @@ const SplashScreen = () => {
 
       {/* Loading text */}
       <motion.p
-        className="text-xs mt-3"
+        className="relative z-10 text-xs mt-3"
         style={{ color: 'rgba(255,255,255,0.7)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
