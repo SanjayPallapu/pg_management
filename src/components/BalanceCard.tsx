@@ -1,24 +1,24 @@
-import { useMemo, useState, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Scale, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-react';
-import { useMonthContext } from '@/contexts/MonthContext';
-import { usePG } from '@/contexts/PGContext';
-import { useTenantPayments } from '@/hooks/useTenantPayments';
-import { useRooms } from '@/hooks/useRooms';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { PaymentEntry } from '@/types';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { toast } from '@/hooks/use-toast';
+import { useMemo, useState, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Scale, ChevronDown, ChevronUp, Pencil, Check, X } from "lucide-react";
+import { useMonthContext } from "@/contexts/MonthContext";
+import { usePG } from "@/contexts/PGContext";
+import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRooms } from "@/hooks/useRooms";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { PaymentEntry } from "@/types";
+import { isTenantActiveInMonth } from "@/utils/dateOnly";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = {
   familyExpenses: true,
   currentBills: false,
-  pgRent: true
+  pgRent: true,
 };
 const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${year}-${month}`;
 
@@ -30,59 +30,60 @@ export const BalanceCard = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(true);
   const [isEditingBalance, setIsEditingBalance] = useState(false);
-  const [editBalance, setEditBalance] = useState('');
+  const [editBalance, setEditBalance] = useState("");
 
   // Previous month info
   const { prevMonth, prevYear } = useMemo(() => {
     let pM = selectedMonth - 1;
     let pY = selectedYear;
-    if (pM === 0) { pM = 12; pY -= 1; }
+    if (pM === 0) {
+      pM = 12;
+      pY -= 1;
+    }
     return { prevMonth: pM, prevYear: pY };
   }, [selectedMonth, selectedYear]);
 
   // Fetch manual balance for previous month from DB
   const { data: manualBalance, isLoading: balanceLoading } = useQuery({
-    queryKey: ['monthly-balance', currentPG?.id, prevMonth, prevYear],
+    queryKey: ["monthly-balance", currentPG?.id, prevMonth, prevYear],
     queryFn: async () => {
       if (!currentPG?.id) return null;
       const { data, error } = await supabase
-        .from('monthly_balances')
-        .select('balance')
-        .eq('pg_id', currentPG.id)
-        .eq('month', prevMonth)
-        .eq('year', prevYear)
+        .from("monthly_balances")
+        .select("balance")
+        .eq("pg_id", currentPG.id)
+        .eq("month", prevMonth)
+        .eq("year", prevYear)
         .maybeSingle();
       if (error) throw error;
       return data?.balance ?? null;
     },
     enabled: !!currentPG?.id,
-    staleTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 60 * 1000,
   });
 
   // Upsert manual balance
   const saveBalance = useMutation({
     mutationFn: async (balance: number) => {
-      if (!currentPG?.id) throw new Error('No PG selected');
-      const { error } = await supabase
-        .from('monthly_balances')
-        .upsert({
+      if (!currentPG?.id) throw new Error("No PG selected");
+      const { error } = await supabase.from("monthly_balances").upsert(
+        {
           pg_id: currentPG.id,
           month: prevMonth,
           year: prevYear,
           balance,
-        } as any, { onConflict: 'pg_id,month,year' });
+        } as any,
+        { onConflict: "pg_id,month,year" },
+      );
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['monthly-balance'] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-balance"] });
       setIsEditingBalance(false);
-      toast({ title: 'Balance saved' });
+      toast({ title: "Balance saved" });
     },
     onError: () => {
-      toast({ title: 'Failed to save balance', variant: 'destructive' });
+      toast({ title: "Failed to save balance", variant: "destructive" });
     },
   });
 
@@ -91,57 +92,55 @@ export const BalanceCard = () => {
     try {
       const stored = localStorage.getItem(getStorageKey(month, year));
       if (stored) return JSON.parse(stored);
-    } catch (e) {/* ignore */}
+    } catch (e) {
+      /* ignore */
+    }
     return { ...DEFAULT_TOGGLES };
   }, []);
 
   const [toggles, setToggles] = useState(() => getMonthToggles(selectedMonth, selectedYear));
-  
+
   // Re-read toggles when month changes or event fires
   useState(() => {
     const handler = () => setToggles(getMonthToggles(selectedMonth, selectedYear));
-    window.addEventListener('expenses-toggles-changed', handler);
-    return () => window.removeEventListener('expenses-toggles-changed', handler);
+    window.addEventListener("expenses-toggles-changed", handler);
+    return () => window.removeEventListener("expenses-toggles-changed", handler);
   });
 
   // Fetch PG expenses for current month
   const { data: currentExpenseData } = useQuery({
-    queryKey: ['personal-expenses-balance', selectedMonth, selectedYear],
+    queryKey: ["personal-expenses-balance", selectedMonth, selectedYear],
     queryFn: async () => {
-      const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-      const response = await fetch(`https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`);
+      const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
+      const response = await fetch(
+        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`,
+      );
       if (!response.ok) return null;
       return response.json();
     },
-    staleTime: 30 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 2 * 60 * 1000,
   });
 
   // Day guest revenue for current month
   const { data: dayGuestRevenue = 0 } = useQuery({
-    queryKey: ['day-guest-revenue-balance', selectedMonth, selectedYear, currentPG?.id],
+    queryKey: ["day-guest-revenue-balance", selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return 0;
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
       const { data, error } = await supabase
-        .from('day_guests')
-        .select('amount_paid, rooms!inner(pg_id)')
-        .eq('rooms.pg_id', currentPG.id)
-        .gte('from_date', startOfMonth.toISOString().split('T')[0])
-        .lte('from_date', endOfMonth.toISOString().split('T')[0]);
+        .from("day_guests")
+        .select("amount_paid, rooms!inner(pg_id)")
+        .eq("rooms.pg_id", currentPG.id)
+        .gte("from_date", startOfMonth.toISOString().split("T")[0])
+        .lte("from_date", endOfMonth.toISOString().split("T")[0]);
       if (error) return 0;
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
     enabled: !!currentPG?.id,
-    staleTime: 30 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 2 * 60 * 1000,
   });
 
   const PG_RENT = 150000;
@@ -149,11 +148,13 @@ export const BalanceCard = () => {
   // Calculate total collected for current month
   const currentTotalCollected = useMemo(() => {
     let thisMonthRent = 0;
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         if (tenant.isLocked) return;
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
-        const payment = payments.find(p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
+        const payment = payments.find(
+          (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
+        );
         if (payment?.paymentEntries) {
           (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
             thisMonthRent += entry.amount;
@@ -163,17 +164,21 @@ export const BalanceCard = () => {
     });
 
     // Overdue collections
-    let pM = selectedMonth - 1, pY = selectedYear;
-    if (pM === 0) { pM = 12; pY -= 1; }
+    let pM = selectedMonth - 1,
+      pY = selectedYear;
+    if (pM === 0) {
+      pM = 12;
+      pY -= 1;
+    }
     let overdueCollected = 0;
-    const allTenants = rooms.flatMap(room => room.tenants);
-    const prevActive = allTenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, pY, pM));
-    prevActive.forEach(tenant => {
+    const allTenants = rooms.flatMap((room) => room.tenants);
+    const prevActive = allTenants.filter((t) => isTenantActiveInMonth(t.startDate, t.endDate, pY, pM));
+    prevActive.forEach((tenant) => {
       if (tenant.isLocked) return;
-      const payment = payments.find(p => p.tenantId === tenant.id && p.month === pM && p.year === pY);
+      const payment = payments.find((p) => p.tenantId === tenant.id && p.month === pM && p.year === pY);
       if (!payment) return;
       const entries = (payment.paymentEntries || []) as PaymentEntry[];
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         const d = new Date(entry.date);
         if (d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear) {
           overdueCollected += entry.amount;
@@ -183,8 +188,8 @@ export const BalanceCard = () => {
 
     // Security deposits
     let secDep = 0;
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
         const dd = new Date(tenant.securityDepositDate);
         if (dd.getMonth() + 1 === selectedMonth && dd.getFullYear() === selectedYear) {
@@ -195,13 +200,17 @@ export const BalanceCard = () => {
 
     // Extra amounts
     let extra = 0;
-    const monthTenants = allTenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth));
-    monthTenants.forEach(tenant => {
+    const monthTenants = allTenants.filter((t) =>
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    );
+    monthTenants.forEach((tenant) => {
       if (tenant.isLocked) return;
-      const payment = payments.find(p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
+      const payment = payments.find(
+        (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
+      );
       if (!payment || !(payment as any).notes) return;
       const m = (payment as any).notes.match(/Extra:\s*₹?([\d,]+)/);
-      if (m) extra += parseInt(m[1].replace(/,/g, '')) || 0;
+      if (m) extra += parseInt(m[1].replace(/,/g, "")) || 0;
     });
 
     return thisMonthRent + overdueCollected + dayGuestRevenue + secDep + extra;
@@ -227,11 +236,9 @@ export const BalanceCard = () => {
 
   // Grand total = previous month balance + current collected - current expenses
   const grandTotal = previousMonthBalance + currentTotalCollected - currentExpenses;
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Only show skeleton on truly first load (no data yet), not during background refetches
-  const hasAnyData = rooms.length > 0 || payments.length > 0 || manualBalance !== null;
-  const isDataLoading = !hasAnyData && (paymentsLoading || roomsLoading || balanceLoading);
+  const isDataLoading = paymentsLoading || roomsLoading || balanceLoading;
 
   const handleStartEdit = () => {
     setEditBalance(String(manualBalance ?? 0));
@@ -253,7 +260,10 @@ export const BalanceCard = () => {
               <span className="text-sm font-medium text-muted-foreground">Balance Overview</span>
             </div>
             <CollapsibleTrigger asChild>
-              <button type="button" className="h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+              <button
+                type="button"
+                className="h-7 w-7 rounded-md inline-flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              >
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
             </CollapsibleTrigger>
@@ -263,12 +273,21 @@ export const BalanceCard = () => {
             <>
               <CollapsibleContent>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
-                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
-                  <div className="flex justify-between items-center"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div>
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
                 </div>
               </CollapsibleContent>
-              <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
+              <div className={`border-t pt-2 ${isOpen ? "mt-2" : "mt-0"}`}>
                 <div className="flex justify-between items-center">
                   <Skeleton className="h-5 w-16" />
                   <Skeleton className="h-7 w-28" />
@@ -289,7 +308,7 @@ export const BalanceCard = () => {
                           onClick={handleStartEdit}
                           className="text-muted-foreground hover:text-primary transition-colors"
                         >
-                          <Pencil className="h-3 w-3" />
+                          <Settings className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -298,20 +317,24 @@ export const BalanceCard = () => {
                         <Input
                           type="number"
                           value={editBalance}
-                          onChange={e => setEditBalance(e.target.value)}
+                          onChange={(e) => setEditBalance(e.target.value)}
                           className="h-6 w-24 text-xs text-right"
                           autoFocus
                         />
                         <button type="button" onClick={handleSaveBalance} className="text-paid hover:text-paid/80">
                           <Check className="h-4 w-4" />
                         </button>
-                        <button type="button" onClick={() => setIsEditingBalance(false)} className="text-destructive hover:text-destructive/80">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingBalance(false)}
+                          className="text-destructive hover:text-destructive/80"
+                        >
                           <X className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
-                      <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-paid' : 'text-destructive'}`}>
-                        {previousMonthBalance >= 0 ? '+' : ''}₹{previousMonthBalance.toLocaleString()}
+                      <span className={`font-medium ${previousMonthBalance >= 0 ? "text-paid" : "text-destructive"}`}>
+                        {previousMonthBalance >= 0 ? "+" : ""}₹{previousMonthBalance.toLocaleString()}
                       </span>
                     )}
                   </div>
@@ -331,11 +354,11 @@ export const BalanceCard = () => {
               </CollapsibleContent>
 
               {/* Grand Total (always visible) */}
-              <div className={`border-t pt-2 ${isOpen ? 'mt-2' : 'mt-0'}`}>
+              <div className={`border-t pt-2 ${isOpen ? "mt-2" : "mt-0"}`}>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold">Balance</span>
-                  <span className={`text-xl font-bold ${grandTotal >= 0 ? 'text-paid' : 'text-destructive'}`}>
-                    {grandTotal >= 0 ? '+' : ''}₹{grandTotal.toLocaleString()}
+                  <span className={`text-xl font-bold ${grandTotal >= 0 ? "text-paid" : "text-destructive"}`}>
+                    {grandTotal >= 0 ? "+" : ""}₹{grandTotal.toLocaleString()}
                   </span>
                 </div>
               </div>
