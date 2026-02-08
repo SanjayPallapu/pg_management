@@ -229,7 +229,9 @@ export const BalanceCard = () => {
   const grandTotal = previousMonthBalance + currentTotalCollected - currentExpenses;
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  const isDataLoading = paymentsLoading || roomsLoading || balanceLoading;
+  // Only show skeleton on truly first load (no data yet), not during background refetches
+  const hasAnyData = rooms.length > 0 || payments.length > 0 || manualBalance !== null;
+  const isDataLoading = !hasAnyData && (paymentsLoading || roomsLoading || balanceLoading);
 
   const handleStartEdit = () => {
     setEditBalance(String(manualBalance ?? 0));

@@ -84,8 +84,9 @@ export const useRooms = () => {
       })) as Room[];
     },
     enabled: !authLoading && !!currentPG?.id,
-    staleTime: 30 * 1000,
-    gcTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevents unnecessary refetches
+    gcTime: 30 * 60 * 1000, // 30 minutes - keeps cache during tab navigation
+    refetchOnWindowFocus: false,
   });
 
   const updateRoom = useMutation({

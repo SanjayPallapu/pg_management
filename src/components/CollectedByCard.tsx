@@ -7,6 +7,7 @@ import { useRooms } from '@/hooks/useRooms';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TenantCollection {
   tenantName: string;
@@ -18,8 +19,8 @@ interface TenantCollection {
 
 export const CollectedByCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { payments } = useTenantPayments();
-  const { rooms } = useRooms();
+  const { payments, isLoading: paymentsLoading } = useTenantPayments();
+  const { rooms, isLoading: roomsLoading } = useRooms();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
 
   const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
@@ -55,7 +56,47 @@ export const CollectedByCard = () => {
   }, [rooms, payments, selectedMonth, selectedYear]);
 
   const entries = Object.entries(collectionsByPerson);
-  if (entries.length === 0) return null;
+  
+  // Show skeleton on initial load, never return null to prevent card disappearing
+  const isInitialLoad = (paymentsLoading || roomsLoading) && rooms.length === 0;
+  
+  if (isInitialLoad) {
+    return (
+      <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <span>👥</span>
+            Collected By
+          </CardTitle>
+          <Users className="h-4 w-4 text-blue-500" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="space-y-2">
+            <div className="flex justify-between"><Skeleton className="h-4 w-20" /><Skeleton className="h-4 w-16" /></div>
+            <div className="flex justify-between"><Skeleton className="h-4 w-20" /><Skeleton className="h-4 w-16" /></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If no collections at all (data loaded but nothing collected), show empty state
+  if (entries.length === 0) {
+    return (
+      <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <span>👥</span>
+            Collected By
+          </CardTitle>
+          <Users className="h-4 w-4 text-blue-500" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <p className="text-xs text-muted-foreground text-center py-2">No collections yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
 
