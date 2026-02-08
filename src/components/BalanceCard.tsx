@@ -56,7 +56,10 @@ export const BalanceCard = () => {
       return data?.balance ?? null;
     },
     enabled: !!currentPG?.id,
-    staleTime: 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // Upsert manual balance
@@ -110,8 +113,11 @@ export const BalanceCard = () => {
       if (!response.ok) return null;
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // Day guest revenue for current month
@@ -131,8 +137,11 @@ export const BalanceCard = () => {
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
     enabled: !!currentPG?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const PG_RENT = 150000;
