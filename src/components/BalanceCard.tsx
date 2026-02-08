@@ -308,7 +308,7 @@ export const BalanceCard = () => {
                           onClick={handleStartEdit}
                           className="text-muted-foreground hover:text-primary transition-colors"
                         >
-                          <Settings className="h-4 w-4" />
+                          <Settings className="h-3 w-3" />
                         </button>
                       )}
                     </div>
