@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Calendar } from "@/components/ui/calendar";
 import { Download, MessageCircle, Phone, Receipt, MessageSquare, Bell, History, Search, X, Users, Calendar as CalendarIcon, Wallet, PartyPopper } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Room, PaymentEntry } from "@/types";
@@ -58,6 +59,8 @@ export const MonthlyRentSheet = ({
   const [payRemainingExtra, setPayRemainingExtra] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("upi");
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<"upi" | "cash">("upi");
+  const [collectedBy, setCollectedBy] = useState<string>("Me");
+  const [remainingCollectedBy, setRemainingCollectedBy] = useState<string>("Me");
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
@@ -435,7 +438,8 @@ export const MonthlyRentSheet = ({
       amount: paymentAmount,
       date: formattedDate,
       type: isFullPayment ? "full" as const : "partial" as const,
-      mode: paymentMode
+      mode: paymentMode,
+      collectedBy,
     };
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
@@ -486,6 +490,7 @@ export const MonthlyRentSheet = ({
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
     setOverpaymentReason("");
+    setCollectedBy("Me");
   };
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
@@ -510,7 +515,8 @@ export const MonthlyRentSheet = ({
       amount: finalAmount,
       date: formattedDate,
       type: isFullPayment ? "remaining" as const : "partial" as const,
-      mode: remainingPaymentMode
+      mode: remainingPaymentMode,
+      collectedBy: remainingCollectedBy,
     };
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
@@ -571,6 +577,7 @@ export const MonthlyRentSheet = ({
     setPayRemainingAmount(0);
     setPayRemainingDiscount(0);
     setPayRemainingExtra(0);
+    setRemainingCollectedBy("Me");
   };
   const handleDeletePayments = (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
     if (!deletePaymentTenant) return;
@@ -656,12 +663,6 @@ export const MonthlyRentSheet = ({
                 </Button>}
             </div>
             <div className="flex gap-1 items-center">
-              {/* Hide Left Tenants Toggle */}
-              <div className="flex items-center gap-1.5 mr-2" title="Hide left tenants">
-                <Label htmlFor="hide-left" className="text-[10px] text-muted-foreground whitespace-nowrap">Left</Label>
-                <Switch id="hide-left" checked={hideLeftTenants} onCheckedChange={setHideLeftTenants} className="data-[state=checked]:bg-amber-500" />
-              </div>
-
               {/* Edit Mode Toggle */}
               <div className="flex items-center gap-1.5 mr-2">
                 <Switch id="edit-mode" checked={editModeEnabled} onCheckedChange={setEditModeEnabled} className="data-[state=checked]:bg-destructive" />
@@ -894,6 +895,9 @@ export const MonthlyRentSheet = ({
                               {entry.mode && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === "upi" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"}`}>
                                   {entry.mode === "upi" ? "UPI" : "Cash"}
                                 </span>}
+                              {entry.collectedBy && <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                                  {entry.collectedBy}
+                                </span>}
                             </div>) : tenant.payment.paymentDate && <div className="text-xs text-muted-foreground">
                               Paid on: {format(new Date(tenant.payment.paymentDate), "dd MMM yyyy")}
                             </div>}
@@ -966,6 +970,17 @@ export const MonthlyRentSheet = ({
                 </Button>
                 <Button type="button" variant={paymentMode === "cash" ? "default" : "outline"} className="flex-1" onClick={() => setPaymentMode("cash")}>
                   Cash
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                <Button type="button" variant={collectedBy === "Me" ? "default" : "outline"} className="flex-1" onClick={() => setCollectedBy("Me")}>
+                  Me
+                </Button>
+                <Button type="button" variant={collectedBy === "Brother" ? "default" : "outline"} className="flex-1" onClick={() => setCollectedBy("Brother")}>
+                  Brother
                 </Button>
               </div>
             </div>
@@ -1098,6 +1113,17 @@ export const MonthlyRentSheet = ({
                 </Button>
                 <Button type="button" variant={remainingPaymentMode === "cash" ? "default" : "outline"} className="flex-1" onClick={() => setRemainingPaymentMode("cash")}>
                   Cash
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                <Button type="button" variant={remainingCollectedBy === "Me" ? "default" : "outline"} className="flex-1" onClick={() => setRemainingCollectedBy("Me")}>
+                  Me
+                </Button>
+                <Button type="button" variant={remainingCollectedBy === "Brother" ? "default" : "outline"} className="flex-1" onClick={() => setRemainingCollectedBy("Brother")}>
+                  Brother
                 </Button>
               </div>
             </div>
