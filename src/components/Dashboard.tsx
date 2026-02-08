@@ -29,6 +29,7 @@ import { SettlementSummarySheet } from './SettlementSummarySheet';
 import { DayGuestRevenueCard } from './DayGuestRevenueCard';
 import { OverduePaidCard } from './OverduePaidCard';
 import { BalanceCard } from './BalanceCard';
+import { CollectedByCard } from './CollectedByCard';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { getPricePerBed } from '@/constants/pricing';
 
@@ -386,6 +387,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Building Rent Card */}
               <BuildingRentCard />
+
+              {/* Collected By Card - shows who collected payments */}
+              <CollectedByCard />
 
               {/* Day Guest Revenue Card - Admin only */}
               {isAdmin && (

@@ -142,6 +142,36 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          month: number
+          pg_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          month: number
+          pg_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          month?: number
+          pg_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           amount: number
