@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Scale, ChevronDown, ChevronUp, Pencil, Check, X } from "lucide-react";
+import { Scale, ChevronDown, ChevronUp, Pencil, Check, X, Settings } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
