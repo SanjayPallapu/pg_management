@@ -1188,7 +1188,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   className="flex-1"
                   onClick={() => setCollectedBy("Me")}
                 >
-                  Sanjay
+                  Me
                 </Button>
                 <Button
                   type="button"
@@ -1196,7 +1196,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   className="flex-1"
                   onClick={() => setCollectedBy("Brother")}
                 >
-                  Brother
+                  Sai
                 </Button>
               </div>
             </div>
