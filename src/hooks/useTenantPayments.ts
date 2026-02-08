@@ -66,8 +66,9 @@ export const useTenantPayments = () => {
       })) as TenantPayment[];
     },
     enabled: !!currentPG?.id,
-    staleTime: 30 * 1000, // Cache for 30 seconds for faster perceived loads
-    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevents unnecessary refetches
+    gcTime: 30 * 60 * 1000, // 30 minutes - keeps cache during tab navigation
+    refetchOnWindowFocus: false,
   });
 
   const upsertPayment = useMutation({
