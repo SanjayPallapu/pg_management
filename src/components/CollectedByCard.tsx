@@ -1,19 +1,30 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { format } from 'date-fns';
+
+interface TenantCollection {
+  tenantName: string;
+  roomNo: string;
+  amount: number;
+  date: string;
+  mode: 'upi' | 'cash';
+}
 
 export const CollectedByCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
+  const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
 
-  const collectionsByPerson = useMemo(() => {
+  const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
     const collections: Record<string, number> = {};
+    const tenants: Record<string, TenantCollection[]> = {};
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
@@ -28,17 +39,29 @@ export const CollectedByCard = () => {
         (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
           const collector = entry.collectedBy || 'Unknown';
           collections[collector] = (collections[collector] || 0) + entry.amount;
+          if (!tenants[collector]) tenants[collector] = [];
+          tenants[collector].push({
+            tenantName: tenant.name,
+            roomNo: room.roomNo,
+            amount: entry.amount,
+            date: entry.date,
+            mode: entry.mode,
+          });
         });
       });
     });
 
-    return collections;
+    return { collectionsByPerson: collections, tenantsByCollector: tenants };
   }, [rooms, payments, selectedMonth, selectedYear]);
 
   const entries = Object.entries(collectionsByPerson);
   if (entries.length === 0) return null;
 
   const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+
+  const toggleCollector = (name: string) => {
+    setExpandedCollector(prev => prev === name ? null : name);
+  };
 
   return (
     <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
@@ -51,20 +74,52 @@ export const CollectedByCard = () => {
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
-          {entries.map(([name, amount]) => (
-            <div key={name} className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-sm font-medium">{name}</span>
+          {entries.map(([name, amount]) => {
+            const isExpanded = expandedCollector === name;
+            const tenantList = tenantsByCollector[name] || [];
+            return (
+              <div key={name}>
+                <button
+                  type="button"
+                  onClick={() => toggleCollector(name)}
+                  className="flex justify-between items-center w-full hover:bg-muted/50 rounded px-1 py-0.5 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-sm font-medium">{name}</span>
+                    {isExpanded ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-paid">₹{amount.toLocaleString()}</span>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      ({Math.round((amount / total) * 100)}%)
+                    </span>
+                  </div>
+                </button>
+                {isExpanded && tenantList.length > 0 && (
+                  <div className="ml-5 mt-1 space-y-1 border-l-2 border-blue-500/20 pl-3 pb-1">
+                    {tenantList.map((t, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium">{t.tenantName}</span>
+                          <span className="text-muted-foreground">R{t.roomNo}</span>
+                          <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${t.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                            {t.mode === 'upi' ? 'UPI' : 'Cash'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium">₹{t.amount.toLocaleString()}</span>
+                          <span className="text-muted-foreground ml-1">
+                            {format(new Date(t.date), 'dd MMM')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="text-right">
-                <span className="text-sm font-bold text-paid">₹{amount.toLocaleString()}</span>
-                <span className="text-xs text-muted-foreground ml-1">
-                  ({Math.round((amount / total) * 100)}%)
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="border-t pt-2 flex justify-between items-center">
             <span className="text-sm font-semibold">Total</span>
             <span className="text-sm font-bold">₹{total.toLocaleString()}</span>

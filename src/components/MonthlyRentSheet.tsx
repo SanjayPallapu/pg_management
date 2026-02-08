@@ -1027,6 +1027,23 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </div>
                   )}
 
+                  {/* Collected By badges - above the action row */}
+                  {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 && (
+                    (() => {
+                      const collectors = [...new Set(tenant.payment.paymentEntries.map(e => e.collectedBy).filter(Boolean))];
+                      if (collectors.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {collectors.map((collector, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                              {collector}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()
+                  )}
+
                   <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
                       <div className="text-xs text-muted-foreground">
@@ -1046,14 +1063,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </span>
                               {entry.mode && (
                                 <span
-                                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === "upi" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"}`}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === "upi" ? "bg-upi-muted text-upi" : "bg-cash-muted text-cash"}`}
                                 >
                                   {entry.mode === "upi" ? "UPI" : "Cash"}
-                                </span>
-                              )}
-                              {entry.collectedBy && (
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                                  {entry.collectedBy}
                                 </span>
                               )}
                             </div>
@@ -1098,12 +1110,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
       {/* Payment Amount Dialog */}
       <AlertDialog open={!!paymentAmountTenant} onOpenChange={() => setPaymentAmountTenant(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
           <AlertDialogHeader>
             <AlertDialogTitle>Enter Payment Amount</AlertDialogTitle>
             <AlertDialogDescription>Enter the amount received and select date.</AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
             <div>
               <Label>Amount (₹)</Label>
               <Input
