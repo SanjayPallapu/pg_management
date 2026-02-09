@@ -603,10 +603,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const status = getTenantPaymentStatus(tenant.id);
     if (status === "Paid") return false;
 
-    // Check if selected month is in the past
+    // Check if selected month is in the past (zero out time to avoid false positives)
     const selectedDate = new Date(selectedYear, selectedMonth - 1, 1);
     const currentDate = new Date();
-    currentDate.setDate(1); // First of current month
+    currentDate.setFullYear(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    currentDate.setHours(0, 0, 0, 0);
     return selectedDate < currentDate;
   };
 
