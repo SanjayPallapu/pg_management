@@ -5,7 +5,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { PaymentEntry } from '@/types';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CollectorSettingsDialog } from './CollectorSettingsDialog';
@@ -60,7 +60,7 @@ export const CollectedByCard = () => {
 
         // Security deposit collections (by deposit date in selected month)
         if (tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && tenant.securityDepositDate) {
-          const depositDate = new Date(tenant.securityDepositDate);
+          const depositDate = parseDateOnly(tenant.securityDepositDate);
           const isInMonth =
             depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear;
 
@@ -195,7 +195,7 @@ export const CollectedByCard = () => {
                         <div className="text-right">
                           <span className="font-medium">₹{t.amount.toLocaleString()}</span>
                           <span className="text-muted-foreground ml-1">
-                            {format(new Date(t.date), 'dd MMM')}
+                            {format(t.type === 'deposit' ? parseDateOnly(t.date) : new Date(t.date), 'dd MMM')}
                           </span>
                         </div>
                       </div>
