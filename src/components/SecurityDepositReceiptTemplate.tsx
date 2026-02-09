@@ -14,6 +14,7 @@ export interface SecurityDepositReceiptData {
     amount: number;
     date: string;
     mode: 'upi' | 'cash';
+    collectedBy?: string;
   };
   // PG Branding
   pgName?: string;
@@ -218,6 +219,12 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
                 <td style={{ padding: '8px 12px', color: '#6b7280', fontSize: '12px' }}>Deposit Date:</td>
                 <td style={{ padding: '8px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{formattedDepositDate}</td>
               </tr>
+              {data.deposit.collectedBy && (
+                <tr>
+                  <td style={{ padding: '8px 12px', color: '#6b7280', fontSize: '12px' }}>Collected By:</td>
+                  <td style={{ padding: '8px 12px', fontWeight: 500, fontSize: '12px', color: '#1a1a1a' }}>{data.deposit.collectedBy}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

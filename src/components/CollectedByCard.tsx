@@ -17,6 +17,7 @@ interface TenantCollection {
   amount: number;
   date: string;
   mode: 'upi' | 'cash';
+  type?: 'rent' | 'deposit';
 }
 
 export const CollectedByCard = () => {
@@ -33,28 +34,52 @@ export const CollectedByCard = () => {
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        if (tenant.isLocked) return;
-        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
+        // Rent payments (only if tenant active in month)
+        if (isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
+          if (tenant.isLocked) return;
+          const payment = payments.find(
+            p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+          );
+          if (payment?.paymentEntries) {
+            (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
+              const rawId = entry.collectedBy || 'Unknown';
+              const displayName = getCollectorDisplayName(rawId);
+              collections[displayName] = (collections[displayName] || 0) + entry.amount;
+              if (!tenants[displayName]) tenants[displayName] = [];
+              tenants[displayName].push({
+                tenantName: tenant.name,
+                roomNo: room.roomNo,
+                amount: entry.amount,
+                date: entry.date,
+                mode: entry.mode,
+                type: 'rent',
+              });
+            });
+          }
+        }
 
-        const payment = payments.find(
-          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
-        );
-        if (!payment?.paymentEntries) return;
+        // Security deposit collections (by deposit date in selected month)
+        if (tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && tenant.securityDepositDate) {
+          const depositDate = new Date(tenant.securityDepositDate);
+          const isInMonth =
+            depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear;
 
-        (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
-          const rawId = entry.collectedBy || 'Unknown';
-          // Map the stored ID to its display name, fallback to raw ID
-          const displayName = getCollectorDisplayName(rawId);
-          collections[displayName] = (collections[displayName] || 0) + entry.amount;
-          if (!tenants[displayName]) tenants[displayName] = [];
-          tenants[displayName].push({
-            tenantName: tenant.name,
-            roomNo: room.roomNo,
-            amount: entry.amount,
-            date: entry.date,
-            mode: entry.mode,
-          });
-        });
+          if (isInMonth) {
+            const rawId = tenant.securityDepositCollectedBy || 'Unknown';
+            const displayName = getCollectorDisplayName(rawId);
+            const mode = (tenant.securityDepositMode === 'upi' ? 'upi' : 'cash') as 'upi' | 'cash';
+            collections[displayName] = (collections[displayName] || 0) + tenant.securityDepositAmount;
+            if (!tenants[displayName]) tenants[displayName] = [];
+            tenants[displayName].push({
+              tenantName: tenant.name,
+              roomNo: room.roomNo,
+              amount: tenant.securityDepositAmount,
+              date: tenant.securityDepositDate,
+              mode,
+              type: 'deposit',
+            });
+          }
+        }
       });
     });
 
@@ -161,6 +186,11 @@ export const CollectedByCard = () => {
                           <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${t.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
                             {t.mode === 'upi' ? 'UPI' : 'Cash'}
                           </span>
+                          {t.type === 'deposit' && (
+                            <span className="px-1 py-0.5 rounded text-[10px] font-medium bg-purple-500/10 text-purple-400">
+                              Deposit
+                            </span>
+                          )}
                         </div>
                         <div className="text-right">
                           <span className="font-medium">₹{t.amount.toLocaleString()}</span>

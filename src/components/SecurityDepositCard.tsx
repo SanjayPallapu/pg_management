@@ -23,6 +23,27 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SecurityDepositReceiptDialog } from './SecurityDepositReceiptDialog';
 import { SecurityDepositReceiptData } from './SecurityDepositReceiptTemplate';
+import { useCollectorNames } from '@/hooks/useCollectorNames';
+
+const DEPOSIT_COLLECTED_BY_CACHE_KEY = 'security-deposit-collected-by';
+
+const readDepositCollectedByCache = (): Record<string, string> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(DEPOSIT_COLLECTED_BY_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed as Record<string, string>;
+    return {};
+  } catch {
+    return {};
+  }
+};
+
+const writeDepositCollectedByCache = (cache: Record<string, string>) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(DEPOSIT_COLLECTED_BY_CACHE_KEY, JSON.stringify(cache));
+};
 
 interface SecurityDepositCardProps {
   rooms: Room[];
@@ -56,6 +77,9 @@ export const SecurityDepositCard = ({
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [depositDate, setDepositDate] = useState<Date>(new Date());
   const [depositMode, setDepositMode] = useState<'upi' | 'cash'>('upi');
+  const { collectors, getCollectorDisplayName } = useCollectorNames();
+  const defaultCollectorId = useMemo(() => collectors[0]?.id ?? 'Me', [collectors]);
+  const [depositCollectedBy, setDepositCollectedBy] = useState<string>(defaultCollectorId);
   const [showEditActions, setShowEditActions] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{ data: SecurityDepositReceiptData; phone: string } | null>(null);
@@ -66,6 +90,17 @@ export const SecurityDepositCard = ({
   const [selectedTenantForAction, setSelectedTenantForAction] = useState<TenantWithRoom | null>(null);
   const { updateTenant } = useRooms();
   const { isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (collectors.length === 0) return;
+    setDepositCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
+  }, [collectors, defaultCollectorId]);
+
+  useEffect(() => {
+    if (depositDialog && !editDialog) {
+      setDepositCollectedBy(defaultCollectorId);
+    }
+  }, [depositDialog, editDialog, defaultCollectorId]);
 
   // Flatten all tenants with their room info
   const allTenants: TenantWithRoom[] = rooms.flatMap(room => 
@@ -208,23 +243,51 @@ export const SecurityDepositCard = ({
     .filter(t => t.securityDepositMode === 'cash')
     .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
 
+  const tryUpdateTenantDeposit = async (
+    tenantId: string,
+    updates: Partial<Tenant>,
+    tenantName?: string,
+  ) => {
+    try {
+      await updateTenant.mutateAsync({ tenantId, updates, tenantName });
+      if (updates.securityDepositCollectedBy) {
+        const cache = readDepositCollectedByCache();
+        cache[tenantId] = updates.securityDepositCollectedBy;
+        writeDepositCollectedByCache(cache);
+      }
+      return true;
+    } catch (error: any) {
+      const message = typeof error?.message === 'string' ? error.message : '';
+      if (message.includes('security_deposit_collected_by')) {
+        const { securityDepositCollectedBy, ...rest } = updates;
+        if (securityDepositCollectedBy) {
+          const cache = readDepositCollectedByCache();
+          cache[tenantId] = securityDepositCollectedBy;
+          writeDepositCollectedByCache(cache);
+        }
+        await updateTenant.mutateAsync({ tenantId, updates: rest, tenantName });
+        return true;
+      }
+      throw error;
+    }
+  };
+
   const handleAddDeposit = async () => {
     if (!depositDialog || depositAmount <= 0) return;
 
     try {
-      await updateTenant.mutateAsync({
-        tenantId: depositDialog.id,
-        updates: {
-          securityDepositAmount: depositAmount,
-          securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
-          securityDepositMode: depositMode,
-        },
-      });
+      await tryUpdateTenantDeposit(depositDialog.id, {
+        securityDepositAmount: depositAmount,
+        securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
+        securityDepositMode: depositMode,
+        securityDepositCollectedBy: depositCollectedBy,
+      }, depositDialog.name);
       toast.success(`Deposit of ₹${depositAmount.toLocaleString()} recorded for ${depositDialog.name}`);
       setDepositDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
       setDepositMode('upi');
+      setDepositCollectedBy(defaultCollectorId);
     } catch (error) {
       toast.error('Failed to record deposit');
     }
@@ -234,19 +297,18 @@ export const SecurityDepositCard = ({
     if (!editDialog || depositAmount <= 0) return;
 
     try {
-      await updateTenant.mutateAsync({
-        tenantId: editDialog.id,
-        updates: {
-          securityDepositAmount: depositAmount,
-          securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
-          securityDepositMode: depositMode,
-        },
-      });
+      await tryUpdateTenantDeposit(editDialog.id, {
+        securityDepositAmount: depositAmount,
+        securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
+        securityDepositMode: depositMode,
+        securityDepositCollectedBy: depositCollectedBy,
+      }, editDialog.name);
       toast.success(`Deposit updated to ₹${depositAmount.toLocaleString()} for ${editDialog.name}`);
       setEditDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
       setDepositMode('upi');
+      setDepositCollectedBy(defaultCollectorId);
     } catch (error) {
       toast.error('Failed to update deposit');
     }
@@ -260,8 +322,15 @@ export const SecurityDepositCard = ({
         updates: {
           securityDepositAmount: null,
           securityDepositDate: null,
+          securityDepositMode: null,
+          securityDepositCollectedBy: null,
         },
       });
+      const cache = readDepositCollectedByCache();
+      if (cache[removeDialog.id]) {
+        delete cache[removeDialog.id];
+        writeDepositCollectedByCache(cache);
+      }
       toast.success(`Deposit removed for ${removeDialog.name}`);
       setRemoveDialog(null);
     } catch (error) {
@@ -378,6 +447,9 @@ export const SecurityDepositCard = ({
                             amount: tenant.securityDepositAmount || 0,
                             date: tenant.securityDepositDate || new Date().toISOString(),
                             mode: (tenant.securityDepositMode as 'upi' | 'cash') || 'cash',
+                            collectedBy: tenant.securityDepositCollectedBy
+                              ? getCollectorDisplayName(tenant.securityDepositCollectedBy)
+                              : undefined,
                           },
                           pgName: currentPG?.name,
                           pgLogoUrl: currentPG?.logoUrl,
@@ -411,6 +483,11 @@ export const SecurityDepositCard = ({
                               {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
                             </span>
                           )}
+                            {tenant.securityDepositCollectedBy && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                                {getCollectorDisplayName(tenant.securityDepositCollectedBy)}
+                              </span>
+                            )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -462,6 +539,7 @@ export const SecurityDepositCard = ({
                                 setDepositAmount(tenant.securityDepositAmount || 5000);
                                 setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
                                 setDepositMode((tenant.securityDepositMode as 'upi' | 'cash') || 'upi');
+                                setDepositCollectedBy(tenant.securityDepositCollectedBy || defaultCollectorId);
                                 setEditDialog(tenant);
                               }}
                             >
@@ -522,6 +600,7 @@ export const SecurityDepositCard = ({
                           onClick={() => {
                             setDepositDialog(tenant);
                             setDepositAmount(5000);
+                            setDepositCollectedBy(defaultCollectorId);
                           }}
                         >
                           Add Deposit
@@ -586,6 +665,22 @@ export const SecurityDepositCard = ({
                 >
                   Cash
                 </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={depositCollectedBy === collector.id ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setDepositCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>
@@ -682,6 +777,22 @@ export const SecurityDepositCard = ({
                 >
                   Cash
                 </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={depositCollectedBy === collector.id ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setDepositCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>

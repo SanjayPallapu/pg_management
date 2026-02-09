@@ -10,6 +10,17 @@ export const useRooms = () => {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { currentPG } = usePG();
   const { logAudit } = useAuditLog();
+  const depositCollectedByCache = (() => {
+    if (typeof window === "undefined") return {} as Record<string, string>;
+    try {
+      const raw = localStorage.getItem("security-deposit-collected-by");
+      if (!raw) return {} as Record<string, string>;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
+    } catch {
+      return {} as Record<string, string>;
+    }
+  })();
 
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ["rooms", currentPG?.id],
@@ -75,6 +86,8 @@ export const useRooms = () => {
           securityDepositAmount: tenant.security_deposit_amount,
           securityDepositDate: tenant.security_deposit_date,
           securityDepositMode: tenant.security_deposit_mode,
+          securityDepositCollectedBy:
+            (tenant as any).security_deposit_collected_by || depositCollectedByCache[tenant.id] || null,
           isLocked: (tenant as any).is_locked || false,
         })),
       })) as Room[];
@@ -234,6 +247,9 @@ export const useRooms = () => {
       }
       if (updates.securityDepositDate !== undefined) updateData.security_deposit_date = updates.securityDepositDate;
       if (updates.securityDepositMode !== undefined) updateData.security_deposit_mode = updates.securityDepositMode;
+      if (updates.securityDepositCollectedBy !== undefined) {
+        updateData.security_deposit_collected_by = updates.securityDepositCollectedBy;
+      }
       if (updates.isLocked !== undefined) {
         updateData.is_locked = updates.isLocked;
         changes.is_locked = { old: !updates.isLocked, new: updates.isLocked };

@@ -471,6 +471,7 @@ export type Database = {
           security_deposit_amount: number | null
           security_deposit_date: string | null
           security_deposit_mode: string | null
+          security_deposit_collected_by: string | null
           start_date: string
           updated_at: string
         }
@@ -488,6 +489,7 @@ export type Database = {
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
           security_deposit_mode?: string | null
+          security_deposit_collected_by?: string | null
           start_date: string
           updated_at?: string
         }
@@ -505,6 +507,7 @@ export type Database = {
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
           security_deposit_mode?: string | null
+          security_deposit_collected_by?: string | null
           start_date?: string
           updated_at?: string
         }

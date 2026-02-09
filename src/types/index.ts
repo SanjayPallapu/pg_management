@@ -21,6 +21,7 @@ export interface Tenant {
   securityDepositAmount?: number | null;
   securityDepositDate?: string | null;
   securityDepositMode?: string | null;
+  securityDepositCollectedBy?: string | null;
   isLocked?: boolean;
 }
 
