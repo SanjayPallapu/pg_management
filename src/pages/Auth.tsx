@@ -180,7 +180,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-1">
+          <div className="mx-auto">
             <img src={appLogo} alt="PG logo" className="h-44 w-44 object-contain" decoding="async" />
           </div>
           <CardTitle>PG Management</CardTitle>
