@@ -61,11 +61,13 @@ import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
+import { useCollectorNames } from "@/hooks/useCollectorNames";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { collectors } = useCollectorNames();
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
     id: string;
     name: string;
@@ -1194,22 +1196,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             <div>
               <Label>Collected By</Label>
               <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={collectedBy === "Me" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setCollectedBy("Me")}
-                >
-                  Sanjay
-                </Button>
-                <Button
-                  type="button"
-                  variant={collectedBy === "Brother" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setCollectedBy("Brother")}
-                >
-                  Sai
-                </Button>
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={collectedBy === collector.id ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>
@@ -1372,22 +1369,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             <div>
               <Label>Collected By</Label>
               <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={remainingCollectedBy === "Me" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setRemainingCollectedBy("Me")}
-                >
-                  Sanjay
-                </Button>
-                <Button
-                  type="button"
-                  variant={remainingCollectedBy === "Brother" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setRemainingCollectedBy("Brother")}
-                >
-                  Sai
-                </Button>
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={remainingCollectedBy === collector.id ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setRemainingCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>

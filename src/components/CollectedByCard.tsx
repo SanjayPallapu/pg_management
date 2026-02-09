@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
@@ -8,6 +8,7 @@ import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CollectorSettingsDialog } from './CollectorSettingsDialog';
 
 interface TenantCollection {
   tenantName: string;
@@ -22,6 +23,7 @@ export const CollectedByCard = () => {
   const { payments, isLoading: paymentsLoading } = useTenantPayments();
   const { rooms, isLoading: roomsLoading } = useRooms();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
     const collections: Record<string, number> = {};
@@ -111,7 +113,15 @@ export const CollectedByCard = () => {
           <span>👥</span>
           Collected By
         </CardTitle>
-        <Users className="h-4 w-4 text-blue-500" />
+         <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-1 rounded hover:bg-muted/50 transition-colors"
+              title="Collector Settings"
+            >
+              <Settings className="h-4 w-4 text-blue-500" />
+            </button>
+          </div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
@@ -167,6 +177,7 @@ export const CollectedByCard = () => {
           </div>
         </div>
       </CardContent>
+      <CollectorSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </Card>
   );
 };

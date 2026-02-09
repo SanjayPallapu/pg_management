@@ -60,6 +60,7 @@ import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
+import { useCollectorNames } from "@/hooks/useCollectorNames";
 
 // Helper to check if tenant joined within last 5 days
 const isNewTenant = (startDate: string): boolean => {
@@ -81,6 +82,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin, isStaff } = useAuth();
+  const { collectors } = useCollectorNames();
   const canManageTenants = isAdmin || isStaff;
   const navigate = useNavigate();
 
@@ -95,6 +97,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("upi");
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<"upi" | "cash">("upi");
+  const [collectedBy, setCollectedBy] = useState<string>("Me");
+  const [remainingCollectedBy, setRemainingCollectedBy] = useState<string>("Me");
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
@@ -449,6 +453,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       date: formattedDate,
       type: isFullPayment ? ("full" as const) : ("partial" as const),
       mode: paymentMode,
+      collectedBy,
     };
 
     // Combine with existing entries
@@ -506,6 +511,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     setPartialPaymentTenant(null);
     setPartialAmount(0);
     setOverpaymentReason("");
+    setCollectedBy("Me");
   };
 
   const handlePayRemaining = (tenantId: string) => {
@@ -535,6 +541,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       date: formattedDate,
       type: isFullPayment ? ("remaining" as const) : ("partial" as const),
       mode: remainingPaymentMode,
+      collectedBy: remainingCollectedBy,
     };
 
     const existingEntries = payment.paymentEntries || [];
@@ -588,6 +595,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
+    setRemainingCollectedBy("Me");
   };
 
   // detect overdue based on SELECTED month payment status
@@ -614,6 +622,18 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     if (hasCrossedCycle(tenant)) {
       return { card: "bg-overdue-muted", badge: "bg-overdue text-overdue-foreground" };
     }
+    // Check if due date hasn't arrived yet (not-due = blue)
+    const isCurrentMonth = (() => {
+      const now = new Date();
+      return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+    })();
+    if (isCurrentMonth) {
+      const joinDay = parseDateOnly(tenant.startDate).getDate();
+      const today = new Date();
+      if (today.getDate() < joinDay) {
+        return { card: "bg-not-due-muted", badge: "bg-not-due text-not-due-foreground" };
+      }
+    }
     return { card: "bg-pending-muted", badge: "bg-pending text-pending-foreground" };
   };
 
@@ -622,6 +642,19 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const status = getTenantPaymentStatus(tenantId);
     if (status === "Paid") return "Paid";
     if (status === "Partial") return "Due";
+    // Check if tenant's due day hasn't arrived yet
+    const tenant = room.tenants.find(t => t.id === tenantId);
+    if (tenant) {
+      const isCurrentMonth = (() => {
+        const now = new Date();
+        return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+      })();
+      if (isCurrentMonth) {
+        const joinDay = parseDateOnly(tenant.startDate).getDate();
+        const today = new Date();
+        if (today.getDate() < joinDay) return "Pending";
+      }
+    }
     return "Pending";
   };
 
@@ -1319,6 +1352,22 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               </div>
             </div>
             <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={collectedBy === collector.id ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
               <Label>Payment Date</Label>
               <Calendar
                 mode="single"
@@ -1396,6 +1445,22 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                 >
                   Cash
                 </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Collected By</Label>
+              <div className="flex gap-2 mt-2">
+                {collectors.map((collector) => (
+                  <Button
+                    key={collector.id}
+                    type="button"
+                    variant={remainingCollectedBy === collector.id ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setRemainingCollectedBy(collector.id)}
+                  >
+                    {collector.displayName}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>
