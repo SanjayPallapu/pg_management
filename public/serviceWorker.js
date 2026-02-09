@@ -1,7 +1,7 @@
-const CACHE_NAME = 'pg-management-v2';
-const STATIC_CACHE = 'pg-static-v2';
-const DYNAMIC_CACHE = 'pg-dynamic-v2';
-const API_CACHE = 'pg-api-v2';
+const CACHE_NAME = 'pg-management-v3';
+const STATIC_CACHE = 'pg-static-v3';
+const DYNAMIC_CACHE = 'pg-dynamic-v3';
+const API_CACHE = 'pg-api-v3';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
