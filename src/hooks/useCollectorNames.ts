@@ -12,26 +12,111 @@ const DEFAULT_COLLECTORS: CollectorConfig[] = [
   { id: 'Brother', displayName: 'Sai' },
 ];
 
+const DEFAULT_COLLECTOR_NAME_BY_ID = new Map(
+  DEFAULT_COLLECTORS.map((collector) => [collector.id, collector.displayName])
+);
+
+const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
+  if (!Array.isArray(raw)) return DEFAULT_COLLECTORS;
+
+  const seen = new Set<string>();
+  const normalized: CollectorConfig[] = [];
+
+  raw.forEach((item) => {
+    let id = '';
+    let displayName = '';
+
+    if (typeof item === 'string') {
+      id = item.trim();
+      displayName = DEFAULT_COLLECTOR_NAME_BY_ID.get(id) ?? id;
+    } else if (item && typeof item === 'object') {
+      const obj = item as Partial<CollectorConfig>;
+      id = String(obj.id ?? '').trim();
+      displayName = String(obj.displayName ?? '').trim();
+
+      if (!id && displayName) {
+        id = displayName;
+      }
+      if (!displayName && id) {
+        displayName = DEFAULT_COLLECTOR_NAME_BY_ID.get(id) ?? id;
+      }
+    }
+
+    if (!id || !displayName) return;
+    if (seen.has(id)) return;
+
+    seen.add(id);
+    normalized.push({ id, displayName });
+  });
+
+  return normalized.length > 0 ? normalized : DEFAULT_COLLECTORS;
+};
+
 export const useCollectorNames = () => {
   const [collectors, setCollectors] = useState<CollectorConfig[]>(DEFAULT_COLLECTORS);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    let nextCollectors = DEFAULT_COLLECTORS;
+    let shouldPersist = !stored;
+
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCollectors(parsed);
+        nextCollectors = normalizeCollectors(parsed);
+        if (JSON.stringify(nextCollectors) !== stored) {
+          shouldPersist = true;
         }
       } catch {
-        // Use defaults
+        shouldPersist = true;
       }
+    }
+
+    setCollectors(nextCollectors);
+    if (shouldPersist) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
     }
   }, []);
 
+  useEffect(() => {
+    const syncFromStorage = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        setCollectors(DEFAULT_COLLECTORS);
+        return;
+      }
+
+      try {
+        setCollectors(normalizeCollectors(JSON.parse(stored)));
+      } catch {
+        setCollectors(DEFAULT_COLLECTORS);
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        syncFromStorage();
+      }
+    };
+
+    const handleCustomEvent = () => {
+      syncFromStorage();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('collector-names-changed', handleCustomEvent as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('collector-names-changed', handleCustomEvent as EventListener);
+    };
+  }, []);
+
   const saveCollectors = useCallback((updated: CollectorConfig[]) => {
-    setCollectors(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const normalized = normalizeCollectors(updated);
+    setCollectors(normalized);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    window.dispatchEvent(new Event('collector-names-changed'));
   }, []);
 
   const addCollector = useCallback((displayName: string) => {
