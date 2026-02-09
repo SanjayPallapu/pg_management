@@ -9,6 +9,7 @@ import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CollectorSettingsDialog } from './CollectorSettingsDialog';
+import { useCollectorNames } from '@/hooks/useCollectorNames';
 
 interface TenantCollection {
   tenantName: string;
@@ -22,8 +23,16 @@ export const CollectedByCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, isLoading: paymentsLoading } = useTenantPayments();
   const { rooms, isLoading: roomsLoading } = useRooms();
+  const { collectors } = useCollectorNames();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Build a map from collector ID to display name
+  const collectorDisplayNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    collectors.forEach(c => { map[c.id] = c.displayName; });
+    return map;
+  }, [collectors]);
 
   const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
     const collections: Record<string, number> = {};
@@ -40,10 +49,12 @@ export const CollectedByCard = () => {
         if (!payment?.paymentEntries) return;
 
         (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
-          const collector = entry.collectedBy || 'Unknown';
-          collections[collector] = (collections[collector] || 0) + entry.amount;
-          if (!tenants[collector]) tenants[collector] = [];
-          tenants[collector].push({
+          const rawId = entry.collectedBy || 'Unknown';
+          // Map the stored ID to its display name, fallback to raw ID
+          const displayName = collectorDisplayNameMap[rawId] || rawId;
+          collections[displayName] = (collections[displayName] || 0) + entry.amount;
+          if (!tenants[displayName]) tenants[displayName] = [];
+          tenants[displayName].push({
             tenantName: tenant.name,
             roomNo: room.roomNo,
             amount: entry.amount,
@@ -55,7 +66,7 @@ export const CollectedByCard = () => {
     });
 
     return { collectionsByPerson: collections, tenantsByCollector: tenants };
-  }, [rooms, payments, selectedMonth, selectedYear]);
+  }, [rooms, payments, selectedMonth, selectedYear, collectorDisplayNameMap]);
 
   const entries = Object.entries(collectionsByPerson);
   
