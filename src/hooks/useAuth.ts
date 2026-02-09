@@ -32,12 +32,13 @@ export const useAuth = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          console.error('[Auth] Error fetching user role:', error);
           return null;
         }
+        console.debug('[Auth] Role fetched', { userId, role: data?.role });
         return data?.role as AppRole | null;
       } catch (err) {
-        console.error('Error in fetchUserRole:', err);
+        console.error('[Auth] Error in fetchUserRole:', err);
         return null;
       }
     };
@@ -46,6 +47,8 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
+
+        console.debug('[Auth] onAuthStateChange', { event, userId: session?.user?.id ?? null });
         
         setAuthState(prev => ({
           ...prev,
@@ -71,6 +74,8 @@ export const useAuth = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
+
+        console.debug('[Auth] Initial session', { userId: session?.user?.id ?? null });
 
         setAuthState(prev => ({
           ...prev,

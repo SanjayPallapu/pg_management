@@ -9,7 +9,7 @@ export const useTenantPayments = () => {
   const queryClient = useQueryClient();
   const { currentPG } = usePG();
 
-  const { data: payments = [], isLoading } = useQuery({
+  const { data: payments = [], isLoading, error } = useQuery({
     queryKey: ['tenant-payments', currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) {
@@ -25,7 +25,10 @@ export const useTenantPayments = () => {
         .select('id')
         .eq('pg_id', currentPG.id);
 
-      if (roomIdsError) throw roomIdsError;
+      if (roomIdsError) {
+        console.error('[Payments] Failed to fetch room ids', roomIdsError);
+        throw roomIdsError;
+      }
 
       const roomIds = (roomIdsData || []).map(r => r.id);
       if (roomIds.length === 0) return [];
@@ -35,7 +38,10 @@ export const useTenantPayments = () => {
         .select('id')
         .in('room_id', roomIds);
 
-      if (tenantIdsError) throw tenantIdsError;
+      if (tenantIdsError) {
+        console.error('[Payments] Failed to fetch tenant ids', tenantIdsError);
+        throw tenantIdsError;
+      }
 
       const tenantIds = (tenantIdsData || []).map(t => t.id);
       if (tenantIds.length === 0) return [];
@@ -48,9 +54,12 @@ export const useTenantPayments = () => {
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Payments] Failed to fetch payments', error);
+        throw error;
+      }
 
-      return data.map(payment => ({
+      const mappedPayments = data.map(payment => ({
         id: payment.id,
         tenantId: payment.tenant_id,
         month: payment.month,
@@ -64,12 +73,18 @@ export const useTenantPayments = () => {
         whatsappSentAt: (payment as any).whatsapp_sent_at || undefined,
         notes: (payment as any).notes || undefined,
       })) as TenantPayment[];
+
+      console.debug('[Payments] Fetched payments', { count: mappedPayments.length, pgId: currentPG.id });
+      return mappedPayments;
     },
     enabled: !!currentPG?.id,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    onError: (error) => {
+      console.error('[Payments] Query error', error);
+    },
   });
 
   const upsertPayment = useMutation({
@@ -210,6 +225,7 @@ export const useTenantPayments = () => {
   return {
     payments,
     isLoading,
+    error,
     upsertPayment,
     getPaymentForMonth,
     getPreviousMonthOverdue,

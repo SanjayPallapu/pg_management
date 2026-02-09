@@ -4,11 +4,32 @@ import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_KEY = SUPABASE_ANON_KEY || SUPABASE_PUBLISHABLE_KEY;
+
+export const supabaseConfig = {
+  url: SUPABASE_URL,
+  key: SUPABASE_KEY,
+  isValid: !!SUPABASE_URL && !!SUPABASE_KEY,
+};
+
+if (!supabaseConfig.isValid) {
+  console.error('[Supabase] Missing environment variables', {
+    VITE_SUPABASE_URL: SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
+    VITE_SUPABASE_PUBLISHABLE_KEY: SUPABASE_PUBLISHABLE_KEY,
+  });
+} else {
+  console.debug('[Supabase] Config loaded', {
+    url: SUPABASE_URL,
+    origin: typeof window !== 'undefined' ? window.location.origin : 'server',
+  });
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY!, {
   auth: {
     storage: localStorage,
     persistSession: true,

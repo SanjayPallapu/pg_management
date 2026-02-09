@@ -22,22 +22,25 @@ export const useRooms = () => {
     }
   })();
 
-  const { data: rooms = [], isLoading } = useQuery({
+  const { data: rooms = [], isLoading, error } = useQuery({
     queryKey: ["rooms", currentPG?.id],
     queryFn: async () => {
       // Don't fetch if no PG is selected
       if (!currentPG?.id) {
         return [];
-      }
+        }
 
-      // Fetch rooms filtered by current PG
+        // Fetch rooms filtered by current PG
       const { data: roomsData, error: roomsError } = await supabase
         .from("rooms")
         .select("*")
         .eq("pg_id", currentPG.id)
         .order("room_no");
 
-      if (roomsError) throw roomsError;
+      if (roomsError) {
+        console.error('[Rooms] Failed to fetch rooms', roomsError);
+        throw roomsError;
+      }
 
       if (!roomsData || roomsData.length === 0) {
         return [];
@@ -51,7 +54,10 @@ export const useRooms = () => {
         .select("*")
         .in("room_id", roomIds);
 
-      if (tenantsError) throw tenantsError;
+      if (tenantsError) {
+        console.error('[Rooms] Failed to fetch tenants', tenantsError);
+        throw tenantsError;
+      }
 
       // Group tenants by room_id
       const tenantsByRoom = (tenantsData || [])
@@ -66,7 +72,7 @@ export const useRooms = () => {
           {} as Record<string, typeof tenantsData>,
         );
 
-      return roomsData.map((room) => ({
+      const mappedRooms = roomsData.map((room) => ({
         id: room.id,
         roomNo: room.room_no,
         status: room.status as "Vacant" | "Occupied" | "Partially Occupied",
@@ -91,12 +97,18 @@ export const useRooms = () => {
           isLocked: (tenant as any).is_locked || false,
         })),
       })) as Room[];
+
+      console.debug('[Rooms] Fetched rooms', { count: mappedRooms.length, pgId: currentPG.id });
+      return mappedRooms;
     },
     enabled: !authLoading && !!currentPG?.id,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    onError: (error) => {
+      console.error('[Rooms] Query error', error);
+    },
   });
 
   const updateRoom = useMutation({

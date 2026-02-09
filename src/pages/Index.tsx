@@ -32,6 +32,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ import appLogo from "@/assets/pg-logo.png";
 import { SecurityDepositCard } from "@/components/SecurityDepositCard";
 
 const Index = () => {
-  const { rooms, isLoading } = useRooms();
+  const { rooms, isLoading, error: roomsError } = useRooms();
   const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG } = usePG();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -59,7 +60,8 @@ const Index = () => {
     onTabChange: setActiveTab,
   });
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { signOut, isAdmin } = useAuth();
+  const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -67,6 +69,22 @@ const Index = () => {
     toast.success("Signed out successfully");
     navigate("/auth");
   };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('[Index] getSession error', error);
+      }
+      console.debug('[Index] session check', { userId: data.session?.user?.id ?? null });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      console.warn('[Index] User not authenticated, redirecting to auth');
+      navigate('/auth');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   // Update selected room when rooms data changes
   useEffect(() => {
@@ -78,6 +96,20 @@ const Index = () => {
     }
   }, [rooms, selectedRoom]);
 
+  useEffect(() => {
+    if (!isLoading && !pgLoading) {
+      if (!currentPG?.id) {
+        setDataError('No PG selected');
+        console.warn('[Index] No current PG selected');
+      } else if (rooms.length === 0) {
+        setDataError('No rooms found');
+        console.warn('[Index] Rooms empty for PG', { pgId: currentPG.id });
+      } else {
+        setDataError(null);
+      }
+    }
+  }, [isLoading, pgLoading, currentPG?.id, rooms.length]);
+
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
     setIsDialogOpen(true);
@@ -87,6 +119,16 @@ const Index = () => {
   if (needsSetup && !pgLoading) {
     return <OnboardingFlow onComplete={() => refreshPGs()} />;
   }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <span className="text-sm text-muted-foreground">Loading session...</span>
+      </div>
+    );
+  }
+
+  const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,6 +211,22 @@ const Index = () => {
           </Tabs>
         </div>
       </div>
+
+      {apiErrorMessage && (
+        <div className="container mx-auto px-4 pt-4">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            Failed to load data: {apiErrorMessage}
+          </div>
+        </div>
+      )}
+
+      {dataError && (
+        <div className="container mx-auto px-4 pt-4">
+          <div className="rounded-lg border border-muted-foreground/20 bg-muted/30 p-3 text-sm text-muted-foreground">
+            No Data Found
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
