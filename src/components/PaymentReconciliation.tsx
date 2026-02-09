@@ -14,7 +14,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { format, getDaysInMonth, subMonths } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
@@ -376,10 +376,13 @@ export const PaymentReconciliation = ({
   const collectionScheduleData = useMemo(() => {
     const scheduleByDay: Record<number, { day: number; expected: number; tenants: number }> = {};
     
-    // Get all pending tenants for current month
+    // Get all active (non-left) pending tenants for current month
     const allTenants = rooms.flatMap(room => 
       room.tenants
-        .filter(tenant => isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth))
+        .filter(tenant => 
+          isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth) &&
+          !hasTenantLeftNow(tenant.endDate) // Exclude tenants who have already left
+        )
         .map(tenant => ({ ...tenant, roomNo: room.roomNo }))
     );
 
@@ -807,7 +810,7 @@ export const PaymentReconciliation = ({
                   </ResponsiveContainer>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  {filteredCollectionScheduleData.slice(0, 6).map(item => (
+                  {filteredCollectionScheduleData.map(item => (
                     <button 
                       key={item.day} 
                       className="p-2 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer"

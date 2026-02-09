@@ -57,8 +57,8 @@ export const CollectedByCard = () => {
 
   const entries = Object.entries(collectionsByPerson);
   
-  // Show skeleton on initial load, never return null to prevent card disappearing
-  const isInitialLoad = (paymentsLoading || roomsLoading) && rooms.length === 0;
+  // Show skeleton only on true initial load (no cached data at all)
+  const isInitialLoad = (paymentsLoading || roomsLoading) && rooms.length === 0 && payments.length === 0;
   
   if (isInitialLoad) {
     return (
