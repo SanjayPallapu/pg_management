@@ -23,16 +23,9 @@ export const CollectedByCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, isLoading: paymentsLoading } = useTenantPayments();
   const { rooms, isLoading: roomsLoading } = useRooms();
-  const { collectors } = useCollectorNames();
+  const { getCollectorDisplayName } = useCollectorNames();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  // Build a map from collector ID to display name
-  const collectorDisplayNameMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    collectors.forEach(c => { map[c.id] = c.displayName; });
-    return map;
-  }, [collectors]);
 
   const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
     const collections: Record<string, number> = {};
@@ -51,7 +44,7 @@ export const CollectedByCard = () => {
         (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
           const rawId = entry.collectedBy || 'Unknown';
           // Map the stored ID to its display name, fallback to raw ID
-          const displayName = collectorDisplayNameMap[rawId] || rawId;
+          const displayName = getCollectorDisplayName(rawId);
           collections[displayName] = (collections[displayName] || 0) + entry.amount;
           if (!tenants[displayName]) tenants[displayName] = [];
           tenants[displayName].push({
@@ -66,7 +59,7 @@ export const CollectedByCard = () => {
     });
 
     return { collectionsByPerson: collections, tenantsByCollector: tenants };
-  }, [rooms, payments, selectedMonth, selectedYear, collectorDisplayNameMap]);
+  }, [rooms, payments, selectedMonth, selectedYear, getCollectorDisplayName]);
 
   const entries = Object.entries(collectionsByPerson);
   

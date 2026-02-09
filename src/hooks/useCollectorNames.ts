@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export interface CollectorConfig {
   id: string;
@@ -54,6 +54,25 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
 
 export const useCollectorNames = () => {
   const [collectors, setCollectors] = useState<CollectorConfig[]>(DEFAULT_COLLECTORS);
+
+  const collectorDisplayNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    DEFAULT_COLLECTOR_NAME_BY_ID.forEach((displayName, id) => {
+      map[id] = displayName;
+    });
+
+    collectors.forEach((collector) => {
+      map[collector.id] = collector.displayName;
+      map[collector.displayName] = collector.displayName;
+    });
+
+    return map;
+  }, [collectors]);
+
+  const getCollectorDisplayName = useCallback(
+    (rawId: string) => collectorDisplayNameMap[rawId] || rawId,
+    [collectorDisplayNameMap]
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -149,5 +168,7 @@ export const useCollectorNames = () => {
     updateCollector,
     removeCollector,
     resetToDefaults,
+    collectorDisplayNameMap,
+    getCollectorDisplayName,
   };
 };

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,7 +67,8 @@ interface MonthlyRentSheetProps {
 }
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { collectors } = useCollectorNames();
+  const { collectors, getCollectorDisplayName } = useCollectorNames();
+  const defaultCollectorId = useMemo(() => collectors[0]?.id ?? "Me", [collectors]);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
     id: string;
     name: string;
@@ -134,6 +135,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     paymentEntries?: PaymentEntry[];
     previousMonthPending?: number;
   } | null>(null);
+
+  useEffect(() => {
+    if (collectors.length === 0) return;
+    setCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
+    setRemainingCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
+  }, [collectors, defaultCollectorId]);
 
   // Handle OS back gesture to close dialogs
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
@@ -467,6 +474,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       setPayRemainingDate(new Date());
       setPayRemainingDiscount(0);
       setPayRemainingExtra(0);
+      setRemainingCollectedBy(defaultCollectorId);
     }
   };
   const confirmPaymentAmount = () => {
@@ -546,7 +554,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
     setOverpaymentReason("");
-    setCollectedBy("Me");
+    setCollectedBy(defaultCollectorId);
   };
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
@@ -632,7 +640,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPayRemainingAmount(0);
     setPayRemainingDiscount(0);
     setPayRemainingExtra(0);
-    setRemainingCollectedBy("Me");
+    setRemainingCollectedBy(defaultCollectorId);
   };
   const handleDeletePayments = (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
     if (!deletePaymentTenant) return;
@@ -1038,7 +1046,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         <div className="flex flex-wrap gap-1 mb-2">
                           {collectors.map((collector, idx) => (
                             <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                              {collector}
+                              {getCollectorDisplayName(collector)}
                             </span>
                           ))}
                         </div>
