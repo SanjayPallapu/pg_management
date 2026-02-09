@@ -12,7 +12,7 @@ export const useRooms = () => {
   const { logAudit } = useAuditLog();
 
   const { data: rooms = [], isLoading } = useQuery({
-    queryKey: ["rooms", isAdmin, currentPG?.id],
+    queryKey: ["rooms", currentPG?.id],
     queryFn: async () => {
       // Don't fetch if no PG is selected
       if (!currentPG?.id) {
@@ -66,16 +66,12 @@ export const useRooms = () => {
         tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
           name: tenant.name,
-          // In a multi-user system, each user sees their own PG data
-          // RLS ensures users only access their own PG's rooms/tenants
-          // So phone masking is not needed - all data belongs to current user
           phone: tenant.phone,
           startDate: tenant.start_date,
           endDate: tenant.end_date || undefined,
           monthlyRent: tenant.monthly_rent,
           paymentStatus: tenant.payment_status as "Paid" | "Pending",
           paymentDate: tenant.payment_date || undefined,
-          // Security deposit info is visible to the PG owner
           securityDepositAmount: tenant.security_deposit_amount,
           securityDepositDate: tenant.security_deposit_date,
           securityDepositMode: tenant.security_deposit_mode,
@@ -84,9 +80,10 @@ export const useRooms = () => {
       })) as Room[];
     },
     enabled: !authLoading && !!currentPG?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes - prevents unnecessary refetches
-    gcTime: 30 * 60 * 1000, // 30 minutes - keeps cache during tab navigation
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const updateRoom = useMutation({
@@ -107,8 +104,8 @@ export const useRooms = () => {
     },
     onMutate: async (newRoom) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
-      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", currentPG?.id]);
+      queryClient.setQueryData(["rooms", currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => (room.roomNo === newRoom.roomNo ? newRoom : room));
       });
@@ -116,7 +113,7 @@ export const useRooms = () => {
     },
     onError: (_err, _newRoom, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
+        queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
@@ -161,10 +158,10 @@ export const useRooms = () => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
       
       // Snapshot the previous value
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
+      const previousRooms = queryClient.getQueryData(["rooms", currentPG?.id]);
       
       // Optimistically update with a temp ID
-      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
+      queryClient.setQueryData(["rooms", currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => {
           if (room.id === roomId) {
@@ -195,7 +192,7 @@ export const useRooms = () => {
     onError: (_err, _variables, context) => {
       // Rollback to previous state on error
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
+        queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
@@ -259,8 +256,8 @@ export const useRooms = () => {
     },
     onMutate: async ({ tenantId, updates }) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
-      const previousRooms = queryClient.getQueryData(["rooms", isAdmin, currentPG?.id]);
-      queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], (old: Room[] | undefined) => {
+      const previousRooms = queryClient.getQueryData(["rooms", currentPG?.id]);
+      queryClient.setQueryData(["rooms", currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
         return old.map((room) => ({
           ...room,
@@ -271,7 +268,7 @@ export const useRooms = () => {
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRooms) {
-        queryClient.setQueryData(["rooms", isAdmin, currentPG?.id], context.previousRooms);
+        queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
     },
     onSuccess: () => {
