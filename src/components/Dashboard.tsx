@@ -1,37 +1,49 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, CreditCard, AlertTriangle, UserCheck, UserPlus, TrendingUp, UserMinus, ChevronDown, Wallet, Users, Settings } from 'lucide-react';
-import { Room, DashboardStats, PaymentEntry } from '@/types';
-import { useMonthContext } from '@/contexts/MonthContext';
-import { usePG } from '@/contexts/PGContext';
-import { useTenantPayments } from '@/hooks/useTenantPayments';
-import { useRentCalculations } from '@/hooks/useRentCalculations';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { DayGuestSheet } from './DayGuestSheet';
-import { SecurityDepositCard } from './SecurityDepositCard';
-import { PaymentModeCard } from './PaymentModeCard';
-import { EmptyBedsSheet } from './EmptyBedsSheet';
-import { TenantLockCard } from './TenantLockCard';
-import { PreviousMonthOverdueCard } from './PreviousMonthOverdueCard';
-import { TenantMovementCard } from './TenantMovementCard';
-import { TotalCollectedCard } from './TotalCollectedCard';
-import { PersonalExpensesCard } from './PersonalExpensesCard';
-import { TodaySpendingCard } from './TodaySpendingCard';
-import { AllCollectedCard } from './AllCollectedCard';
-import { PendingTenantsCard } from './PendingTenantsCard';
-import { CalculatorCard } from './CalculatorCard';
-import { KeyNumbersCard } from './KeyNumbersCard';
-import { BuildingRentCard } from './BuildingRentCard';
-import { SettlementSummarySheet } from './SettlementSummarySheet';
-import { DayGuestRevenueCard } from './DayGuestRevenueCard';
-import { OverduePaidCard } from './OverduePaidCard';
-import { BalanceCard } from './BalanceCard';
-import { CollectedByCard } from './CollectedByCard';
-import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
-import { getPricePerBed } from '@/constants/pricing';
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Building,
+  CreditCard,
+  AlertTriangle,
+  UserCheck,
+  UserPlus,
+  TrendingUp,
+  UserMinus,
+  ChevronDown,
+  Wallet,
+  Users,
+  Settings,
+} from "lucide-react";
+import { Room, DashboardStats, PaymentEntry } from "@/types";
+import { useMonthContext } from "@/contexts/MonthContext";
+import { usePG } from "@/contexts/PGContext";
+import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRentCalculations } from "@/hooks/useRentCalculations";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { DayGuestSheet } from "./DayGuestSheet";
+import { SecurityDepositCard } from "./SecurityDepositCard";
+import { PaymentModeCard } from "./PaymentModeCard";
+import { EmptyBedsSheet } from "./EmptyBedsSheet";
+import { TenantLockCard } from "./TenantLockCard";
+import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
+import { TenantMovementCard } from "./TenantMovementCard";
+import { TotalCollectedCard } from "./TotalCollectedCard";
+import { PersonalExpensesCard } from "./PersonalExpensesCard";
+import { TodaySpendingCard } from "./TodaySpendingCard";
+import { AllCollectedCard } from "./AllCollectedCard";
+import { PendingTenantsCard } from "./PendingTenantsCard";
+import { CalculatorCard } from "./CalculatorCard";
+import { KeyNumbersCard } from "./KeyNumbersCard";
+import { BuildingRentCard } from "./BuildingRentCard";
+import { SettlementSummarySheet } from "./SettlementSummarySheet";
+import { DayGuestRevenueCard } from "./DayGuestRevenueCard";
+import { OverduePaidCard } from "./OverduePaidCard";
+import { BalanceCard } from "./BalanceCard";
+import { CollectedByCard } from "./CollectedByCard";
+import { isTenantActiveInMonth, isTenantActiveNow } from "@/utils/dateOnly";
+import { getPricePerBed } from "@/constants/pricing";
 
 interface DashboardProps {
   rooms: Room[];
@@ -47,12 +59,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
-  
+
   // Collapsible section states
   const [financialsOpen, setFinancialsOpen] = useState(true);
   const [tenantsOpen, setTenantsOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
-  
+
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
     selectedYear,
@@ -62,7 +74,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   // Fetch day guest stats for selected month - filtered by current PG
   const { data: dayGuestStats } = useQuery({
-    queryKey: ['day-guest-stats', selectedMonth, selectedYear, currentPG?.id],
+    queryKey: ["day-guest-stats", selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
 
@@ -70,29 +82,29 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
       const { data, error } = await supabase
-        .from('day_guests')
-        .select('total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id)')
-        .eq('rooms.pg_id', currentPG.id)
-        .gte('from_date', startOfMonth.toISOString().split('T')[0])
-        .lte('from_date', endOfMonth.toISOString().split('T')[0]);
+        .from("day_guests")
+        .select("total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id)")
+        .eq("rooms.pg_id", currentPG.id)
+        .gte("from_date", startOfMonth.toISOString().split("T")[0])
+        .lte("from_date", endOfMonth.toISOString().split("T")[0]);
 
       if (error) {
-        console.error('Error fetching day guest stats:', error);
+        console.error("Error fetching day guest stats:", error);
         return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
       }
 
       const collected = data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
       const pending = data.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
-      
+
       // Calculate UPI and Cash totals
       let upi = 0;
       let cash = 0;
-      data.forEach(g => {
+      data.forEach((g) => {
         const entries = (g.payment_entries as any[]) || [];
-        entries.forEach(entry => {
-          if (entry.mode === 'upi') {
+        entries.forEach((entry) => {
+          if (entry.mode === "upi") {
             upi += entry.amount || 0;
-          } else if (entry.mode === 'cash') {
+          } else if (entry.mode === "cash") {
             cash += entry.amount || 0;
           }
         });
@@ -104,13 +116,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   });
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
-  
+
   // Check if viewing current month
   const today = new Date();
-  const isCurrentMonth = selectedMonth === (today.getMonth() + 1) && selectedYear === today.getFullYear();
+  const isCurrentMonth = selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
 
-  const roomStats = rooms.map(room => {
-    const activeTenants = room.tenants.filter(t => {
+  const roomStats = rooms.map((room) => {
+    const activeTenants = room.tenants.filter((t) => {
       const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
       if (isCurrentMonth) {
         return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
@@ -118,13 +130,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       return activeInSelectedMonth;
     });
     const activeCount = activeTenants.length;
-    
+
     // Ensure we don't count more occupied than capacity
     const occupied = Math.min(activeCount, room.capacity);
     const emptyBeds = Math.max(0, room.capacity - occupied);
     const perBedRent = getPricePerBed(room.capacity);
     const potentialAdditionalRent = emptyBeds * perBedRent;
-    
+
     return {
       roomNo: room.roomNo,
       capacity: room.capacity,
@@ -137,16 +149,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       isEmpty: occupied === 0,
     };
   });
-  
+
   const totalOccupied = roomStats.reduce((sum, r) => sum + r.occupied, 0);
   const totalEmptyBeds = roomStats.reduce((sum, r) => sum + r.emptyBeds, 0);
   const totalPotentialAdditionalRevenue = roomStats.reduce((sum, r) => sum + r.potentialAdditionalRent, 0);
-  const fullyOccupiedRooms = roomStats.filter(r => r.isFull).length;
-  const vacantRooms = roomStats.filter(r => r.isEmpty).length;
-  
+  const fullyOccupiedRooms = roomStats.filter((r) => r.isFull).length;
+  const vacantRooms = roomStats.filter((r) => r.isEmpty).length;
+
   // Current revenue from present tenants (sum of their monthly rents)
   const currentMonthlyRevenue = rooms.reduce((sum, room) => {
-    const activeTenants = room.tenants.filter(t => {
+    const activeTenants = room.tenants.filter((t) => {
       const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
       if (isCurrentMonth) {
         return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
@@ -155,21 +167,21 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     });
     return sum + activeTenants.reduce((s, t) => s + t.monthlyRent, 0);
   }, 0);
-  
+
   // Max monthly revenue if all beds filled (using fixed per-bed rates)
-  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + (room.capacity * getPricePerBed(room.capacity)), 0);
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.capacity * getPricePerBed(room.capacity), 0);
 
   // Calculate total collected (same logic as TotalCollectedCard) for PersonalExpensesCard
   const totalCollectedForExpenses = useMemo(() => {
     // This month rent from payment entries
     let thisMonthRent = 0;
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         if (tenant.isLocked) return;
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
-        
+
         const payment = payments.find(
-          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+          (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
         );
         if (payment?.paymentEntries) {
           (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
@@ -187,18 +199,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       prevMonth = 12;
       prevYear = selectedYear - 1;
     }
-    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({ ...tenant, roomNo: room.roomNo })));
-    const prevMonthActiveTenants = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)
+    const allTenants = rooms.flatMap((room) => room.tenants.map((tenant) => ({ ...tenant, roomNo: room.roomNo })));
+    const prevMonthActiveTenants = allTenants.filter((tenant) =>
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth),
     );
-    prevMonthActiveTenants.forEach(tenant => {
+    prevMonthActiveTenants.forEach((tenant) => {
       if (tenant.isLocked) return;
-      const payment = payments.find(p => 
-        p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear
-      );
+      const payment = payments.find((p) => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear);
       if (!payment) return;
       const entries = (payment.paymentEntries || []) as PaymentEntry[];
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         const entryDate = new Date(entry.date);
         if (entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear) {
           overdueCollected += entry.amount;
@@ -208,25 +218,25 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
     // Extra amounts from notes
     let extraAmounts = 0;
-    const currentMonthTenants = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)
+    const currentMonthTenants = allTenants.filter((tenant) =>
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth),
     );
-    currentMonthTenants.forEach(tenant => {
+    currentMonthTenants.forEach((tenant) => {
       if (tenant.isLocked) return;
-      const payment = payments.find(p => 
-        p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+      const payment = payments.find(
+        (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
       );
       if (!payment || !payment.notes) return;
       const extraMatch = payment.notes.match(/Extra:\s*₹?([\d,]+)/);
       if (extraMatch) {
-        extraAmounts += parseInt(extraMatch[1].replace(/,/g, '')) || 0;
+        extraAmounts += parseInt(extraMatch[1].replace(/,/g, "")) || 0;
       }
     });
 
     // Security deposits this month
     let securityDeposits = 0;
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
         const depositDate = new Date(tenant.securityDepositDate);
         if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
@@ -249,10 +259,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   return (
     <>
       <div className="space-y-6">
-
         {/* Balance Card - above everything */}
         <BalanceCard />
-
+        <CollectedByCard />
         {/* Split KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
@@ -263,12 +272,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Capacity</span>
-                    <Building 
-                      className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
+                    <Building
+                      className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                       onClick={() => setCalculatorSheetOpen(true)}
                     />
                   </div>
-                  <div className="text-2xl font-bold">{totalOccupied}/{totalCapacity}</div>
+                  <div className="text-2xl font-bold">
+                    {totalOccupied}/{totalCapacity}
+                  </div>
                   <p className="text-xs text-muted-foreground">{stats.totalRooms} rooms across 3 floors</p>
                 </div>
                 {/* Right: Occupancy */}
@@ -320,7 +331,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <Wallet className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">Financials</span>
             </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
@@ -334,7 +347,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <AllCollectedCard rooms={rooms} />
 
               {/* Potential Revenue Card - Clickable */}
-              <Card 
+              <Card
                 className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
                 onClick={() => setEmptyBedsSheetOpen(true)}
               >
@@ -345,7 +358,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                       <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
                     </div>
                   </div>
-                  
+
                   {/* Current vs Max revenue comparison */}
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div>
@@ -357,14 +370,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                       <p className="text-xs text-muted-foreground">Max capacity</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div className="text-sm font-semibold text-pending">
                       +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {totalEmptyBeds} beds empty
-                    </div>
+                    <div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
                 </CardContent>
@@ -389,12 +400,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <BuildingRentCard />
 
               {/* Collected By Card - shows who collected payments */}
-              <CollectedByCard />
 
               {/* Day Guest Revenue Card - Admin only */}
-              {isAdmin && (
-                <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} />
-              )}
+              {isAdmin && <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} />}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -406,7 +414,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <Users className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">Tenants</span>
             </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${tenantsOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${tenantsOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
@@ -417,7 +427,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <TenantMovementCard rooms={rooms} />
 
               {/* Settlement Summary Card */}
-              <Card 
+              <Card
                 className="cursor-pointer transition-colors hover:bg-accent/50"
                 onClick={() => setSettlementSheetOpen(true)}
               >
@@ -441,7 +451,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <Settings className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">Tools & Admin</span>
             </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3">
@@ -459,24 +471,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       </div>
 
       {isAdmin && <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />}
-      <EmptyBedsSheet 
-        open={emptyBedsSheetOpen} 
+      <EmptyBedsSheet
+        open={emptyBedsSheetOpen}
         onOpenChange={setEmptyBedsSheetOpen}
         roomStats={roomStats}
         totalEmptyBeds={totalEmptyBeds}
         totalPotentialRevenue={totalPotentialAdditionalRevenue}
       />
-      <SettlementSummarySheet
-        open={settlementSheetOpen}
-        onOpenChange={setSettlementSheetOpen}
-        rooms={rooms}
-      />
+      <SettlementSummarySheet open={settlementSheetOpen} onOpenChange={setSettlementSheetOpen} rooms={rooms} />
       {/* Hidden calculator triggered by building icon */}
-      <CalculatorCard 
-        externalOpen={calculatorSheetOpen} 
-        onExternalOpenChange={setCalculatorSheetOpen}
-        hideCard
-      />
+      <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
     </>
   );
 };
