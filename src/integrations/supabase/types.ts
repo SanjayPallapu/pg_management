@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      collector_names: {
+        Row: {
+          id: string
+          user_id: string
+          collector_key: string
+          display_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          collector_key: string
+          display_name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          collector_key?: string
+          display_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

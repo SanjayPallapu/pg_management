@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface CollectorConfig {
   id: string;
@@ -65,6 +67,7 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
 
 export const useCollectorNames = () => {
   const [collectors, setCollectors] = useState<CollectorConfig[]>(DEFAULT_COLLECTORS);
+  const { user } = useAuth();
 
   const collectorDisplayNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -108,6 +111,45 @@ export const useCollectorNames = () => {
     }
   }, []);
 
+  const syncFromServer = useCallback(async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('collector_names')
+      .select('collector_key, display_name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('[Collectors] Failed to load collector names', error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      const seed = DEFAULT_COLLECTORS.map((collector) => ({
+        user_id: user.id,
+        collector_key: collector.id,
+        display_name: collector.displayName,
+      }));
+
+      const { error: seedError } = await supabase.from('collector_names').insert(seed);
+      if (seedError) {
+        console.error('[Collectors] Failed to seed collector names', seedError);
+        return;
+      }
+      await syncFromServer();
+      return;
+    }
+
+    const nextCollectors = normalizeCollectors(
+      data.map((row) => ({ id: row.collector_key, displayName: row.display_name }))
+    );
+
+    setCollectors(nextCollectors);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
+    window.dispatchEvent(new Event('collector-names-changed'));
+  }, [user]);
+
   useEffect(() => {
     const syncFromStorage = () => {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -142,6 +184,31 @@ export const useCollectorNames = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    syncFromServer();
+
+    const channel = supabase
+      .channel(`collector-names-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'collector_names',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          syncFromServer();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, syncFromServer]);
+
   const saveCollectors = useCallback((updated: CollectorConfig[]) => {
     const normalized = normalizeCollectors(updated);
     setCollectors(normalized);
@@ -152,26 +219,100 @@ export const useCollectorNames = () => {
   const addCollector = useCallback((displayName: string) => {
     const id = displayName.trim();
     if (!id) return;
+
+    if (user) {
+      supabase
+        .from('collector_names')
+        .insert({ user_id: user.id, collector_key: id, display_name: id })
+        .then(({ error }) => {
+          if (error) {
+            console.error('[Collectors] Failed to add collector', error);
+          }
+        });
+      return;
+    }
+
     const updated = [...collectors, { id, displayName: id }];
     saveCollectors(updated);
-  }, [collectors, saveCollectors]);
+  }, [collectors, saveCollectors, user]);
 
   const updateCollector = useCallback((index: number, displayName: string) => {
-    const updated = collectors.map((c, i) => 
-      i === index ? { ...c, displayName: displayName.trim() } : c
+    const nextDisplay = displayName.trim();
+    if (!nextDisplay) return;
+
+    const target = collectors[index];
+    if (!target) return;
+
+    if (user) {
+      supabase
+        .from('collector_names')
+        .update({ display_name: nextDisplay })
+        .eq('user_id', user.id)
+        .eq('collector_key', target.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[Collectors] Failed to update collector', error);
+          }
+        });
+      return;
+    }
+
+    const updated = collectors.map((c, i) =>
+      i === index ? { ...c, displayName: nextDisplay } : c
     );
     saveCollectors(updated);
-  }, [collectors, saveCollectors]);
+  }, [collectors, saveCollectors, user]);
 
   const removeCollector = useCallback((index: number) => {
     if (collectors.length <= 1) return; // Must have at least one
+    const target = collectors[index];
+    if (!target) return;
+
+    if (user) {
+      supabase
+        .from('collector_names')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('collector_key', target.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[Collectors] Failed to remove collector', error);
+          }
+        });
+      return;
+    }
+
     const updated = collectors.filter((_, i) => i !== index);
     saveCollectors(updated);
-  }, [collectors, saveCollectors]);
+  }, [collectors, saveCollectors, user]);
 
   const resetToDefaults = useCallback(() => {
+    if (user) {
+      supabase
+        .from('collector_names')
+        .delete()
+        .eq('user_id', user.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[Collectors] Failed to reset collectors', error);
+            return;
+          }
+          const seed = DEFAULT_COLLECTORS.map((collector) => ({
+            user_id: user.id,
+            collector_key: collector.id,
+            display_name: collector.displayName,
+          }));
+          supabase.from('collector_names').insert(seed).then(({ error: seedError }) => {
+            if (seedError) {
+              console.error('[Collectors] Failed to seed collectors', seedError);
+            }
+          });
+        });
+      return;
+    }
+
     saveCollectors(DEFAULT_COLLECTORS);
-  }, [saveCollectors]);
+  }, [saveCollectors, user]);
 
   return {
     collectors,
