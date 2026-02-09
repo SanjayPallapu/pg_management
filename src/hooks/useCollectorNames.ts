@@ -49,7 +49,18 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
     normalized.push({ id, displayName });
   });
 
-  return normalized.length > 0 ? normalized : DEFAULT_COLLECTORS;
+  if (normalized.length === 0) return DEFAULT_COLLECTORS;
+
+  const normalizedIds = new Set(normalized.map((collector) => collector.id));
+  const withDefaults = [...normalized];
+
+  DEFAULT_COLLECTORS.forEach((collector) => {
+    if (!normalizedIds.has(collector.id)) {
+      withDefaults.push(collector);
+    }
+  });
+
+  return withDefaults;
 };
 
 export const useCollectorNames = () => {
