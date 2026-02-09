@@ -97,8 +97,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [partialPaymentDate, setPartialPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("upi");
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<"upi" | "cash">("upi");
-  const [collectedBy, setCollectedBy] = useState<string>("Me");
-  const [remainingCollectedBy, setRemainingCollectedBy] = useState<string>("Me");
+  const [collectedBy, setCollectedBy] = useState<string>(collectors[0]?.displayName || "Me");
+  const [remainingCollectedBy, setRemainingCollectedBy] = useState<string>(collectors[0]?.displayName || "Me");
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
@@ -595,7 +595,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
-    setRemainingCollectedBy("Me");
+    setRemainingCollectedBy(collectors[0]?.displayName || "Me");
   };
 
   // detect overdue based on SELECTED month payment status
