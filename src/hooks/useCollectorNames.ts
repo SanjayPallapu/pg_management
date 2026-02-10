@@ -114,7 +114,7 @@ export const useCollectorNames = () => {
   const syncFromServer = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('collector_names')
       .select('collector_key, display_name')
       .eq('user_id', user.id)
@@ -132,7 +132,7 @@ export const useCollectorNames = () => {
         display_name: collector.displayName,
       }));
 
-      const { error: seedError } = await supabase.from('collector_names').insert(seed);
+      const { error: seedError } = await (supabase as any).from('collector_names').insert(seed);
       if (seedError) {
         console.error('[Collectors] Failed to seed collector names', seedError);
         return;
@@ -142,7 +142,7 @@ export const useCollectorNames = () => {
     }
 
     const nextCollectors = normalizeCollectors(
-      data.map((row) => ({ id: row.collector_key, displayName: row.display_name }))
+      data.map((row: any) => ({ id: row.collector_key, displayName: row.display_name }))
     );
 
     setCollectors(nextCollectors);
@@ -221,7 +221,7 @@ export const useCollectorNames = () => {
     if (!id) return;
 
     if (user) {
-      supabase
+      (supabase as any)
         .from('collector_names')
         .insert({ user_id: user.id, collector_key: id, display_name: id })
         .then(({ error }) => {
@@ -244,7 +244,7 @@ export const useCollectorNames = () => {
     if (!target) return;
 
     if (user) {
-      supabase
+      (supabase as any)
         .from('collector_names')
         .update({ display_name: nextDisplay })
         .eq('user_id', user.id)
@@ -269,7 +269,7 @@ export const useCollectorNames = () => {
     if (!target) return;
 
     if (user) {
-      supabase
+      (supabase as any)
         .from('collector_names')
         .delete()
         .eq('user_id', user.id)
@@ -288,7 +288,7 @@ export const useCollectorNames = () => {
 
   const resetToDefaults = useCallback(() => {
     if (user) {
-      supabase
+      (supabase as any)
         .from('collector_names')
         .delete()
         .eq('user_id', user.id)
@@ -302,7 +302,7 @@ export const useCollectorNames = () => {
             collector_key: collector.id,
             display_name: collector.displayName,
           }));
-          supabase.from('collector_names').insert(seed).then(({ error: seedError }) => {
+          (supabase as any).from('collector_names').insert(seed).then(({ error: seedError }: any) => {
             if (seedError) {
               console.error('[Collectors] Failed to seed collectors', seedError);
             }
