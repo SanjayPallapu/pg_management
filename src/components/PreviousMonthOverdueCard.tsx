@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, X, ChevronDown, ChevronRight, User, Phone, MessageCircle, Receipt, Bell, CreditCard } from 'lucide-react';
+import { History, X, ChevronDown, ChevronRight, User, Phone, MessageCircle, Receipt, Bell, CreditCard, Pencil } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -22,6 +22,7 @@ import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { OverduePaymentDialog } from './OverduePaymentDialog';
 import { toast } from '@/hooks/use-toast';
+import { CollectorSettingsDialog } from './CollectorSettingsDialog';
 
 interface StillPendingTenant {
   id: string;
@@ -46,6 +47,7 @@ export const PreviousMonthOverdueCard = () => {
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
+  const [collectorSettingsOpen, setCollectorSettingsOpen] = useState(false);
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
   
   // Dialog states for still pending sheet
@@ -444,7 +446,13 @@ export const PreviousMonthOverdueCard = () => {
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Payment Details</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">Payment Details</h3>
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" onClick={() => setCollectorSettingsOpen(true)}>
+                    <Pencil className="h-3 w-3" />
+                    Edit Collectors
+                  </Button>
+                </div>
                 {collectedData.map(detail => (
                   <Collapsible 
                     key={detail.tenantId} 
@@ -719,6 +727,7 @@ export const PreviousMonthOverdueCard = () => {
         onOpenChange={setReminderDialogOpen}
         reminderData={reminderData}
       />
+      <CollectorSettingsDialog open={collectorSettingsOpen} onOpenChange={setCollectorSettingsOpen} />
     </>
   );
 };
