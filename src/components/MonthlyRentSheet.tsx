@@ -987,9 +987,25 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground mb-2">
-                    Room {tenant.roomNo}
-                    {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs text-muted-foreground">
+                      Room {tenant.roomNo}
+                      {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
+                    </div>
+                    {/* Collected By badges - right of room number */}
+                    {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 && (() => {
+                      const uniqueCollectors = [...new Set(tenant.payment.paymentEntries.map(e => e.collectedBy).filter(Boolean))];
+                      if (uniqueCollectors.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {uniqueCollectors.map((collector, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                              {getCollectorDisplayName(collector)}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                   {/* Pro-rata visual indicator for mid-month leavers */}
                   {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
@@ -1037,22 +1053,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </div>
                   )}
 
-                  {/* Collected By badges - above the action row */}
-                  {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 && (
-                    (() => {
-                      const collectors = [...new Set(tenant.payment.paymentEntries.map(e => e.collectedBy).filter(Boolean))];
-                      if (collectors.length === 0) return null;
-                      return (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {collectors.map((collector, idx) => (
-                            <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                              {getCollectorDisplayName(collector)}
-                            </span>
-                          ))}
-                        </div>
-                      );
-                    })()
-                  )}
+                  {/* Collected By badges moved to room number row */}
 
                   <div className="flex justify-between items-end">
                     <div className="space-y-0.5">

@@ -106,9 +106,6 @@ export const useRooms = () => {
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    onError: (error) => {
-      console.error('[Rooms] Query error', error);
-    },
   });
 
   const updateRoom = useMutation({
@@ -355,6 +352,7 @@ export const useRooms = () => {
   return {
     rooms,
     isLoading: isLoading || authLoading,
+    error,
     updateRoom,
     addTenant,
     updateTenant,

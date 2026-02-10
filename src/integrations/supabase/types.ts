@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      collector_names: {
-        Row: {
-          id: string
-          user_id: string
-          collector_key: string
-          display_name: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          collector_key: string
-          display_name: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          collector_key?: string
-          display_name?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           action: string
@@ -498,7 +471,6 @@ export type Database = {
           security_deposit_amount: number | null
           security_deposit_date: string | null
           security_deposit_mode: string | null
-          security_deposit_collected_by: string | null
           start_date: string
           updated_at: string
         }
@@ -516,7 +488,6 @@ export type Database = {
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
           security_deposit_mode?: string | null
-          security_deposit_collected_by?: string | null
           start_date: string
           updated_at?: string
         }
@@ -534,7 +505,6 @@ export type Database = {
           security_deposit_amount?: number | null
           security_deposit_date?: string | null
           security_deposit_mode?: string | null
-          security_deposit_collected_by?: string | null
           start_date?: string
           updated_at?: string
         }

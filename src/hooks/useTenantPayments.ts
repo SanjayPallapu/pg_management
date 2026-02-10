@@ -82,9 +82,6 @@ export const useTenantPayments = () => {
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    onError: (error) => {
-      console.error('[Payments] Query error', error);
-    },
   });
 
   const upsertPayment = useMutation({
