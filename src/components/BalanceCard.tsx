@@ -112,14 +112,23 @@ export const BalanceCard = () => {
     queryKey: ["personal-expenses-balance", selectedMonth, selectedYear],
     queryFn: async () => {
       const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
-      const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`,
-      );
-      if (!response.ok) return null;
-      return response.json();
+      try {
+        const response = await fetch(
+          `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`,
+        );
+        if (!response.ok) {
+          console.warn('[BalanceCard] Expense API failed:', response.status);
+          return null;
+        }
+        return response.json();
+      } catch (err) {
+        console.warn('[BalanceCard] Expense API error:', err);
+        return null;
+      }
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 2,
   });
 
   // Day guest revenue for current month
