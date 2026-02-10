@@ -32,29 +32,60 @@ export const CollectedByCard = () => {
     const collections: Record<string, number> = {};
     const tenants: Record<string, TenantCollection[]> = {};
 
+    const addCollection = (displayName: string, entry: TenantCollection) => {
+      collections[displayName] = (collections[displayName] || 0) + entry.amount;
+      if (!tenants[displayName]) tenants[displayName] = [];
+      tenants[displayName].push(entry);
+    };
+
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        // Rent payments (only if tenant active in month)
+        // Current month rent payments
         if (isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
-          if (tenant.isLocked) return;
-          const payment = payments.find(
-            p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
-          );
-          if (payment?.paymentEntries) {
-            (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
-              const rawId = entry.collectedBy || 'Unknown';
-              const displayName = getCollectorDisplayName(rawId);
-              collections[displayName] = (collections[displayName] || 0) + entry.amount;
-              if (!tenants[displayName]) tenants[displayName] = [];
-              tenants[displayName].push({
-                tenantName: tenant.name,
-                roomNo: room.roomNo,
-                amount: entry.amount,
-                date: entry.date,
-                mode: entry.mode,
-                type: 'rent',
+          if (!tenant.isLocked) {
+            const payment = payments.find(
+              p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+            );
+            if (payment?.paymentEntries) {
+              (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
+                const displayName = getCollectorDisplayName(entry.collectedBy || 'Unknown');
+                addCollection(displayName, {
+                  tenantName: tenant.name,
+                  roomNo: room.roomNo,
+                  amount: entry.amount,
+                  date: entry.date,
+                  mode: entry.mode,
+                  type: 'rent',
+                });
               });
-            });
+            }
+          }
+        }
+
+        // Previous month overdue collections paid this month
+        let pM = selectedMonth - 1, pY = selectedYear;
+        if (pM === 0) { pM = 12; pY -= 1; }
+        if (isTenantActiveInMonth(tenant.startDate, tenant.endDate, pY, pM)) {
+          if (!tenant.isLocked) {
+            const payment = payments.find(
+              p => p.tenantId === tenant.id && p.month === pM && p.year === pY
+            );
+            if (payment?.paymentEntries) {
+              (payment.paymentEntries as PaymentEntry[]).forEach(entry => {
+                const entryDate = new Date(entry.date);
+                if (entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear) {
+                  const displayName = getCollectorDisplayName(entry.collectedBy || 'Unknown');
+                  addCollection(displayName, {
+                    tenantName: tenant.name,
+                    roomNo: room.roomNo,
+                    amount: entry.amount,
+                    date: entry.date,
+                    mode: entry.mode,
+                    type: 'rent',
+                  });
+                }
+              });
+            }
           }
         }
 
@@ -65,12 +96,9 @@ export const CollectedByCard = () => {
             depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear;
 
           if (isInMonth) {
-            const rawId = tenant.securityDepositCollectedBy || 'Unknown';
-            const displayName = getCollectorDisplayName(rawId);
+            const displayName = getCollectorDisplayName(tenant.securityDepositCollectedBy || 'Unknown');
             const mode = (tenant.securityDepositMode === 'upi' ? 'upi' : 'cash') as 'upi' | 'cash';
-            collections[displayName] = (collections[displayName] || 0) + tenant.securityDepositAmount;
-            if (!tenants[displayName]) tenants[displayName] = [];
-            tenants[displayName].push({
+            addCollection(displayName, {
               tenantName: tenant.name,
               roomNo: room.roomNo,
               amount: tenant.securityDepositAmount,
