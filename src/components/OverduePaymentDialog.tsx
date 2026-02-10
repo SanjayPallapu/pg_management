@@ -21,6 +21,7 @@ import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
 import { StayPeriodIndicator } from './StayPeriodIndicator';
 import { PaymentEntry } from '@/types';
+import { useCollectorNames } from '@/hooks/useCollectorNames';
 
 interface PreviousMonthPending {
   month: number;
@@ -64,6 +65,7 @@ interface OverduePaymentDialogProps {
     previousMonthPending?: PreviousMonthPending | null;
     discount?: number;
     notes?: string;
+    collectedBy?: string;
   }) => void;
 }
 
@@ -84,6 +86,8 @@ export const OverduePaymentDialog = ({
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [dateOpen, setDateOpen] = useState(false);
   const [discount, setDiscount] = useState<number>(0);
+  const { collectors } = useCollectorNames();
+  const [collectedBy, setCollectedBy] = useState<string>(collectors[0]?.displayName || 'Sanjay');
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -94,6 +98,7 @@ export const OverduePaymentDialog = ({
       setPaymentDate(new Date());
       setPaymentMode('upi');
       setDiscount(0);
+      setCollectedBy(collectors[0]?.displayName || 'Sanjay');
     }
     onOpenChange(isOpen);
   };
@@ -126,6 +131,7 @@ export const OverduePaymentDialog = ({
       previousMonthPending: previousMonthPending,
       discount: discount > 0 ? discount : undefined,
       notes: notes || undefined,
+      collectedBy,
     });
     
     handleOpenChange(false);
@@ -339,6 +345,24 @@ export const OverduePaymentDialog = ({
                     <CashLogo className="h-5 w-5 mr-2" />
                     Cash
                   </Button>
+                </div>
+              </div>
+
+              {/* Collected By */}
+              <div className="space-y-2">
+                <Label>Collected By</Label>
+                <div className="flex gap-2">
+                  {collectors.map((c) => (
+                    <Button
+                      key={c.id}
+                      type="button"
+                      variant={collectedBy === c.displayName ? 'default' : 'outline'}
+                      onClick={() => setCollectedBy(c.displayName)}
+                      className="flex-1 h-10"
+                    >
+                      {c.displayName}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>
