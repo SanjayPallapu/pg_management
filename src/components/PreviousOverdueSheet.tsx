@@ -300,6 +300,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
     } | null;
     discount?: number;
     notes?: string;
+    collectedBy?: string;
   }) => {
     const discount = data.discount || 0;
     const effectiveMonthlyRent = data.monthlyRent - discount;
@@ -317,7 +318,8 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
       amount: data.amount,
       date: data.date,
       type: isFullPayment ? 'full' as const : 'partial' as const,
-      mode: data.mode
+      mode: data.mode,
+      collectedBy: data.collectedBy,
     };
 
     // Combine notes
