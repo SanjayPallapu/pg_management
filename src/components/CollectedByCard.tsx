@@ -198,7 +198,7 @@ export const CollectedByCard = () => {
   };
 
   const typeLabel = (t: string) => {
-    if (t === 'overdue') return 'Prev Overdue';
+    if (t === 'overdue') return 'Due';
     if (t === 'deposit') return 'Deposit';
     if (t === 'dayguest') return 'Day Guest';
     return null;
@@ -210,6 +210,9 @@ export const CollectedByCard = () => {
     if (t === 'dayguest') return 'bg-teal-500/10 text-teal-400';
     return '';
   };
+
+  const categoryOrder = ['rent', 'overdue', 'deposit', 'dayguest'] as const;
+  const categoryLabel: Record<string, string> = { rent: 'Current Month', overdue: 'Due (Previous)', deposit: 'Deposit', dayguest: 'Day Guest' };
 
   return (
     <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
@@ -254,14 +257,14 @@ export const CollectedByCard = () => {
                   </div>
                 </button>
                 {isExpanded && (
-                  <div className="ml-5 mt-1 space-y-1 border-l-2 border-blue-500/20 pl-3 pb-1">
+                  <div className="ml-5 mt-1 space-y-2 border-l-2 border-blue-500/20 pl-3 pb-1">
                     {/* Category sub-totals */}
                     <div className="flex flex-wrap gap-2 text-[10px] mb-1">
                       {cats.rent > 0 && (
                         <span className="text-muted-foreground">Rent: <span className="font-medium text-foreground">₹{cats.rent.toLocaleString()}</span></span>
                       )}
                       {cats.overdue > 0 && (
-                        <span className="text-amber-500">Prev Overdue: <span className="font-medium">₹{cats.overdue.toLocaleString()}</span></span>
+                        <span className="text-amber-500">Due: <span className="font-medium">₹{cats.overdue.toLocaleString()}</span></span>
                       )}
                       {cats.deposit > 0 && (
                         <span className="text-purple-400">Deposit: <span className="font-medium">₹{cats.deposit.toLocaleString()}</span></span>
@@ -270,28 +273,37 @@ export const CollectedByCard = () => {
                         <span className="text-teal-400">Day Guest: <span className="font-medium">₹{cats.dayguest.toLocaleString()}</span></span>
                       )}
                     </div>
-                    {tenantList.map((t, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium">{t.tenantName}</span>
-                          <span className="text-muted-foreground">R{t.roomNo}</span>
-                          <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${t.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
-                            {t.mode === 'upi' ? 'UPI' : 'Cash'}
-                          </span>
-                          {t.type && typeLabel(t.type) && (
-                            <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${typeBadgeClass(t.type)}`}>
-                              {typeLabel(t.type)}
-                            </span>
-                          )}
+                    {/* Grouped by category, sorted by date within each */}
+                    {categoryOrder.map(cat => {
+                      const items = tenantList
+                        .filter(t => (t.type || 'rent') === cat)
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                      if (items.length === 0) return null;
+                      return (
+                        <div key={cat} className="space-y-0.5">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-1">
+                            {categoryLabel[cat]} ({items.length})
+                          </div>
+                          {items.map((t, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-xs gap-1">
+                              <div className="flex items-center gap-1 min-w-0 flex-1">
+                                <span className="font-medium truncate">{t.tenantName}</span>
+                                <span className="text-muted-foreground shrink-0">R{t.roomNo}</span>
+                                <span className={`px-1 py-0.5 rounded text-[10px] font-medium shrink-0 ${t.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                                  {t.mode === 'upi' ? 'UPI' : 'Cash'}
+                                </span>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="font-medium">₹{t.amount.toLocaleString()}</span>
+                                <span className="text-muted-foreground ml-1">
+                                  {format(t.type === 'deposit' ? parseDateOnly(t.date) : new Date(t.date), 'dd MMM')}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="text-right">
-                          <span className="font-medium">₹{t.amount.toLocaleString()}</span>
-                          <span className="text-muted-foreground ml-1">
-                            {format(t.type === 'deposit' ? parseDateOnly(t.date) : new Date(t.date), 'dd MMM')}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
