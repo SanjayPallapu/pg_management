@@ -4,6 +4,7 @@ import { Users, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
+import { useDayGuests } from '@/hooks/useDayGuests';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
@@ -17,25 +18,35 @@ interface TenantCollection {
   amount: number;
   date: string;
   mode: 'upi' | 'cash';
-  type?: 'rent' | 'deposit';
+  type?: 'rent' | 'deposit' | 'overdue' | 'dayguest';
 }
 
 export const CollectedByCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, isLoading: paymentsLoading } = useTenantPayments();
   const { rooms, isLoading: roomsLoading } = useRooms();
+  const { dayGuests } = useDayGuests();
   const { getCollectorDisplayName } = useCollectorNames();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { collectionsByPerson, tenantsByCollector } = useMemo(() => {
+  const { collectionsByPerson, tenantsByCollector, categoryTotals } = useMemo(() => {
     const collections: Record<string, number> = {};
     const tenants: Record<string, TenantCollection[]> = {};
+    // Track per-collector category totals
+    const catTotals: Record<string, { rent: number; overdue: number; deposit: number; dayguest: number }> = {};
 
     const addCollection = (displayName: string, entry: TenantCollection) => {
       collections[displayName] = (collections[displayName] || 0) + entry.amount;
       if (!tenants[displayName]) tenants[displayName] = [];
       tenants[displayName].push(entry);
+      
+      if (!catTotals[displayName]) catTotals[displayName] = { rent: 0, overdue: 0, deposit: 0, dayguest: 0 };
+      const cat = entry.type || 'rent';
+      if (cat === 'rent') catTotals[displayName].rent += entry.amount;
+      else if (cat === 'overdue') catTotals[displayName].overdue += entry.amount;
+      else if (cat === 'deposit') catTotals[displayName].deposit += entry.amount;
+      else if (cat === 'dayguest') catTotals[displayName].dayguest += entry.amount;
     };
 
     rooms.forEach(room => {
@@ -81,7 +92,7 @@ export const CollectedByCard = () => {
                     amount: entry.amount,
                     date: entry.date,
                     mode: entry.mode,
-                    type: 'rent',
+                    type: 'overdue',
                   });
                 }
               });
@@ -89,7 +100,7 @@ export const CollectedByCard = () => {
           }
         }
 
-        // Security deposit collections (by deposit date in selected month)
+        // Security deposit collections
         if (tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && tenant.securityDepositDate) {
           const depositDate = parseDateOnly(tenant.securityDepositDate);
           const isInMonth =
@@ -111,12 +122,36 @@ export const CollectedByCard = () => {
       });
     });
 
-    return { collectionsByPerson: collections, tenantsByCollector: tenants };
-  }, [rooms, payments, selectedMonth, selectedYear, getCollectorDisplayName]);
+    // Day guest collections
+    const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+    const endOfMonth = new Date(selectedYear, selectedMonth, 0);
+    
+    dayGuests.forEach(guest => {
+      const fromDate = new Date(guest.from_date);
+      if (fromDate >= startOfMonth && fromDate <= endOfMonth) {
+        const entries = (guest.payment_entries as any[]) || [];
+        const room = rooms.find(r => r.id === guest.room_id);
+        const roomNo = room?.roomNo || '?';
+        
+        entries.forEach((entry: any) => {
+          const displayName = getCollectorDisplayName(entry.collectedBy || 'Unknown');
+          addCollection(displayName, {
+            tenantName: guest.guest_name,
+            roomNo,
+            amount: entry.amount,
+            date: entry.date,
+            mode: entry.mode || 'cash',
+            type: 'dayguest',
+          });
+        });
+      }
+    });
+
+    return { collectionsByPerson: collections, tenantsByCollector: tenants, categoryTotals: catTotals };
+  }, [rooms, payments, dayGuests, selectedMonth, selectedYear, getCollectorDisplayName]);
 
   const entries = Object.entries(collectionsByPerson);
   
-  // Show skeleton only on true initial load (no cached data at all)
   const isInitialLoad = (paymentsLoading || roomsLoading) && rooms.length === 0 && payments.length === 0;
   
   if (isInitialLoad) {
@@ -139,7 +174,6 @@ export const CollectedByCard = () => {
     );
   }
 
-  // If no collections at all (data loaded but nothing collected), show empty state
   if (entries.length === 0) {
     return (
       <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
@@ -161,6 +195,20 @@ export const CollectedByCard = () => {
 
   const toggleCollector = (name: string) => {
     setExpandedCollector(prev => prev === name ? null : name);
+  };
+
+  const typeLabel = (t: string) => {
+    if (t === 'overdue') return 'Prev Overdue';
+    if (t === 'deposit') return 'Deposit';
+    if (t === 'dayguest') return 'Day Guest';
+    return null;
+  };
+
+  const typeBadgeClass = (t: string) => {
+    if (t === 'overdue') return 'bg-amber-500/10 text-amber-500';
+    if (t === 'deposit') return 'bg-purple-500/10 text-purple-400';
+    if (t === 'dayguest') return 'bg-teal-500/10 text-teal-400';
+    return '';
   };
 
   return (
@@ -185,6 +233,7 @@ export const CollectedByCard = () => {
           {entries.map(([name, amount]) => {
             const isExpanded = expandedCollector === name;
             const tenantList = tenantsByCollector[name] || [];
+            const cats = categoryTotals[name] || { rent: 0, overdue: 0, deposit: 0, dayguest: 0 };
             return (
               <div key={name}>
                 <button
@@ -204,8 +253,23 @@ export const CollectedByCard = () => {
                     </span>
                   </div>
                 </button>
-                {isExpanded && tenantList.length > 0 && (
+                {isExpanded && (
                   <div className="ml-5 mt-1 space-y-1 border-l-2 border-blue-500/20 pl-3 pb-1">
+                    {/* Category sub-totals */}
+                    <div className="flex flex-wrap gap-2 text-[10px] mb-1">
+                      {cats.rent > 0 && (
+                        <span className="text-muted-foreground">Rent: <span className="font-medium text-foreground">₹{cats.rent.toLocaleString()}</span></span>
+                      )}
+                      {cats.overdue > 0 && (
+                        <span className="text-amber-500">Prev Overdue: <span className="font-medium">₹{cats.overdue.toLocaleString()}</span></span>
+                      )}
+                      {cats.deposit > 0 && (
+                        <span className="text-purple-400">Deposit: <span className="font-medium">₹{cats.deposit.toLocaleString()}</span></span>
+                      )}
+                      {cats.dayguest > 0 && (
+                        <span className="text-teal-400">Day Guest: <span className="font-medium">₹{cats.dayguest.toLocaleString()}</span></span>
+                      )}
+                    </div>
                     {tenantList.map((t, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-1.5">
@@ -214,9 +278,9 @@ export const CollectedByCard = () => {
                           <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${t.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
                             {t.mode === 'upi' ? 'UPI' : 'Cash'}
                           </span>
-                          {t.type === 'deposit' && (
-                            <span className="px-1 py-0.5 rounded text-[10px] font-medium bg-purple-500/10 text-purple-400">
-                              Deposit
+                          {t.type && typeLabel(t.type) && (
+                            <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${typeBadgeClass(t.type)}`}>
+                              {typeLabel(t.type)}
                             </span>
                           )}
                         </div>
