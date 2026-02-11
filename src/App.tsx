@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
+import Approvals from "./pages/Approvals";
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
  import { PGProvider } from "@/contexts/PGContext";
@@ -91,6 +92,11 @@ const AppContent = () => {
           <Route path="/left-tenants" element={
             <ProtectedRoute>
               <LeftTenants />
+            </ProtectedRoute>
+          } />
+          <Route path="/approvals" element={
+            <ProtectedRoute>
+              <Approvals />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
