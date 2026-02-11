@@ -113,7 +113,7 @@ const SplashScreen = () => {
         <motion.img
           src={splashLogo}
           alt="App logo"
-          className="w-80 h-80 object-contain"
+          className="w-96 h-96 object-contain"
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -121,7 +121,7 @@ const SplashScreen = () => {
 
       {/* Title text */}
       <motion.h1
-        className="relative z-10 text-3xl font-extrabold mt-6 tracking-wide"
+        className="relative z-10 text-3xl font-extrabold mt-2 tracking-wide"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
@@ -160,13 +160,13 @@ const SplashScreen = () => {
 
       {/* Loading text */}
       <motion.p
-        className="relative z-10 text-xs mt-3"
+        className="relative z-10 text-xs mt-3 font-medium"
         style={{ color: 'rgba(255,255,255,0.7)' }}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
+        animate={{ opacity: [0, 1, 0.5, 1] }}
+        transition={{ delay: 1, duration: 2, repeat: Infinity }}
       >
-        Loading your dashboard...
+        Setting up your dashboard ✨
       </motion.p>
     </motion.div>
   );
