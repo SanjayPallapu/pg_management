@@ -19,17 +19,19 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { Calendar, SquarePen, Trash2, Loader2, IndianRupee } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useCollectorNames } from '@/hooks/useCollectorNames';
 
 interface DayGuestSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface PaymentEntry {
+interface DayGuestPaymentEntry {
   amount: number;
   date: string;
   type: 'full' | 'partial' | 'remaining';
   mode?: 'upi' | 'cash';
+  collectedBy?: string;
 }
 
 interface EditingGuest {
@@ -43,6 +45,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const { dayGuests, isLoading, updateDayGuest, deleteDayGuest } = useDayGuests();
   const { rooms } = useRooms();
   const { role } = useAuth();
+  const { collectors } = useCollectorNames();
   const isAdmin = role === 'admin';
 
   // Handle OS back gesture to close sheet
@@ -67,6 +70,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
+  const [paymentCollectedBy, setPaymentCollectedBy] = useState<string>('');
 
   // Mark unpaid confirmation dialog state
   const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
@@ -149,6 +153,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     setPaymentAmount(remaining);
     setPaymentDate(new Date());
     setPaymentMode('upi');
+    setPaymentCollectedBy(collectors[0]?.displayName || 'Sanjay');
     setPaymentDialogOpen(true);
   };
 
@@ -160,14 +165,15 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     const isFullPayment = totalPaid >= paymentGuest.total_amount;
     const status = isFullPayment ? 'Paid' : 'Pending';
 
-    const newEntry: PaymentEntry = {
+    const newEntry: DayGuestPaymentEntry = {
       amount: paymentAmount,
       date: format(paymentDate, 'yyyy-MM-dd'),
       type: existingPaid === 0 ? (isFullPayment ? 'full' : 'partial') : (isFullPayment ? 'remaining' : 'partial'),
       mode: paymentMode,
+      collectedBy: paymentCollectedBy || collectors[0]?.displayName || 'Sanjay',
     };
 
-    const existingEntries: PaymentEntry[] = (paymentGuest.payment_entries as PaymentEntry[]) || [];
+    const existingEntries: DayGuestPaymentEntry[] = (paymentGuest.payment_entries as DayGuestPaymentEntry[]) || [];
     const updatedEntries = [...existingEntries, newEntry];
 
     await updateDayGuest.mutateAsync({
@@ -270,7 +276,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                             const remaining = guest.total_amount - amountPaid;
                             const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
                             const isPaid = guest.payment_status === 'Paid';
-                            const paymentEntries = (guest.payment_entries as PaymentEntry[]) || [];
+                            const paymentEntries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
                             const showActions = editModeRoom === roomNo;
 
                             return (
@@ -357,8 +363,11 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                     {paymentEntries.map((entry, idx) => (
                                       <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
                                         <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
+                                        {entry.collectedBy && (
+                                          <span className="text-muted-foreground text-[10px]">{entry.collectedBy}</span>
+                                        )}
                                         {entry.mode && (
-                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
                                             {entry.mode === 'upi' ? 'UPI' : 'Cash'}
                                           </span>
                                         )}
@@ -585,6 +594,24 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   >
                     Cash
                   </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm">Collected By</Label>
+                <div className="flex gap-2 mt-1">
+                  {collectors.map((c) => (
+                    <Button
+                      key={c.id}
+                      type="button"
+                      variant={paymentCollectedBy === c.displayName ? 'default' : 'outline'}
+                      size="sm"
+                      className={cn("flex-1", paymentCollectedBy === c.displayName && "bg-foreground text-background")}
+                      onClick={() => setPaymentCollectedBy(c.displayName)}
+                    >
+                      {c.displayName}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>

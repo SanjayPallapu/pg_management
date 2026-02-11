@@ -279,7 +279,8 @@ export const PreviousMonthOverdueCard = () => {
       amount: data.amount,
       date: data.date,
       type: isFullPayment ? 'full' : 'partial',
-      mode: data.mode
+      mode: data.mode,
+      collectedBy: (data as any).collectedBy || collectors[0]?.displayName || 'Sanjay',
     };
 
     // Combine notes
@@ -510,15 +511,6 @@ export const PreviousMonthOverdueCard = () => {
                       onMouseUp={handleLongPressEnd}
                       onMouseLeave={handleLongPressEnd}
                     >
-                      {/* Collector badge */}
-                      {detail.currentMonthEntries[0]?.collectedBy && (
-                        <div className="absolute top-2 right-2 z-10">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
-                            {getCollectorDisplayName(detail.currentMonthEntries[0].collectedBy)}
-                          </Badge>
-                        </div>
-                      )}
-
                       {/* Collector edit popover */}
                       <Popover open={collectorEditTenantId === detail.tenantId} onOpenChange={(open) => !open && setCollectorEditTenantId(null)}>
                         <PopoverTrigger asChild>
