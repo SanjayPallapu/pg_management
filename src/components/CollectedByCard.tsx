@@ -281,7 +281,12 @@ export const CollectedByCard = () => {
                       if (items.length === 0) return null;
                       return (
                         <div key={cat} className="space-y-0.5">
-                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-1">
+                          <div className={`text-[10px] font-semibold uppercase tracking-wider pt-1 ${
+                            cat === 'rent' ? 'text-green-500' :
+                            cat === 'overdue' ? 'text-amber-500' :
+                            cat === 'deposit' ? 'text-purple-400' :
+                            'text-teal-400'
+                          }`}>
                             {categoryLabel[cat]} ({items.length})
                           </div>
                           {items.map((t, idx) => (
