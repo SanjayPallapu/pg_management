@@ -17,7 +17,7 @@ const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const COLLAPSE_KEY = 'buildingRentCard_collapsed';
 
 export const BuildingRentCard = () => {
-  const { selectedMonth, selectedYear } = useMonthContext();
+  const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear } = useMonthContext();
   const { settings, updateSettings, resetSettings } = useBuildingRentSettings();
   const { payments, addPayment, deletePayment } = useBuildingRentHistory();
   
@@ -154,6 +154,10 @@ export const BuildingRentCard = () => {
         settings={settings}
         onSave={updateSettings}
         onReset={resetSettings}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onMonthChange={(m) => setSelectedMonth(m)}
+        onYearChange={(y) => setSelectedYear(y)}
       />
 
       <BuildingRentHistorySheet
