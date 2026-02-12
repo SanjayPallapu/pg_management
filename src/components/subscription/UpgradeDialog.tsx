@@ -14,9 +14,11 @@ import {
   Clock,
   Copy,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
 import { SUBSCRIPTION_PLANS, PAYMENT_METHODS, ADMIN_UPI_ID, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
@@ -36,6 +38,7 @@ const PAYMENT_ICONS = {
 export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const { subscription } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+  const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
@@ -218,6 +221,37 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
 
         {step === 'payment' && (
           <div className="space-y-4">
+            {/* Razorpay Online Payment */}
+            <Button
+              className="w-full gap-2 py-6 text-base"
+              onClick={() => {
+                initiatePayment({
+                  plan: selectedPlan,
+                  amount: currentPlan.price,
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    // Subscription will be auto-activated via webhook
+                  },
+                });
+              }}
+              disabled={razorpayLoading}
+            >
+              {razorpayLoading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+              ) : (
+                <><Zap className="h-5 w-5" /> Pay ₹{currentPlan.price} Online (Card/UPI/Net Banking)</>
+              )}
+            </Button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or pay manually via UPI</span>
+              </div>
+            </div>
+
             <div className="text-center p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">Pay to UPI ID</p>
               <div className="flex items-center justify-center gap-2">
@@ -230,7 +264,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             </div>
 
             <p className="text-sm text-muted-foreground text-center">
-              Select payment app to pay instantly
+              Select payment app to pay manually
             </p>
 
             <div className="grid grid-cols-2 gap-3">
