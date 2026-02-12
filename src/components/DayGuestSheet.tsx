@@ -38,6 +38,8 @@ interface EditingGuest {
   id: string;
   toDate: Date;
   perDayRate: number;
+  paymentEntries: DayGuestPaymentEntry[];
+  amountPaid: number;
 }
 
 export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
@@ -104,10 +106,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
 
   const handleEditStart = (guest: DayGuest) => {
     setEditGuestData(guest);
+    const entries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
     setEditingGuest({
       id: guest.id,
       toDate: new Date(guest.to_date),
       perDayRate: guest.per_day_rate,
+      paymentEntries: [...entries],
+      amountPaid: guest.amount_paid || 0,
     });
     setEditDialogOpen(true);
   };
@@ -118,6 +123,8 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     const fromDate = new Date(editGuestData.from_date);
     const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate), 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
+    const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
+    const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');
 
     await updateDayGuest.mutateAsync({
       id: editGuestData.id,
@@ -125,6 +132,9 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       per_day_rate: editingGuest.perDayRate,
       number_of_days: numberOfDays,
       total_amount: totalAmount,
+      amount_paid: newAmountPaid,
+      payment_entries: editingGuest.paymentEntries,
+      payment_status: newStatus,
     });
 
     setEditDialogOpen(false);
@@ -484,6 +494,56 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   </span>
                 </div>
               </div>
+              {/* Payment Entries - Editable */}
+              {editingGuest.paymentEntries.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Payment History</Label>
+                  {editingGuest.paymentEntries.map((entry, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <IndianRupee className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            value={entry.amount}
+                            onChange={(e) => {
+                              const updated = [...editingGuest.paymentEntries];
+                              updated[idx] = { ...updated[idx], amount: Number(e.target.value) || 0 };
+                              setEditingGuest(prev => prev ? { ...prev, paymentEntries: updated } : null);
+                            }}
+                            className="pl-7 h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {format(new Date(entry.date), 'dd MMM')}
+                      </span>
+                      {entry.mode && (
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                          {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          const updated = editingGuest.paymentEntries.filter((_, i) => i !== idx);
+                          setEditingGuest(prev => prev ? { ...prev, paymentEntries: updated } : null);
+                        }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                    <span>Total Paid:</span>
+                    <span className="font-medium text-paid">
+                      ₹{editingGuest.paymentEntries.reduce((s, e) => s + e.amount, 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

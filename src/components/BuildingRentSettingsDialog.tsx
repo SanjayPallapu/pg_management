@@ -12,6 +12,9 @@ import { RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { BuildingRentSettings } from '@/hooks/useBuildingRentSettings';
 import { formatIndianCurrency } from '@/utils/numberToWords';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 interface BuildingRentSettingsDialogProps {
   open: boolean;
@@ -19,6 +22,10 @@ interface BuildingRentSettingsDialogProps {
   settings: BuildingRentSettings;
   onSave: (settings: Partial<BuildingRentSettings>) => void;
   onReset: () => void;
+  selectedMonth?: number;
+  selectedYear?: number;
+  onMonthChange?: (month: number) => void;
+  onYearChange?: (year: number) => void;
 }
 
 export const BuildingRentSettingsDialog = ({
@@ -27,6 +34,10 @@ export const BuildingRentSettingsDialog = ({
   settings,
   onSave,
   onReset,
+  selectedMonth,
+  selectedYear,
+  onMonthChange,
+  onYearChange,
 }: BuildingRentSettingsDialogProps) => {
   const [amount, setAmount] = useState(settings.amount);
   const [receivedFrom, setReceivedFrom] = useState(settings.receivedFrom);
@@ -65,6 +76,38 @@ export const BuildingRentSettingsDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Month & Year Selector */}
+          {selectedMonth !== undefined && selectedYear !== undefined && onMonthChange && onYearChange && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Month</Label>
+                <Select value={String(selectedMonth)} onValueChange={(v) => onMonthChange(Number(v))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m, i) => (
+                      <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Year</Label>
+                <Select value={String(selectedYear)} onValueChange={(v) => onYearChange(Number(v))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2024, 2025, 2026, 2027].map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="amount">Monthly Rent Amount</Label>
             <div className="relative mt-1">
