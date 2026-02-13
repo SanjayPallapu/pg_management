@@ -14,6 +14,7 @@ import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
+import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { SubscriptionBadge, SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { Room } from "@/types";
@@ -42,6 +43,8 @@ import { SecurityDepositCard } from "@/components/SecurityDepositCard";
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
   const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG } = usePG();
+  // Prefetch payments data early so Dashboard doesn't show spinners
+  const { isLoading: paymentsLoading } = useTenantPayments();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");

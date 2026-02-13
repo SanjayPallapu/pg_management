@@ -18,6 +18,7 @@ import { Room, DashboardStats, PaymentEntry } from "@/types";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRealtimePayments } from "@/hooks/useRealtimePayments";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +56,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const { currentPG } = usePG();
   const { payments } = useTenantPayments();
   const { isAdmin } = useAuth();
+  useRealtimePayments(); // Subscribe to real-time payment updates
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
