@@ -183,8 +183,8 @@ const Auth = () => {
           <div className="mx-auto">
             <img src={appLogo} alt="PG logo" className="h-44 w-44 object-contain" decoding="async" />
           </div>
-          <CardTitle>PG Management</CardTitle>
-          <CardDescription>Sign in to manage your property</CardDescription>
+          <CardTitle className="-mt-4">PG Management</CardTitle>
+          <CardDescription className="-mt-1">Sign in to manage your property</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -232,6 +232,19 @@ const Auth = () => {
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mb-2 -ml-2 gap-1"
+                  onClick={() => {
+                    const tabsTrigger = document.querySelector('[data-state="active"][value="signup"]');
+                    const signinTrigger = document.querySelector('[value="signin"]') as HTMLElement;
+                    if (signinTrigger) signinTrigger.click();
+                  }}
+                >
+                  ← Back to Sign In
+                </Button>
                 <div className="space-y-2">
                   <Label htmlFor="signup-fullname">Full Name</Label>
                   <Input
