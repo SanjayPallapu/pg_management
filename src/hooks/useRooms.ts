@@ -106,6 +106,7 @@ export const useRooms = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
+    placeholderData: (prev) => prev, // keep old data visible during refetch
   });
 
   const updateRoom = useMutation({
