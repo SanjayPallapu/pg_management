@@ -37,7 +37,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <PGProvider>{children}</PGProvider>;
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 3 * 60 * 1000, // 3 min default staleness
+      gcTime: 15 * 60 * 1000,   // 15 min garbage collection
+      refetchOnWindowFocus: false, // prevent refetch storms
+      retry: 1,                   // single retry on failure
+      refetchOnReconnect: true,
+    },
+  },
+});
 
  // Simple splash handler
  const SplashHandler = ({ onComplete }: { onComplete: () => void }) => {

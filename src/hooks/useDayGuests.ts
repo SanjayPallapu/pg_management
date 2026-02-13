@@ -88,6 +88,8 @@ export const useDayGuests = (roomId?: string) => {
       }) as DayGuest[];
     },
     enabled: !authLoading && (!!roomId || !!currentPG?.id),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const addDayGuest = useMutation({
