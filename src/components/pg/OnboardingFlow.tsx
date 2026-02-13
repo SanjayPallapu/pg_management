@@ -13,6 +13,7 @@ import {
   Crown,
   Check,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   Copy,
   Upload,
@@ -22,10 +23,12 @@ import {
   CreditCard,
   Clock,
   LogOut,
+  Zap,
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import { useAuth } from '@/hooks/useAuth';
 import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID, PAYMENT_METHODS, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
@@ -80,7 +83,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const { refreshPGs, subscription, refreshSubscription, pgs } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
   const { signOut, isAdmin } = useAuth();
-
+  const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [step, setStep] = useState<Step>('welcome');
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -213,6 +216,9 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <Button size="lg" onClick={() => setStep('features')} className="w-full">
                 Get Started <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
+              <Button variant="ghost" onClick={handleSignOut} className="w-full gap-2 text-muted-foreground">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
             </div>
           </motion.div>
         );
@@ -253,7 +259,10 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               ))}
             </div>
 
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center gap-3 pt-4">
+              <Button variant="ghost" onClick={() => setStep('welcome')}>
+                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+              </Button>
               <Button size="lg" onClick={() => setStep('plans')}>
                 View Plans <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
@@ -340,13 +349,18 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               </Card>
             </div>
 
-            <Button 
-              size="lg" 
-              onClick={() => setStep('payment')} 
-              className="w-full"
-            >
-              Continue to Payment - ₹{currentPlan.price}
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => setStep('features')} className="flex-1">
+                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+              </Button>
+              <Button 
+                size="lg" 
+                onClick={() => setStep('payment')} 
+                className="flex-[2]"
+              >
+                Continue to Payment - ₹{currentPlan.price}
+              </Button>
+            </div>
           </motion.div>
         );
 
@@ -363,6 +377,37 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 <CreditCard className="h-3 w-3 mr-1" /> Payment
               </Badge>
               <h2 className="text-2xl font-bold">{currentPlan.name} Plan - ₹{currentPlan.price}/month</h2>
+            </div>
+
+            {/* Razorpay Online Payment */}
+            <Button
+              className="w-full gap-2 py-6 text-base"
+              onClick={() => {
+                initiatePayment({
+                  plan: selectedPlan,
+                  amount: currentPlan.price,
+                  onSuccess: async () => {
+                    await refreshSubscription();
+                    setStep('setup');
+                  },
+                });
+              }}
+              disabled={razorpayLoading}
+            >
+              {razorpayLoading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+              ) : (
+                <><Zap className="h-5 w-5" /> Pay ₹{currentPlan.price} Online (Card/UPI/Net Banking)</>
+              )}
+            </Button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or pay manually via UPI</span>
+              </div>
             </div>
 
             {/* UPI Details */}
