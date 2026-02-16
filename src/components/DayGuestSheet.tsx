@@ -121,7 +121,8 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     if (!editingGuest || !editGuestData) return;
 
     const fromDate = new Date(editGuestData.from_date);
-    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate), 1);
+    // Count both start and end day (inclusive)
+    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate) + 1, 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
     const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
     const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');

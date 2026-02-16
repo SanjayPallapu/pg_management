@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { Dashboard } from "@/components/Dashboard";
@@ -63,6 +64,35 @@ const Index = () => {
     onTabChange: setActiveTab,
   });
   const { selectedMonth, selectedYear } = useMonthContext();
+  // Prefetch day guest revenue so it loads with other dashboard cards
+  useQuery({
+    queryKey: ['day-guest-revenue', selectedMonth, selectedYear, currentPG?.id],
+    queryFn: async () => {
+      if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
+      const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+      const endOfMonth = new Date(selectedYear, selectedMonth, 0);
+      const { data, error } = await supabase
+        .from('day_guests')
+        .select('total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id)')
+        .eq('rooms.pg_id', currentPG.id)
+        .gte('from_date', startOfMonth.toISOString().split('T')[0])
+        .lte('from_date', endOfMonth.toISOString().split('T')[0]);
+      if (error) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
+      const collected = data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
+      const pending = data.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
+      let upi = 0, cash = 0;
+      data.forEach(g => {
+        ((g.payment_entries as any[]) || []).forEach(entry => {
+          if (entry.mode === 'upi') upi += entry.amount || 0;
+          else if (entry.mode === 'cash') cash += entry.amount || 0;
+        });
+      });
+      return { collected, pending, count: data.length, upi, cash };
+    },
+    enabled: !!currentPG?.id,
+    staleTime: 3 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
   const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
