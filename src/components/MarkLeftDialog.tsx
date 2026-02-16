@@ -124,9 +124,9 @@ export const MarkLeftDialog = ({
     const cycleStart = billingInfo.cycleStart;
     const leaveDateObj = leaveDate;
     
-    // Days from cycle start to leave date (inclusive of start, exclusive of leave date)
-    let daysStayed = differenceInDays(leaveDateObj, cycleStart);
-    if (daysStayed < 0) daysStayed = 0;
+    // Days from cycle start to leave date (inclusive of both start and end day)
+    let daysStayed = differenceInDays(leaveDateObj, cycleStart) + 1;
+    if (daysStayed < 1) daysStayed = 1;
 
     // Total days in billing cycle
     const totalDaysInCycle = differenceInDays(billingInfo.cycleEnd, cycleStart) + 1;
