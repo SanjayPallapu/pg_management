@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserPlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { usePG } from '@/contexts/PGContext';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -59,7 +60,9 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
     placeholderData: (prev) => prev ?? { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 },
   });
 
-  if (isLoading) {
+  const showSkeleton = isLoading && !dayGuestStats;
+
+  if (showSkeleton) {
     return (
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
@@ -69,13 +72,17 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
         <CardContent className="p-4 pt-0">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <div className="h-7 w-20 bg-muted animate-pulse rounded" />
-              <div className="h-3 w-14 bg-muted animate-pulse rounded mt-1" />
+              <Skeleton className="h-7 w-20" />
+              <Skeleton className="h-3 w-14 mt-1" />
             </div>
             <div>
-              <div className="h-7 w-20 bg-muted animate-pulse rounded" />
-              <div className="h-3 w-14 bg-muted animate-pulse rounded mt-1" />
+              <Skeleton className="h-7 w-20" />
+              <Skeleton className="h-3 w-14 mt-1" />
             </div>
+          </div>
+          <div className="flex justify-center gap-4 text-xs border-t pt-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-16" />
           </div>
         </CardContent>
       </Card>
