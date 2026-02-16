@@ -1,11 +1,13 @@
-import { useState, useMemo } from 'react';
-import { differenceInDays } from 'date-fns';
+import { useState, useMemo, useCallback } from 'react';
+import { differenceInDays, getDaysInMonth } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Lock, AlertTriangle, IndianRupee, Calendar } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Lock, AlertTriangle, IndianRupee, Calendar, Check } from 'lucide-react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -14,6 +16,8 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { hasTenantLeftNow, isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+
+type RateMode = 'day-wise' | 'monthly-30' | 'custom';
 
 interface LeftTenantsCleanupSheetProps {
   open: boolean;
@@ -29,9 +33,18 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLocking, setIsLocking] = useState(false);
   const [filterRoom, setFilterRoom] = useState<string | null>(null);
+  
+  // Rate calculation mode per tenant
+  const [rateModes, setRateModes] = useState<Record<string, RateMode>>({});
+  const [customRates, setCustomRates] = useState<Record<string, number>>({});
+  // Refund paid toggle per tenant
+  const [refundPaid, setRefundPaid] = useState<Record<string, boolean>>({});
 
-  // Find left tenants that are still active in the rent sheet for this month
-  // (active in month BUT already left - endDate is today or in the past)
+  const getRateMode = (id: string): RateMode => rateModes[id] || 'monthly-30';
+  const setRateMode = (id: string, mode: RateMode) => setRateModes(prev => ({ ...prev, [id]: mode }));
+
+  const daysInMonth = getDaysInMonth(new Date(selectedYear, selectedMonth - 1));
+
   const leftTenantsInSheet = useMemo(() => {
     const tenants: Array<{
       id: string;
@@ -43,47 +56,27 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
       isLocked: boolean;
       paymentStatus: 'Paid' | 'Partial' | 'Pending';
       amountPaid: number;
-      balance: number;
       daysStayed: number;
-      proRataRent: number;
-      refundDue: number;
     }> = [];
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        // Must be active in the selected month (was part of rent sheet)
-        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
-          return;
-        }
-        
-        // Must have left (endDate is today or in the past)
-        if (!hasTenantLeftNow(tenant.endDate)) {
-          return;
-        }
-        
-        // Skip already locked tenants
-        if (tenant.isLocked) {
-          return;
-        }
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
+        if (!hasTenantLeftNow(tenant.endDate)) return;
+        if (tenant.isLocked) return;
 
-        // Get payment status for this tenant
         const payment = payments.find(
           p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
         );
 
         const amountPaid = payment?.amountPaid || 0;
-        const balance = Math.max(0, tenant.monthlyRent - amountPaid);
         const paymentStatus = payment?.paymentStatus || 'Pending';
 
-        // Calculate pro-rata: days from start of billing cycle to leave date
         const joinDate = parseDateOnly(tenant.startDate);
         const joinDay = joinDate.getDate();
         const cycleStart = new Date(selectedYear, selectedMonth - 1, joinDay === 1 ? 1 : joinDay);
         const leaveDate = parseDateOnly(tenant.endDate!);
         const daysStayed = Math.max(differenceInDays(leaveDate, cycleStart), 1);
-        const perDayRate = Math.round(tenant.monthlyRent / 30);
-        const proRataRent = daysStayed * perDayRate;
-        const refundDue = amountPaid > proRataRent ? amountPaid - proRataRent : 0;
 
         tenants.push({
           id: tenant.id,
@@ -95,10 +88,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           isLocked: tenant.isLocked || false,
           paymentStatus: paymentStatus as 'Paid' | 'Partial' | 'Pending',
           amountPaid,
-          balance,
           daysStayed,
-          proRataRent,
-          refundDue,
         });
       });
     });
@@ -106,13 +96,28 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
     return tenants;
   }, [rooms, selectedMonth, selectedYear, payments]);
 
-  // Get unique room numbers for filtering
+  // Compute per-day rate and refund based on selected mode
+  const getCalc = useCallback((tenant: typeof leftTenantsInSheet[0]) => {
+    const mode = getRateMode(tenant.id);
+    let perDayRate: number;
+    if (mode === 'day-wise') {
+      perDayRate = Math.round(tenant.monthlyRent / daysInMonth);
+    } else if (mode === 'custom') {
+      perDayRate = customRates[tenant.id] || Math.round(tenant.monthlyRent / 30);
+    } else {
+      perDayRate = Math.round(tenant.monthlyRent / 30);
+    }
+    const proRataRent = perDayRate * tenant.daysStayed;
+    const refundDue = tenant.amountPaid > proRataRent ? tenant.amountPaid - proRataRent : 0;
+    const balance = Math.max(0, tenant.monthlyRent - tenant.amountPaid);
+    return { perDayRate, proRataRent, refundDue, balance };
+  }, [rateModes, customRates, daysInMonth]);
+
   const uniqueRooms = useMemo(() => {
     const roomSet = new Set(leftTenantsInSheet.map(t => t.roomNo));
     return Array.from(roomSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }, [leftTenantsInSheet]);
 
-  // Filtered tenants based on room filter
   const filteredTenants = useMemo(() => {
     if (!filterRoom) return leftTenantsInSheet;
     return leftTenantsInSheet.filter(t => t.roomNo === filterRoom);
@@ -121,11 +126,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
+      if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
       return newSet;
     });
   };
@@ -140,65 +141,72 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
   const handleBulkLock = async () => {
     if (selectedIds.size === 0) return;
-    
     setIsLocking(true);
     try {
       const tenantsToLock = leftTenantsInSheet.filter(t => selectedIds.has(t.id));
-      
       for (const tenant of tenantsToLock) {
         await updateTenant.mutateAsync({
           tenantId: tenant.id,
           updates: { isLocked: true },
           tenantName: tenant.name,
         });
-        
         await logAudit.mutateAsync({
           action: 'update',
           tableName: 'tenants',
           recordId: tenant.id,
           recordName: tenant.name,
-          changes: {
-            isLocked: { old: false, new: true },
-          },
+          changes: { isLocked: { old: false, new: true } },
           newData: { isLocked: true },
           oldData: { isLocked: false },
         });
       }
-      
       toast({
         title: `${tenantsToLock.length} tenant(s) locked`,
         description: 'They have been removed from rent sheet and reports',
       });
-      
       setSelectedIds(new Set());
       onOpenChange(false);
     } catch (error) {
       console.error('Error locking tenants:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to lock some tenants',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to lock some tenants', variant: 'destructive' });
     } finally {
       setIsLocking(false);
     }
   };
 
-  // Calculate totals for selected tenants
-  const selectedStats = useMemo(() => {
-    const selected = leftTenantsInSheet.filter(t => selectedIds.has(t.id));
-    return {
-      count: selected.length,
-      totalBalance: selected.reduce((sum, t) => sum + t.balance, 0),
-      totalPaid: selected.reduce((sum, t) => sum + t.amountPaid, 0),
-    };
-  }, [leftTenantsInSheet, selectedIds]);
+  // Summary stats considering refund paid toggles
+  const summaryStats = useMemo(() => {
+    let totalPaid = 0;
+    let totalPending = 0;
+    let totalRefundDue = 0;
+    let totalRefunded = 0;
+
+    leftTenantsInSheet.forEach(t => {
+      const { proRataRent, refundDue } = getCalc(t);
+      const effectiveCollected = refundPaid[t.id] ? proRataRent : t.amountPaid;
+      const effectivePending = Math.max(0, proRataRent - t.amountPaid);
+      totalPaid += effectiveCollected;
+      totalPending += effectivePending;
+      totalRefundDue += refundDue;
+      if (refundPaid[t.id]) totalRefunded += refundDue;
+    });
+
+    return { totalPaid, totalPending, totalRefundDue, totalRefunded };
+  }, [leftTenantsInSheet, getCalc, refundPaid]);
 
   const getPaymentBadgeClass = (status: string) => {
     switch (status) {
       case 'Paid': return 'bg-paid text-paid-foreground';
       case 'Partial': return 'bg-partial text-partial-foreground';
       default: return 'bg-pending text-pending-foreground';
+    }
+  };
+
+  const rateModeLabel = (mode: RateMode) => {
+    switch (mode) {
+      case 'day-wise': return `Actual (÷${daysInMonth})`;
+      case 'monthly-30': return 'Monthly ÷ 30';
+      case 'custom': return 'Custom';
     }
   };
 
@@ -225,24 +233,9 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
             {/* Room Filter */}
             {uniqueRooms.length > 1 && (
               <div className="flex gap-2 py-3 overflow-x-auto border-b">
-                <Button 
-                  variant={filterRoom === null ? 'default' : 'outline'} 
-                  size="sm"
-                  onClick={() => setFilterRoom(null)}
-                  className="shrink-0"
-                >
-                  All
-                </Button>
+                <Button variant={filterRoom === null ? 'default' : 'outline'} size="sm" onClick={() => setFilterRoom(null)} className="shrink-0">All</Button>
                 {uniqueRooms.map(roomNo => (
-                  <Button
-                    key={roomNo}
-                    variant={filterRoom === roomNo ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setFilterRoom(roomNo)}
-                    className="shrink-0"
-                  >
-                    Room {roomNo}
-                  </Button>
+                  <Button key={roomNo} variant={filterRoom === roomNo ? 'default' : 'outline'} size="sm" onClick={() => setFilterRoom(roomNo)} className="shrink-0">Room {roomNo}</Button>
                 ))}
               </div>
             )}
@@ -251,94 +244,163 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
               <Button variant="outline" size="sm" onClick={selectAll}>
                 {selectedIds.size === filteredTenants.length ? 'Deselect All' : 'Select All'}
               </Button>
-              <Badge variant="secondary">
-                {selectedIds.size} selected
-              </Badge>
+              <Badge variant="secondary">{selectedIds.size} selected</Badge>
             </div>
 
-            {/* Stats for selected tenants */}
-            {selectedIds.size > 0 && (
-              <div className="grid grid-cols-2 gap-2 py-3 border-b text-sm">
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4 text-paid" />
-                  <span className="text-muted-foreground">Paid:</span>
-                  <span className="font-medium text-paid">₹{selectedStats.totalPaid.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4 text-pending" />
-                  <span className="text-muted-foreground">Balance:</span>
-                  <span className="font-medium text-pending">₹{selectedStats.totalBalance.toLocaleString()}</span>
-                </div>
+            {/* Summary stats */}
+            <div className="grid grid-cols-2 gap-2 py-3 border-b text-sm">
+              <div className="flex items-center gap-2">
+                <IndianRupee className="h-4 w-4 text-paid" />
+                <span className="text-muted-foreground">Effective Collected:</span>
+                <span className="font-medium text-paid">₹{summaryStats.totalPaid.toLocaleString()}</span>
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                <IndianRupee className="h-4 w-4 text-pending" />
+                <span className="text-muted-foreground">Pending:</span>
+                <span className="font-medium text-pending">₹{summaryStats.totalPending.toLocaleString()}</span>
+              </div>
+              {summaryStats.totalRefundDue > 0 && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <IndianRupee className="h-4 w-4 text-emerald-500" />
+                  <span className="text-muted-foreground">Total Refund:</span>
+                  <span className="font-medium text-emerald-500">₹{summaryStats.totalRefundDue.toLocaleString()}</span>
+                  {summaryStats.totalRefunded > 0 && (
+                    <Badge variant="outline" className="text-xs text-emerald-500 border-emerald-500/30">
+                      <Check className="h-3 w-3 mr-1" />₹{summaryStats.totalRefunded.toLocaleString()} refunded
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
 
-            {/* Action buttons at top for visibility */}
+            {/* Action buttons */}
             <div className="flex justify-between gap-2 py-3 border-b sticky top-0 bg-background z-10">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkLock}
-                disabled={selectedIds.size === 0 || isLocking}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={handleBulkLock} disabled={selectedIds.size === 0 || isLocking} className="gap-2">
                 <Lock className="h-4 w-4" />
                 Lock {selectedIds.size} Tenant{selectedIds.size !== 1 ? 's' : ''}
               </Button>
             </div>
 
-            <ScrollArea className="h-[calc(85vh-320px)]">
-              <div className="space-y-2 py-4">
-                {filteredTenants.map(tenant => (
-                  <div
-                    key={tenant.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedIds.has(tenant.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'
-                    }`}
-                    onClick={() => toggleSelection(tenant.id)}
-                  >
-                    <Checkbox
-                      checked={selectedIds.has(tenant.id)}
-                      onCheckedChange={() => toggleSelection(tenant.id)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium truncate">{tenant.name}</span>
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {tenant.roomNo}
-                        </Badge>
-                        <Badge className={`text-xs shrink-0 ${getPaymentBadgeClass(tenant.paymentStatus)}`}>
-                          {tenant.paymentStatus}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Left: {format(parseDateOnly(tenant.endDate), 'dd MMM')}
-                        </span>
-                        <span className="text-paid">₹{tenant.amountPaid.toLocaleString()} paid</span>
-                        {tenant.balance > 0 && (
-                          <span className="text-pending">₹{tenant.balance.toLocaleString()} due</span>
-                        )}
-                      </div>
-                      {/* Refund calculation for overpaid tenants */}
-                      {tenant.refundDue > 0 && (
-                        <div className="mt-1 p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                          <div className="text-xs space-y-0.5">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Stayed {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30)}/day</span>
-                              <span>= ₹{tenant.proRataRent.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between font-medium text-emerald-600">
-                              <span>Refund Due</span>
-                              <span>₹{tenant.refundDue.toLocaleString()}</span>
-                            </div>
+            <ScrollArea className="h-[calc(85vh-360px)]">
+              <div className="space-y-3 py-4">
+                {filteredTenants.map(tenant => {
+                  const mode = getRateMode(tenant.id);
+                  const { perDayRate, proRataRent, refundDue, balance } = getCalc(tenant);
+                  const isRefundPaid = refundPaid[tenant.id] || false;
+
+                  return (
+                    <div
+                      key={tenant.id}
+                      className={`p-3 rounded-lg border transition-colors ${
+                        selectedIds.has(tenant.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'
+                      }`}
+                    >
+                      {/* Top row: checkbox + name + badges */}
+                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => toggleSelection(tenant.id)}>
+                        <Checkbox
+                          checked={selectedIds.has(tenant.id)}
+                          onCheckedChange={() => toggleSelection(tenant.id)}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium truncate">{tenant.name}</span>
+                            <Badge variant="outline" className="text-xs shrink-0">{tenant.roomNo}</Badge>
+                            <Badge className={`text-xs shrink-0 ${getPaymentBadgeClass(tenant.paymentStatus)}`}>
+                              {tenant.paymentStatus}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Left: {format(parseDateOnly(tenant.endDate), 'dd MMM')}
+                            </span>
+                            <span className="text-paid">₹{tenant.amountPaid.toLocaleString()} paid</span>
+                            {balance > 0 && <span className="text-pending">₹{balance.toLocaleString()} due</span>}
                           </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Per day rate mode selector */}
+                      <div className="mt-2 ml-7">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                          <span className="text-xs text-muted-foreground mr-1">Per day:</span>
+                          {(['monthly-30', 'day-wise', 'custom'] as RateMode[]).map(m => (
+                            <Button
+                              key={m}
+                              variant={mode === m ? 'default' : 'outline'}
+                              size="sm"
+                              className="h-6 text-xs px-2"
+                              onClick={(e) => { e.stopPropagation(); setRateMode(tenant.id, m); }}
+                            >
+                              {rateModeLabel(m)}
+                            </Button>
+                          ))}
+                        </div>
+                        {mode === 'custom' && (
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-xs text-muted-foreground">₹</span>
+                            <Input
+                              type="number"
+                              className="h-7 w-24 text-xs"
+                              placeholder="Per day rate"
+                              value={customRates[tenant.id] || ''}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => setCustomRates(prev => ({ ...prev, [tenant.id]: Number(e.target.value) }))}
+                            />
+                            <span className="text-xs text-muted-foreground">/day</span>
+                          </div>
+                        )}
+
+                        {/* Calculation breakdown */}
+                        <div className="p-2 rounded bg-muted/50 border border-border">
+                          <div className="text-xs space-y-0.5">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                {tenant.daysStayed} days × ₹{perDayRate}/day
+                              </span>
+                              <span>= ₹{proRataRent.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Amount Paid</span>
+                              <span className="text-paid">₹{tenant.amountPaid.toLocaleString()}</span>
+                            </div>
+                            {refundDue > 0 && (
+                              <>
+                                <div className="flex justify-between font-medium text-emerald-500 border-t border-border pt-1 mt-1">
+                                  <span>Refund Due</span>
+                                  <span>₹{refundDue.toLocaleString()}</span>
+                                </div>
+                                {/* Refund paid toggle */}
+                                <div className="flex items-center justify-between pt-1">
+                                  <span className="text-muted-foreground">Refund Paid?</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs ${isRefundPaid ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                                      {isRefundPaid ? 'Yes' : 'No'}
+                                    </span>
+                                    <Switch
+                                      checked={isRefundPaid}
+                                      onCheckedChange={(val) => {
+                                        setRefundPaid(prev => ({ ...prev, [tenant.id]: val }));
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                            {tenant.amountPaid < proRataRent && (
+                              <div className="flex justify-between font-medium text-pending border-t border-border pt-1 mt-1">
+                                <span>Still Due</span>
+                                <span>₹{(proRataRent - tenant.amountPaid).toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </ScrollArea>
           </>
