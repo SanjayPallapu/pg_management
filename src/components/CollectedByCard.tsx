@@ -12,6 +12,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CollectorSettingsDialog } from './CollectorSettingsDialog';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
 
+const DEPOSIT_COLLECTED_BY_CACHE_KEY = 'security-deposit-collected-by';
+const readDepositCollectedByCache = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(DEPOSIT_COLLECTED_BY_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
 interface TenantCollection {
   tenantName: string;
   roomNo: string;
@@ -107,7 +115,10 @@ export const CollectedByCard = () => {
             depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear;
 
           if (isInMonth) {
-            const displayName = getCollectorDisplayName(tenant.securityDepositCollectedBy || 'Unknown');
+            // Read from localStorage cache if DB doesn't have collectedBy
+            const depositCache = readDepositCollectedByCache();
+            const collectedBy = tenant.securityDepositCollectedBy || depositCache[tenant.id] || 'Unknown';
+            const displayName = getCollectorDisplayName(collectedBy);
             const mode = (tenant.securityDepositMode === 'upi' ? 'upi' : 'cash') as 'upi' | 'cash';
             addCollection(displayName, {
               tenantName: tenant.name,

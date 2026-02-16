@@ -65,6 +65,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingGuestId, setDeletingGuestId] = useState<string | null>(null);
   const [deletingGuestName, setDeletingGuestName] = useState<string>('');
+  const [deleteEntryIdx, setDeleteEntryIdx] = useState<number | null>(null);
 
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -121,8 +122,8 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     if (!editingGuest || !editGuestData) return;
 
     const fromDate = new Date(editGuestData.from_date);
-    // Count both start and end day (inclusive)
-    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate) + 1, 1);
+    // Day count: check-in to check-out (e.g., 10th to 14th = 4 days)
+    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate), 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
     const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
     const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');
@@ -498,7 +499,20 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
               {/* Payment Entries - Editable */}
               {editingGuest.paymentEntries.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-sm">Payment History</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Payment History</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => {
+                        setEditingGuest(prev => prev ? { ...prev, paymentEntries: prev.paymentEntries } : null);
+                      }}
+                    >
+                      <SquarePen className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
                   {editingGuest.paymentEntries.map((entry, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
                       <div className="flex-1">
@@ -528,10 +542,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                        onClick={() => {
-                          const updated = editingGuest.paymentEntries.filter((_, i) => i !== idx);
-                          setEditingGuest(prev => prev ? { ...prev, paymentEntries: updated } : null);
-                        }}
+                        onClick={() => setDeleteEntryIdx(idx)}
                       >
                         ×
                       </Button>
@@ -708,6 +719,32 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Mark Unpaid
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Delete Payment Entry Confirmation */}
+      <AlertDialog open={deleteEntryIdx !== null} onOpenChange={(open) => { if (!open) setDeleteEntryIdx(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Payment Entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this payment entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteEntryIdx(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteEntryIdx !== null && editingGuest) {
+                  const updated = editingGuest.paymentEntries.filter((_, i) => i !== deleteEntryIdx);
+                  setEditingGuest(prev => prev ? { ...prev, paymentEntries: updated } : null);
+                }
+                setDeleteEntryIdx(null);
+              }}
+            >
+              Delete Entry
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

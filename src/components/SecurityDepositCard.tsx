@@ -243,6 +243,15 @@ export const SecurityDepositCard = ({
     .filter(t => t.securityDepositMode === 'cash')
     .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
 
+  // All-time UPI/Cash totals
+  const allTimeUpi = depositedTenants
+    .filter(t => t.securityDepositMode === 'upi')
+    .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
+  
+  const allTimeCash = depositedTenants
+    .filter(t => t.securityDepositMode === 'cash')
+    .reduce((sum, t) => sum + (t.securityDepositAmount || 0), 0);
+
   const tryUpdateTenantDeposit = async (
     tenantId: string,
     updates: Partial<Tenant>,
@@ -360,15 +369,19 @@ export const SecurityDepositCard = ({
                 <p className="text-xs text-muted-foreground">Tenants deposited</p>
               </div>
             </div>
-            {/* Selected month UPI/Cash breakdown */}
-            {(selectedMonthUpi > 0 || selectedMonthCash > 0) && (
-              <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
-                <div className="text-blue-600 dark:text-blue-400">
-                  UPI: ₹{selectedMonthUpi.toLocaleString()}
-                </div>
-                <div className="text-green-600 dark:text-green-400">
-                  Cash: ₹{selectedMonthCash.toLocaleString()}
-                </div>
+            {/* All-time UPI/Cash breakdown */}
+            <div className="flex justify-center gap-4 text-xs border-t pt-2 mt-2">
+              <div className="text-upi">
+                <span className="font-medium">UPI:</span> ₹{allTimeUpi.toLocaleString()}
+              </div>
+              <div className="text-cash">
+                <span className="font-medium">Cash:</span> ₹{allTimeCash.toLocaleString()}
+              </div>
+            </div>
+            {/* Current month deposits */}
+            {selectedMonthTotal > 0 && (
+              <div className="text-xs text-muted-foreground text-center mt-1">
+                This month: ₹{selectedMonthTotal.toLocaleString()} (UPI: ₹{selectedMonthUpi.toLocaleString()} • Cash: ₹{selectedMonthCash.toLocaleString()})
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view details</p>

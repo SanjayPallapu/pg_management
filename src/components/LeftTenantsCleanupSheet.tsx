@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { differenceInDays } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -38,10 +39,14 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
       roomNo: string;
       monthlyRent: number;
       endDate: string;
+      startDate: string;
       isLocked: boolean;
       paymentStatus: 'Paid' | 'Partial' | 'Pending';
       amountPaid: number;
       balance: number;
+      daysStayed: number;
+      proRataRent: number;
+      refundDue: number;
     }> = [];
 
     rooms.forEach(room => {
@@ -70,16 +75,30 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
         const balance = Math.max(0, tenant.monthlyRent - amountPaid);
         const paymentStatus = payment?.paymentStatus || 'Pending';
 
+        // Calculate pro-rata: days from start of billing cycle to leave date
+        const joinDate = parseDateOnly(tenant.startDate);
+        const joinDay = joinDate.getDate();
+        const cycleStart = new Date(selectedYear, selectedMonth - 1, joinDay === 1 ? 1 : joinDay);
+        const leaveDate = parseDateOnly(tenant.endDate!);
+        const daysStayed = Math.max(differenceInDays(leaveDate, cycleStart), 1);
+        const perDayRate = Math.round(tenant.monthlyRent / 30);
+        const proRataRent = daysStayed * perDayRate;
+        const refundDue = amountPaid > proRataRent ? amountPaid - proRataRent : 0;
+
         tenants.push({
           id: tenant.id,
           name: tenant.name,
           roomNo: room.roomNo,
           monthlyRent: tenant.monthlyRent,
           endDate: tenant.endDate!,
+          startDate: tenant.startDate,
           isLocked: tenant.isLocked || false,
           paymentStatus: paymentStatus as 'Paid' | 'Partial' | 'Pending',
           amountPaid,
           balance,
+          daysStayed,
+          proRataRent,
+          refundDue,
         });
       });
     });
@@ -302,6 +321,21 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                           <span className="text-pending">₹{tenant.balance.toLocaleString()} due</span>
                         )}
                       </div>
+                      {/* Refund calculation for overpaid tenants */}
+                      {tenant.refundDue > 0 && (
+                        <div className="mt-1 p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
+                          <div className="text-xs space-y-0.5">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Stayed {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30)}/day</span>
+                              <span>= ₹{tenant.proRataRent.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between font-medium text-emerald-600">
+                              <span>Refund Due</span>
+                              <span>₹{tenant.refundDue.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
