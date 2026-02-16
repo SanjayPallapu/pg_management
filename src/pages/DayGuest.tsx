@@ -39,7 +39,8 @@ const DayGuestPage = () => {
   const [notes, setNotes] = useState('');
 
   // Calculated values
-  const numberOfDays = fromDate && toDate ? Math.max(differenceInDays(toDate, fromDate), 1) : 1;
+  // Count both start and end day (inclusive): join 31st, leave 3rd = 4 days
+  const numberOfDays = fromDate && toDate ? Math.max(differenceInDays(toDate, fromDate) + 1, 1) : 1;
   const totalAmount = numberOfDays * perDayRate;
 
   const handleSubmit = async (e: React.FormEvent) => {

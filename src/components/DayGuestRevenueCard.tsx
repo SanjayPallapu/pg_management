@@ -52,9 +52,11 @@ export const DayGuestRevenueCard = ({ onClick }: DayGuestRevenueCardProps) => {
       return { collected, pending, count: data.length, upi, cash };
     },
     enabled: !!currentPG?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
-    placeholderData: { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 },
+    staleTime: 3 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev ?? { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 },
   });
 
   if (isLoading) {
