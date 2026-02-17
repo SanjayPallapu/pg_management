@@ -16,6 +16,8 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { hasTenantLeftNow, isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { addRefund, removeRefund, getRefunds } from '@/utils/refundStore';
+import { useQueryClient } from '@tanstack/react-query';
 
 type RateMode = 'day-wise' | 'monthly-30' | 'custom';
 
@@ -30,6 +32,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   const { updateTenant } = useRooms();
   const { payments } = useTenantPayments();
   const { logAudit } = useAuditLog();
+  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLocking, setIsLocking] = useState(false);
   const [filterRoom, setFilterRoom] = useState<string | null>(null);
@@ -37,8 +40,13 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   // Rate calculation mode per tenant
   const [rateModes, setRateModes] = useState<Record<string, RateMode>>({});
   const [customRates, setCustomRates] = useState<Record<string, number>>({});
-  // Refund paid toggle per tenant
-  const [refundPaid, setRefundPaid] = useState<Record<string, boolean>>({});
+  // Refund paid toggle per tenant - initialized from localStorage
+  const [refundPaid, setRefundPaid] = useState<Record<string, boolean>>(() => {
+    const saved = getRefunds(selectedYear, selectedMonth);
+    const map: Record<string, boolean> = {};
+    saved.forEach(r => { map[r.tenantId] = true; });
+    return map;
+  });
 
   const getRateMode = (id: string): RateMode => rateModes[id] || 'monthly-30';
   const setRateMode = (id: string, mode: RateMode) => setRateModes(prev => ({ ...prev, [id]: mode }));
@@ -382,6 +390,37 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                                       checked={isRefundPaid}
                                       onCheckedChange={(val) => {
                                         setRefundPaid(prev => ({ ...prev, [tenant.id]: val }));
+                                        const { refundDue } = getCalc(tenant);
+                                        if (val) {
+                                          // Persist refund and audit log
+                                          addRefund(selectedYear, selectedMonth, {
+                                            tenantId: tenant.id,
+                                            tenantName: tenant.name,
+                                            roomNo: tenant.roomNo,
+                                            refundAmount: refundDue,
+                                            paidAt: new Date().toISOString(),
+                                          });
+                                          logAudit.mutate({
+                                            action: 'update',
+                                            tableName: 'tenants',
+                                            recordId: tenant.id,
+                                            recordName: tenant.name,
+                                            changes: { refund: { old: 0, new: refundDue } },
+                                            newData: { refundPaid: true, refundAmount: refundDue },
+                                          });
+                                        } else {
+                                          removeRefund(selectedYear, selectedMonth, tenant.id);
+                                          logAudit.mutate({
+                                            action: 'update',
+                                            tableName: 'tenants',
+                                            recordId: tenant.id,
+                                            recordName: tenant.name,
+                                            changes: { refund: { old: refundDue, new: 0 } },
+                                            newData: { refundPaid: false, refundAmount: 0 },
+                                          });
+                                        }
+                                        // Invalidate dashboard queries so totals update
+                                        queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                     />
