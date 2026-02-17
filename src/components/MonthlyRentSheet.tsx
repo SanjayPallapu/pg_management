@@ -1128,25 +1128,53 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           </AlertDialogHeader>
           <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
             <div>
-              <Label>Amount (₹)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Amount (₹)</Label>
+                {paymentAmountTenant && (() => {
+                  const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
+                  if (!tenant) return null;
+                  return (
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant={paymentAmount === tenant.monthlyRent ? "default" : "outline"}
+                        size="sm"
+                        className="h-6 text-xs px-2"
+                        onClick={() => { setPaymentAmount(tenant.monthlyRent); setOverpaymentReason(""); }}
+                      >
+                        Full Rent
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={paymentAmount !== tenant.monthlyRent && paymentAmount > 0 ? "default" : "outline"}
+                        size="sm"
+                        className="h-6 text-xs px-2"
+                        onClick={() => { setPaymentAmount(0); setOverpaymentReason(""); }}
+                      >
+                        Custom / Luggage
+                      </Button>
+                    </div>
+                  );
+                })()}
+              </div>
               <Input
                 type="number"
                 value={paymentAmount}
                 onChange={(e) => {
                   setPaymentAmount(parseInt(e.target.value) || 0);
-                  // Reset overpayment reason when amount changes
                   setOverpaymentReason("");
                 }}
                 className="mt-2"
+                placeholder="Enter custom amount"
               />
               {paymentAmountTenant &&
                 (() => {
                   const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
                   if (tenant) {
-                    if (paymentAmount < tenant.monthlyRent) {
+                    if (paymentAmount < tenant.monthlyRent && paymentAmount > 0) {
                       return (
                         <p className="text-sm text-partial mt-2">
-                          This will be recorded as a partial payment. Remaining: ₹
+                          Partial payment. Remaining: ₹
                           {(tenant.monthlyRent - paymentAmount).toLocaleString()}
                         </p>
                       );
