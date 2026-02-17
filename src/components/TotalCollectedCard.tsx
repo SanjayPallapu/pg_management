@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Room, PaymentEntry } from '@/types';
 import { useMemo } from 'react';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { getTotalRefunded } from '@/utils/refundStore';
 
 interface TotalCollectedCardProps {
   rooms: Room[];
@@ -168,7 +169,8 @@ export const TotalCollectedCard = ({ rooms }: TotalCollectedCardProps) => {
     return { total, upi, cash };
   }, [rooms, selectedMonth, selectedYear]);
 
-  const totalCollected = thisMonthRent + overdueCollected + dayGuestRevenue + securityDeposits.total + extraAmounts;
+  const totalRefunded = getTotalRefunded(selectedYear, selectedMonth);
+  const totalCollected = thisMonthRent + overdueCollected + dayGuestRevenue + securityDeposits.total + extraAmounts - totalRefunded;
 
   return (
     <Card className="bg-gradient-to-r from-paid/10 to-paid/5 border-paid/20">
@@ -204,10 +206,16 @@ export const TotalCollectedCard = ({ rooms }: TotalCollectedCardProps) => {
               )}
             </div>
           </div>
-          {extraAmounts > 0 && (
+           {extraAmounts > 0 && (
             <div className="flex justify-between">
               <span>Extra Amounts</span>
               <span>₹{extraAmounts.toLocaleString()}</span>
+            </div>
+          )}
+          {totalRefunded > 0 && (
+            <div className="flex justify-between text-destructive">
+              <span>Refunds Paid</span>
+              <span>-₹{totalRefunded.toLocaleString()}</span>
             </div>
           )}
         </div>
