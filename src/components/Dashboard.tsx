@@ -76,7 +76,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   });
 
   // Fetch day guest stats for selected month - filtered by current PG
-  const { data: dayGuestStats } = useQuery({
+  const { data: dayGuestStats, isLoading: dayGuestStatsLoading } = useQuery({
     queryKey: ["day-guest-stats", selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
@@ -406,7 +406,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               {/* Collected By Card - shows who collected payments */}
 
               {/* Day Guest Revenue Card - Admin only, receives data from parent query */}
-              {isAdmin && <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} stats={dayGuestStats} />}
+              {isAdmin && <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} stats={dayGuestStats} isLoading={dayGuestStatsLoading} />}
             </div>
           </CollapsibleContent>
         </Collapsible>

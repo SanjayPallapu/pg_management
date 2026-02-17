@@ -140,16 +140,25 @@ export const CollectedByCard = () => {
     dayGuests.forEach(guest => {
       const fromDate = new Date(guest.from_date);
       if (fromDate >= startOfMonth && fromDate <= endOfMonth) {
+        const amountPaid = guest.amount_paid || 0;
+        if (amountPaid <= 0) return;
+        
         const entries = (guest.payment_entries as any[]) || [];
         const room = rooms.find(r => r.id === guest.room_id);
         const roomNo = room?.roomNo || '?';
         
+        // Cap entries total at amount_paid
+        const entryTotal = entries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+        const ratio = entryTotal > 0 && entryTotal !== amountPaid ? amountPaid / entryTotal : 1;
+        
         entries.forEach((entry: any) => {
+          const scaledAmount = Math.round((entry.amount || 0) * ratio);
+          if (scaledAmount <= 0) return;
           const displayName = getCollectorDisplayName(entry.collectedBy || 'Unknown');
           addCollection(displayName, {
             tenantName: guest.guest_name,
             roomNo,
-            amount: entry.amount,
+            amount: scaledAmount,
             date: entry.date,
             mode: entry.mode || 'cash',
             type: 'dayguest',

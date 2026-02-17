@@ -94,14 +94,27 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
     dayGuests.forEach(guest => {
       const fromDate = new Date(guest.from_date);
       if (fromDate >= startOfMonth && fromDate <= endOfMonth) {
+        const amountPaid = guest.amount_paid || 0;
+        if (amountPaid <= 0) return;
+        
+        // Use payment_entries for mode breakdown, but cap total at amount_paid
         const entries = (guest.payment_entries as any[]) || [];
+        let entryUpi = 0, entryCash = 0;
         entries.forEach(entry => {
-          if (entry.mode === 'upi') {
-            dayGuestUpi.upi += entry.amount || 0;
-          } else if (entry.mode === 'cash') {
-            dayGuestUpi.cash += entry.amount || 0;
-          }
+          if (entry.mode === 'upi') entryUpi += entry.amount || 0;
+          else if (entry.mode === 'cash') entryCash += entry.amount || 0;
         });
+        const entryTotal = entryUpi + entryCash;
+        
+        if (entryTotal > 0 && entryTotal !== amountPaid) {
+          // Scale proportionally to match amount_paid
+          const ratio = amountPaid / entryTotal;
+          dayGuestUpi.upi += Math.round(entryUpi * ratio);
+          dayGuestUpi.cash += Math.round(entryCash * ratio);
+        } else {
+          dayGuestUpi.upi += entryUpi;
+          dayGuestUpi.cash += entryCash;
+        }
       }
     });
 
