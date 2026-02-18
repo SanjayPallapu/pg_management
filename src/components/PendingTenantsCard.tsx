@@ -42,14 +42,21 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
     return endDate <= today;
   };
 
-  // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants)
+  // Sort by startDate ascending (earliest joiner first for reminder priority)
+  const sortByJoiningDate = (a: TenantWithPayment, b: TenantWithPayment) => {
+    const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+    const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    return dateA - dateB;
+  };
+
+  // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants), sorted by joining date
   const overdueCombined = useMemo(() => {
-    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked && !isLeftTenant(t));
+    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked && !isLeftTenant(t)).sort(sortByJoiningDate);
   }, [overdueTenants, advanceNotPaidTenants]);
 
-  // Not yet due (excluding locked and left)
+  // Not yet due (excluding locked and left), sorted by joining date
   const notYetDue = useMemo(() => {
-    return notDueTenants.filter(t => !t.isLocked && !isLeftTenant(t));
+    return notDueTenants.filter(t => !t.isLocked && !isLeftTenant(t)).sort(sortByJoiningDate);
   }, [notDueTenants]);
 
   const overdueTotal = overdueCombined.reduce((sum, t) => sum + t.monthlyRent, 0);

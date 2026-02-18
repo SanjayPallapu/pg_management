@@ -17,7 +17,8 @@ interface DayGuestRevenueCardProps {
 }
 
 export const DayGuestRevenueCard = ({ onClick, stats, isLoading }: DayGuestRevenueCardProps) => {
-  if (isLoading && !stats) {
+  // Show skeleton when loading OR when stats not yet available (ensures sync with other cards)
+  if (isLoading || !stats) {
     return (
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
