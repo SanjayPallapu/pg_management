@@ -42,11 +42,11 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
     return endDate <= today;
   };
 
-  // Sort by startDate ascending (earliest joiner first for reminder priority)
+  // Sort by day-of-month from startDate (due date order for reminders)
   const sortByJoiningDate = (a: TenantWithPayment, b: TenantWithPayment) => {
-    const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
-    const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
-    return dateA - dateB;
+    const dayA = a.startDate ? new Date(a.startDate).getDate() : 0;
+    const dayB = b.startDate ? new Date(b.startDate).getDate() : 0;
+    return dayA - dayB;
   };
 
   // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants), sorted by joining date
