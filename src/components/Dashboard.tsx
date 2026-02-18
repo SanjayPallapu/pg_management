@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { getTotalRefunded } from '@/utils/refundStore';
+import { getTotalRefunded } from "@/utils/refundStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -249,7 +249,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     });
 
     const totalRefunded = getTotalRefunded(selectedYear, selectedMonth);
-    return thisMonthRent + overdueCollected + (dayGuestStats?.collected || 0) + securityDeposits + extraAmounts - totalRefunded;
+    return (
+      thisMonthRent +
+      overdueCollected +
+      (dayGuestStats?.collected || 0) +
+      securityDeposits +
+      extraAmounts -
+      totalRefunded
+    );
   }, [rooms, payments, selectedMonth, selectedYear, dayGuestStats]);
 
   const stats: DashboardStats = {
@@ -406,7 +413,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               {/* Collected By Card - shows who collected payments */}
 
               {/* Day Guest Revenue Card - right after Building Rent, always loads with it */}
-              {isAdmin && <DayGuestRevenueCard onClick={() => setDayGuestSheetOpen(true)} stats={dayGuestStats ?? undefined} isLoading={dayGuestStatsLoading} />}
+              <DayGuestRevenueCard
+                onClick={() => setDayGuestSheetOpen(true)}
+                stats={dayGuestStats ?? undefined}
+                isLoading={dayGuestStatsLoading}
+              />
             </div>
           </CollapsibleContent>
         </Collapsible>
