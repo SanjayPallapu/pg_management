@@ -361,6 +361,32 @@ export const BalanceCard = () => {
                     <span className="text-muted-foreground">{months[selectedMonth - 1]} Expenses</span>
                     <span className="font-medium text-destructive">-₹{currentExpenses.toLocaleString()}</span>
                   </div>
+
+                  {/* PG Rent toggle */}
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">PG Rent</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = getMonthToggles(selectedMonth, selectedYear);
+                          const updated = { ...current, pgRent: !current.pgRent };
+                          localStorage.setItem(getStorageKey(selectedMonth, selectedYear), JSON.stringify(updated));
+                          setToggles(updated);
+                          window.dispatchEvent(new CustomEvent('expenses-toggles-changed', { detail: { month: selectedMonth, year: selectedYear } }));
+                        }}
+                        className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                          toggles.pgRent
+                            ? "bg-red-500 border-red-500"
+                            : "bg-transparent border-muted-foreground hover:border-red-400"
+                        }`}
+                        title={toggles.pgRent ? "Included in expenses" : "Excluded from expenses"}
+                      />
+                    </div>
+                    <span className={`font-medium ${toggles.pgRent ? "text-destructive" : "text-muted-foreground"}`}>
+                      -₹{(150000).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </CollapsibleContent>
 

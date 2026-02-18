@@ -253,7 +253,14 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor }: Tenan
               </>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Room {tenant.roomNo}</p>
+          <p className="text-sm text-muted-foreground">
+            Room {tenant.roomNo}
+            {tenant.startDate && (
+              <span className="ml-2 text-xs">
+                Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+              </span>
+            )}
+          </p>
         </div>
         <Badge className={categoryColor === 'pending' ? 'bg-pending text-pending-foreground' : 'bg-blue-500 text-white'}>
           ₹{tenant.monthlyRent.toLocaleString()}
