@@ -153,13 +153,7 @@ const Index = () => {
     return <OnboardingFlow onComplete={() => refreshPGs()} />;
   }
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <span className="text-sm text-muted-foreground">Loading session...</span>
-      </div>
-    );
-  }
+  // Removed loading session screen - show dashboard immediately
 
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 

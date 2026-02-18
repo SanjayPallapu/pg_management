@@ -40,13 +40,15 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   // Rate calculation mode per tenant
   const [rateModes, setRateModes] = useState<Record<string, RateMode>>({});
   const [customRates, setCustomRates] = useState<Record<string, number>>({});
-  // Refund paid toggle per tenant - initialized from localStorage
-  const [refundPaid, setRefundPaid] = useState<Record<string, boolean>>(() => {
+  // Refund paid toggle per tenant - always read from localStorage
+  const refundPaidFromStore = useMemo(() => {
     const saved = getRefunds(selectedYear, selectedMonth);
     const map: Record<string, boolean> = {};
     saved.forEach(r => { map[r.tenantId] = true; });
     return map;
-  });
+  }, [selectedYear, selectedMonth]);
+  const [refundPaidOverrides, setRefundPaidOverrides] = useState<Record<string, boolean>>({});
+  const refundPaid = useMemo(() => ({ ...refundPaidFromStore, ...refundPaidOverrides }), [refundPaidFromStore, refundPaidOverrides]);
 
   const getRateMode = (id: string): RateMode => rateModes[id] || 'monthly-30';
   const setRateMode = (id: string, mode: RateMode) => setRateModes(prev => ({ ...prev, [id]: mode }));
@@ -389,7 +391,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                                     <Switch
                                       checked={isRefundPaid}
                                       onCheckedChange={(val) => {
-                                        setRefundPaid(prev => ({ ...prev, [tenant.id]: val }));
+                                        setRefundPaidOverrides(prev => ({ ...prev, [tenant.id]: val }));
                                         const { refundDue } = getCalc(tenant);
                                         if (val) {
                                           // Persist refund and audit log
