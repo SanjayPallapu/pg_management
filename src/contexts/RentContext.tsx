@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createContext, useContext, useCallback, ReactNode } from 'react';
 import { TenantPayment } from '@/types';
-import { usePG } from '@/contexts/PGContext';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface RentContextType {
   rentRecords: TenantPayment[];
@@ -33,117 +33,44 @@ interface RentProviderProps {
 }
 
 export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProviderProps) => {
-  const [rentRecords, setRentRecords] = useState<TenantPayment[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { currentPG } = usePG();
+  const { payments, isLoading, error, upsertPayment } = useTenantPayments();
+  const queryClient = useQueryClient();
 
-  const fetchRentForMonth = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      if (!currentPG?.id) {
-        setRentRecords([]);
-        return;
-      }
-
-      const { data: roomIdsData, error: roomIdsError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('pg_id', currentPG.id);
-
-      if (roomIdsError) throw roomIdsError;
-
-      const roomIds = (roomIdsData || []).map(r => r.id);
-      if (roomIds.length === 0) {
-        setRentRecords([]);
-        return;
-      }
-
-      const { data: tenantIdsData, error: tenantIdsError } = await supabase
-        .from('tenants')
-        .select('id')
-        .in('room_id', roomIds);
-
-      if (tenantIdsError) throw tenantIdsError;
-
-      const tenantIds = (tenantIdsData || []).map(t => t.id);
-      if (tenantIds.length === 0) {
-        setRentRecords([]);
-        return;
-      }
-
-      const { data, error: fetchError } = await supabase
-        .from('tenant_payments')
-        .select('*')
-        .in('tenant_id', tenantIds)
-        .eq('month', selectedMonth)
-        .eq('year', selectedYear)
-        .order('tenant_id', { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      const mappedRecords: TenantPayment[] = (data || []).map(record => ({
-        id: record.id,
-        tenantId: record.tenant_id,
-        month: record.month,
-        year: record.year,
-        paymentStatus: record.payment_status as 'Paid' | 'Pending' | 'Partial',
-        paymentDate: record.payment_date || undefined,
-        amount: record.amount,
-        amountPaid: (record as any).amount_paid || 0,
-        paymentEntries: ((record as any).payment_entries || []),
-      }));
-      setRentRecords(mappedRecords);
-    } catch (err) {
-      console.error('Error fetching rent data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch rent data');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedMonth, selectedYear, currentPG?.id]);
+  // Filter payments for the selected month/year
+  const rentRecords = payments.filter(
+    p => p.month === selectedMonth && p.year === selectedYear
+  );
 
   const togglePaid = useCallback(
-    async (tenantId: string, roomId?: string) => {
-      try {
-        const existingRecord = rentRecords.find(
-          (r) => r.tenantId === tenantId && r.month === selectedMonth && r.year === selectedYear
-        );
+    async (tenantId: string, _roomId?: string) => {
+      const existingRecord = rentRecords.find(
+        r => r.tenantId === tenantId
+      );
+      if (!existingRecord) return;
 
-        if (!existingRecord) return;
+      const newStatus = existingRecord.paymentStatus === 'Paid' ? 'Pending' : 'Paid';
 
-        const newStatus = existingRecord.paymentStatus === 'Paid' ? 'Pending' : 'Paid';
-        const updatedAt = new Date().toISOString();
-
-        setRentRecords((prev) =>
-          prev.map((r) =>
-            r.id === existingRecord.id
-              ? { ...r, paymentStatus: newStatus, updatedAt }
-              : r
-          )
-        );
-
-        const { error: updateError } = await supabase
-          .from('tenant_payments')
-          .update({
-            payment_status: newStatus,
-            updated_at: updatedAt,
-          })
-          .eq('id', existingRecord.id);
-
-        if (updateError) throw updateError;
-      } catch (err) {
-        console.error('Error toggling payment status:', err);
-        await fetchRentForMonth();
-      }
+      await upsertPayment.mutateAsync({
+        tenantId,
+        month: selectedMonth,
+        year: selectedYear,
+        paymentStatus: newStatus,
+        paymentDate: existingRecord.paymentDate,
+        amount: existingRecord.amount,
+        amountPaid: existingRecord.amountPaid,
+        paymentEntries: existingRecord.paymentEntries,
+      });
     },
-    [rentRecords, selectedMonth, selectedYear, fetchRentForMonth]
+    [rentRecords, selectedMonth, selectedYear, upsertPayment]
   );
+
+  const refreshMonth = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+  }, [queryClient]);
 
   const getPaymentStatus = useCallback(
     (tenantId: string): 'Paid' | 'Pending' | 'Partial' | null => {
-      const record = rentRecords.find((r) => r.tenantId === tenantId);
+      const record = rentRecords.find(r => r.tenantId === tenantId);
       return record ? record.paymentStatus : null;
     },
     [rentRecords]
@@ -151,28 +78,24 @@ export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProv
 
   const getTotalCollected = useCallback((): number => {
     return rentRecords
-      .filter((r) => r.paymentStatus === 'Paid')
+      .filter(r => r.paymentStatus === 'Paid')
       .reduce((sum, r) => sum + (r.amount || 0), 0);
   }, [rentRecords]);
 
   const getTotalPending = useCallback((): number => {
     return rentRecords
-      .filter((r) => r.paymentStatus !== 'Paid')
+      .filter(r => r.paymentStatus !== 'Paid')
       .reduce((sum, r) => sum + (r.amount || 0), 0);
   }, [rentRecords]);
-
-  useEffect(() => {
-    fetchRentForMonth();
-  }, [fetchRentForMonth]);
 
   const value: RentContextType = {
     rentRecords,
     selectedMonth,
     selectedYear,
     isLoading,
-    error,
+    error: error ? String(error) : null,
     togglePaid,
-    refreshMonth: fetchRentForMonth,
+    refreshMonth,
     getPaymentStatus,
     getTotalCollected,
     getTotalPending,
