@@ -16,40 +16,14 @@ export const useTenantPayments = () => {
         return [];
       }
 
-      // Only fetch payments from the last 13 months for performance
+      // Optimized: single query using inner join instead of 3 sequential queries
       const currentDate = new Date();
       const cutoffYear = currentDate.getFullYear() - 1;
 
-      const { data: roomIdsData, error: roomIdsError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('pg_id', currentPG.id);
-
-      if (roomIdsError) {
-        console.error('[Payments] Failed to fetch room ids', roomIdsError);
-        throw roomIdsError;
-      }
-
-      const roomIds = (roomIdsData || []).map(r => r.id);
-      if (roomIds.length === 0) return [];
-
-      const { data: tenantIdsData, error: tenantIdsError } = await supabase
-        .from('tenants')
-        .select('id')
-        .in('room_id', roomIds);
-
-      if (tenantIdsError) {
-        console.error('[Payments] Failed to fetch tenant ids', tenantIdsError);
-        throw tenantIdsError;
-      }
-
-      const tenantIds = (tenantIdsData || []).map(t => t.id);
-      if (tenantIds.length === 0) return [];
-      
       const { data, error } = await supabase
         .from('tenant_payments')
-        .select('*')
-        .in('tenant_id', tenantIds)
+        .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, tenants!inner(room_id, rooms!inner(pg_id))')
+        .eq('tenants.rooms.pg_id', currentPG.id)
         .gte('year', cutoffYear)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
