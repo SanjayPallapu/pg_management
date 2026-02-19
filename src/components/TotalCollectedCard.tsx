@@ -5,6 +5,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, PaymentEntry } from '@/types';
+import { usePG } from '@/contexts/PGContext';
 import { useMemo } from 'react';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { getTotalRefunded } from '@/utils/refundStore';
@@ -18,16 +19,19 @@ export const TotalCollectedCard = ({ rooms }: TotalCollectedCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
 
-  // Fetch day guest revenue for selected month
+  // Use the same query key as Dashboard/Index prefetch to share cache
+  const { currentPG } = usePG();
   const { data: dayGuestRevenue = 0 } = useQuery({
-    queryKey: ['day-guest-revenue', selectedMonth, selectedYear],
+    queryKey: ['day-guest-revenue', selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
+      if (!currentPG?.id) return 0;
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
       const { data, error } = await supabase
         .from('day_guests')
-        .select('amount_paid')
+        .select('amount_paid, rooms!inner(pg_id)')
+        .eq('rooms.pg_id', currentPG.id)
         .gte('from_date', startOfMonth.toISOString().split('T')[0])
         .lte('from_date', endOfMonth.toISOString().split('T')[0]);
 
@@ -35,6 +39,7 @@ export const TotalCollectedCard = ({ rooms }: TotalCollectedCardProps) => {
 
       return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
     },
+    enabled: !!currentPG?.id,
   });
 
   // Calculate THIS MONTH rent collected by summing actual payment entries

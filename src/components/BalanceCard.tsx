@@ -131,9 +131,9 @@ export const BalanceCard = () => {
     retry: 2,
   });
 
-  // Day guest revenue for current month
+  // Day guest revenue for current month - use same query key as Dashboard to share cache
   const { data: dayGuestRevenue = 0 } = useQuery({
-    queryKey: ["day-guest-revenue-balance", selectedMonth, selectedYear, currentPG?.id],
+    queryKey: ["day-guest-revenue", selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return 0;
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);

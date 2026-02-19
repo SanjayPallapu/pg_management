@@ -1,20 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { Dashboard } from "@/components/Dashboard";
-import { RoomDirectory } from "@/components/RoomDirectory";
-import { Reports } from "@/components/Reports";
-import { TenantManagement } from "@/components/TenantManagement";
-import { MonthlyRentSheet } from "@/components/MonthlyRentSheet";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
-import { AuditHistorySheet } from "@/components/AuditHistorySheet";
 import { DashboardSkeleton, RentSheetSkeleton } from "@/components/skeletons";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
+
+// Lazy load non-critical tab components
+const RoomDirectory = lazy(() => import("@/components/RoomDirectory").then(m => ({ default: m.RoomDirectory })));
+const Reports = lazy(() => import("@/components/Reports").then(m => ({ default: m.Reports })));
+const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then(m => ({ default: m.MonthlyRentSheet })));
+const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
+const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").then(m => ({ default: m.AuditHistorySheet })));
+const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { SubscriptionBadge, SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
@@ -39,7 +42,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import appLogo from "@/assets/pg-logo.png";
-import { SecurityDepositCard } from "@/components/SecurityDepositCard";
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
@@ -266,29 +268,41 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="rooms" className="space-y-6 mt-6">
-              <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
+              <Suspense fallback={<DashboardSkeleton />}>
+                <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="rent-sheet" className="space-y-6 mt-6">
-              {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
+              <Suspense fallback={<RentSheetSkeleton />}>
+                {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-6 mt-6">
-              <Reports rooms={rooms} />
+              <Suspense fallback={<DashboardSkeleton />}>
+                <Reports rooms={rooms} />
+              </Suspense>
             </TabsContent>
           </div>
         </Tabs>
 
         {/* Always-mounted host to ensure Security Deposit opens from any tab */}
-        <SecurityDepositCard rooms={rooms} showSummaryCard={false} enableExternalTriggers />
+        <Suspense fallback={null}>
+          <SecurityDepositCard rooms={rooms} showSummaryCard={false} enableExternalTriggers />
+        </Suspense>
 
         {/* Tenant Management Dialog */}
         {selectedRoom && (
-          <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+          <Suspense fallback={null}>
+            <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+          </Suspense>
         )}
 
         {/* Activity History Sheet */}
-        <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
+        <Suspense fallback={null}>
+          <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
+        </Suspense>
 
         {/* Subscription Details Sheet */}
         <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
