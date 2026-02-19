@@ -14,7 +14,7 @@ import appLogo from "@/assets/splash-uploaded-logo.png";
 
 const authSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters")
 });
 
 const signupSchema = z.object({
@@ -22,7 +22,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Please enter your name"),
   phone: z.string().min(10, "Please enter a valid phone number"),
-  city: z.string().min(2, "Please enter your city"),
+  city: z.string().min(2, "Please enter your city")
 });
 
 const Auth = () => {
@@ -55,7 +55,7 @@ const Auth = () => {
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors: { email?: string; password?: string } = {};
+        const newErrors: {email?: string;password?: string;} = {};
         err.errors.forEach((e) => {
           if (e.path[0] === "email") newErrors.email = e.message;
           if (e.path[0] === "password") newErrors.password = e.message;
@@ -73,7 +73,7 @@ const Auth = () => {
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors: { email?: string; password?: string; fullName?: string; phone?: string; city?: string } = {};
+        const newErrors: {email?: string;password?: string;fullName?: string;phone?: string;city?: string;} = {};
         err.errors.forEach((e) => {
           if (e.path[0] === "email") newErrors.email = e.message;
           if (e.path[0] === "password") newErrors.password = e.message;
@@ -126,7 +126,7 @@ const Auth = () => {
         user_id: data.user.id,
         full_name: fullName,
         phone: phone,
-        city: city,
+        city: city
       });
 
       setIsSubmitting(false);
@@ -144,8 +144,8 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>);
+
   }
 
   const handlePendingSignOut = async () => {
@@ -172,19 +172,19 @@ const Auth = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center p-0 space-y-0 relative">
-          <div className="mx-auto mb-0 flex justify-center relative z-0">
-            <img src={appLogo} alt="PG logo" className="h-64 w-64 object-contain" decoding="async" />
+        <CardHeader className="text-center">
+          <div className="mx-auto">
+            <img src={appLogo} alt="PG logo" className="h-44 w-44 object-contain" decoding="async" />
           </div>
-          <CardTitle className="absolute inset-x-0 top-3/4 -translate-y-1/2 z-10">PG Management</CardTitle>
-          <CardDescription className="absolute inset-x-0 top-3/4 translate-y-4 z-10">Sign in to manage your property</CardDescription>
+          <CardTitle className="-mt-4">PG Management</CardTitle>
+          <CardDescription className="-mt-1">Sign in to manage your property</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -202,8 +202,8 @@ const Auth = () => {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
@@ -214,37 +214,37 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
+                  {isSubmitting ?
+                  <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
-                    </>
-                  ) : (
-                    "Sign In"
-                  )}
+                    </> :
+
+                  "Sign In"
+                  }
                 </Button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mb-2 -ml-2 gap-1"
-                  onClick={() => {
-                    const tabsTrigger = document.querySelector('[data-state="active"][value="signup"]');
-                    const signinTrigger = document.querySelector('[value="signin"]') as HTMLElement;
-                    if (signinTrigger) signinTrigger.click();
-                  }}
-                >
-                  ← Back to Sign In
-                </Button>
+                
+
+
+
+
+
+
+
+
+
+
+
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-fullname">Full Name</Label>
                   <Input
@@ -253,8 +253,8 @@ const Auth = () => {
                     placeholder="Your full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
                 </div>
                 <div className="space-y-2">
@@ -265,8 +265,8 @@ const Auth = () => {
                     placeholder="9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
                 <div className="space-y-2">
@@ -277,8 +277,8 @@ const Auth = () => {
                     placeholder="Your city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
                 </div>
                 <div className="space-y-2">
@@ -289,8 +289,8 @@ const Auth = () => {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
@@ -301,19 +301,19 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting} />
+
                   {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
+                  {isSubmitting ?
+                  <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
+                    </> :
+
+                  "Create Account"
+                  }
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
                   First user gets admin access, subsequent users get staff access.
@@ -323,8 +323,8 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Auth;
