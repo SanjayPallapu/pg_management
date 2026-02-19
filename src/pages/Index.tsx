@@ -151,8 +151,8 @@ const Index = () => {
     setIsDialogOpen(true);
   };
 
-  // Show loading state while fetching PG data
-  if (pgLoading) {
+  // Show loading state only for new signups
+  if (pgLoading && isNewSignup) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-6 max-w-sm">
