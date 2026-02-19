@@ -119,20 +119,9 @@ const SplashScreen = () => {
         />
       </motion.div>
 
-      {/* Title text */}
-      <motion.h1
-        className="relative z-10 text-3xl font-extrabold mt-2 tracking-wide"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
-      >
-        PG Management
-      </motion.h1>
-
-      {/* Tagline */}
+      {/* Tagline - positioned above title */}
       <motion.p
-        className="relative z-10 text-lg font-semibold mt-2 tracking-widest"
+        className="relative z-10 text-lg font-semibold tracking-widest"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
@@ -140,6 +129,17 @@ const SplashScreen = () => {
       >
         Simple. Smart. Secure.
       </motion.p>
+
+      {/* Title text */}
+      <motion.h1
+        className="relative z-10 text-3xl font-extrabold -mt-5 tracking-wide"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+      >
+        PG Management
+      </motion.h1>
 
       {/* Progress bar */}
       <motion.div
