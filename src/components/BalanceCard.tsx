@@ -1,18 +1,16 @@
 import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Scale, ChevronDown, ChevronUp, Pencil, Check, X, Settings } from "lucide-react";
+import { Scale, ChevronDown, ChevronUp, Check, X, Settings } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
-import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { useRooms } from "@/hooks/useRooms";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PaymentEntry } from "@/types";
-import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { useTotalCollected } from "@/hooks/useTotalCollected";
 
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = {
@@ -24,7 +22,7 @@ const getStorageKey = (month: number, year: number) => `${STORAGE_KEY_PREFIX}-${
 
 export const BalanceCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { payments, isLoading: paymentsLoading } = useTenantPayments();
+  const { totalCollected: currentTotalCollected, isLoading: collectedLoading } = useTotalCollected();
   const { rooms, isLoading: roomsLoading } = useRooms();
   const { currentPG } = usePG();
   const queryClient = useQueryClient();
@@ -131,99 +129,7 @@ export const BalanceCard = () => {
     retry: 2,
   });
 
-  // Day guest revenue for current month - use same query key as Dashboard to share cache
-  const { data: dayGuestRevenue = 0 } = useQuery({
-    queryKey: ["day-guest-revenue", selectedMonth, selectedYear, currentPG?.id],
-    queryFn: async () => {
-      if (!currentPG?.id) return 0;
-      const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
-      const endOfMonth = new Date(selectedYear, selectedMonth, 0);
-      const { data, error } = await supabase
-        .from("day_guests")
-        .select("amount_paid, rooms!inner(pg_id)")
-        .eq("rooms.pg_id", currentPG.id)
-        .gte("from_date", startOfMonth.toISOString().split("T")[0])
-        .lte("from_date", endOfMonth.toISOString().split("T")[0]);
-      if (error) return 0;
-      return data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
-    },
-    enabled: !!currentPG?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 2 * 60 * 1000,
-  });
-
   const PG_RENT = 150000;
-
-  // Calculate total collected for current month
-  const currentTotalCollected = useMemo(() => {
-    let thisMonthRent = 0;
-    rooms.forEach((room) => {
-      room.tenants.forEach((tenant) => {
-        if (tenant.isLocked) return;
-        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
-        const payment = payments.find(
-          (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
-        );
-        if (payment?.paymentEntries) {
-          (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
-            thisMonthRent += entry.amount;
-          });
-        }
-      });
-    });
-
-    // Overdue collections
-    let pM = selectedMonth - 1,
-      pY = selectedYear;
-    if (pM === 0) {
-      pM = 12;
-      pY -= 1;
-    }
-    let overdueCollected = 0;
-    const allTenants = rooms.flatMap((room) => room.tenants);
-    const prevActive = allTenants.filter((t) => isTenantActiveInMonth(t.startDate, t.endDate, pY, pM));
-    prevActive.forEach((tenant) => {
-      if (tenant.isLocked) return;
-      const payment = payments.find((p) => p.tenantId === tenant.id && p.month === pM && p.year === pY);
-      if (!payment) return;
-      const entries = (payment.paymentEntries || []) as PaymentEntry[];
-      entries.forEach((entry) => {
-        const d = new Date(entry.date);
-        if (d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear) {
-          overdueCollected += entry.amount;
-        }
-      });
-    });
-
-    // Security deposits
-    let secDep = 0;
-    rooms.forEach((room) => {
-      room.tenants.forEach((tenant) => {
-        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
-        const dd = new Date(tenant.securityDepositDate);
-        if (dd.getMonth() + 1 === selectedMonth && dd.getFullYear() === selectedYear) {
-          secDep += tenant.securityDepositAmount;
-        }
-      });
-    });
-
-    // Extra amounts
-    let extra = 0;
-    const monthTenants = allTenants.filter((t) =>
-      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
-    );
-    monthTenants.forEach((tenant) => {
-      if (tenant.isLocked) return;
-      const payment = payments.find(
-        (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
-      );
-      if (!payment || !(payment as any).notes) return;
-      const m = (payment as any).notes.match(/Extra:\s*₹?([\d,]+)/);
-      if (m) extra += parseInt(m[1].replace(/,/g, "")) || 0;
-    });
-
-    return thisMonthRent + overdueCollected + dayGuestRevenue + secDep + extra;
-  }, [rooms, payments, selectedMonth, selectedYear, dayGuestRevenue]);
 
   // Family expenses value
   const familyExpensesValue = currentExpenseData?.familyExpenses || 0;
@@ -251,8 +157,8 @@ export const BalanceCard = () => {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   // Only show loading on true initial load (no cached data yet)
-  const hasAnyData = rooms.length > 0 || payments.length > 0 || manualBalance !== undefined;
-  const isDataLoading = (paymentsLoading || roomsLoading || balanceLoading) && !hasAnyData;
+  const hasAnyData = rooms.length > 0 || manualBalance !== undefined;
+  const isDataLoading = (collectedLoading || roomsLoading || balanceLoading) && !hasAnyData;
 
   const handleStartEdit = () => {
     setEditBalance(String(manualBalance ?? 0));

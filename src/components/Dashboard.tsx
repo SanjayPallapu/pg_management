@@ -1,5 +1,4 @@
-import { useState, useMemo } from "react";
-import { getTotalRefunded } from "@/utils/refundStore";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -15,7 +14,8 @@ import {
   Users,
   Settings,
 } from "lucide-react";
-import { Room, DashboardStats, PaymentEntry } from "@/types";
+import { Room, DashboardStats } from "@/types";
+import { useTotalCollected } from "@/hooks/useTotalCollected";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
@@ -174,90 +174,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   // Max monthly revenue if all beds filled (using fixed per-bed rates)
   const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.capacity * getPricePerBed(room.capacity), 0);
 
-  // Calculate total collected (same logic as TotalCollectedCard) for PersonalExpensesCard
-  const totalCollectedForExpenses = useMemo(() => {
-    // This month rent from payment entries
-    let thisMonthRent = 0;
-    rooms.forEach((room) => {
-      room.tenants.forEach((tenant) => {
-        if (tenant.isLocked) return;
-        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
-
-        const payment = payments.find(
-          (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
-        );
-        if (payment?.paymentEntries) {
-          (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
-            thisMonthRent += entry.amount;
-          });
-        }
-      });
-    });
-
-    // Overdue collections (previous month payments made in current month)
-    let overdueCollected = 0;
-    let prevMonth = selectedMonth - 1;
-    let prevYear = selectedYear;
-    if (prevMonth === 0) {
-      prevMonth = 12;
-      prevYear = selectedYear - 1;
-    }
-    const allTenants = rooms.flatMap((room) => room.tenants.map((tenant) => ({ ...tenant, roomNo: room.roomNo })));
-    const prevMonthActiveTenants = allTenants.filter((tenant) =>
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth),
-    );
-    prevMonthActiveTenants.forEach((tenant) => {
-      if (tenant.isLocked) return;
-      const payment = payments.find((p) => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear);
-      if (!payment) return;
-      const entries = (payment.paymentEntries || []) as PaymentEntry[];
-      entries.forEach((entry) => {
-        const entryDate = new Date(entry.date);
-        if (entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear) {
-          overdueCollected += entry.amount;
-        }
-      });
-    });
-
-    // Extra amounts from notes
-    let extraAmounts = 0;
-    const currentMonthTenants = allTenants.filter((tenant) =>
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth),
-    );
-    currentMonthTenants.forEach((tenant) => {
-      if (tenant.isLocked) return;
-      const payment = payments.find(
-        (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
-      );
-      if (!payment || !payment.notes) return;
-      const extraMatch = payment.notes.match(/Extra:\s*₹?([\d,]+)/);
-      if (extraMatch) {
-        extraAmounts += parseInt(extraMatch[1].replace(/,/g, "")) || 0;
-      }
-    });
-
-    // Security deposits this month
-    let securityDeposits = 0;
-    rooms.forEach((room) => {
-      room.tenants.forEach((tenant) => {
-        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
-        const depositDate = new Date(tenant.securityDepositDate);
-        if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
-          securityDeposits += tenant.securityDepositAmount;
-        }
-      });
-    });
-
-    const totalRefunded = getTotalRefunded(selectedYear, selectedMonth);
-    return (
-      thisMonthRent +
-      overdueCollected +
-      (dayGuestStats?.collected || 0) +
-      securityDeposits +
-      extraAmounts -
-      totalRefunded
-    );
-  }, [rooms, payments, selectedMonth, selectedYear, dayGuestStats]);
+  // Use shared hook for total collected
+  const { totalCollected: totalCollectedForExpenses } = useTotalCollected(rooms);
 
   const stats: DashboardStats = {
     totalRooms: rooms.length,
