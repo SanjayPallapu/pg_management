@@ -16,7 +16,14 @@ Deno.serve(async (req) => {
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      throw new Error("Razorpay credentials not configured");
+      console.error("Razorpay credentials not configured");
+      return new Response(
+        JSON.stringify({ error: "Payment service is not properly configured. Please contact support." }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Auth check
@@ -77,7 +84,8 @@ Deno.serve(async (req) => {
 
     if (!orderRes.ok) {
       console.error("Razorpay order creation failed:", order);
-      throw new Error("Failed to create Razorpay order");
+      const errorMsg = order?.error?.description || "Failed to create payment order";
+      throw new Error(errorMsg);
     }
 
     // Store order reference in payment_requests

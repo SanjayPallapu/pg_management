@@ -54,8 +54,14 @@ export const useRazorpay = () => {
           body: { plan, amount },
         });
 
-        if (error || !data?.order_id) {
-          throw new Error(error?.message || "Failed to create order");
+        if (error) {
+          console.error("Edge function error:", error);
+          throw new Error(error?.message || "Failed to initiate payment. Please try later");
+        }
+
+        if (!data?.order_id) {
+          console.error("Invalid response from edge function:", data);
+          throw new Error("Failed to create payment order. Please try again");
         }
 
         // Open Razorpay checkout
@@ -95,7 +101,9 @@ export const useRazorpay = () => {
         razorpay.open();
       } catch (err) {
         console.error("Error initiating payment:", err);
-        toast.error("Failed to initiate payment. Please try again.");
+        const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment. Please try later";
+        toast.error(errorMessage);
+        setIsLoading(false);
         onFailure?.();
       } finally {
         setIsLoading(false);

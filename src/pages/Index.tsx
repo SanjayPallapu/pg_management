@@ -33,6 +33,7 @@ import {
   History,
   CreditCard,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useMonthContext } from "@/contexts/MonthContext";
@@ -150,12 +151,46 @@ const Index = () => {
     setIsDialogOpen(true);
   };
 
-  // Show onboarding flow for new users without PGs
-  if (needsSetup && !pgLoading) {
-    return <OnboardingFlow onComplete={() => refreshPGs()} />;
+  // Show loading state while fetching PG data
+  if (pgLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-6 max-w-sm">
+          {/* Animated Spinner */}
+          <div className="flex justify-center">
+            <div className="relative w-20 h-20">
+              <Loader2 className="h-20 w-20 animate-spin text-primary" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Building className="h-10 w-10 text-primary/40" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Loading Message */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Setting up your PG</h2>
+            <p className="text-muted-foreground text-sm animate-pulse">
+              Loading your property details and subscription info...
+            </p>
+          </div>
+          
+          {/* Progress Indicator */}
+          <div className="space-y-1">
+            <div className="flex gap-1 justify-center">
+              <div className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0s' }} />
+              <div className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // Removed loading session screen - show dashboard immediately
+  // Show onboarding flow for new users without PGs
+  if (needsSetup) {
+    return <OnboardingFlow onComplete={() => refreshPGs()} />;
+  }
 
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 

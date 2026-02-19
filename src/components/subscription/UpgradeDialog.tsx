@@ -293,25 +293,58 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
 
         {step === 'confirm' && (
           <div className="space-y-4">
-            <div className="text-center py-4">
-              <p className="font-medium mb-2">After payment, upload screenshot or contact admin</p>
+            {/* Payment Status Header */}
+            <div className="text-center py-6 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+              <Badge className="mb-3 bg-primary/20 text-primary border-0">
+                <Clock className="h-3 w-3 mr-1" /> Pending Verification
+              </Badge>
+              <h3 className="text-xl font-bold mb-2">Payment Submitted</h3>
               <p className="text-sm text-muted-foreground">
-                Admin will verify payment and activate your account
+                Please upload your payment proof below
               </p>
             </div>
 
+            {/* Payment Details */}
+            <Card className="border-l-4 border-l-primary">
+              <CardContent className="pt-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Plan</span>
+                    <span className="font-medium">{currentPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-bold text-lg">₹{currentPlan.price}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t">
+                    <span className="text-muted-foreground">Payment Method</span>
+                    <span className="font-medium capitalize">{selectedMethod}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Screenshot Upload */}
             <div className="space-y-3">
-              <div className="border-2 border-dashed rounded-lg p-4 text-center">
+              <p className="text-sm font-medium">Upload Payment Proof</p>
+              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                 {screenshotUrl ? (
-                  <div className="space-y-2">
-                    <img 
-                      src={screenshotUrl} 
-                      alt="Payment proof" 
-                      className="h-32 mx-auto object-contain rounded"
-                    />
+                  <div className="space-y-3">
+                    <div className="relative inline-block">
+                      <img 
+                        src={screenshotUrl} 
+                        alt="Payment proof" 
+                        className="h-48 object-contain rounded-lg shadow-sm"
+                      />
+                      <div className="absolute top-2 right-2 bg-green-500/90 text-white rounded-full p-2">
+                        <Check className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-green-600 font-medium">Screenshot uploaded successfully</p>
                     <Button variant="outline" size="sm" asChild>
                       <label className="cursor-pointer">
-                        Change
+                        <Upload className="h-3 w-3 mr-1" />
+                        Replace
                         <input
                           type="file"
                           accept="image/*"
@@ -324,13 +357,15 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                 ) : (
                   <label className="cursor-pointer block">
                     {isUploading ? (
-                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+                      <div className="space-y-2">
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                      </div>
                     ) : (
                       <>
-                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          Upload payment screenshot
-                        </p>
+                        <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium text-foreground">Click to upload or drag</p>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
                       </>
                     )}
                     <input
@@ -343,16 +378,19 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                   </label>
                 )}
               </div>
+            </div>
 
+            {/* Action Buttons */}
+            <div className="space-y-2">
               <Button 
                 onClick={handleSubmit} 
-                className="w-full"
-                disabled={createPaymentRequest.isPending}
+                className="w-full gap-2"
+                disabled={!screenshotUrl || createPaymentRequest.isPending}
               >
                 {createPaymentRequest.isPending ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
                 ) : (
-                  <>Submit Payment Request</>
+                  <><Check className="h-4 w-4" /> Submit Payment</>
                 )}
               </Button>
 
@@ -365,9 +403,16 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                 Contact Admin on WhatsApp
               </Button>
 
-              <Button variant="ghost" onClick={() => setStep('payment')} className="w-full">
-                Back
+              <Button variant="ghost" onClick={() => setStep('payment')} className="w-full text-xs">
+                Choose Another Method
               </Button>
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3">
+              <p className="text-xs text-blue-900 dark:text-blue-200">
+                <strong>Note:</strong> Your subscription will be activated once admin verifies the payment. You'll receive confirmation via email.
+              </p>
             </div>
           </div>
         )}

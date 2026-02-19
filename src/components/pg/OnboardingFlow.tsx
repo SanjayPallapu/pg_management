@@ -444,20 +444,30 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             {/* Screenshot Upload */}
             {selectedMethod && (
               <div className="space-y-3">
-                <p className="text-sm text-center text-muted-foreground">
-                  After payment, upload screenshot for quick verification
-                </p>
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                  <p className="text-sm font-medium text-center mb-1">Payment Submitted</p>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Upload screenshot for quick verification
+                  </p>
+                </div>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                   {screenshotUrl ? (
-                    <div className="space-y-2">
-                      <img 
-                        src={screenshotUrl} 
-                        alt="Payment proof" 
-                        className="h-32 mx-auto object-contain rounded"
-                      />
+                    <div className="space-y-3">
+                      <div className="relative inline-block">
+                        <img 
+                          src={screenshotUrl} 
+                          alt="Payment proof" 
+                          className="h-48 object-contain rounded-lg shadow-sm"
+                        />
+                        <div className="absolute top-2 right-2 bg-green-500/90 text-white rounded-full p-2">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-green-600 font-medium">Screenshot uploaded</p>
                       <Button variant="outline" size="sm" asChild>
                         <label className="cursor-pointer">
-                          Change
+                          <Upload className="h-3 w-3 mr-1" />
+                          Replace
                           <input
                             type="file"
                             accept="image/*"
@@ -470,13 +480,15 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                   ) : (
                     <label className="cursor-pointer block">
                       {isUploading ? (
-                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+                        <div className="space-y-2">
+                          <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                          <p className="text-sm text-muted-foreground">Uploading...</p>
+                        </div>
                       ) : (
                         <>
-                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            Upload payment screenshot
-                          </p>
+                          <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium">Click to upload or drag</p>
+                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
                         </>
                       )}
                       <input
@@ -492,13 +504,13 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
                 <Button 
                   onClick={handleSubmitPayment} 
-                  className="w-full"
-                  disabled={createPaymentRequest.isPending}
+                  className="w-full gap-2"
+                  disabled={!screenshotUrl || createPaymentRequest.isPending}
                 >
                   {createPaymentRequest.isPending ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
                   ) : (
-                    <>Submit Payment Request</>
+                    <><Check className="h-4 w-4" /> Submit Payment</>
                   )}
                 </Button>
 
@@ -510,6 +522,12 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                   <MessageCircle className="h-4 w-4" />
                   Contact Admin on WhatsApp
                 </Button>
+
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3">
+                  <p className="text-xs text-blue-900 dark:text-blue-200">
+                    <strong>Note:</strong> Your subscription will be activated once admin verifies the payment.
+                  </p>
+                </div>
               </div>
             )}
 
