@@ -32,8 +32,9 @@ export const useTotalCollected = (roomsOverride?: Room[]): TotalCollectedResult 
 
   const rooms = roomsOverride || fetchedRooms;
 
-  // Day guest revenue - shared cache key
-  const { data: dayGuestRevenue = 0 } = useQuery({
+  // Day guest revenue - use select to safely extract number from shared cache
+  // Dashboard's query with same key may return an object {collected, pending, ...}
+  const { data: dayGuestRaw } = useQuery({
     queryKey: ['day-guest-revenue', selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return 0;
@@ -51,6 +52,12 @@ export const useTotalCollected = (roomsOverride?: Room[]): TotalCollectedResult 
     enabled: !!currentPG?.id,
   });
 
+  // Safely extract a number - cache may hold a number OR an object with .collected
+  const dayGuestRevenue = typeof dayGuestRaw === 'number'
+    ? dayGuestRaw
+    : (dayGuestRaw && typeof dayGuestRaw === 'object' && 'collected' in dayGuestRaw)
+      ? (dayGuestRaw as any).collected || 0
+      : 0;
   const result = useMemo(() => {
     // This month rent from payment entries
     let thisMonthRent = 0;
