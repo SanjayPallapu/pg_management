@@ -126,7 +126,8 @@ const Auth = () => {
         user_id: data.user.id,
         full_name: fullName,
         phone: phone,
-        city: city
+        city: city,
+        is_new_signup: true
       });
 
       setIsSubmitting(false);
@@ -179,12 +180,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto">
-            <img src={appLogo} alt="PG logo" className="h-44 w-44 object-contain" decoding="async" />
+        <CardHeader className="text-center p-0 pb-6">
+          <div className="mx-auto -mb-24">
+            <img src={appLogo} alt="PG logo" className="h-72 w-72 object-contain" decoding="async" />
           </div>
-          <CardTitle className="-mt-4">PG Management</CardTitle>
-          <CardDescription className="-mt-1">Sign in to manage your property</CardDescription>
+          <CardTitle className="-mt-4 text-2xl mb-0">PG Management</CardTitle>
+          <CardDescription className="-mt-2 text-base font-semibold">Simple. Smart. Secure.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">

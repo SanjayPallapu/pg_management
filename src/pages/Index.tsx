@@ -96,7 +96,7 @@ const Index = () => {
     staleTime: 3 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
-  const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user, isNewSignup } = useAuth();
   const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSignOut = async () => {
@@ -187,8 +187,8 @@ const Index = () => {
     );
   }
 
-  // Show onboarding flow for new users without PGs
-  if (needsSetup) {
+  // Show onboarding flow only for new users who just signed up (not for sign-ins)
+  if (needsSetup && isNewSignup) {
     return <OnboardingFlow onComplete={() => refreshPGs()} />;
   }
 

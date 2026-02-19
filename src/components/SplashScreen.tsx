@@ -105,7 +105,7 @@ const SplashScreen = () => {
 
       {/* Logo - larger */}
       <motion.div
-        className="relative z-10"
+        className="relative z-10 -mb-20"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
@@ -119,27 +119,26 @@ const SplashScreen = () => {
         />
       </motion.div>
 
-      {/* Tagline - positioned above title */}
-      <motion.p
-        className="relative z-10 text-lg font-semibold tracking-widest"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
-      >
-        Simple. Smart. Secure.
-      </motion.p>
-
-      {/* Title text */}
-      <motion.h1
-        className="relative z-10 text-3xl font-extrabold -mt-5 tracking-wide"
+      {/* Title text with tagline - positioned above */}
+      <motion.div
+        className="relative z-10 text-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
       >
-        PG Management
-      </motion.h1>
+        <h1
+          className="text-2xl font-extrabold tracking-wide mb-0"
+          style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+        >
+          PG Management
+        </h1>
+        <p
+          className="text-lg font-semibold tracking-widest -mt-1 mb-4"
+          style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+        >
+          Simple. Smart. Secure.
+        </p>
+      </motion.div>
 
       {/* Progress bar */}
       <motion.div
