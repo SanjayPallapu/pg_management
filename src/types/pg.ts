@@ -69,14 +69,14 @@ export const SUBSCRIPTION_PLANS = {
   manual: {
     name: 'Manual',
     price: 499, // Monthly in INR
-    maxPgs: -1, // Unlimited
+    maxPgs: 2, // Limited to 2 PGs
     maxTenantsPerPg: -1, // Unlimited
     features: {
       autoReminders: false,
       dailyReports: false,
       aiLogo: true,
     },
-    description: 'Manual reminders via WhatsApp',
+    description: 'Limited PGs with manual reminders',
   },
   automatic: {
     name: 'Automatic',
@@ -88,7 +88,7 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Automated image reminders & reports',
+    description: 'Unlimited everything with automation',
   },
 } as const;
 

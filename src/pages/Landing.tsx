@@ -213,7 +213,7 @@ const Landing = () => {
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  {["Unlimited PGs", "Unlimited Tenants", "Manual WhatsApp Reminders", "AI Logo Generator", "Digital Receipts"].map((f) => (
+                  {["Limited PGs (2)", "Unlimited Tenants", "Manual WhatsApp Reminders", "Payment Receipts", "Basic Reports", "AI Logo Generator"].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
                     </li>
@@ -240,7 +240,7 @@ const Landing = () => {
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  {["Everything in Manual", "Automated Image Reminders", "Daily Activity Reports", "Multi-admin Support", "Priority Support"].map((f) => (
+                  {["Unlimited PGs", "Unlimited Tenants", "Automated Image Reminders", "Smart Payment Receipts", "Daily Activity Reports", "AI Logo Generator"].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
                     </li>

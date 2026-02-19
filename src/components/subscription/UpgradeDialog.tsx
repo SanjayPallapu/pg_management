@@ -159,13 +159,19 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                 <p className="text-sm text-muted-foreground mb-3">{SUBSCRIPTION_PLANS.manual.description}</p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> PGs
+                    <Check className="h-4 w-4 text-primary" /> <strong>Limited PGs</strong> (2)
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> Manual WhatsApp reminders
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> Payment receipts
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> Basic reports
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> AI logo generator
@@ -198,16 +204,22 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                 <p className="text-sm text-muted-foreground mb-3">{SUBSCRIPTION_PLANS.automatic.description}</p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" /> Everything in Manual
+                    <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> PGs
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> <strong>Automated</strong> image reminders
                   </li>
                   <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" /> Smart payment receipts
+                  </li>
+                  <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" /> Daily activity reports
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" /> Multi-admin support
+                    <Check className="h-4 w-4 text-primary" /> AI logo generator
                   </li>
                 </ul>
               </CardContent>
