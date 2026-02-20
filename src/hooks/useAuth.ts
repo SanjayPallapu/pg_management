@@ -48,17 +48,18 @@ export const useAuth = () => {
     // Function to fetch if user is new signup
     const fetchIsNewSignup = async (userId: string): Promise<boolean> => {
       try {
+        // Check if profile exists - if not, it's a new signup
         const { data, error } = await supabase
           .from('profiles')
-          .select('is_new_signup')
+          .select('id')
           .eq('user_id', userId)
           .maybeSingle();
 
         if (error) {
-          console.error('[Auth] Error fetching is_new_signup:', error);
+          console.error('[Auth] Error fetching profile:', error);
           return false;
         }
-        return data?.is_new_signup ?? false;
+        return !data;
       } catch (err) {
         console.error('[Auth] Error in fetchIsNewSignup:', err);
         return false;

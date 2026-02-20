@@ -39,6 +39,8 @@ import { PendingTenantsCard } from "./PendingTenantsCard";
 import { CalculatorCard } from "./CalculatorCard";
 import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
+import { PGRulesCard } from "./PGRulesCard";
+import { RulesTemplate } from "./RulesTemplate";
 import { SettlementSummarySheet } from "./SettlementSummarySheet";
 import { DayGuestRevenueCard } from "./DayGuestRevenueCard";
 import { OverduePaidCard } from "./OverduePaidCard";
@@ -62,6 +64,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
+  const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
 
   // Collapsible section states
   const [financialsOpen, setFinancialsOpen] = useState(true);
@@ -398,10 +401,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Tenant Lock Card */}
               <TenantLockCard rooms={rooms} />
+
+              {/* PG Rules Card */}
+              <PGRulesCard onEditableTemplate={() => setRulesTemplateOpen(true)} />
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
+
+      {/* Rules Template Sheet */}
+      <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} />
 
       {isAdmin && <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />}
       <EmptyBedsSheet
