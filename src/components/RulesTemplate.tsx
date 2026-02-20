@@ -243,7 +243,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '13px',
+                          fontSize: '15px',
                           color: '#334155',
                           lineHeight: 1.8,
                           paddingLeft: '28px',
@@ -291,7 +291,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '13px',
+                          fontSize: '15px',
                           color: '#334155',
                           lineHeight: 1.8,
                           paddingLeft: '28px',
@@ -323,17 +323,17 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                 textAlign: 'center',
               }}>
                 <div style={{
-                  fontSize: '16px',
-                  fontWeight: 700,
+                  fontSize: '14px',
+                  fontWeight: 600,
                   color: '#166534',
                   marginBottom: '4px',
                 }}>
                   🙏 Thank You for Your Cooperation!
                 </div>
                 <div style={{
-                  fontSize: '11px',
+                  fontSize: '13px',
                   color: '#4b5563',
-                  lineHeight: 1.5,
+                  lineHeight: 1.6,
                 }}>
                   For any queries or concerns, please contact the management. We are here to help!
                 </div>
