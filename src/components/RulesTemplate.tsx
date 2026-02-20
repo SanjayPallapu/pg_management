@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { toPng } from 'html-to-image';
 
 interface RulesTemplateProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface RulesTemplateProps {
 
 export const RulesTemplate = ({ open, onOpenChange }: RulesTemplateProps) => {
   const templateRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const rules = [
     {
@@ -221,6 +223,29 @@ export const RulesTemplate = ({ open, onOpenChange }: RulesTemplateProps) => {
       toast({ title: 'Error', description: 'Failed to download rules' });
     }
   };
+  const handleGenerateImage = async () => {
+    if (!templateRef.current) return;
+    setIsGenerating(true);
+    try {
+      const dataUrl = await toPng(templateRef.current, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+      });
+      const link = document.createElement('a');
+      link.download = 'PG_Rules_Regulations.png';
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: 'Success', description: 'Rules image saved successfully' });
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({ title: 'Error', description: 'Failed to generate image' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -294,12 +319,21 @@ export const RulesTemplate = ({ open, onOpenChange }: RulesTemplateProps) => {
 
         <SheetFooter className="border-t pt-4 flex gap-2">
           <Button
+            onClick={handleGenerateImage}
+            variant="outline"
+            className="gap-2 flex-1"
+            disabled={isGenerating}
+          >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            {isGenerating ? 'Generating...' : 'Save as Image'}
+          </Button>
+          <Button
             onClick={handleDownload}
             variant="outline"
             className="gap-2 flex-1"
           >
             <Download className="h-4 w-4" />
-            Download HTML
+            HTML
           </Button>
           <Button onClick={handlePrint} className="gap-2 flex-1">
             <Printer className="h-4 w-4" />
