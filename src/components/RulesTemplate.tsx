@@ -243,7 +243,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '20px',
+                          fontSize: '18px',
                           color: '#334155',
                           lineHeight: 1.8,
                           paddingLeft: '28px',
@@ -291,7 +291,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '20px',
+                          fontSize: '18px',
                           color: '#334155',
                           lineHeight: 1.8,
                           paddingLeft: '28px',
