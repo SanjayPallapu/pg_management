@@ -318,11 +318,10 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules }: TemplateInnerProps) => (
         );
       })}
 
-      {/* Header with Logo */}
-      <div style={{ textAlign: 'center', padding: '30px 40px 16px' }}>
+      {/* Header with Logo left, Text right */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '24px 36px 16px' }}>
         <div style={{
-          width: '100px', height: '100px',
-          margin: '0 auto 12px',
+          width: '100px', height: '100px', flexShrink: 0,
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #fce7f3, #f5f3ff)',
           border: '3px solid #f9a8d4',
@@ -336,40 +335,39 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules }: TemplateInnerProps) => (
             onError={(e) => { (e.target as HTMLImageElement).src = '/icon-512.png'; }}
           />
         </div>
-        <div style={{
-          fontFamily: "'Georgia', 'Times New Roman', serif",
-          fontSize: '32px', fontWeight: 700, color: '#7c3aed',
-          lineHeight: 1.2, marginBottom: '4px',
-          textShadow: '0 1px 2px rgba(124, 58, 237, 0.15)',
-        }}>
-          {pgName}
-        </div>
-
-        {/* Decorative divider */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', margin: '10px 0' }}>
-          <div style={{ width: '80px', height: '2px', background: 'linear-gradient(90deg, transparent, #ec4899)' }} />
-          <span style={{ fontSize: '16px' }}>✿</span>
-          <div style={{ width: '80px', height: '2px', background: 'linear-gradient(90deg, #ec4899, transparent)' }} />
-        </div>
-
-        {/* Title banner */}
-        <div style={{
-          display: 'inline-block',
-          padding: '8px 32px',
-          background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-          borderRadius: '24px',
-          color: '#ffffff',
-          fontSize: '16px', fontWeight: 700,
-          letterSpacing: '3px', textTransform: 'uppercase',
-          boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
-        }}>
-          Rules & Regulations
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontFamily: "'Georgia', 'Times New Roman', serif",
+            fontSize: '32px', fontWeight: 700, color: '#7c3aed',
+            lineHeight: 1.2, marginBottom: '4px',
+            textShadow: '0 1px 2px rgba(124, 58, 237, 0.15)',
+          }}>
+            {pgName}
+          </div>
+          {/* Decorative divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '8px 0' }}>
+            <div style={{ width: '80px', height: '2px', background: 'linear-gradient(90deg, transparent, #ec4899)' }} />
+            <span style={{ fontSize: '16px' }}>✿</span>
+            <div style={{ width: '80px', height: '2px', background: 'linear-gradient(90deg, #ec4899, transparent)' }} />
+          </div>
+          <div style={{
+            display: 'inline-block',
+            padding: '8px 32px',
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            borderRadius: '24px',
+            color: '#ffffff',
+            fontSize: '16px', fontWeight: 700,
+            letterSpacing: '3px', textTransform: 'uppercase',
+            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+          }}>
+            Rules & Regulations
+          </div>
         </div>
       </div>
 
-      {/* Rules - single column */}
+      {/* Rules - single column, filter out Luggage Charges */}
       <div style={{ padding: '12px 36px 0' }}>
-        {rules.map((rule, idx) => (
+        {rules.filter(r => r.title !== 'Luggage Charges').map((rule, idx) => (
           <div key={rule.id} style={{ marginBottom: '16px' }}>
             {/* Rule title */}
             <div style={{
@@ -405,17 +403,6 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules }: TemplateInnerProps) => (
                 {detail}
               </div>
             ))}
-
-            {/* Rule description / note if different from details */}
-            {rule.description && rule.details.length > 0 && rule.description !== rule.details[0] && (
-              <div style={{
-                fontSize: '14px', color: '#6b7280',
-                paddingLeft: '40px', marginTop: '4px',
-                fontStyle: 'italic', lineHeight: 1.6,
-              }}>
-                Note: {rule.description}
-              </div>
-            )}
           </div>
         ))}
       </div>
