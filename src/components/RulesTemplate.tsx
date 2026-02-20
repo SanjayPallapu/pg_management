@@ -9,231 +9,61 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, Printer, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Printer } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { toPng } from 'html-to-image';
+import { usePG } from '@/contexts/PGContext';
+
+interface Rule {
+  id: string;
+  title: string;
+  description: string;
+  details: string[];
+}
 
 interface RulesTemplateProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  rules?: Rule[];
 }
 
-export const RulesTemplate = ({ open, onOpenChange }: RulesTemplateProps) => {
+const RULE_ICONS: Record<string, string> = {
+  'Meal Timings': '🍽️',
+  'Night Gate Timing': '🚪',
+  'Corridor Lights': '💡',
+  'Room Cleaning': '🧹',
+  'Visitors Policy': '👥',
+  'Noise & Behavior': '🔔',
+  'Rent Policy': '💰',
+  'Notice Period': '📅',
+  'Security Deposit': '🔒',
+  'Luggage Charges': '🧳',
+  'Issues & Support': '🆘',
+};
+
+const getIcon = (title: string): string => {
+  return RULE_ICONS[title] || '📌';
+};
+
+export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateProps) => {
   const templateRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { currentPG } = usePG();
 
-  const rules = [
-    {
-      title: 'Meal Timings',
-      icon: '🍽️',
-      content: [
-        'Breakfast (Tiffin): 7:30 AM – 9:00 AM',
-        'Lunch: 12:30 PM – 2:00 PM',
-        'Dinner: 7:30 PM – 9:00 PM',
-        'Note: If food gets over during the above timings, residents may inform the management. We will be happy to prepare food again, subject to availability.',
-      ],
-    },
-    {
-      title: 'Night Gate Timing',
-      icon: '🚪',
-      content: ['The main gate will be closed at 10:00 PM.'],
-    },
-    {
-      title: 'Corridor Lights',
-      icon: '💡',
-      content: ['Corridor lights will be switched off at 10:00 PM.'],
-    },
-    {
-      title: 'Room Cleaning',
-      icon: '🧹',
-      content: ['Rooms will be cleaned once a week.'],
-    },
-    {
-      title: 'Visitors Policy',
-      icon: '👥',
-      content: [
-        'Friends, relatives, or any outsiders are not allowed inside rooms.',
-        'Bringing any friend into your room without prior permission will result in a fine of ₹1000.',
-      ],
-    },
-    {
-      title: 'Noise & Behavior',
-      icon: '🔔',
-      content: [
-        'Loud noise inside or outside the rooms is not permitted.',
-        'Do not disturb others.',
-        'Respect other residents\' privacy at all times.',
-      ],
-    },
-    {
-      title: 'Rent Policy',
-      icon: '💰',
-      content: [
-        'Full monthly rent must be paid even if you stay outside or go home for any duration.',
-      ],
-    },
-    {
-      title: 'Notice Period',
-      icon: '📅',
-      content: [
-        'Residents must inform 15–30 days in advance before vacating the room.',
-      ],
-    },
-    {
-      title: 'Security Deposit',
-      icon: '🔒',
-      content: [
-        'The security deposit is refundable at the time of vacating, subject to applicable deductions.',
-      ],
-    },
-    {
-      title: 'Luggage Charges',
-      icon: '🧳',
-      content: ['Extra luggage storage will be charged ₹150 per day.'],
-    },
-    {
-      title: 'Issues & Support',
-      icon: '🆘',
-      content: [
-        'If you face any issues or problems during your stay, please inform the management.',
-        'We will review the matter and try to resolve it as early as possible.',
-      ],
-    },
-  ];
+  const pgName = currentPG?.name || 'PG Management';
+  const pgLogoUrl = currentPG?.logoUrl || '/icon-512.png';
 
-  const handlePrint = () => {
-    if (!templateRef.current) return;
-    
-    const printWindow = window.open('', '', 'height=auto,width=auto');
-    if (!printWindow) {
-      toast({ title: 'Error', description: 'Unable to open print window' });
-      return;
-    }
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>PG Rules & Regulations</title>
-        <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 8.5in;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 20px;
-          }
-          .logo {
-            max-width: 100px;
-            height: auto;
-            margin: 0 auto 15px;
-            display: block;
-          }
-          .title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1e40af;
-            margin: 10px 0;
-          }
-          .subtitle {
-            font-size: 14px;
-            color: #666;
-            margin: 5px 0;
-          }
-          .rules-container {
-            margin-top: 20px;
-          }
-          .rule {
-            margin-bottom: 20px;
-            page-break-inside: avoid;
-          }
-          .rule-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          .rule-icon {
-            font-size: 20px;
-          }
-          .rule-content {
-            margin-left: 20px;
-            font-size: 13px;
-            line-height: 1.8;
-          }
-          .rule-content li {
-            margin-bottom: 6px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
-            font-size: 12px;
-            color: #666;
-          }
-          @media print {
-            body {
-              padding: 0;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        ${templateRef.current.innerHTML}
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 250);
-  };
-
-  const handleDownload = () => {
-    try {
-      const element = templateRef.current;
-      if (!element) {
-        toast({ title: 'Error', description: 'Template not found' });
-        return;
-      }
-
-      const html = element.outerHTML;
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'PG_Rules_Regulations.html';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({ title: 'Success', description: 'Rules downloaded successfully' });
-    } catch (error) {
-      toast({ title: 'Error', description: 'Failed to download rules' });
-    }
-  };
   const handleGenerateImage = async () => {
     if (!templateRef.current) return;
     setIsGenerating(true);
     try {
       const dataUrl = await toPng(templateRef.current, {
-        quality: 0.95,
+        quality: 1,
         pixelRatio: 2,
         backgroundColor: '#ffffff',
       });
       const link = document.createElement('a');
-      link.download = 'PG_Rules_Regulations.png';
+      link.download = `${pgName.replace(/\s+/g, '_')}_Rules.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -247,95 +77,287 @@ export const RulesTemplate = ({ open, onOpenChange }: RulesTemplateProps) => {
     }
   };
 
+  const handlePrint = () => {
+    if (!templateRef.current) return;
+    const printWindow = window.open('', '', 'height=auto,width=auto');
+    if (!printWindow) {
+      toast({ title: 'Error', description: 'Unable to open print window' });
+      return;
+    }
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${pgName} - Rules</title><style>body{margin:0;padding:0;background:#fff;}@media print{body{padding:0;}}</style></head><body>${templateRef.current.outerHTML}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 300);
+  };
+
+  // Split rules into two columns
+  const midpoint = Math.ceil(rules.length / 2);
+  const leftRules = rules.slice(0, midpoint);
+  const rightRules = rules.slice(midpoint);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full md:w-3/4 flex flex-col">
-        <SheetHeader className="pb-4 border-b">
-          <SheetTitle>PG Rules & Regulations Template</SheetTitle>
-          <SheetDescription>Printable template for residents</SheetDescription>
+      <SheetContent side="right" className="w-full md:w-3/4 lg:w-2/3 flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <SheetTitle>Rules Template Preview</SheetTitle>
+          <SheetDescription>A4 printable template with your PG branding</SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="flex-1">
-          <div className="pr-4">
+        <ScrollArea className="flex-1 px-4">
+          <div className="py-4">
+            {/* Off-screen render target for image generation */}
             <div
               ref={templateRef}
-              className="max-w-2xl mx-auto bg-white p-8 rounded-lg border"
-              style={{ minHeight: '600px' }}
+              style={{
+                width: '794px', // A4 width at 96dpi
+                minHeight: '1123px', // A4 height
+                margin: '0 auto',
+                background: '#ffffff',
+                fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
+                position: 'relative',
+                overflow: 'hidden',
+              }}
             >
-              {/* Header with Logo */}
-              <div className="text-center mb-8 pb-6 border-b-4 border-blue-600">
-                <div className="mb-3">
-                  <img
-                    src="/src/assets/pg-logo.png"
-                    alt="PG Logo"
-                    className="h-16 w-auto mx-auto"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+              {/* Top decorative bar */}
+              <div style={{
+                width: '100%',
+                height: '8px',
+                background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%)',
+              }} />
+
+              {/* Header Section */}
+              <div style={{
+                padding: '28px 40px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                borderBottom: '2px solid #e5e7eb',
+              }}>
+                <img
+                  src={pgLogoUrl}
+                  alt={pgName}
+                  crossOrigin="anonymous"
+                  loading="eager"
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    objectFit: 'contain',
+                    borderRadius: '12px',
+                    border: '2px solid #e5e7eb',
+                    background: '#ffffff',
+                  }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/icon-512.png';
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '26px',
+                    fontWeight: 800,
+                    color: '#1e293b',
+                    letterSpacing: '-0.5px',
+                    lineHeight: 1.2,
+                  }}>
+                    {pgName}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#64748b',
+                    marginTop: '4px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '2px',
+                    fontWeight: 600,
+                  }}>
+                    Rules & Regulations
+                  </div>
                 </div>
-                <h1 className="text-3xl font-bold text-blue-700 mb-2">
-                  PG Rules & Regulations
-                </h1>
-                <p className="text-gray-600 text-sm">
-                  Please read and abide by these rules for a harmonious community living
-                </p>
+                <div style={{
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  whiteSpace: 'nowrap',
+                }}>
+                  📋 Official Guidelines
+                </div>
               </div>
 
-              {/* Rules Section */}
-              <div className="space-y-6">
-                {rules.map((rule, idx) => (
-                  <div key={idx} className="break-inside-avoid">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl">{rule.icon}</span>
-                      <h2 className="text-lg font-bold text-blue-700">
-                        {rule.title}
-                      </h2>
-                    </div>
-                    <ul className="ml-8 space-y-2">
-                      {rule.content.map((item, itemIdx) => (
-                        <li
-                          key={itemIdx}
-                          className="text-sm text-gray-700 leading-relaxed list-disc"
-                        >
-                          {item}
-                        </li>
+              {/* Welcome message */}
+              <div style={{
+                margin: '20px 40px 16px',
+                padding: '12px 16px',
+                background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                borderRadius: '8px',
+                borderLeft: '4px solid #2563eb',
+              }}>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#1e40af',
+                  fontWeight: 600,
+                  marginBottom: '2px',
+                }}>
+                  Dear Residents,
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#475569',
+                  lineHeight: 1.5,
+                }}>
+                  Please read and follow these guidelines for a comfortable and harmonious community living experience. Your cooperation is highly appreciated.
+                </div>
+              </div>
+
+              {/* Rules in two columns */}
+              <div style={{
+                padding: '0 40px',
+                display: 'flex',
+                gap: '20px',
+              }}>
+                {/* Left Column */}
+                <div style={{ flex: 1 }}>
+                  {leftRules.map((rule, idx) => (
+                    <div key={rule.id} style={{
+                      marginBottom: '14px',
+                      padding: '12px',
+                      background: idx % 2 === 0 ? '#f8fafc' : '#ffffff',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '6px',
+                      }}>
+                        <span style={{ fontSize: '16px' }}>{getIcon(rule.title)}</span>
+                        <div style={{
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: '#1e40af',
+                        }}>
+                          {idx + 1}. {rule.title}
+                        </div>
+                      </div>
+                      {rule.details.map((detail, dIdx) => (
+                        <div key={dIdx} style={{
+                          fontSize: '10.5px',
+                          color: '#334155',
+                          lineHeight: 1.6,
+                          paddingLeft: '28px',
+                          position: 'relative',
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: '16px',
+                            top: '2px',
+                            color: '#94a3b8',
+                            fontSize: '8px',
+                          }}>●</span>
+                          {detail}
+                        </div>
                       ))}
-                    </ul>
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right Column */}
+                <div style={{ flex: 1 }}>
+                  {rightRules.map((rule, idx) => (
+                    <div key={rule.id} style={{
+                      marginBottom: '14px',
+                      padding: '12px',
+                      background: idx % 2 === 0 ? '#f8fafc' : '#ffffff',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '6px',
+                      }}>
+                        <span style={{ fontSize: '16px' }}>{getIcon(rule.title)}</span>
+                        <div style={{
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: '#1e40af',
+                        }}>
+                          {midpoint + idx + 1}. {rule.title}
+                        </div>
+                      </div>
+                      {rule.details.map((detail, dIdx) => (
+                        <div key={dIdx} style={{
+                          fontSize: '10.5px',
+                          color: '#334155',
+                          lineHeight: 1.6,
+                          paddingLeft: '28px',
+                          position: 'relative',
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: '16px',
+                            top: '2px',
+                            color: '#94a3b8',
+                            fontSize: '8px',
+                          }}>●</span>
+                          {detail}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Footer */}
-              <div className="mt-10 pt-6 border-t-2 border-gray-300 text-center text-xs text-gray-600">
-                <p className="font-semibold mb-2">Thank you for your cooperation!</p>
-                <p>
-                  In case of any queries or concerns, please contact the management
-                </p>
+              <div style={{
+                margin: '20px 40px 0',
+                padding: '16px 20px',
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                borderRadius: '8px',
+                border: '1px solid #bbf7d0',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: '#166534',
+                  marginBottom: '4px',
+                }}>
+                  🙏 Thank You for Your Cooperation!
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#4b5563',
+                  lineHeight: 1.5,
+                }}>
+                  For any queries or concerns, please contact the management. We are here to help!
+                </div>
               </div>
+
+              {/* Bottom decorative bar */}
+              <div style={{
+                marginTop: '20px',
+                width: '100%',
+                height: '8px',
+                background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%)',
+              }} />
             </div>
           </div>
         </ScrollArea>
 
-        <SheetFooter className="border-t pt-4 flex gap-2">
+        <SheetFooter className="border-t px-6 py-4 flex gap-2">
           <Button
             onClick={handleGenerateImage}
-            variant="outline"
             className="gap-2 flex-1"
             disabled={isGenerating}
           >
             {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
             {isGenerating ? 'Generating...' : 'Save as Image'}
           </Button>
-          <Button
-            onClick={handleDownload}
-            variant="outline"
-            className="gap-2 flex-1"
-          >
-            <Download className="h-4 w-4" />
-            HTML
-          </Button>
-          <Button onClick={handlePrint} className="gap-2 flex-1">
+          <Button onClick={handlePrint} variant="outline" className="gap-2 flex-1">
             <Printer className="h-4 w-4" />
             Print
           </Button>
