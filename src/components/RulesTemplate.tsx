@@ -194,17 +194,17 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                 borderLeft: '4px solid #2563eb',
               }}>
                 <div style={{
-                  fontSize: '12px',
+                  fontSize: '14px',
                   color: '#1e40af',
                   fontWeight: 600,
-                  marginBottom: '2px',
+                  marginBottom: '4px',
                 }}>
                   Dear Residents,
                 </div>
                 <div style={{
-                  fontSize: '11px',
+                  fontSize: '13px',
                   color: '#475569',
-                  lineHeight: 1.5,
+                  lineHeight: 1.6,
                 }}>
                   Please read and follow these guidelines for a comfortable and harmonious community living experience. Your cooperation is highly appreciated.
                 </div>
@@ -230,11 +230,11 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        marginBottom: '6px',
+                        marginBottom: '8px',
                       }}>
-                        <span style={{ fontSize: '16px' }}>{getIcon(rule.title)}</span>
+                        <span style={{ fontSize: '18px' }}>{getIcon(rule.title)}</span>
                         <div style={{
-                          fontSize: '13px',
+                          fontSize: '15px',
                           fontWeight: 700,
                           color: '#1e40af',
                         }}>
@@ -243,11 +243,12 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '10.5px',
+                          fontSize: '13px',
                           color: '#334155',
-                          lineHeight: 1.6,
+                          lineHeight: 1.8,
                           paddingLeft: '28px',
                           position: 'relative',
+                          marginBottom: '6px',
                         }}>
                           <span style={{
                             position: 'absolute',
@@ -277,11 +278,11 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        marginBottom: '6px',
+                        marginBottom: '8px',
                       }}>
-                        <span style={{ fontSize: '16px' }}>{getIcon(rule.title)}</span>
+                        <span style={{ fontSize: '18px' }}>{getIcon(rule.title)}</span>
                         <div style={{
-                          fontSize: '13px',
+                          fontSize: '15px',
                           fontWeight: 700,
                           color: '#1e40af',
                         }}>
@@ -290,18 +291,19 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                       </div>
                       {rule.details.map((detail, dIdx) => (
                         <div key={dIdx} style={{
-                          fontSize: '10.5px',
+                          fontSize: '13px',
                           color: '#334155',
-                          lineHeight: 1.6,
+                          lineHeight: 1.8,
                           paddingLeft: '28px',
                           position: 'relative',
+                          marginBottom: '6px',
                         }}>
                           <span style={{
                             position: 'absolute',
                             left: '16px',
-                            top: '2px',
+                            top: '3px',
                             color: '#94a3b8',
-                            fontSize: '8px',
+                            fontSize: '9px',
                           }}>●</span>
                           {detail}
                         </div>

@@ -229,8 +229,8 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                     <div key={rule.id} className="border rounded-lg p-4 hover:bg-accent/30 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-sm">{rule.title}</h3>
-                          <p className="text-xs text-muted-foreground">{rule.description}</p>
+                          <h3 className="font-semibold text-base">{rule.title}</h3>
+                          <p className="text-sm text-muted-foreground">{rule.description}</p>
                         </div>
                         {editMode && (
                           <div className="flex gap-1 ml-2">
@@ -248,9 +248,9 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                           </div>
                         )}
                       </div>
-                      <ul className="space-y-1 ml-4">
+                      <ul className="space-y-2 ml-4">
                         {rule.details.map((detail, idx) => (
-                          <li key={idx} className="text-xs text-muted-foreground list-disc">{detail}</li>
+                          <li key={idx} className="text-base text-muted-foreground list-disc">{detail}</li>
                         ))}
                       </ul>
                     </div>
