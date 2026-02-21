@@ -189,7 +189,7 @@ const Index = () => {
 
   // Show onboarding flow only for new users who just signed up (not for sign-ins)
   if (needsSetup && isNewSignup) {
-    return <OnboardingFlow onComplete={() => refreshPGs()} />;
+    return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
   }
 
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
