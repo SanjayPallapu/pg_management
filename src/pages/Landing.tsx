@@ -90,9 +90,9 @@ const Landing = () => {
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={appLogo} alt="PG Manager" className="h-12 w-12 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-16 w-16 object-contain" />
             <span className="text-lg font-bold text-foreground">PG Manager</span>
           </div>
           <div className="flex items-center gap-3">
