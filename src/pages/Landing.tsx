@@ -92,7 +92,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={appLogo} alt="PG Manager" className="h-16 w-16 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-20 w-20 object-contain p-0 m-0" />
             <span className="text-lg font-bold text-foreground">PG Manager</span>
           </div>
           <div className="flex items-center gap-3">
