@@ -92,7 +92,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={appLogo} alt="PG Manager" className="h-9 w-9 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-12 w-12 object-contain" />
             <span className="text-lg font-bold text-foreground">PG Manager</span>
           </div>
           <div className="flex items-center gap-3">
@@ -319,7 +319,7 @@ const Landing = () => {
             Join 500+ PG owners who are saving time and growing revenue with PG Manager.
           </p>
           <Button size="lg" className="text-lg px-10 py-6" onClick={() => navigate("/auth")}>
-            Get Started for Free <ArrowRight className="h-5 w-5 ml-2" />
+            Get Started <ArrowRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
       </section>
@@ -328,7 +328,7 @@ const Landing = () => {
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={appLogo} alt="PG Manager" className="h-8 w-8 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-12 w-12 object-contain" />
             <span className="text-sm font-medium text-foreground">PG Manager</span>
           </div>
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} PG Manager. All rights reserved.</p>
