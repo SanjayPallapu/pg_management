@@ -45,25 +45,10 @@ export const useAuth = () => {
       }
     };
 
-    // Function to fetch if user is new signup
-    const fetchIsNewSignup = async (userId: string): Promise<boolean> => {
-      try {
-        // Check if profile exists - if not, it's a new signup
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (error) {
-          console.error('[Auth] Error fetching profile:', error);
-          return false;
-        }
-        return !data;
-      } catch (err) {
-        console.error('[Auth] Error in fetchIsNewSignup:', err);
-        return false;
-      }
+    // Check if this is a new signup using sessionStorage flag
+    // Only the signUp function sets this flag, so sign-ins won't trigger onboarding
+    const checkIsNewSignup = (): boolean => {
+      return sessionStorage.getItem('isNewSignup') === 'true';
     };
 
     // Set up auth state listener for ONGOING changes (does NOT control isLoading)
@@ -86,11 +71,10 @@ export const useAuth = () => {
               setAuthState(prev => ({ ...prev, role }));
             }
           });
-          fetchIsNewSignup(session.user.id).then(isNewSignup => {
-            if (isMounted) {
-              setAuthState(prev => ({ ...prev, isNewSignup }));
-            }
-          });
+          const isNew = checkIsNewSignup();
+          if (isMounted) {
+            setAuthState(prev => ({ ...prev, isNewSignup: isNew }));
+          }
         } else {
           setAuthState(prev => ({ ...prev, role: null, isNewSignup: false }));
         }
@@ -115,7 +99,7 @@ export const useAuth = () => {
         if (session?.user) {
           const [role, isNewSignup] = await Promise.all([
             fetchUserRoleAsync(session.user.id),
-            fetchIsNewSignup(session.user.id)
+            Promise.resolve(checkIsNewSignup())
           ]);
           if (isMounted) {
             setAuthState(prev => ({ ...prev, role, isNewSignup }));
@@ -154,6 +138,10 @@ export const useAuth = () => {
         emailRedirectTo: redirectUrl,
       },
     });
+    // Mark as new signup so onboarding flow triggers
+    if (!error && data?.user) {
+      sessionStorage.setItem('isNewSignup', 'true');
+    }
     return { data, error };
   };
 

@@ -92,7 +92,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={appLogo} alt="PG Manager" className="h-10 w-10 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-14 w-14 object-contain" />
             <span className="text-lg font-bold text-foreground">PG Manager</span>
           </div>
           <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ const Landing = () => {
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={appLogo} alt="PG Manager" className="h-8 w-8 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-12 w-12 object-contain" />
             <span className="text-sm font-medium text-foreground">PG Manager</span>
           </div>
           <p className="text-sm text-muted-foreground">
