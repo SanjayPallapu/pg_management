@@ -92,7 +92,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={appLogo} alt="PG Manager" className="h-14 w-14 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-30 w-30 object-contain" />
             <span className="text-lg font-bold text-foreground">PG Manager</span>
           </div>
           <div className="flex items-center gap-3">
@@ -124,13 +124,19 @@ const Landing = () => {
               <span className="text-primary block mt-2">Like a Pro</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              The all-in-one platform to track tenants, collect rent, send reminders, and grow your PG business — all from your phone.
+              The all-in-one platform to track tenants, collect rent, send reminders, and grow your PG business — all
+              from your phone.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-lg px-8 py-6" onClick={() => navigate("/auth")}>
                 Start Free Trial <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-6"
+                onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 See Features
               </Button>
             </div>
@@ -161,9 +167,7 @@ const Landing = () => {
       <section id="features" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-              Everything You Need to Run Your PG
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Everything You Need to Run Your PG</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               From tenant onboarding to monthly reports — we've got every aspect of PG management covered.
             </p>
@@ -213,7 +217,14 @@ const Landing = () => {
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  {["Limited PGs (2)", "Unlimited Tenants", "Manual WhatsApp Reminders", "Payment Receipts", "Basic Reports", "AI Logo Generator"].map((f) => (
+                  {[
+                    "Limited PGs (2)",
+                    "Unlimited Tenants",
+                    "Manual WhatsApp Reminders",
+                    "Payment Receipts",
+                    "Basic Reports",
+                    "AI Logo Generator",
+                  ].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
                     </li>
@@ -240,7 +251,14 @@ const Landing = () => {
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  {["Unlimited PGs", "Unlimited Tenants", "Automated Image Reminders", "Smart Payment Receipts", "Daily Activity Reports", "AI Logo Generator"].map((f) => (
+                  {[
+                    "Unlimited PGs",
+                    "Unlimited Tenants",
+                    "Automated Image Reminders",
+                    "Smart Payment Receipts",
+                    "Daily Activity Reports",
+                    "AI Logo Generator",
+                  ].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
                     </li>
@@ -259,9 +277,7 @@ const Landing = () => {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-              Loved by PG Owners
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Loved by PG Owners</h2>
             <p className="text-lg text-muted-foreground">See what our users have to say</p>
           </div>
 
@@ -298,14 +314,12 @@ const Landing = () => {
       {/* CTA */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Ready to Simplify Your PG Management?
-          </h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Ready to Simplify Your PG Management?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
             Join 500+ PG owners who are saving time and growing revenue with PG Manager.
           </p>
           <Button size="lg" className="text-lg px-10 py-6" onClick={() => navigate("/auth")}>
-            Get Started <ArrowRight className="h-5 w-5 ml-2" />
+            Get Started for Free <ArrowRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
       </section>
@@ -314,12 +328,10 @@ const Landing = () => {
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={appLogo} alt="PG Manager" className="h-12 w-12 object-contain" />
+            <img src={appLogo} alt="PG Manager" className="h-8 w-8 object-contain" />
             <span className="text-sm font-medium text-foreground">PG Manager</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} PG Manager. All rights reserved.
-          </p>
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} PG Manager. All rights reserved.</p>
         </div>
       </footer>
     </div>
