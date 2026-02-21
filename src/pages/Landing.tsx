@@ -305,7 +305,7 @@ const Landing = () => {
             Join 500+ PG owners who are saving time and growing revenue with PG Manager.
           </p>
           <Button size="lg" className="text-lg px-10 py-6" onClick={() => navigate("/auth")}>
-            Get Started for Free <ArrowRight className="h-5 w-5 ml-2" />
+            Get Started <ArrowRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
       </section>
