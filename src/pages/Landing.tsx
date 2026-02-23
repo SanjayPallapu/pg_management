@@ -22,6 +22,8 @@ import { SUBSCRIPTION_PLANS } from "@/types/pg";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FAQSection from "@/components/landing/FAQSection";
 import ComparisonSection from "@/components/landing/ComparisonSection";
+import PhoneMockup from "@/components/landing/PhoneMockup";
+import ContactSection from "@/components/landing/ContactSection";
 
 const features = [
 {
@@ -98,10 +100,13 @@ const Landing = () => {
             <img alt="PG Manager" className="h-16 w-16 object-contain" src="/lovable-uploads/387803e0-c49f-44b0-8f2c-2057e762f712.png" />
             <span className="text-lg font-bold text-foreground border-0 rounded-md">PG Manager</span>
           </div>
+          <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">Features</button>
+            <button onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">Pricing</button>
+            <button onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">FAQ</button>
+            <button onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">Contact</button>
+          </div>
           <div className="flex items-center gap-3">
-            
-
-
             <Button onClick={() => navigate("/auth")}>
               Get Started <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
@@ -163,6 +168,9 @@ const Landing = () => {
               </div>
             )}
           </motion.div>
+
+          {/* Phone Mockup */}
+          <PhoneMockup />
         </div>
       </section>
 
@@ -321,7 +329,12 @@ const Landing = () => {
       </section>
 
       {/* FAQ */}
-      <FAQSection />
+      <section id="faq">
+        <FAQSection />
+      </section>
+
+      {/* Contact */}
+      <ContactSection />
 
       {/* CTA */}
       <section className="py-20">
