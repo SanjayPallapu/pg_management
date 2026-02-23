@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -12,23 +12,59 @@ import whatsappReminders from "@/assets/screenshots/whatsapp-reminders.jpg";
 import customMessage from "@/assets/screenshots/custom-message.jpg";
 import reports from "@/assets/screenshots/reports.jpg";
 import dayGuests from "@/assets/screenshots/day-guests.jpg";
+import rentManagement from "@/assets/screenshots/rent-management.jpg";
+import paymentReceipt from "@/assets/screenshots/payment-receipt.jpg";
+import paymentReceiptFull from "@/assets/screenshots/payment-receipt-full.jpg";
+import welcomeTenant from "@/assets/screenshots/welcome-tenant.jpg";
+import welcomeMessage from "@/assets/screenshots/welcome-message.jpg";
+import paymentReminderDetail from "@/assets/screenshots/payment-reminder-detail.jpg";
+import paymentReminderSend from "@/assets/screenshots/payment-reminder-send.jpg";
+import securityDepositReceipt from "@/assets/screenshots/security-deposit-receipt.jpg";
+import securityDepositFull from "@/assets/screenshots/security-deposit-full.jpg";
 
 const screens = [
   { src: dashboard, label: "Dashboard" },
   { src: rooms, label: "Room Management" },
-  { src: securityDeposits, label: "Security Deposits" },
-  { src: paymentReconciliation, label: "Payment Reconciliation" },
+  { src: rentManagement, label: "Rent Collection" },
   { src: paymentDetails, label: "Payment Details" },
+  { src: paymentReceipt, label: "Payment Receipt" },
+  { src: paymentReceiptFull, label: "Receipt Preview" },
+  { src: paymentReconciliation, label: "Reconciliation" },
   { src: settlement, label: "Settlement Summary" },
   { src: whatsappReminders, label: "WhatsApp Reminders" },
+  { src: paymentReminderDetail, label: "Reminder Detail" },
+  { src: paymentReminderSend, label: "Send Reminder" },
+  { src: welcomeTenant, label: "Welcome Tenant" },
+  { src: welcomeMessage, label: "Welcome Message" },
+  { src: securityDeposits, label: "Security Deposits" },
+  { src: securityDepositReceipt, label: "Deposit Receipt" },
+  { src: securityDepositFull, label: "Deposit Details" },
   { src: customMessage, label: "Custom Messages" },
   { src: reports, label: "Reports & Analytics" },
   { src: dayGuests, label: "Day Guest Tracking" },
 ];
 
+// Preload all images on mount
+const preloadImages = () => {
+  screens.forEach(({ src }) => {
+    const img = new Image();
+    img.src = src;
+  });
+};
+
 const AppShowcase = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const touchStartX = useRef(0);
+
+  // Preload all images
+  useEffect(() => {
+    preloadImages();
+    // Mark loaded after a short delay to allow preloading
+    const t = setTimeout(() => setImagesLoaded(true), 300);
+    return () => clearTimeout(t);
+  }, []);
 
   const go = useCallback((dir: number) => {
     setDirection(dir);
@@ -41,10 +77,21 @@ const AppShowcase = () => {
     return () => clearInterval(timer);
   }, [go]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 50) {
+      go(delta < 0 ? 1 : -1);
+    }
+  };
+
   const variants = {
-    enter: (d: number) => ({ x: d > 0 ? 120 : -120, opacity: 0, scale: 0.92 }),
-    center: { x: 0, opacity: 1, scale: 1 },
-    exit: (d: number) => ({ x: d > 0 ? -120 : 120, opacity: 0, scale: 0.92 }),
+    enter: (d: number) => ({ x: d > 0 ? 80 : -80, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (d: number) => ({ x: d > 0 ? -80 : 80, opacity: 0 }),
   };
 
   return (
@@ -70,14 +117,18 @@ const AppShowcase = () => {
               <ChevronLeft className="h-5 w-5 text-muted-foreground" />
             </button>
 
-            <div className="relative w-[260px] sm:w-[280px]">
+            <div
+              className="relative w-[260px] sm:w-[280px]"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* Phone bezel */}
               <div className="rounded-[2.5rem] border-[6px] border-foreground/20 bg-background shadow-2xl overflow-hidden">
                 {/* Notch */}
                 <div className="absolute top-[6px] left-1/2 -translate-x-1/2 w-24 h-5 bg-foreground/20 rounded-b-2xl z-20" />
                 {/* Screen */}
                 <div className="rounded-[2rem] overflow-hidden aspect-[9/19.5] relative bg-muted">
-                  <AnimatePresence custom={direction} mode="wait">
+                  <AnimatePresence custom={direction} mode="popLayout">
                     <motion.img
                       key={current}
                       custom={direction}
@@ -85,11 +136,12 @@ const AppShowcase = () => {
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
                       src={screens[current].src}
                       alt={screens[current].label}
                       className="absolute inset-0 w-full h-full object-cover"
                       draggable={false}
+                      loading="eager"
                     />
                   </AnimatePresence>
                 </div>
@@ -117,15 +169,15 @@ const AppShowcase = () => {
             {screens[current].label}
           </motion.p>
 
-          {/* Dots */}
-          <div className="flex gap-2">
+          {/* Dots - scrollable on mobile */}
+          <div className="flex gap-1.5 max-w-[280px] sm:max-w-none overflow-x-auto py-1 px-2">
             {screens.map((_, i) => (
               <button
                 key={i}
                 onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full transition-all duration-300 flex-shrink-0 ${
                   i === current
-                    ? "w-6 bg-primary"
+                    ? "w-5 bg-primary"
                     : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 aria-label={`Go to ${screens[i].label}`}
@@ -134,14 +186,7 @@ const AppShowcase = () => {
           </div>
 
           {/* Mobile swipe hint */}
-          <div className="flex sm:hidden gap-4 mt-2">
-            <button onClick={() => go(-1)} className="text-sm text-muted-foreground flex items-center gap-1">
-              <ChevronLeft className="h-4 w-4" /> Prev
-            </button>
-            <button onClick={() => go(1)} className="text-sm text-muted-foreground flex items-center gap-1">
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          <p className="text-xs text-muted-foreground sm:hidden">← Swipe to navigate →</p>
         </div>
       </div>
     </section>
