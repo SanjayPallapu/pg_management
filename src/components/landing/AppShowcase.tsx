@@ -55,18 +55,16 @@ const preloadImages = () => {
 const AppShowcase = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const touchStartX = useRef(0);
 
-  // Preload all images
+  // Preload all images eagerly
   useEffect(() => {
     preloadImages();
-    // Mark loaded after a short delay to allow preloading
-    const t = setTimeout(() => setImagesLoaded(true), 300);
-    return () => clearTimeout(t);
   }, []);
 
   const go = useCallback((dir: number) => {
+    setHasInteracted(true);
     setDirection(dir);
     setCurrent((prev) => (prev + dir + screens.length) % screens.length);
   }, []);
@@ -89,10 +87,13 @@ const AppShowcase = () => {
   };
 
   const variants = {
-    enter: (d: number) => ({ x: d > 0 ? 80 : -80, opacity: 0 }),
+    enter: (d: number) => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (d: number) => ({ x: d > 0 ? -80 : 80, opacity: 0 }),
+    exit: (d: number) => ({ x: d > 0 ? -60 : 60, opacity: 0 }),
   };
+
+  // Show first image instantly, animate only after interaction
+  const shouldAnimate = hasInteracted;
 
   return (
     <section className="py-20">
@@ -128,22 +129,30 @@ const AppShowcase = () => {
                 <div className="absolute top-[6px] left-1/2 -translate-x-1/2 w-24 h-5 bg-foreground/20 rounded-b-2xl z-20" />
                 {/* Screen */}
                 <div className="rounded-[2rem] overflow-hidden aspect-[9/19.5] relative bg-muted">
-                  <AnimatePresence custom={direction} mode="popLayout">
-                    <motion.img
-                      key={current}
-                      custom={direction}
-                      variants={variants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{ duration: 0.25, ease: "easeOut" }}
+                  {shouldAnimate ? (
+                    <AnimatePresence custom={direction} initial={false} mode="wait">
+                      <motion.img
+                        key={current}
+                        custom={direction}
+                        variants={variants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        src={screens[current].src}
+                        alt={screens[current].label}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    </AnimatePresence>
+                  ) : (
+                    <img
                       src={screens[current].src}
                       alt={screens[current].label}
                       className="absolute inset-0 w-full h-full object-cover"
                       draggable={false}
-                      loading="eager"
                     />
-                  </AnimatePresence>
+                  )}
                 </div>
               </div>
               {/* Glow */}
