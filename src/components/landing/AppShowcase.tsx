@@ -69,11 +69,7 @@ const AppShowcase = () => {
     setCurrent((prev) => (prev + dir + screens.length) % screens.length);
   }, []);
 
-  // Auto-advance every 4s
-  useEffect(() => {
-    const timer = setInterval(() => go(1), 4000);
-    return () => clearInterval(timer);
-  }, [go]);
+  // Auto-advance disabled per user request
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
