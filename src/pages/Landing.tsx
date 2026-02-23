@@ -25,6 +25,7 @@ import ComparisonSection from "@/components/landing/ComparisonSection";
 import PhoneMockup from "@/components/landing/PhoneMockup";
 import ContactSection from "@/components/landing/ContactSection";
 import AppShowcase from "@/components/landing/AppShowcase";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const features = [
 {
@@ -108,6 +109,7 @@ const Landing = () => {
             <button onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">Contact</button>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Button onClick={() => navigate("/auth")}>
               Get Started <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
