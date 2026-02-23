@@ -19,6 +19,9 @@ import {
 import { motion } from "framer-motion";
 import appLogo from "@/assets/splash-uploaded-logo.png";
 import { SUBSCRIPTION_PLANS } from "@/types/pg";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import FAQSection from "@/components/landing/FAQSection";
+import ComparisonSection from "@/components/landing/ComparisonSection";
 
 const features = [
 {
@@ -198,6 +201,12 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* How It Works */}
+      <HowItWorksSection />
+
+      {/* Comparison & Trust */}
+      <ComparisonSection />
+
       {/* Pricing Section */}
       <section id="pricing" className="py-20">
         <div className="container mx-auto px-4">
@@ -310,6 +319,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* FAQ */}
+      <FAQSection />
 
       {/* CTA */}
       <section className="py-20">
