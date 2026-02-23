@@ -24,6 +24,7 @@ import FAQSection from "@/components/landing/FAQSection";
 import ComparisonSection from "@/components/landing/ComparisonSection";
 import PhoneMockup from "@/components/landing/PhoneMockup";
 import ContactSection from "@/components/landing/ContactSection";
+import AppShowcase from "@/components/landing/AppShowcase";
 
 const features = [
 {
@@ -208,6 +209,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* App Showcase Carousel */}
+      <AppShowcase />
 
       {/* How It Works */}
       <HowItWorksSection />
