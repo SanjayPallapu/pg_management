@@ -127,8 +127,8 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto">
 
-            <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm">
-              🚀 Trusted by 500+ PG Owners across India
+            <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm">🚀 Trusted by 100+ PG Owners across India
+
             </Badge>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground leading-tight mb-6">
               Manage Your PG
