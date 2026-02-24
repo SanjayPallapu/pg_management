@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -49,9 +49,31 @@ type TemplateStyle = 'professional' | 'elegant';
 
 export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateProps) => {
   const templateRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [templateStyle, setTemplateStyle] = useState<TemplateStyle>('professional');
   const { currentPG } = usePG();
+
+  // Scale template to fit container width
+  useEffect(() => {
+    const updateScale = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const containerWidth = container.clientWidth - 16; // padding
+      const scale = Math.min(1, containerWidth / 794);
+      container.style.setProperty('--template-scale', String(scale));
+      // Set container height to match scaled content
+      const template = templateRef.current;
+      if (template) {
+        container.style.height = `${template.scrollHeight * scale + 32}px`;
+      }
+    };
+    if (open) {
+      setTimeout(updateScale, 100);
+      window.addEventListener('resize', updateScale);
+      return () => window.removeEventListener('resize', updateScale);
+    }
+  }, [open, templateStyle, rules]);
 
   const pgName = currentPG?.name || 'PG Management';
   const pgLogoUrl = currentPG?.logoUrl || '/icon-512.png';
@@ -125,8 +147,8 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 px-4">
-          <div className="py-4">
+        <ScrollArea className="flex-1 px-0">
+          <div ref={containerRef} className="py-4 px-2" style={{ position: 'relative' }}>
             <div
               ref={templateRef}
               style={{
@@ -137,6 +159,8 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                 fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
                 position: 'relative',
                 overflow: 'hidden',
+                transform: 'scale(var(--template-scale, 1))',
+                transformOrigin: 'top center',
               }}
             >
               {templateStyle === 'professional' ? (

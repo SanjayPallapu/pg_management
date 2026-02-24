@@ -13,6 +13,7 @@ import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
+import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
 
 interface PendingTenantsCardProps {
   rooms: Room[];
@@ -24,6 +25,15 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due'>('overdue');
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderTenant, setReminderTenant] = useState<TenantWithPayment | null>(null);
+
+  const handleOpenReminder = (tenant: TenantWithPayment) => {
+    setReminderTenant(tenant);
+    setReminderOpen(true);
+  };
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const { overdueTenants, advanceNotPaidTenants, notDueTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -158,6 +168,7 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
                         isSelected={selectedTenants.has(tenant.id)}
                         onToggle={handleToggleTenant}
                         categoryColor="pending"
+                        onReminder={handleOpenReminder}
                       />
                     ))
                   )}
@@ -178,6 +189,7 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
                         isSelected={selectedTenants.has(tenant.id)}
                         onToggle={handleToggleTenant}
                         categoryColor="blue"
+                        onReminder={handleOpenReminder}
                       />
                     ))
                   )}
@@ -187,6 +199,22 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
           </Tabs>
         </SheetContent>
       </Sheet>
+
+      <PaymentReminderDialog
+        open={reminderOpen}
+        onOpenChange={setReminderOpen}
+        reminderData={reminderTenant ? {
+          tenantName: reminderTenant.name,
+          tenantPhone: reminderTenant.phone || '',
+          joiningDate: reminderTenant.startDate || '',
+          forMonth: `${monthNames[selectedMonth]} ${selectedYear}`,
+          roomNo: reminderTenant.roomNo || '',
+          sharingType: '',
+          amount: reminderTenant.monthlyRent,
+          amountPaid: reminderTenant.amountPaid || 0,
+          balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
+        } : null}
+      />
     </>
   );
 };
@@ -198,7 +226,7 @@ interface TenantSelectItemProps {
   categoryColor: 'pending' | 'blue';
 }
 
-const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor }: TenantSelectItemProps) => {
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-pending-muted border-pending/30' 
     : 'bg-blue-500/10 border-blue-500/30';
@@ -233,16 +261,12 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor }: Tenan
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem asChild>
-                      <a
-                        href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${tenant.name}, this is a payment reminder for your rent of ₹${tenant.monthlyRent.toLocaleString()}. Please let me know once the payment is done. Thank you!`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <Bell className="h-4 w-4" />
-                        Payment Reminder
-                      </a>
+                    <DropdownMenuItem 
+                      onClick={(e) => { e.stopPropagation(); onReminder?.(tenant); }}
+                      className="flex items-center gap-2"
+                    >
+                      <Bell className="h-4 w-4" />
+                      Payment Reminder
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a
