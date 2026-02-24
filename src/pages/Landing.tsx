@@ -161,7 +161,7 @@ const Landing = () => {
             className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-16">
 
             {[
-            { value: "500+", label: "PG Owners" },
+            { value: "100+", label: "PG Owners" },
             { value: "10K+", label: "Tenants Managed" },
             { value: "₹2Cr+", label: "Rent Collected" }].
             map((stat) =>
