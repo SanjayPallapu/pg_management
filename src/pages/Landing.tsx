@@ -163,7 +163,7 @@ const Landing = () => {
             {[
             { value: "500+", label: "PG Owners" },
             { value: "10K+", label: "Tenants Managed" },
-            { value: "₹5Cr+", label: "Rent Collected" }].
+            { value: "₹2Cr+", label: "Rent Collected" }].
             map((stat) =>
             <div key={stat.label} className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold text-primary">{stat.value}</p>
