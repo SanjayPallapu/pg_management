@@ -21,6 +21,11 @@ import paymentReminderDetail from "@/assets/screenshots/payment-reminder-detail.
 import paymentReminderSend from "@/assets/screenshots/payment-reminder-send.jpg";
 import securityDepositReceipt from "@/assets/screenshots/security-deposit-receipt.jpg";
 import securityDepositFull from "@/assets/screenshots/security-deposit-full.jpg";
+import reportsDashboard from "@/assets/screenshots/reports-dashboard.jpg";
+import pendingRent from "@/assets/screenshots/pending-rent.jpg";
+import roomDetails from "@/assets/screenshots/room-details.jpg";
+import paymentReconciliationDetail from "@/assets/screenshots/payment-reconciliation-detail.jpg";
+import emptyBeds from "@/assets/screenshots/empty-beds.jpg";
 
 const screens = [
   { src: dashboard, label: "Dashboard" },
@@ -42,6 +47,11 @@ const screens = [
   { src: customMessage, label: "Custom Messages" },
   { src: reports, label: "Reports & Analytics" },
   { src: dayGuests, label: "Day Guest Tracking" },
+  { src: reportsDashboard, label: "Collection Overview" },
+  { src: pendingRent, label: "Pending Rent Tracker" },
+  { src: roomDetails, label: "Room Details View" },
+  { src: paymentReconciliationDetail, label: "Payment Reconciliation" },
+  { src: emptyBeds, label: "Empty Beds Breakdown" },
 ];
 
 // Preload all images on mount
