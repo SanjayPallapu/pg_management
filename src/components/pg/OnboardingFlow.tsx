@@ -28,7 +28,7 @@ import {
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useRazorpay } from '@/hooks/useRazorpay';
+import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 import { useAuth } from '@/hooks/useAuth';
 import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID, PAYMENT_METHODS, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
@@ -83,7 +83,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const { refreshPGs, subscription, refreshSubscription, pgs } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
   const { signOut, isAdmin } = useAuth();
-  const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
+  const { initiateCheckout, isLoading: stripeLoading } = useStripeCheckout();
   const [step, setStep] = useState<Step>('welcome');
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -391,11 +391,11 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <h2 className="text-2xl font-bold">{currentPlan.name} Plan - ₹{currentPlan.price}/month</h2>
             </div>
 
-            {/* Razorpay Online Payment */}
+            {/* Stripe Online Payment */}
             <Button
               className="w-full gap-2 py-6 text-base"
               onClick={() => {
-                initiatePayment({
+                initiateCheckout({
                   plan: selectedPlan,
                   amount: currentPlan.price,
                   onSuccess: async () => {
@@ -404,9 +404,9 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                   },
                 });
               }}
-              disabled={razorpayLoading}
+              disabled={stripeLoading}
             >
-              {razorpayLoading ? (
+              {stripeLoading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
               ) : (
                 <><Zap className="h-5 w-5" /> Pay ₹{currentPlan.price} Online (Card/UPI/Net Banking)</>

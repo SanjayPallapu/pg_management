@@ -29,23 +29,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
-    const email = claimsData.claims.email;
     const { plan, amount, returnUrl } = await req.json();
 
     if (!plan || !amount) {
@@ -62,7 +59,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      customer_email: email,
+      customer_email: user.email,
       line_items: [
         {
           price_data: {
@@ -71,13 +68,13 @@ Deno.serve(async (req) => {
               name: `PG Manager - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
               description: `Monthly subscription - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
             },
-            unit_amount: amount * 100, // Convert to paise
+            unit_amount: amount * 100,
           },
           quantity: 1,
         },
       ],
       metadata: {
-        user_id: userId,
+        user_id: user.id,
         plan: plan,
       },
       success_url: `${returnUrl || "https://pg-managementt.lovable.app"}?payment=success&plan=${plan}`,
@@ -85,13 +82,8 @@ Deno.serve(async (req) => {
     });
 
     // Store payment request
-    const adminSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    await adminSupabase.from("payment_requests").insert({
-      user_id: userId,
+    await supabaseAdmin.from("payment_requests").insert({
+      user_id: user.id,
       amount: amount,
       payment_method: "stripe",
       status: "pending",
