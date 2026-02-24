@@ -99,7 +99,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-px">
-            <img alt="PG Manager" className="h-16 w-16 object-contain" src="/lovable-uploads/387803e0-c49f-44b0-8f2c-2057e762f712.png" />
+            <img alt="PG Manager" className="h-16 w-16 object-contain" src="/lovable-uploads/e6c9e1f8-79c6-4213-b090-2b4644b8ac55.jpg" />
             <span className="text-lg font-bold text-foreground border-0 rounded-md">PG Manager</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground">
