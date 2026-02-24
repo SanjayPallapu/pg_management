@@ -359,7 +359,7 @@ const Landing = () => {
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img alt="PG Manager" className="h-12 w-12 object-contain" src="/lovable-uploads/b1a13d19-8ccf-45ef-a671-245f3213d3b7.png" />
+            <img alt="PG Manager" className="h-12 w-12 object-contain" src="/lovable-uploads/ef76527d-9557-4cc0-8aa4-953e197b4945.png" />
             <span className="text-sm font-medium text-foreground">PG Manager</span>
           </div>
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} PG Manager. All rights reserved.</p>
