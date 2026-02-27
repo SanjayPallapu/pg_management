@@ -138,14 +138,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       )}
 
       {floorData.map(({ floor, rooms: roomsOnFloor, name }, index) => {
-        const floorColors = [
-          'from-blue-500/12 via-indigo-500/8 to-purple-500/6 border-blue-500/20',
-          'from-emerald-500/12 via-teal-500/8 to-cyan-500/6 border-emerald-500/20',
-          'from-amber-500/12 via-orange-500/8 to-yellow-500/6 border-amber-500/20',
-          'from-rose-500/12 via-pink-500/8 to-fuchsia-500/6 border-rose-500/20',
-          'from-violet-500/12 via-purple-500/8 to-indigo-500/6 border-violet-500/20',
-        ];
-        const colorClass = floorColors[index % floorColors.length];
+        const colorClass = 'from-primary/15 via-primary/8 to-accent/10 border-primary/20';
 
         return (
         <div key={floor} className="space-y-4">
