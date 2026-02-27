@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Lock, AlertTriangle, IndianRupee, Calendar, Check } from 'lucide-react';
+import { Lock, AlertTriangle, IndianRupee, Calendar, Check, ArrowLeft } from 'lucide-react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -225,10 +225,13 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
       <SheetContent side="bottom" className="h-screen bg-gradient-to-b from-background via-background to-muted/30">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <AlertTriangle className="h-5 w-5 text-pending" />
             Left Tenants Cleanup
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="ml-10">
             These tenants have left but are still included in the rent sheet. Lock them to exclude from totals and reports.
           </SheetDescription>
         </SheetHeader>
