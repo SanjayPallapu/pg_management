@@ -236,7 +236,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] p-0">
+        <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
           <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
             <SheetTitle className="text-left">Day Guest Details - {monthName}</SheetTitle>
             <div className="grid grid-cols-2 gap-6 mt-2">
@@ -251,7 +251,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
             </div>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(90vh-100px)]">
+          <ScrollArea className="h-[calc(100vh-100px)]">
             <div className="p-4 space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
