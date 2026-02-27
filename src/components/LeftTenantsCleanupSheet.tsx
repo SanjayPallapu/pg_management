@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Lock, AlertTriangle, IndianRupee, Calendar, Check, ArrowLeft } from 'lucide-react';
+import { Lock, AlertTriangle, IndianRupee, Calendar, Check } from 'lucide-react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
@@ -36,7 +36,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLocking, setIsLocking] = useState(false);
   const [filterRoom, setFilterRoom] = useState<string | null>(null);
-  
+
   // Rate calculation mode per tenant
   const [rateModes, setRateModes] = useState<Record<string, RateMode>>({});
   const [customRates, setCustomRates] = useState<Record<string, number>>({});
@@ -44,14 +44,14 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   const refundPaidFromStore = useMemo(() => {
     const saved = getRefunds(selectedYear, selectedMonth);
     const map: Record<string, boolean> = {};
-    saved.forEach(r => { map[r.tenantId] = true; });
+    saved.forEach((r) => {map[r.tenantId] = true;});
     return map;
   }, [selectedYear, selectedMonth]);
   const [refundPaidOverrides, setRefundPaidOverrides] = useState<Record<string, boolean>>({});
   const refundPaid = useMemo(() => ({ ...refundPaidFromStore, ...refundPaidOverrides }), [refundPaidFromStore, refundPaidOverrides]);
 
   const getRateMode = (id: string): RateMode => rateModes[id] || 'monthly-30';
-  const setRateMode = (id: string, mode: RateMode) => setRateModes(prev => ({ ...prev, [id]: mode }));
+  const setRateMode = (id: string, mode: RateMode) => setRateModes((prev) => ({ ...prev, [id]: mode }));
 
   const daysInMonth = getDaysInMonth(new Date(selectedYear, selectedMonth - 1));
 
@@ -69,14 +69,14 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
       daysStayed: number;
     }> = [];
 
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
         if (!hasTenantLeftNow(tenant.endDate)) return;
         if (tenant.isLocked) return;
 
         const payment = payments.find(
-          p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
+          (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
         );
 
         const amountPaid = payment?.amountPaid || 0;
@@ -98,7 +98,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           isLocked: tenant.isLocked || false,
           paymentStatus: paymentStatus as 'Paid' | 'Partial' | 'Pending',
           amountPaid,
-          daysStayed,
+          daysStayed
         });
       });
     });
@@ -124,19 +124,19 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
   }, [rateModes, customRates, daysInMonth]);
 
   const uniqueRooms = useMemo(() => {
-    const roomSet = new Set(leftTenantsInSheet.map(t => t.roomNo));
+    const roomSet = new Set(leftTenantsInSheet.map((t) => t.roomNo));
     return Array.from(roomSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }, [leftTenantsInSheet]);
 
   const filteredTenants = useMemo(() => {
     if (!filterRoom) return leftTenantsInSheet;
-    return leftTenantsInSheet.filter(t => t.roomNo === filterRoom);
+    return leftTenantsInSheet.filter((t) => t.roomNo === filterRoom);
   }, [leftTenantsInSheet, filterRoom]);
 
   const toggleSelection = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
+      if (newSet.has(id)) newSet.delete(id);else newSet.add(id);
       return newSet;
     });
   };
@@ -145,7 +145,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
     if (selectedIds.size === filteredTenants.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredTenants.map(t => t.id)));
+      setSelectedIds(new Set(filteredTenants.map((t) => t.id)));
     }
   };
 
@@ -153,12 +153,12 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
     if (selectedIds.size === 0) return;
     setIsLocking(true);
     try {
-      const tenantsToLock = leftTenantsInSheet.filter(t => selectedIds.has(t.id));
+      const tenantsToLock = leftTenantsInSheet.filter((t) => selectedIds.has(t.id));
       for (const tenant of tenantsToLock) {
         await updateTenant.mutateAsync({
           tenantId: tenant.id,
           updates: { isLocked: true },
-          tenantName: tenant.name,
+          tenantName: tenant.name
         });
         await logAudit.mutateAsync({
           action: 'update',
@@ -167,12 +167,12 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           recordName: tenant.name,
           changes: { isLocked: { old: false, new: true } },
           newData: { isLocked: true },
-          oldData: { isLocked: false },
+          oldData: { isLocked: false }
         });
       }
       toast({
         title: `${tenantsToLock.length} tenant(s) locked`,
-        description: 'They have been removed from rent sheet and reports',
+        description: 'They have been removed from rent sheet and reports'
       });
       setSelectedIds(new Set());
       onOpenChange(false);
@@ -191,7 +191,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
     let totalRefundDue = 0;
     let totalRefunded = 0;
 
-    leftTenantsInSheet.forEach(t => {
+    leftTenantsInSheet.forEach((t) => {
       const { proRataRent, refundDue } = getCalc(t);
       const effectiveCollected = refundPaid[t.id] ? proRataRent : t.amountPaid;
       const effectivePending = Math.max(0, proRataRent - t.amountPaid);
@@ -206,17 +206,17 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
   const getPaymentBadgeClass = (status: string) => {
     switch (status) {
-      case 'Paid': return 'bg-paid text-paid-foreground';
-      case 'Partial': return 'bg-partial text-partial-foreground';
-      default: return 'bg-pending text-pending-foreground';
+      case 'Paid':return 'bg-paid text-paid-foreground';
+      case 'Partial':return 'bg-partial text-partial-foreground';
+      default:return 'bg-pending text-pending-foreground';
     }
   };
 
   const rateModeLabel = (mode: RateMode) => {
     switch (mode) {
-      case 'day-wise': return `Actual (÷${daysInMonth})`;
-      case 'monthly-30': return 'Monthly ÷ 30';
-      case 'custom': return 'Custom';
+      case 'day-wise':return `Actual (÷${daysInMonth})`;
+      case 'monthly-30':return 'Monthly ÷ 30';
+      case 'custom':return 'Custom';
     }
   };
 
@@ -226,7 +226,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
-              <ArrowLeft className="h-5 w-5" />
+              
             </Button>
             <AlertTriangle className="h-5 w-5 text-pending" />
             Left Tenants Cleanup
@@ -236,22 +236,22 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           </SheetDescription>
         </SheetHeader>
 
-        {leftTenantsInSheet.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+        {leftTenantsInSheet.length === 0 ?
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Lock className="h-12 w-12 mb-4 opacity-50" />
             <p>No left tenants found in the current rent sheet</p>
-          </div>
-        ) : (
-          <>
+          </div> :
+
+        <>
             {/* Room Filter */}
-            {uniqueRooms.length > 1 && (
-              <div className="flex gap-2 py-3 overflow-x-auto border-b">
+            {uniqueRooms.length > 1 &&
+          <div className="flex gap-2 py-3 overflow-x-auto border-b">
                 <Button variant={filterRoom === null ? 'default' : 'outline'} size="sm" onClick={() => setFilterRoom(null)} className="shrink-0">All</Button>
-                {uniqueRooms.map(roomNo => (
-                  <Button key={roomNo} variant={filterRoom === roomNo ? 'default' : 'outline'} size="sm" onClick={() => setFilterRoom(roomNo)} className="shrink-0">Room {roomNo}</Button>
-                ))}
-              </div>
+                {uniqueRooms.map((roomNo) =>
+            <Button key={roomNo} variant={filterRoom === roomNo ? 'default' : 'outline'} size="sm" onClick={() => setFilterRoom(roomNo)} className="shrink-0">Room {roomNo}</Button>
             )}
+              </div>
+          }
 
             <div className="flex items-center justify-between py-3 border-b">
               <Button variant="outline" size="sm" onClick={selectAll}>
@@ -272,18 +272,18 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                 <span className="text-muted-foreground">Pending:</span>
                 <span className="font-medium text-pending">₹{summaryStats.totalPending.toLocaleString()}</span>
               </div>
-              {summaryStats.totalRefundDue > 0 && (
-                <div className="flex items-center gap-2 col-span-2">
+              {summaryStats.totalRefundDue > 0 &&
+            <div className="flex items-center gap-2 col-span-2">
                   <IndianRupee className="h-4 w-4 text-emerald-500" />
                   <span className="text-muted-foreground">Total Refund:</span>
                   <span className="font-medium text-emerald-500">₹{summaryStats.totalRefundDue.toLocaleString()}</span>
-                  {summaryStats.totalRefunded > 0 && (
-                    <Badge variant="outline" className="text-xs text-emerald-500 border-emerald-500/30">
+                  {summaryStats.totalRefunded > 0 &&
+              <Badge variant="outline" className="text-xs text-emerald-500 border-emerald-500/30">
                       <Check className="h-3 w-3 mr-1" />₹{summaryStats.totalRefunded.toLocaleString()} refunded
                     </Badge>
-                  )}
+              }
                 </div>
-              )}
+            }
             </div>
 
             {/* Action buttons */}
@@ -297,24 +297,24 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
             <ScrollArea className="h-[calc(100vh-360px)]">
               <div className="space-y-3 py-4">
-                {filteredTenants.map(tenant => {
-                  const mode = getRateMode(tenant.id);
-                  const { perDayRate, proRataRent, refundDue, balance } = getCalc(tenant);
-                  const isRefundPaid = refundPaid[tenant.id] || false;
+                {filteredTenants.map((tenant) => {
+                const mode = getRateMode(tenant.id);
+                const { perDayRate, proRataRent, refundDue, balance } = getCalc(tenant);
+                const isRefundPaid = refundPaid[tenant.id] || false;
 
-                  return (
-                    <div
-                      key={tenant.id}
-                      className={`p-3 rounded-lg border transition-colors ${
-                        selectedIds.has(tenant.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'
-                      }`}
-                    >
+                return (
+                  <div
+                    key={tenant.id}
+                    className={`p-3 rounded-lg border transition-colors ${
+                    selectedIds.has(tenant.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'}`
+                    }>
+
                       {/* Top row: checkbox + name + badges */}
                       <div className="flex items-center gap-3 cursor-pointer" onClick={() => toggleSelection(tenant.id)}>
                         <Checkbox
-                          checked={selectedIds.has(tenant.id)}
-                          onCheckedChange={() => toggleSelection(tenant.id)}
-                        />
+                        checked={selectedIds.has(tenant.id)}
+                        onCheckedChange={() => toggleSelection(tenant.id)} />
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium truncate">{tenant.name}</span>
@@ -338,32 +338,32 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                       <div className="mt-2 ml-7">
                         <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
                           <span className="text-xs text-muted-foreground mr-1">Per day:</span>
-                          {(['monthly-30', 'day-wise', 'custom'] as RateMode[]).map(m => (
-                            <Button
-                              key={m}
-                              variant={mode === m ? 'default' : 'outline'}
-                              size="sm"
-                              className="h-6 text-xs px-2"
-                              onClick={(e) => { e.stopPropagation(); setRateMode(tenant.id, m); }}
-                            >
+                          {(['monthly-30', 'day-wise', 'custom'] as RateMode[]).map((m) =>
+                        <Button
+                          key={m}
+                          variant={mode === m ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-6 text-xs px-2"
+                          onClick={(e) => {e.stopPropagation();setRateMode(tenant.id, m);}}>
+
                               {rateModeLabel(m)}
                             </Button>
-                          ))}
+                        )}
                         </div>
-                        {mode === 'custom' && (
-                          <div className="flex items-center gap-2 mb-1.5">
+                        {mode === 'custom' &&
+                      <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-xs text-muted-foreground">₹</span>
                             <Input
-                              type="number"
-                              className="h-7 w-24 text-xs"
-                              placeholder="Per day rate"
-                              value={customRates[tenant.id] || ''}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => setCustomRates(prev => ({ ...prev, [tenant.id]: Number(e.target.value) }))}
-                            />
+                          type="number"
+                          className="h-7 w-24 text-xs"
+                          placeholder="Per day rate"
+                          value={customRates[tenant.id] || ''}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setCustomRates((prev) => ({ ...prev, [tenant.id]: Number(e.target.value) }))} />
+
                             <span className="text-xs text-muted-foreground">/day</span>
                           </div>
-                        )}
+                      }
 
                         {/* Calculation breakdown */}
                         <div className="p-2 rounded bg-muted/50 border border-border">
@@ -378,8 +378,8 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                               <span className="text-muted-foreground">Amount Paid</span>
                               <span className="text-paid">₹{tenant.amountPaid.toLocaleString()}</span>
                             </div>
-                            {refundDue > 0 && (
-                              <>
+                            {refundDue > 0 &&
+                          <>
                                 <div className="flex justify-between font-medium text-emerald-500 border-t border-border pt-1 mt-1">
                                   <span>Refund Due</span>
                                   <span>₹{refundDue.toLocaleString()}</span>
@@ -392,64 +392,64 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
                                       {isRefundPaid ? 'Yes' : 'No'}
                                     </span>
                                     <Switch
-                                      checked={isRefundPaid}
-                                      onCheckedChange={(val) => {
-                                        setRefundPaidOverrides(prev => ({ ...prev, [tenant.id]: val }));
-                                        const { refundDue } = getCalc(tenant);
-                                        if (val) {
-                                          // Persist refund and audit log
-                                          addRefund(selectedYear, selectedMonth, {
-                                            tenantId: tenant.id,
-                                            tenantName: tenant.name,
-                                            roomNo: tenant.roomNo,
-                                            refundAmount: refundDue,
-                                            paidAt: new Date().toISOString(),
-                                          });
-                                          logAudit.mutate({
-                                            action: 'update',
-                                            tableName: 'tenants',
-                                            recordId: tenant.id,
-                                            recordName: tenant.name,
-                                            changes: { refund: { old: 0, new: refundDue } },
-                                            newData: { refundPaid: true, refundAmount: refundDue },
-                                          });
-                                        } else {
-                                          removeRefund(selectedYear, selectedMonth, tenant.id);
-                                          logAudit.mutate({
-                                            action: 'update',
-                                            tableName: 'tenants',
-                                            recordId: tenant.id,
-                                            recordName: tenant.name,
-                                            changes: { refund: { old: refundDue, new: 0 } },
-                                            newData: { refundPaid: false, refundAmount: 0 },
-                                          });
-                                        }
-                                        // Invalidate dashboard queries so totals update
-                                        queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
+                                  checked={isRefundPaid}
+                                  onCheckedChange={(val) => {
+                                    setRefundPaidOverrides((prev) => ({ ...prev, [tenant.id]: val }));
+                                    const { refundDue } = getCalc(tenant);
+                                    if (val) {
+                                      // Persist refund and audit log
+                                      addRefund(selectedYear, selectedMonth, {
+                                        tenantId: tenant.id,
+                                        tenantName: tenant.name,
+                                        roomNo: tenant.roomNo,
+                                        refundAmount: refundDue,
+                                        paidAt: new Date().toISOString()
+                                      });
+                                      logAudit.mutate({
+                                        action: 'update',
+                                        tableName: 'tenants',
+                                        recordId: tenant.id,
+                                        recordName: tenant.name,
+                                        changes: { refund: { old: 0, new: refundDue } },
+                                        newData: { refundPaid: true, refundAmount: refundDue }
+                                      });
+                                    } else {
+                                      removeRefund(selectedYear, selectedMonth, tenant.id);
+                                      logAudit.mutate({
+                                        action: 'update',
+                                        tableName: 'tenants',
+                                        recordId: tenant.id,
+                                        recordName: tenant.name,
+                                        changes: { refund: { old: refundDue, new: 0 } },
+                                        newData: { refundPaid: false, refundAmount: 0 }
+                                      });
+                                    }
+                                    // Invalidate dashboard queries so totals update
+                                    queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+                                  }}
+                                  onClick={(e) => e.stopPropagation()} />
+
                                   </div>
                                 </div>
                               </>
-                            )}
-                            {tenant.amountPaid < proRataRent && (
-                              <div className="flex justify-between font-medium text-pending border-t border-border pt-1 mt-1">
+                          }
+                            {tenant.amountPaid < proRataRent &&
+                          <div className="flex justify-between font-medium text-pending border-t border-border pt-1 mt-1">
                                 <span>Still Due</span>
                                 <span>₹{(proRataRent - tenant.amountPaid).toLocaleString()}</span>
                               </div>
-                            )}
+                          }
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>);
+
+              })}
               </div>
             </ScrollArea>
           </>
-        )}
+        }
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>);
+
 };
