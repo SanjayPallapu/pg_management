@@ -143,15 +143,17 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
         return (
         <Collapsible key={floor} defaultOpen={true}>
-          <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-end px-1">
+              <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                <span className="group-data-[state=closed]:hidden">Collapse</span>
+                <span className="hidden group-data-[state=closed]:inline">Expand</span>
+              </CollapsibleTrigger>
+            </div>
             <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
               <div className="border-l-4 border-primary pl-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-lg">{name}</h3>
-                  <CollapsibleTrigger className="group">
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
-                  </CollapsibleTrigger>
-                </div>
+                <h3 className="font-semibold text-lg">{name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
                   {roomsOnFloor.filter(r => {
