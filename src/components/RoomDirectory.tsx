@@ -99,7 +99,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   return (
     <div className="space-y-8">
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 rounded-xl p-4 bg-gradient-to-r from-primary/15 via-primary/8 to-accent/10 border border-primary/20">
           <div>
             <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
             <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
@@ -108,7 +108,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             variant="outline"
             size="sm"
             onClick={() => setFloorManagementOpen(true)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-background/70 backdrop-blur-sm"
           >
             <Settings2 className="h-4 w-4" />
             Manage Floors
@@ -139,10 +139,11 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
       {floorData.map(({ floor, rooms: roomsOnFloor, name }, index) => {
         const floorColors = [
-          'from-primary/8 to-primary/3 border-primary/20',
-          'from-accent/40 to-accent/15 border-accent/30',
-          'from-muted to-muted/40 border-muted-foreground/15',
-          'from-secondary/60 to-secondary/20 border-secondary/30',
+          'from-blue-500/12 via-indigo-500/8 to-purple-500/6 border-blue-500/20',
+          'from-emerald-500/12 via-teal-500/8 to-cyan-500/6 border-emerald-500/20',
+          'from-amber-500/12 via-orange-500/8 to-yellow-500/6 border-amber-500/20',
+          'from-rose-500/12 via-pink-500/8 to-fuchsia-500/6 border-rose-500/20',
+          'from-violet-500/12 via-purple-500/8 to-indigo-500/6 border-violet-500/20',
         ];
         const colorClass = floorColors[index % floorColors.length];
 
