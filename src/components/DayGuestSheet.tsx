@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { useRooms } from '@/hooks/useRooms';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { Calendar, SquarePen, Trash2, Loader2, IndianRupee } from 'lucide-react';
+import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
@@ -238,7 +238,12 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
           <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
-            <SheetTitle className="text-left">Day Guest Details - {monthName}</SheetTitle>
+            <SheetTitle className="text-left flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              Day Guest Details - {monthName}
+            </SheetTitle>
             <div className="grid grid-cols-2 gap-6 mt-2">
               <div className="bg-paid/10 rounded-lg p-3 text-center">
                 <p className="text-xs text-muted-foreground">Collected</p>

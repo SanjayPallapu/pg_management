@@ -16,7 +16,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Users, Send, Loader2 } from "lucide-react";
+import { MessageCircle, Users, Send, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
@@ -226,10 +226,13 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
       <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
         <SheetHeader className="p-4 pb-2">
           <SheetTitle className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <MessageCircle className="h-5 w-5 text-cash" />
             Bulk WhatsApp Messages
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="ml-10">
             Send payment reminders or custom messages to multiple tenants
           </SheetDescription>
         </SheetHeader>

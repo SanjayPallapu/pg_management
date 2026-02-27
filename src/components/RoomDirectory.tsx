@@ -137,9 +137,18 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         <TenantSearchResults rooms={rooms} searchQuery={searchQuery} onNavigateToRoom={onViewDetails} />
       )}
 
-      {floorData.map(({ floor, rooms: roomsOnFloor, name }) => (
+      {floorData.map(({ floor, rooms: roomsOnFloor, name }, index) => {
+        const floorColors = [
+          'from-primary/8 to-primary/3 border-primary/20',
+          'from-accent/40 to-accent/15 border-accent/30',
+          'from-muted to-muted/40 border-muted-foreground/15',
+          'from-secondary/60 to-secondary/20 border-secondary/30',
+        ];
+        const colorClass = floorColors[index % floorColors.length];
+
+        return (
         <div key={floor} className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
             <div className="border-l-4 border-primary pl-4">
               <h3 className="font-semibold text-lg">{name}</h3>
               <p className="text-sm text-muted-foreground">
@@ -155,7 +164,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
               variant="outline"
               size="sm"
               onClick={() => openAddRoomsDialog(floor)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
             >
               <Plus className="h-4 w-4" />
               Add Rooms
@@ -184,7 +193,8 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
       <AddRoomsDialog
         open={addRoomsDialogOpen}
