@@ -4,7 +4,8 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X, Plus, Settings2, Trash2, Edit2 } from 'lucide-react';
+import { Search, X, Plus, Settings2, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TenantSearchResults } from './TenantSearchResults';
 import { usePG } from '@/contexts/PGContext';
 import { Button } from '@/components/ui/button';
@@ -141,52 +142,59 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         const colorClass = 'from-primary/15 via-primary/8 to-accent/10 border-primary/20';
 
         return (
-        <div key={floor} className="space-y-4">
-          <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
-            <div className="border-l-4 border-primary pl-4">
-              <h3 className="font-semibold text-lg">{name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
-                {roomsOnFloor.filter(r => {
-                  const c = occupiedCountForMonth(r);
-                  return c > 0 && c < r.capacity;
-                }).length} partially occupied,{' '}
-                {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openAddRoomsDialog(floor)}
-              className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add Rooms
-            </Button>
-          </div>
-          
-          {roomsOnFloor.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {roomsOnFloor.map(room => (
-                <RoomCard 
-                  key={room.roomNo} 
-                  room={room} 
-                  onViewDetails={onViewDetails}
-                  onEditRoom={setEditingRoom}
-                  dayGuests={dayGuestsByRoom[room.id] || []}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 border-2 border-dashed border-muted-foreground/30 rounded-lg">
-              <p className="text-muted-foreground mb-3">No rooms on this floor yet</p>
-              <Button variant="outline" onClick={() => openAddRoomsDialog(floor)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Rooms ({floor}01 - {floor}09)
+        <Collapsible key={floor} defaultOpen={true}>
+          <div className="space-y-4">
+            <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
+              <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left group">
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=closed]:-rotate-90 shrink-0" />
+                <div className="border-l-4 border-primary pl-4">
+                  <h3 className="font-semibold text-lg">{name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
+                    {roomsOnFloor.filter(r => {
+                      const c = occupiedCountForMonth(r);
+                      return c > 0 && c < r.capacity;
+                    }).length} partially occupied,{' '}
+                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
+                  </p>
+                </div>
+              </CollapsibleTrigger>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openAddRoomsDialog(floor)}
+                className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Add Rooms
               </Button>
             </div>
-          )}
-        </div>
+            
+            <CollapsibleContent>
+              {roomsOnFloor.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {roomsOnFloor.map(room => (
+                    <RoomCard 
+                      key={room.roomNo} 
+                      room={room} 
+                      onViewDetails={onViewDetails}
+                      onEditRoom={setEditingRoom}
+                      dayGuests={dayGuestsByRoom[room.id] || []}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 border-2 border-dashed border-muted-foreground/30 rounded-lg">
+                  <p className="text-muted-foreground mb-3">No rooms on this floor yet</p>
+                  <Button variant="outline" onClick={() => openAddRoomsDialog(floor)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Rooms ({floor}01 - {floor}09)
+                  </Button>
+                </div>
+              )}
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
         );
       })}
 
