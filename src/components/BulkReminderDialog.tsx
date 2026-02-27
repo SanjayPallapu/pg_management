@@ -223,7 +223,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] p-0">
+      <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
         <SheetHeader className="p-4 pb-2">
           <SheetTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-cash" />
@@ -240,7 +240,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             <TabsTrigger value="custom">Custom Message</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[calc(90vh-200px)]">
+          <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="p-4 space-y-4">
               <TabsContent value="reminder" className="mt-0 space-y-4">
                 <div className="flex items-center gap-4 flex-wrap">
