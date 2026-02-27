@@ -9,7 +9,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { X, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { PaymentEntry } from '@/types';
 import { UpiLogo } from './icons/UpiLogo';
@@ -178,7 +178,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
               Payment History
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-              <X className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>

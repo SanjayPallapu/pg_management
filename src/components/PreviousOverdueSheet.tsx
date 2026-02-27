@@ -9,7 +9,7 @@ import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/ut
 import { calculateProRataRent } from '@/utils/proRataRent';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageCircle, X, History, Receipt, Bell, CreditCard } from 'lucide-react';
+import { Phone, MessageCircle, ArrowLeft, History, Receipt, Bell, CreditCard } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -369,7 +369,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                   <History className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-                  <X className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </div>
             </div>

@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { X, Users, Calendar, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, IndianRupee } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -131,7 +131,7 @@ export const SettlementSummarySheet = ({
               Settlement Summary - {monthName} {selectedYear}
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-              <X className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>

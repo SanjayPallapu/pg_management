@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Phone, MessageCircle, Receipt, MessageSquare, CheckCircle, X } from 'lucide-react';
+import { Phone, MessageCircle, Receipt, MessageSquare, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -228,8 +228,8 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                 {months[prevMonth - 1]} Overdue Collections
               </SheetTitle>
               {isMobile && (
-                <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)}>
-                  <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -366,8 +366,8 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                 Still Pending from {months[prevMonth - 1]}
               </SheetTitle>
               {isMobile && (
-                <Button variant="ghost" size="icon" onClick={() => setStillPendingSheetOpen(false)}>
-                  <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={() => setStillPendingSheetOpen(false)}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
             </div>

@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { User, Phone, MessageCircle, CreditCard, X } from 'lucide-react';
+import { User, Phone, MessageCircle, CreditCard, ArrowLeft } from 'lucide-react';
 import { Tenant, Room, TenantPayment } from '@/types';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
@@ -89,7 +89,7 @@ export const TenantsByDueDaySheet = ({
               Day {day} - Pending Collections
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-              <X className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
