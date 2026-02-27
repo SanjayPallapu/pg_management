@@ -144,13 +144,6 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         return (
         <Collapsible key={floor} defaultOpen={true}>
           <div className="space-y-2">
-            <div className="flex justify-end px-1">
-              <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
-                <span className="group-data-[state=closed]:hidden">Collapse</span>
-                <span className="hidden group-data-[state=closed]:inline">Expand</span>
-              </CollapsibleTrigger>
-            </div>
             <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="font-semibold text-lg">{name}</h3>
@@ -163,15 +156,22 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openAddRoomsDialog(floor)}
-                className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
-              >
-                <Plus className="h-4 w-4" />
-                Add Rooms
-              </Button>
+              <div className="flex flex-col items-end gap-2">
+                <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                  <span className="group-data-[state=closed]:hidden">Collapse</span>
+                  <span className="hidden group-data-[state=closed]:inline">Expand</span>
+                </CollapsibleTrigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
+                  className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Rooms
+                </Button>
+              </div>
             </div>
             
             <CollapsibleContent>
