@@ -28,6 +28,15 @@ const signupSchema = z.object({
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signOut } = useAuth();
+  const [authTimedOut, setAuthTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => setAuthTimedOut(true), 3000);
+      return () => clearTimeout(timer);
+    }
+    setAuthTimedOut(false);
+  }, [isLoading]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -141,12 +150,11 @@ const Auth = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !authTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>);
-
   }
 
   const handlePendingSignOut = async () => {
