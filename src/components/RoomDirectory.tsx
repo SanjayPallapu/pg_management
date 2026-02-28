@@ -23,13 +23,8 @@ interface RoomDirectoryProps {
   onViewDetails: (room: Room) => void;
 }
 
-const getFloorName = (floor: number, roomsOnFloor: Room[]): string => {
-  if (roomsOnFloor.length === 0) return `Floor ${floor}`;
-  const roomNos = roomsOnFloor.map(r => r.roomNo).sort();
-  const first = roomNos[0];
-  const last = roomNos[roomNos.length - 1];
-  const ordinal = floor === 1 ? '1st' : floor === 2 ? '2nd' : floor === 3 ? '3rd' : `${floor}th`;
-  return `${ordinal} Floor (${first}-${last})`;
+const getFloorName = (floor: number): string => {
+  return `Floor ${floor}`;
 };
 
 export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
@@ -87,7 +82,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       return {
         floor,
         rooms: roomsOnFloor,
-        name: getFloorName(floor, roomsOnFloor),
+        name: getFloorName(floor),
       };
     });
   }, [rooms, currentPG?.floors]);
@@ -144,18 +139,18 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         return (
         <Collapsible key={floor} defaultOpen={true}>
           <div className="space-y-2">
-            <div className={`rounded-xl p-4 bg-gradient-to-r ${colorClass} border space-y-2`}>
+            <div className={`relative rounded-xl bg-gradient-to-r ${colorClass} border overflow-hidden`}>
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
+              <div className="p-4 pl-5 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="border-l-4 border-primary pl-4">
-                  <h3 className="font-semibold text-lg">{name}</h3>
-                </div>
+                <h3 className="font-semibold text-lg">{name}</h3>
                 <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
                   <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                   <span className="group-data-[state=closed]:hidden">Collapse</span>
                   <span className="hidden group-data-[state=closed]:inline">Expand</span>
                 </CollapsibleTrigger>
               </div>
-              <div className="flex items-center justify-between pl-4">
+              <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
                   {roomsOnFloor.filter(r => {
@@ -173,6 +168,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   <Plus className="h-4 w-4" />
                   Add Rooms
                 </Button>
+              </div>
               </div>
             </div>
             
