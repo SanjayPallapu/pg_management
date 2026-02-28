@@ -43,10 +43,10 @@ const Auth = () => {
   }>({});
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && hasRole) {
+    if (!isLoading && isAuthenticated) {
       navigate("/", { replace: true });
     }
-  }, [isAuthenticated, hasRole, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   const validateSignInForm = () => {
     try {
@@ -92,17 +92,23 @@ const Auth = () => {
     if (!validateSignInForm()) return;
 
     setIsSubmitting(true);
-    const { error } = await signIn(email, password);
-    setIsSubmitting(false);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        toast.error("Invalid email or password");
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password");
+        } else {
+          toast.error(error.message);
+        }
+        setIsSubmitting(false);
       } else {
-        toast.error(error.message);
+        toast.success("Signed in successfully");
+        navigate("/", { replace: true });
       }
-    } else {
-      toast.success("Signed in successfully");
+    } catch {
+      toast.error("Sign in failed. Please try again.");
+      setIsSubmitting(false);
     }
   };
 
