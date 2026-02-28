@@ -144,9 +144,18 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         return (
         <Collapsible key={floor} defaultOpen={true}>
           <div className="space-y-2">
-            <div className={`flex items-center justify-between rounded-xl p-4 bg-gradient-to-r ${colorClass} border`}>
-              <div className="border-l-4 border-primary pl-4">
-                <h3 className="font-semibold text-lg">{name}</h3>
+            <div className={`rounded-xl p-4 bg-gradient-to-r ${colorClass} border space-y-2`}>
+              <div className="flex items-center justify-between">
+                <div className="border-l-4 border-primary pl-4">
+                  <h3 className="font-semibold text-lg">{name}</h3>
+                </div>
+                <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                  <span className="group-data-[state=closed]:hidden">Collapse</span>
+                  <span className="hidden group-data-[state=closed]:inline">Expand</span>
+                </CollapsibleTrigger>
+              </div>
+              <div className="flex items-center justify-between pl-4">
                 <p className="text-sm text-muted-foreground">
                   {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
                   {roomsOnFloor.filter(r => {
@@ -155,13 +164,6 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   }).length} partially occupied,{' '}
                   {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
                 </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
-                  <span className="group-data-[state=closed]:hidden">Collapse</span>
-                  <span className="hidden group-data-[state=closed]:inline">Expand</span>
-                </CollapsibleTrigger>
                 <Button
                   variant="outline"
                   size="sm"
