@@ -161,12 +161,11 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                 </p>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
-                  className="flex items-center gap-1 bg-background/60 backdrop-blur-sm"
+                  className="h-8 w-8 bg-background/60 backdrop-blur-sm"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Rooms
+                  <Settings2 className="h-4 w-4" />
                 </Button>
               </div>
               </div>
