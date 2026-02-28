@@ -86,7 +86,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center justify-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />
             Subscription Details
           </SheetTitle>
