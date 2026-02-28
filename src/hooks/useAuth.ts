@@ -24,6 +24,19 @@ export const useAuth = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // HARD DEADLINE: Force loading to false after 1 second no matter what
+    const forceLoadingTimer = setTimeout(() => {
+      if (isMounted) {
+        setAuthState(prev => {
+          if (prev.isLoading) {
+            console.warn('[Auth] Force-ending loading state after 1s deadline');
+            return { ...prev, isLoading: false };
+          }
+          return prev;
+        });
+      }
+    }, 1000);
+
     // Function to fetch user role
     const fetchUserRoleAsync = async (userId: string): Promise<AppRole | null> => {
       try {
@@ -37,7 +50,6 @@ export const useAuth = () => {
           console.error('[Auth] Error fetching user role:', error);
           return null;
         }
-        console.debug('[Auth] Role fetched', { userId, role: data?.role });
         return data?.role as AppRole | null;
       } catch (err) {
         console.error('[Auth] Error in fetchUserRole:', err);
@@ -45,8 +57,6 @@ export const useAuth = () => {
       }
     };
 
-    // Check if this is a new signup using sessionStorage flag
-    // Only the signUp function sets this flag, so sign-ins won't trigger onboarding
     const checkIsNewSignup = (): boolean => {
       return sessionStorage.getItem('isNewSignup') === 'true';
     };
@@ -56,15 +66,12 @@ export const useAuth = () => {
       (event, session) => {
         if (!isMounted) return;
 
-        console.debug('[Auth] onAuthStateChange', { event, userId: session?.user?.id ?? null });
-        
         setAuthState(prev => ({
           ...prev,
           session,
           user: session?.user ?? null,
         }));
 
-        // Fire and forget for ongoing changes - don't await, don't set loading
         if (session?.user) {
           fetchUserRoleAsync(session.user.id).then(role => {
             if (isMounted) {
@@ -81,44 +88,46 @@ export const useAuth = () => {
       }
     );
 
-    // INITIAL load (controls isLoading) - fetch session AND role before setting loading false
-    // Add timeout to prevent infinite hang from stale token refresh
+    // INITIAL load - try to get session but don't block forever
     const initializeAuth = async () => {
       try {
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth session timeout')), 4000)
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), 800)
         );
 
-        let session: Session | null = null;
-        try {
-          const result = await Promise.race([sessionPromise, timeoutPromise]);
-          session = result.data.session;
-        } catch (err) {
-          console.warn('[Auth] getSession timed out or failed, clearing stale session:', err);
-          // Clear stale tokens that cause infinite refresh loops
-          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-          session = null;
-        }
+        const result = await Promise.race([
+          sessionPromise.then(r => r.data.session).catch(() => null),
+          timeoutPromise,
+        ]);
 
         if (!isMounted) return;
 
-        console.debug('[Auth] Initial session', { userId: session?.user?.id ?? null });
+        const session = result;
+
+        // If no session obtained (timeout or error), clear stale local storage
+        if (!session) {
+          // Remove stale Supabase tokens from localStorage to stop infinite refresh
+          const keys = Object.keys(localStorage);
+          for (const key of keys) {
+            if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
 
         setAuthState(prev => ({
           ...prev,
-          session,
+          session: session ?? null,
           user: session?.user ?? null,
         }));
 
-        // Fetch role BEFORE setting loading false
         if (session?.user) {
-          const [role, isNewSignup] = await Promise.all([
+          const [role] = await Promise.all([
             fetchUserRoleAsync(session.user.id),
-            Promise.resolve(checkIsNewSignup())
           ]);
           if (isMounted) {
-            setAuthState(prev => ({ ...prev, role, isNewSignup }));
+            setAuthState(prev => ({ ...prev, role, isNewSignup: checkIsNewSignup() }));
           }
         }
       } finally {
@@ -132,6 +141,7 @@ export const useAuth = () => {
 
     return () => {
       isMounted = false;
+      clearTimeout(forceLoadingTimer);
       subscription.unsubscribe();
     };
   }, []);
