@@ -391,8 +391,9 @@ export const SecurityDepositCard = ({
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader className="pl-8">
-            <SheetTitle className="flex items-center gap-2">
+          <SheetHeader>
+            <SheetTitle className="flex items-center justify-center gap-2">
+              <Wallet className="h-5 w-5" />
               Security Deposits
             </SheetTitle>
             <SheetDescription>

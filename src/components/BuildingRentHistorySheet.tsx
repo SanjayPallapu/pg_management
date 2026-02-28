@@ -60,7 +60,7 @@ export const BuildingRentHistorySheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center justify-center gap-2">
             <Calendar className="h-5 w-5" />
             Building Rent History
           </SheetTitle>

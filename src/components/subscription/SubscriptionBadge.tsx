@@ -10,10 +10,8 @@ export const SubscriptionBadge = () => {
   const { subscription, isProUser } = usePG();
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  if (!subscription) return null;
-
   // Calculate days until expiry
-  const daysUntilExpiry = subscription.expiresAt 
+  const daysUntilExpiry = subscription?.expiresAt 
     ? differenceInDays(new Date(subscription.expiresAt), new Date())
     : null;
   
