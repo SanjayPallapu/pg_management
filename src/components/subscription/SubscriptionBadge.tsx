@@ -37,7 +37,7 @@ export const SubscriptionBadge = () => {
     );
   }
 
-  if (isExpired || subscription.status === 'expired') {
+  if (isExpired || subscription?.status === 'expired') {
     return (
       <>
         <Badge variant="destructive" className="cursor-pointer" onClick={() => setShowUpgrade(true)}>
@@ -48,7 +48,7 @@ export const SubscriptionBadge = () => {
     );
   }
 
-  if (subscription.status === 'pending') {
+  if (subscription?.status === 'pending') {
     return (
       <Badge variant="outline" className="text-amber-600 border-amber-300">
         Pending Approval
