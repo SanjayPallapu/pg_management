@@ -166,7 +166,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   className="bg-background/60 backdrop-blur-sm flex items-center gap-1"
                 >
                   <Settings2 className="h-4 w-4" />
-                  Add / Rooms
+                  Add Room
                 </Button>
               </div>
               </div>
