@@ -38,11 +38,11 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       }
       return parseInt(digits, 10) || 1;
     };
-    
+
     // Parse room numbers - support formats like "201" or "01"
     const startNum = getRoomIndex(roomStart);
     const endNum = getRoomIndex(roomEnd) || startNum;
-    
+
     if (startNum > endNum) {
       toast.error('Start room number must be less than or equal to end room number');
       return;
@@ -52,23 +52,23 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
     try {
       const roomsToAdd = [];
       const cap = parseInt(capacity);
-      
+
       for (let i = startNum; i <= endNum; i++) {
         // Generate room number based on floor and room index
         const roomNo = `${floor}${i.toString().padStart(2, '0')}`;
-        
+
         // Skip if room already exists
         if (existingRoomNos.includes(roomNo)) {
           continue;
         }
-        
+
         roomsToAdd.push({
           pg_id: currentPG.id,
           room_no: roomNo,
           floor: floor,
           capacity: cap,
           rent_amount: getPricePerBed(cap) * cap,
-          status: 'Vacant',
+          status: 'Vacant'
         });
       }
 
@@ -79,13 +79,13 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       }
 
       const { error } = await supabase.from('rooms').insert(roomsToAdd);
-      
+
       if (error) throw error;
-      
+
       // Immediate refetch for faster UX
       await queryClient.invalidateQueries({ queryKey: ['rooms'], refetchType: 'active' });
       await queryClient.refetchQueries({ queryKey: ['rooms'] });
-      
+
       toast.success(`Added ${roomsToAdd.length} rooms (${roomsToAdd[0].room_no} to ${roomsToAdd[roomsToAdd.length - 1].room_no})`);
       onOpenChange(false);
     } catch (err) {
@@ -109,8 +109,8 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
   const startNum = getRoomIndex(roomStart);
   const endNum = getRoomIndex(roomEnd) || startNum;
   const roomCount = Math.max(0, endNum - startNum + 1);
-  const previewRooms = Array.from({ length: Math.min(roomCount, 5) }, (_, i) => 
-    `${floor}${(startNum + i).toString().padStart(2, '0')}`
+  const previewRooms = Array.from({ length: Math.min(roomCount, 5) }, (_, i) =>
+  `${floor}${(startNum + i).toString().padStart(2, '0')}`
   );
   const hasMore = roomCount > 5;
 
@@ -132,8 +132,8 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
                 id="roomStart"
                 value={roomStart}
                 onChange={(e) => setRoomStart(e.target.value)}
-                placeholder={`${floor}01`}
-              />
+                placeholder={`${floor}01`} />
+
             </div>
             <div className="space-y-2">
               <Label htmlFor="roomEnd">To Room</Label>
@@ -141,8 +141,8 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
                 id="roomEnd"
                 value={roomEnd}
                 onChange={(e) => setRoomEnd(e.target.value)}
-                placeholder={`${floor}09`}
-              />
+                placeholder={`${floor}09`} />
+
             </div>
           </div>
 
@@ -180,49 +180,49 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
             </p>
           </div>
 
-          {roomCount > 0 && (
-            <div className="rounded-lg bg-muted/50 p-3">
+          {roomCount > 0 &&
+          <div className="rounded-lg bg-muted/50 p-3">
               <p className="text-sm font-medium mb-2">Preview ({roomCount} rooms):</p>
               <div className="flex flex-wrap gap-1.5">
-                {previewRooms.map(roomNo => (
-                  <span 
-                    key={roomNo} 
-                    className={`px-2 py-1 rounded text-xs ${
-                      existingRoomNos.includes(roomNo) 
-                        ? 'bg-destructive/20 text-destructive line-through' 
-                        : 'bg-primary/20 text-primary'
-                    }`}
-                  >
+                {previewRooms.map((roomNo) =>
+              <span
+                key={roomNo}
+                className={`px-2 py-1 rounded text-xs ${
+                existingRoomNos.includes(roomNo) ?
+                'bg-destructive/20 text-destructive line-through' :
+                'bg-primary/20 text-primary'}`
+                }>
+
                     {roomNo}
                   </span>
-                ))}
+              )}
                 {hasMore && <span className="px-2 py-1 text-xs text-muted-foreground">...+{roomCount - 5} more</span>}
               </div>
-              {existingRoomNos.some(r => previewRooms.includes(r)) && (
-                <p className="text-xs text-muted-foreground mt-2">
+              {existingRoomNos.some((r) => previewRooms.includes(r)) &&
+            <p className="text-xs text-muted-foreground mt-2">
                   Crossed out rooms already exist and will be skipped
                 </p>
-              )}
+            }
             </div>
-          )}
+          }
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAddRooms} disabled={isAdding || roomCount === 0}>
-            {isAdding ? (
-              <>
+          <Button onClick={handleAddRooms} disabled={isAdding || roomCount === 0} className="mb-[12px]">
+            {isAdding ?
+            <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Adding...
-              </>
-            ) : (
-              <>Add {roomCount} Room{roomCount !== 1 ? 's' : ''}</>
-            )}
+              </> :
+
+            <>Add {roomCount} Room{roomCount !== 1 ? 's' : ''}</>
+            }
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 };
