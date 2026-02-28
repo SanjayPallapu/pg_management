@@ -82,9 +82,25 @@ export const useAuth = () => {
     );
 
     // INITIAL load (controls isLoading) - fetch session AND role before setting loading false
+    // Add timeout to prevent infinite hang from stale token refresh
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Auth session timeout')), 4000)
+        );
+
+        let session: Session | null = null;
+        try {
+          const result = await Promise.race([sessionPromise, timeoutPromise]);
+          session = result.data.session;
+        } catch (err) {
+          console.warn('[Auth] getSession timed out or failed, clearing stale session:', err);
+          // Clear stale tokens that cause infinite refresh loops
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+          session = null;
+        }
+
         if (!isMounted) return;
 
         console.debug('[Auth] Initial session', { userId: session?.user?.id ?? null });
