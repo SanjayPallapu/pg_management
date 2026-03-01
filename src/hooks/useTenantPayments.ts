@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { TenantPayment, PaymentEntry } from '@/types';
 import { useAuditLog } from './useAuditLog';
 import { usePG } from '@/contexts/PGContext';

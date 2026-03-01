@@ -6,7 +6,7 @@ import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { PaymentEntry } from '@/types';
 import { usePG } from '@/contexts/PGContext';
 

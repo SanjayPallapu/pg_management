@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Wand2, Loader2 } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
 import { usePGSetup } from '@/hooks/usePGSetup';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { toast } from 'sonner';
 
 interface LogoUpdateDialogProps {

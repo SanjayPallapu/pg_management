@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { PG, Subscription } from '@/types/pg';
 import { useAuth } from '@/hooks/useAuth';
 

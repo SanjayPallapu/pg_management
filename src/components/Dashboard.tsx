@@ -22,7 +22,7 @@ import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { useRealtimePayments } from "@/hooks/useRealtimePayments";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/proxyClient";
 import { useAuth } from "@/hooks/useAuth";
 import { DayGuestSheet } from "./DayGuestSheet";
 import { SecurityDepositCard } from "./SecurityDepositCard";

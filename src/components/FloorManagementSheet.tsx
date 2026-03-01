@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Trash2, Edit2, Plus, Building2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { usePG } from '@/contexts/PGContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
