@@ -120,7 +120,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     try {
       await refreshSubscription();
       // After refresh, check the NEW subscription status
-      const { data } = await import('@/integrations/supabase/client').then(m => 
+      const { data } = await import('@/integrations/supabase/proxyClient').then(m => 
         m.supabase.from('subscriptions').select('status').maybeSingle()
       );
       

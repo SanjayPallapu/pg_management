@@ -4,7 +4,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { usePG } from '@/contexts/PGContext';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { PaymentEntry, Room } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { getTotalRefunded } from '@/utils/refundStore';

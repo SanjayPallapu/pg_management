@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/proxyClient';
 import { useAuth } from './useAuth';
 import { usePG } from '@/contexts/PGContext';
 import { toast } from 'sonner';
