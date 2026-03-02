@@ -47,7 +47,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
-  
+
   const [modeFilter, setModeFilter] = useState<FilterType>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
@@ -59,9 +59,9 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
 
   // Build tenant lookup with joining date
   const tenantLookup = useMemo(() => {
-    const lookup: Record<string, { name: string; roomNo: string; joiningDate: string }> = {};
-    rooms.forEach(room => {
-      room.tenants.forEach(tenant => {
+    const lookup: Record<string, {name: string;roomNo: string;joiningDate: string;}> = {};
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
         lookup[tenant.id] = { name: tenant.name, roomNo: room.roomNo, joiningDate: tenant.startDate };
       });
     });
@@ -71,11 +71,11 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
   // Group payments by tenant + month
   const groupedPayments = useMemo(() => {
     const groups: Map<string, TenantGroupedPayment> = new Map();
-    
-    payments.forEach(payment => {
+
+    payments.forEach((payment) => {
       const tenant = tenantLookup[payment.tenantId];
       if (!tenant) return;
-      
+
       const paymentEntries = payment.paymentEntries || [];
       if (paymentEntries.length === 0) return;
 
@@ -84,9 +84,9 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
-      
+
       if (dateFilter === 'current-month') {
-        filteredEntries = filteredEntries.filter(e => {
+        filteredEntries = filteredEntries.filter((e) => {
           const entryDate = new Date(e.date);
           return entryDate.getMonth() + 1 === currentMonth && entryDate.getFullYear() === currentYear;
         });
@@ -97,32 +97,32 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
           lastMonth = 12;
           lastYear -= 1;
         }
-        filteredEntries = filteredEntries.filter(e => {
+        filteredEntries = filteredEntries.filter((e) => {
           const entryDate = new Date(e.date);
           return entryDate.getMonth() + 1 === lastMonth && entryDate.getFullYear() === lastYear;
         });
       } else if (dateFilter === 'last-3-months') {
         const threeMonthsAgo = new Date(currentYear, currentMonth - 4, 1);
-        filteredEntries = filteredEntries.filter(e => new Date(e.date) >= threeMonthsAgo);
+        filteredEntries = filteredEntries.filter((e) => new Date(e.date) >= threeMonthsAgo);
       }
 
       // Apply mode filter
       if (modeFilter !== 'all') {
-        filteredEntries = filteredEntries.filter(e => e.mode === modeFilter);
+        filteredEntries = filteredEntries.filter((e) => e.mode === modeFilter);
       }
 
       if (filteredEntries.length === 0) return;
 
       const key = `${payment.tenantId}-${payment.month}-${payment.year}`;
-      
+
       const forPeriod = formatBillingRange(tenant.joiningDate, payment.year, payment.month);
-      
+
       const entries = filteredEntries.map((entry: PaymentEntry, index: number) => ({
         id: `${payment.id}-${index}`,
         amount: entry.amount,
         date: entry.date,
         mode: entry.mode,
-        type: entry.type,
+        type: entry.type
       }));
 
       const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
@@ -136,26 +136,26 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
         forPeriod,
         joiningDate: tenant.joiningDate,
         entries,
-        totalAmount,
+        totalAmount
       });
     });
-    
+
     // Sort by most recent first (by latest entry date)
     return Array.from(groups.values()).sort((a, b) => {
-      const aLatest = Math.max(...a.entries.map(e => new Date(e.date).getTime()));
-      const bLatest = Math.max(...b.entries.map(e => new Date(e.date).getTime()));
+      const aLatest = Math.max(...a.entries.map((e) => new Date(e.date).getTime()));
+      const bLatest = Math.max(...b.entries.map((e) => new Date(e.date).getTime()));
       return bLatest - aLatest;
     });
   }, [payments, tenantLookup, modeFilter, dateFilter]);
 
   // Calculate totals from all filtered entries
-  const allEntries = groupedPayments.flatMap(g => g.entries);
+  const allEntries = groupedPayments.flatMap((g) => g.entries);
   const totalAmount = allEntries.reduce((sum, e) => sum + e.amount, 0);
-  const upiTotal = allEntries.filter(e => e.mode === 'upi').reduce((sum, e) => sum + e.amount, 0);
-  const cashTotal = allEntries.filter(e => e.mode === 'cash').reduce((sum, e) => sum + e.amount, 0);
+  const upiTotal = allEntries.filter((e) => e.mode === 'upi').reduce((sum, e) => sum + e.amount, 0);
+  const cashTotal = allEntries.filter((e) => e.mode === 'cash').reduce((sum, e) => sum + e.amount, 0);
 
   const toggleExpand = (key: string) => {
-    setExpandedCards(prev => {
+    setExpandedCards((prev) => {
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
@@ -168,18 +168,18 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
-      >
+      <SheetContent
+        side="right"
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}>
+
         <SheetHeader className="pb-2">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">
               Payment History
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+            
+
+
           </div>
         </SheetHeader>
 
@@ -205,16 +205,16 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
               variant={modeFilter === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setModeFilter('all')}
-              className="flex-1"
-            >
+              className="flex-1">
+
               All
             </Button>
             <Button
               variant={modeFilter === 'upi' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setModeFilter('upi')}
-              className="flex-1 gap-1"
-            >
+              className="flex-1 gap-1">
+
               <UpiLogo className="h-4 w-4" />
               UPI
             </Button>
@@ -222,8 +222,8 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
               variant={modeFilter === 'cash' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setModeFilter('cash')}
-              className="flex-1 gap-1"
-            >
+              className="flex-1 gap-1">
+
               <CashLogo className="h-4 w-4" />
               Cash
             </Button>
@@ -254,16 +254,16 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
         {/* Grouped Transaction List */}
         <ScrollArea className={isMobile ? "h-[calc(100vh-320px)]" : "h-[calc(100vh-300px)] mt-2"}>
           <div className="space-y-3 pr-2">
-            {groupedPayments.map(group => {
+            {groupedPayments.map((group) => {
               const key = `${group.tenantId}-${group.month}-${group.year}`;
               const isExpanded = expandedCards.has(key) || group.entries.length <= 2;
               const displayEntries = isExpanded ? group.entries : group.entries.slice(0, 2);
-              
+
               return (
-                <div 
+                <div
                   key={key}
-                  className="p-3 rounded-lg border bg-card"
-                >
+                  className="p-3 rounded-lg border bg-card">
+
                   {/* Header */}
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
@@ -284,8 +284,8 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
 
                   {/* Transaction entries */}
                   <div className="space-y-1.5 pt-2 border-t">
-                    {displayEntries.map(entry => (
-                      <div key={entry.id} className="flex items-center justify-between text-sm">
+                    {displayEntries.map((entry) =>
+                    <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground">
                             {format(new Date(entry.date), 'dd MMM yyyy')}
@@ -294,62 +294,62 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
                           <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge 
-                            variant="outline" 
-                            className={
-                              entry.type === 'full' 
-                                ? 'bg-paid/10 text-paid border-paid/30 text-xs' 
-                                : entry.type === 'remaining'
-                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs'
-                                : 'bg-partial/10 text-partial border-partial/30 text-xs'
-                            }
-                          >
+                          <Badge
+                          variant="outline"
+                          className={
+                          entry.type === 'full' ?
+                          'bg-paid/10 text-paid border-paid/30 text-xs' :
+                          entry.type === 'remaining' ?
+                          'bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs' :
+                          'bg-partial/10 text-partial border-partial/30 text-xs'
+                          }>
+
                             {entry.type === 'full' ? 'Full' : entry.type === 'remaining' ? 'Final' : 'Partial'}
                           </Badge>
                           <div className="flex items-center gap-1">
-                            {entry.mode === 'upi' ? (
-                              <UpiLogo className="h-3 w-3" />
-                            ) : (
-                              <CashLogo className="h-3 w-3" />
-                            )}
+                            {entry.mode === 'upi' ?
+                          <UpiLogo className="h-3 w-3" /> :
+
+                          <CashLogo className="h-3 w-3" />
+                          }
                             <span className="text-xs text-muted-foreground capitalize">{entry.mode}</span>
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
 
                   {/* Expand/Collapse button */}
-                  {group.entries.length > 2 && (
-                    <button
-                      onClick={() => toggleExpand(key)}
-                      className="w-full mt-2 pt-2 border-t flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {isExpanded ? (
-                        <>
+                  {group.entries.length > 2 &&
+                  <button
+                    onClick={() => toggleExpand(key)}
+                    className="w-full mt-2 pt-2 border-t flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+
+                      {isExpanded ?
+                    <>
                           <ChevronUp className="h-3 w-3" />
                           Show less
-                        </>
-                      ) : (
-                        <>
+                        </> :
+
+                    <>
                           <ChevronDown className="h-3 w-3" />
                           Show {group.entries.length - 2} more
                         </>
-                      )}
+                    }
                     </button>
-                  )}
-                </div>
-              );
+                  }
+                </div>);
+
             })}
 
-            {groupedPayments.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
+            {groupedPayments.length === 0 &&
+            <div className="text-center text-muted-foreground py-8">
                 No transactions found
               </div>
-            )}
+            }
           </div>
         </ScrollArea>
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>);
+
 };
