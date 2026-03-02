@@ -58,10 +58,10 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
         {children}
-        <SheetPrimitive.Close className="absolute left-4 top-4 rounded-full h-8 w-8 flex items-center justify-center opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <ArrowLeft className="h-5 w-5" />
-          <span className="sr-only">Back</span>
-        </SheetPrimitive.Close>
+        
+
+
+
       </SheetPrimitive.Content>
     </SheetPortal>
 
@@ -82,7 +82,7 @@ const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>>(
   ({ className, ...props }, ref) =>
-  <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground ml-[30px]", className)} {...props} />
+  <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground ml-0", className)} {...props} />
 );
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
 
