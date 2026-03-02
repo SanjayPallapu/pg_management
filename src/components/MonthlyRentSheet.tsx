@@ -383,8 +383,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     };
   }, [selectedMonth, selectedYear, payments, rooms]);
   const stats = useMemo(() => {
-    // Exclude locked tenants from stats
-    const unlockedTenants = tenantsWithPayments.filter((t) => !t.isLocked);
+    // Exclude locked tenants AND left tenants from stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const unlockedTenants = tenantsWithPayments.filter((t) => {
+      if (t.isLocked) return false;
+      // Exclude left tenants from pending/collected stats
+      if (t.endDate) {
+        const endDate = new Date(t.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        if (endDate <= today) return false;
+      }
+      return true;
+    });
     const paid = unlockedTenants.filter((t) => t.payment.paymentStatus === "Paid");
     const partial = unlockedTenants.filter((t) => t.payment.paymentStatus === "Partial");
     const pending = unlockedTenants.filter((t) => t.payment.paymentStatus === "Pending");
