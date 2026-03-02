@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
@@ -99,6 +99,21 @@ const Index = () => {
   const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user, isNewSignup } = useAuth();
   const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Fetch pending approval count for admin badge
+  const { data: pendingApprovalCount = 0 } = useQuery({
+    queryKey: ['pending-approval-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('payment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: isAdmin,
+    refetchInterval: 30000, // refresh every 30s
+  });
   const handleSignOut = async () => {
     const { error } = await signOut();
     // Navigate to auth page regardless of error (session may already be invalid)
@@ -240,10 +255,15 @@ const Index = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-8 flex-shrink-0 text-xs"
+                  className="h-8 flex-shrink-0 text-xs relative"
                   onClick={() => setAdminApprovalOpen(true)}
                 >
                   Approvals
+                  {pendingApprovalCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1">
+                      {pendingApprovalCount > 99 ? '99+' : pendingApprovalCount}
+                    </span>
+                  )}
                 </Button>
               )}
               <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSignOut} title="Sign Out">
