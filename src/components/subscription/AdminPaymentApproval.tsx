@@ -128,8 +128,8 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+          <SheetHeader className="text-center">
+            <SheetTitle className="flex items-center justify-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
               Payment Approvals
             </SheetTitle>
