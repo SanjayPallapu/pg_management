@@ -104,7 +104,7 @@ const Auth = () => {
         setIsSubmitting(false);
       } else {
         toast.success("Signed in successfully");
-        navigate("/", { replace: true });
+        // Navigation handled by useEffect watching isAuthenticated
       }
     } catch {
       toast.error("Sign in failed. Please try again.");
