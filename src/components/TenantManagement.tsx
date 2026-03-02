@@ -662,8 +662,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className="text-center">
+          <DialogTitle className="flex items-center justify-center gap-2">
             Room {room.roomNo}
             <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
           </DialogTitle>
