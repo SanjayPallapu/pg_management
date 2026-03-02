@@ -228,13 +228,17 @@ export const PreviousMonthOverdueCard = () => {
       return aDate.getTime() - bDate.getTime();
     });
 
-    return {
+      // Filter out left tenants from still pending list
+      const activePendingList = pendingList.filter(t => t.remaining > 0 && !t.hasLeft);
+      const activePendingTotal = activePendingList.reduce((sum, t) => sum + t.remaining, 0);
+
+      return {
       collectedData: details,
       totalCollected: total,
       upiTotal: totalUpi,
       cashTotal: totalCash,
-      totalOverdue: totalOverdueAmount,
-      stillPendingTenants: pendingList.filter(t => t.remaining > 0),
+      totalOverdue: activePendingTotal,
+      stillPendingTenants: activePendingList,
     };
   }, [rooms, payments, prevMonth, prevYear, selectedMonth, selectedYear]);
 
