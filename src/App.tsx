@@ -14,8 +14,8 @@ import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
- import { PGProvider } from "@/contexts/PGContext";
-import { useAuth } from "@/hooks/useAuth";
+import { PGProvider } from "@/contexts/PGContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 // Protected route component that wraps children with PGProvider
@@ -117,11 +117,13 @@ const App = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="pg-manager-theme">
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AppContent />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppContent />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
