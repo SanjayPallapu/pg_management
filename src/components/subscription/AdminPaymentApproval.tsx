@@ -17,7 +17,8 @@ import {
   Image as ImageIcon,
   Loader2,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -128,8 +129,17 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-4 rounded-full"
+            onClick={() => onOpenChange(false)}
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <SheetHeader className="text-center">
-            <SheetTitle className="flex items-center justify-center gap-2">
+            <SheetTitle className="flex items-center justify-center gap-2 pl-8">
               <CreditCard className="h-5 w-5 text-primary" />
               Payment Approvals
             </SheetTitle>
