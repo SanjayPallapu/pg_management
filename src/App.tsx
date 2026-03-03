@@ -21,17 +21,9 @@ import { Loader2 } from "lucide-react";
 // Protected route component that wraps children with PGProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, hasRole, isLoading } = useAuth();
-  const [timedOut, setTimedOut] = useState(false);
 
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => setTimedOut(true), 5000);
-      return () => clearTimeout(timer);
-    }
-    setTimedOut(false);
-  }, [isLoading]);
-
-  if (isLoading && !timedOut) {
+  // While still loading auth state, show spinner (max 1s due to useAuth's force timeout)
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

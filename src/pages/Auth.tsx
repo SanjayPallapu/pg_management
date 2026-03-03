@@ -104,7 +104,8 @@ const Auth = () => {
         setIsSubmitting(false);
       } else {
         toast.success("Signed in successfully");
-        // Navigation handled by useEffect watching isAuthenticated
+        // Navigate immediately after successful sign-in
+        navigate("/", { replace: true });
       }
     } catch {
       toast.error("Sign in failed. Please try again.");
@@ -136,11 +137,13 @@ const Auth = () => {
         is_new_signup: true
       });
 
-      setIsSubmitting(false);
       if (profileError) {
         console.error("Error creating profile:", profileError);
       }
-      toast.success("Account created! You can now sign in.");
+      setIsSubmitting(false);
+      toast.success("Account created!");
+      // Navigate to dashboard — onboarding wizard triggers via isNewSignup flag
+      navigate("/", { replace: true });
     } else {
       setIsSubmitting(false);
       toast.success("Account created! You can now sign in.");
