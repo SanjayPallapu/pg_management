@@ -171,6 +171,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = (): AuthContextType => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) {
+    // Return a safe default during initial render before provider mounts
+    return {
+      user: null,
+      session: null,
+      role: null,
+      isLoading: true,
+      isNewSignup: false,
+      isAuthenticated: false,
+      hasRole: false,
+      isAdmin: false,
+      isStaff: false,
+      signIn: async () => ({ error: new Error('Auth not ready') }),
+      signUp: async () => ({ data: null, error: new Error('Auth not ready') }),
+      signOut: async () => ({ error: new Error('Auth not ready') }),
+    };
+  }
   return ctx;
 };
