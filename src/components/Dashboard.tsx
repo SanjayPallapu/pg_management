@@ -385,12 +385,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <Collapsible open={toolsOpen} onOpenChange={setToolsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
             <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-primary" />
+              <Settings className={`h-4 w-4 text-primary transition-transform duration-500 ${toolsOpen ? "rotate-180" : ""}`} />
               <span className="font-semibold text-sm">Tools & Admin</span>
             </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}
-            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3">

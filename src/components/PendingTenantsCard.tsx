@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -124,8 +124,17 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" className="h-[85vh]">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-4 rounded-full"
+            onClick={() => setSheetOpen(false)}
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <SheetHeader>
-            <SheetTitle>Select Pending Tenants</SheetTitle>
+            <SheetTitle className="pl-8">Select Pending Tenants</SheetTitle>
           </SheetHeader>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, MessageCircle, Receipt, Phone } from 'lucide-react';
+import { Search, MessageCircle, Receipt, Phone, ArrowLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -391,8 +391,17 @@ export const SecurityDepositCard = ({
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-4 rounded-full"
+            onClick={() => setSheetOpen(false)}
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <SheetHeader>
-            <SheetTitle className="flex items-center justify-center gap-2">
+            <SheetTitle className="flex items-center justify-center gap-2 pl-8">
               <Wallet className="h-5 w-5" />
               Security Deposits
             </SheetTitle>
