@@ -115,10 +115,10 @@ const Index = () => {
     refetchInterval: 30000, // refresh every 30s
   });
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    // Navigate to auth page regardless of error (session may already be invalid)
+    await signOut();
     toast.success("Signed out successfully");
-    navigate("/auth");
+    // Full page reload to clear all cached state
+    window.location.href = "/auth";
   };
 
   useEffect(() => {
