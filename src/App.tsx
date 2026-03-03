@@ -40,7 +40,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/landing" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <PGProvider>{children}</PGProvider>;
