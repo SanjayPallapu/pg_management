@@ -353,9 +353,18 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-4 rounded-full"
+            onClick={() => onOpenChange(false)}
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <SheetHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-base text-destructive">
+              <SheetTitle className="text-base text-destructive pl-8">
                 Previous Month Overdue
               </SheetTitle>
               <div className="flex items-center gap-1">
@@ -367,9 +376,6 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                   title="Payment History"
                 >
                   <History className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </div>
             </div>
