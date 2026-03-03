@@ -17,7 +17,8 @@ import {
   Sparkles,
   Bell,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  ArrowLeft
 } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
@@ -85,8 +86,17 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 top-4 rounded-full"
+          onClick={() => onOpenChange(false)}
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         <SheetHeader>
-          <SheetTitle className="flex items-center justify-center gap-2">
+          <SheetTitle className="flex items-center justify-center gap-2 pl-8">
             <Crown className="h-5 w-5 text-amber-500" />
             Subscription Details
           </SheetTitle>

@@ -35,13 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isMounted) {
         setIsLoading(prev => {
           if (prev) {
-            console.warn('[Auth] Force-ending loading state after 1s deadline');
+            console.warn('[Auth] Force-ending loading state after 2s deadline');
             return false;
           }
           return prev;
         });
       }
-    }, 1000);
+    }, 2000);
 
     const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
       try {
@@ -50,9 +50,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select('role')
           .eq('user_id', userId)
           .maybeSingle();
-        if (error) return null;
+        if (error) {
+          console.error('[Auth] Error fetching user role:', error.message);
+          // Retry once after a short delay (proxy/timing issues)
+          await new Promise(r => setTimeout(r, 500));
+          const retry = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (retry.error) {
+            console.error('[Auth] Retry also failed:', retry.error.message);
+            return null;
+          }
+          console.log('[Auth] Retry succeeded, role:', retry.data?.role);
+          return retry.data?.role as AppRole | null;
+        }
+        console.log('[Auth] User role fetched:', data?.role);
         return data?.role as AppRole | null;
-      } catch {
+      } catch (e) {
+        console.error('[Auth] Exception fetching role:', e);
         return null;
       }
     };
