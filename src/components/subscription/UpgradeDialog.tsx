@@ -18,7 +18,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
 import { SUBSCRIPTION_PLANS, PAYMENT_METHODS, ADMIN_UPI_ID, ADMIN_WHATSAPP } from '@/types/pg';
 import { toast } from 'sonner';
@@ -38,7 +38,7 @@ const PAYMENT_ICONS = {
 export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const { subscription } = usePG();
   const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
-  const { initiateCheckout, isLoading: stripeLoading } = useStripeCheckout();
+  const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
@@ -237,7 +237,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             <Button
               className="w-full gap-2 py-6 text-base"
               onClick={() => {
-                initiateCheckout({
+                initiatePayment({
                   plan: selectedPlan,
                   amount: currentPlan.price,
                   onSuccess: () => {
@@ -245,9 +245,9 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                   },
                 });
               }}
-              disabled={stripeLoading}
+              disabled={razorpayLoading}
             >
-              {stripeLoading ? (
+              {razorpayLoading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
               ) : (
                 <><Zap className="h-5 w-5" /> Pay ₹{currentPlan.price} Online (Card/UPI/Net Banking)</>

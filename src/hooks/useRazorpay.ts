@@ -105,8 +105,6 @@ export const useRazorpay = () => {
         toast.error(errorMessage);
         setIsLoading(false);
         onFailure?.();
-      } finally {
-        setIsLoading(false);
       }
     },
     [scriptLoaded]
