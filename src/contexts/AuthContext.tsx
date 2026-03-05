@@ -152,13 +152,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = useCallback(async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
+    // Set flag BEFORE signUp so onAuthStateChange handler picks it up
+    sessionStorage.setItem('isNewSignup', 'true');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: redirectUrl },
     });
-    if (!error && data?.user) {
-      sessionStorage.setItem('isNewSignup', 'true');
+    if (error) {
+      // Remove flag on error
+      sessionStorage.removeItem('isNewSignup');
+    } else if (data?.user) {
+      // Also update state directly in case onAuthStateChange already fired
+      setIsNewSignup(true);
     }
     return { data, error };
   }, []);
