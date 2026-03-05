@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import appLogo from '@/assets/pg-logo.png';
 import {
   Building,
   Users,
@@ -201,8 +202,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             exit={{ opacity: 0, y: -20 }}
             className="text-center space-y-6 max-w-md mx-auto"
           >
-            <div className="h-20 w-20 rounded-full bg-primary/10 mx-auto flex items-center justify-center">
-              <Building className="h-10 w-10 text-primary" />
+            <div className="mx-auto">
+              <img src={appLogo} alt="PG Manager" className="h-44 w-44 object-contain" />
             </div>
             
             <div>
