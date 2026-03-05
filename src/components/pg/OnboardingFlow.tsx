@@ -10,6 +10,10 @@ import featureReceipts from '@/assets/features/smart-receipts.png';
 import featureReminders from '@/assets/features/payment-reminders.png';
 import featureReports from '@/assets/features/daily-reports.png';
 import featureUPI from '@/assets/features/upi-payments.png';
+import payGpay from '@/assets/payments/gpay.png';
+import payPhonePe from '@/assets/payments/phonepe.png';
+import payPaytm from '@/assets/payments/paytm.png';
+import payUPI from '@/assets/payments/upi.png';
 import {
   Building,
   Users,
@@ -79,11 +83,11 @@ const FEATURES = [
   },
 ];
 
-const PAYMENT_ICONS = {
-  upi: Smartphone,
-  gpay: Wallet,
-  phonepe: CreditCard,
-  paytm: Smartphone,
+const PAYMENT_IMAGES: Record<string, string> = {
+  gpay: payGpay,
+  phonepe: payPhonePe,
+  paytm: payPaytm,
+  upi: payUPI,
 };
 
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
@@ -255,7 +259,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 >
                   <Card className="h-full hover:border-primary/50 transition-colors">
                     <CardContent className="pt-4 text-center">
-                      <div className="h-12 w-12 rounded-xl mx-auto mb-3 overflow-hidden">
+                      <div className="h-14 w-14 rounded-2xl mx-auto mb-3 overflow-hidden shadow-md">
                         <img src={feature.image} alt={feature.title} className="h-full w-full object-cover" />
                       </div>
                       <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
@@ -444,7 +448,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             {/* Payment Methods */}
             <div className="grid grid-cols-2 gap-3">
               {PAYMENT_METHODS.map((method) => {
-                const Icon = PAYMENT_ICONS[method.id as keyof typeof PAYMENT_ICONS];
+                const imgSrc = PAYMENT_IMAGES[method.id];
                 return (
                   <Card
                     key={method.id}
@@ -452,7 +456,9 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                     onClick={() => handleMethodSelect(method.id)}
                   >
                     <CardContent className="py-4 text-center">
-                      <Icon className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <div className="h-10 w-10 rounded-lg mx-auto mb-2 overflow-hidden">
+                        <img src={imgSrc} alt={method.name} className="h-full w-full object-cover" />
+                      </div>
                       <p className="font-medium text-sm">{method.name}</p>
                     </CardContent>
                   </Card>
