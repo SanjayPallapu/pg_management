@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import appLogo from '@/assets/pg-logo.png';
+import featureMultiPG from '@/assets/features/multi-pg.png';
+import featureTenants from '@/assets/features/tenant-tracking.png';
+import featureReceipts from '@/assets/features/smart-receipts.png';
+import featureReminders from '@/assets/features/payment-reminders.png';
+import featureReports from '@/assets/features/daily-reports.png';
+import featureUPI from '@/assets/features/upi-payments.png';
 import {
   Building,
   Users,
@@ -42,32 +48,32 @@ type Step = 'welcome' | 'features' | 'plans' | 'payment' | 'pending' | 'setup';
 
 const FEATURES = [
   {
-    icon: Building,
+    image: featureMultiPG,
     title: 'Multi-PG Management',
     description: 'Manage multiple PGs from a single dashboard',
   },
   {
-    icon: Users,
+    image: featureTenants,
     title: 'Tenant Tracking',
     description: 'Track all tenants, rooms, and occupancy',
   },
   {
-    icon: Receipt,
+    image: featureReceipts,
     title: 'Smart Receipts',
     description: 'Generate beautiful payment receipts instantly',
   },
   {
-    icon: Bell,
+    image: featureReminders,
     title: 'Payment Reminders',
     description: 'Send image-based reminders via WhatsApp',
   },
   {
-    icon: BarChart3,
+    image: featureReports,
     title: 'Daily Reports',
     description: 'Get daily activity summary with all collections',
   },
   {
-    icon: Smartphone,
+    image: featureUPI,
     title: 'UPI-First Payments',
     description: 'Accept payments via UPI, GPay, PhonePe',
   },
@@ -249,8 +255,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 >
                   <Card className="h-full hover:border-primary/50 transition-colors">
                     <CardContent className="pt-4 text-center">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 mx-auto flex items-center justify-center mb-3">
-                        <feature.icon className="h-5 w-5 text-primary" />
+                      <div className="h-12 w-12 rounded-xl mx-auto mb-3 overflow-hidden">
+                        <img src={feature.image} alt={feature.title} className="h-full w-full object-cover" />
                       </div>
                       <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
                       <p className="text-xs text-muted-foreground">{feature.description}</p>
