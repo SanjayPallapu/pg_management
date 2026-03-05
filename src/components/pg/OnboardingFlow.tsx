@@ -202,8 +202,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             exit={{ opacity: 0, y: -20 }}
             className="text-center space-y-6 max-w-md mx-auto"
           >
-            <div className="mx-auto">
-              <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-48 w-48 rounded-2xl object-cover shadow-lg" />
+            <div className="flex justify-center">
+              <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
             </div>
             
             <div>
