@@ -20,7 +20,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [sheetType, setSheetType] = useState<'joined' | 'left' | null>(null);
 
-  const { joined, left, joinedTenants, leftTenants } = useMemo(() => {
+  const { joined, left, joinedTenants, leftTenants, joinedTotal, leftTotal } = useMemo(() => {
     const joinedList: TenantWithRoom[] = [];
     const leftList: TenantWithRoom[] = [];
 
