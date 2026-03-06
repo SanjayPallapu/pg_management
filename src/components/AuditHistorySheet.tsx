@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { format, isWithinInterval, startOfDay, endOfDay, subDays, subMonths, parseISO } from 'date-fns';
-import { Plus, Pencil, Trash2, Loader2, Search, X, CalendarIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, X, CalendarIcon, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 interface AuditHistorySheetProps {
   open: boolean;
