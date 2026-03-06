@@ -90,7 +90,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
                 <UserMinus className="h-4 w-4 text-pending" />
               </div>
               <div className="text-2xl font-bold text-pending">{left}</div>
-              <p className="text-xs text-muted-foreground">Tenants left this month</p>
+              <p className="text-xs text-muted-foreground">₹{leftTotal.toLocaleString()}/mo total</p>
             </div>
           </div>
         </CardContent>
