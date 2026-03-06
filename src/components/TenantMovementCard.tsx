@@ -20,7 +20,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [sheetType, setSheetType] = useState<'joined' | 'left' | null>(null);
 
-  const { joined, left, joinedTenants, leftTenants } = useMemo(() => {
+  const { joined, left, joinedTenants, leftTenants, joinedTotal, leftTotal } = useMemo(() => {
     const joinedList: TenantWithRoom[] = [];
     const leftList: TenantWithRoom[] = [];
 
@@ -50,11 +50,16 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
     joinedList.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
     leftList.sort((a, b) => new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime());
 
+    const joinedTotal = joinedList.reduce((sum, t) => sum + t.monthlyRent, 0);
+    const leftTotal = leftList.reduce((sum, t) => sum + t.monthlyRent, 0);
+
     return { 
       joined: joinedList.length, 
       left: leftList.length,
       joinedTenants: joinedList,
       leftTenants: leftList,
+      joinedTotal,
+      leftTotal,
     };
   }, [rooms, selectedMonth, selectedYear]);
 
@@ -74,7 +79,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
                 <UserPlus className="h-4 w-4 text-paid" />
               </div>
               <div className="text-2xl font-bold text-paid">{joined}</div>
-              <p className="text-xs text-muted-foreground">New tenants this month</p>
+              <p className="text-xs text-muted-foreground">₹{joinedTotal.toLocaleString()}/mo total</p>
             </div>
             <div 
               className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
@@ -85,7 +90,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
                 <UserMinus className="h-4 w-4 text-pending" />
               </div>
               <div className="text-2xl font-bold text-pending">{left}</div>
-              <p className="text-xs text-muted-foreground">Tenants left this month</p>
+              <p className="text-xs text-muted-foreground">₹{leftTotal.toLocaleString()}/mo total</p>
             </div>
           </div>
         </CardContent>

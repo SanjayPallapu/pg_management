@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { format, isWithinInterval, startOfDay, endOfDay, subDays, subMonths, parseISO } from 'date-fns';
-import { Plus, Pencil, Trash2, Loader2, Search, X, CalendarIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, X, CalendarIcon, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 interface AuditHistorySheetProps {
   open: boolean;
@@ -360,9 +360,14 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md [&>button]:hidden">
         <SheetHeader>
-          <SheetTitle>Activity History</SheetTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <SheetTitle>Activity History</SheetTitle>
+          </div>
         </SheetHeader>
 
         {/* Filters */}
