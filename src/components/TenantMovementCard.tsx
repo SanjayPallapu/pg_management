@@ -50,11 +50,16 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
     joinedList.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
     leftList.sort((a, b) => new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime());
 
+    const joinedTotal = joinedList.reduce((sum, t) => sum + t.monthlyRent, 0);
+    const leftTotal = leftList.reduce((sum, t) => sum + t.monthlyRent, 0);
+
     return { 
       joined: joinedList.length, 
       left: leftList.length,
       joinedTenants: joinedList,
       leftTenants: leftList,
+      joinedTotal,
+      leftTotal,
     };
   }, [rooms, selectedMonth, selectedYear]);
 

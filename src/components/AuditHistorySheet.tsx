@@ -360,9 +360,14 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md [&>button]:hidden">
         <SheetHeader>
-          <SheetTitle>Activity History</SheetTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <SheetTitle>Activity History</SheetTitle>
+          </div>
         </SheetHeader>
 
         {/* Filters */}
