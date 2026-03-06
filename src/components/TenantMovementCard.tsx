@@ -79,7 +79,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
                 <UserPlus className="h-4 w-4 text-paid" />
               </div>
               <div className="text-2xl font-bold text-paid">{joined}</div>
-              <p className="text-xs text-muted-foreground">New tenants this month</p>
+              <p className="text-xs text-muted-foreground">₹{joinedTotal.toLocaleString()}/mo total</p>
             </div>
             <div 
               className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
