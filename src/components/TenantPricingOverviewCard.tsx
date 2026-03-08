@@ -28,6 +28,7 @@ export const TenantPricingOverviewCard = () => {
   const { rooms } = useRooms();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+  const [selectedSharing, setSelectedSharing] = useState<number | null>(null);
 
   const today = new Date();
   const isCurrentMonth = selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
@@ -94,12 +95,18 @@ export const TenantPricingOverviewCard = () => {
 
   if (totalTenants === 0) return null;
 
+  const availableSharings = sharingGroups.map(g => g.sharing);
+  const filteredGroups = selectedSharing
+    ? sharingGroups.filter(g => g.sharing === selectedSharing)
+    : sharingGroups;
+
   const SHARE_COLORS: Record<number, string> = {
     1: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     2: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     3: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     4: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
     5: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
+    6: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
   };
 
   return (
@@ -123,8 +130,35 @@ export const TenantPricingOverviewCard = () => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="p-4 pt-0 space-y-3">
+            {/* Sharing type filter chips */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setSelectedSharing(null)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  selectedSharing === null
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                }`}
+              >
+                All
+              </button>
+              {availableSharings.map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSharing(selectedSharing === s ? null : s)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    selectedSharing === s
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                  }`}
+                >
+                  {s}S
+                </button>
+              ))}
+            </div>
+
             <div className="space-y-2">
-              {sharingGroups.map(group => {
+              {filteredGroups.map(group => {
                 const isExpanded = expandedGroups.has(group.sharing);
                 return (
                   <div key={group.sharing}>
