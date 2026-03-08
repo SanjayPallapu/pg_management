@@ -172,15 +172,19 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
         side="right"
         className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}>
 
-        <SheetHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-base">
-              Payment History
-            </SheetTitle>
-            
-
-
-          </div>
+        <SheetHeader className="pb-2 relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-0 top-0 rounded-full h-8 w-8"
+            aria-label="Back"
+            onClick={() => onOpenChange(false)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <SheetTitle className="text-base pl-8">
+            Payment History
+          </SheetTitle>
         </SheetHeader>
 
         {/* Filters */}
