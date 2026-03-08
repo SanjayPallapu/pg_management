@@ -47,6 +47,7 @@ import { OverduePaidCard } from "./OverduePaidCard";
 import { BalanceCard } from "./BalanceCard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
+import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
@@ -344,6 +345,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Expected Collection by Due Date */}
               <ExpectedCollectionCard />
+
+              {/* Tenant Pricing Overview - sharing wise breakdown */}
+              <TenantPricingOverviewCard />
             </div>
           </CollapsibleContent>
         </Collapsible>
