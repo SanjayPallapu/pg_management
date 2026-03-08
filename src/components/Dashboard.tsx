@@ -345,6 +345,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Expected Collection by Due Date */}
               <ExpectedCollectionCard />
+
+              {/* Tenant Pricing Overview - sharing wise breakdown */}
+              <TenantPricingOverviewCard />
             </div>
           </CollapsibleContent>
         </Collapsible>
