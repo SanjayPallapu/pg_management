@@ -111,7 +111,13 @@ export const TenantPricingOverviewCard = () => {
 
   return (
     <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Collapsible open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) {
+          setSelectedSharing(null);
+          setExpandedGroups(new Set(availableSharings));
+        }
+      }}>
         <CollapsibleTrigger className="w-full">
           <CardContent className="p-4 pb-3">
             <div className="flex items-center justify-between">
