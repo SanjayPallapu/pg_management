@@ -47,6 +47,7 @@ import { OverduePaidCard } from "./OverduePaidCard";
 import { BalanceCard } from "./BalanceCard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
+import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
