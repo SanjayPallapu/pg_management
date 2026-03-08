@@ -17,6 +17,7 @@ interface SharingGroup {
   sharing: number;
   label: string;
   tenantCount: number;
+  totalBeds: number;
   totalRent: number;
   standardRate: number;
   tenants: TenantInfo[];
