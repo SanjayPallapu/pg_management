@@ -95,12 +95,18 @@ export const TenantPricingOverviewCard = () => {
 
   if (totalTenants === 0) return null;
 
+  const availableSharings = sharingGroups.map(g => g.sharing);
+  const filteredGroups = selectedSharing
+    ? sharingGroups.filter(g => g.sharing === selectedSharing)
+    : sharingGroups;
+
   const SHARE_COLORS: Record<number, string> = {
     1: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     2: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     3: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     4: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
     5: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
+    6: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
   };
 
   return (
