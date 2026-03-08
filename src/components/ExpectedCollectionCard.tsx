@@ -65,14 +65,25 @@ export const ExpectedCollectionCard = () => {
   return (
     <>
       <Card>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-purple-500" />
-            <div>
-              <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
-              <p className="text-xs text-muted-foreground">Amount pending grouped by tenant joining day</p>
-            </div>
-          </div>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger className="w-full">
+            <CardContent className="p-4 pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-purple-500" />
+                  <div className="text-left">
+                    <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {!isOpen ? `₹${filteredTotal.toLocaleString()} from ${filteredTenantCount} tenants` : 'Amount pending grouped by tenant joining day'}
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CardContent>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="p-4 pt-0 space-y-3">
 
           {/* Date Range Filter */}
           <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/30 rounded-lg">
