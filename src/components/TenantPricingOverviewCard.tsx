@@ -17,6 +17,7 @@ interface SharingGroup {
   sharing: number;
   label: string;
   tenantCount: number;
+  totalBeds: number;
   totalRent: number;
   standardRate: number;
   tenants: TenantInfo[];
@@ -48,11 +49,15 @@ export const TenantPricingOverviewCard = () => {
           sharing,
           label: sharing === 1 ? 'Single' : `${sharing} Sharing`,
           tenantCount: 0,
+          totalBeds: 0,
           totalRent: 0,
           standardRate: BED_PRICING[sharing] || 4000,
           tenants: [],
         };
       }
+
+      // Add total bed capacity for this room
+      groupMap[sharing].totalBeds += room.capacity;
 
       activeTenants.forEach(t => {
         if (t.isLocked) return;
@@ -133,7 +138,7 @@ export const TenantPricingOverviewCard = () => {
                           <div>
                             <div className="text-sm font-semibold">{group.label}</div>
                             <div className="text-xs opacity-80">
-                              {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · ₹{group.standardRate.toLocaleString()}/bed
+                              {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · {group.totalBeds} beds · ₹{group.standardRate.toLocaleString()}/bed
                             </div>
                           </div>
                         </div>
