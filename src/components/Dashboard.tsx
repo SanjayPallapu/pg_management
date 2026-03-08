@@ -341,6 +341,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 stats={dayGuestStats ?? undefined}
                 isLoading={dayGuestStatsLoading}
               />
+
+              {/* Expected Collection by Due Date */}
+              <ExpectedCollectionCard />
             </div>
           </CollapsibleContent>
         </Collapsible>
