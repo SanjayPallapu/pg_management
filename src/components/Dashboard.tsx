@@ -343,11 +343,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 isLoading={dayGuestStatsLoading}
               />
 
-              {/* Expected Collection by Due Date */}
-              <ExpectedCollectionCard />
-
-              {/* Tenant Pricing Overview - sharing wise breakdown */}
-              <TenantPricingOverviewCard />
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -367,6 +362,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             <div className="grid gap-4 md:grid-cols-3 mb-6">
               {/* Pending Tenants Card */}
               <PendingTenantsCard rooms={rooms} />
+
+              {/* Expected Collection by Due Date */}
+              <ExpectedCollectionCard />
+
+              {/* Tenant Pricing Overview */}
+              <TenantPricingOverviewCard />
 
               {/* Tenant Movement Card */}
               <TenantMovementCard rooms={rooms} />
