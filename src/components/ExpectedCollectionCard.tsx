@@ -180,7 +180,9 @@ export const ExpectedCollectionCard = () => {
               </button>
             ))}
           </div>
-        </CardContent>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       <TenantsByDueDaySheet
