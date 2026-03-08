@@ -138,7 +138,7 @@ export const TenantPricingOverviewCard = () => {
                           <div>
                             <div className="text-sm font-semibold">{group.label}</div>
                             <div className="text-xs opacity-80">
-                              {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · ₹{group.standardRate.toLocaleString()}/bed
+                              {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · {group.totalBeds} beds · ₹{group.standardRate.toLocaleString()}/bed
                             </div>
                           </div>
                         </div>
