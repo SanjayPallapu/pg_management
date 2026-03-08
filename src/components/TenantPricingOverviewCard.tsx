@@ -136,35 +136,8 @@ export const TenantPricingOverviewCard = () => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="p-4 pt-0 space-y-3">
-            {/* Sharing type filter chips */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => setSelectedSharing(null)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  selectedSharing === null
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
-                }`}
-              >
-                All
-              </button>
-              {availableSharings.map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSharing(selectedSharing === s ? null : s)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    selectedSharing === s
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
-                  }`}
-                >
-                  {s}S
-                </button>
-              ))}
-            </div>
-
             <div className="space-y-2">
-              {filteredGroups.map(group => {
+              {sharingGroups.map(group => {
                 const isExpanded = expandedGroups.has(group.sharing);
                 return (
                   <div key={group.sharing}>
