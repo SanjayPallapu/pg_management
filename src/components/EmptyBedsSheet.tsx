@@ -193,13 +193,26 @@ export const EmptyBedsSheet = ({
             {Object.entries(bySharing)
               .sort(([a], [b]) => Number(b) - Number(a))
               .map(([capacity, data]) => (
-                <Badge key={capacity} variant="outline" className="py-1.5 px-3">
-                  <span className="font-medium">{capacity}-sharing</span>
-                  <span className="mx-2 text-muted-foreground">•</span>
-                  <span>{data.beds} beds</span>
-                  <span className="mx-2 text-muted-foreground">•</span>
-                  <span className="text-paid">₹{data.perBed.toLocaleString()}/bed</span>
-                </Badge>
+                <button
+                  key={capacity}
+                  onClick={() => setSharingFilter(sharingFilter === Number(capacity) ? null : Number(capacity))}
+                  className="inline-block"
+                >
+                  <Badge
+                    variant="outline"
+                    className={`py-1.5 px-3 cursor-pointer transition-colors ${
+                      sharingFilter === Number(capacity)
+                        ? 'bg-primary/15 border-primary'
+                        : 'hover:bg-accent/50'
+                    }`}
+                  >
+                    <span className="font-medium">{capacity}-sharing</span>
+                    <span className="mx-2 text-muted-foreground">•</span>
+                    <span>{data.beds} beds</span>
+                    <span className="mx-2 text-muted-foreground">•</span>
+                    <span className="text-paid">₹{data.perBed.toLocaleString()}/bed</span>
+                  </Badge>
+                </button>
               ))}
           </div>
         </div>
