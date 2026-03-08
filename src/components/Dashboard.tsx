@@ -363,6 +363,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               {/* Pending Tenants Card */}
               <PendingTenantsCard rooms={rooms} />
 
+              {/* Expected Collection by Due Date */}
+              <ExpectedCollectionCard />
+
+              {/* Tenant Pricing Overview */}
+              <TenantPricingOverviewCard />
+
               {/* Tenant Movement Card */}
               <TenantMovementCard rooms={rooms} />
 
