@@ -49,11 +49,15 @@ export const TenantPricingOverviewCard = () => {
           sharing,
           label: sharing === 1 ? 'Single' : `${sharing} Sharing`,
           tenantCount: 0,
+          totalBeds: 0,
           totalRent: 0,
           standardRate: BED_PRICING[sharing] || 4000,
           tenants: [],
         };
       }
+
+      // Add total bed capacity for this room
+      groupMap[sharing].totalBeds += room.capacity;
 
       activeTenants.forEach(t => {
         if (t.isLocked) return;
