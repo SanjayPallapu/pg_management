@@ -28,6 +28,7 @@ export const TenantPricingOverviewCard = () => {
   const { rooms } = useRooms();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+  const [selectedSharing, setSelectedSharing] = useState<number | null>(null);
 
   const today = new Date();
   const isCurrentMonth = selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
