@@ -52,6 +52,11 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
+        // Skip tenants who have already left
+        if (tenant.endDate && new Date(tenant.endDate) <= new Date(new Date().toDateString())) {
+          return;
+        }
+
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return;
         }
