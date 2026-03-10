@@ -2,7 +2,7 @@ import { useMemo, useState, useRef } from 'react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { Phone, MessageCircle, Receipt, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -52,6 +52,11 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
+        // Skip tenants who have already left
+        if (tenant.endDate && new Date(tenant.endDate) <= new Date(new Date().toDateString())) {
+          return;
+        }
+
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return;
         }
