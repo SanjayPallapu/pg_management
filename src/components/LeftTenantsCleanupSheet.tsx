@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Lock, AlertTriangle, IndianRupee, Calendar, Check } from 'lucide-react';
+import { Lock, AlertTriangle, IndianRupee, Calendar, Check, ArrowLeft } from 'lucide-react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
