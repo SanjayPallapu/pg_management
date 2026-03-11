@@ -12,6 +12,8 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
+import { lazy, Suspense } from "react";
+const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
