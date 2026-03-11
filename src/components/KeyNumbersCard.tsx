@@ -27,7 +27,7 @@ export const KeyNumbersCard = () => {
   const [editRoom, setEditRoom] = useState('');
   
   // Long press handling
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
 
   const { data: keyNumbers = [], isLoading } = useQuery({
