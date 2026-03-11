@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, Text, Float } from "@react-three/drei";
 import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
@@ -9,250 +9,266 @@ import { Button } from "@/components/ui/button";
 import * as THREE from "three";
 
 // ─── Types ──────────────────────────────────────────────────────────────
-interface BuildingData {
+interface FloorData {
   roomNo: string;
-  floor: number;
   capacity: number;
   occupancy: number;
-  rentAmount: number;
-  x: number;
-  z: number;
+  floor: number;
 }
 
-// ─── Glowing window material ────────────────────────────────────────────
-const WindowGrid = ({
-  width,
-  height,
+// ─── Window row for a single floor ─────────────────────────────────────
+const FloorWindows = ({
+  floorY,
+  floorHeight,
+  buildingWidth,
+  buildingDepth,
   occupancy,
   capacity,
 }: {
-  width: number;
-  height: number;
+  floorY: number;
+  floorHeight: number;
+  buildingWidth: number;
+  buildingDepth: number;
   occupancy: number;
   capacity: number;
 }) => {
-  const cols = Math.max(2, Math.ceil(width * 3));
-  const rows = Math.max(2, Math.ceil(height * 2));
-  const windows: JSX.Element[] = [];
+  const cols = 4;
+  const windowWidth = buildingWidth * 0.15;
+  const windowHeight = floorHeight * 0.5;
+  const occupancyRate = capacity > 0 ? occupancy / capacity : 0;
 
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const isLit = (r * cols + c) < occupancy || Math.random() < occupancy / Math.max(capacity, 1) * 0.8;
-      const wx = (c / (cols - 1) - 0.5) * (width * 0.7);
-      const wy = (r / (rows - 1) - 0.5) * (height * 0.7);
-      windows.push(
-        <mesh key={`${r}-${c}`} position={[wx, wy, 0]}>
-          <planeGeometry args={[width * 0.12, height * 0.08]} />
-          <meshStandardMaterial
-            color={isLit ? "#4fc3f7" : "#1a2332"}
-            emissive={isLit ? "#4fc3f7" : "#000000"}
-            emissiveIntensity={isLit ? 0.8 + Math.random() * 0.4 : 0}
-            transparent
-            opacity={isLit ? 0.95 : 0.3}
-          />
-        </mesh>
-      );
-    }
-  }
-
-  return <group>{windows}</group>;
-};
-
-// ─── Single building ────────────────────────────────────────────────────
-const CityBuilding = ({ data }: { data: BuildingData }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  const width = 0.8 + Math.random() * 0.4;
-  const depth = 0.8 + Math.random() * 0.4;
-  const height = 1.5 + data.capacity * 0.8 + data.floor * 0.5;
-
-  const occupancyRate = data.capacity > 0 ? data.occupancy / data.capacity : 0;
-  
-  // Color based on occupancy: dark blue (empty) → teal (partial) → cyan (full)
-  const buildingColor = useMemo(() => {
-    const r = Math.floor(10 + occupancyRate * 20);
-    const g = Math.floor(20 + occupancyRate * 50);
-    const b = Math.floor(40 + occupancyRate * 80);
-    return `rgb(${r}, ${g}, ${b})`;
-  }, [occupancyRate]);
-
-  useFrame((state) => {
-    if (meshRef.current && hovered) {
-      meshRef.current.position.y = height / 2 + Math.sin(state.clock.elapsedTime * 2) * 0.05;
-    }
-  });
+  const faces = [
+    { pos: [0, 0, buildingDepth / 2 + 0.02] as [number, number, number], rot: [0, 0, 0] as [number, number, number], w: buildingWidth },
+    { pos: [0, 0, -(buildingDepth / 2 + 0.02)] as [number, number, number], rot: [0, Math.PI, 0] as [number, number, number], w: buildingWidth },
+    { pos: [buildingWidth / 2 + 0.02, 0, 0] as [number, number, number], rot: [0, Math.PI / 2, 0] as [number, number, number], w: buildingDepth },
+    { pos: [-(buildingWidth / 2 + 0.02), 0, 0] as [number, number, number], rot: [0, -Math.PI / 2, 0] as [number, number, number], w: buildingDepth },
+  ];
 
   return (
-    <group position={[data.x, 0, data.z]}>
-      {/* Building body */}
-      <mesh
-        ref={meshRef}
-        position={[0, height / 2, 0]}
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[width, height, depth]} />
-        <meshStandardMaterial
-          color={buildingColor}
-          metalness={0.3}
-          roughness={0.7}
-        />
-      </mesh>
-
-      {/* Front windows */}
-      <group position={[0, height / 2, depth / 2 + 0.01]}>
-        <WindowGrid width={width} height={height} occupancy={data.occupancy} capacity={data.capacity} />
-      </group>
-
-      {/* Back windows */}
-      <group position={[0, height / 2, -(depth / 2 + 0.01)]} rotation={[0, Math.PI, 0]}>
-        <WindowGrid width={width} height={height} occupancy={data.occupancy} capacity={data.capacity} />
-      </group>
-
-      {/* Side windows */}
-      <group position={[width / 2 + 0.01, height / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <WindowGrid width={depth} height={height} occupancy={data.occupancy} capacity={data.capacity} />
-      </group>
-      <group position={[-(width / 2 + 0.01), height / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <WindowGrid width={depth} height={height} occupancy={data.occupancy} capacity={data.capacity} />
-      </group>
-
-      {/* Rooftop glow for full occupancy */}
-      {occupancyRate >= 1 && (
-        <mesh position={[0, height + 0.1, 0]}>
-          <sphereGeometry args={[0.15, 8, 8]} />
-          <meshStandardMaterial
-            color="#00e676"
-            emissive="#00e676"
-            emissiveIntensity={2}
-            transparent
-            opacity={0.8}
-          />
-        </mesh>
-      )}
-
-      {/* Room label on hover */}
-      {hovered && (
-        <Float speed={2} floatIntensity={0.3}>
-          <Text
-            position={[0, height + 0.5, 0]}
-            fontSize={0.3}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="middle"
-            outlineWidth={0.02}
-            outlineColor="#000000"
-          >
-            {`Room ${data.roomNo}`}
-          </Text>
-          <Text
-            position={[0, height + 0.15, 0]}
-            fontSize={0.18}
-            color="#4fc3f7"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {`${data.occupancy}/${data.capacity} occupied`}
-          </Text>
-        </Float>
-      )}
+    <group position={[0, floorY, 0]}>
+      {faces.map((face, fi) => (
+        <group key={fi} position={face.pos} rotation={face.rot}>
+          {Array.from({ length: cols }).map((_, c) => {
+            const isLit = Math.random() < occupancyRate * 0.9 + 0.1;
+            const warmth = Math.random();
+            const litColor = warmth > 0.5 ? "#ffcc44" : "#4fc3f7";
+            const wx = (c / (cols - 1) - 0.5) * (face.w * 0.7);
+            return (
+              <mesh key={c} position={[wx, 0, 0]}>
+                <planeGeometry args={[windowWidth, windowHeight]} />
+                <meshStandardMaterial
+                  color={isLit ? litColor : "#0a1225"}
+                  emissive={isLit ? litColor : "#000000"}
+                  emissiveIntensity={isLit ? 1.2 : 0}
+                  transparent
+                  opacity={isLit ? 0.95 : 0.4}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      ))}
     </group>
   );
 };
 
-// ─── Ground plane ───────────────────────────────────────────────────────
-const Ground = ({ size }: { size: number }) => (
+// ─── Single large building ──────────────────────────────────────────────
+const BigBuilding = ({ floors }: { floors: FloorData[] }) => {
+  const meshRef = useRef<THREE.Group>(null);
+  const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
+
+  const floorHeight = 1.8;
+  const buildingWidth = 4;
+  const buildingDepth = 3;
+  const totalHeight = floors.length * floorHeight;
+  const totalOccupancy = floors.reduce((s, f) => s + f.occupancy, 0);
+  const totalCapacity = floors.reduce((s, f) => s + f.capacity, 0);
+  const occupancyRate = totalCapacity > 0 ? totalOccupancy / totalCapacity : 0;
+
+  // Building base color shifts with occupancy
+  const baseColor = useMemo(() => {
+    const h = 200 + occupancyRate * 40; // blue to teal
+    const s = 30 + occupancyRate * 30;
+    const l = 15 + occupancyRate * 10;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  }, [occupancyRate]);
+
+  return (
+    <group ref={meshRef}>
+      {/* Floor segments */}
+      {floors.map((floor, i) => {
+        const y = i * floorHeight + floorHeight / 2;
+        const isHovered = hoveredFloor === i;
+        return (
+          <group key={i}>
+            {/* Floor block */}
+            <mesh
+              position={[0, y, 0]}
+              onPointerEnter={() => setHoveredFloor(i)}
+              onPointerLeave={() => setHoveredFloor(null)}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[buildingWidth, floorHeight * 0.95, buildingDepth]} />
+              <meshStandardMaterial
+                color={isHovered ? "#1a3a5c" : baseColor}
+                metalness={0.4}
+                roughness={0.6}
+              />
+            </mesh>
+
+            {/* Floor separator line */}
+            {i > 0 && (
+              <mesh position={[0, i * floorHeight + 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[buildingWidth + 0.1, buildingDepth + 0.1]} />
+                <meshStandardMaterial color="#2a4a6a" emissive="#1a3050" emissiveIntensity={0.3} transparent opacity={0.6} />
+              </mesh>
+            )}
+
+            {/* Windows for this floor */}
+            <FloorWindows
+              floorY={y}
+              floorHeight={floorHeight}
+              buildingWidth={buildingWidth}
+              buildingDepth={buildingDepth}
+              occupancy={floor.occupancy}
+              capacity={floor.capacity}
+            />
+
+            {/* Hover label */}
+            {isHovered && (
+              <Float speed={2} floatIntensity={0.2}>
+                <Text
+                  position={[buildingWidth / 2 + 1.5, y + 0.3, 0]}
+                  fontSize={0.3}
+                  color="#ffffff"
+                  anchorX="left"
+                  anchorY="middle"
+                  outlineWidth={0.02}
+                  outlineColor="#000000"
+                >
+                  {`Room ${floor.roomNo} (Floor ${floor.floor})`}
+                </Text>
+                <Text
+                  position={[buildingWidth / 2 + 1.5, y - 0.1, 0]}
+                  fontSize={0.22}
+                  color="#4fc3f7"
+                  anchorX="left"
+                  anchorY="middle"
+                >
+                  {`${floor.occupancy}/${floor.capacity} occupied`}
+                </Text>
+              </Float>
+            )}
+          </group>
+        );
+      })}
+
+      {/* Rooftop antenna */}
+      <mesh position={[0, totalHeight + 0.8, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 1.6, 8]} />
+        <meshStandardMaterial color="#556677" metalness={0.8} roughness={0.3} />
+      </mesh>
+
+      {/* Rooftop beacon */}
+      <mesh position={[0, totalHeight + 1.7, 0]}>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshStandardMaterial
+          color={occupancyRate >= 0.8 ? "#00e676" : "#ff5252"}
+          emissive={occupancyRate >= 0.8 ? "#00e676" : "#ff5252"}
+          emissiveIntensity={3}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
+
+      {/* Building name */}
+      <Text
+        position={[0, totalHeight + 2.3, 0]}
+        fontSize={0.4}
+        color="#e0f0ff"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
+        font={undefined}
+      >
+        PG Tower
+      </Text>
+    </group>
+  );
+};
+
+// ─── Ground ─────────────────────────────────────────────────────────────
+const Ground = () => (
   <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-    <planeGeometry args={[size * 3, size * 3]} />
-    <meshStandardMaterial color="#0a1628" metalness={0.1} roughness={0.9} />
+    <circleGeometry args={[25, 64]} />
+    <meshStandardMaterial color="#070e1a" metalness={0.2} roughness={0.9} />
   </mesh>
 );
 
-// ─── Road grid ──────────────────────────────────────────────────────────
-const Roads = ({ size }: { size: number }) => {
-  const lines: JSX.Element[] = [];
-  const count = Math.ceil(size / 3);
-  for (let i = -count; i <= count; i++) {
-    // Horizontal roads
-    lines.push(
-      <mesh key={`h-${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, i * 3]}>
-        <planeGeometry args={[size * 3, 0.3]} />
-        <meshStandardMaterial color="#1a2a3a" emissive="#0d1926" emissiveIntensity={0.3} />
-      </mesh>
-    );
-    // Vertical roads
-    lines.push(
-      <mesh key={`v-${i}`} rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[i * 3, 0.005, 0]}>
-        <planeGeometry args={[size * 3, 0.3]} />
-        <meshStandardMaterial color="#1a2a3a" emissive="#0d1926" emissiveIntensity={0.3} />
-      </mesh>
-    );
-  }
-  return <group>{lines}</group>;
-};
-
-// ─── Auto-rotate camera ─────────────────────────────────────────────────
-const AutoRotate = () => {
-  const { camera } = useThree();
+// ─── Moon ───────────────────────────────────────────────────────────────
+const Moon = () => {
+  const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
-    const t = state.clock.elapsedTime * 0.05;
-    const radius = 15;
-    camera.position.x = Math.sin(t) * radius;
-    camera.position.z = Math.cos(t) * radius;
-    camera.lookAt(0, 2, 0);
+    if (ref.current) {
+      ref.current.position.y = 22 + Math.sin(state.clock.elapsedTime * 0.1) * 0.5;
+    }
   });
-  return null;
+  return (
+    <group>
+      <mesh ref={ref} position={[18, 22, -25]}>
+        <sphereGeometry args={[3, 32, 32]} />
+        <meshStandardMaterial
+          color="#e8eaf6"
+          emissive="#bbdefb"
+          emissiveIntensity={2}
+        />
+      </mesh>
+      {/* Moon glow */}
+      <mesh position={[18, 22, -25.5]}>
+        <sphereGeometry args={[4.5, 32, 32]} />
+        <meshStandardMaterial
+          color="#1a237e"
+          emissive="#90caf9"
+          emissiveIntensity={0.4}
+          transparent
+          opacity={0.15}
+        />
+      </mesh>
+    </group>
+  );
 };
 
 // ─── Scene ──────────────────────────────────────────────────────────────
-const CityScene = ({ buildings }: { buildings: BuildingData[] }) => {
-  const gridSize = Math.ceil(Math.sqrt(buildings.length));
+const CityScene = ({ floors }: { floors: FloorData[] }) => (
+  <>
+    <ambientLight intensity={0.12} color="#1a237e" />
+    <directionalLight position={[10, 25, 8]} intensity={0.4} color="#e3f2fd" castShadow />
+    <pointLight position={[0, 20, 0]} intensity={0.6} color="#4fc3f7" distance={50} />
+    <pointLight position={[-5, 5, 5]} intensity={0.2} color="#ffcc44" distance={20} />
 
-  return (
-    <>
-      {/* Lighting */}
-      <ambientLight intensity={0.15} color="#1a237e" />
-      <directionalLight position={[10, 20, 5]} intensity={0.3} color="#e3f2fd" castShadow />
-      <pointLight position={[0, 15, 0]} intensity={0.5} color="#4fc3f7" distance={40} />
+    <Moon />
 
-      {/* Moon */}
-      <mesh position={[15, 18, -20]}>
-        <sphereGeometry args={[2, 32, 32]} />
-        <meshStandardMaterial color="#e8eaf6" emissive="#bbdefb" emissiveIntensity={1.5} />
-      </mesh>
+    <Stars radius={120} depth={80} count={6000} factor={6} saturation={0.2} fade speed={0.3} />
 
-      {/* Stars */}
-      <Stars radius={100} depth={60} count={3000} factor={4} saturation={0.1} fade speed={0.5} />
+    <Ground />
 
-      {/* Ground & Roads */}
-      <Ground size={gridSize * 2} />
-      <Roads size={gridSize * 2} />
+    <BigBuilding floors={floors} />
 
-      {/* Buildings */}
-      {buildings.map((b, i) => (
-        <CityBuilding key={i} data={b} />
-      ))}
+    <OrbitControls
+      enablePan
+      enableZoom
+      enableRotate
+      minDistance={5}
+      maxDistance={50}
+      maxPolarAngle={Math.PI / 2.1}
+      target={[0, floors.length * 0.9, 0]}
+    />
 
-      {/* Controls */}
-      <OrbitControls
-        enablePan
-        enableZoom
-        enableRotate
-        maxPolarAngle={Math.PI / 2.2}
-        minDistance={5}
-        maxDistance={40}
-        target={[0, 2, 0]}
-      />
-      <AutoRotate />
-
-      {/* Fog */}
-      <fog attach="fog" args={["#050d1a", 15, 50]} />
-    </>
-  );
-};
+    <fog attach="fog" args={["#050d1a", 25, 70]} />
+  </>
+);
 
 // ─── Main page ──────────────────────────────────────────────────────────
 const CityVisualization = () => {
@@ -260,52 +276,40 @@ const CityVisualization = () => {
   const { currentPG } = usePG();
   const navigate = useNavigate();
 
-  const buildings: BuildingData[] = useMemo(() => {
+  const floors: FloorData[] = useMemo(() => {
     if (!rooms.length) return [];
-    const gridCols = Math.ceil(Math.sqrt(rooms.length));
-    const spacing = 2.5;
-
-    return rooms.map((room, i) => {
-      const col = i % gridCols;
-      const row = Math.floor(i / gridCols);
-      const occupancy = room.tenants?.filter((t) => !t.endDate)?.length ?? 0;
-
-      return {
+    return rooms
+      .map((room) => ({
         roomNo: room.roomNo,
         floor: room.floor || 1,
         capacity: room.capacity,
-        occupancy,
-        rentAmount: room.rentAmount,
-        x: (col - gridCols / 2) * spacing + (Math.random() - 0.5) * 0.5,
-        z: (row - gridCols / 2) * spacing + (Math.random() - 0.5) * 0.5,
-      };
-    });
+        occupancy: room.tenants?.filter((t) => !t.endDate)?.length ?? 0,
+      }))
+      .sort((a, b) => a.floor - b.floor || a.roomNo.localeCompare(b.roomNo));
   }, [rooms]);
 
-  // Stats
   const totalRooms = rooms.length;
-  const totalCapacity = rooms.reduce((s, r) => s + r.capacity, 0);
-  const totalOccupied = buildings.reduce((s, b) => s + b.occupancy, 0);
+  const totalCapacity = floors.reduce((s, f) => s + f.capacity, 0);
+  const totalOccupied = floors.reduce((s, f) => s + f.occupancy, 0);
 
   return (
     <div className="relative w-full h-screen bg-[#050d1a] overflow-hidden">
-      {/* 3D Canvas */}
       <Canvas
         shadows
-        camera={{ position: [12, 10, 12], fov: 50 }}
+        camera={{ position: [10, 8, 10], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => {
           gl.setClearColor("#050d1a");
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.2;
+          gl.toneMappingExposure = 1.5;
         }}
       >
-        <CityScene buildings={buildings} />
+        <CityScene floors={floors} />
       </Canvas>
 
-      {/* Overlay UI */}
+      {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 p-4 flex items-start justify-between pointer-events-none">
-        <div className="pointer-events-auto space-y-3">
+        <div className="pointer-events-auto">
           <Button
             variant="ghost"
             size="sm"
@@ -316,29 +320,26 @@ const CityVisualization = () => {
             Back
           </Button>
         </div>
-
-        {/* Title */}
         <div className="text-center flex-1">
-          <h1 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg tracking-wider">
-            {currentPG?.name || "PG"} City
+          <h1 className="text-xl font-bold text-white drop-shadow-lg tracking-wider">
+            {currentPG?.name || "PG"} Tower
           </h1>
-          <p className="text-xs text-cyan-300/70 mt-0.5 tracking-widest uppercase">
-            Your properties, visualized
+          <p className="text-[10px] text-cyan-300/70 mt-0.5 tracking-widest uppercase">
+            Drag to rotate • Scroll to zoom • Click floors for details
           </p>
         </div>
-
-        <div className="w-20" /> {/* Spacer */}
+        <div className="w-20" />
       </div>
 
       {/* Stats panel */}
       <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 pointer-events-auto">
         <div className="bg-black/50 backdrop-blur-xl rounded-xl border border-white/10 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-cyan-300 tracking-wider uppercase">City Stats</h3>
+          <h3 className="text-sm font-semibold text-cyan-300 tracking-wider uppercase">Tower Stats</h3>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
               <BuildingIcon className="h-5 w-5 mx-auto text-cyan-400 mb-1" />
               <p className="text-lg font-bold text-white">{totalRooms}</p>
-              <p className="text-[10px] text-white/50">Buildings</p>
+              <p className="text-[10px] text-white/50">Floors</p>
             </div>
             <div className="text-center">
               <Home className="h-5 w-5 mx-auto text-cyan-400 mb-1" />
@@ -358,27 +359,8 @@ const CityVisualization = () => {
             />
           </div>
           <p className="text-[10px] text-white/40 text-center">
-            {totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0}% occupancy • Hover buildings for details
+            {totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0}% occupancy
           </p>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="absolute top-16 right-4 pointer-events-none hidden md:block">
-        <div className="bg-black/40 backdrop-blur-md rounded-lg border border-white/10 p-3 space-y-2">
-          <p className="text-[10px] text-white/60 uppercase tracking-wider font-semibold">Legend</p>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-cyan-400 shadow-[0_0_6px_#4fc3f7]" />
-            <span className="text-[10px] text-white/70">Lit window = Occupied</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-[#1a2332]" />
-            <span className="text-[10px] text-white/70">Dark = Vacant</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_6px_#00e676]" />
-            <span className="text-[10px] text-white/70">Rooftop = Full</span>
-          </div>
         </div>
       </div>
     </div>
