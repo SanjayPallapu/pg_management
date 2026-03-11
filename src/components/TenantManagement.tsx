@@ -181,7 +181,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [confirmAction, setConfirmAction] = useState<{ type: "paid" | "delete"; tenantId: string } | null>(null);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{

@@ -29,7 +29,7 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
   const [receiptData, setReceiptData] = useState<any>(null);
   const [reminderData, setReminderData] = useState<any>(null);
   
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
