@@ -108,6 +108,13 @@ const AppContent = () => {
               <LeftTenants />
             </ProtectedRoute>
           } />
+          <Route path="/city" element={
+            <ProtectedRoute>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                <CityVisualization />
+              </Suspense>
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
