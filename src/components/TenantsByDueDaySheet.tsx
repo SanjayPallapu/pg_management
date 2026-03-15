@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { User, Phone, MessageCircle, CreditCard, ArrowLeft } from 'lucide-react';
 import { Tenant, Room, TenantPayment } from '@/types';
-import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
