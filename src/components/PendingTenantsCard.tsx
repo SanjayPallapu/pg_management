@@ -123,7 +123,7 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
       </Card>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="h-[85vh]">
+        <SheetContent side="bottom" className="h-[85vh] [&>button]:hidden">
           <Button
             variant="ghost"
             size="icon"
