@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { User, Phone, MessageCircle, CreditCard, ArrowLeft } from 'lucide-react';
 import { Tenant, Room, TenantPayment } from '@/types';
-import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -35,10 +35,16 @@ export const TenantsByDueDaySheet = ({
   const tenantsDueOnDay = rooms.flatMap(room =>
     room.tenants
       .filter(tenant => {
+        // Skip locked tenants
+        if (tenant.isLocked) return false;
+        
         // Check if tenant is active in the selected month
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) {
           return false;
         }
+        
+        // Exclude tenants who have already left
+        if (hasTenantLeftNow(tenant.endDate)) return false;
 
         // Check if tenant's joining day matches
         const joinDay = new Date(tenant.startDate).getDate();
