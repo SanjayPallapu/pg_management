@@ -16,7 +16,7 @@ export const ExpectedCollectionCard = () => {
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const [isOpen, setIsOpen] = useState(false);
-  const [collectionFromDay, setCollectionFromDay] = useState<number>(1);
+  const [collectionFromDay, setCollectionFromDay] = useState<number>(new Date().getDate());
   const [collectionToDay, setCollectionToDay] = useState<number>(31);
   const [selectedDueDay, setSelectedDueDay] = useState<number | null>(null);
   const [dueDaySheetOpen, setDueDaySheetOpen] = useState(false);
