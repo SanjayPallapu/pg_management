@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -35,7 +35,7 @@ import { TotalCollectedCard } from "./TotalCollectedCard";
 import { PersonalExpensesCard } from "./PersonalExpensesCard";
 import { TodaySpendingCard } from "./TodaySpendingCard";
 import { AllCollectedCard } from "./AllCollectedCard";
-import { PendingTenantsCard } from "./PendingTenantsCard";
+import { PendingTenantsCard, PendingTenantsCardRef } from "./PendingTenantsCard";
 import { CalculatorCard } from "./CalculatorCard";
 import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
@@ -70,6 +70,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]}>>([]);
 
   // Collapsible section states
+  const pendingTenantsRef = useRef<PendingTenantsCardRef>(null);
   const [financialsOpen, setFinancialsOpen] = useState(true);
   const [tenantsOpen, setTenantsOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -246,7 +247,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <p className="text-xs text-muted-foreground">This month</p>
                 </div>
                 {/* Right: Pending */}
-                <div className="p-4">
+                <div className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={() => pendingTenantsRef.current?.openSheet()}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Pending</span>
                     <AlertTriangle className="h-4 w-4 text-pending" />
@@ -361,7 +362,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
               {/* Pending Tenants Card */}
-              <PendingTenantsCard rooms={rooms} />
+              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
 
               {/* Expected Collection by Due Date */}
               <ExpectedCollectionCard />
