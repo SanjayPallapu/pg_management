@@ -362,7 +362,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
               {/* Pending Tenants Card */}
-              <PendingTenantsCard rooms={rooms} />
+              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
 
               {/* Expected Collection by Due Date */}
               <ExpectedCollectionCard />
