@@ -70,6 +70,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]}>>([]);
 
   // Collapsible section states
+  const pendingTenantsRef = useRef<PendingTenantsCardRef>(null);
   const [financialsOpen, setFinancialsOpen] = useState(true);
   const [tenantsOpen, setTenantsOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
