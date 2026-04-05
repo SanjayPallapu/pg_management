@@ -35,7 +35,7 @@ import { TotalCollectedCard } from "./TotalCollectedCard";
 import { PersonalExpensesCard } from "./PersonalExpensesCard";
 import { TodaySpendingCard } from "./TodaySpendingCard";
 import { AllCollectedCard } from "./AllCollectedCard";
-import { PendingTenantsCard } from "./PendingTenantsCard";
+import { PendingTenantsCard, PendingTenantsCardRef } from "./PendingTenantsCard";
 import { CalculatorCard } from "./CalculatorCard";
 import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
