@@ -251,7 +251,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       />
     </>
   );
-};
+});
 
 interface TenantSelectItemProps {
   tenant: TenantWithPayment;
