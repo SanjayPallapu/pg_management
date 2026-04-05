@@ -247,7 +247,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <p className="text-xs text-muted-foreground">This month</p>
                 </div>
                 {/* Right: Pending */}
-                <div className="p-4">
+                <div className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={() => pendingTenantsRef.current?.openSheet()}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Pending</span>
                     <AlertTriangle className="h-4 w-4 text-pending" />
