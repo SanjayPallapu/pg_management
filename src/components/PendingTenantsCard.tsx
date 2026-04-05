@@ -149,6 +149,23 @@ export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
               </TabsTrigger>
             </TabsList>
 
+            {/* Select All Toggle */}
+            {currentTenants.length > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <Checkbox
+                  checked={currentTenants.length > 0 && currentTenants.every(t => selectedTenants.has(t.id))}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedTenants(new Set(currentTenants.map(t => t.id)));
+                    } else {
+                      setSelectedTenants(new Set());
+                    }
+                  }}
+                />
+                <span className="text-sm font-medium">Select All ({currentTenants.length})</span>
+              </div>
+            )}
+
             {/* Selected Summary */}
             {selectedTenants.size > 0 && (
               <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
