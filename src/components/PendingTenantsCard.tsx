@@ -19,10 +19,18 @@ interface PendingTenantsCardProps {
   rooms: Room[];
 }
 
-export const PendingTenantsCard = ({ rooms }: PendingTenantsCardProps) => {
+export interface PendingTenantsCardRef {
+  openSheet: () => void;
+}
+
+export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms }, ref) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    openSheet: () => setSheetOpen(true),
+  }));
   const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due'>('overdue');
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const [reminderOpen, setReminderOpen] = useState(false);
