@@ -80,10 +80,22 @@ export const EmptyBedsSheet = ({
     );
   }, [roomStats]);
 
+  // Floor-wise summary (all rooms, not just empty)
+  const floorSummary = useMemo(() => {
+    const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
+    const floors = [...new Set(allRoomsWithEmptyBeds.map(r => r.floor))].sort();
+    return floors.map(floor => {
+      const roomsOnFloor = allRoomsWithEmptyBeds.filter(r => r.floor === floor);
+      const emptyBeds = roomsOnFloor.reduce((sum, r) => sum + r.emptyBeds, 0);
+      const totalCapacity = roomsOnFloor.reduce((sum, r) => sum + r.capacity, 0);
+      return { floor, emptyBeds, totalCapacity };
+    });
+  }, [roomStats]);
+
   // Get unique floors from rooms with empty beds (unfiltered)
   const availableFloors = useMemo(() => {
-    return [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
-  }, [roomStats]);
+    return floorSummary.map(f => f.floor);
+  }, [floorSummary]);
 
   // Get unique sharing types sorted descending
   const availableSharingTypes = useMemo(() => {
