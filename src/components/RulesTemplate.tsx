@@ -226,7 +226,7 @@ interface TemplateInnerProps {
   getDetails: (rule: Rule) => string[];
 }
 
-const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = [], midpoint = 0 }: TemplateInnerProps) => (
+const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = [], midpoint = 0, getTitle, getDetails }: TemplateInnerProps) => (
   <>
     {/* Top decorative bar */}
     <div style={{ width: '100%', height: '8px', background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%)' }} />
