@@ -179,12 +179,16 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
                   leftRules={leftRules}
                   rightRules={rightRules}
                   midpoint={midpoint}
+                  getTitle={getTitle}
+                  getDetails={getDetails}
                 />
               ) : (
                 <ElegantTemplate
                   pgName={pgName}
                   pgLogoUrl={pgLogoUrl}
                   rules={rules}
+                  getTitle={getTitle}
+                  getDetails={getDetails}
                 />
               )}
             </div>
@@ -218,6 +222,8 @@ interface TemplateInnerProps {
   leftRules?: Rule[];
   rightRules?: Rule[];
   midpoint?: number;
+  getTitle: (rule: Rule) => string;
+  getDetails: (rule: Rule) => string[];
 }
 
 const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = [], midpoint = 0 }: TemplateInnerProps) => (
