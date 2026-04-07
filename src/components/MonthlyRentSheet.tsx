@@ -31,6 +31,7 @@ import {
   Calendar as CalendarIcon,
   Wallet,
   PartyPopper,
+  BookOpen,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
