@@ -17,14 +17,20 @@ import { usePG } from '@/contexts/PGContext';
 interface Rule {
   id: string;
   title: string;
+  titleTe?: string;
   description: string;
+  descriptionTe?: string;
   details: string[];
+  detailsTe?: string[];
 }
+
+type RulesLanguage = 'en' | 'te';
 
 interface RulesTemplateProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rules?: Rule[];
+  language?: RulesLanguage;
 }
 
 const RULE_ICONS: Record<string, string> = {
@@ -47,7 +53,9 @@ const getIcon = (title: string): string => {
 
 type TemplateStyle = 'professional' | 'elegant';
 
-export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateProps) => {
+export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' }: RulesTemplateProps) => {
+  const getTitle = (rule: Rule) => language === 'te' && rule.titleTe ? rule.titleTe : rule.title;
+  const getDetails = (rule: Rule) => language === 'te' && rule.detailsTe ? rule.detailsTe : rule.details;
   const templateRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
