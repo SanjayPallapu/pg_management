@@ -162,6 +162,8 @@ export const EmptyBedsSheet = ({
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">By Sharing Type</h3>
+
+            <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 px-2">
                   <SlidersHorizontal className="h-4 w-4" />
