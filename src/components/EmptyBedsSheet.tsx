@@ -133,12 +133,35 @@ export const EmptyBedsSheet = ({
           </div>
         </div>
 
+        {/* Floor-wise Empty Beds */}
+        <div className="mb-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Floor-wise Vacancy</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => (
+              <button
+                key={floor}
+                onClick={() => setFloorFilter(floorFilter === floor ? null : floor)}
+                className={`rounded-lg border p-3 text-left transition-colors ${
+                  floorFilter === floor ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-accent/30'
+                }`}
+              >
+                <div className="text-xs text-muted-foreground">Floor {floor}</div>
+                <div className="text-lg font-bold">{emptyBeds} <span className="text-sm font-normal text-muted-foreground">/ {totalCapacity}</span></div>
+                <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                  <div
+                    className="bg-pending h-1.5 rounded-full transition-all"
+                    style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }}
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* By Sharing Type with Filters */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">By Sharing Type</h3>
-
-            <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 px-2">
                   <SlidersHorizontal className="h-4 w-4" />
