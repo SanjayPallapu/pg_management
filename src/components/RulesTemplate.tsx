@@ -423,12 +423,12 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }: Tem
                 textDecorationColor: '#ddd6fe',
                 textUnderlineOffset: '4px',
               }}>
-                {idx + 1}. {rule.title}
+                {idx + 1}. {getTitle(rule)}
               </div>
             </div>
 
             {/* Rule details */}
-            {rule.details.map((detail, dIdx) => (
+            {getDetails(rule).map((detail, dIdx) => (
               <div key={dIdx} style={{
                 fontSize: '18px', color: '#374151',
                 lineHeight: 1.8, paddingLeft: '40px',
