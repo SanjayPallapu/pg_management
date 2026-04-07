@@ -82,12 +82,11 @@ export const EmptyBedsSheet = ({
 
   // Floor-wise summary (all rooms, not just empty)
   const floorSummary = useMemo(() => {
-    const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
-    const floors = [...new Set(allRoomsWithEmptyBeds.map(r => r.floor))].sort();
-    return floors.map(floor => {
-      const roomsOnFloor = allRoomsWithEmptyBeds.filter(r => r.floor === floor);
-      const emptyBeds = roomsOnFloor.reduce((sum, r) => sum + r.emptyBeds, 0);
-      const totalCapacity = roomsOnFloor.reduce((sum, r) => sum + r.capacity, 0);
+    const floorsWithEmpty = [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
+    return floorsWithEmpty.map(floor => {
+      const allRoomsOnFloor = roomStats.filter(r => r.floor === floor);
+      const emptyBeds = allRoomsOnFloor.reduce((sum, r) => sum + r.emptyBeds, 0);
+      const totalCapacity = allRoomsOnFloor.reduce((sum, r) => sum + r.capacity, 0);
       return { floor, emptyBeds, totalCapacity };
     });
   }, [roomStats]);
