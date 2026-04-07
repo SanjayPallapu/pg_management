@@ -136,25 +136,47 @@ export const EmptyBedsSheet = ({
         {/* Floor-wise Empty Beds */}
         <div className="mb-4">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">Floor-wise Vacancy</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => (
-              <button
-                key={floor}
-                onClick={() => setFloorFilter(floorFilter === floor ? null : floor)}
-                className={`rounded-lg border p-3 text-left transition-colors ${
-                  floorFilter === floor ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-accent/30'
-                }`}
-              >
-                <div className="text-xs text-muted-foreground">Floor {floor}</div>
-                <div className="text-lg font-bold">{emptyBeds} <span className="text-sm font-normal text-muted-foreground">/ {totalCapacity}</span></div>
-                <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-                  <div
-                    className="bg-pending h-1.5 rounded-full transition-all"
-                    style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }}
-                  />
+          <div className="space-y-2">
+            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => {
+              const isExpanded = floorFilter === floor;
+              const floorRooms = roomStats.filter(r => r.emptyBeds > 0 && r.floor === floor)
+                .sort((a, b) => a.roomNo.localeCompare(b.roomNo));
+              return (
+                <div key={floor} className={`rounded-lg border transition-colors ${isExpanded ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
+                  <button
+                    onClick={() => setFloorFilter(isExpanded ? null : floor)}
+                    className="w-full p-3 text-left flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-xs text-muted-foreground">Floor {floor}</div>
+                      <div className="text-lg font-bold">{emptyBeds} <span className="text-sm font-normal text-muted-foreground">/ {totalCapacity}</span></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-muted rounded-full h-1.5">
+                        <div className="bg-pending h-1.5 rounded-full transition-all" style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-1.5">
+                      {floorRooms.map(room => (
+                        <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-md px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Room {room.roomNo}</span>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{room.capacity}S</Badge>
+                          </div>
+                          <div className="flex items-center gap-1 text-pending font-medium">
+                            <Bed className="h-3 w-3" />
+                            <span>{room.emptyBeds} empty</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </div>
 
