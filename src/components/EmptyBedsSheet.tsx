@@ -80,10 +80,22 @@ export const EmptyBedsSheet = ({
     );
   }, [roomStats]);
 
+  // Floor-wise summary (all rooms, not just empty)
+  const floorSummary = useMemo(() => {
+    const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
+    const floors = [...new Set(allRoomsWithEmptyBeds.map(r => r.floor))].sort();
+    return floors.map(floor => {
+      const roomsOnFloor = allRoomsWithEmptyBeds.filter(r => r.floor === floor);
+      const emptyBeds = roomsOnFloor.reduce((sum, r) => sum + r.emptyBeds, 0);
+      const totalCapacity = roomsOnFloor.reduce((sum, r) => sum + r.capacity, 0);
+      return { floor, emptyBeds, totalCapacity };
+    });
+  }, [roomStats]);
+
   // Get unique floors from rooms with empty beds (unfiltered)
   const availableFloors = useMemo(() => {
-    return [...new Set(roomStats.filter(r => r.emptyBeds > 0).map(r => r.floor))].sort();
-  }, [roomStats]);
+    return floorSummary.map(f => f.floor);
+  }, [floorSummary]);
 
   // Get unique sharing types sorted descending
   const availableSharingTypes = useMemo(() => {
@@ -118,6 +130,31 @@ export const EmptyBedsSheet = ({
           <div className="bg-paid/10 rounded-lg p-3">
             <div className="text-2xl font-bold text-paid">₹{Math.round(totalPotentialRevenue).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Potential Revenue</p>
+          </div>
+        </div>
+
+        {/* Floor-wise Empty Beds */}
+        <div className="mb-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Floor-wise Vacancy</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => (
+              <button
+                key={floor}
+                onClick={() => setFloorFilter(floorFilter === floor ? null : floor)}
+                className={`rounded-lg border p-3 text-left transition-colors ${
+                  floorFilter === floor ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-accent/30'
+                }`}
+              >
+                <div className="text-xs text-muted-foreground">Floor {floor}</div>
+                <div className="text-lg font-bold">{emptyBeds} <span className="text-sm font-normal text-muted-foreground">/ {totalCapacity}</span></div>
+                <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                  <div
+                    className="bg-pending h-1.5 rounded-full transition-all"
+                    style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }}
+                  />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
