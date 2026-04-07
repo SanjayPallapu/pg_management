@@ -21,32 +21,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookOpen, Settings, Plus, Trash2, X } from 'lucide-react';
+import { BookOpen, Settings, Plus, Trash2, X, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface Rule {
+export interface Rule {
   id: string;
   title: string;
+  titleTe?: string;
   description: string;
+  descriptionTe?: string;
   details: string[];
+  detailsTe?: string[];
 }
 
+export type RulesLanguage = 'en' | 'te';
+
 const DEFAULT_RULES: Rule[] = [
-  { id: '1', title: 'Meal Timings', description: 'Food service timings for the PG residents', details: ['Breakfast (Tiffin): 7:30 AM – 9:00 AM', 'Lunch: 12:30 PM – 2:00 PM', 'Dinner: 7:30 PM – 9:00 PM', 'Note: If food gets over during the above timings, residents may inform the management. We will be happy to prepare food again, subject to availability.'] },
-  { id: '2', title: 'Night Gate Timing', description: 'Main gate closure timing', details: ['The main gate will be closed at 10:00 PM.'] },
-  { id: '3', title: 'Corridor Lights', description: 'Corridor lighting schedule', details: ['Corridor lights will be switched off at 10:00 PM.'] },
-  { id: '4', title: 'Room Cleaning', description: 'Room maintenance schedule', details: ['Rooms will be cleaned once a week.'] },
-  { id: '5', title: 'Visitors Policy', description: 'Rules regarding visitors and guests', details: ['Friends, relatives, or any outsiders are not allowed inside rooms.', 'Bringing any friend into your room without prior permission will result in a fine of ₹1000.'] },
-  { id: '6', title: 'Noise & Behavior', description: 'Community conduct expectations', details: ['Loud noise inside or outside the rooms is not permitted.', 'Do not disturb others.', "Respect other residents' privacy at all times."] },
-  { id: '7', title: 'Rent Policy', description: 'Rent payment obligations', details: ['Full monthly rent must be paid even if you stay outside or go home for any duration.'] },
-  { id: '8', title: 'Notice Period', description: 'Requirement before vacating', details: ['Residents must inform 15–30 days in advance before vacating the room.'] },
-  { id: '9', title: 'Security Deposit', description: 'Security deposit terms', details: ['The security deposit is refundable at the time of vacating, subject to applicable deductions.'] },
-  { id: '10', title: 'Luggage Charges', description: 'Extra luggage storage charges', details: ['Extra luggage storage will be charged ₹150 per day.'] },
-  { id: '11', title: 'Issues & Support', description: 'How to report and resolve issues', details: ['If you face any issues or problems during your stay, please inform the management.', 'We will review the matter and try to resolve it as early as possible.'] },
+  { id: '1', title: 'Meal Timings', titleTe: 'భోజన సమయాలు', description: 'Food service timings for the PG residents', descriptionTe: 'PG నివాసులకు భోజన సేవ సమయాలు', details: ['Breakfast (Tiffin): 7:30 AM – 9:00 AM', 'Lunch: 12:30 PM – 2:00 PM', 'Dinner: 7:30 PM – 9:00 PM', 'Note: If food gets over during the above timings, residents may inform the management. We will be happy to prepare food again, subject to availability.'], detailsTe: ['అల్పాహారం (టిఫిన్): 7:30 AM – 9:00 AM', 'భోజనం: 12:30 PM – 2:00 PM', 'రాత్రి భోజనం: 7:30 PM – 9:00 PM', 'గమనిక: పై సమయాల్లో ఆహారం అయిపోతే, నిర్వహణకు తెలియజేయండి. మేము మళ్ళీ తయారు చేస్తాము.'] },
+  { id: '2', title: 'Night Gate Timing', titleTe: 'రాత్రి గేట్ సమయం', description: 'Main gate closure timing', descriptionTe: 'ప్రధాన గేట్ మూసివేయు సమయం', details: ['The main gate will be closed at 10:00 PM.'], detailsTe: ['ప్రధాన గేట్ రాత్రి 10:00 గంటలకు మూసివేయబడుతుంది.'] },
+  { id: '3', title: 'Corridor Lights', titleTe: 'కారిడార్ లైట్లు', description: 'Corridor lighting schedule', descriptionTe: 'కారిడార్ లైటింగ్ షెడ్యూల్', details: ['Corridor lights will be switched off at 10:00 PM.'], detailsTe: ['కారిడార్ లైట్లు రాత్రి 10:00 గంటలకు ఆఫ్ చేయబడతాయి.'] },
+  { id: '4', title: 'Room Cleaning', titleTe: 'గది శుభ్రపరచడం', description: 'Room maintenance schedule', descriptionTe: 'గది నిర్వహణ షెడ్యూల్', details: ['Rooms will be cleaned once a week.'], detailsTe: ['గదులు వారానికి ఒకసారి శుభ్రం చేయబడతాయి.'] },
+  { id: '5', title: 'Visitors Policy', titleTe: 'సందర్శకుల విధానం', description: 'Rules regarding visitors and guests', descriptionTe: 'సందర్శకులు మరియు అతిథుల నియమాలు', details: ['Friends, relatives, or any outsiders are not allowed inside rooms.', 'Bringing any friend into your room without prior permission will result in a fine of ₹1000.'], detailsTe: ['స్నేహితులు, బంధువులు లేదా బయటి వ్యక్తులను గదుల్లోకి అనుమతించరు.', 'అనుమతి లేకుండా స్నేహితులను గదిలోకి తీసుకురావడం వల్ల ₹1000 జరిమానా విధించబడుతుంది.'] },
+  { id: '6', title: 'Noise & Behavior', titleTe: 'శబ్దం & ప్రవర్తన', description: 'Community conduct expectations', descriptionTe: 'సమాజ నడవడిక అంచనాలు', details: ['Loud noise inside or outside the rooms is not permitted.', 'Do not disturb others.', "Respect other residents' privacy at all times."], detailsTe: ['గదులలో లేదా బయట పెద్ద శబ్దం అనుమతించబడదు.', 'ఇతరులను ఇబ్బంది పెట్టవద్దు.', 'ఇతర నివాసుల గోప్యతను ఎల్లప్పుడూ గౌరవించండి.'] },
+  { id: '7', title: 'Rent Policy', titleTe: 'అద్దె విధానం', description: 'Rent payment obligations', descriptionTe: 'అద్దె చెల్లింపు బాధ్యతలు', details: ['Full monthly rent must be paid even if you stay outside or go home for any duration.'], detailsTe: ['మీరు ఎంత కాలం బయట ఉన్నా లేదా ఇంటికి వెళ్ళినా పూర్తి నెలవారీ అద్దె చెల్లించాలి.'] },
+  { id: '8', title: 'Notice Period', titleTe: 'నోటీసు వ్యవధి', description: 'Requirement before vacating', descriptionTe: 'గది ఖాళీ చేయడానికి ముందు అవసరం', details: ['Residents must inform 15–30 days in advance before vacating the room.'], detailsTe: ['నివాసులు గది ఖాళీ చేయడానికి 15–30 రోజుల ముందుగా తెలియజేయాలి.'] },
+  { id: '9', title: 'Security Deposit', titleTe: 'భద్రతా డిపాజిట్', description: 'Security deposit terms', descriptionTe: 'భద్రతా డిపాజిట్ నిబంధనలు', details: ['The security deposit is refundable at the time of vacating, subject to applicable deductions.'], detailsTe: ['భద్రతా డిపాజిట్ ఖాళీ చేసేటప్పుడు తిరిగి చెల్లించబడుతుంది, వర్తించే తగ్గింపులకు లోబడి.'] },
+  { id: '10', title: 'Luggage Charges', titleTe: 'లగేజీ చార్జీలు', description: 'Extra luggage storage charges', descriptionTe: 'అదనపు లగేజీ నిల్వ చార్జీలు', details: ['Extra luggage storage will be charged ₹150 per day.'], detailsTe: ['అదనపు లగేజీ నిల్వకు రోజుకు ₹150 వసూలు చేయబడుతుంది.'] },
+  { id: '11', title: 'Issues & Support', titleTe: 'సమస్యలు & సహాయం', description: 'How to report and resolve issues', descriptionTe: 'సమస్యలను ఎలా నివేదించాలి మరియు పరిష్కరించాలి', details: ['If you face any issues or problems during your stay, please inform the management.', 'We will review the matter and try to resolve it as early as possible.'], detailsTe: ['మీ బస సమయంలో ఏవైనా సమస్యలు ఎదురైతే, దయచేసి నిర్వహణకు తెలియజేయండి.', 'మేము విషయాన్ని సమీక్షించి, వీలైనంత త్వరగా పరిష్కరించడానికి ప్రయత్నిస్తాము.'] },
 ];
 
 interface PGRulesCardProps {
-  onEditableTemplate?: (rules: Rule[]) => void;
+  onEditableTemplate?: (rules: Rule[], language: RulesLanguage) => void;
 }
 
 export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
@@ -57,6 +62,11 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [language, setLanguage] = useState<RulesLanguage>('en');
+
+  const getRuleTitle = (rule: Rule) => language === 'te' && rule.titleTe ? rule.titleTe : rule.title;
+  const getRuleDescription = (rule: Rule) => language === 'te' && rule.descriptionTe ? rule.descriptionTe : rule.description;
+  const getRuleDetails = (rule: Rule) => language === 'te' && rule.detailsTe ? rule.detailsTe : rule.details;
 
   const handleEditRule = (rule: Rule) => {
     setEditingRule({ ...rule });
@@ -68,7 +78,6 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
       toast({ title: 'Error', description: 'Rule title cannot be empty' });
       return;
     }
-    // Show confirmation before saving
     setShowSaveConfirm(true);
   };
 
@@ -146,32 +155,59 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full md:w-2/3 flex flex-col">
           <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-            <div>
-              <SheetTitle>PG Rules & Regulations</SheetTitle>
-              <SheetDescription>Manage rules for your PG residents</SheetDescription>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <SheetTitle>PG Rules & Regulations</SheetTitle>
+                <SheetDescription>Manage rules for your PG residents</SheetDescription>
+              </div>
             </div>
-            {!editMode ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setEditMode(true)}
-                className="gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Manage
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setEditMode(false);
-                  setEditingRule(null);
-                }}
-              >
-                Done
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Language Toggle */}
+              <div className="flex rounded-md border border-input overflow-hidden text-xs">
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'en' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => setLanguage('te')}
+                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'te' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
+                >
+                  తెలుగు
+                </button>
+              </div>
+              {!editMode ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditMode(true)}
+                  className="gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Manage
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEditMode(false);
+                    setEditingRule(null);
+                  }}
+                >
+                  Done
+                </Button>
+              )}
+            </div>
           </SheetHeader>
 
           <ScrollArea className="flex-1 pr-4">
@@ -229,8 +265,8 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                     <div key={rule.id} className="border rounded-lg p-4 hover:bg-accent/30 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-base">{rule.title}</h3>
-                          <p className="text-sm text-muted-foreground">{rule.description}</p>
+                          <h3 className="font-semibold text-base">{getRuleTitle(rule)}</h3>
+                          <p className="text-sm text-muted-foreground">{getRuleDescription(rule)}</p>
                         </div>
                         {editMode && (
                           <div className="flex gap-1 ml-2">
@@ -249,7 +285,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                         )}
                       </div>
                       <ul className="space-y-2 ml-4">
-                        {rule.details.map((detail, idx) => (
+                        {getRuleDetails(rule).map((detail, idx) => (
                           <li key={idx} className="text-base text-muted-foreground list-disc">{detail}</li>
                         ))}
                       </ul>
@@ -268,7 +304,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
           {!editMode && (
             <div className="border-t pt-4 mt-4">
               <Button
-                onClick={() => onEditableTemplate?.(rules)}
+                onClick={() => onEditableTemplate?.(rules, language)}
                 className="w-full gap-2"
                 variant="default"
               >

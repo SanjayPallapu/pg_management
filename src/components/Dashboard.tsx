@@ -67,7 +67,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
-  const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]}>>([]);
+  const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
+  const [rulesLanguage, setRulesLanguage] = useState<'en' | 'te'>('en');
 
   // Collapsible section states
   const pendingTenantsRef = useRef<PendingTenantsCardRef>(null);
@@ -411,14 +412,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <TenantLockCard rooms={rooms} />
 
               {/* PG Rules Card */}
-              <PGRulesCard onEditableTemplate={(rules) => { setRulesForTemplate(rules); setRulesTemplateOpen(true); }} />
+              <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
 
       {/* Rules Template Sheet */}
-      <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} />
+      <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />
 
       {isAdmin && <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />}
       <EmptyBedsSheet

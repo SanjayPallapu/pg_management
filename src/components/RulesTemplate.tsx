@@ -17,14 +17,20 @@ import { usePG } from '@/contexts/PGContext';
 interface Rule {
   id: string;
   title: string;
+  titleTe?: string;
   description: string;
+  descriptionTe?: string;
   details: string[];
+  detailsTe?: string[];
 }
+
+type RulesLanguage = 'en' | 'te';
 
 interface RulesTemplateProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rules?: Rule[];
+  language?: RulesLanguage;
 }
 
 const RULE_ICONS: Record<string, string> = {
@@ -47,7 +53,9 @@ const getIcon = (title: string): string => {
 
 type TemplateStyle = 'professional' | 'elegant';
 
-export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateProps) => {
+export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' }: RulesTemplateProps) => {
+  const getTitle = (rule: Rule) => language === 'te' && rule.titleTe ? rule.titleTe : rule.title;
+  const getDetails = (rule: Rule) => language === 'te' && rule.detailsTe ? rule.detailsTe : rule.details;
   const templateRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -171,12 +179,16 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [] }: RulesTemplateP
                   leftRules={leftRules}
                   rightRules={rightRules}
                   midpoint={midpoint}
+                  getTitle={getTitle}
+                  getDetails={getDetails}
                 />
               ) : (
                 <ElegantTemplate
                   pgName={pgName}
                   pgLogoUrl={pgLogoUrl}
                   rules={rules}
+                  getTitle={getTitle}
+                  getDetails={getDetails}
                 />
               )}
             </div>
@@ -210,9 +222,11 @@ interface TemplateInnerProps {
   leftRules?: Rule[];
   rightRules?: Rule[];
   midpoint?: number;
+  getTitle: (rule: Rule) => string;
+  getDetails: (rule: Rule) => string[];
 }
 
-const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = [], midpoint = 0 }: TemplateInnerProps) => (
+const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = [], midpoint = 0, getTitle, getDetails }: TemplateInnerProps) => (
   <>
     {/* Top decorative bar */}
     <div style={{ width: '100%', height: '8px', background: 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%)' }} />
@@ -243,9 +257,9 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = 
           <div key={rule.id} style={{ marginBottom: '14px', padding: '12px', background: idx % 2 === 0 ? '#f8fafc' : '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span style={{ fontSize: '18px' }}>{getIcon(rule.title)}</span>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e40af' }}>{idx + 1}. {rule.title}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e40af' }}>{idx + 1}. {getTitle(rule)}</div>
             </div>
-            {rule.details.map((detail, dIdx) => (
+            {getDetails(rule).map((detail, dIdx) => (
               <div key={dIdx} style={{ fontSize: '18px', color: '#334155', lineHeight: 1.8, paddingLeft: '28px', position: 'relative', marginBottom: '6px' }}>
                 <span style={{ position: 'absolute', left: '16px', top: '2px', color: '#94a3b8', fontSize: '8px' }}>●</span>
                 {detail}
@@ -259,9 +273,9 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = 
           <div key={rule.id} style={{ marginBottom: '14px', padding: '12px', background: idx % 2 === 0 ? '#f8fafc' : '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span style={{ fontSize: '18px' }}>{getIcon(rule.title)}</span>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e40af' }}>{midpoint + idx + 1}. {rule.title}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e40af' }}>{midpoint + idx + 1}. {getTitle(rule)}</div>
             </div>
-            {rule.details.map((detail, dIdx) => (
+            {getDetails(rule).map((detail, dIdx) => (
               <div key={dIdx} style={{ fontSize: '18px', color: '#334155', lineHeight: 1.8, paddingLeft: '28px', position: 'relative', marginBottom: '6px' }}>
                 <span style={{ position: 'absolute', left: '16px', top: '3px', color: '#94a3b8', fontSize: '9px' }}>●</span>
                 {detail}
@@ -283,7 +297,7 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, leftRules = [], rightRules = 
 );
 
 /* ─── Elegant Floral Template (single-column, soft pink/purple) ─── */
-const ElegantTemplate = ({ pgName, pgLogoUrl, rules }: TemplateInnerProps) => (
+const ElegantTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }: TemplateInnerProps) => (
   <div style={{
     width: '100%',
     minHeight: '1123px',
@@ -409,12 +423,12 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules }: TemplateInnerProps) => (
                 textDecorationColor: '#ddd6fe',
                 textUnderlineOffset: '4px',
               }}>
-                {idx + 1}. {rule.title}
+                {idx + 1}. {getTitle(rule)}
               </div>
             </div>
 
             {/* Rule details */}
-            {rule.details.map((detail, dIdx) => (
+            {getDetails(rule).map((detail, dIdx) => (
               <div key={dIdx} style={{
                 fontSize: '18px', color: '#374151',
                 lineHeight: 1.8, paddingLeft: '40px',

@@ -31,6 +31,7 @@ import {
   Calendar as CalendarIcon,
   Wallet,
   PartyPopper,
+  BookOpen,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -987,6 +988,31 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             >
                               <PartyPopper className="h-4 w-4" />
                               Welcome
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const rulesText = [
+                                  `*PG Rules & Regulations* 📋\n`,
+                                  `1. 🍽️ *Meal Timings*: Breakfast 7:30-9:00 AM, Lunch 12:30-2:00 PM, Dinner 7:30-9:00 PM`,
+                                  `2. 🚪 *Night Gate*: Main gate closes at 10:00 PM`,
+                                  `3. 💡 *Corridor Lights*: Switched off at 10:00 PM`,
+                                  `4. 🧹 *Room Cleaning*: Once a week`,
+                                  `5. 👥 *Visitors*: No outsiders in rooms. ₹1000 fine for violations`,
+                                  `6. 🔔 *Noise*: No loud noise. Respect others' privacy`,
+                                  `7. 💰 *Rent*: Full rent even if away`,
+                                  `8. 📅 *Notice Period*: 15-30 days advance notice`,
+                                  `9. 🔒 *Security Deposit*: Refundable with deductions`,
+                                  `10. 🧳 *Luggage*: ₹150/day for extra storage`,
+                                  `11. 🆘 *Support*: Contact management for issues`,
+                                  `\n🙏 Thank you for your cooperation!`
+                                ].join('\n');
+                                const encoded = encodeURIComponent(rulesText);
+                                window.open(`https://wa.me/${tenant.phone.replace(/\D/g, "")}?text=${encoded}`, "_blank");
+                              }}
+                              className="gap-2"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              Rules & Regulations
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
