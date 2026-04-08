@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,38 +23,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Settings, Plus, Trash2, X, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-export interface Rule {
-  id: string;
-  title: string;
-  titleTe?: string;
-  description: string;
-  descriptionTe?: string;
-  details: string[];
-  detailsTe?: string[];
-}
-
-export type RulesLanguage = 'en' | 'te';
-
-const DEFAULT_RULES: Rule[] = [
-  { id: '1', title: 'Meal Timings', titleTe: 'భోజన సమయాలు', description: 'Food service timings for the PG residents', descriptionTe: 'PG నివాసులకు భోజన సేవ సమయాలు', details: ['Breakfast (Tiffin): 7:30 AM – 9:00 AM', 'Lunch: 12:30 PM – 2:00 PM', 'Dinner: 7:30 PM – 9:00 PM', 'Note: If food gets over during the above timings, residents may inform the management. We will be happy to prepare food again, subject to availability.'], detailsTe: ['అల్పాహారం (టిఫిన్): 7:30 AM – 9:00 AM', 'భోజనం: 12:30 PM – 2:00 PM', 'రాత్రి భోజనం: 7:30 PM – 9:00 PM', 'గమనిక: పై సమయాల్లో ఆహారం అయిపోతే, నిర్వహణకు తెలియజేయండి. మేము మళ్ళీ తయారు చేస్తాము.'] },
-  { id: '2', title: 'Night Gate Timing', titleTe: 'రాత్రి గేట్ సమయం', description: 'Main gate closure timing', descriptionTe: 'ప్రధాన గేట్ మూసివేయు సమయం', details: ['The main gate will be closed at 10:00 PM.'], detailsTe: ['ప్రధాన గేట్ రాత్రి 10:00 గంటలకు మూసివేయబడుతుంది.'] },
-  { id: '3', title: 'Corridor Lights', titleTe: 'కారిడార్ లైట్లు', description: 'Corridor lighting schedule', descriptionTe: 'కారిడార్ లైటింగ్ షెడ్యూల్', details: ['Corridor lights will be switched off at 10:00 PM.'], detailsTe: ['కారిడార్ లైట్లు రాత్రి 10:00 గంటలకు ఆఫ్ చేయబడతాయి.'] },
-  { id: '4', title: 'Room Cleaning', titleTe: 'గది శుభ్రపరచడం', description: 'Room maintenance schedule', descriptionTe: 'గది నిర్వహణ షెడ్యూల్', details: ['Rooms will be cleaned once a week.'], detailsTe: ['గదులు వారానికి ఒకసారి శుభ్రం చేయబడతాయి.'] },
-  { id: '5', title: 'Visitors Policy', titleTe: 'సందర్శకుల విధానం', description: 'Rules regarding visitors and guests', descriptionTe: 'సందర్శకులు మరియు అతిథుల నియమాలు', details: ['Friends, relatives, or any outsiders are not allowed inside rooms.', 'Bringing any friend into your room without prior permission will result in a fine of ₹1000.'], detailsTe: ['స్నేహితులు, బంధువులు లేదా బయటి వ్యక్తులను గదుల్లోకి అనుమతించరు.', 'అనుమతి లేకుండా స్నేహితులను గదిలోకి తీసుకురావడం వల్ల ₹1000 జరిమానా విధించబడుతుంది.'] },
-  { id: '6', title: 'Noise & Behavior', titleTe: 'శబ్దం & ప్రవర్తన', description: 'Community conduct expectations', descriptionTe: 'సమాజ నడవడిక అంచనాలు', details: ['Loud noise inside or outside the rooms is not permitted.', 'Do not disturb others.', "Respect other residents' privacy at all times."], detailsTe: ['గదులలో లేదా బయట పెద్ద శబ్దం అనుమతించబడదు.', 'ఇతరులను ఇబ్బంది పెట్టవద్దు.', 'ఇతర నివాసుల గోప్యతను ఎల్లప్పుడూ గౌరవించండి.'] },
-  { id: '7', title: 'Rent Policy', titleTe: 'అద్దె విధానం', description: 'Rent payment obligations', descriptionTe: 'అద్దె చెల్లింపు బాధ్యతలు', details: ['Full monthly rent must be paid even if you stay outside or go home for any duration.'], detailsTe: ['మీరు ఎంత కాలం బయట ఉన్నా లేదా ఇంటికి వెళ్ళినా పూర్తి నెలవారీ అద్దె చెల్లించాలి.'] },
-  { id: '8', title: 'Notice Period', titleTe: 'నోటీసు వ్యవధి', description: 'Requirement before vacating', descriptionTe: 'గది ఖాళీ చేయడానికి ముందు అవసరం', details: ['Residents must inform 15–30 days in advance before vacating the room.'], detailsTe: ['నివాసులు గది ఖాళీ చేయడానికి 15–30 రోజుల ముందుగా తెలియజేయాలి.'] },
-  { id: '9', title: 'Security Deposit', titleTe: 'భద్రతా డిపాజిట్', description: 'Security deposit terms', descriptionTe: 'భద్రతా డిపాజిట్ నిబంధనలు', details: ['The security deposit is refundable at the time of vacating, subject to applicable deductions.'], detailsTe: ['భద్రతా డిపాజిట్ ఖాళీ చేసేటప్పుడు తిరిగి చెల్లించబడుతుంది, వర్తించే తగ్గింపులకు లోబడి.'] },
-  { id: '10', title: 'Luggage Charges', titleTe: 'లగేజీ చార్జీలు', description: 'Extra luggage storage charges', descriptionTe: 'అదనపు లగేజీ నిల్వ చార్జీలు', details: ['Extra luggage storage will be charged ₹150 per day.'], detailsTe: ['అదనపు లగేజీ నిల్వకు రోజుకు ₹150 వసూలు చేయబడుతుంది.'] },
-  { id: '11', title: 'Issues & Support', titleTe: 'సమస్యలు & సహాయం', description: 'How to report and resolve issues', descriptionTe: 'సమస్యలను ఎలా నివేదించాలి మరియు పరిష్కరించాలి', details: ['If you face any issues or problems during your stay, please inform the management.', 'We will review the matter and try to resolve it as early as possible.'], detailsTe: ['మీ బస సమయంలో ఏవైనా సమస్యలు ఎదురైతే, దయచేసి నిర్వహణకు తెలియజేయండి.', 'మేము విషయాన్ని సమీక్షించి, వీలైనంత త్వరగా పరిష్కరించడానికి ప్రయత్నిస్తాము.'] },
-];
+import { usePG } from '@/contexts/PGContext';
+import { DEFAULT_RULES, getStoredPGRules, getStoredRulesLanguage, saveStoredPGRules, saveStoredRulesLanguage, type Rule, type RulesLanguage } from '@/lib/pgRules';
 
 interface PGRulesCardProps {
   onEditableTemplate?: (rules: Rule[], language: RulesLanguage) => void;
 }
 
 export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
+  const { currentPG } = usePG();
   const [open, setOpen] = useState(false);
   const [rules, setRules] = useState<Rule[]>(DEFAULT_RULES);
   const [editMode, setEditMode] = useState(false);
@@ -67,6 +44,23 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
   const getRuleTitle = (rule: Rule) => language === 'te' && rule.titleTe ? rule.titleTe : rule.title;
   const getRuleDescription = (rule: Rule) => language === 'te' && rule.descriptionTe ? rule.descriptionTe : rule.description;
   const getRuleDetails = (rule: Rule) => language === 'te' && rule.detailsTe ? rule.detailsTe : rule.details;
+
+  useEffect(() => {
+    setRules(getStoredPGRules(currentPG?.id));
+    setLanguage(getStoredRulesLanguage(currentPG?.id));
+    setEditingRule(null);
+    setEditMode(false);
+  }, [currentPG?.id]);
+
+  const persistRules = (nextRules: Rule[]) => {
+    setRules(nextRules);
+    saveStoredPGRules(currentPG?.id, nextRules);
+  };
+
+  const handleLanguageChange = (nextLanguage: RulesLanguage) => {
+    setLanguage(nextLanguage);
+    saveStoredRulesLanguage(currentPG?.id, nextLanguage);
+  };
 
   const handleEditRule = (rule: Rule) => {
     setEditingRule({ ...rule });
@@ -83,7 +77,13 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
 
   const confirmSaveRule = () => {
     if (!editingRule) return;
-    setRules(rules.map(r => r.id === editingRule.id ? editingRule : r));
+
+    const existingRule = rules.some((rule) => rule.id === editingRule.id);
+    const nextRules = existingRule
+      ? rules.map((rule) => (rule.id === editingRule.id ? editingRule : rule))
+      : [...rules, editingRule];
+
+    persistRules(nextRules);
     setEditingRule(null);
     setShowSaveConfirm(false);
     toast({ title: 'Success', description: 'Rule updated successfully' });
@@ -92,16 +92,15 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
   const handleAddRule = () => {
     const newRule: Rule = {
       id: Date.now().toString(),
-      title: 'New Rule',
-      description: 'Rule description',
-      details: ['Detail 1'],
+      title: '',
+      description: '',
+      details: [''],
     };
-    setRules([...rules, newRule]);
     setEditingRule(newRule);
   };
 
   const handleDeleteRule = (id: string) => {
-    setRules(rules.filter(r => r.id !== id));
+    persistRules(rules.filter(r => r.id !== id));
     setShowDeleteDialog(false);
     setRuleToDelete(null);
     toast({ title: 'Deleted', description: 'Rule removed successfully' });
@@ -111,7 +110,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
     if (!editingRule) return;
     setEditingRule({
       ...editingRule,
-      details: [...editingRule.details, 'New detail'],
+      details: [...editingRule.details, ''],
     });
   };
 
@@ -173,13 +172,13 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
               {/* Language Toggle */}
               <div className="flex rounded-md border border-input overflow-hidden text-xs">
                 <button
-                  onClick={() => setLanguage('en')}
+                  onClick={() => handleLanguageChange('en')}
                   className={`px-2.5 py-1 font-medium transition-colors ${language === 'en' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
                 >
                   English
                 </button>
                 <button
-                  onClick={() => setLanguage('te')}
+                  onClick={() => handleLanguageChange('te')}
                   className={`px-2.5 py-1 font-medium transition-colors ${language === 'te' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
                 >
                   తెలుగు

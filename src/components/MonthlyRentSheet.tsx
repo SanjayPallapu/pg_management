@@ -63,11 +63,15 @@ import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
+import { usePG } from "@/contexts/PGContext";
+import { getStoredPGRules, getStoredRulesLanguage } from "@/lib/pgRules";
+import { generateRulesImage } from "@/utils/generateRulesImage";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const defaultCollectorId = useMemo(() => collectors[0]?.id ?? "Me", [collectors]);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
@@ -97,6 +101,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
   const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [sharingRulesForTenantId, setSharingRulesForTenantId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [hideLeftTenants, setHideLeftTenants] = useState(true);
@@ -142,6 +147,64 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
     setRemainingCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
   }, [collectors, defaultCollectorId]);
+
+  const shareRulesImageToWhatsApp = async (tenantName: string, tenantPhone: string) => {
+    if (!currentPG) {
+      toast({ title: "PG not selected", description: "Please select a PG first." });
+      return;
+    }
+
+    setSharingRulesForTenantId(tenantPhone);
+
+    try {
+      const rulesImage = await generateRulesImage({
+        pgName: currentPG.name,
+        pgLogoUrl: currentPG.logoUrl || '/icon-512.png',
+        rules: getStoredPGRules(currentPG.id),
+        language: getStoredRulesLanguage(currentPG.id),
+        templateStyle: 'professional',
+      });
+
+      const response = await fetch(rulesImage);
+      const blob = await response.blob();
+      const safeName = tenantName.replace(/\s+/g, '-').toLowerCase();
+      const file = new File([blob], `rules-${safeName}.png`, { type: 'image/png' });
+
+      let phone = tenantPhone.replace(/\D/g, '');
+      const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(displayPhone);
+      }
+
+      toast({
+        title: `📱 Search: ${tenantName}`,
+        description: `Rules image ready. Phone ${displayPhone} copied.`,
+        duration: 8000,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const navAny = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
+      if (navigator.share && navAny.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        const link = document.createElement('a');
+        link.href = rulesImage;
+        link.download = `rules-${safeName}.png`;
+        link.click();
+
+        if (!phone.startsWith('91')) phone = `91${phone}`;
+        window.location.href = `https://wa.me/${phone}`;
+      }
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        toast({ title: 'Share failed', description: 'Unable to prepare rules image.', variant: 'destructive' });
+      }
+    } finally {
+      setSharingRulesForTenantId(null);
+    }
+  };
 
   // Handle OS back gesture to close dialogs
   useBackGesture(!!paymentAmountTenant, () => setPaymentAmountTenant(null));
@@ -990,29 +1053,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               Welcome
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => {
-                                const rulesText = [
-                                  `*PG Rules & Regulations* 📋\n`,
-                                  `1. 🍽️ *Meal Timings*: Breakfast 7:30-9:00 AM, Lunch 12:30-2:00 PM, Dinner 7:30-9:00 PM`,
-                                  `2. 🚪 *Night Gate*: Main gate closes at 10:00 PM`,
-                                  `3. 💡 *Corridor Lights*: Switched off at 10:00 PM`,
-                                  `4. 🧹 *Room Cleaning*: Once a week`,
-                                  `5. 👥 *Visitors*: No outsiders in rooms. ₹1000 fine for violations`,
-                                  `6. 🔔 *Noise*: No loud noise. Respect others' privacy`,
-                                  `7. 💰 *Rent*: Full rent even if away`,
-                                  `8. 📅 *Notice Period*: 15-30 days advance notice`,
-                                  `9. 🔒 *Security Deposit*: Refundable with deductions`,
-                                  `10. 🧳 *Luggage*: ₹150/day for extra storage`,
-                                  `11. 🆘 *Support*: Contact management for issues`,
-                                  `\n🙏 Thank you for your cooperation!`
-                                ].join('\n');
-                                const encoded = encodeURIComponent(rulesText);
-                                window.open(`https://wa.me/${tenant.phone.replace(/\D/g, "")}?text=${encoded}`, "_blank");
-                              }}
+                              onClick={() => shareRulesImageToWhatsApp(tenant.name, tenant.phone)}
                               className="gap-2"
                             >
                               <BookOpen className="h-4 w-4" />
-                              Rules & Regulations
+                              {sharingRulesForTenantId === tenant.phone ? 'Preparing Rules Image...' : 'Rules & Regulations'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
