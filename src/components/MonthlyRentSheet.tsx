@@ -46,7 +46,7 @@ import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import * as XLSX from "xlsx";
+import { applyStyledExport, XLSX as styledXLSX } from "@/utils/excelStyles";
 import { toast } from "@/hooks/use-toast";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";

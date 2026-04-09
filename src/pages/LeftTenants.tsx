@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { Download, Pencil, Trash2, RotateCcw } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { applyStyledExport, XLSX as styledXLSX } from '@/utils/excelStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 

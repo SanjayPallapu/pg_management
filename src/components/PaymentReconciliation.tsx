@@ -16,7 +16,7 @@ import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { format, getDaysInMonth, subMonths } from 'date-fns';
-import * as XLSX from 'xlsx';
+import { applyStyledExport, addStyledSheet, XLSX as styledXLSX } from '@/utils/excelStyles';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
