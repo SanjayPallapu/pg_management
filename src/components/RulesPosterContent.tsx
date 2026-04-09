@@ -53,8 +53,8 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }
     </div>
 
     <div style={{ margin: '18px 36px 14px', padding: '16px 18px', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', borderRadius: '16px', borderLeft: '6px solid #2563eb' }}>
-      <div style={{ fontSize: '22px', color: '#1d4ed8', fontWeight: 800, marginBottom: '6px' }}>Dear Residents,</div>
-      <div style={{ fontSize: '18px', color: '#334155', lineHeight: 1.65 }}>Please read and follow these rules carefully for a comfortable, clean, and peaceful stay.</div>
+      <div style={{ fontSize: '24px', color: '#1d4ed8', fontWeight: 900, marginBottom: '6px' }}>Dear Residents,</div>
+      <div style={{ fontSize: '20px', fontWeight: 600, color: '#334155', lineHeight: 1.65 }}>Please read and follow these rules carefully for a comfortable, clean, and peaceful stay.</div>
     </div>
 
     <div style={{ padding: '0 36px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -62,12 +62,12 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }
         <div key={rule.id} style={{ padding: '14px 16px', background: idx % 2 === 0 ? '#f8fbff' : '#ffffff', borderRadius: '16px', border: '1px solid #dbe4f0', boxShadow: '0 6px 18px rgba(15, 23, 42, 0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
             <span style={{ fontSize: '22px', lineHeight: 1 }}>{getIcon(rule.title)}</span>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#1d4ed8', lineHeight: 1.35 }}>{idx + 1}. {getTitle(rule)}</div>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: '#1d4ed8', lineHeight: 1.35 }}>{idx + 1}. {getTitle(rule)}</div>
           </div>
 
           {getDetails(rule).map((detail, detailIndex) => (
-            <div key={detailIndex} style={{ fontSize: '17px', color: '#334155', lineHeight: 1.7, paddingLeft: '24px', position: 'relative', marginBottom: '4px' }}>
-              <span style={{ position: 'absolute', left: '6px', top: '9px', color: '#60a5fa', fontSize: '10px' }}>•</span>
+            <div key={detailIndex} style={{ fontSize: '20px', fontWeight: 600, color: '#334155', lineHeight: 1.7, paddingLeft: '24px', position: 'relative', marginBottom: '4px' }}>
+              <span style={{ position: 'absolute', left: '6px', top: '11px', color: '#60a5fa', fontSize: '12px' }}>•</span>
               {detail}
             </div>
           ))}
@@ -76,8 +76,8 @@ const ProfessionalTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }
     </div>
 
     <div style={{ margin: '18px 36px 0', padding: '16px 20px', background: 'linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%)', borderRadius: '16px', border: '1px solid #dbe4f0', textAlign: 'center' }}>
-      <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e40af', marginBottom: '4px' }}>Thank you for your cooperation</div>
-      <div style={{ fontSize: '15px', color: '#475569', lineHeight: 1.6 }}>For any issue or support, please contact the management team.</div>
+      <div style={{ fontSize: '22px', fontWeight: 900, color: '#1e40af', marginBottom: '4px' }}>Thank you for your cooperation</div>
+      <div style={{ fontSize: '18px', fontWeight: 600, color: '#475569', lineHeight: 1.6 }}>For any issue or support, please contact the management team.</div>
     </div>
 
     <div style={{ marginTop: '18px', width: '100%', height: '10px', background: 'linear-gradient(90deg, #1e40af 0%, #60a5fa 50%, #1e40af 100%)' }} />
@@ -123,8 +123,8 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }: Tem
       </div>
 
       <div style={{ margin: '4px 34px 14px', padding: '15px 18px', background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(253,242,248,0.82))', borderRadius: '16px', borderLeft: '5px solid #db2777' }}>
-        <div style={{ fontSize: '21px', fontWeight: 800, color: '#a21caf', marginBottom: '6px' }}>Please Note</div>
-        <div style={{ fontSize: '17px', color: '#4b5563', lineHeight: 1.65 }}>Kindly follow these house rules to keep the stay safe, neat, and respectful for everyone.</div>
+        <div style={{ fontSize: '24px', fontWeight: 900, color: '#a21caf', marginBottom: '6px' }}>Please Note</div>
+        <div style={{ fontSize: '20px', fontWeight: 600, color: '#4b5563', lineHeight: 1.65 }}>Kindly follow these house rules to keep the stay safe, neat, and respectful for everyone.</div>
       </div>
 
       <div style={{ padding: '6px 34px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -132,12 +132,12 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }: Tem
           <div key={rule.id} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.78)', borderRadius: '18px', border: '1px solid #e9d5ff', boxShadow: '0 8px 20px rgba(168, 85, 247, 0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
               <span style={{ fontSize: '22px', lineHeight: 1 }}>{getIcon(rule.title)}</span>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#7c3aed', lineHeight: 1.35 }}>{idx + 1}. {getTitle(rule)}</div>
+              <div style={{ fontSize: '24px', fontWeight: 900, color: '#7c3aed', lineHeight: 1.35 }}>{idx + 1}. {getTitle(rule)}</div>
             </div>
 
             {getDetails(rule).map((detail, detailIndex) => (
-              <div key={detailIndex} style={{ fontSize: '17px', color: '#374151', lineHeight: 1.7, paddingLeft: '24px', position: 'relative', marginBottom: '4px' }}>
-                <span style={{ position: 'absolute', left: '6px', top: '9px', color: '#c026d3', fontSize: '10px' }}>•</span>
+              <div key={detailIndex} style={{ fontSize: '20px', fontWeight: 600, color: '#374151', lineHeight: 1.7, paddingLeft: '24px', position: 'relative', marginBottom: '4px' }}>
+                <span style={{ position: 'absolute', left: '6px', top: '11px', color: '#c026d3', fontSize: '12px' }}>•</span>
                 {detail}
               </div>
             ))}
@@ -146,8 +146,8 @@ const ElegantTemplate = ({ pgName, pgLogoUrl, rules, getTitle, getDetails }: Tem
       </div>
 
       <div style={{ margin: '16px 34px 0', padding: '16px 20px', background: 'linear-gradient(135deg, #fff1f2 0%, #fdf2f8 100%)', borderRadius: '16px', border: '1px solid #fbcfe8', textAlign: 'center' }}>
-        <div style={{ fontFamily: "'Georgia', serif", fontSize: '18px', fontWeight: 700, color: '#a21caf', marginBottom: '6px' }}>Thank you for your cooperation</div>
-        <div style={{ fontSize: '15px', color: '#6b7280', lineHeight: 1.6 }}>If you need help, please contact the management.</div>
+        <div style={{ fontFamily: "'Georgia', serif", fontSize: '22px', fontWeight: 900, color: '#a21caf', marginBottom: '6px' }}>Thank you for your cooperation</div>
+        <div style={{ fontSize: '18px', fontWeight: 600, color: '#6b7280', lineHeight: 1.6 }}>If you need help, please contact the management.</div>
       </div>
     </div>
   </div>
