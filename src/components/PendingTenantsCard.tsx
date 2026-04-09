@@ -135,7 +135,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-4 rounded-full"
+            className="absolute left-4 top-4 rounded-full z-10"
             onClick={() => setSheetOpen(false)}
             aria-label="Back"
           >
