@@ -16,7 +16,7 @@ import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { format, getDaysInMonth, subMonths } from 'date-fns';
-import * as XLSX from 'xlsx';
+import { applyStyledExport, addStyledSheet, XLSX as styledXLSX } from '@/utils/excelStyles';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
@@ -497,15 +497,17 @@ export const PaymentReconciliation = ({
       'Entry Amount': '-' as string | number
     }]);
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
-    const detailsWs = XLSX.utils.json_to_sheet(detailsData);
-    XLSX.utils.book_append_sheet(wb, detailsWs, 'Payment Details');
+    // Create styled workbook
+    const wb = applyStyledExport(summaryData, 'Summary', [{ wch: 25 }, { wch: 20 }], {
+      currencyColumns: [1],
+      fileName: `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`,
+    });
+    addStyledSheet(wb, detailsData, 'Payment Details', [
+      { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+      { wch: 8 }, { wch: 12 }, { wch: 15 }, { wch: 8 }, { wch: 12 },
+    ], { statusColumns: [3], currencyColumns: [2, 4, 9] });
 
-    // Download
-    XLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
+    styledXLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
   };
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
