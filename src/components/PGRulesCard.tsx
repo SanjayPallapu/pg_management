@@ -213,12 +213,16 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
             <div className="space-y-4 mt-4">
               {editMode && editingRule ? (
                 <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  {/* English Fields */}
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-primary uppercase tracking-wider">English</p>
+                  </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Rule Title</label>
                     <Input
                       value={editingRule.title}
                       onChange={(e) => setEditingRule({ ...editingRule, title: e.target.value })}
-                      placeholder="Enter rule title"
+                      placeholder="Enter rule title (English)"
                     />
                   </div>
                   <div className="space-y-2">
@@ -226,7 +230,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                     <Input
                       value={editingRule.description}
                       onChange={(e) => setEditingRule({ ...editingRule, description: e.target.value })}
-                      placeholder="Enter rule description"
+                      placeholder="Enter description (English)"
                     />
                   </div>
                   <div className="space-y-2">
@@ -242,7 +246,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                           <Textarea
                             value={detail}
                             onChange={(e) => handleUpdateDetail(idx, e.target.value)}
-                            placeholder={`Detail ${idx + 1}`}
+                            placeholder={`Detail ${idx + 1} (English)`}
                             className="text-sm"
                             rows={2}
                           />
@@ -253,6 +257,63 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Telugu Fields */}
+                  <div className="border-t pt-3 mt-3 space-y-1">
+                    <p className="text-xs font-bold text-primary uppercase tracking-wider">తెలుగు (Telugu)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Rule Title (Telugu)</label>
+                    <Input
+                      value={editingRule.titleTe || ''}
+                      onChange={(e) => setEditingRule({ ...editingRule, titleTe: e.target.value })}
+                      placeholder="నియమం శీర్షిక"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Description (Telugu)</label>
+                    <Input
+                      value={editingRule.descriptionTe || ''}
+                      onChange={(e) => setEditingRule({ ...editingRule, descriptionTe: e.target.value })}
+                      placeholder="వివరణ"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Details (Telugu)</label>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        if (!editingRule) return;
+                        const currentTe = editingRule.detailsTe || [];
+                        setEditingRule({ ...editingRule, detailsTe: [...currentTe, ''] });
+                      }} className="gap-1 h-7">
+                        <Plus className="h-3 w-3" /> Add
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(editingRule.detailsTe || []).map((detail, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Textarea
+                            value={detail}
+                            onChange={(e) => {
+                              const newDetailsTe = [...(editingRule.detailsTe || [])];
+                              newDetailsTe[idx] = e.target.value;
+                              setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
+                            }}
+                            placeholder={`వివరాలు ${idx + 1}`}
+                            className="text-sm"
+                            rows={2}
+                          />
+                          <Button size="sm" variant="ghost" onClick={() => {
+                            const newDetailsTe = (editingRule.detailsTe || []).filter((_, i) => i !== idx);
+                            setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
+                          }} className="h-fit">
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex gap-2 pt-2">
                     <Button onClick={handleSaveRule} className="flex-1" size="sm">Save Rule</Button>
                     <Button variant="outline" onClick={() => setEditingRule(null)} size="sm" className="flex-1">Cancel</Button>
