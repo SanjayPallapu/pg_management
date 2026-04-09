@@ -78,10 +78,6 @@ const LeftTenants = () => {
       'Leave Date': tenant.endDate ? format(parseDateOnly(tenant.endDate), 'dd MMM yyyy') : '',
     }));
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Left Tenants');
-    
     const colWidths = [
       { wch: 10 },
       { wch: 20 },
@@ -89,9 +85,10 @@ const LeftTenants = () => {
       { wch: 15 },
       { wch: 15 },
     ];
-    ws['!cols'] = colWidths;
-    
-    XLSX.writeFile(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    const wb = applyStyledExport(data, 'Left Tenants', colWidths, {
+      fileName: `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`,
+    });
+    styledXLSX.writeFile(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   }, [leftTenants, roomNo]);
 
   const handleStartEdit = (tenant: any) => {

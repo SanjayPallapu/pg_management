@@ -774,33 +774,24 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       });
       return row;
     });
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(excelData);
     const colWidths = [
-      {
-        wch: 20,
-      },
-      {
-        wch: 10,
-      },
-      {
-        wch: 15,
-      },
-      {
-        wch: 15,
-      },
-      {
-        wch: 12,
-      },
+      { wch: 20 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
     ];
-    months.forEach(() =>
-      colWidths.push({
-        wch: 12,
-      }),
-    );
-    ws["!cols"] = colWidths;
-    XLSX.utils.book_append_sheet(wb, ws, `Rent ${selectedYear}`);
-    XLSX.writeFile(wb, `Rent_Sheet_${selectedYear}.xlsx`);
+    const statusCols: number[] = [];
+    months.forEach((_, i) => {
+      colWidths.push({ wch: 12 });
+      statusCols.push(5 + i);
+    });
+    const wb = applyStyledExport(excelData, `Rent ${selectedYear}`, colWidths, {
+      statusColumns: statusCols,
+      currencyColumns: [4],
+      fileName: `Rent_Sheet_${selectedYear}.xlsx`,
+    });
+    styledXLSX.writeFile(wb, `Rent_Sheet_${selectedYear}.xlsx`);
     toast({
       title: "Excel file exported with full year data",
     });
