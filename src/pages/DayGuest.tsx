@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const DEFAULT_PER_DAY_RATE = 350;
 
@@ -79,6 +81,48 @@ const DayGuestPage = () => {
     setPerDayRate(DEFAULT_PER_DAY_RATE);
     setPaymentStatus('Pending');
     setNotes('');
+  };
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editGuest, setEditGuest] = useState<{
+    id: string; guestName: string; mobileNumber: string; idProof: string;
+    fromDate: Date; toDate: Date; perDayRate: number; notes: string;
+  } | null>(null);
+
+  const handleEditStart = (guest: DayGuest) => {
+    setEditGuest({
+      id: guest.id,
+      guestName: guest.guest_name,
+      mobileNumber: guest.mobile_number || '',
+      idProof: guest.id_proof || '',
+      fromDate: new Date(guest.from_date),
+      toDate: new Date(guest.to_date),
+      perDayRate: guest.per_day_rate,
+      notes: guest.notes || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editGuest || !editGuest.guestName.trim()) return;
+    const days = Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1);
+    const total = days * editGuest.perDayRate;
+    await updateDayGuest.mutateAsync({
+      id: editGuest.id,
+      guest_name: editGuest.guestName.trim(),
+      mobile_number: editGuest.mobileNumber.trim() || null,
+      id_proof: editGuest.idProof.trim() || null,
+      from_date: format(editGuest.fromDate, 'yyyy-MM-dd'),
+      to_date: format(editGuest.toDate, 'yyyy-MM-dd'),
+      number_of_days: days,
+      per_day_rate: editGuest.perDayRate,
+      total_amount: total,
+      notes: editGuest.notes.trim() || null,
+    });
+    toast.success('Day guest updated');
+    setEditDialogOpen(false);
+    setEditGuest(null);
   };
 
   const handleStatusChange = async (guest: DayGuest, newStatus: 'Paid' | 'Pending') => {
