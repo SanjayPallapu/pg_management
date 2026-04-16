@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const DEFAULT_PER_DAY_RATE = 350;
 
@@ -79,6 +81,48 @@ const DayGuestPage = () => {
     setPerDayRate(DEFAULT_PER_DAY_RATE);
     setPaymentStatus('Pending');
     setNotes('');
+  };
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editGuest, setEditGuest] = useState<{
+    id: string; guestName: string; mobileNumber: string; idProof: string;
+    fromDate: Date; toDate: Date; perDayRate: number; notes: string;
+  } | null>(null);
+
+  const handleEditStart = (guest: DayGuest) => {
+    setEditGuest({
+      id: guest.id,
+      guestName: guest.guest_name,
+      mobileNumber: guest.mobile_number || '',
+      idProof: guest.id_proof || '',
+      fromDate: new Date(guest.from_date),
+      toDate: new Date(guest.to_date),
+      perDayRate: guest.per_day_rate,
+      notes: guest.notes || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editGuest || !editGuest.guestName.trim()) return;
+    const days = Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1);
+    const total = days * editGuest.perDayRate;
+    await updateDayGuest.mutateAsync({
+      id: editGuest.id,
+      guest_name: editGuest.guestName.trim(),
+      mobile_number: editGuest.mobileNumber.trim() || null,
+      id_proof: editGuest.idProof.trim() || null,
+      from_date: format(editGuest.fromDate, 'yyyy-MM-dd'),
+      to_date: format(editGuest.toDate, 'yyyy-MM-dd'),
+      number_of_days: days,
+      per_day_rate: editGuest.perDayRate,
+      total_amount: total,
+      notes: editGuest.notes.trim() || null,
+    });
+    toast.success('Day guest updated');
+    setEditDialogOpen(false);
+    setEditGuest(null);
   };
 
   const handleStatusChange = async (guest: DayGuest, newStatus: 'Paid' | 'Pending') => {
@@ -362,6 +406,14 @@ const DayGuestPage = () => {
                         </SelectContent>
                       </Select>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => handleEditStart(guest)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         {guest.payment_status === 'Pending' && guest.mobile_number && !guest.mobile_number.includes('•') && (
                           <Button
                             variant="outline"
@@ -397,6 +449,91 @@ const DayGuestPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Day Guest Dialog */}
+      <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit Day Guest</AlertDialogTitle>
+            <AlertDialogDescription>Update guest details</AlertDialogDescription>
+          </AlertDialogHeader>
+          {editGuest && (
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-sm">Guest Name *</Label>
+                <Input value={editGuest.guestName} onChange={(e) => setEditGuest({ ...editGuest, guestName: e.target.value })} className="mt-1" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Mobile</Label>
+                  <Input value={editGuest.mobileNumber} onChange={(e) => setEditGuest({ ...editGuest, mobileNumber: e.target.value })} type="tel" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-sm">ID Proof</Label>
+                  <Input value={editGuest.idProof} onChange={(e) => setEditGuest({ ...editGuest, idProof: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">From Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start mt-1">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {format(editGuest.fromDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent mode="single" selected={editGuest.fromDate} onSelect={(d) => d && setEditGuest({ ...editGuest, fromDate: d })} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label className="text-sm">To Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start mt-1">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {format(editGuest.toDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent mode="single" selected={editGuest.toDate} onSelect={(d) => d && setEditGuest({ ...editGuest, toDate: d })} disabled={(d) => d < editGuest.fromDate} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm">Per Day Rate</Label>
+                <div className="relative mt-1">
+                  <IndianRupee className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input type="number" value={editGuest.perDayRate} onChange={(e) => setEditGuest({ ...editGuest, perDayRate: Number(e.target.value) })} className="pl-8" />
+                </div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex justify-between text-sm">
+                  <span>Days:</span>
+                  <span className="font-medium">{Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1)}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span>Total:</span>
+                  <span className="font-semibold text-primary">₹{(Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1) * editGuest.perDayRate).toLocaleString()}</span>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm">Notes</Label>
+                <Input value={editGuest.notes} onChange={(e) => setEditGuest({ ...editGuest, notes: e.target.value })} placeholder="Notes..." className="mt-1" />
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditSave} disabled={updateDayGuest.isPending || !editGuest?.guestName.trim()}>
+              Save Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

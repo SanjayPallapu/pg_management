@@ -36,8 +36,13 @@ interface DayGuestPaymentEntry {
 
 interface EditingGuest {
   id: string;
+  guestName: string;
+  mobileNumber: string;
+  idProof: string;
+  fromDate: Date;
   toDate: Date;
   perDayRate: number;
+  notes: string;
   paymentEntries: DayGuestPaymentEntry[];
   amountPaid: number;
 }
@@ -110,8 +115,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     const entries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
     setEditingGuest({
       id: guest.id,
+      guestName: guest.guest_name,
+      mobileNumber: guest.mobile_number || '',
+      idProof: guest.id_proof || '',
+      fromDate: new Date(guest.from_date),
       toDate: new Date(guest.to_date),
       perDayRate: guest.per_day_rate,
+      notes: guest.notes || '',
       paymentEntries: [...entries],
       amountPaid: guest.amount_paid || 0,
     });
@@ -121,15 +131,17 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const handleEditSave = async () => {
     if (!editingGuest || !editGuestData) return;
 
-    const fromDate = new Date(editGuestData.from_date);
-    // Day count: inclusive of both start and end dates (e.g., Mar 23 to Apr 11 = 20 days)
-    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate) + 1, 1);
+    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, editingGuest.fromDate) + 1, 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
     const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
-    const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');
+    const newStatus = newAmountPaid >= totalAmount ? 'Paid' : 'Pending';
 
     await updateDayGuest.mutateAsync({
       id: editGuestData.id,
+      guest_name: editingGuest.guestName.trim(),
+      mobile_number: editingGuest.mobileNumber.trim() || null,
+      id_proof: editingGuest.idProof.trim() || null,
+      from_date: format(editingGuest.fromDate, 'yyyy-MM-dd'),
       to_date: format(editingGuest.toDate, 'yyyy-MM-dd'),
       per_day_rate: editingGuest.perDayRate,
       number_of_days: numberOfDays,
@@ -137,11 +149,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       amount_paid: newAmountPaid,
       payment_entries: editingGuest.paymentEntries,
       payment_status: newStatus,
+      notes: editingGuest.notes.trim() || null,
     });
 
     setEditDialogOpen(false);
     setEditingGuest(null);
     setEditGuestData(null);
+    toast.success('Day guest updated successfully');
   };
 
   const handleDeleteStart = (guest: DayGuest) => {
@@ -454,22 +468,71 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
 
       {/* Edit Dialog */}
       <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Edit Day Guest</AlertDialogTitle>
             <AlertDialogDescription>
-              Update the stay details for {editGuestData?.guest_name}
+              Update details for {editGuestData?.guest_name}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           {editingGuest && editGuestData && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3 py-2">
+              {/* Guest Name */}
+              <div>
+                <Label className="text-sm">Guest Name *</Label>
+                <Input
+                  value={editingGuest.guestName}
+                  onChange={(e) => setEditingGuest(prev => prev ? { ...prev, guestName: e.target.value } : null)}
+                  placeholder="Guest name"
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Mobile & ID Proof */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Mobile</Label>
+                  <Input
+                    value={editingGuest.mobileNumber}
+                    onChange={(e) => setEditingGuest(prev => prev ? { ...prev, mobileNumber: e.target.value } : null)}
+                    placeholder="Mobile number"
+                    type="tel"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">ID Proof</Label>
+                  <Input
+                    value={editingGuest.idProof}
+                    onChange={(e) => setEditingGuest(prev => prev ? { ...prev, idProof: e.target.value } : null)}
+                    placeholder="Aadhar, DL..."
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-sm">From Date</Label>
-                  <p className="text-sm font-medium mt-1">
-                    {format(new Date(editGuestData.from_date), 'MMM d, yyyy')}
-                  </p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start mt-1">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {format(editingGuest.fromDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={editingGuest.fromDate}
+                        onSelect={(date) => date && setEditingGuest(prev => prev ? { ...prev, fromDate: date } : null)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label className="text-sm">To Date</Label>
@@ -485,7 +548,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                         mode="single"
                         selected={editingGuest.toDate}
                         onSelect={(date) => date && setEditingGuest(prev => prev ? { ...prev, toDate: date } : null)}
-                        disabled={(date) => date < new Date(editGuestData.from_date)}
+                        disabled={(date) => date < editingGuest.fromDate}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />
@@ -494,6 +557,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                 </div>
               </div>
 
+              {/* Per Day Rate */}
               <div>
                 <Label className="text-sm">Per Day Rate</Label>
                 <div className="relative mt-1">
@@ -507,34 +571,36 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                 </div>
               </div>
 
+              {/* Summary */}
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex justify-between text-sm">
                   <span>Days:</span>
-                  <span className="font-medium">{Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)) + 1, 1)}</span>
+                  <span className="font-medium">{Math.max(differenceInDays(editingGuest.toDate, editingGuest.fromDate) + 1, 1)}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span>New Total:</span>
                   <span className="font-semibold text-primary">
-                    ₹{(Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)) + 1, 1) * editingGuest.perDayRate).toLocaleString()}
+                    ₹{(Math.max(differenceInDays(editingGuest.toDate, editingGuest.fromDate) + 1, 1) * editingGuest.perDayRate).toLocaleString()}
                   </span>
                 </div>
               </div>
+
+              {/* Notes */}
+              <div>
+                <Label className="text-sm">Notes</Label>
+                <Input
+                  value={editingGuest.notes}
+                  onChange={(e) => setEditingGuest(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                  placeholder="Additional notes..."
+                  className="mt-1"
+                />
+              </div>
+
               {/* Payment Entries - Editable */}
               {editingGuest.paymentEntries.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm">Payment History</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={() => {
-                        setEditingGuest(prev => prev ? { ...prev, paymentEntries: prev.paymentEntries } : null);
-                      }}
-                    >
-                      <SquarePen className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
                   </div>
                   {editingGuest.paymentEntries.map((entry, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
