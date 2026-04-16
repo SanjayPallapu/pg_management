@@ -36,8 +36,13 @@ interface DayGuestPaymentEntry {
 
 interface EditingGuest {
   id: string;
+  guestName: string;
+  mobileNumber: string;
+  idProof: string;
+  fromDate: Date;
   toDate: Date;
   perDayRate: number;
+  notes: string;
   paymentEntries: DayGuestPaymentEntry[];
   amountPaid: number;
 }
@@ -110,8 +115,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     const entries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
     setEditingGuest({
       id: guest.id,
+      guestName: guest.guest_name,
+      mobileNumber: guest.mobile_number || '',
+      idProof: guest.id_proof || '',
+      fromDate: new Date(guest.from_date),
       toDate: new Date(guest.to_date),
       perDayRate: guest.per_day_rate,
+      notes: guest.notes || '',
       paymentEntries: [...entries],
       amountPaid: guest.amount_paid || 0,
     });
@@ -121,15 +131,17 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const handleEditSave = async () => {
     if (!editingGuest || !editGuestData) return;
 
-    const fromDate = new Date(editGuestData.from_date);
-    // Day count: inclusive of both start and end dates (e.g., Mar 23 to Apr 11 = 20 days)
-    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate) + 1, 1);
+    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, editingGuest.fromDate) + 1, 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
     const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
-    const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');
+    const newStatus = newAmountPaid >= totalAmount ? 'Paid' : 'Pending';
 
     await updateDayGuest.mutateAsync({
       id: editGuestData.id,
+      guest_name: editingGuest.guestName.trim(),
+      mobile_number: editingGuest.mobileNumber.trim() || null,
+      id_proof: editingGuest.idProof.trim() || null,
+      from_date: format(editingGuest.fromDate, 'yyyy-MM-dd'),
       to_date: format(editingGuest.toDate, 'yyyy-MM-dd'),
       per_day_rate: editingGuest.perDayRate,
       number_of_days: numberOfDays,
@@ -137,11 +149,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       amount_paid: newAmountPaid,
       payment_entries: editingGuest.paymentEntries,
       payment_status: newStatus,
+      notes: editingGuest.notes.trim() || null,
     });
 
     setEditDialogOpen(false);
     setEditingGuest(null);
     setEditGuestData(null);
+    toast.success('Day guest updated successfully');
   };
 
   const handleDeleteStart = (guest: DayGuest) => {
