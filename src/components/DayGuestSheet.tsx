@@ -122,8 +122,8 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     if (!editingGuest || !editGuestData) return;
 
     const fromDate = new Date(editGuestData.from_date);
-    // Day count: check-in to check-out (e.g., 10th to 14th = 4 days)
-    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate), 1);
+    // Day count: inclusive of both start and end dates (e.g., Mar 23 to Apr 11 = 20 days)
+    const numberOfDays = Math.max(differenceInDays(editingGuest.toDate, fromDate) + 1, 1);
     const totalAmount = numberOfDays * editingGuest.perDayRate;
     const newAmountPaid = editingGuest.paymentEntries.reduce((sum, e) => sum + e.amount, 0);
     const newStatus = newAmountPaid >= totalAmount ? 'Paid' : (newAmountPaid > 0 ? 'Pending' : 'Pending');
@@ -492,12 +492,12 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex justify-between text-sm">
                   <span>Days:</span>
-                  <span className="font-medium">{Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)), 1)}</span>
+                  <span className="font-medium">{Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)) + 1, 1)}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span>New Total:</span>
                   <span className="font-semibold text-primary">
-                    ₹{(Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)), 1) * editingGuest.perDayRate).toLocaleString()}
+                    ₹{(Math.max(differenceInDays(editingGuest.toDate, new Date(editGuestData.from_date)) + 1, 1) * editingGuest.perDayRate).toLocaleString()}
                   </span>
                 </div>
               </div>
