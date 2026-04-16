@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -361,16 +361,34 @@ const DayGuestPage = () => {
                           <SelectItem value="Paid">Paid</SelectItem>
                         </SelectContent>
                       </Select>
-                      {isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(guest.id)}
-                          className="h-8 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {guest.payment_status === 'Pending' && guest.mobile_number && !guest.mobile_number.includes('•') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs gap-1 text-emerald-600 border-emerald-300"
+                            onClick={() => {
+                              let phone = guest.mobile_number?.replace(/\D/g, '') || '';
+                              if (!phone.startsWith('91')) phone = `91${phone}`;
+                              const pending = guest.total_amount - (guest.amount_paid || 0);
+                              const msg = `Hi ${guest.guest_name}, this is a reminder for your pending day guest payment of ₹${pending.toLocaleString()} (Room ${roomNo}, ${format(new Date(guest.from_date), 'MMM d')} - ${format(new Date(guest.to_date), 'MMM d')}). Please pay at the earliest. Thank you!`;
+                              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                            }}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(guest.id)}
+                            className="h-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
