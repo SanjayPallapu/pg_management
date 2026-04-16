@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { useRooms } from '@/hooks/useRooms';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft } from 'lucide-react';
+import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
