@@ -406,6 +406,14 @@ const DayGuestPage = () => {
                         </SelectContent>
                       </Select>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => handleEditStart(guest)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         {guest.payment_status === 'Pending' && guest.mobile_number && !guest.mobile_number.includes('•') && (
                           <Button
                             variant="outline"
