@@ -415,6 +415,24 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                       </Button>
                                     </>
                                   )}
+                                  {/* WhatsApp Reminder for pending guests */}
+                                  {!isPaid && guest.mobile_number && !guest.mobile_number.includes('•') && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 text-xs gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                                      onClick={() => {
+                                        let phone = guest.mobile_number?.replace(/\D/g, '') || '';
+                                        if (!phone.startsWith('91')) phone = `91${phone}`;
+                                        const pendingAmt = remaining;
+                                        const msg = `Hi ${guest.guest_name}, this is a reminder for your pending day guest payment of ₹${pendingAmt.toLocaleString()} (Room ${rooms.find(r => r.id === guest.room_id)?.roomNo || ''}, ${format(new Date(guest.from_date), 'MMM d')} - ${format(new Date(guest.to_date), 'MMM d')}). Please pay at the earliest. Thank you!`;
+                                        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                      }}
+                                    >
+                                      <MessageCircle className="h-3.5 w-3.5" />
+                                      Remind
+                                    </Button>
+                                  )}
                                 </div>
 
                                 {/* Notes */}
