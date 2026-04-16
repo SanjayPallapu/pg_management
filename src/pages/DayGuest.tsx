@@ -449,6 +449,91 @@ const DayGuestPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Day Guest Dialog */}
+      <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit Day Guest</AlertDialogTitle>
+            <AlertDialogDescription>Update guest details</AlertDialogDescription>
+          </AlertDialogHeader>
+          {editGuest && (
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-sm">Guest Name *</Label>
+                <Input value={editGuest.guestName} onChange={(e) => setEditGuest({ ...editGuest, guestName: e.target.value })} className="mt-1" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Mobile</Label>
+                  <Input value={editGuest.mobileNumber} onChange={(e) => setEditGuest({ ...editGuest, mobileNumber: e.target.value })} type="tel" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-sm">ID Proof</Label>
+                  <Input value={editGuest.idProof} onChange={(e) => setEditGuest({ ...editGuest, idProof: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">From Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start mt-1">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {format(editGuest.fromDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent mode="single" selected={editGuest.fromDate} onSelect={(d) => d && setEditGuest({ ...editGuest, fromDate: d })} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label className="text-sm">To Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start mt-1">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {format(editGuest.toDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent mode="single" selected={editGuest.toDate} onSelect={(d) => d && setEditGuest({ ...editGuest, toDate: d })} disabled={(d) => d < editGuest.fromDate} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm">Per Day Rate</Label>
+                <div className="relative mt-1">
+                  <IndianRupee className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input type="number" value={editGuest.perDayRate} onChange={(e) => setEditGuest({ ...editGuest, perDayRate: Number(e.target.value) })} className="pl-8" />
+                </div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex justify-between text-sm">
+                  <span>Days:</span>
+                  <span className="font-medium">{Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1)}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span>Total:</span>
+                  <span className="font-semibold text-primary">₹{(Math.max(differenceInDays(editGuest.toDate, editGuest.fromDate) + 1, 1) * editGuest.perDayRate).toLocaleString()}</span>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm">Notes</Label>
+                <Input value={editGuest.notes} onChange={(e) => setEditGuest({ ...editGuest, notes: e.target.value })} placeholder="Notes..." className="mt-1" />
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditSave} disabled={updateDayGuest.isPending || !editGuest?.guestName.trim()}>
+              Save Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
