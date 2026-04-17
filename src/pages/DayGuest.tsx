@@ -17,6 +17,7 @@ import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { DayGuestReminderDialog, type DayGuestReminderInput } from '@/components/DayGuestReminderDialog';
 
 const DEFAULT_PER_DAY_RATE = 350;
 
@@ -89,6 +90,27 @@ const DayGuestPage = () => {
     id: string; guestName: string; mobileNumber: string; idProof: string;
     fromDate: Date; toDate: Date; perDayRate: number; notes: string;
   } | null>(null);
+
+  // Reminder dialog state
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderData, setReminderData] = useState<DayGuestReminderInput | null>(null);
+
+  const openReminder = (guest: DayGuest) => {
+    const amountPaid = guest.amount_paid || 0;
+    setReminderData({
+      guestName: guest.guest_name,
+      guestPhone: guest.mobile_number || '',
+      fromDate: guest.from_date,
+      toDate: guest.to_date,
+      numberOfDays: guest.number_of_days,
+      perDayRate: guest.per_day_rate,
+      totalAmount: guest.total_amount,
+      amountPaid,
+      balance: guest.total_amount - amountPaid,
+      roomNo,
+    });
+    setReminderDialogOpen(true);
+  };
 
   const handleEditStart = (guest: DayGuest) => {
     setEditGuest({
@@ -419,13 +441,7 @@ const DayGuestPage = () => {
                             variant="outline"
                             size="sm"
                             className="h-8 px-2 text-xs gap-1 text-emerald-600 border-emerald-300"
-                            onClick={() => {
-                              let phone = guest.mobile_number?.replace(/\D/g, '') || '';
-                              if (!phone.startsWith('91')) phone = `91${phone}`;
-                              const pending = guest.total_amount - (guest.amount_paid || 0);
-                              const msg = `Hi ${guest.guest_name}, this is a reminder for your pending day guest payment of ₹${pending.toLocaleString()} (Room ${roomNo}, ${format(new Date(guest.from_date), 'MMM d')} - ${format(new Date(guest.to_date), 'MMM d')}). Please pay at the earliest. Thank you!`;
-                              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                            }}
+                            onClick={() => openReminder(guest)}
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                           </Button>
@@ -534,6 +550,13 @@ const DayGuestPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Day Guest Reminder Dialog */}
+      <DayGuestReminderDialog
+        open={reminderDialogOpen}
+        onOpenChange={setReminderDialogOpen}
+        reminderData={reminderData}
+      />
     </div>
   );
 };
