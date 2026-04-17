@@ -91,13 +91,17 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
+      const startStr = startOfMonth.toISOString().split("T")[0];
+      const endStr = endOfMonth.toISOString().split("T")[0];
 
+      // Include any guest whose stay overlaps the selected month
+      // (from_date <= endOfMonth AND to_date >= startOfMonth)
       const { data, error } = await supabase
         .from("day_guests")
         .select("guest_name, from_date, to_date, total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id, room_no)")
         .eq("rooms.pg_id", currentPG.id)
-        .gte("from_date", startOfMonth.toISOString().split("T")[0])
-        .lte("from_date", endOfMonth.toISOString().split("T")[0])
+        .lte("from_date", endStr)
+        .gte("to_date", startStr)
         .order("from_date", { ascending: false });
 
       if (error) {
