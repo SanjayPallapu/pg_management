@@ -87,21 +87,22 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const { data: dayGuestStats, isLoading: dayGuestStatsLoading } = useQuery({
     queryKey: ["day-guest-revenue", selectedMonth, selectedYear, currentPG?.id],
     queryFn: async () => {
-      if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
+      if (!currentPG?.id) return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0, guests: [] };
 
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
 
       const { data, error } = await supabase
         .from("day_guests")
-        .select("total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id)")
+        .select("guest_name, from_date, to_date, total_amount, payment_status, amount_paid, payment_entries, rooms!inner(pg_id, room_no)")
         .eq("rooms.pg_id", currentPG.id)
         .gte("from_date", startOfMonth.toISOString().split("T")[0])
-        .lte("from_date", endOfMonth.toISOString().split("T")[0]);
+        .lte("from_date", endOfMonth.toISOString().split("T")[0])
+        .order("from_date", { ascending: false });
 
       if (error) {
         console.error("Error fetching day guest stats:", error);
-        return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0 };
+        return { collected: 0, pending: 0, count: 0, upi: 0, cash: 0, guests: [] };
       }
 
       const collected = data.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
@@ -121,7 +122,18 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         });
       });
 
-      return { collected, pending, count: data.length, upi, cash };
+      const guests = data.map((g: any) => ({
+        name: g.guest_name as string,
+        roomNo: (g.rooms?.room_no as string) || "",
+        fromDate: g.from_date as string,
+        toDate: g.to_date as string,
+        total: g.total_amount as number,
+        paid: (g.amount_paid as number) || 0,
+        balance: (g.total_amount as number) - ((g.amount_paid as number) || 0),
+        status: g.payment_status as string,
+      }));
+
+      return { collected, pending, count: data.length, upi, cash, guests };
     },
     enabled: !!currentPG?.id,
   });

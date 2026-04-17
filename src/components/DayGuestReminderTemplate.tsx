@@ -165,7 +165,7 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.roomNo}</td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Per Day Rate:</td>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Per Day Rent:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>
                 {formatCurrency(data.perDayRate)}
               </td>
