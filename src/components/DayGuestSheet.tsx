@@ -854,6 +854,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Day Guest Reminder Dialog */}
+      <DayGuestReminderDialog
+        open={reminderDialogOpen}
+        onOpenChange={setReminderDialogOpen}
+        reminderData={reminderData}
+      />
     </>
   );
 };
