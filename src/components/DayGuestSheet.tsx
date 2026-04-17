@@ -20,6 +20,7 @@ import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCi
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
+import { DayGuestReminderDialog, type DayGuestReminderInput } from '@/components/DayGuestReminderDialog';
 
 interface DayGuestSheetProps {
   open: boolean;
@@ -83,6 +84,27 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   // Mark unpaid confirmation dialog state
   const [unpaidDialogOpen, setUnpaidDialogOpen] = useState(false);
   const [unpaidGuest, setUnpaidGuest] = useState<DayGuest | null>(null);
+
+  // Reminder dialog state
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderData, setReminderData] = useState<DayGuestReminderInput | null>(null);
+
+  const openReminder = (guest: DayGuest, roomNo: string) => {
+    const amountPaid = guest.amount_paid || 0;
+    setReminderData({
+      guestName: guest.guest_name,
+      guestPhone: guest.mobile_number || '',
+      fromDate: guest.from_date,
+      toDate: guest.to_date,
+      numberOfDays: guest.number_of_days,
+      perDayRate: guest.per_day_rate,
+      totalAmount: guest.total_amount,
+      amountPaid,
+      balance: guest.total_amount - amountPaid,
+      roomNo,
+    });
+    setReminderDialogOpen(true);
+  };
 
   // Handle OS back gesture to close sub-dialogs
   useBackGesture(editDialogOpen, () => setEditDialogOpen(false));
@@ -435,13 +457,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                       variant="outline"
                                       size="sm"
                                       className="h-7 text-xs gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-                                      onClick={() => {
-                                        let phone = guest.mobile_number?.replace(/\D/g, '') || '';
-                                        if (!phone.startsWith('91')) phone = `91${phone}`;
-                                        const pendingAmt = remaining;
-                                        const msg = `Hi ${guest.guest_name}, this is a reminder for your pending day guest payment of ₹${pendingAmt.toLocaleString()} (Room ${rooms.find(r => r.id === guest.room_id)?.roomNo || ''}, ${format(new Date(guest.from_date), 'MMM d')} - ${format(new Date(guest.to_date), 'MMM d')}). Please pay at the earliest. Thank you!`;
-                                        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                                      }}
+                                      onClick={() => openReminder(guest, roomNo)}
                                     >
                                       <MessageCircle className="h-3.5 w-3.5" />
                                       Remind
