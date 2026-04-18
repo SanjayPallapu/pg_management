@@ -35,8 +35,8 @@ const formatShortDate = (iso: string) => {
 };
 
 export const DayGuestRevenueCard = ({ onClick, stats, isLoading }: DayGuestRevenueCardProps) => {
-  // Show skeleton when loading OR when stats not yet available (ensures sync with other cards)
-  if (isLoading || !stats) {
+  // Only show skeleton on initial load when no data exists yet
+  if (isLoading && !stats) {
     return (
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
