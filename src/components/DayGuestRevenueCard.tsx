@@ -63,7 +63,7 @@ export const DayGuestRevenueCard = ({ onClick, stats, isLoading }: DayGuestReven
     );
   }
 
-  const guests = stats.guests || [];
+  const guests = stats?.guests || [];
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
