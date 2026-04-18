@@ -140,6 +140,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       return { collected, pending, count: data.length, upi, cash, guests };
     },
     enabled: !!currentPG?.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    placeholderData: (prev) => prev,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
