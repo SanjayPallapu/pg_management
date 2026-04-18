@@ -91,8 +91,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
       const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth, 0);
-      const startStr = startOfMonth.toISOString().split("T")[0];
-      const endStr = endOfMonth.toISOString().split("T")[0];
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const toLocalISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const startStr = toLocalISO(startOfMonth);
+      const endStr = toLocalISO(endOfMonth);
 
       // Include any guest whose stay overlaps the selected month
       // (from_date <= endOfMonth AND to_date >= startOfMonth)
