@@ -112,13 +112,15 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
   useBackGesture(unpaidDialogOpen, () => setUnpaidDialogOpen(false));
 
-  // Filter guests for selected month
+  // Filter guests whose stay overlaps the selected month
+  // (from_date <= endOfMonth AND to_date >= startOfMonth)
   const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
-  const endOfMonth = new Date(selectedYear, selectedMonth, 0);
+  const endOfMonth = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
 
   const filteredGuests = dayGuests.filter(guest => {
     const fromDate = new Date(guest.from_date);
-    return fromDate >= startOfMonth && fromDate <= endOfMonth;
+    const toDate = new Date(guest.to_date);
+    return fromDate <= endOfMonth && toDate >= startOfMonth;
   });
 
   // Group guests by room
