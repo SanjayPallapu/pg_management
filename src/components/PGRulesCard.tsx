@@ -328,32 +328,43 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                 </div>
               ) : (
                 <>
-                  {rules.map((rule) => (
-                    <div key={rule.id} className="border rounded-lg p-4 hover:bg-accent/30 transition-colors">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-base">{getRuleTitle(rule)}</h3>
-                          <p className="text-sm text-muted-foreground">{getRuleDescription(rule)}</p>
+                  {rules.map((rule, idx) => (
+                    <div
+                      key={rule.id}
+                      className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base leading-tight">{getRuleTitle(rule)}</h3>
+                          {getRuleDescription(rule) && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{getRuleDescription(rule)}</p>
+                          )}
                         </div>
                         {editMode && (
-                          <div className="flex gap-1 ml-2">
-                            <Button size="sm" variant="ghost" onClick={() => handleEditRule(rule)} className="h-7 w-7 p-0">
-                              <Settings className="h-3 w-3" />
+                          <div className="flex gap-1 shrink-0">
+                            <Button size="icon" variant="ghost" onClick={() => handleEditRule(rule)} className="h-8 w-8">
+                              <Settings className="h-3.5 w-3.5" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
                               onClick={() => { setRuleToDelete(rule.id); setShowDeleteDialog(true); }}
-                              className="h-7 w-7 p-0"
+                              className="h-8 w-8"
                             >
-                              <Trash2 className="h-3 w-3 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
                           </div>
                         )}
                       </div>
-                      <ul className="space-y-2 ml-4">
-                        {getRuleDetails(rule).map((detail, idx) => (
-                          <li key={idx} className="text-base text-muted-foreground list-disc">{detail}</li>
+                      <ul className="space-y-1.5 pl-11">
+                        {getRuleDetails(rule).map((detail, dIdx) => (
+                          <li key={dIdx} className="text-sm text-foreground/80 leading-relaxed flex gap-2">
+                            <span className="text-primary mt-1.5 shrink-0">•</span>
+                            <span>{detail}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -369,14 +380,14 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
           </ScrollArea>
 
           {!editMode && (
-            <div className="border-t pt-4 mt-4">
+            <div className="border-t p-4">
               <Button
                 onClick={() => onEditableTemplate?.(rules, language)}
-                className="w-full gap-2"
-                variant="default"
+                className="w-full gap-2 h-12"
+                size="lg"
               >
                 <BookOpen className="h-4 w-4" />
-                View Template
+                Preview & Share Template
               </Button>
             </div>
           )}
