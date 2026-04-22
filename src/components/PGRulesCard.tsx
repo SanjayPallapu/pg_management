@@ -152,65 +152,72 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
       </Card>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full md:w-2/3 flex flex-col">
-          <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+        <SheetContent side="right" className="w-full md:w-2/3 flex flex-col p-0 [&>button]:hidden">
+          {/* Clean Header */}
+          <SheetHeader className="border-b px-4 py-4 space-y-0">
             <div className="flex items-center gap-2">
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
                 onClick={() => setOpen(false)}
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <SheetTitle>PG Rules & Regulations</SheetTitle>
-                <SheetDescription>Manage rules for your PG residents</SheetDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Language Toggle */}
-              <div className="flex rounded-md border border-input overflow-hidden text-xs">
-                <button
-                  onClick={() => handleLanguageChange('en')}
-                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'en' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => handleLanguageChange('te')}
-                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'te' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
-                >
-                  తెలుగు
-                </button>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <BookOpen className="h-5 w-5 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <SheetTitle className="text-base leading-tight">Rules & Regulations</SheetTitle>
+                  <SheetDescription className="text-xs">{rules.length} rules • {language === 'te' ? 'తెలుగు' : 'English'}</SheetDescription>
+                </div>
               </div>
               {!editMode ? (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setEditMode(true)}
-                  className="gap-2"
+                  className="gap-1.5 shrink-0"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-3.5 w-3.5" />
                   Manage
                 </Button>
               ) : (
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => {
                     setEditMode(false);
                     setEditingRule(null);
                   }}
+                  className="shrink-0"
                 >
                   Done
                 </Button>
               )}
             </div>
+
+            {/* Language Toggle - prominent row */}
+            <div className="grid grid-cols-2 gap-2 pt-3">
+              <Button
+                variant={language === 'en' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleLanguageChange('en')}
+                className="h-9"
+              >
+                English
+              </Button>
+              <Button
+                variant={language === 'te' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleLanguageChange('te')}
+                className="h-9"
+              >
+                తెలుగు Telugu
+              </Button>
+            </div>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-4 mt-4">
+          <ScrollArea className="flex-1 px-4">
+            <div className="space-y-3 py-4">
               {editMode && editingRule ? (
                 <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
                   {/* English Fields */}
