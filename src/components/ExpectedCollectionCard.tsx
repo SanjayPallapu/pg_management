@@ -198,22 +198,98 @@ export const ExpectedCollectionCard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Day buttons grid */}
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {filteredData.map(item => (
-              <button
-                key={item.day}
-                className="p-2 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer"
-                onClick={() => {
-                  setSelectedDueDay(item.day);
-                  setDueDaySheetOpen(true);
-                }}
-              >
-                <div className="text-xs text-muted-foreground">Day {item.day}</div>
-                <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">{item.tenants} tenant(s)</div>
-              </button>
-            ))}
+          {/* Grouped tenants by due day */}
+          <div className="space-y-2">
+            {filteredData.length === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-6">
+                No pending collections in this date range
+              </div>
+            ) : (
+              filteredData.map(item => (
+                <div
+                  key={item.day}
+                  className="rounded-lg border border-purple-500/20 bg-purple-500/5 overflow-hidden"
+                >
+                  {/* Day header */}
+                  <button
+                    className="w-full flex items-center justify-between gap-2 p-3 hover:bg-purple-500/10 transition-colors text-left"
+                    onClick={() => {
+                      setSelectedDueDay(item.day);
+                      setDueDaySheetOpen(true);
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-500/20">
+                        <span className="text-sm font-bold text-purple-700 dark:text-purple-300">{item.day}</span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">Due on Day {item.day}</div>
+                        <div className="text-xs text-muted-foreground">{item.tenants} tenant(s) pending</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                        ₹{item.expected.toLocaleString()}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">View all</div>
+                    </div>
+                  </button>
+
+                  {/* Inline tenant list */}
+                  <div className="divide-y divide-purple-500/10 border-t border-purple-500/10">
+                    {item.list.map(tenant => (
+                      <div
+                        key={tenant.id}
+                        className="flex items-center gap-2 px-3 py-2 bg-card/50"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium truncate">{tenant.name}</span>
+                            <Badge
+                              variant="secondary"
+                              className={`h-4 px-1.5 text-[9px] ${
+                                tenant.isPartial
+                                  ? 'bg-orange-500/15 text-orange-700 dark:text-orange-300'
+                                  : 'bg-red-500/15 text-red-700 dark:text-red-300'
+                              }`}
+                            >
+                              {tenant.isPartial ? 'Partial' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            Room {tenant.roomNo} • ₹{tenant.balance.toLocaleString()} due
+                            {tenant.isPartial && ` (Paid ₹${tenant.amountPaid.toLocaleString()})`}
+                          </div>
+                        </div>
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <a
+                              href={`tel:${tenant.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                              aria-label={`Call ${tenant.name}`}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openWhatsAppChat(tenant.phone); }}
+                              className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                              aria-label={`WhatsApp ${tenant.name}`}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
             </CardContent>
           </CollapsibleContent>
