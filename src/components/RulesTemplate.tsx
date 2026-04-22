@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Image as ImageIcon, Loader2, Printer } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, Loader2, Printer, Share2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { usePG } from '@/contexts/PGContext';
 import { RulesPosterContent } from '@/components/RulesPosterContent';
@@ -27,8 +27,15 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
   const templateRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [templateStyle, setTemplateStyle] = useState<RulesTemplateStyle>('professional');
+  const [activeLanguage, setActiveLanguage] = useState<RulesLanguage>(language);
   const { currentPG } = usePG();
+
+  // Sync language when prop changes (sheet opens with stored preference)
+  useEffect(() => {
+    setActiveLanguage(language);
+  }, [language, open]);
 
   // Scale template to fit container width
   useEffect(() => {
@@ -48,7 +55,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
       window.addEventListener('resize', updateScale);
       return () => window.removeEventListener('resize', updateScale);
     }
-  }, [open, templateStyle, rules]);
+  }, [open, templateStyle, rules, activeLanguage]);
 
   const pgName = currentPG?.name || 'PG Management';
   const pgLogoUrl = currentPG?.logoUrl || '/icon-512.png';
