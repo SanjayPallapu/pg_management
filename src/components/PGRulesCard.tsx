@@ -152,65 +152,72 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
       </Card>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full md:w-2/3 flex flex-col">
-          <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+        <SheetContent side="right" className="w-full md:w-2/3 flex flex-col p-0 [&>button]:hidden">
+          {/* Clean Header */}
+          <SheetHeader className="border-b px-4 py-4 space-y-0">
             <div className="flex items-center gap-2">
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
                 onClick={() => setOpen(false)}
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <SheetTitle>PG Rules & Regulations</SheetTitle>
-                <SheetDescription>Manage rules for your PG residents</SheetDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Language Toggle */}
-              <div className="flex rounded-md border border-input overflow-hidden text-xs">
-                <button
-                  onClick={() => handleLanguageChange('en')}
-                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'en' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => handleLanguageChange('te')}
-                  className={`px-2.5 py-1 font-medium transition-colors ${language === 'te' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-accent'}`}
-                >
-                  తెలుగు
-                </button>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <BookOpen className="h-5 w-5 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <SheetTitle className="text-base leading-tight">Rules & Regulations</SheetTitle>
+                  <SheetDescription className="text-xs">{rules.length} rules • {language === 'te' ? 'తెలుగు' : 'English'}</SheetDescription>
+                </div>
               </div>
               {!editMode ? (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setEditMode(true)}
-                  className="gap-2"
+                  className="gap-1.5 shrink-0"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-3.5 w-3.5" />
                   Manage
                 </Button>
               ) : (
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={() => {
                     setEditMode(false);
                     setEditingRule(null);
                   }}
+                  className="shrink-0"
                 >
                   Done
                 </Button>
               )}
             </div>
+
+            {/* Language Toggle - prominent row */}
+            <div className="grid grid-cols-2 gap-2 pt-3">
+              <Button
+                variant={language === 'en' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleLanguageChange('en')}
+                className="h-9"
+              >
+                English
+              </Button>
+              <Button
+                variant={language === 'te' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleLanguageChange('te')}
+                className="h-9"
+              >
+                తెలుగు Telugu
+              </Button>
+            </div>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-4 mt-4">
+          <ScrollArea className="flex-1 px-4">
+            <div className="space-y-3 py-4">
               {editMode && editingRule ? (
                 <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
                   {/* English Fields */}
@@ -321,32 +328,43 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
                 </div>
               ) : (
                 <>
-                  {rules.map((rule) => (
-                    <div key={rule.id} className="border rounded-lg p-4 hover:bg-accent/30 transition-colors">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-base">{getRuleTitle(rule)}</h3>
-                          <p className="text-sm text-muted-foreground">{getRuleDescription(rule)}</p>
+                  {rules.map((rule, idx) => (
+                    <div
+                      key={rule.id}
+                      className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base leading-tight">{getRuleTitle(rule)}</h3>
+                          {getRuleDescription(rule) && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{getRuleDescription(rule)}</p>
+                          )}
                         </div>
                         {editMode && (
-                          <div className="flex gap-1 ml-2">
-                            <Button size="sm" variant="ghost" onClick={() => handleEditRule(rule)} className="h-7 w-7 p-0">
-                              <Settings className="h-3 w-3" />
+                          <div className="flex gap-1 shrink-0">
+                            <Button size="icon" variant="ghost" onClick={() => handleEditRule(rule)} className="h-8 w-8">
+                              <Settings className="h-3.5 w-3.5" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
                               onClick={() => { setRuleToDelete(rule.id); setShowDeleteDialog(true); }}
-                              className="h-7 w-7 p-0"
+                              className="h-8 w-8"
                             >
-                              <Trash2 className="h-3 w-3 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
                           </div>
                         )}
                       </div>
-                      <ul className="space-y-2 ml-4">
-                        {getRuleDetails(rule).map((detail, idx) => (
-                          <li key={idx} className="text-base text-muted-foreground list-disc">{detail}</li>
+                      <ul className="space-y-1.5 pl-11">
+                        {getRuleDetails(rule).map((detail, dIdx) => (
+                          <li key={dIdx} className="text-sm text-foreground/80 leading-relaxed flex gap-2">
+                            <span className="text-primary mt-1.5 shrink-0">•</span>
+                            <span>{detail}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -362,14 +380,14 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
           </ScrollArea>
 
           {!editMode && (
-            <div className="border-t pt-4 mt-4">
+            <div className="border-t p-4">
               <Button
                 onClick={() => onEditableTemplate?.(rules, language)}
-                className="w-full gap-2"
-                variant="default"
+                className="w-full gap-2 h-12"
+                size="lg"
               >
                 <BookOpen className="h-4 w-4" />
-                View Template
+                Preview & Share Template
               </Button>
             </div>
           )}

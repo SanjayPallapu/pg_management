@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronDown, MessageCircle, Phone, User } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
@@ -21,12 +22,24 @@ export const ExpectedCollectionCard = () => {
   const [selectedDueDay, setSelectedDueDay] = useState<number | null>(null);
   const [dueDaySheetOpen, setDueDaySheetOpen] = useState(false);
 
+  type DueTenant = {
+    id: string;
+    name: string;
+    phone: string;
+    roomNo: string;
+    monthlyRent: number;
+    amountPaid: number;
+    balance: number;
+    isPartial: boolean;
+  };
+
   const collectionScheduleData = useMemo(() => {
-    const scheduleByDay: Record<number, { day: number; expected: number; tenants: number }> = {};
-    
+    const scheduleByDay: Record<number, { day: number; expected: number; tenants: number; list: DueTenant[] }> = {};
+
     const allTenants = rooms.flatMap(room =>
       room.tenants
         .filter(tenant =>
+          !tenant.isLocked &&
           isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth) &&
           !hasTenantLeftNow(tenant.endDate)
         )
@@ -37,19 +50,41 @@ export const ExpectedCollectionCard = () => {
       const payment = payments.find(p =>
         p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
       );
-      
-      if (!payment || payment.paymentStatus === 'Pending') {
-        const joinDay = new Date(tenant.startDate).getDate();
-        if (!scheduleByDay[joinDay]) {
-          scheduleByDay[joinDay] = { day: joinDay, expected: 0, tenants: 0 };
-        }
-        scheduleByDay[joinDay].expected += tenant.monthlyRent;
-        scheduleByDay[joinDay].tenants++;
+
+      const status = payment?.paymentStatus;
+      const isPaid = status === 'Paid';
+      if (isPaid) return;
+
+      const amountPaid = payment?.amountPaid || 0;
+      const balance = Math.max(0, tenant.monthlyRent - amountPaid);
+      if (balance === 0) return;
+
+      const joinDay = new Date(tenant.startDate).getDate();
+      if (!scheduleByDay[joinDay]) {
+        scheduleByDay[joinDay] = { day: joinDay, expected: 0, tenants: 0, list: [] };
       }
+      scheduleByDay[joinDay].expected += balance;
+      scheduleByDay[joinDay].tenants++;
+      scheduleByDay[joinDay].list.push({
+        id: tenant.id,
+        name: tenant.name,
+        phone: tenant.phone,
+        roomNo: tenant.roomNo,
+        monthlyRent: tenant.monthlyRent,
+        amountPaid,
+        balance,
+        isPartial: amountPaid > 0,
+      });
     });
 
     return Object.values(scheduleByDay).sort((a, b) => a.day - b.day);
   }, [rooms, payments, selectedMonth, selectedYear]);
+
+  const openWhatsAppChat = (phone: string) => {
+    const formattedPhone = phone.replace(/\D/g, '');
+    const phoneWithCode = formattedPhone.startsWith('91') ? formattedPhone : `91${formattedPhone}`;
+    window.open(`https://wa.me/${phoneWithCode}`, '_blank');
+  };
 
   const filteredData = useMemo(() => {
     return collectionScheduleData.filter(
@@ -163,22 +198,98 @@ export const ExpectedCollectionCard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Day buttons grid */}
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {filteredData.map(item => (
-              <button
-                key={item.day}
-                className="p-2 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer"
-                onClick={() => {
-                  setSelectedDueDay(item.day);
-                  setDueDaySheetOpen(true);
-                }}
-              >
-                <div className="text-xs text-muted-foreground">Day {item.day}</div>
-                <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">{item.tenants} tenant(s)</div>
-              </button>
-            ))}
+          {/* Grouped tenants by due day */}
+          <div className="space-y-2">
+            {filteredData.length === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-6">
+                No pending collections in this date range
+              </div>
+            ) : (
+              filteredData.map(item => (
+                <div
+                  key={item.day}
+                  className="rounded-lg border border-purple-500/20 bg-purple-500/5 overflow-hidden"
+                >
+                  {/* Day header */}
+                  <button
+                    className="w-full flex items-center justify-between gap-2 p-3 hover:bg-purple-500/10 transition-colors text-left"
+                    onClick={() => {
+                      setSelectedDueDay(item.day);
+                      setDueDaySheetOpen(true);
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-500/20">
+                        <span className="text-sm font-bold text-purple-700 dark:text-purple-300">{item.day}</span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">Due on Day {item.day}</div>
+                        <div className="text-xs text-muted-foreground">{item.tenants} tenant(s) pending</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                        ₹{item.expected.toLocaleString()}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">View all</div>
+                    </div>
+                  </button>
+
+                  {/* Inline tenant list */}
+                  <div className="divide-y divide-purple-500/10 border-t border-purple-500/10">
+                    {item.list.map(tenant => (
+                      <div
+                        key={tenant.id}
+                        className="flex items-center gap-2 px-3 py-2 bg-card/50"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium truncate">{tenant.name}</span>
+                            <Badge
+                              variant="secondary"
+                              className={`h-4 px-1.5 text-[9px] ${
+                                tenant.isPartial
+                                  ? 'bg-orange-500/15 text-orange-700 dark:text-orange-300'
+                                  : 'bg-red-500/15 text-red-700 dark:text-red-300'
+                              }`}
+                            >
+                              {tenant.isPartial ? 'Partial' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            Room {tenant.roomNo} • ₹{tenant.balance.toLocaleString()} due
+                            {tenant.isPartial && ` (Paid ₹${tenant.amountPaid.toLocaleString()})`}
+                          </div>
+                        </div>
+                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <a
+                              href={`tel:${tenant.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                              aria-label={`Call ${tenant.name}`}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openWhatsAppChat(tenant.phone); }}
+                              className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                              aria-label={`WhatsApp ${tenant.name}`}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
             </CardContent>
           </CollapsibleContent>
