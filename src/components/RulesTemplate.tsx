@@ -92,6 +92,41 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
     setTimeout(() => printWindow.print(), 300);
   };
 
+  const handleShareWhatsApp = async () => {
+    if (!templateRef.current) return;
+    setIsSharing(true);
+    try {
+      const dataUrl = await generateReceiptImage(templateRef.current);
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File(
+        [blob],
+        `${pgName.replace(/\s+/g, '_')}_Rules_${activeLanguage}.png`,
+        { type: 'image/png' },
+      );
+      const navAny = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
+      if (navigator.share && navAny.canShare?.({ files: [file] })) {
+        // Image-only share (no text) per project policy
+        await navigator.share({ files: [file] });
+        toast({ title: 'Shared', description: 'Rules image ready to send on WhatsApp' });
+      } else {
+        // Fallback: download then open WhatsApp Web
+        const link = document.createElement('a');
+        link.download = file.name;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.open('https://web.whatsapp.com/', '_blank');
+        toast({ title: 'Image saved', description: 'Attach the downloaded image in WhatsApp' });
+      }
+    } catch (error) {
+      console.error('Error sharing rules:', error);
+      toast({ title: 'Error', description: 'Failed to share rules image' });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="[&>button]:hidden w-full md:w-3/4 lg:w-2/3 flex flex-col p-0">
@@ -106,15 +141,40 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <SheetTitle>Rules Template Preview</SheetTitle>
-          <SheetDescription>Choose a template style and generate image</SheetDescription>
+          <SheetDescription>Choose language & style, then share or save</SheetDescription>
         </SheetHeader>
 
-        <div className="grid grid-cols-2 gap-2 border-b px-6 py-3">
+        {/* Language selector */}
+        <div className="border-b px-6 py-3 space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5">Language</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={activeLanguage === 'en' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveLanguage('en')}
+                className="h-10"
+              >
+                English
+              </Button>
+              <Button
+                variant={activeLanguage === 'te' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveLanguage('te')}
+                className="h-10"
+              >
+                తెలుగు Telugu
+              </Button>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5">Template Style</p>
+            <div className="grid grid-cols-2 gap-2">
           <Button
             variant={templateStyle === 'professional' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setTemplateStyle('professional')}
-            className="h-11 gap-1.5"
+            className="h-10 gap-1.5"
           >
             📋 Professional
           </Button>
@@ -122,10 +182,12 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
             variant={templateStyle === 'elegant' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setTemplateStyle('elegant')}
-            className="h-11 gap-1.5"
+            className="h-10 gap-1.5"
           >
             🌸 Elegant
           </Button>
+            </div>
+          </div>
         </div>
 
         <ScrollArea className="flex-1 px-0">
@@ -148,25 +210,34 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
                 pgName={pgName}
                 pgLogoUrl={pgLogoUrl}
                 rules={rules}
-                language={language}
+                language={activeLanguage}
                 templateStyle={templateStyle}
               />
             </div>
           </div>
         </ScrollArea>
 
-        <SheetFooter className="grid grid-cols-2 gap-3 border-t px-6 py-4">
+        <SheetFooter className="grid grid-cols-3 gap-2 border-t px-4 py-3">
+          <Button
+            onClick={handleShareWhatsApp}
+            className="h-12 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+            disabled={isSharing || isGenerating}
+          >
+            {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+            <span className="text-xs">{isSharing ? 'Sharing...' : 'WhatsApp'}</span>
+          </Button>
           <Button
             onClick={handleGenerateImage}
-            className="h-12 gap-2"
-            disabled={isGenerating}
+            variant="secondary"
+            className="h-12 gap-1.5"
+            disabled={isGenerating || isSharing}
           >
             {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-            {isGenerating ? 'Generating...' : 'Save as Image'}
+            <span className="text-xs">{isGenerating ? 'Saving...' : 'Save Image'}</span>
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="h-12 gap-2">
+          <Button onClick={handlePrint} variant="outline" className="h-12 gap-1.5">
             <Printer className="h-4 w-4" />
-            Print
+            <span className="text-xs">Print</span>
           </Button>
         </SheetFooter>
       </SheetContent>
