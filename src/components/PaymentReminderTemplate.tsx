@@ -25,6 +25,8 @@ export interface ReminderData {
   // PG Branding
   pgName?: string;
   pgLogoUrl?: string;
+  // When true, hide the tenant name row (anonymous/common reminder)
+  hideTenantName?: boolean;
 }
 
 interface PaymentReminderTemplateProps {
@@ -117,6 +119,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
   const hasPaid = (data.payment.paid || 0) > 0;
   const pgName = data.pgName || "PG Management";
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
+  const hideTenantName = data.hideTenantName === true;
 
   return (
     <div
@@ -255,10 +258,12 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Tenant Name:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.tenant.name}</td>
-            </tr>
+            {!hideTenantName && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "10px 16px", color: "#6b7280" }}>Tenant Name:</td>
+                <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.tenant.name}</td>
+              </tr>
+            )}
 
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>For Period:</td>
