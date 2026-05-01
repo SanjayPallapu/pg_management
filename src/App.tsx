@@ -58,7 +58,7 @@ const queryClient = new QueryClient({
     const timer = setTimeout(() => {
       sessionStorage.setItem("hasSeenSplash", "true");
       onComplete();
-     }, 2500);
+     }, 1500);
     return () => clearTimeout(timer);
   }, [onComplete]);
   
