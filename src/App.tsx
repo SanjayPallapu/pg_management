@@ -67,17 +67,40 @@ const queryClient = new QueryClient({
 
 // Inner app component that handles splash screen logic
 const AppContent = () => {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    const hasSeen = sessionStorage.getItem("hasSeenSplash");
-    const urlParams = new URLSearchParams(window.location.search);
-    const forceSplash = urlParams.get('splash') === 'true';
-    
-    if (hasSeen && !forceSplash) {
-      setShowSplash(false);
+  // Initialize synchronously so we never flash splash for returning users
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const hasSeen = sessionStorage.getItem("hasSeenSplash");
+      const urlParams = new URLSearchParams(window.location.search);
+      const forceSplash = urlParams.get('splash') === 'true';
+      return forceSplash || !hasSeen;
+    } catch {
+      return false;
     }
-  }, []);
+  });
+
+  // Safety net: ALWAYS dismiss splash after 3s, no matter what.
+  // Also dismiss immediately when the app comes back from background — users
+  // resuming the app should never see the splash again.
+  useEffect(() => {
+    if (!showSplash) return;
+    const hardTimer = setTimeout(() => {
+      sessionStorage.setItem("hasSeenSplash", "true");
+      setShowSplash(false);
+    }, 3000);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        sessionStorage.setItem("hasSeenSplash", "true");
+        setShowSplash(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearTimeout(hardTimer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [showSplash]);
 
   if (showSplash) {
     return (
