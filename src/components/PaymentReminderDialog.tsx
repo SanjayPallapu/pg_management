@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Loader2, Bell, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
@@ -38,6 +40,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const reminderRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReminderData | null>(null);
   const { selectedMonth, selectedYear } = useMonthContext();
+  const [hideTenantName, setHideTenantName] = useState(false);
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -65,9 +68,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         selectedYear: yearToUse,
         pgName: currentPG?.name,
         pgLogoUrl: currentPG?.logoUrl,
+        hideTenantName,
       });
     }
-  }, [reminderData, open, selectedMonth, selectedYear, currentPG]);
+  }, [reminderData, open, selectedMonth, selectedYear, currentPG, hideTenantName]);
 
   const generateReminder = useCallback(async () => {
     if (!reminderData || !templateData || !reminderRef.current) {
@@ -138,6 +142,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const handleClose = () => {
     setGeneratedImage(null);
     setTemplateData(null);
+    setHideTenantName(false);
     onOpenChange(false);
   };
 
@@ -178,12 +183,27 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
           {reminderData && (
             <div className="py-4 space-y-4">
+              {/* Custom: hide tenant name (for common/shared room reminders) */}
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                <div className="flex flex-col">
+                  <Label htmlFor="hideTenantName" className="cursor-pointer font-medium">Hide Tenant Name</Label>
+                  <span className="text-xs text-muted-foreground">Send a common reminder for the room (no name)</span>
+                </div>
+                <Switch
+                  id="hideTenantName"
+                  checked={hideTenantName}
+                  onCheckedChange={(checked) => { setHideTenantName(checked); setGeneratedImage(null); }}
+                />
+              </div>
+
               {/* Summary Card matching the receipt dialog style */}
               <div className="rounded-lg p-4 text-sm space-y-2 border border-border bg-muted/30">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tenant:</span>
-                  <span className="font-semibold">{reminderData.tenantName}</span>
-                </div>
+                {!hideTenantName && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tenant:</span>
+                    <span className="font-semibold">{reminderData.tenantName}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Due:</span>
                   <span className="font-semibold text-amber-600">₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}</span>
@@ -191,6 +211,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">For Month:</span>
                   <span className="font-semibold">{reminderData.forMonth}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Room No:</span>
+                  <span className="font-semibold">{reminderData.roomNo}</span>
                 </div>
               </div>
 
