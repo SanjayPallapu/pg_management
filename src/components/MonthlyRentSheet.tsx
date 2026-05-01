@@ -65,8 +65,6 @@ import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
-import { getStoredPGRules, getStoredRulesLanguage } from "@/lib/pgRules";
-import { generateRulesImage } from "@/utils/generateRulesImage";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
