@@ -200,6 +200,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   useBackGesture(!!partialPaymentTenant, () => setPartialPaymentTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!markLeftTenant, () => setMarkLeftTenant(null));
+  useBackGesture(!!shiftTenant, () => setShiftTenant(null));
 
   const getPricePerPerson = (capacity: number) => {
     const priceMap: { [key: number]: number } = {
