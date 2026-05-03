@@ -344,6 +344,32 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
       title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',
       description: `₹${data.amount.toLocaleString()} paid via ${data.mode.toUpperCase()} for ${months[data.month - 1]} ${data.year}${discount > 0 ? ` (Discount: ₹${discount})` : ''}`
     });
+
+    // Auto-open Send Payment Receipt dialog after recording
+    const tenant = selectedTenant;
+    if (tenant) {
+      const room = rooms.find(r => r.tenants.some(t => t.id === tenant.id));
+      const sharingType = room ? `${room.capacity} Sharing` : '';
+      setReceiptData({
+        tenantName: tenant.name,
+        tenantPhone: tenant.phone,
+        paymentMode: data.mode,
+        paymentDate: format(new Date(data.date), 'dd-MMM-yyyy'),
+        joiningDate: tenant.startDate,
+        forMonth: `${months[data.month - 1]} ${data.year}`,
+        roomNo: tenant.roomNo,
+        sharingType,
+        amount: data.monthlyRent,
+        amountPaid: data.amount,
+        isFullPayment,
+        remainingBalance: isFullPayment ? 0 : effectiveMonthlyRent - totalPaid,
+        tenantId: tenant.id,
+        paymentEntries: [...existingEntries, newEntry],
+        pgName: currentPG?.name,
+        pgLogoUrl: currentPG?.logoUrl,
+      });
+      setReceiptDialogOpen(true);
+    }
   };
 
   return (
