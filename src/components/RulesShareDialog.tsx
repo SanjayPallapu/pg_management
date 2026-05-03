@@ -135,17 +135,15 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={language === 'en' ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => handleLanguageChange('en')}
-                className="h-10"
+                className="mb-[15px]"
               >
                 English
               </Button>
               <Button
                 variant={language === 'te' ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => handleLanguageChange('te')}
-                className="h-10"
+                className="mb-[15px]"
               >
                 తెలుగు Telugu
               </Button>

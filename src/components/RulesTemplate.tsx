@@ -151,17 +151,15 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={activeLanguage === 'en' ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => setActiveLanguage('en')}
-                className="h-10"
+                className="mb-[15px]"
               >
                 English
               </Button>
               <Button
                 variant={activeLanguage === 'te' ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => setActiveLanguage('te')}
-                className="h-10"
+                className="mb-[15px]"
               >
                 తెలుగు Telugu
               </Button>
