@@ -264,6 +264,10 @@ export const useRooms = () => {
         updateData.is_locked = updates.isLocked;
         changes.is_locked = { old: !updates.isLocked, new: updates.isLocked };
       }
+      if ((updates as any).roomId !== undefined) {
+        updateData.room_id = (updates as any).roomId;
+        changes.room_id = { old: null, new: (updates as any).roomId };
+      }
 
       const { error } = await supabase.from("tenants").update(updateData).eq("id", tenantId);
 

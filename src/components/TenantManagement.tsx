@@ -38,6 +38,7 @@ import {
   Receipt,
   Wallet,
   Loader2,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -59,6 +60,7 @@ import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
+import { ShiftRoomDialog } from "./ShiftRoomDialog";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 
@@ -103,6 +105,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
+  const [shiftTenant, setShiftTenant] = useState<Tenant | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
@@ -197,6 +200,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   useBackGesture(!!partialPaymentTenant, () => setPartialPaymentTenant(null));
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!markLeftTenant, () => setMarkLeftTenant(null));
+  useBackGesture(!!shiftTenant, () => setShiftTenant(null));
 
   const getPricePerPerson = (capacity: number) => {
     const priceMap: { [key: number]: number } = {
@@ -1050,6 +1054,17 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                   Mark Left
                                 </Button>
                               )}
+                              {!tenant.endDate && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  onClick={() => setShiftTenant(tenant)}
+                                >
+                                  <ArrowRightLeft className="h-4 w-4 mr-1" />
+                                  Shift Room
+                                </Button>
+                              )}
                               {tenant.endDate && (
                                 <Button
                                   variant="outline"
@@ -1485,6 +1500,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Shift Room Dialog */}
+      <ShiftRoomDialog
+        open={!!shiftTenant}
+        onOpenChange={(open) => !open && setShiftTenant(null)}
+        tenant={shiftTenant}
+        currentRoom={room}
+      />
 
       {/* Mark Left Dialog with Settlement */}
       <MarkLeftDialog
