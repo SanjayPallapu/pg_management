@@ -1501,6 +1501,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Shift Room Dialog */}
+      <ShiftRoomDialog
+        open={!!shiftTenant}
+        onOpenChange={(open) => !open && setShiftTenant(null)}
+        tenant={shiftTenant}
+        currentRoom={room}
+      />
+
       {/* Mark Left Dialog with Settlement */}
       <MarkLeftDialog
         open={!!markLeftTenant}
