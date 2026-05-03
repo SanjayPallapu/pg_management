@@ -60,6 +60,7 @@ import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
+import { ShiftRoomDialog } from "./ShiftRoomDialog";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 
@@ -104,6 +105,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
+  const [shiftTenant, setShiftTenant] = useState<Tenant | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
