@@ -215,7 +215,7 @@ export const OverduePaymentDialog = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             
-            <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-2">
+            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-4 py-4 pr-2">
               {/* Payment Amount */}
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>
