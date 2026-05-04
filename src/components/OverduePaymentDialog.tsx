@@ -367,7 +367,7 @@ export const OverduePaymentDialog = ({
               </div>
             </div>
 
-            <AlertDialogFooter>
+            <AlertDialogFooter className="gap-[10px]">
               <Button variant="outline" onClick={() => setStep('confirm')}>
                 Back
               </Button>
