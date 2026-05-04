@@ -305,6 +305,40 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </Card>
         </div>
 
+        {/* Potential Revenue Card - moved below Collected/Pending */}
+        <Card
+          className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
+          onClick={() => setEmptyBedsSheetOpen(true)}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Max capacity</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t">
+              <div className="text-sm font-semibold text-pending">
+                +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
+              </div>
+              <div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
+          </CardContent>
+        </Card>
+
         {/* Financial Section - Collapsible */}
         <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
@@ -326,41 +360,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* All Collections Card - UPI/Cash breakdown */}
               <AllCollectedCard rooms={rooms} />
-
-              {/* Potential Revenue Card - Clickable */}
-              <Card
-                className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
-                onClick={() => setEmptyBedsSheetOpen(true)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
-                    </div>
-                  </div>
-
-                  {/* Current vs Max revenue comparison */}
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div>
-                      <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">Max capacity</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="text-sm font-semibold text-pending">
-                      +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
-                    </div>
-                    <div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
-                </CardContent>
-              </Card>
 
               {/* Security Deposit Card - Below PG Expenses */}
               <SecurityDepositCard rooms={rooms} />
