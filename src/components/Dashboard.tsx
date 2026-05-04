@@ -13,6 +13,7 @@ import {
   Wallet,
   Users,
   Settings,
+  Scale,
 } from "lucide-react";
 import { Room, DashboardStats } from "@/types";
 import { useTotalCollected } from "@/hooks/useTotalCollected";
@@ -75,6 +76,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [financialsOpen, setFinancialsOpen] = useState(true);
   const [tenantsOpen, setTenantsOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [overviewOpen, setOverviewOpen] = useState(false);
 
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
@@ -219,9 +221,28 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   return (
     <>
       <div className="space-y-6">
-        {/* Balance Card - above everything */}
-        <BalanceCard />
         <CollectedByCard />
+
+        {/* Balance & Expenses Overview - Collapsible (collapsed by default) */}
+        <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-sm">Balance & Expenses</span>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${overviewOpen ? "rotate-180" : ""}`}
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <BalanceCard />
+              <TodaySpendingCard />
+              <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Split KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
@@ -340,12 +361,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
                 </CardContent>
               </Card>
-
-              {/* Today's Spending Card */}
-              <TodaySpendingCard />
-
-              {/* Personal Expenses Card */}
-              <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
 
               {/* Security Deposit Card - Below PG Expenses */}
               <SecurityDepositCard rooms={rooms} />
