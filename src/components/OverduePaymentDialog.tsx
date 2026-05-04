@@ -367,15 +367,15 @@ export const OverduePaymentDialog = ({
               </div>
             </div>
 
-            <AlertDialogFooter>
-              <Button variant="outline" onClick={() => setStep('confirm')}>
-                Back
-              </Button>
+            <AlertDialogFooter className="gap-[10px]">
               <Button 
                 onClick={handleConfirmPayment}
                 disabled={paymentAmount <= 0}
               >
                 Record Payment
+              </Button>
+              <Button variant="outline" onClick={() => setStep('confirm')}>
+                Back
               </Button>
             </AlertDialogFooter>
           </>
