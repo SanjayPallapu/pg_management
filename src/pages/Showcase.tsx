@@ -67,7 +67,7 @@ const testimonials = [
 
 /* ─────────────────────  motion presets  ───────────────────── */
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
