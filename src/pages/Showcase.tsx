@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, type Variants } from "framer-motion";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,21 +67,23 @@ const testimonials = [
 
 /* ─────────────────────  motion presets  ───────────────────── */
 
-const fadeUp = {
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.08, duration: 0.6, ease: EASE },
   }),
 };
 
-const slideIn = {
+const slideIn: Variants = {
   hidden: { opacity: 0, x: -40 },
   visible: (i = 0) => ({
     opacity: 1,
     x: 0,
-    transition: { delay: i * 0.06, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.06, duration: 0.55, ease: EASE },
   }),
 };
 
@@ -189,7 +191,7 @@ const Showcase = () => {
           <motion.div
             initial={{ opacity: 0, y: 60, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.9, delay: 0.5, ease: EASE }}
             className="relative mx-auto mt-16 w-[260px] sm:w-[300px]"
           >
             <div className="absolute -inset-8 bg-primary/20 rounded-[3rem] blur-3xl -z-10" />
@@ -245,7 +247,7 @@ const Showcase = () => {
                     loading="lazy"
                     className="w-full h-full object-cover object-top will-change-transform"
                     whileHover={{ scale: 1.06 }}
-                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.6, ease: EASE }}
                   />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-background via-background/90 to-transparent">
