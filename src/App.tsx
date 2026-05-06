@@ -14,6 +14,7 @@ import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
+const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
@@ -116,6 +117,11 @@ const AppContent = () => {
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/publish-guide" element={
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+              <PublishGuide />
+            </Suspense>
+          } />
           <Route path="/" element={
             <ProtectedRoute>
               <Index />
