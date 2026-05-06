@@ -149,6 +149,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          pg_id: string | null
           room_number: string
           serial_number: string
           updated_at: string
@@ -156,6 +157,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          pg_id?: string | null
           room_number: string
           serial_number: string
           updated_at?: string
@@ -163,6 +165,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          pg_id?: string | null
           room_number?: string
           serial_number?: string
           updated_at?: string
