@@ -31,16 +31,19 @@ export const KeyNumbersCard = () => {
   const isLongPress = useRef(false);
 
   const { data: keyNumbers = [], isLoading } = useQuery({
-    queryKey: ['key-numbers'],
+    queryKey: ['key-numbers', currentPG?.id],
     queryFn: async () => {
+      if (!currentPG?.id) return [];
       const { data, error } = await supabase
         .from('key_numbers')
         .select('*')
+        .eq('pg_id', currentPG.id)
         .order('room_number', { ascending: true });
       
       if (error) throw error;
       return data as KeyNumber[];
     },
+    enabled: !!currentPG?.id,
   });
 
   const addKeyNumber = useMutation({
@@ -56,6 +59,9 @@ export const KeyNumbersCard = () => {
       setNewSerial('');
       setNewRoom('');
       toast({ title: 'Key number added' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Failed to add key', description: err?.message ?? String(err), variant: 'destructive' as any });
     },
   });
 
