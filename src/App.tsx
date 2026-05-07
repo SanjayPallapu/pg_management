@@ -16,6 +16,7 @@ import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
+const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 import SplashScreen from "./components/SplashScreen";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
@@ -127,6 +128,13 @@ const AppContent = () => {
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <Showcase />
             </Suspense>
+          } />
+          <Route path="/voice" element={
+            <ProtectedRoute>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                <VoiceAgent />
+              </Suspense>
+            </ProtectedRoute>
           } />
           <Route path="/" element={
             <ProtectedRoute>
