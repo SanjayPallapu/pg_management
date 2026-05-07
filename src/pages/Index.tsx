@@ -34,6 +34,7 @@ import {
   CreditCard,
   ExternalLink,
   Loader2,
+  Mic,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useMonthContext } from "@/contexts/MonthContext";
@@ -364,6 +365,16 @@ const Index = () => {
 
         {/* Admin Payment Approval Sheet */}
         <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
+
+        {/* Floating Voice Assistant button */}
+        <button
+          aria-label="Open voice assistant"
+          onClick={() => navigate('/voice')}
+          className="fixed bottom-6 right-4 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-2xl shadow-primary/40 flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <Mic className="h-6 w-6" />
+          <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+        </button>
       </div>
     </div>
   );
