@@ -21,6 +21,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -209,7 +210,22 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
                                   variant="outline"
                                   size="sm"
                                   className="gap-2"
-                                  onClick={() => window.open(request.screenshot_url!, '_blank')}
+                                  onClick={async () => {
+                                    const path = request.screenshot_url!;
+                                    // Legacy public URL fallback
+                                    if (path.startsWith('http')) {
+                                      window.open(path, '_blank');
+                                      return;
+                                    }
+                                    const { data, error } = await supabase.storage
+                                      .from('payment-proofs')
+                                      .createSignedUrl(path, 60 * 5);
+                                    if (error || !data?.signedUrl) {
+                                      toast.error('Could not load screenshot');
+                                      return;
+                                    }
+                                    window.open(data.signedUrl, '_blank');
+                                  }}
                                 >
                                   <ImageIcon className="h-4 w-4" />
                                   View Screenshot
