@@ -88,10 +88,83 @@ const tools = [
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "mark_payment",
+      description:
+        "Record/update rent payment for a tenant for a given month. Use this when the user says things like 'mark Ramesh as paid', 'రాము పెయిడ్ అని పెట్టు', '101 rent received cash 5000'. ALWAYS confirm with the user (read back tenant + amount + mode) before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          tenantName: { type: "string", description: "Tenant name (partial ok). Optional if roomNo given and room has 1 tenant." },
+          roomNo: { type: "string", description: "Room number to disambiguate." },
+          month: { type: "number", description: "1-12. Defaults current." },
+          year: { type: "number" },
+          status: { type: "string", enum: ["Paid", "Partial", "Pending"], description: "Resulting status. 'Paid' = full month rent." },
+          amount: { type: "number", description: "Amount paid in this entry (rupees). For status=Paid leave empty to use full monthly rent." },
+          mode: { type: "string", enum: ["upi", "cash"], description: "Defaults upi." },
+          collectedBy: { type: "string", description: "Collector name. Defaults 'Sanjay'." },
+          confirmed: { type: "boolean", description: "Must be true to actually write. If false, returns a preview." },
+        },
+        required: ["status"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_notes",
+      description: "Add/replace a note on a tenant or room. Confirm before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          target: { type: "string", enum: ["tenant", "room"] },
+          tenantName: { type: "string" },
+          roomNo: { type: "string" },
+          month: { type: "number" },
+          year: { type: "number" },
+          notes: { type: "string" },
+          confirmed: { type: "boolean" },
+        },
+        required: ["target", "notes"],
+        additionalProperties: false,
+      },
+    },
+  },
 ];
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
+}
+
+// Telugu/Hindi digit normalization for room numbers, names, etc.
+function normalizeDigits(s: string): string {
+  if (!s) return s;
+  const map: Record<string, string> = {
+    "౦":"0","౧":"1","౨":"2","౩":"3","౪":"4","౫":"5","౬":"6","౭":"7","౮":"8","౯":"9",
+    "०":"0","१":"1","२":"2","३":"3","४":"4","५":"5","६":"6","७":"7","८":"8","९":"9",
+  };
+  return s.replace(/[౦-౯०-९]/g, (c) => map[c] || c);
+}
+
+async function resolveTenant(supabase: any, pgId: string, name?: string, roomNo?: string) {
+  const today = todayISO();
+  const { data: rooms } = await supabase.from("rooms").select("id, room_no").eq("pg_id", pgId);
+  const roomIds = (rooms || []).map((r: any) => r.id);
+  if (!roomIds.length) return [];
+  let q = supabase.from("tenants")
+    .select("id, name, phone, monthly_rent, end_date, is_locked, room_id, rooms(room_no)")
+    .in("room_id", roomIds);
+  if (name) q = q.ilike("name", `%${normalizeDigits(name)}%`);
+  const { data: tenants } = await q;
+  let list = (tenants || []).filter((t: any) => !t.is_locked && (!t.end_date || t.end_date > today));
+  if (roomNo) {
+    const rn = normalizeDigits(roomNo).trim();
+    list = list.filter((t: any) => (t.rooms?.room_no || "").toLowerCase() === rn.toLowerCase());
+  }
+  return list;
 }
 
 async function executeTool(
@@ -195,9 +268,10 @@ async function executeTool(
   }
 
   if (name === "get_room_details") {
+    const rn = normalizeDigits(args.roomNo || "");
     const { data: room } = await supabase
       .from("rooms").select("id, room_no, floor, capacity, rent_amount, status, notes")
-      .eq("pg_id", pgId).eq("room_no", args.roomNo).maybeSingle();
+      .eq("pg_id", pgId).eq("room_no", rn).maybeSingle();
     if (!room) return { found: false };
     const { data: tenants } = await supabase
       .from("tenants").select("name, phone, monthly_rent, start_date, end_date, is_locked")
@@ -218,6 +292,81 @@ async function executeTool(
       if (vacant > 0) result.push({ room_no: r.room_no, floor: r.floor, vacant_beds: vacant, rent: r.rent_amount });
     }
     return { vacant_rooms: result, total_vacant_beds: result.reduce((s, r) => s + r.vacant_beds, 0) };
+  }
+
+  if (name === "mark_payment") {
+    const matches = await resolveTenant(supabase, pgId, args.tenantName, args.roomNo);
+    if (!matches.length) return { ok: false, reason: "no_tenant_match", hint: "Ask user for clearer name or room." };
+    if (matches.length > 1) {
+      return {
+        ok: false, reason: "ambiguous",
+        candidates: matches.map((t: any) => ({ name: t.name, room: t.rooms?.room_no })),
+      };
+    }
+    const t = matches[0];
+    const status = args.status as "Paid" | "Partial" | "Pending";
+    const monthlyRent = t.monthly_rent || 0;
+    const entryAmount = status === "Paid"
+      ? (args.amount ?? monthlyRent)
+      : status === "Pending" ? 0 : (args.amount ?? 0);
+    const mode = args.mode || "upi";
+    const collectedBy = args.collectedBy || "Sanjay";
+    const preview = {
+      tenant: t.name, room: t.rooms?.room_no, month, year,
+      status, entry_amount: entryAmount, mode, collected_by: collectedBy,
+      monthly_rent: monthlyRent,
+    };
+    if (!args.confirmed) return { ok: false, reason: "needs_confirmation", preview };
+
+    // Fetch existing payment row
+    const { data: existing } = await supabase
+      .from("tenant_payments").select("id, amount_paid, payment_entries")
+      .eq("tenant_id", t.id).eq("month", month).eq("year", year).maybeSingle();
+    const prevPaid = existing?.amount_paid || 0;
+    const prevEntries = (existing?.payment_entries as any[]) || [];
+    let newPaid = prevPaid;
+    let newEntries = prevEntries;
+    if (status !== "Pending" && entryAmount > 0) {
+      newPaid = prevPaid + entryAmount;
+      newEntries = [...prevEntries, {
+        amount: entryAmount, date: today, mode,
+        type: status === "Paid" ? "full" : "partial",
+        collectedBy,
+      }];
+    }
+    const finalStatus = newPaid >= monthlyRent && monthlyRent > 0 ? "Paid"
+      : newPaid > 0 ? "Partial" : "Pending";
+    const { error } = await supabase.from("tenant_payments").upsert({
+      tenant_id: t.id, month, year,
+      amount: monthlyRent, amount_paid: newPaid,
+      payment_status: finalStatus, payment_entries: newEntries,
+      payment_date: status !== "Pending" ? today : null,
+    }, { onConflict: "tenant_id,month,year" });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, tenant: t.name, room: t.rooms?.room_no, total_paid: newPaid, status: finalStatus };
+  }
+
+  if (name === "update_notes") {
+    if (!args.confirmed) {
+      return { ok: false, reason: "needs_confirmation", preview: { target: args.target, notes: args.notes, tenant: args.tenantName, room: args.roomNo } };
+    }
+    if (args.target === "room") {
+      const rn = normalizeDigits(args.roomNo || "");
+      const { error } = await supabase.from("rooms").update({ notes: args.notes }).eq("pg_id", pgId).eq("room_no", rn);
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, target: "room", room: rn };
+    }
+    // tenant note → store on tenant_payments.notes for given month
+    const matches = await resolveTenant(supabase, pgId, args.tenantName, args.roomNo);
+    if (matches.length !== 1) return { ok: false, reason: matches.length ? "ambiguous" : "no_tenant_match" };
+    const t = matches[0];
+    const { error } = await supabase.from("tenant_payments").upsert({
+      tenant_id: t.id, month, year,
+      amount: t.monthly_rent || 0,
+      notes: args.notes,
+    } as any, { onConflict: "tenant_id,month,year" });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, target: "tenant", tenant: t.name };
   }
 
   return { error: `Unknown tool: ${name}` };
@@ -260,21 +409,28 @@ Deno.serve(async (req) => {
     }
 
     const isTelugu = lang === "te-IN";
+
+    // Pre-fetch a tiny snapshot so the model can resolve pronouns/short refs without extra round-trips
+    const snapshot = await executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null);
+    const collection = await executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null);
+
     const systemPrompt = `You are an advanced, friendly voice assistant for "${pg.name}", a PG (paying guest) hostel management system. The owner is talking to you by VOICE in a real-time conversation.
 
 LANGUAGE:
 ${isTelugu
   ? `- ALWAYS reply in natural spoken Telugu (తెలుగు) script. Use simple, conversational Telugu the way a friendly assistant in Hyderabad would speak.
 - Numbers and money: speak in Telugu (e.g. "పన్నెండు వేల రూపాయలు"). Mix English words only for proper nouns (room numbers, names).
-- Greetings like "నమస్కారం" are welcome. Keep it warm and natural.`
+- Greetings like "నమస్కారం" are welcome. Keep it warm and natural.
+- Telugu speech recognition often mishears names and digits. If user said something that sounds like a name or room number, try fuzzy matching (e.g. "రూమ్ ఒన్ జీరో వన్" = 101). Always read back the resolved name/room so user can correct you.`
   : `- Reply in clear, natural English (Indian English style is fine).
-- For money say "rupees" (e.g. "twelve thousand rupees"). Speak numbers naturally.`}
+- For money say "rupees" (e.g. "twelve thousand rupees"). Speak numbers naturally.
+- The user's voice may include alternates separated by " | " — pick the most plausible interpretation.`}
 
 CONVERSATION STYLE:
 - This is a REAL conversation, not a Q&A. Be warm, natural, and human-like.
 - Keep responses SHORT (1-3 sentences). Voice-friendly: no markdown, no bullets, no asterisks, no symbols.
-- Remember context from earlier turns. If the user says "and him?" or "what about that room?", use prior messages.
-- If a question is ambiguous, ask a brief clarifying question instead of guessing.
+- TRACK FOCUS: silently remember the last tenant and last room mentioned. Resolve pronouns: "he/him/she/her/అతను/ఆమె" → last tenant; "that room/ఆ రూమ్/and 102?" → swap room but reuse last intent (e.g. "and 102?" after "tell me about 101" means get_room_details on 102).
+- If still ambiguous, ask ONE brief clarifying question.
 - Use small acknowledgements ("Sure", "Got it", "సరే", "అలాగే") to feel natural.
 - If the user is just chatting (greetings, thanks), reply briefly and naturally — no tool needed.
 
@@ -283,6 +439,15 @@ DATA RULES:
 - For "how much collected", "who hasn't paid", "vacant rooms", tenant or room lookups — call the right tool.
 - After tool data, summarize in 1-3 short spoken sentences.
 - If asked something outside PG data, politely steer back.
+
+WRITE ACTIONS (mark_payment, update_notes):
+- These MUTATE data. NEVER call them with confirmed=true on the first turn.
+- Step 1: parse user intent → call the tool with confirmed=false to get a preview, OR repeat the action back to the user in your reply: "Mark Ramesh in room 101 as paid 8000 cash, collected by Sanjay — confirm?"
+- Step 2: only after user explicitly confirms ("yes/haan/సరే/అవును/ఓకే/do it"), call again with confirmed=true.
+- If tool returns reason=ambiguous, ask user to pick.
+
+CURRENT SNAPSHOT (live data, use to answer instantly without extra tool calls when sufficient):
+${JSON.stringify({ overview: snapshot, this_month: collection }, null, 2)}
 
 Today's date: ${todayISO()}.`;
 

@@ -69,7 +69,7 @@ export default function VoiceAgent() {
            voices.find(v => /en-US/i.test(v.lang)) ||
            voices.find(v => /^en/i.test(v.lang)));
       if (preferred) u.voice = preferred;
-      u.onstart = () => setPhase("speaking");
+      u.onstart = () => { setPhase("speaking"); startBargeInListener(); };
       u.onend = () => { setPhase("idle"); maybeAutoListen(); };
       u.onerror = () => { setPhase("idle"); maybeAutoListen(); };
       utterRef.current = u;
@@ -108,20 +108,31 @@ export default function VoiceAgent() {
     recog.lang = langRef.current;
     recog.interimResults = true;
     recog.continuous = false;
-    recog.maxAlternatives = 1;
+    recog.maxAlternatives = langRef.current === "te-IN" ? 5 : 3;
     recog.onstart = () => { setPhase("listening"); setPartial(""); };
     recog.onresult = (e: any) => {
       let interim = "", finalText = "";
+      let alternates: string[] = [];
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalText += t; else interim += t;
+        const r = e.results[i];
+        const t = r[0].transcript;
+        if (r.isFinal) {
+          finalText += t;
+          for (let k = 1; k < r.length && k < 5; k++) {
+            const alt = r[k]?.transcript;
+            if (alt && alt !== t) alternates.push(alt);
+          }
+        } else interim += t;
       }
       if (interim) setPartial(interim);
       if (finalText) {
         setPartial("");
         setTranscript(finalText);
         recog.stop();
-        sendToAgent(finalText.trim());
+        const combined = alternates.length
+          ? `${finalText.trim()} | ${alternates.slice(0, 3).join(" | ")}`
+          : finalText.trim();
+        sendToAgent(combined);
       }
     };
     recog.onerror = (e: any) => {
@@ -132,6 +143,42 @@ export default function VoiceAgent() {
     };
     recog.onend = () => { setPhase(p => (p === "listening" ? "idle" : p)); };
     recogRef.current = recog;
+    try { recog.start(); } catch {}
+  }, [sendToAgent]);
+
+  // Barge-in: while assistant is speaking, run a parallel recognizer that
+  // cancels TTS the moment the user starts talking, then takes over.
+  const bargeRef = useRef<any>(null);
+  const startBargeInListener = useCallback(() => {
+    if (!SpeechRecognitionImpl) return;
+    try { bargeRef.current?.stop(); } catch {}
+    const recog = new SpeechRecognitionImpl();
+    recog.lang = langRef.current;
+    recog.interimResults = true;
+    recog.continuous = false;
+    recog.maxAlternatives = langRef.current === "te-IN" ? 5 : 3;
+    let interrupted = false;
+    recog.onresult = (e: any) => {
+      const txt = e.results?.[0]?.[0]?.transcript?.trim();
+      if (!txt) return;
+      if (!interrupted) {
+        interrupted = true;
+        try { window.speechSynthesis.cancel(); } catch {}
+      }
+      const last = e.results[e.results.length - 1];
+      if (last?.isFinal) {
+        const alts: string[] = [];
+        for (let k = 1; k < last.length && k < 5; k++) if (last[k]?.transcript) alts.push(last[k].transcript);
+        try { recog.stop(); } catch {}
+        const combined = alts.length ? `${txt} | ${alts.slice(0, 3).join(" | ")}` : txt;
+        sendToAgent(combined);
+      } else {
+        setPartial(txt);
+      }
+    };
+    recog.onerror = () => {};
+    recog.onend = () => {};
+    bargeRef.current = recog;
     try { recog.start(); } catch {}
   }, [sendToAgent]);
 
@@ -147,6 +194,7 @@ export default function VoiceAgent() {
 
   const stopAll = useCallback(() => {
     try { recogRef.current?.stop(); } catch {}
+    try { bargeRef.current?.stop(); } catch {}
     try { window.speechSynthesis?.cancel(); } catch {}
     setPhase("idle");
   }, []);
