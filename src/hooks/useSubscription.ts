@@ -65,20 +65,18 @@ export const useSubscription = () => {
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `payment-${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `payment-proofs/${fileName}`;
+      const fileName = `payment-${Date.now()}.${fileExt}`;
+      // Path is scoped to the user's folder so RLS only allows the owner to read it
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('receipts')
+        .from('payment-proofs')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
-
-      return urlData.publicUrl;
+      // Store the storage path; signed URLs are generated on demand by admins
+      return filePath;
     } catch (err) {
       console.error('Error uploading screenshot:', err);
       toast.error('Failed to upload screenshot');
