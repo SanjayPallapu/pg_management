@@ -46,6 +46,7 @@ import { SettlementSummarySheet } from "./SettlementSummarySheet";
 import { DayGuestRevenueCard } from "./DayGuestRevenueCard";
 import { OverduePaidCard } from "./OverduePaidCard";
 import { BalanceCard } from "./BalanceCard";
+import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
@@ -223,22 +224,20 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       <div className="space-y-6">
         <CollectedByCard />
 
-        {/* Balance & Expenses Overview - Collapsible (collapsed by default) */}
-        <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen}>
+        {/* Bills & Budget Dashboard - replaces previous Balance/Enquiry summary */}
+        <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen} defaultOpen>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
             <div className="flex items-center gap-2">
               <Scale className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Balance & Expenses</span>
+              <span className="font-semibold text-sm">Bills & Budget</span>
             </div>
             <ChevronDown
               className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${overviewOpen ? "rotate-180" : ""}`}
             />
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              <BalanceCard />
-              <TodaySpendingCard />
-              <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
+            <div className="mb-6">
+              <BillsBudgetDashboard rooms={rooms} />
             </div>
           </CollapsibleContent>
         </Collapsible>
