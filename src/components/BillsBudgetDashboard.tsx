@@ -56,7 +56,7 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Wallet className="h-4 w-4 text-primary" />
-              Monthly Budget — {MONTHS[selectedMonth - 1]} {selectedYear}
+              Monthly Budget — {MONTHS[selectedMonth - 1]?.label} {selectedYear}
             </CardTitle>
             {!editingBudget ? (
               <Button variant="ghost" size="sm" className="h-7" onClick={() => { setBudgetDraft(String(budgetAmount)); setEditingBudget(true); }}>
