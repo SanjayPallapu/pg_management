@@ -65,6 +65,7 @@ import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
+import { RoomQuickNav } from "./RoomQuickNav";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -791,16 +792,20 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-4">
-          <div className="grid gap-3 md:grid-cols-2 mb-4">
-            <div className="p-3 bg-paid-muted rounded-lg">
-              <div className="text-2xl font-bold text-paid">₹{stats.totalCollected.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Collected ({stats.paidCount} tenants)</div>
-            </div>
-            <div className="p-3 bg-pending-muted rounded-lg">
-              <div className="text-2xl font-bold text-pending">₹{stats.totalPending.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Pending ({stats.pendingCount} tenants)</div>
-            </div>
-          </div>
+          {/* Room quick-nav — tap a room number to jump to its tenant card */}
+          <RoomQuickNav
+            rooms={rooms}
+            payments={payments}
+            month={selectedMonth}
+            year={selectedYear}
+            onSelect={(roomNo) => {
+              setSearchQuery(roomNo);
+              setTimeout(() => {
+                const el = document.querySelector(`[data-room-no="${roomNo}"]`);
+                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 50);
+            }}
+          />
 
           {/* Previous Month Overdue Card - Interactive */}
           <div className="mb-4">
@@ -900,7 +905,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 setReminderDialogOpen(true);
               };
               return (
-                <div key={tenant.id} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
+                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">
