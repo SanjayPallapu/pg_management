@@ -145,6 +145,72 @@ export type Database = {
           },
         ]
       }
+      expense_entries: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          entry_date: string
+          floor: number | null
+          id: string
+          label: string
+          month: number
+          notes: string | null
+          pg_id: string
+          room_id: string | null
+          subcategory: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          entry_date?: string
+          floor?: number | null
+          id?: string
+          label: string
+          month: number
+          notes?: string | null
+          pg_id: string
+          room_id?: string | null
+          subcategory?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          entry_date?: string
+          floor?: number | null
+          id?: string
+          label?: string
+          month?: number
+          notes?: string | null
+          pg_id?: string
+          room_id?: string | null
+          subcategory?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_entries_pg_id_fkey"
+            columns: ["pg_id"]
+            isOneToOne: false
+            referencedRelation: "pgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_entries_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_numbers: {
         Row: {
           created_at: string
@@ -202,6 +268,44 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_budgets: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          month: number
+          pg_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month: number
+          pg_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: number
+          pg_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_budgets_pg_id_fkey"
+            columns: ["pg_id"]
+            isOneToOne: false
+            referencedRelation: "pgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -248,6 +352,7 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          electricity_unit_price: number
           floors: number | null
           id: string
           logo_url: string | null
@@ -258,6 +363,7 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          electricity_unit_price?: number
           floors?: number | null
           id?: string
           logo_url?: string | null
@@ -268,6 +374,7 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          electricity_unit_price?: number
           floors?: number | null
           id?: string
           logo_url?: string | null
@@ -337,12 +444,54 @@ export type Database = {
         }
         Relationships: []
       }
+      room_electricity_readings: {
+        Row: {
+          created_at: string
+          id: string
+          month: number
+          room_id: string
+          unit_price: number
+          units: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: number
+          room_id: string
+          unit_price?: number
+          units?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: number
+          room_id?: string
+          unit_price?: number
+          units?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_electricity_readings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           capacity: number
           created_at: string
           floor: number
           id: string
+          is_ac: boolean
           notes: string | null
           pg_id: string | null
           property_id: string | null
@@ -356,6 +505,7 @@ export type Database = {
           created_at?: string
           floor: number
           id?: string
+          is_ac?: boolean
           notes?: string | null
           pg_id?: string | null
           property_id?: string | null
@@ -369,6 +519,7 @@ export type Database = {
           created_at?: string
           floor?: number
           id?: string
+          is_ac?: boolean
           notes?: string | null
           pg_id?: string | null
           property_id?: string | null
@@ -490,6 +641,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tenant_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_snoozes: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          snoozed_until: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          snoozed_until: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          snoozed_until?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_snoozes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
