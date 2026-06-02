@@ -1,111 +1,75 @@
-## Overview
-Five connected upgrades shipped together: a new bills & budget dashboard replacing the old Balance/Enquiry section, a quick room-grid nav on the Rent tab, split UPI + Cash payments (with template updates), a tenant snooze ("will pay in X days") for the pending picker, and AC room electricity billing flowing into reminders and receipts.
 
----
+## Scope
 
-## 1. Bills & Expense Tracking Dashboard (replaces Balance & Enquiry)
+Three deliverables in one batch:
 
-**Remove**: existing Balance Overview, Today's Spending, PG Expenses cards on the Dashboard (the section in screenshot 1) and the Enquiry section.
+### A. Finish remaining backend-driven features
 
-**Add a new "Bills & Budget" dashboard** with month picker at top:
+**3. Split Payment (UPI + Cash) in one transaction**
+- Edit `src/components/payment/PaymentAmountDialog.tsx`: add a "Split (UPI + Cash)" toggle. When ON, replace the single amount input with two side-by-side inputs (UPI ₹, Cash ₹) showing the live sum. Replaces the UPI/Cash toggle in split mode.
+- Update `usePaymentEntry` / call sites in `MonthlyRentSheet` to create **two** `tenant_payments` rows (one per mode) when split is used. Both rows share the same `payment_date` and `paid_by`.
+- Receipt + WhatsApp templates (`ReceiptTemplate.tsx`) show a "Payment Breakdown" row: `UPI ₹X · Cash ₹Y` when both > 0.
 
-- **Monthly Budget card** — user sets a budget amount (e.g. ₹80,000), stored per month. Shows:
-  - Progress bar: spent vs budget
-  - % used + remaining ₹
-  - Color shifts green → amber → red as it crosses 70% / 100%
-- **Category Bills cards** (each editable, with add-entry button):
-  - Current Bills (by floor / unit — entries tagged with floor + room)
-  - Utility Bills — Water, Gas, Groceries, Milk (recurring presets)
-  - Other Bills — free-form misc entries
-  - Family Expenses
-  - Each card shows: category total, expandable list of entries (date, label, ₹, note), edit/delete per entry
-- **Grand Total** strip — sum across all categories for the month
+**4. Snooze pending tenants**
+- In `BulkReminderDialog.tsx` Payment Reminders tab, add a "Snooze selected" button next to "Send". Opens a date picker popover (presets: +3d, +7d, custom). Calls `useTenantSnoozes.snoozeTenants`.
+- Filter `pendingTenants` to exclude tenants where `isSnoozed(id) === true`.
+- In `MonthlyRentSheet`'s tenant cards, when snoozed show a small `Promised by DD MMM` chip + `X` to remove snooze (calls `removeSnooze`).
 
-**Storage**: new `expense_entries` table `{id, pg_id, month, year, category, subcategory, label, amount, entry_date, floor, room_id, notes}` and `monthly_budgets` table `{pg_id, month, year, amount}`. RLS scoped via `pgs.owner_id = auth.uid()`.
+**5. AC rooms electricity bill + dedicated AC bill template**
+- Add `is_ac` toggle to `RoomEditDialog.tsx` and `AddRoomsDialog.tsx`.
+- Add `electricity_unit_price` field to PG Settings (BuildingRentSettingsDialog or new section in Settings).
+- New `ACBillEntryDialog.tsx`: per AC room, per month, enter units used + auto-pick unit price → preview per-tenant share.
+- New section in BillsBudgetDashboard "AC Electricity" listing AC rooms with their units / share / total.
+- AC surcharge added to rent reminders + receipts (via existing `PaymentReminderTemplate` extra row "AC Bill (X units)").
+- **NEW `ACBillTemplate.tsx`** — a dedicated WhatsApp-shareable image template (like reminder template) with: room number, units used, unit price, tenants list, per-head share. Triggered from the AC Bill row in BillsBudgetDashboard via a "Share to WhatsApp" button per room (generates image, opens wa.me with image-only — no text per memory rule).
 
----
+### B. Bills & Budget UI overhaul
 
-## 2. Rent tab: Room-number quick grid
+Completely rebuild `BillsBudgetDashboard.tsx` into two stacked sections matching reference screenshots:
 
-**Remove** the "₹0 Collected (0 tenants)" and "₹322,800 Pending (65 tenants)" summary cards above the Rent Sheet.
+**Top: Bills Management** (matches screenshot 2)
+- Header: title + month picker
+- Monthly Budget card (existing logic) with progress bar
+- Grand Total card
+- Section: **Current Bills** — pre-seeded entries per floor/motor (Ground/Motor/1st/2nd&3rd). Each row shows label + entry count + `+` button. Section header has a single ⚙️ settings icon (no pencil) opening a sheet with all entries, edit/delete inside it.
+- Section: **Utility Bills** — preset cards (Water Tank, Gas Cylinder, Water Can, Milk & Curd, Rice Bags, Palm Oil, Chicken) each with `X/N entries · Total: ₹Y` and `+` to add quick entry.
+- Section: **Other Bills** — empty state + `Add` button (renamed from "Add Entry").
+- Section: **Family Expenses** — same structure with `Filter` + ⚙️ + `Add`.
+- All cards: edit/delete moved INSIDE the settings sheet (not on outer cards). Delete = 1-step confirm via `AlertDialog`.
+- New `BillsEntriesSheet.tsx` opens on settings click — lists entries for that subcategory with edit/delete inline.
 
-**Add a new "Rooms" quick-nav card** above the search bar:
-- All room numbers rendered as compact pill buttons in a wrap grid (101, 102, 103, 201, …)
-- Color coding matches existing room status (green=paid, orange=partial, red=overdue, light-blue=not yet due)
-- Tap a room number → scrolls to / opens that room's tenant card in the Rent Sheet (smooth scroll + brief highlight)
-- Sorted by floor then room number
+**Bottom: Expense Analytics** (matches screenshot 1) — new file `BillsAnalytics.tsx`
+- "Hostel Tenants" tenant-count card (saved per PG in a new `pgs.tenant_count_override` column OR derived from active tenants — use active tenant count by default with +/- override stored in localStorage per PG).
+- 5 quick stat tiles: Groceries · Utility · Other · Family · Per Tenant.
+- Per-Tenant Cost (6 months) — `recharts` AreaChart.
+- Current Month Breakdown — Pie chart of category split.
+- 6-Month Spending Trend — LineChart.
+- Monthly Comparison — BarChart.
 
----
+All charts use semantic tokens from `index.css` (hsl variables). Use `recharts` (already in deps).
 
-## 3. Split payment (UPI + Cash in one transaction)
+### C. Android app (informational)
+Provide a short response on the two paths (PWA install vs Capacitor native APK/Play Store) — no code changes unless the user picks Capacitor afterward. Project already has `capacitor.config.ts`; the path forward would be `npx cap add android && npx cap sync && npx cap open android`.
 
-In the **Enter Payment Amount** dialog (`PaymentAmountDialog.tsx`):
-- Replace the single "Payment Mode" segmented control with a **"Split Payment" toggle**:
-  - **Off** (default): current behavior — one mode (UPI or Cash) for the full amount
-  - **On**: two inputs side by side — "UPI ₹___" and "Cash ₹___"; live sum validation against the entered amount; "Confirm" disabled until sum matches
-- On confirm with split, write **two `PaymentEntry` rows** in `payment_entries` JSONB (same date, same collectedBy, modes `upi` and `cash`).
-- **Receipt template** (`ReceiptTemplate.tsx`) and **WhatsApp success template**: when entries include both modes, show a "Payment Breakdown" row with `UPI ₹X + Cash ₹Y` instead of a single mode line.
-- **Reminder template**: unchanged (sent before payment).
+## Files Touched
 
----
+- `src/components/payment/PaymentAmountDialog.tsx` — split mode UI
+- `src/hooks/usePaymentEntry.ts` — handle 2-row insert
+- `src/components/ReceiptTemplate.tsx` — payment breakdown row
+- `src/components/BulkReminderDialog.tsx` — snooze button + filter
+- `src/components/rent/TenantRentCard.tsx` — snooze badge
+- `src/components/RoomEditDialog.tsx`, `AddRoomsDialog.tsx` — is_ac toggle
+- `src/components/BuildingRentSettingsDialog.tsx` or new `ElectricityPriceDialog.tsx` — unit price
+- new `src/components/ACBillEntryDialog.tsx`
+- new `src/components/ACBillTemplate.tsx` — WhatsApp image template
+- `src/components/PaymentReminderTemplate.tsx` — optional AC surcharge row
+- `src/components/BillsBudgetDashboard.tsx` — full rewrite
+- new `src/components/BillsEntriesSheet.tsx`
+- new `src/components/BillsAnalytics.tsx`
+- `src/components/Dashboard.tsx` — mount BillsAnalytics under BillsBudgetDashboard
 
-## 4. Snooze pending tenants ("will pay in X days")
+No new DB migrations (tables/columns from prior turn cover it). Only adds `pgs.electricity_unit_price` if not already present — it was added last migration.
 
-In the **Select Pending Tenants** sheet:
-- Add a **"Snooze" action** for selected tenants — opens a small popover with date picker ("Will pay by")
-- Snoozed tenants are **hidden from the Overdue/Not-Yet-Due picker tabs** until the snooze date passes (auto-expires)
-- They **remain visible in the main Rent Sheet** with a small badge `Promised by DD MMM`
-- Add a **"Snoozed (N)"** third tab in the picker to view + modify snoozed list (extend / remove snooze)
+## Confirm before I build
 
-**Storage**: new `tenant_snoozes` table `{id, tenant_id, snoozed_until, reason, created_at}` with RLS via tenant → room → pg ownership chain. Active snooze = the row with max `snoozed_until > today`.
-
----
-
-## 5. AC rooms — electricity bill in rent
-
-**Rooms section**:
-- Add an **"AC Room" toggle** when adding/editing a room (`RoomEditDialog`, `AddRoomsDialog`). Schema: `rooms.is_ac boolean default false`.
-- Settings: add a **PG-level "Electricity unit price"** setting (₹ per unit).
-
-**Each month, for AC rooms**:
-- New input on the room/tenant row in Rent Sheet: **"Units used (this month)"** → stored per room per month.
-- Auto-calc: `extra_per_tenant = round(units × unit_price ÷ active_tenants_in_room)`
-- This extra is **added on top of monthly rent** in:
-  - Pending amount shown in pending picker
-  - **Payment Reminder template** — adds a "Current Bill: X units × ₹Y = ₹Z (your share: ₹W)" line
-  - **Payment Success / Receipt template** — itemized: "Rent ₹A + Electricity ₹W = ₹Total"
-- Non-AC rooms are unaffected.
-
-**Storage**: new `room_electricity_readings` table `{id, room_id, month, year, units, unit_price_snapshot, created_at}` and a `pg_settings.electricity_unit_price` value (extend existing settings or add a tiny `pg_settings` JSON column on `pgs`).
-
----
-
-## Technical notes
-
-- **Migrations**: 3 new tables (`expense_entries`, `monthly_budgets`, `tenant_snoozes`, `room_electricity_readings`), 2 column additions (`rooms.is_ac`, `pgs.electricity_unit_price`). All with GRANTs + RLS via `pgs.owner_id = auth.uid()` ownership chain.
-- **Hooks**: `useExpenseEntries`, `useMonthlyBudget`, `useTenantSnoozes`, `useElectricityReadings`, `useACSurcharge(tenantId, month, year)` helper.
-- **Single source of truth**: `useTotalCollected` stays unchanged. AC surcharge is added at display time on top of `monthly_rent`, not stored on `tenant_payments.amount` (keeps reporting clean).
-- **Templates**: update `ReceiptTemplate.tsx`, `PaymentReminderTemplate.tsx`, `WhatsAppReceiptDialog` flow to render split payments and AC line items conditionally.
-- **Date handling**: all month/date logic via `src/utils/dateOnly.ts`.
-- **Memory updates**: add Core rules for AC surcharge formula, snooze visibility scope, split payment storage pattern.
-
----
-
-## File touchpoints (high level)
-```text
-DB migrations              4 new
-src/components/Dashboard.tsx                       — remove old cards, mount new BillsBudgetDashboard
-src/components/BillsBudgetDashboard.tsx            — NEW
-src/components/budget/*                            — NEW (CategoryCard, EntryDialog, BudgetCard)
-src/components/MonthlyRentSheet.tsx                — remove summary cards, add RoomQuickNav
-src/components/RoomQuickNav.tsx                    — NEW
-src/components/payment/PaymentAmountDialog.tsx     — split UPI+Cash UI
-src/components/ReceiptTemplate.tsx                 — split breakdown + AC line
-src/components/PaymentReminderTemplate.tsx         — AC line + share-of-bill
-src/components/BulkReminderDialog.tsx              — Snooze action + Snoozed tab
-src/components/RoomEditDialog.tsx, AddRoomsDialog  — AC toggle
-src/components/SettingsDialog (or new)             — Electricity unit price
-src/hooks/useExpenseEntries.ts, useMonthlyBudget.ts, useTenantSnoozes.ts,
-    useElectricityReadings.ts, useACSurcharge.ts   — NEW
-src/utils/templateHelpers.ts                       — buildPaymentLines() with AC + split
-```
+This is ~10 file edits + 4 new files. Reply "go" and I'll ship in one pass; or pick a subset.
