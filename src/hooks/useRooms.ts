@@ -80,6 +80,7 @@ export const useRooms = () => {
         rentAmount: room.rent_amount,
         floor: room.floor as 1 | 2 | 3,
         notes: room.notes || undefined,
+        isAc: (room as any).is_ac || false,
         tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
           name: tenant.name,
@@ -118,6 +119,7 @@ export const useRooms = () => {
           capacity: room.capacity,
           rent_amount: room.rentAmount,
           notes: room.notes,
+          is_ac: room.isAc ?? false,
         })
         .eq("id", room.id);
 
