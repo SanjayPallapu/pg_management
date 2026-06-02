@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Snowflake } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
   const [capacity, setCapacity] = useState("3");
   const [rentAmount, setRentAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [isAc, setIsAc] = useState(false);
 
   // Reset form when room changes
   useEffect(() => {
@@ -42,6 +44,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       setCapacity(room.capacity.toString());
       setRentAmount(room.rentAmount.toString());
       setNotes(room.notes || "");
+      setIsAc(room.isAc ?? false);
     }
   }, [room]);
   const handleSave = async () => {
@@ -54,6 +57,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
           capacity: parseInt(capacity),
           rent_amount: parseInt(rentAmount),
           notes: notes || null,
+          is_ac: isAc,
         })
         .eq("id", room.id);
       if (error) throw error;
@@ -170,6 +174,17 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any special notes about this room..."
               />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Snowflake className="h-4 w-4 text-sky-500" />
+                <div>
+                  <Label htmlFor="is-ac" className="text-sm font-medium">AC Room</Label>
+                  <p className="text-xs text-muted-foreground">Tenants pay extra electricity bill</p>
+                </div>
+              </div>
+              <Switch id="is-ac" checked={isAc} onCheckedChange={setIsAc} />
             </div>
 
             {canDelete && (
