@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format as fmtDate, addDays } from "date-fns";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
+import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
 import { toast } from "@/hooks/use-toast";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
@@ -49,6 +50,20 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { isSnoozed, snoozeTenants } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
+
+  // Helper: compute AC surcharge share for a tenant in the given room
+  const getAcShareForTenant = (room: Room, tenantId: string): number => {
+    if (!room.isAc) return 0;
+    const reading = acByRoom.get(room.id);
+    const units = reading?.units ?? 0;
+    const unitPrice = reading?.unit_price ?? 12;
+    const active = room.tenants.filter((t) =>
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    );
+    if (!active.some((t) => t.id === tenantId)) return 0;
+    return calcAcShare(units, unitPrice, active.length);
+  };
   const [messageType, setMessageType] = useState<"reminder" | "custom">("reminder");
   const [customMessage, setCustomMessage] = useState("");
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
@@ -81,6 +96,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
           );
           const amountPaid = payment?.amountPaid || 0;
+          const acShare = getAcShareForTenant(room, tenant.id);
           return {
             id: tenant.id,
             name: tenant.name,
@@ -88,7 +104,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             roomNo: room.roomNo,
             monthlyRent: tenant.monthlyRent,
             amountPaid,
-            balance: tenant.monthlyRent - amountPaid,
+            balance: tenant.monthlyRent - amountPaid + acShare,
+            acShare,
             paymentStatus: (payment?.paymentStatus || "Pending") as "Paid" | "Pending" | "Partial",
           };
         })
@@ -96,7 +113,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
     // Filter to only pending and partial
     return allTenants.filter((t) => t.paymentStatus !== "Paid" && !isSnoozed(t.id));
-  }, [rooms, payments, selectedMonth, selectedYear, isSnoozed]);
+  }, [rooms, payments, selectedMonth, selectedYear, isSnoozed, acByRoom]);
 
   // Get all tenants for custom message (excluding left tenants)
   const allTenants = useMemo(() => {
@@ -177,6 +194,9 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
       message += `.\n\nAmount Due: ₹${tenant.balance.toLocaleString()}`;
       if (tenant.amountPaid > 0) {
         message += `\n(Already Paid: ₹${tenant.amountPaid.toLocaleString()})`;
+      }
+      if ((tenant as any).acShare && (tenant as any).acShare > 0) {
+        message += `\n(Includes AC Electricity: ₹${(tenant as any).acShare.toLocaleString()})`;
       }
     }
 

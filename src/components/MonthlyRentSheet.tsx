@@ -66,6 +66,8 @@ import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
 import { RoomQuickNav } from "./RoomQuickNav";
+import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
+import { CalendarClock, X as XIcon } from "lucide-react";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -73,6 +75,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const [splitMode, setSplitMode] = useState(false);
+  const [upiAmount, setUpiAmount] = useState(0);
+  const [cashAmount, setCashAmount] = useState(0);
   const defaultCollectorId = useMemo(() => collectors[0]?.id ?? "Me", [collectors]);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
     id: string;
@@ -518,16 +524,25 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const isFullPayment = totalPaid >= tenant.monthlyRent;
     const status = isFullPayment ? "Paid" : "Partial";
 
-    // Build new payment entry
-    const newEntry = {
-      amount: paymentAmount,
-      date: formattedDate,
-      type: isFullPayment ? ("full" as const) : ("partial" as const),
-      mode: paymentMode,
-      collectedBy,
-    };
+    // Build new payment entry/entries (split = two rows: UPI + Cash)
     const existingEntries = tenant.payment.paymentEntries || [];
-    const updatedEntries = [...existingEntries, newEntry];
+    const newEntries: PaymentEntry[] = [];
+    if (splitMode && (upiAmount > 0 || cashAmount > 0)) {
+      if (upiAmount > 0) newEntries.push({
+        amount: upiAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: "upi", collectedBy,
+      });
+      if (cashAmount > 0) newEntries.push({
+        amount: cashAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: "cash", collectedBy,
+      });
+    } else {
+      newEntries.push({
+        amount: paymentAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: paymentMode, collectedBy,
+      });
+    }
+    const updatedEntries = [...existingEntries, ...newEntries];
 
     // Build notes for overpayment
     const notes = isOverpayment
@@ -578,6 +593,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPaymentAmount(0);
     setOverpaymentReason("");
     setCollectedBy(defaultCollectorId);
+    setSplitMode(false);
+    setUpiAmount(0);
+    setCashAmount(0);
   };
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
@@ -912,6 +930,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         {tenant.isLocked && "🔒 "}
                         {tenant.name}
                       </div>
+                      {isSnoozed(tenant.id) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeSnooze.mutate(tenant.id); }}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-medium border border-amber-500/30"
+                          title="Click to remove snooze"
+                        >
+                          <CalendarClock className="h-3 w-3" />
+                          Promised by {format(new Date(getSnoozedUntil(tenant.id)!), "dd MMM")}
+                          <XIcon className="h-2.5 w-2.5 opacity-60" />
+                        </button>
+                      )}
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== "••••••••••" && (
                         <a
@@ -1236,7 +1265,44 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             </div>
             <div>
               <Label>Payment Mode</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="flex items-center justify-between mt-2 mb-2">
+                <span className="text-xs text-muted-foreground">
+                  {splitMode ? `Split total: ₹${(upiAmount + cashAmount).toLocaleString()}` : "Single mode"}
+                </span>
+                <Button
+                  type="button" size="sm" variant={splitMode ? "default" : "outline"}
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    const next = !splitMode;
+                    setSplitMode(next);
+                    if (next) { setUpiAmount(paymentAmount); setCashAmount(0); }
+                    else { setPaymentAmount(upiAmount + cashAmount || paymentAmount); }
+                  }}
+                >
+                  {splitMode ? "Single mode" : "Split UPI + Cash"}
+                </Button>
+              </div>
+              {splitMode ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">UPI ₹</Label>
+                    <Input type="number" value={upiAmount || ""}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        setUpiAmount(v); setPaymentAmount(v + cashAmount);
+                      }} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cash ₹</Label>
+                    <Input type="number" value={cashAmount || ""}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        setCashAmount(v); setPaymentAmount(upiAmount + v);
+                      }} />
+                  </div>
+                </div>
+              ) : (
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant={paymentMode === "upi" ? "default" : "outline"}
@@ -1254,6 +1320,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   Cash
                 </Button>
               </div>
+              )}
             </div>
             <div>
               <Label>Collected By</Label>

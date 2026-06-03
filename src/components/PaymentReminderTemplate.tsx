@@ -22,6 +22,12 @@ export interface ReminderData {
   };
   selectedMonth: number; // 1–12
   selectedYear: number; // YYYY
+  // Optional AC electricity surcharge
+  acSurcharge?: {
+    units: number;
+    unitPrice: number;
+    share: number; // per-tenant share already computed
+  };
   // PG Branding
   pgName?: string;
   pgLogoUrl?: string;
@@ -120,6 +126,8 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
   const pgName = data.pgName || "PG Management";
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
   const hideTenantName = data.hideTenantName === true;
+  const ac = data.acSurcharge;
+  const totalDue = data.payment.balance + (ac?.share || 0);
 
   return (
     <div
@@ -219,11 +227,11 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             marginBottom: "6px",
           }}
         >
-          {formatCurrency(data.payment.balance)}
+          {formatCurrency(totalDue)}
         </div>
 
         <div style={{ fontSize: "14px", color: "#92400e", fontWeight: 500 }}>
-          {hasPaid ? "Remaining Balance Due" : "Amount Due"}
+          {hasPaid ? "Remaining Balance Due" : "Amount Due"}{ac?.share ? " (incl. AC)" : ""}
         </div>
 
         {hasPaid && (
@@ -283,6 +291,17 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
                 {formatCurrency(data.payment.amount)}
               </td>
             </tr>
+            {ac && ac.share > 0 && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#eff6ff" }}>
+                <td style={{ padding: "10px 16px", color: "#1d4ed8" }}>AC Electricity:</td>
+                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#1d4ed8" }}>
+                  {formatCurrency(ac.share)}
+                  <span style={{ fontSize: 11, color: "#3b82f6", marginLeft: 6 }}>
+                    ({ac.units} units × ₹{ac.unitPrice}/unit ÷ share)
+                  </span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
