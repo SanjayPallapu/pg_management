@@ -17,6 +17,7 @@ import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
+import { BillsAnalytics } from "./bills/BillsAnalytics";
 import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
 import { generateReceiptImage } from "@/utils/generateReceiptImage";
 import { toast } from "@/hooks/use-toast";
@@ -484,6 +485,9 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           <ACBillTemplate data={acShareData} />
         </div>
       )}
+
+      {/* Analytics dashboard */}
+      <BillsAnalytics />
     </div>
   );
 };
