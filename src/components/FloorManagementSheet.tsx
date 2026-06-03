@@ -10,6 +10,7 @@ import { usePG } from '@/contexts/PGContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Room } from '@/types';
+import { AddRoomsDialog } from './AddRoomsDialog';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -31,6 +32,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   const queryClient = useQueryClient();
   const [isAddingFloor, setIsAddingFloor] = useState(false);
   const [deletingFloor, setDeletingFloor] = useState<number | null>(null);
+  const [addRoomsFloor, setAddRoomsFloor] = useState<number | null>(null);
 
   type DeleteFlow = {
     floor: number;
@@ -91,9 +93,8 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
  
    const handleAddGroundFloor = async () => {
      if (!currentPG || hasGroundFloor) return;
-     // Ground floor doesn't increase floor count - it's floor 0
-     // Just show a message to add rooms on ground floor
-     toast.info('Ground Floor enabled! Add rooms with floor 0 to use it.');
+     // Open the Add Rooms dialog scoped to floor 0
+     setAddRoomsFloor(0);
    };
 
   const handleDeleteFloor = async (floor: number) => {
@@ -224,6 +225,15 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
           </div>
         </SheetContent>
       </Sheet>
+
+      {addRoomsFloor !== null && (
+        <AddRoomsDialog
+          open={addRoomsFloor !== null}
+          onOpenChange={(o) => !o && setAddRoomsFloor(null)}
+          floor={addRoomsFloor}
+          existingRoomNos={rooms.filter(r => r.floor === addRoomsFloor).map(r => r.roomNo)}
+        />
+      )}
 
       <AlertDialog open={deleteFlow !== null} onOpenChange={(o) => !o && setDeleteFlow(null)}>
         <AlertDialogContent>
