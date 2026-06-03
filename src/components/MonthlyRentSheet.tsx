@@ -524,16 +524,25 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const isFullPayment = totalPaid >= tenant.monthlyRent;
     const status = isFullPayment ? "Paid" : "Partial";
 
-    // Build new payment entry
-    const newEntry = {
-      amount: paymentAmount,
-      date: formattedDate,
-      type: isFullPayment ? ("full" as const) : ("partial" as const),
-      mode: paymentMode,
-      collectedBy,
-    };
+    // Build new payment entry/entries (split = two rows: UPI + Cash)
     const existingEntries = tenant.payment.paymentEntries || [];
-    const updatedEntries = [...existingEntries, newEntry];
+    const newEntries: PaymentEntry[] = [];
+    if (splitMode && (upiAmount > 0 || cashAmount > 0)) {
+      if (upiAmount > 0) newEntries.push({
+        amount: upiAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: "upi", collectedBy,
+      });
+      if (cashAmount > 0) newEntries.push({
+        amount: cashAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: "cash", collectedBy,
+      });
+    } else {
+      newEntries.push({
+        amount: paymentAmount, date: formattedDate,
+        type: isFullPayment ? "full" : "partial", mode: paymentMode, collectedBy,
+      });
+    }
+    const updatedEntries = [...existingEntries, ...newEntries];
 
     // Build notes for overpayment
     const notes = isOverpayment
@@ -584,6 +593,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPaymentAmount(0);
     setOverpaymentReason("");
     setCollectedBy(defaultCollectorId);
+    setSplitMode(false);
+    setUpiAmount(0);
+    setCashAmount(0);
   };
   const confirmPayRemaining = () => {
     if (!payRemainingTenant) return;
