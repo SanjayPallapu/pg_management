@@ -66,6 +66,8 @@ import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
 import { RoomQuickNav } from "./RoomQuickNav";
+import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
+import { CalendarClock, X as XIcon } from "lucide-react";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -73,6 +75,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const [splitMode, setSplitMode] = useState(false);
+  const [upiAmount, setUpiAmount] = useState(0);
+  const [cashAmount, setCashAmount] = useState(0);
   const defaultCollectorId = useMemo(() => collectors[0]?.id ?? "Me", [collectors]);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
     id: string;
