@@ -918,6 +918,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         {tenant.isLocked && "🔒 "}
                         {tenant.name}
                       </div>
+                      {isSnoozed(tenant.id) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); removeSnooze.mutate(tenant.id); }}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-medium border border-amber-500/30"
+                          title="Click to remove snooze"
+                        >
+                          <CalendarClock className="h-3 w-3" />
+                          Promised by {format(new Date(getSnoozedUntil(tenant.id)!), "dd MMM")}
+                          <XIcon className="h-2.5 w-2.5 opacity-60" />
+                        </button>
+                      )}
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== "••••••••••" && (
                         <a
