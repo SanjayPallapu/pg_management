@@ -1265,7 +1265,44 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             </div>
             <div>
               <Label>Payment Mode</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="flex items-center justify-between mt-2 mb-2">
+                <span className="text-xs text-muted-foreground">
+                  {splitMode ? `Split total: ₹${(upiAmount + cashAmount).toLocaleString()}` : "Single mode"}
+                </span>
+                <Button
+                  type="button" size="sm" variant={splitMode ? "default" : "outline"}
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    const next = !splitMode;
+                    setSplitMode(next);
+                    if (next) { setUpiAmount(paymentAmount); setCashAmount(0); }
+                    else { setPaymentAmount(upiAmount + cashAmount || paymentAmount); }
+                  }}
+                >
+                  {splitMode ? "Single mode" : "Split UPI + Cash"}
+                </Button>
+              </div>
+              {splitMode ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">UPI ₹</Label>
+                    <Input type="number" value={upiAmount || ""}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        setUpiAmount(v); setPaymentAmount(v + cashAmount);
+                      }} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cash ₹</Label>
+                    <Input type="number" value={cashAmount || ""}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        setCashAmount(v); setPaymentAmount(upiAmount + v);
+                      }} />
+                  </div>
+                </div>
+              ) : (
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant={paymentMode === "upi" ? "default" : "outline"}
@@ -1283,6 +1320,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   Cash
                 </Button>
               </div>
+              )}
             </div>
             <div>
               <Label>Collected By</Label>
