@@ -4,7 +4,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X, Plus, Settings2, ChevronDown } from 'lucide-react';
+import { Search, X, Plus, Settings2, ChevronDown, Snowflake } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TenantSearchResults } from './TenantSearchResults';
 import { usePG } from '@/contexts/PGContext';
@@ -36,6 +36,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [selectedFloorForRooms, setSelectedFloorForRooms] = useState<number>(1);
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [acFilter, setAcFilter] = useState<'all' | 'ac' | 'normal'>('all');
   
   // Fetch all day guests once at directory level to avoid N+1 queries
   const { dayGuests: allDayGuests } = useDayGuests();
@@ -67,25 +68,24 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   // Dynamically determine floors from actual room data
   const floorData = useMemo(() => {
     const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
-    // If no rooms, use PG floors setting or default to 1
+    const hasGroundFloor = floorsFromRooms.includes(0);
     const pgFloors = currentPG?.floors || 3;
-    const allFloors = floorsFromRooms.length > 0 
-      ? floorsFromRooms 
-      : Array.from({ length: pgFloors }, (_, i) => i + 1);
-    
-    // Also include floors from PG setting that might be empty
     const maxFloor = Math.max(...floorsFromRooms, pgFloors);
-    const combinedFloors = Array.from({ length: maxFloor }, (_, i) => i + 1);
-    
+    const upperFloors = Array.from({ length: maxFloor }, (_, i) => i + 1);
+    const combinedFloors = hasGroundFloor ? [0, ...upperFloors] : upperFloors;
+
     return combinedFloors.map(floor => {
-      const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
+      const roomsOnFloor = rooms
+        .filter(r => r.floor === floor)
+        .filter(r => acFilter === 'all' ? true : acFilter === 'ac' ? r.isAc : !r.isAc)
+        .sort((a, b) => a.roomNo.localeCompare(b.roomNo));
       return {
         floor,
         rooms: roomsOnFloor,
-        name: getFloorName(floor),
+        name: floor === 0 ? 'Ground Floor' : getFloorName(floor),
       };
     });
-  }, [rooms, currentPG?.floors]);
+  }, [rooms, currentPG?.floors, acFilter]);
 
   const openAddRoomsDialog = useCallback((floor: number) => {
     setSelectedFloorForRooms(floor);
@@ -126,6 +126,32 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
               <X className="h-4 w-4" />
             </button>
           )}
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={acFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setAcFilter('all')}
+            className="h-8 text-xs"
+          >
+            All ({rooms.length})
+          </Button>
+          <Button
+            size="sm"
+            variant={acFilter === 'ac' ? 'default' : 'outline'}
+            onClick={() => setAcFilter('ac')}
+            className="h-8 text-xs gap-1"
+          >
+            <Snowflake className="h-3 w-3" /> AC ({rooms.filter(r => r.isAc).length})
+          </Button>
+          <Button
+            size="sm"
+            variant={acFilter === 'normal' ? 'default' : 'outline'}
+            onClick={() => setAcFilter('normal')}
+            className="h-8 text-xs"
+          >
+            Normal ({rooms.filter(r => !r.isAc).length})
+          </Button>
         </div>
       </div>
 
