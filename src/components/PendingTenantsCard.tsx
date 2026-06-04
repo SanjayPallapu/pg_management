@@ -47,7 +47,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   };
 
   const getAcSurchargeFor = (tenant: TenantWithPayment) => {
-    const room = rooms.find((r) => r.id === (tenant as any).roomId);
+    const room = rooms.find((r) => r.roomNo === tenant.roomNo);
     if (!room || !room.isAc) return undefined;
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
