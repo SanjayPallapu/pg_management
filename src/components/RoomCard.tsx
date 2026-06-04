@@ -19,6 +19,9 @@ import {
   Wallet,
   PartyPopper,
   Settings,
+  Snowflake,
+  CalendarClock,
+  X as XIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,6 +41,8 @@ import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { format, differenceInDays } from "date-fns";
+import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
+import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
   isTenantActiveNow,
@@ -65,6 +70,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin, isStaff } = useAuth();
   const { currentPG } = usePG();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const canManageTenants = isAdmin || isStaff;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -80,6 +87,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     amount: number;
     amountPaid?: number;
     balance: number;
+    acSurcharge?: { units: number; unitPrice: number; share: number };
   } | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<{
