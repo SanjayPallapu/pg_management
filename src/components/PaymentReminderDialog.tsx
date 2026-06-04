@@ -24,6 +24,7 @@ interface ReminderInputData {
   // Optional overrides for when called from Previous Overdue sheet
   overrideMonth?: number;
   overrideYear?: number;
+  acSurcharge?: { units: number; unitPrice: number; share: number };
 }
 
 interface PaymentReminderDialogProps {
@@ -69,6 +70,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         pgName: currentPG?.name,
         pgLogoUrl: currentPG?.logoUrl,
         hideTenantName,
+        acSurcharge: reminderData.acSurcharge,
       });
     }
   }, [reminderData, open, selectedMonth, selectedYear, currentPG, hideTenantName]);
