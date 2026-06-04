@@ -246,7 +246,15 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         </div>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Room {room.roomNo}</CardTitle>
-          <Badge className={getStatusColor(currentStatus)}>{currentStatus}</Badge>
+          <div className="flex items-center gap-1.5">
+            {room.isAc && (
+              <Badge className="bg-sky-500/15 text-sky-600 border border-sky-500/30 gap-1 px-1.5 py-0.5">
+                <Snowflake className="h-3 w-3" />
+                AC
+              </Badge>
+            )}
+            <Badge className={getStatusColor(currentStatus)}>{currentStatus}</Badge>
+          </div>
         </div>
       </CardHeader>
 
