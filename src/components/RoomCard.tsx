@@ -322,6 +322,18 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               const openPaymentReminder = () => {
                 const payment = getSelectedMonthPayment(tenant.id);
                 const amountPaid = payment?.amountPaid || 0;
+                // Compute AC share if applicable
+                let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
+                if (room.isAc) {
+                  const reading = acByRoom.get(room.id);
+                  const units = reading?.units ?? 0;
+                  const unitPrice = reading?.unit_price ?? 12;
+                  const active = room.tenants.filter((t) =>
+                    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+                  );
+                  const share = calcAcShare(units, unitPrice, active.length);
+                  if (share > 0) acSurcharge = { units, unitPrice, share };
+                }
                 const balance = tenant.monthlyRent - amountPaid;
                 setReminderData({
                   tenantName: tenant.name,
@@ -333,6 +345,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
+                  acSurcharge,
                 });
                 setReminderDialogOpen(true);
               };
