@@ -7,13 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, X as XIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
+import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
+import { useElectricityReadings, calcAcShare } from '@/hooks/useElectricityReadings';
+import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
+import { format as fmtDate } from 'date-fns';
 
 interface PendingTenantsCardProps {
   rooms: Room[];
@@ -26,6 +30,8 @@ export interface PendingTenantsCardRef {
 export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms }, ref) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -39,6 +45,19 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const handleOpenReminder = (tenant: TenantWithPayment) => {
     setReminderTenant(tenant);
     setReminderOpen(true);
+  };
+
+  const getAcSurchargeFor = (tenant: TenantWithPayment) => {
+    const room = rooms.find((r) => r.id === (tenant as any).roomId);
+    if (!room || !room.isAc) return undefined;
+    const reading = acByRoom.get(room.id);
+    const units = reading?.units ?? 0;
+    const unitPrice = reading?.unit_price ?? 12;
+    const active = room.tenants.filter((t) =>
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    );
+    const share = calcAcShare(units, unitPrice, active.length);
+    return share > 0 ? { units, unitPrice, share } : undefined;
   };
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -247,6 +266,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amount: reminderTenant.monthlyRent,
           amountPaid: reminderTenant.amountPaid || 0,
           balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
+          acSurcharge: getAcSurchargeFor(reminderTenant),
         } : null}
       />
     </>
