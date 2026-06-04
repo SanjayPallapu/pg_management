@@ -1,19 +1,22 @@
 import { useState, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, X as XIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
+import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
+import { useElectricityReadings, calcAcShare } from '@/hooks/useElectricityReadings';
+import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
+import { format as fmtDate } from 'date-fns';
 
 interface PendingTenantsCardProps {
   rooms: Room[];
@@ -26,6 +29,8 @@ export interface PendingTenantsCardRef {
 export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms }, ref) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -39,6 +44,19 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const handleOpenReminder = (tenant: TenantWithPayment) => {
     setReminderTenant(tenant);
     setReminderOpen(true);
+  };
+
+  const getAcSurchargeFor = (tenant: TenantWithPayment) => {
+    const room = rooms.find((r) => r.roomNo === tenant.roomNo);
+    if (!room || !room.isAc) return undefined;
+    const reading = acByRoom.get(room.id);
+    const units = reading?.units ?? 0;
+    const unitPrice = reading?.unit_price ?? 12;
+    const active = room.tenants.filter((t) =>
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    );
+    const share = calcAcShare(units, unitPrice, active.length);
+    return share > 0 ? { units, unitPrice, share } : undefined;
   };
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -203,6 +221,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                         onToggle={handleToggleTenant}
                         categoryColor="pending"
                         onReminder={handleOpenReminder}
+                        snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
+                        onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
                       />
                     ))
                   )}
@@ -224,6 +244,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                         onToggle={handleToggleTenant}
                         categoryColor="blue"
                         onReminder={handleOpenReminder}
+                        snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
+                        onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
                       />
                     ))
                   )}
@@ -247,6 +269,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amount: reminderTenant.monthlyRent,
           amountPaid: reminderTenant.amountPaid || 0,
           balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
+          acSurcharge: getAcSurchargeFor(reminderTenant),
         } : null}
       />
     </>
@@ -260,7 +283,7 @@ interface TenantSelectItemProps {
   categoryColor: 'pending' | 'blue';
 }
 
-const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, snoozedUntil, onRemoveSnooze }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void; snoozedUntil?: string; onRemoveSnooze?: () => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-pending-muted border-pending/30' 
     : 'bg-blue-500/10 border-blue-500/30';
@@ -277,8 +300,20 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           className="pointer-events-none"
         />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold truncate">{tenant.name}</span>
+            {snoozedUntil && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onRemoveSnooze?.(); }}
+                className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25"
+                title="Tap to remove snooze"
+              >
+                <CalendarClock className="h-2.5 w-2.5" />
+                Promised by {fmtDate(parseDateOnly(snoozedUntil), 'dd MMM')}
+                <XIcon className="h-2.5 w-2.5 opacity-70" />
+              </button>
+            )}
             {tenant.phone && tenant.phone !== '••••••••••' && (
               <>
                 <a

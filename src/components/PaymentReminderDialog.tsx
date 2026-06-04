@@ -24,6 +24,7 @@ interface ReminderInputData {
   // Optional overrides for when called from Previous Overdue sheet
   overrideMonth?: number;
   overrideYear?: number;
+  acSurcharge?: { units: number; unitPrice: number; share: number };
 }
 
 interface PaymentReminderDialogProps {
@@ -69,6 +70,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         pgName: currentPG?.name,
         pgLogoUrl: currentPG?.logoUrl,
         hideTenantName,
+        acSurcharge: reminderData.acSurcharge,
       });
     }
   }, [reminderData, open, selectedMonth, selectedYear, currentPG, hideTenantName]);
@@ -206,8 +208,21 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Due:</span>
-                  <span className="font-semibold text-amber-600">₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}</span>
+                  <span className="font-semibold text-amber-600">
+                    ₹{Math.floor(reminderData.balance + (reminderData.acSurcharge?.share || 0)).toLocaleString('en-IN')}
+                  </span>
                 </div>
+                {reminderData.acSurcharge && reminderData.acSurcharge.share > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 dark:text-blue-400 text-xs">↳ AC Electricity:</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400 text-xs">
+                      ₹{reminderData.acSurcharge.share.toLocaleString('en-IN')}
+                      <span className="opacity-70 ml-1">
+                        ({reminderData.acSurcharge.units}u × ₹{reminderData.acSurcharge.unitPrice})
+                      </span>
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">For Month:</span>
                   <span className="font-semibold">{reminderData.forMonth}</span>

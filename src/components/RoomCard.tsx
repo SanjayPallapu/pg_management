@@ -19,6 +19,9 @@ import {
   Wallet,
   PartyPopper,
   Settings,
+  Snowflake,
+  CalendarClock,
+  X as XIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,6 +41,8 @@ import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { format, differenceInDays } from "date-fns";
+import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
+import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
   isTenantActiveNow,
@@ -65,6 +70,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin, isStaff } = useAuth();
   const { currentPG } = usePG();
+  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const canManageTenants = isAdmin || isStaff;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -80,6 +87,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     amount: number;
     amountPaid?: number;
     balance: number;
+    acSurcharge?: { units: number; unitPrice: number; share: number };
   } | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<{
@@ -238,7 +246,15 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         </div>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Room {room.roomNo}</CardTitle>
-          <Badge className={getStatusColor(currentStatus)}>{currentStatus}</Badge>
+          <div className="flex items-center gap-1.5">
+            {room.isAc && (
+              <Badge className="bg-sky-500/15 text-sky-600 border border-sky-500/30 gap-1 px-1.5 py-0.5">
+                <Snowflake className="h-3 w-3" />
+                AC
+              </Badge>
+            )}
+            <Badge className={getStatusColor(currentStatus)}>{currentStatus}</Badge>
+          </div>
         </div>
       </CardHeader>
 
@@ -306,6 +322,18 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               const openPaymentReminder = () => {
                 const payment = getSelectedMonthPayment(tenant.id);
                 const amountPaid = payment?.amountPaid || 0;
+                // Compute AC share if applicable
+                let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
+                if (room.isAc) {
+                  const reading = acByRoom.get(room.id);
+                  const units = reading?.units ?? 0;
+                  const unitPrice = reading?.unit_price ?? 12;
+                  const active = room.tenants.filter((t) =>
+                    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+                  );
+                  const share = calcAcShare(units, unitPrice, active.length);
+                  if (share > 0) acSurcharge = { units, unitPrice, share };
+                }
                 const balance = tenant.monthlyRent - amountPaid;
                 setReminderData({
                   tenantName: tenant.name,
@@ -317,6 +345,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
+                  acSurcharge,
                 });
                 setReminderDialogOpen(true);
               };
@@ -357,6 +386,18 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                             <Sparkles className="h-2.5 w-2.5 mr-0.5" />
                             NEW
                           </Badge>
+                        )}
+                        {isSnoozed(tenant.id) && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); removeSnooze.mutate(tenant.id); }}
+                            className="inline-flex items-center gap-1 h-4 px-1.5 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25"
+                            title="Tap to remove snooze"
+                          >
+                            <CalendarClock className="h-2.5 w-2.5" />
+                            Promised by {format(parseDateOnly(getSnoozedUntil(tenant.id)!), "dd MMM")}
+                            <XIcon className="h-2.5 w-2.5 opacity-70" />
+                          </button>
                         )}
                       </div>
                       {leftThisMonth && tenant.endDate && (
