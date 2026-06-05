@@ -44,6 +44,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { applyStyledExport, XLSX as styledXLSX } from "@/utils/excelStyles";
@@ -76,6 +77,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
   const [cashAmount, setCashAmount] = useState(0);
@@ -130,6 +132,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     amount: number;
     amountPaid?: number;
     balance: number;
+    acSurcharge?: { units: number; unitPrice: number; share: number };
+    acBill?: {
+      roomNo: string;
+      units: number;
+      unitPrice: number;
+      totalAmount: number;
+      tenants: { name: string; share: number }[];
+      monthLabel: string;
+      pgName?: string;
+      pgLogoUrl?: string;
+    };
   } | null>(null);
   const [receiptData, setReceiptData] = useState<{
     tenantName: string;
@@ -909,6 +922,44 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 const sharingType = room ? `${room.capacity} Sharing` : "N/A";
                 const amountPaid = tenant.payment.amountPaid || 0;
                 const balance = targetRent - amountPaid;
+                let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
+                let acBill:
+                  | {
+                      roomNo: string;
+                      units: number;
+                      unitPrice: number;
+                      totalAmount: number;
+                      tenants: { name: string; share: number }[];
+                      monthLabel: string;
+                      pgName?: string;
+                      pgLogoUrl?: string;
+                    }
+                  | undefined;
+
+                if (room?.isAc) {
+                  const reading = acByRoom.get(room.id);
+                  const units = reading?.units ?? 0;
+                  const unitPrice = reading?.unit_price ?? 12;
+                  const activeTenants = room.tenants.filter((roomTenant) =>
+                    isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, selectedYear, selectedMonth),
+                  );
+                  const share = calcAcShare(units, unitPrice, activeTenants.length);
+
+                  if (share > 0) {
+                    acSurcharge = { units, unitPrice, share };
+                    acBill = {
+                      roomNo: room.roomNo,
+                      units,
+                      unitPrice,
+                      totalAmount: units * unitPrice,
+                      tenants: activeTenants.map((roomTenant) => ({ name: roomTenant.name, share })),
+                      monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                      pgName: currentPG?.name,
+                      pgLogoUrl: currentPG?.logoUrl,
+                    };
+                  }
+                }
+
                 setReminderData({
                   tenantName: tenant.name,
                   tenantPhone: tenant.phone,
@@ -919,6 +970,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
+                  acSurcharge,
+                  acBill,
                 });
                 setReminderDialogOpen(true);
               };
