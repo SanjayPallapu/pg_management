@@ -334,7 +334,16 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 const amountPaid = payment?.amountPaid || 0;
                 // Compute AC share if applicable
                 let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
-                let acBill: typeof reminderData extends infer R ? R extends { acBill?: infer A } ? A : never : never;
+                let acBill: {
+                  roomNo: string;
+                  units: number;
+                  unitPrice: number;
+                  totalAmount: number;
+                  tenants: { name: string; share: number }[];
+                  monthLabel: string;
+                  pgName?: string;
+                  pgLogoUrl?: string;
+                } | undefined;
                 if (room.isAc) {
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
