@@ -313,6 +313,40 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 </svg>
                 Copy Reminder Data (JSON)
               </Button>
+
+              {/* AC Bill section — only for AC rooms with a reading */}
+              {reminderData.acBill && (
+                <div className="rounded-lg border border-sky-300/50 bg-sky-50 dark:bg-sky-950/20 p-3 space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-sky-700 dark:text-sky-300">⚡ AC Electricity Bill</span>
+                    <span className="text-xs text-sky-700/80 dark:text-sky-300/80">
+                      {reminderData.acBill.units}u × ₹{reminderData.acBill.unitPrice} = ₹{reminderData.acBill.totalAmount.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  {generatedAcImage && (
+                    <img src={generatedAcImage} alt="AC Bill" className="w-full rounded-md border" />
+                  )}
+                  <Button
+                    onClick={generateAcBill}
+                    disabled={isGeneratingAc}
+                    variant="secondary"
+                    className="w-full h-10"
+                  >
+                    {isGeneratingAc ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+                    ) : generatedAcImage ? 'Regenerate AC Bill' : 'Generate AC Bill Image'}
+                  </Button>
+                  {generatedAcImage && (
+                    <Button
+                      onClick={shareAcToWhatsApp}
+                      className="w-full h-10 gap-2 bg-sky-600 hover:bg-sky-700"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Send AC Bill to WhatsApp
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
