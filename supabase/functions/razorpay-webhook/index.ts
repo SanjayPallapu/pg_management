@@ -26,9 +26,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
-    if (!RAZORPAY_KEY_SECRET) {
-      throw new Error("RAZORPAY_KEY_SECRET not configured");
+    // Razorpay signs webhooks with a separate webhook secret (configured in
+    // Razorpay Dashboard → Webhooks). Fall back to the key secret only as a
+    // last resort to avoid breaking older configs.
+    const RAZORPAY_WEBHOOK_SECRET =
+      Deno.env.get("RAZORPAY_WEBHOOK_SECRET") || Deno.env.get("RAZORPAY_KEY_SECRET");
+    if (!RAZORPAY_WEBHOOK_SECRET) {
+      throw new Error("RAZORPAY_WEBHOOK_SECRET not configured");
     }
 
     const body = await req.text();
@@ -36,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Verify webhook signature
     if (signature) {
-      const isValid = await verifySignature(body, signature, RAZORPAY_KEY_SECRET);
+      const isValid = await verifySignature(body, signature, RAZORPAY_WEBHOOK_SECRET);
       if (!isValid) {
         console.error("Invalid webhook signature");
         return new Response(JSON.stringify({ error: "Invalid signature" }), {
