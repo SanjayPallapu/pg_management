@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Bell, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
+import { ACBillTemplate, type ACBillData } from '@/components/ACBillTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { usePG } from '@/contexts/PGContext';
@@ -25,6 +26,7 @@ interface ReminderInputData {
   overrideMonth?: number;
   overrideYear?: number;
   acSurcharge?: { units: number; unitPrice: number; share: number };
+  acBill?: ACBillData;
 }
 
 interface PaymentReminderDialogProps {
@@ -38,7 +40,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedAcImage, setGeneratedAcImage] = useState<string | null>(null);
+  const [isGeneratingAc, setIsGeneratingAc] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
+  const acRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReminderData | null>(null);
   const { selectedMonth, selectedYear } = useMonthContext();
   const [hideTenantName, setHideTenantName] = useState(false);
@@ -100,6 +105,43 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     toast({ title: 'Reminder downloaded!' });
   };
 
+  const generateAcBill = useCallback(async () => {
+    if (!reminderData?.acBill || !acRef.current) return;
+    setIsGeneratingAc(true);
+    try {
+      const dataUrl = await generateReceiptImage(acRef.current);
+      setGeneratedAcImage(dataUrl);
+      toast({ title: 'AC bill image generated!' });
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Failed to generate AC bill', variant: 'destructive' });
+    } finally {
+      setIsGeneratingAc(false);
+    }
+  }, [reminderData]);
+
+  const shareAcToWhatsApp = async () => {
+    if (!generatedAcImage || !reminderData) return;
+    try {
+      const res = await fetch(generatedAcImage);
+      const blob = await res.blob();
+      const file = new File([blob], `ac-bill-room-${reminderData.roomNo}.png`, { type: 'image/png' });
+      let phone = reminderData.tenantPhone.replace(/\D/g, '');
+      const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
+      await navigator.clipboard.writeText(displayPhone);
+      const navAny = navigator as any;
+      if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
+        await navAny.share({ files: [file] });
+      } else {
+        downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
+        if (!phone.startsWith('91')) phone = `91${phone}`;
+        window.location.href = `https://wa.me/${phone}`;
+      }
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') toast({ title: 'Share failed', variant: 'destructive' });
+    }
+  };
+
   const shareToWhatsApp = async () => {
     if (!generatedImage || !reminderData) return;
 
@@ -143,6 +185,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
   const handleClose = () => {
     setGeneratedImage(null);
+    setGeneratedAcImage(null);
     setTemplateData(null);
     setHideTenantName(false);
     onOpenChange(false);
@@ -168,6 +211,9 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       {templateData && (
         <div style={{ position: 'fixed', left: '0', top: '0', transform: 'translateX(-200vw)', zIndex: -1, pointerEvents: 'none' }} aria-hidden="true">
           <PaymentReminderTemplate ref={reminderRef} data={templateData} />
+          {reminderData?.acBill && (
+            <ACBillTemplate ref={acRef} data={reminderData.acBill} />
+          )}
         </div>
       )}
       
