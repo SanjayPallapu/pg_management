@@ -88,6 +88,16 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     amountPaid?: number;
     balance: number;
     acSurcharge?: { units: number; unitPrice: number; share: number };
+    acBill?: {
+      roomNo: string;
+      units: number;
+      unitPrice: number;
+      totalAmount: number;
+      tenants: { name: string; share: number }[];
+      monthLabel: string;
+      pgName?: string;
+      pgLogoUrl?: string;
+    };
   } | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<{
@@ -324,6 +334,16 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 const amountPaid = payment?.amountPaid || 0;
                 // Compute AC share if applicable
                 let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
+                let acBill: {
+                  roomNo: string;
+                  units: number;
+                  unitPrice: number;
+                  totalAmount: number;
+                  tenants: { name: string; share: number }[];
+                  monthLabel: string;
+                  pgName?: string;
+                  pgLogoUrl?: string;
+                } | undefined;
                 if (room.isAc) {
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
@@ -332,7 +352,19 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
                   );
                   const share = calcAcShare(units, unitPrice, active.length);
-                  if (share > 0) acSurcharge = { units, unitPrice, share };
+                  if (share > 0) {
+                    acSurcharge = { units, unitPrice, share };
+                    acBill = {
+                      roomNo: room.roomNo,
+                      units,
+                      unitPrice,
+                      totalAmount: units * unitPrice,
+                      tenants: active.map((t) => ({ name: t.name, share })),
+                      monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                      pgName: currentPG?.name,
+                      pgLogoUrl: currentPG?.logoUrl,
+                    };
+                  }
                 }
                 const balance = tenant.monthlyRent - amountPaid;
                 setReminderData({
@@ -346,6 +378,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
                   acSurcharge,
+                  acBill,
                 });
                 setReminderDialogOpen(true);
               };
