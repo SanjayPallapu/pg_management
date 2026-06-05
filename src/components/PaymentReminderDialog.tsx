@@ -212,7 +212,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         <div style={{ position: 'fixed', left: '0', top: '0', transform: 'translateX(-200vw)', zIndex: -1, pointerEvents: 'none' }} aria-hidden="true">
           <PaymentReminderTemplate ref={reminderRef} data={templateData} />
           {reminderData?.acBill && (
-            <ACBillTemplate ref={acRef} data={reminderData.acBill} />
+            <ACBillTemplate ref={acRef} data={{ ...reminderData.acBill, tenantName: reminderData.tenantName }} />
           )}
         </div>
       )}
