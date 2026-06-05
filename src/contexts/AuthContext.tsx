@@ -35,13 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isMounted) {
         setIsLoading(prev => {
           if (prev) {
-            console.warn('[Auth] Force-ending loading state after 2s deadline');
+            console.warn('[Auth] Force-ending loading state after 5s deadline');
             return false;
           }
           return prev;
         });
       }
-    }, 2000);
+    }, 5000);
 
     const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
       try {
@@ -100,28 +100,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), 800)
-        );
-
-        const result = await Promise.race([
-          sessionPromise.then(r => r.data.session).catch(() => null),
-          timeoutPromise,
-        ]);
+        // Always wait for the real session — never wipe persisted tokens on a timeout.
+        const { data, error } = await supabase.auth.getSession();
+        if (error) console.error('[Auth] getSession error:', error.message);
+        const result = data?.session ?? null;
 
         if (!isMounted) return;
 
-        if (!result) {
-          const keys = Object.keys(localStorage);
-          for (const key of keys) {
-            if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-              localStorage.removeItem(key);
-            }
-          }
-        }
-
-        setSession(result ?? null);
+        setSession(result);
         setUser(result?.user ?? null);
 
         if (result?.user) {
