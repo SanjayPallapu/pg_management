@@ -16,6 +16,7 @@ export interface Subscription {
   userId: string;
   plan: 'free' | 'pro';
   status: 'free' | 'pending' | 'active' | 'expired';
+  billingCycle?: 'trial' | 'monthly' | 'quarterly' | 'yearly';
   maxPgs: number;
   maxTenantsPerPg: number;
   features: SubscriptionFeatures;
@@ -66,38 +67,62 @@ export interface PGBrandingData {
 
 // Subscription plan definitions
 export const SUBSCRIPTION_PLANS = {
-  manual: {
-    name: 'Manual',
-    price: 499, // Monthly in INR
-    maxPgs: 2, // Limited to 2 PGs
-    maxTenantsPerPg: -1, // Unlimited
-    features: {
-      autoReminders: false,
-      dailyReports: false,
-      aiLogo: true,
-    },
-    description: 'Limited PGs with manual reminders',
-  },
-  automatic: {
-    name: 'Automatic',
-    price: 999, // Monthly in INR
-    maxPgs: -1, // Unlimited
-    maxTenantsPerPg: -1, // Unlimited
+  trial: {
+    name: 'Free Trial',
+    price: 0,
+    periodLabel: '30 days',
+    billingCycle: 'trial',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
     features: {
       autoReminders: true,
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Unlimited everything with automation',
+    description: 'Start with a full-featured 1 month free trial.',
+  },
+  monthly: {
+    name: 'Monthly',
+    price: 999,
+    periodLabel: '/month',
+    billingCycle: 'monthly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Unlimited PGs, unlimited tenants, billed every month.',
+  },
+  quarterly: {
+    name: 'Quarterly',
+    price: 2699,
+    periodLabel: '/3 months',
+    billingCycle: 'quarterly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Save more with one payment every 3 months.',
+  },
+  yearly: {
+    name: 'Yearly',
+    price: 9999,
+    periodLabel: '/year',
+    billingCycle: 'yearly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Best value for serious multi-PG operators.',
   },
 } as const;
 
-export const ADMIN_UPI_ID = '9390418552@kotak811';
-export const ADMIN_WHATSAPP = '919390418552';
-
-export const PAYMENT_METHODS = [
-  { id: 'gpay', name: 'Google Pay', icon: 'Wallet' },
-  { id: 'phonepe', name: 'PhonePe', icon: 'CreditCard' },
-  { id: 'paytm', name: 'Paytm', icon: 'Smartphone' },
-  { id: 'upi', name: 'Any UPI', icon: 'Smartphone' },
-] as const;
+export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
