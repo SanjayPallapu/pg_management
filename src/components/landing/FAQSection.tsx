@@ -8,11 +8,11 @@ import {
 const faqs = [
   {
     q: "Is there a free trial?",
-    a: "Yes! You get a free trial to explore all features before choosing a plan. No credit card required.",
+    a: "Yes. Every PG owner gets a 1 month free trial with all features enabled before recurring billing starts.",
   },
   {
     q: "Can I manage multiple PG properties?",
-    a: "Absolutely. With the Automatic plan, you can manage unlimited PGs from a single dashboard.",
+    a: "Absolutely. Trial and paid plans support multi-PG owners from a single dashboard.",
   },
   {
     q: "How do WhatsApp reminders work?",
