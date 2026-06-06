@@ -46,11 +46,12 @@ export interface CreateDayGuestInput {
 
 export const useDayGuests = (roomId?: string) => {
   const queryClient = useQueryClient();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, isOwner, isLoading: authLoading } = useAuth();
   const { currentPG } = usePG();
+  const canViewSensitiveGuestData = isAdmin || isOwner;
 
   const { data: dayGuests = [], isLoading } = useQuery({
-    queryKey: ['day-guests', roomId, isAdmin, currentPG?.id],
+    queryKey: ['day-guests', roomId, canViewSensitiveGuestData, currentPG?.id],
     queryFn: async () => {
       if (!roomId && !currentPG?.id) {
         return [];
@@ -80,8 +81,8 @@ export const useDayGuests = (roomId?: string) => {
         return {
           ...rest,
         // Mask sensitive data for staff users
-          mobile_number: isAdmin ? rest.mobile_number : (rest.mobile_number ? '••••••••••' : null),
-          id_proof: isAdmin ? rest.id_proof : (rest.id_proof ? '••••••••' : null),
+          mobile_number: canViewSensitiveGuestData ? rest.mobile_number : (rest.mobile_number ? '••••••••••' : null),
+          id_proof: canViewSensitiveGuestData ? rest.id_proof : (rest.id_proof ? '••••••••' : null),
           payment_status: rest.payment_status as 'Paid' | 'Pending',
           payment_entries: (rest.payment_entries as unknown) as PaymentEntry[] | null,
         };
@@ -117,7 +118,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onMutate: async (newGuest) => {
       await queryClient.cancelQueries({ queryKey: ['day-guests'] });
-      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData]);
       
       const optimisticGuest: DayGuest = {
         id: `temp-${Date.now()}`,
@@ -138,7 +139,7 @@ export const useDayGuests = (roomId?: string) => {
         updated_at: new Date().toISOString(),
       };
       
-      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) => 
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData], (old = []) =>
         [optimisticGuest, ...old]
       );
       
@@ -146,7 +147,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onError: (_err, _newGuest, context) => {
       if (context?.previousGuests) {
-        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+        queryClient.setQueryData(['day-guests', roomId, canViewSensitiveGuestData], context.previousGuests);
       }
       toast.error('Failed to add day guest');
     },
@@ -181,9 +182,9 @@ export const useDayGuests = (roomId?: string) => {
     },
     onMutate: async (updatedGuest) => {
       await queryClient.cancelQueries({ queryKey: ['day-guests'] });
-      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData]);
       
-      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) =>
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData], (old = []) =>
         old.map(guest => 
           guest.id === updatedGuest.id 
             ? { ...guest, ...updatedGuest, updated_at: new Date().toISOString() } 
@@ -195,7 +196,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onError: (_err, _updatedGuest, context) => {
       if (context?.previousGuests) {
-        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+        queryClient.setQueryData(['day-guests', roomId, canViewSensitiveGuestData], context.previousGuests);
       }
       toast.error('Failed to update day guest');
     },
@@ -213,9 +214,9 @@ export const useDayGuests = (roomId?: string) => {
     },
     onMutate: async (idToDelete) => {
       await queryClient.cancelQueries({ queryKey: ['day-guests'] });
-      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, isAdmin]);
+      const previousGuests = queryClient.getQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData]);
       
-      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, isAdmin], (old = []) =>
+      queryClient.setQueryData<DayGuest[]>(['day-guests', roomId, canViewSensitiveGuestData], (old = []) =>
         old.filter(guest => guest.id !== idToDelete)
       );
       
@@ -223,7 +224,7 @@ export const useDayGuests = (roomId?: string) => {
     },
     onError: (_err, _id, context) => {
       if (context?.previousGuests) {
-        queryClient.setQueryData(['day-guests', roomId, isAdmin], context.previousGuests);
+        queryClient.setQueryData(['day-guests', roomId, canViewSensitiveGuestData], context.previousGuests);
       }
       toast.error('Failed to delete day guest');
     },

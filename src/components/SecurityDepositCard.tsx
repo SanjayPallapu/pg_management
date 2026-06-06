@@ -89,7 +89,8 @@ export const SecurityDepositCard = ({
   useBackGesture(!!editDialog, () => setEditDialog(null));
   const [selectedTenantForAction, setSelectedTenantForAction] = useState<TenantWithRoom | null>(null);
   const { updateTenant } = useRooms();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isOwner } = useAuth();
+  const canManageDeposits = isAdmin || isOwner;
 
   useEffect(() => {
     if (collectors.length === 0) return;
@@ -438,7 +439,7 @@ export const SecurityDepositCard = ({
                   <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                     Deposited ({depositedTenants.length})
                   </h3>
-                  {isAdmin && (
+                  {canManageDeposits && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -550,7 +551,7 @@ export const SecurityDepositCard = ({
                           <IndianRupee className="h-3 w-3 mr-1" />
                           {tenant.securityDepositAmount?.toLocaleString()}
                         </Badge>
-                        {isAdmin && showEditActions && (
+                        {canManageDeposits && showEditActions && (
                           <>
                             <Button 
                               variant="outline" 
@@ -615,7 +616,7 @@ export const SecurityDepositCard = ({
                         <div className="font-medium">{tenant.name}</div>
                         <div className="text-sm text-muted-foreground">Room {tenant.roomNo}</div>
                       </div>
-                      {isAdmin && (
+                      {canManageDeposits && (
                         <Button 
                           variant="outline" 
                           size="sm"

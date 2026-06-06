@@ -7,7 +7,7 @@ import { usePG } from "@/contexts/PGContext";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
   const { currentPG } = usePG();
   const { logAudit } = useAuditLog();
   const depositCollectedByCache = (() => {

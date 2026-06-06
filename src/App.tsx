@@ -12,6 +12,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
+import Legal from "./pages/Legal";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
@@ -118,6 +119,7 @@ const AppContent = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/publish-guide" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>

@@ -62,7 +62,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { payments } = useTenantPayments();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isOwner } = useAuth();
+  const canManageDayGuests = isAdmin || isOwner;
   useRealtimePayments(); // Subscribe to real-time payment updates
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
@@ -457,7 +458,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />
 
-      {isAdmin && <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />}
+      {canManageDayGuests && <DayGuestSheet open={dayGuestSheetOpen} onOpenChange={setDayGuestSheetOpen} />}
       <EmptyBedsSheet
         open={emptyBedsSheetOpen}
         onOpenChange={setEmptyBedsSheetOpen}

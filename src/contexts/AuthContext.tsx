@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/proxyClient';
 
-export type AppRole = 'admin' | 'staff';
+export type AppRole = 'admin' | 'owner' | 'staff';
 
 interface AuthContextType {
   user: User | null;
@@ -13,10 +13,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasRole: boolean;
   isAdmin: boolean;
+  isOwner: boolean;
   isStaff: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signOut: () => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<AuthResponse>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signOut: () => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -78,6 +80,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return sessionStorage.getItem('isNewSignup') === 'true';
     };
 
+    const ensureOAuthProfile = async (authUser: User) => {
+      const provider = authUser.app_metadata?.provider;
+      if (provider !== 'google') return;
+
+      const fullName =
+        typeof authUser.user_metadata?.full_name === 'string'
+          ? authUser.user_metadata.full_name
+          : typeof authUser.user_metadata?.name === 'string'
+            ? authUser.user_metadata.name
+            : authUser.email ?? null;
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            user_id: authUser.id,
+            full_name: fullName,
+            is_new_signup: true,
+          },
+          { onConflict: 'user_id' },
+        );
+
+      if (error) console.error('[Auth] Error ensuring Google profile:', error.message);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!isMounted) return;
@@ -85,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
+          ensureOAuthProfile(newSession.user);
           fetchUserRole(newSession.user.id).then(r => {
             if (isMounted) setRole(r);
           });
@@ -111,6 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(result?.user ?? null);
 
         if (result?.user) {
+          await ensureOAuthProfile(result.user);
           const r = await fetchUserRole(result.user.id);
           if (isMounted) {
             setRole(r);
@@ -155,6 +184,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { data, error };
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    const redirectTo = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+    return { error };
+  }, []);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -169,9 +213,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: !!session,
     hasRole: !!role,
     isAdmin: role === 'admin',
+    isOwner: role === 'owner',
     isStaff: role === 'staff',
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
   };
 
@@ -191,9 +237,11 @@ export const useAuth = (): AuthContextType => {
       isAuthenticated: false,
       hasRole: false,
       isAdmin: false,
+      isOwner: false,
       isStaff: false,
       signIn: async () => ({ error: new Error('Auth not ready') }),
       signUp: async () => ({ data: null, error: new Error('Auth not ready') }),
+      signInWithGoogle: async () => ({ error: new Error('Auth not ready') }),
       signOut: async () => ({ error: new Error('Auth not ready') }),
     };
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
@@ -27,13 +28,14 @@ const signupSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, hasRole, isLoading, signIn, signUp, signOut } = useAuth();
+  const { isAuthenticated, hasRole, isLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
@@ -150,6 +152,15 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleAuth = async () => {
+    setIsGoogleSubmitting(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setIsGoogleSubmitting(false);
+      toast.error(error.message);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -165,14 +176,14 @@ const Auth = () => {
   if (isAuthenticated && !hasRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-primary/20">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Building2 className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle>Access Pending</CardTitle>
+            <CardTitle>Workspace Setup Pending</CardTitle>
             <CardDescription>
-              Your account is being set up. Please contact an administrator to assign you a role.
+              Your owner workspace is being created. Sign out and sign in again if this message stays visible.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -186,14 +197,16 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center p-0 pb-6">
-          <div className="mx-auto -mb-24">
-            <img src={appLogo} alt="PG logo" className="h-72 w-72 object-contain" decoding="async" />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6">
+      <Card className="w-full max-w-md border-primary/20 shadow-lg shadow-primary/5">
+        <CardHeader className="text-center px-6 pb-5 pt-6">
+          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+            <img src={appLogo} alt="PG logo" className="h-16 w-16 object-contain" decoding="async" />
           </div>
-          <CardTitle className="-mt-4 text-2xl mb-0">PG Management</CardTitle>
-          <CardDescription className="-mt-2 text-base font-semibold">Simple. Smart. Secure.</CardDescription>
+          <CardTitle className="text-2xl">PG Management</CardTitle>
+          <CardDescription className="text-sm font-medium">
+            Private workspace for every PG owner.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -236,6 +249,28 @@ const Auth = () => {
 
                   "Sign In"
                   }
+                </Button>
+                <div className="relative py-1">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleGoogleAuth}
+                  disabled={isSubmitting || isGoogleSubmitting}
+                >
+                  {isGoogleSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-bold">G</span>
+                  )}
+                  Continue with Google
                 </Button>
               </form>
             </TabsContent>
@@ -324,12 +359,40 @@ const Auth = () => {
                   "Create Account"
                   }
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  First user gets admin access, subsequent users get staff access.
+                <div className="relative py-1">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleGoogleAuth}
+                  disabled={isSubmitting || isGoogleSubmitting}
+                >
+                  {isGoogleSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-bold">G</span>
+                  )}
+                  Continue with Google
+                </Button>
+                <p className="rounded-lg bg-primary/5 px-3 py-2 text-center text-xs text-muted-foreground">
+                  Every signup creates a separate owner workspace. Your PG, tenants, and payments stay private to your account.
                 </p>
               </form>
             </TabsContent>
           </Tabs>
+          <div className="mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <Link to="/legal#privacy" className="hover:text-foreground">Privacy</Link>
+            <Link to="/legal#terms" className="hover:text-foreground">Terms</Link>
+            <Link to="/legal#refunds" className="hover:text-foreground">Refunds</Link>
+            <Link to="/legal#deletion" className="hover:text-foreground">Delete account</Link>
+          </div>
         </CardContent>
       </Card>
     </div>);

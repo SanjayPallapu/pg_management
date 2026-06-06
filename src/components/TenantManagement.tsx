@@ -83,9 +83,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { isAdmin, isStaff } = useAuth();
+  const { isAdmin, isOwner, isStaff } = useAuth();
   const { collectors } = useCollectorNames();
-  const canManageTenants = isAdmin || isStaff;
+  const canManageTenants = isAdmin || isOwner || isStaff;
   const navigate = useNavigate();
 
   // Handle OS back gesture to close dialog

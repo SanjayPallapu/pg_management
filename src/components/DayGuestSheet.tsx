@@ -54,7 +54,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const { rooms } = useRooms();
   const { role } = useAuth();
   const { collectors } = useCollectorNames();
-  const isAdmin = role === 'admin';
+  const canManageDayGuests = role === 'admin' || role === 'owner';
 
   // Handle OS back gesture to close sheet
   useBackGesture(open, () => onOpenChange(false));
@@ -374,7 +374,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                       >
                                         Edit
                                       </Button>
-                                      {isAdmin && (
+                                      {canManageDayGuests && (
                                         <Button
                                           variant="outline"
                                           size="sm"

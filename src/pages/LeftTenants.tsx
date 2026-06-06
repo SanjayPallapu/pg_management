@@ -35,7 +35,8 @@ const LeftTenants = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomNo = searchParams.get('roomNo');
-  const { isAdmin } = useAuth();
+  const { isAdmin, isOwner } = useAuth();
+  const canEditLeftTenants = isAdmin || isOwner;
 
   const { rooms, isLoading, updateTenant, removeTenant } = useRooms();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -165,7 +166,7 @@ const LeftTenants = () => {
               <div className="text-sm text-muted-foreground">
                 Total: <span className="font-medium text-foreground">{leftTenants.length}</span>
               </div>
-              {isAdmin && leftTenants.length > 0 && (
+              {canEditLeftTenants && leftTenants.length > 0 && (
                 <Button
                   variant={isEditMode ? "default" : "outline"}
                   size="sm"

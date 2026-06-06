@@ -27,7 +27,7 @@ const DayGuestPage = () => {
   const roomNo = searchParams.get('roomNo') || '';
   const navigate = useNavigate();
   const { role } = useAuth();
-  const isAdmin = role === 'admin';
+  const canManageDayGuests = role === 'admin' || role === 'owner';
 
   const { dayGuests, isLoading, addDayGuest, updateDayGuest, deleteDayGuest } = useDayGuests(roomId);
 
@@ -446,7 +446,7 @@ const DayGuestPage = () => {
                             <MessageCircle className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        {isAdmin && (
+                        {canManageDayGuests && (
                           <Button
                             variant="ghost"
                             size="sm"
