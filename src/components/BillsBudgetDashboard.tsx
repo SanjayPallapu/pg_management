@@ -4,24 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Building2, Droplet, Receipt, Home, Wallet, IndianRupee, Plus, Settings, Snowflake,
-  Flame, Egg, Milk, Drumstick, Coffee, ShoppingBag, Send,
+  Building2, Droplet, Receipt, Home, Wallet, IndianRupee, Plus, Settings,
+  Flame, Egg, Milk, Drumstick, Coffee, ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
-import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
-import { usePG } from "@/contexts/PGContext";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
-import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
-import { generateReceiptImage } from "@/utils/generateReceiptImage";
-import { toast } from "@/hooks/use-toast";
-import { isTenantActiveInMonth } from "@/utils/dateOnly";
 
 interface Props { rooms: Room[]; }
 
@@ -96,13 +90,11 @@ const TotalBar = ({ label, total, tone }: { label: string; total: number; tone: 
 
 export const BillsBudgetDashboard = ({ rooms }: Props) => {
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { currentPG } = usePG();
   const {
     entries, byCategory, totalFor, grandTotal,
     addEntry, updateEntry, deleteEntry,
   } = useExpenseEntries(selectedMonth, selectedYear);
   const { amount: budgetAmount, setBudget } = useMonthlyBudget(selectedMonth, selectedYear);
-  const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
 
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState("");
@@ -143,81 +135,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
   // entries by subcategory helper
   const entriesBySub = (cat: ExpenseCategory, sub: string) =>
     byCategory(cat).filter((e) => (e.subcategory ?? "") === sub);
-
-  // AC rooms with active tenants
-  const acRooms = useMemo(() => {
-    return rooms
-      .filter((r) => r.isAc)
-      .map((r) => {
-        const activeTenants = r.tenants.filter((t) =>
-          isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-        );
-        const reading = acByRoom.get(r.id);
-        const units = reading?.units ?? 0;
-        const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
-        const total = units * unitPrice;
-        const share = calcAcShare(units, unitPrice, activeTenants.length);
-        return { room: r, activeTenants, units, unitPrice, total, share };
-      });
-  }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG]);
-
-  const acTemplateRef = useState<HTMLDivElement | null>(null);
-  const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
-
-  const handleShareAC = async (item: typeof acRooms[number], draftUnits = item.units, draftUnitPrice = item.unitPrice) => {
-    if (draftUnits <= 0) {
-      toast({ title: "Enter units first", variant: "destructive" });
-      return;
-    }
-    if (draftUnitPrice <= 0) {
-      toast({ title: "Enter unit price first", variant: "destructive" });
-      return;
-    }
-    try {
-      await setReading.mutateAsync({ roomId: item.room.id, units: draftUnits, unitPrice: draftUnitPrice });
-    } catch {
-      return;
-    }
-    const total = draftUnits * draftUnitPrice;
-    const share = calcAcShare(draftUnits, draftUnitPrice, item.activeTenants.length);
-    setAcShareData({
-      roomNo: item.room.roomNo,
-      units: draftUnits,
-      unitPrice: draftUnitPrice,
-      totalAmount: total,
-      tenants: item.activeTenants.map((t) => ({ name: t.name, share })),
-      monthLabel: `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`,
-      pgName: currentPG?.name,
-      pgLogoUrl: currentPG?.logoUrl,
-    });
-    // Wait one tick for the template to render
-    setTimeout(async () => {
-      const el = document.getElementById("ac-bill-template-host");
-      if (!el) return;
-      try {
-        const dataUrl = await generateReceiptImage(el);
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], `ac-bill-${item.room.roomNo}.png`, { type: "image/png" });
-        const shareNavigator = navigator as Navigator & {
-          canShare?: (data?: ShareData) => boolean;
-        };
-        if (shareNavigator.canShare?.({ files: [file] })) {
-          await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
-        } else {
-          const a = document.createElement("a");
-          a.href = dataUrl;
-          a.download = `ac-bill-${item.room.roomNo}.png`;
-          a.click();
-          toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
-        }
-      } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : "";
-        toast({ title: "Share failed", description: message, variant: "destructive" });
-      } finally {
-        setAcShareData(null);
-      }
-    }, 250);
-  };
 
   return (
     <div className="space-y-5">
@@ -426,29 +343,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         <TotalBar label="Total Family Expenses" total={familyTotal} tone="bg-pink-500/10 text-pink-700 dark:text-pink-300" />
       </section>
 
-      {/* AC Electricity */}
-      {acRooms.length > 0 && (
-        <section className="space-y-2">
-          <SectionHeader title="AC Electricity" icon={Snowflake} color="text-cyan-500" />
-          <div className="space-y-2">
-            {acRooms.map((item) => (
-              <ACRoomCard
-                key={item.room.id}
-                roomNo={item.room.roomNo}
-                tenantCount={item.activeTenants.length}
-                units={item.units}
-                unitPrice={item.unitPrice}
-                total={item.total}
-                share={item.share}
-                onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
-                onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
-                onShare={(units, unitPrice) => handleShareAC(item, units, unitPrice)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Quick add dialog */}
       <QuickExpenseDialog
         open={!!quickAdd}
@@ -484,83 +378,8 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         />
       )}
 
-      {/* Hidden AC bill template host for image generation */}
-      {acShareData && (
-        <div
-          id="ac-bill-template-host"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            transform: "translateX(-200vw)",
-            zIndex: -1,
-            pointerEvents: "none",
-          }}
-        >
-          <ACBillTemplate data={acShareData} />
-        </div>
-      )}
-
       {/* Analytics dashboard */}
       <BillsAnalytics />
     </div>
-  );
-};
-
-// -------- AC room card --------
-const ACRoomCard = ({
-  roomNo, tenantCount, units, unitPrice, total, share,
-  onUnitsChange, onPriceChange, onShare,
-}: {
-  roomNo: string; tenantCount: number; units: number; unitPrice: number; total: number; share: number;
-  onUnitsChange: (u: number) => void; onPriceChange: (p: number) => void; onShare: (units: number, unitPrice: number) => void;
-}) => {
-  const [u, setU] = useState(String(units || ""));
-  const [p, setP] = useState(String(unitPrice || 12));
-  const draftUnits = parseInt(u) || 0;
-  const draftUnitPrice = parseInt(p) || 0;
-  const draftTotal = draftUnits * draftUnitPrice;
-  const draftShare = calcAcShare(draftUnits, draftUnitPrice, tenantCount);
-  return (
-    <Card className="border-cyan-500/20">
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Snowflake className="h-4 w-4 text-cyan-500" />
-            <span className="text-sm font-semibold">Room {roomNo}</span>
-            <span className="text-xs text-muted-foreground">· {tenantCount} tenants</span>
-          </div>
-          <Button size="sm" variant="outline" className="h-7 text-xs" onMouseDown={(e) => e.preventDefault()} onClick={() => onShare(draftUnits, draftUnitPrice)}>
-            <Send className="h-3 w-3 mr-1" /> Share Bill
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <Label className="text-[10px] uppercase text-muted-foreground">Units</Label>
-            <Input
-              type="number" value={u} onChange={(e) => setU(e.target.value)}
-              onBlur={() => onUnitsChange(parseInt(u) || 0)}
-              placeholder="0" className="h-8 text-sm"
-            />
-          </div>
-          <div>
-            <Label className="text-[10px] uppercase text-muted-foreground">₹/unit</Label>
-            <Input
-              type="number" value={p} onChange={(e) => setP(e.target.value)}
-              onBlur={() => onPriceChange(parseInt(p) || 0)}
-              className="h-8 text-sm"
-            />
-          </div>
-          <div>
-            <Label className="text-[10px] uppercase text-muted-foreground">Total</Label>
-            <div className="h-8 flex items-center text-sm font-semibold">₹{(draftTotal || total).toLocaleString()}</div>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground flex items-center justify-between bg-cyan-500/5 rounded px-2 py-1.5">
-          <span>Per tenant</span>
-          <span className="font-bold text-cyan-700 dark:text-cyan-300">₹{(draftShare || share).toLocaleString()}</span>
-        </div>
-      </CardContent>
-    </Card>
   );
 };

@@ -32,6 +32,9 @@ import {
   Wallet,
   PartyPopper,
   BookOpen,
+  ChevronDown,
+  Send,
+  Snowflake,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -60,6 +63,7 @@ import { BulkReminderDialog } from "./BulkReminderDialog";
 import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
+import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
 import { isTenantActiveInMonth } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
@@ -69,15 +73,24 @@ import { usePG } from "@/contexts/PGContext";
 import { RoomQuickNav } from "./RoomQuickNav";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import { CalendarClock, X as XIcon } from "lucide-react";
+import { generateReceiptImage } from "@/utils/generateReceiptImage";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
+
+type PaymentDisplayExtras = {
+  notes?: string;
+  whatsappSent?: boolean;
+};
+
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
-  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
+  const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
+  const [acSectionOpen, setAcSectionOpen] = useState(true);
+  const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
   const [cashAmount, setCashAmount] = useState(0);
@@ -442,6 +455,79 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     };
   }, [tenantsWithPayments]);
 
+  const acRooms = useMemo(() => {
+    return rooms
+      .filter((room) => room.isAc)
+      .map((room) => {
+        const activeTenants = room.tenants.filter((tenant) =>
+          isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth),
+        );
+        const reading = acByRoom.get(room.id);
+        const units = reading?.units ?? 0;
+        const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+        const total = units * unitPrice;
+        const share = calcAcShare(units, unitPrice, activeTenants.length);
+        return { room, activeTenants, units, unitPrice, total, share };
+      });
+  }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG?.electricityUnitPrice]);
+
+  const handleShareAC = async (item: typeof acRooms[number], draftUnits: number, draftUnitPrice: number) => {
+    if (draftUnits <= 0) {
+      toast({ title: "Enter units first", variant: "destructive" });
+      return;
+    }
+    if (draftUnitPrice <= 0) {
+      toast({ title: "Enter unit price first", variant: "destructive" });
+      return;
+    }
+
+    try {
+      await setReading.mutateAsync({ roomId: item.room.id, units: draftUnits, unitPrice: draftUnitPrice });
+    } catch {
+      return;
+    }
+
+    const total = draftUnits * draftUnitPrice;
+    const share = calcAcShare(draftUnits, draftUnitPrice, item.activeTenants.length);
+    setAcShareData({
+      roomNo: item.room.roomNo,
+      units: draftUnits,
+      unitPrice: draftUnitPrice,
+      totalAmount: total,
+      tenants: item.activeTenants.map((tenant) => ({ name: tenant.name, share })),
+      monthLabel: `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+
+    setTimeout(async () => {
+      const el = document.getElementById("rent-ac-bill-template-host");
+      if (!el) return;
+      try {
+        const dataUrl = await generateReceiptImage(el);
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], `ac-bill-${item.room.roomNo}.png`, { type: "image/png" });
+        const shareNavigator = navigator as Navigator & {
+          canShare?: (data?: ShareData) => boolean;
+        };
+        if (shareNavigator.canShare?.({ files: [file] })) {
+          await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
+        } else {
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `ac-bill-${item.room.roomNo}.png`;
+          a.click();
+          toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        toast({ title: "Share failed", description: message, variant: "destructive" });
+      } finally {
+        setAcShareData(null);
+      }
+    }, 250);
+  };
+
   // Helper function to get previous month pending for a tenant
   const getPreviousMonthPendingForTenant = (tenantId: string): number => {
     let prevMonth = selectedMonth - 1;
@@ -598,7 +684,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
       tenantId: tenant.id,
-      paymentEntries: updatedEntries as any,
+      paymentEntries: updatedEntries,
       previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
     setWhatsappDialogOpen(true);
@@ -640,7 +726,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const status = isFullPayment ? "Paid" : "Partial";
 
     // Build notes for discount/extra
-    let notes = (tenant.payment as any).notes || "";
+    let notes = (tenant.payment as PaymentDisplayExtras).notes || "";
     if (payRemainingDiscount > 0) {
       notes += (notes ? " | " : "") + `Discount: ₹${payRemainingDiscount.toLocaleString()}`;
     }
@@ -686,7 +772,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       isFullPayment: isFullPayment,
       remainingBalance: isFullPayment ? 0 : adjustedTarget - totalPaid,
       tenantId: tenant.id,
-      paymentEntries: updatedEntries as any,
+      paymentEntries: updatedEntries,
       previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
     setWhatsappDialogOpen(true);
@@ -728,7 +814,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       })),
     );
     const excelData = allTenants.map((tenant) => {
-      const row: any = {
+      const row: Record<string, string | number> = {
         Name: tenant.name,
         "Room No": tenant.roomNo,
         "Join Date": format(new Date(tenant.startDate), "dd-MMM-yyyy"),
@@ -846,6 +932,48 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           {/* Overdue Paid Card - shows previous month overdue that was paid this month */}
           <OverduePaidCard rooms={rooms} />
 
+          {/* AC Electricity */}
+          {acRooms.length > 0 && (
+            <Collapsible open={acSectionOpen} onOpenChange={setAcSectionOpen} className="mb-4">
+              <Card className="border-cyan-500/25 bg-cyan-500/5">
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-3 py-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10">
+                        <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">AC Electricity</div>
+                        <div className="text-xs text-muted-foreground">
+                          {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[selectedMonth - 1]?.label} {selectedYear}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", acSectionOpen && "rotate-180")} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 px-3 pb-3 pt-0">
+                    {acRooms.map((item) => (
+                      <RentACRoomCard
+                        key={item.room.id}
+                        roomNo={item.room.roomNo}
+                        tenantCount={item.activeTenants.length}
+                        units={item.units}
+                        unitPrice={item.unitPrice}
+                        total={item.total}
+                        share={item.share}
+                        onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
+                        onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
+                        onShare={(units, unitPrice) => handleShareAC(item, units, unitPrice)}
+                      />
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
           {/* Search Bar */}
           <div className="mb-4 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -892,7 +1020,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       : tenant.paymentCategory === "advance-not-paid"
                         ? "Advance Due"
                         : "Pending";
-              const whatsappSent = (tenant.payment as any).whatsappSent;
+              const whatsappSent = (tenant.payment as PaymentDisplayExtras).whatsappSent;
               const handleResendReceipt = () => {
                 const lastEntry = tenant.payment.paymentEntries?.[tenant.payment.paymentEntries.length - 1];
                 const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
@@ -1194,9 +1322,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             </div>
                           )}
                       {/* Display overpayment notes */}
-                      {(tenant.payment as any).notes && (
+                      {(tenant.payment as PaymentDisplayExtras).notes && (
                         <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                          📝 {(tenant.payment as any).notes}
+                          📝 {(tenant.payment as PaymentDisplayExtras).notes}
                         </div>
                       )}
                     </div>
@@ -1631,6 +1759,105 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Welcome Dialog */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
       <RulesShareDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} shareData={rulesShareData} />
+      {acShareData && (
+        <div
+          id="rent-ac-bill-template-host"
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            transform: "translateX(-200vw)",
+            zIndex: -1,
+            pointerEvents: "none",
+          }}
+        >
+          <ACBillTemplate data={acShareData} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const RentACRoomCard = ({
+  roomNo,
+  tenantCount,
+  units,
+  unitPrice,
+  total,
+  share,
+  onUnitsChange,
+  onPriceChange,
+  onShare,
+}: {
+  roomNo: string;
+  tenantCount: number;
+  units: number;
+  unitPrice: number;
+  total: number;
+  share: number;
+  onUnitsChange: (units: number) => void;
+  onPriceChange: (unitPrice: number) => void;
+  onShare: (units: number, unitPrice: number) => void;
+}) => {
+  const [unitsDraft, setUnitsDraft] = useState(String(units || ""));
+  const [priceDraft, setPriceDraft] = useState(String(unitPrice || 12));
+  const draftUnits = parseInt(unitsDraft) || 0;
+  const draftUnitPrice = parseInt(priceDraft) || 0;
+  const draftTotal = draftUnits * draftUnitPrice;
+  const draftShare = calcAcShare(draftUnits, draftUnitPrice, tenantCount);
+
+  return (
+    <div className="rounded-lg border border-cyan-500/20 bg-background p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Snowflake className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-300" />
+            <span className="truncate text-sm font-semibold">Room {roomNo}</span>
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{tenantCount} active tenant{tenantCount === 1 ? "" : "s"}</div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 shrink-0 text-xs"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => onShare(draftUnits, draftUnitPrice)}
+        >
+          <Send className="mr-1 h-3 w-3" />
+          Share
+        </Button>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Units</Label>
+          <Input
+            type="number"
+            value={unitsDraft}
+            onChange={(event) => setUnitsDraft(event.target.value)}
+            onBlur={() => onUnitsChange(parseInt(unitsDraft) || 0)}
+            placeholder="0"
+            className="h-8 text-sm"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">₹/unit</Label>
+          <Input
+            type="number"
+            value={priceDraft}
+            onChange={(event) => setPriceDraft(event.target.value)}
+            onBlur={() => onPriceChange(parseInt(priceDraft) || 0)}
+            className="h-8 text-sm"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Total</Label>
+          <div className="flex h-8 items-center text-sm font-semibold">₹{(draftTotal || total).toLocaleString()}</div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-between rounded-md bg-cyan-500/5 px-2 py-1.5 text-xs text-muted-foreground">
+        <span>Per tenant</span>
+        <span className="font-bold text-cyan-700 dark:text-cyan-300">₹{(draftShare || share).toLocaleString()}</span>
+      </div>
     </div>
   );
 };
