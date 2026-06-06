@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { useAuth } from './useAuth';
@@ -9,7 +8,7 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const { subscription, refreshSubscription } = usePG();
   const queryClient = useQueryClient();
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading;
 
   const createPaymentRequest = useMutation({
     mutationFn: async ({
@@ -59,33 +58,6 @@ export const useSubscription = () => {
     },
   });
 
-  const uploadPaymentScreenshot = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `payment-${Date.now()}.${fileExt}`;
-      // Path is scoped to the user's folder so RLS only allows the owner to read it
-      const filePath = `${user.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Store the storage path; signed URLs are generated on demand by admins
-      return filePath;
-    } catch (err) {
-      console.error('Error uploading screenshot:', err);
-      toast.error('Failed to upload screenshot');
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   // Admin functions
   const approvePaymentRequest = useMutation({
     mutationFn: async (requestId: string) => {
@@ -124,6 +96,7 @@ export const useSubscription = () => {
             auto_reminders: true,
             daily_reports: true,
             ai_logo: true,
+            billing_cycle: 'monthly',
           },
           payment_approved_at: new Date().toISOString(),
           approved_by: user.id,
@@ -192,8 +165,6 @@ export const useSubscription = () => {
   return {
     subscription,
     createPaymentRequest,
-    uploadPaymentScreenshot,
-    isUploading,
     approvePaymentRequest,
     rejectPaymentRequest,
     isPending: subscription?.status === 'pending',
