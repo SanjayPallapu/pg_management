@@ -108,11 +108,14 @@ export const PGProvider = ({ children }: PGProviderProps) => {
       if (fetchError) throw fetchError;
 
       if (data) {
+        const billingCycle = (data.features as any)?.billing_cycle as 'trial' | 'monthly' | 'quarterly' | 'yearly' | undefined;
+
         setSubscription({
           id: data.id,
           userId: data.user_id,
           plan: data.plan as 'free' | 'pro',
           status: data.status as 'free' | 'pending' | 'active' | 'expired',
+          billingCycle,
           maxPgs: data.max_pgs,
           maxTenantsPerPg: data.max_tenants_per_pg,
           features: {
@@ -162,7 +165,7 @@ export const PGProvider = ({ children }: PGProviderProps) => {
   // 1. No PGs created yet, AND subscription is active
   // 2. OR subscription is not active (needs payment approval)
   // Admin users bypass subscription requirements entirely
-  const needsSubscription = isAdmin ? false : (!subscription || subscription.status === 'free' || subscription.status === 'pending');
+  const needsSubscription = isAdmin ? false : (!subscription || subscription.status === 'free' || subscription.status === 'expired');
   const needsSetup = pgs.length === 0 || needsSubscription;
 
   const value: PGContextType = {
