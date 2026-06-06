@@ -14,7 +14,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
 import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
-import { useElectricityReadings, calcAcShare } from '@/hooks/useElectricityReadings';
+import { useElectricityReadings, calcAcTenantShares } from '@/hooks/useElectricityReadings';
 import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
@@ -57,8 +57,9 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const share = calcAcShare(units, unitPrice, active.length);
-    return share > 0 ? { units, unitPrice, share } : undefined;
+    const tenantShare = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth)
+      .find((share) => share.name === tenant.name);
+    return tenantShare && tenantShare.share > 0 ? { units, unitPrice, share: tenantShare.share } : undefined;
   };
 
   const getAcBillFor = (tenant: TenantWithPayment) => {
@@ -71,16 +72,17 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const share = calcAcShare(units, unitPrice, active.length);
+    const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth);
+    const tenantShare = tenantShares.find((share) => share.name === tenant.name);
 
-    if (share <= 0) return undefined;
+    if (!tenantShare || tenantShare.share <= 0) return undefined;
 
     return {
       roomNo: room.roomNo,
       units,
       unitPrice,
       totalAmount: units * unitPrice,
-      tenants: active.map((t) => ({ name: t.name, share })),
+      tenants: tenantShares.map((share) => ({ name: `${share.name} (${share.daysStayed}d)`, share: share.share })),
       monthLabel: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,

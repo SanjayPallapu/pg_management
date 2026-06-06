@@ -42,7 +42,7 @@ import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { format, differenceInDays } from "date-fns";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
-import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
+import { useElectricityReadings, calcAcTenantShares } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
   isTenantActiveNow,
@@ -347,19 +347,20 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 if (room.isAc) {
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
-                  const unitPrice = reading?.unit_price ?? 12;
+                  const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
                   const active = room.tenants.filter((t) =>
                     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
                   );
-                  const share = calcAcShare(units, unitPrice, active.length);
-                  if (share > 0) {
-                    acSurcharge = { units, unitPrice, share };
+                  const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth);
+                  const tenantShare = tenantShares.find((share) => share.name === tenant.name);
+                  if (tenantShare && tenantShare.share > 0) {
+                    acSurcharge = { units, unitPrice, share: tenantShare.share };
                     acBill = {
                       roomNo: room.roomNo,
                       units,
                       unitPrice,
                       totalAmount: units * unitPrice,
-                      tenants: active.map((t) => ({ name: t.name, share })),
+                      tenants: tenantShares.map((share) => ({ name: `${share.name} (${share.daysStayed}d)`, share: share.share })),
                       monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,

@@ -114,3 +114,78 @@ export const calcAcShare = (units: number, unitPrice: number, activeTenants: num
   if (!units || !unitPrice || activeTenants <= 0) return 0;
   return Math.round((units * unitPrice) / activeTenants);
 };
+
+export interface AcTenantLike {
+  name: string;
+  startDate: string;
+  endDate?: string;
+}
+
+export interface AcTenantShare {
+  name: string;
+  daysStayed: number;
+  share: number;
+}
+
+const parseDateOnlyLocal = (dateStr: string) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export const getAcStayedDaysInMonth = (
+  startDate: string,
+  endDate: string | undefined,
+  year: number,
+  month: number,
+) => {
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+  const joinDate = parseDateOnlyLocal(startDate);
+  const leaveDate = endDate ? parseDateOnlyLocal(endDate) : monthEnd;
+  const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
+  const effectiveEnd = leaveDate < monthEnd ? leaveDate : monthEnd;
+
+  if (effectiveStart > monthEnd || effectiveEnd < monthStart || effectiveEnd < effectiveStart) return 0;
+
+  const startNoon = new Date(effectiveStart);
+  startNoon.setHours(12, 0, 0, 0);
+  const endNoon = new Date(effectiveEnd);
+  endNoon.setHours(12, 0, 0, 0);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  return Math.round((endNoon.getTime() - startNoon.getTime()) / msPerDay) + 1;
+};
+
+export const calcAcTenantShares = (
+  units: number,
+  unitPrice: number,
+  tenants: AcTenantLike[],
+  year: number,
+  month: number,
+): AcTenantShare[] => {
+  const totalAmount = units * unitPrice;
+  if (totalAmount <= 0) return [];
+
+  const tenantDays = tenants
+    .map((tenant) => ({
+      name: tenant.name,
+      daysStayed: getAcStayedDaysInMonth(tenant.startDate, tenant.endDate, year, month),
+    }))
+    .filter((tenant) => tenant.daysStayed > 0);
+
+  const totalDays = tenantDays.reduce((sum, tenant) => sum + tenant.daysStayed, 0);
+  if (totalDays <= 0) return [];
+
+  return tenantDays.map((tenant) => ({
+    ...tenant,
+    share: Math.round((totalAmount * tenant.daysStayed) / totalDays),
+  }));
+};
+
+export const calcCustomAcSplitShares = (totalAmount: number, splitCount: number): AcTenantShare[] => {
+  if (totalAmount <= 0 || splitCount <= 0) return [];
+  return [{
+    name: `Each person (${splitCount} split)`,
+    daysStayed: 0,
+    share: Math.round(totalAmount / splitCount),
+  }];
+};

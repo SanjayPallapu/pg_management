@@ -47,7 +47,11 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
-import { useElectricityReadings, calcAcShare } from "@/hooks/useElectricityReadings";
+import {
+  useElectricityReadings,
+  calcAcTenantShares,
+  calcCustomAcSplitShares,
+} from "@/hooks/useElectricityReadings";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { applyStyledExport, XLSX as styledXLSX } from "@/utils/excelStyles";
@@ -466,12 +470,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const units = reading?.units ?? 0;
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
         const total = units * unitPrice;
-        const share = calcAcShare(units, unitPrice, activeTenants.length);
-        return { room, activeTenants, units, unitPrice, total, share };
+        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth);
+        return { room, activeTenants, units, unitPrice, total, tenantShares };
       });
   }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG?.electricityUnitPrice]);
 
-  const handleShareAC = async (item: typeof acRooms[number], draftUnits: number, draftUnitPrice: number) => {
+  const handleShareAC = async (
+    item: typeof acRooms[number],
+    draftUnits: number,
+    draftUnitPrice: number,
+    customSplitCount?: number,
+  ) => {
     if (draftUnits <= 0) {
       toast({ title: "Enter units first", variant: "destructive" });
       return;
@@ -488,13 +497,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
 
     const total = draftUnits * draftUnitPrice;
-    const share = calcAcShare(draftUnits, draftUnitPrice, item.activeTenants.length);
+    const tenantShares =
+      customSplitCount && customSplitCount > 0
+        ? calcCustomAcSplitShares(total, customSplitCount)
+        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth);
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
       unitPrice: draftUnitPrice,
       totalAmount: total,
-      tenants: item.activeTenants.map((tenant) => ({ name: tenant.name, share })),
+      tenants: tenantShares.map((tenant) => ({
+        name: tenant.daysStayed > 0 ? `${tenant.name} (${tenant.daysStayed}d)` : tenant.name,
+        share: tenant.share,
+      })),
       monthLabel: `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
@@ -962,10 +977,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         units={item.units}
                         unitPrice={item.unitPrice}
                         total={item.total}
-                        share={item.share}
+                        tenantShares={item.tenantShares}
                         onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
                         onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
-                        onShare={(units, unitPrice) => handleShareAC(item, units, unitPrice)}
+                        onShare={(units, unitPrice, customSplitCount) => handleShareAC(item, units, unitPrice, customSplitCount)}
                       />
                     ))}
                   </CardContent>
@@ -1067,20 +1082,24 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 if (room?.isAc) {
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
-                  const unitPrice = reading?.unit_price ?? 12;
+                  const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
                   const activeTenants = room.tenants.filter((roomTenant) =>
                     isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, selectedYear, selectedMonth),
                   );
-                  const share = calcAcShare(units, unitPrice, activeTenants.length);
+                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth);
+                  const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
-                  if (share > 0) {
-                    acSurcharge = { units, unitPrice, share };
+                  if (tenantShare && tenantShare.share > 0) {
+                    acSurcharge = { units, unitPrice, share: tenantShare.share };
                     acBill = {
                       roomNo: room.roomNo,
                       units,
                       unitPrice,
                       totalAmount: units * unitPrice,
-                      tenants: activeTenants.map((roomTenant) => ({ name: roomTenant.name, share })),
+                      tenants: tenantShares.map((shareItem) => ({
+                        name: `${shareItem.name} (${shareItem.daysStayed}d)`,
+                        share: shareItem.share,
+                      })),
                       monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,
@@ -1784,7 +1803,7 @@ const RentACRoomCard = ({
   units,
   unitPrice,
   total,
-  share,
+  tenantShares,
   onUnitsChange,
   onPriceChange,
   onShare,
@@ -1794,17 +1813,33 @@ const RentACRoomCard = ({
   units: number;
   unitPrice: number;
   total: number;
-  share: number;
+  tenantShares: { name: string; daysStayed: number; share: number }[];
   onUnitsChange: (units: number) => void;
   onPriceChange: (unitPrice: number) => void;
-  onShare: (units: number, unitPrice: number) => void;
+  onShare: (units: number, unitPrice: number, customSplitCount?: number) => void;
 }) => {
   const [unitsDraft, setUnitsDraft] = useState(String(units || ""));
   const [priceDraft, setPriceDraft] = useState(String(unitPrice || 12));
+  const [splitCountDraft, setSplitCountDraft] = useState("");
   const draftUnits = parseInt(unitsDraft) || 0;
   const draftUnitPrice = parseInt(priceDraft) || 0;
+  const draftSplitCount = parseInt(splitCountDraft) || 0;
   const draftTotal = draftUnits * draftUnitPrice;
-  const draftShare = calcAcShare(draftUnits, draftUnitPrice, tenantCount);
+  const dayWiseShares = draftTotal > 0
+    ? tenantShares.map((tenant) => ({
+        ...tenant,
+        share: total > 0 ? Math.round((draftTotal * tenant.share) / total) : tenant.share,
+      }))
+    : tenantShares;
+  const customShare = draftSplitCount > 0 ? Math.round(draftTotal / draftSplitCount) : 0;
+  const shareValues = dayWiseShares.map((tenant) => tenant.share).filter((share) => share > 0);
+  const minShare = shareValues.length ? Math.min(...shareValues) : 0;
+  const maxShare = shareValues.length ? Math.max(...shareValues) : 0;
+  const shareLabel = customShare > 0
+    ? `₹${customShare.toLocaleString()} each`
+    : minShare === maxShare
+      ? `₹${minShare.toLocaleString()}`
+      : `₹${minShare.toLocaleString()} - ₹${maxShare.toLocaleString()}`;
 
   return (
     <div className="rounded-lg border border-cyan-500/20 bg-background p-3">
@@ -1821,13 +1856,13 @@ const RentACRoomCard = ({
           variant="outline"
           className="h-8 shrink-0 text-xs"
           onMouseDown={(event) => event.preventDefault()}
-          onClick={() => onShare(draftUnits, draftUnitPrice)}
+          onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined)}
         >
           <Send className="mr-1 h-3 w-3" />
           Share
         </Button>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
           <Label className="text-[10px] uppercase text-muted-foreground">Units</Label>
           <Input
@@ -1853,11 +1888,32 @@ const RentACRoomCard = ({
           <Label className="text-[10px] uppercase text-muted-foreground">Total</Label>
           <div className="flex h-8 items-center text-sm font-semibold">₹{(draftTotal || total).toLocaleString()}</div>
         </div>
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Split persons</Label>
+          <Input
+            type="number"
+            min="1"
+            value={splitCountDraft}
+            onChange={(event) => setSplitCountDraft(event.target.value)}
+            placeholder="Day-wise"
+            className="h-8 text-sm"
+          />
+        </div>
       </div>
       <div className="mt-2 flex items-center justify-between rounded-md bg-cyan-500/5 px-2 py-1.5 text-xs text-muted-foreground">
-        <span>Per tenant</span>
-        <span className="font-bold text-cyan-700 dark:text-cyan-300">₹{(draftShare || share).toLocaleString()}</span>
+        <span>{customShare > 0 ? `Custom equal split by ${draftSplitCount}` : "Day-wise share"}</span>
+        <span className="font-bold text-cyan-700 dark:text-cyan-300">{shareLabel}</span>
       </div>
+      {splitCountDraft === "" && dayWiseShares.length > 0 && (
+        <div className="mt-2 grid gap-1 text-[11px] text-muted-foreground">
+          {dayWiseShares.map((tenant) => (
+            <div key={tenant.name} className="flex items-center justify-between">
+              <span className="truncate">{tenant.name} · {tenant.daysStayed}d</span>
+              <span className="font-medium text-foreground">₹{tenant.share.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
