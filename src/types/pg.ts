@@ -39,9 +39,9 @@ export interface PaymentRequest {
   id: string;
   userId: string;
   amount: number;
-  paymentMethod: 'upi' | 'whatsapp' | 'gpay' | 'phonepe';
+  paymentMethod: 'razorpay';
   screenshotUrl?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'authenticated' | 'active' | 'cancelled' | 'halted';
   notes?: string;
   reviewedBy?: string;
   reviewedAt?: string;
@@ -126,3 +126,15 @@ export const SUBSCRIPTION_PLANS = {
 } as const;
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
+
+export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'quarterly', 'yearly'];
+
+export const SUBSCRIPTION_PLAN_META = {
+  maxPgs: -1,
+  maxTenantsPerPg: -1,
+  features: {
+    autoReminders: true,
+    dailyReports: true,
+    aiLogo: true,
+  },
+} as const;
