@@ -1,54 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import appLogo from '@/assets/pg-logo.png';
 import featureMultiPG from '@/assets/features/multi-pg.png';
 import featureTenants from '@/assets/features/tenant-tracking.png';
 import featureReceipts from '@/assets/features/smart-receipts.png';
 import featureReminders from '@/assets/features/payment-reminders.png';
 import featureReports from '@/assets/features/daily-reports.png';
 import featureUPI from '@/assets/features/upi-payments.png';
-import payGpay from '@/assets/payments/gpay.png';
-import payPhonePe from '@/assets/payments/phonepe.png';
-import payPaytm from '@/assets/payments/paytm.png';
-import payUPI from '@/assets/payments/upi.png';
 import {
-  Building,
-  Users,
-  Receipt,
-  Bell,
-  BarChart3,
-  Smartphone,
   Crown,
   Check,
   ChevronRight,
   ChevronLeft,
   Sparkles,
-  Copy,
-  Upload,
   Loader2,
-  MessageCircle,
-  Wallet,
-  CreditCard,
   Clock,
   LogOut,
   Zap,
+  CreditCard,
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useAuth } from '@/hooks/useAuth';
-import { SUBSCRIPTION_PLANS, ADMIN_UPI_ID, PAYMENT_METHODS, ADMIN_WHATSAPP } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey } from '@/types/pg';
 import { toast } from 'sonner';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-type Step = 'welcome' | 'features' | 'plans' | 'payment' | 'pending' | 'setup';
+type Step = 'welcome' | 'features' | 'plans' | 'payment' | 'setup';
 
 const FEATURES = [
   {
@@ -78,35 +62,25 @@ const FEATURES = [
   },
   {
     image: featureUPI,
-    title: 'UPI-First Payments',
-    description: 'Accept payments via UPI, GPay, PhonePe',
+    title: 'Online Collections',
+    description: 'Collect subscription payments using Razorpay auto-renewal',
   },
 ];
 
-const PAYMENT_IMAGES: Record<string, string> = {
-  gpay: payGpay,
-  phonepe: payPhonePe,
-  paytm: payPaytm,
-  upi: payUPI,
-};
-
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
-  const { refreshPGs, subscription, refreshSubscription, pgs } = usePG();
-  const { createPaymentRequest, uploadPaymentScreenshot, isUploading, isPending } = useSubscription();
+  const { refreshPGs, subscription, refreshSubscription } = usePG();
   const { signOut, isAdmin } = useAuth();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [step, setStep] = useState<Step>('welcome');
-  const [selectedPlan, setSelectedPlan] = useState<'manual' | 'automatic'>('manual');
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>('monthly');
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
-  // Admins skip the payment flow entirely - go straight to setup
-  // Active subscribers also skip to setup
+  const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
+  const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
+  const hasActiveTrial = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
   const isSubscriptionActive = subscription?.status === 'active';
   const shouldSkipToSetup = isAdmin || isSubscriptionActive;
 
-  // Effect to redirect admins/active subscribers to setup
   useEffect(() => {
     if (shouldSkipToSetup && step !== 'setup') {
       setStep('setup');
@@ -118,31 +92,13 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     window.location.reload();
   };
 
-  const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
-
-  // Determine effective step:
-  // 1. Admin users or active subscribers go to setup
-  // 2. Pending subscription shows pending step
-  // 3. Otherwise show current step in flow
-  const effectiveStep = shouldSkipToSetup ? 'setup' : (isPending ? 'pending' : step);
-
   const handleCheckStatus = async () => {
     setIsCheckingStatus(true);
     try {
       await refreshSubscription();
-      // After refresh, check the NEW subscription status
-      const { data } = await import('@/integrations/supabase/proxyClient').then(m => 
-        m.supabase.from('subscriptions').select('status').maybeSingle()
-      );
-      
-      if (data?.status === 'active') {
-        toast.success('Your subscription is now active! Redirecting to setup...');
-        setStep('setup');
-      } else {
-        toast.info('Payment is still under review');
-      }
-    } catch (err) {
-      toast.error('Failed to check status');
+      toast.success('Subscription refreshed');
+    } catch {
+      toast.error('Failed to refresh subscription');
     } finally {
       setIsCheckingStatus(false);
     }
@@ -153,54 +109,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     onComplete();
   };
 
-  const copyUPI = () => {
-    navigator.clipboard.writeText(ADMIN_UPI_ID);
-    toast.success('UPI ID copied!');
-  };
-
-  const handleMethodSelect = (methodId: string) => {
-    setSelectedMethod(methodId);
-    
-    const amount = currentPlan.price;
-    const upiUrl = `upi://pay?pa=${ADMIN_UPI_ID}&pn=PG%20Manager&am=${amount}&cu=INR&tn=${selectedPlan}%20Plan`;
-    
-    if (methodId !== 'upi') {
-      window.open(upiUrl, '_blank');
-    } else {
-      copyUPI();
-    }
-  };
-
-  const openWhatsApp = () => {
-    const message = `Hi, I have paid ₹${currentPlan.price} for ${currentPlan.name} Plan subscription. Please verify and activate my account.`;
-    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const url = await uploadPaymentScreenshot(file);
-    if (url) {
-      setScreenshotUrl(url);
-      toast.success('Screenshot uploaded!');
-    }
-  };
-
-  const handleSubmitPayment = async () => {
-    if (!selectedMethod) {
-      toast.error('Please select a payment method');
-      return;
-    }
-
-    await createPaymentRequest.mutateAsync({
-      amount: currentPlan.price,
-      paymentMethod: selectedMethod,
-      screenshotUrl: screenshotUrl || undefined,
-    });
-
-    await refreshSubscription();
-  };
+  const effectiveStep = shouldSkipToSetup ? 'setup' : step;
 
   const renderStep = () => {
     switch (effectiveStep) {
@@ -215,11 +124,11 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             <div className="flex justify-center">
               <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
             </div>
-            
+
             <div>
               <h1 className="text-3xl font-bold mb-2">Welcome to PG Manager</h1>
               <p className="text-muted-foreground">
-                The smartest way to manage your PG/Hostel business
+                Multi-owner PG management with 1 month free trial and auto-renewing subscriptions.
               </p>
             </div>
 
@@ -287,101 +196,76 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6 max-w-2xl mx-auto"
+            className="space-y-6 max-w-3xl mx-auto"
           >
             <div className="text-center mb-8">
               <Badge variant="secondary" className="mb-4">
                 <Crown className="h-3 w-3 mr-1" /> Pricing
               </Badge>
-              <h2 className="text-2xl font-bold">Choose your plan</h2>
-              <p className="text-muted-foreground mt-2">Unlock unlimited PGs and features</p>
+              <h2 className="text-2xl font-bold">Start free, then choose your billing cycle</h2>
+              <p className="text-muted-foreground mt-2">Every owner gets 1 month free trial. Paid plans auto-renew through Razorpay.</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Manual Plan */}
-              <Card 
-                className={`relative cursor-pointer transition-all ${selectedPlan === 'manual' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
-                onClick={() => setSelectedPlan('manual')}
-              >
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-bold mb-2">Manual</h3>
-                  <div className="text-3xl font-bold mb-4">
-                    ₹{SUBSCRIPTION_PLANS.manual.price} <span className="text-sm font-normal text-muted-foreground">/month</span>
+            <Card className="border-primary ring-2 ring-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold">{SUBSCRIPTION_PLANS.trial.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{SUBSCRIPTION_PLANS.trial.description}</p>
                   </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> <strong>Limited PGs</strong> (2)
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Manual WhatsApp reminders
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Payment receipts
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Basic reports
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> AI logo generator
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              {/* Automatic Plan */}
-              <Card 
-                className={`relative cursor-pointer transition-all ${selectedPlan === 'automatic' ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
-                onClick={() => setSelectedPlan('automatic')}
-              >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                    <Crown className="h-3 w-3 mr-1" /> Best Value
-                  </Badge>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold">Free</div>
+                    <div className="text-sm text-muted-foreground">{SUBSCRIPTION_PLANS.trial.periodLabel}</div>
+                  </div>
                 </div>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    Automatic <Crown className="h-5 w-5 text-amber-500" />
-                  </h3>
-                  <div className="text-3xl font-bold mb-4">
-                    ₹{SUBSCRIPTION_PLANS.automatic.price} <span className="text-sm font-normal text-muted-foreground">/month</span>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> PGs
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> <strong>Unlimited</strong> tenants
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> <strong>Automated</strong> image reminders
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Smart payment receipts
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> Daily activity reports
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" /> AI logo generator
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+                <ul className="space-y-2 mt-4 text-sm">
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PGs, rooms, and tenants during trial</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> All reminder, AC bill, analytics, and receipt features unlocked</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Upgrade anytime to keep auto-renewal active</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {paidPlans.map((planKey) => {
+                const plan = SUBSCRIPTION_PLANS[planKey];
+                const isSelected = selectedPlan === planKey;
+                return (
+                  <Card
+                    key={planKey}
+                    className={`relative cursor-pointer transition-all ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
+                    onClick={() => setSelectedPlan(planKey)}
+                  >
+                    {planKey === 'yearly' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+                          Best Value
+                        </Badge>
+                      </div>
+                    )}
+                    <CardContent className="pt-6">
+                      <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                      <div className="text-3xl font-bold mb-4">
+                        ₹{plan.price} <span className="text-sm font-normal text-muted-foreground">{plan.periodLabel}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PG owners</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Auto-renewing billing</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Full Pro feature access</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="flex gap-3">
               <Button variant="ghost" onClick={() => setStep('features')} className="flex-1">
                 <ChevronLeft className="mr-1 h-4 w-4" /> Back
               </Button>
-              <Button 
-                size="lg" 
-                onClick={() => setStep('payment')} 
-                className="flex-[2]"
-              >
-                Continue to Payment - ₹{currentPlan.price}
+              <Button size="lg" onClick={() => setStep('payment')} className="flex-[2]">
+                Continue - ₹{currentPlan.price}
               </Button>
             </div>
           </motion.div>
@@ -397,18 +281,27 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           >
             <div className="text-center mb-4">
               <Badge variant="secondary" className="mb-4">
-                <CreditCard className="h-3 w-3 mr-1" /> Payment
+                <CreditCard className="h-3 w-3 mr-1" /> Subscription Checkout
               </Badge>
-              <h2 className="text-2xl font-bold">{currentPlan.name} Plan - ₹{currentPlan.price}/month</h2>
+              <h2 className="text-2xl font-bold">{currentPlan.name} - ₹{currentPlan.price}</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                {hasActiveTrial ? 'Your free trial is already active. Authorize auto-renewal for later billing.' : 'You will start with a 1 month free trial, then billing begins automatically.'}
+              </p>
             </div>
 
-            {/* Razorpay Online Payment */}
+            <Card className="border-border">
+              <CardContent className="pt-4 space-y-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Trial</span><span>1 month free</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">After trial</span><span>{currentPlan.periodLabel === '/month' ? `₹${currentPlan.price} every month` : currentPlan.periodLabel === '/3 months' ? `₹${currentPlan.price} every 3 months` : `₹${currentPlan.price} every year`}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Billing</span><span>Auto-renewing</span></div>
+              </CardContent>
+            </Card>
+
             <Button
               className="w-full gap-2 py-6 text-base"
               onClick={() => {
                 initiatePayment({
                   plan: selectedPlan,
-                  amount: currentPlan.price,
                   onSuccess: async () => {
                     await refreshSubscription();
                     setStep('setup');
@@ -418,192 +311,16 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               disabled={razorpayLoading}
             >
               {razorpayLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
               ) : (
-                <><Zap className="h-5 w-5" /> Pay ₹{currentPlan.price} Online (Card/UPI/Net Banking)</>
+                <><Zap className="h-5 w-5" /> Continue with Razorpay</>
               )}
             </Button>
 
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or pay manually via UPI</span>
-              </div>
-            </div>
-
-            {/* UPI Details */}
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Pay to UPI ID</p>
-              <div className="flex items-center justify-center gap-2">
-                <code className="text-lg font-mono font-bold">{ADMIN_UPI_ID}</code>
-                <Button variant="ghost" size="icon" onClick={copyUPI}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-2xl font-bold text-primary mt-2">₹{currentPlan.price}</p>
-            </div>
-
-            {/* Payment Methods */}
-            <div className="grid grid-cols-2 gap-3">
-              {PAYMENT_METHODS.map((method) => {
-                const imgSrc = PAYMENT_IMAGES[method.id];
-                return (
-                  <Card
-                    key={method.id}
-                    className={`cursor-pointer transition-all ${selectedMethod === method.id ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
-                    onClick={() => handleMethodSelect(method.id)}
-                  >
-                    <CardContent className="py-4 text-center">
-                      <div className="h-10 w-10 rounded-lg mx-auto mb-2 overflow-hidden">
-                        <img src={imgSrc} alt={method.name} className="h-full w-full object-cover" />
-                      </div>
-                      <p className="font-medium text-sm">{method.name}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Screenshot Upload */}
-            {selectedMethod && (
-              <div className="space-y-3">
-                <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
-                  <p className="text-sm font-medium text-center mb-1">Payment Submitted</p>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Upload screenshot for quick verification
-                  </p>
-                </div>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                  {screenshotUrl ? (
-                    <div className="space-y-3">
-                      <div className="relative inline-block">
-                        <img 
-                          src={screenshotUrl} 
-                          alt="Payment proof" 
-                          className="h-48 object-contain rounded-lg shadow-sm"
-                        />
-                        <div className="absolute top-2 right-2 bg-green-500/90 text-white rounded-full p-2">
-                          <Check className="h-4 w-4" />
-                        </div>
-                      </div>
-                      <p className="text-xs text-green-600 font-medium">Screenshot uploaded</p>
-                      <Button variant="outline" size="sm" asChild>
-                        <label className="cursor-pointer">
-                          <Upload className="h-3 w-3 mr-1" />
-                          Replace
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleScreenshotUpload}
-                          />
-                        </label>
-                      </Button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer block">
-                      {isUploading ? (
-                        <div className="space-y-2">
-                          <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
-                          <p className="text-sm text-muted-foreground">Uploading...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm font-medium">Click to upload or drag</p>
-                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleScreenshotUpload}
-                        disabled={isUploading}
-                      />
-                    </label>
-                  )}
-                </div>
-
-                <Button 
-                  onClick={handleSubmitPayment} 
-                  className="w-full gap-2"
-                  disabled={!screenshotUrl || createPaymentRequest.isPending}
-                >
-                  {createPaymentRequest.isPending ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
-                  ) : (
-                    <><Check className="h-4 w-4" /> Submit Payment</>
-                  )}
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  onClick={openWhatsApp} 
-                  className="w-full gap-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Contact Admin on WhatsApp
-                </Button>
-
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3">
-                  <p className="text-xs text-blue-900 dark:text-blue-200">
-                    <strong>Note:</strong> Your subscription will be activated once admin verifies the payment.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <Button variant="ghost" onClick={() => setStep('plans')} className="w-full">
-              Back to Plans
-            </Button>
-          </motion.div>
-        );
-
-      case 'pending':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="text-center space-y-6 max-w-md mx-auto"
-          >
-            <div className="h-20 w-20 rounded-full bg-amber-100 dark:bg-amber-900/30 mx-auto flex items-center justify-center">
-              <Clock className="h-10 w-10 text-amber-600" />
-            </div>
-            
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Payment Under Review</h1>
-              <p className="text-muted-foreground">
-                Your payment is being reviewed by admin. You'll get access once approved.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-4">
-              <Button onClick={openWhatsApp} variant="outline" className="gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Contact Admin for Quick Activation
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={handleCheckStatus}
-                disabled={isCheckingStatus}
-              >
-                {isCheckingStatus ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Checking...</>
-                ) : (
-                  'Check Status'
-                )}
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={handleSignOut}
-                className="text-muted-foreground gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => setStep('plans')} className="flex-1">Back</Button>
+              <Button variant="outline" onClick={handleCheckStatus} disabled={isCheckingStatus} className="flex-1">
+                {isCheckingStatus ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Refreshing...</> : 'Refresh Status'}
               </Button>
             </div>
           </motion.div>

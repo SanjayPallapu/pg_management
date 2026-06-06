@@ -226,74 +226,98 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-lg text-muted-foreground">Choose the plan that fits your needs. Upgrade anytime.</p>
+            <p className="text-lg text-muted-foreground">Start with a full-featured free trial, then switch to recurring billing anytime.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Manual Plan */}
-            <Card className="relative border-border hover:border-primary/50 transition-all">
-              <CardContent className="pt-8 pb-8">
-                <h3 className="text-xl font-semibold mb-2">Manual Plan</h3>
-                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.manual.description}</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.manual.price}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                  "Limited PGs (2)",
-                  "Unlimited Tenants",
-                  "Manual WhatsApp Reminders",
-                  "Payment Receipts",
-                  "Basic Reports",
-                  "AI Logo Generator"].
-                  map((f) =>
-                  <li key={f} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
-                    </li>
-                  )}
-                </ul>
-                <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
-                  Get Started
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Automatic Plan */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <Card className="relative border-primary ring-2 ring-primary/20">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-4 py-1">
-                  <Crown className="h-3 w-3 mr-1" /> Most Popular
+                <Badge className="bg-primary text-primary-foreground border-0 px-4 py-1">
+                  Start Here
                 </Badge>
               </div>
               <CardContent className="pt-8 pb-8">
-                <h3 className="text-xl font-semibold mb-2">Automatic Plan</h3>
-                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.automatic.description}</p>
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.trial.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.trial.description}</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.automatic.price}</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-4xl font-bold">Free</span>
+                  <span className="text-muted-foreground"> · {SUBSCRIPTION_PLANS.trial.periodLabel}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {[
-                  "Unlimited PGs",
-                  "Unlimited Tenants",
-                  "Automated Image Reminders",
-                  "Smart Payment Receipts",
-                  "Daily Activity Reports",
-                  "AI Logo Generator"].
-                  map((f) =>
-                  <li key={f} className="flex items-center gap-2 text-sm">
+                    'Unlimited PGs during trial',
+                    'Unlimited tenants and rooms',
+                    'All reminders, AC bills, reports',
+                    'No setup fee',
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
                     </li>
-                  )}
+                  ))}
                 </ul>
-                <Button className="w-full" onClick={() => navigate("/auth")}>
-                  Get Started <ArrowRight className="h-4 w-4 ml-1" />
+                <Button className="w-full" onClick={() => navigate('/auth')}>
+                  Start Free Trial <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </CardContent>
             </Card>
-          </div>
-        </div>
+
+            <Card className="relative border-border hover:border-primary/50 transition-all">
+              <CardContent className="pt-8 pb-8">
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.monthly.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.monthly.description}</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.monthly.price}</span>
+                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.monthly.periodLabel}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Unlimited PG owners',
+                    'Auto-renew monthly',
+                    'WhatsApp reminders and receipts',
+                    'Analytics dashboard included',
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
+                  Choose Monthly
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="relative border-border hover:border-primary/50 transition-all">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-4 py-1">
+                  Best Value
+                </Badge>
+              </div>
+              <CardContent className="pt-8 pb-8">
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.yearly.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.yearly.description}</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.yearly.price}</span>
+                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.yearly.periodLabel}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Lowest effective monthly price',
+                    'Auto-renew yearly',
+                    'All premium features included',
+                    'Best for serious operators',
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
+                  Choose Yearly
+                </Button>
+              </CardContent>
+            </Card>
+          </div>        </div>
       </section>
 
       {/* Testimonials */}

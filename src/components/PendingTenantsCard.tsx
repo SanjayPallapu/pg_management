@@ -59,6 +59,30 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     return share > 0 ? { units, unitPrice, share } : undefined;
   };
 
+  const getAcBillFor = (tenant: TenantWithPayment) => {
+    const room = rooms.find((r) => r.roomNo === tenant.roomNo);
+    if (!room || !room.isAc) return undefined;
+
+    const reading = acByRoom.get(room.id);
+    const units = reading?.units ?? 0;
+    const unitPrice = reading?.unit_price ?? 12;
+    const active = room.tenants.filter((t) =>
+      isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    );
+    const share = calcAcShare(units, unitPrice, active.length);
+
+    if (share <= 0) return undefined;
+
+    return {
+      roomNo: room.roomNo,
+      units,
+      unitPrice,
+      totalAmount: units * unitPrice,
+      tenants: active.map((t) => ({ name: t.name, share })),
+      monthLabel: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
+    };
+  };
+
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const { overdueTenants, advanceNotPaidTenants, notDueTenants, partialTenants } = useRentCalculations({
@@ -270,6 +294,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amountPaid: reminderTenant.amountPaid || 0,
           balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
           acSurcharge: getAcSurchargeFor(reminderTenant),
+          acBill: getAcBillFor(reminderTenant),
         } : null}
       />
     </>

@@ -6,6 +6,64 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type PlanKey = "monthly" | "quarterly" | "yearly";
+
+const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "quarterly" | "yearly"; interval: number; totalCount: number; label: string }> = {
+  monthly: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Monthly" },
+  quarterly: { amount: 269900, period: "quarterly", interval: 1, totalCount: 40, label: "Quarterly" },
+  yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Yearly" },
+};
+
+const TRIAL_DAYS = 30;
+
+async function createOrFetchPlan(credentials: string, plan: PlanKey) {
+  const cfg = PLAN_CONFIG[plan];
+  const planName = `PG Manager ${cfg.label}`;
+
+  const fetchPlansRes = await fetch("https://api.razorpay.com/v1/plans?count=100", {
+    headers: { Authorization: `Basic ${credentials}` },
+  });
+
+  const fetchPlansJson = await fetchPlansRes.json();
+  if (fetchPlansRes.ok && Array.isArray(fetchPlansJson?.items)) {
+    const existing = fetchPlansJson.items.find((item: any) =>
+      item?.item?.name === planName &&
+      item?.item?.amount === cfg.amount &&
+      item?.period === cfg.period &&
+      item?.interval === cfg.interval
+    );
+    if (existing?.id) return existing.id as string;
+  }
+
+  const planRes = await fetch("https://api.razorpay.com/v1/plans", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      period: cfg.period,
+      interval: cfg.interval,
+      item: {
+        name: planName,
+        amount: cfg.amount,
+        currency: "INR",
+        description: `PG Manager ${cfg.label} auto-renewing subscription`,
+      },
+      notes: {
+        plan_key: plan,
+      },
+    }),
+  });
+
+  const planJson = await planRes.json();
+  if (!planRes.ok || !planJson?.id) {
+    throw new Error(planJson?.error?.description || "Failed to create Razorpay plan");
+  }
+
+  return planJson.id as string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,17 +74,12 @@ Deno.serve(async (req) => {
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      console.error("Razorpay credentials not configured");
-      return new Response(
-        JSON.stringify({ error: "Payment service is not properly configured. Please contact support." }),
-        {
-          status: 503,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Payment service is not configured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -42,53 +95,58 @@ Deno.serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !data?.claims) {
-      console.error("Auth error:", claimsError);
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = data.claims.sub;
-    const { plan, amount } = await req.json();
+    const userId = claimsData.claims.sub;
+    const { plan } = await req.json();
 
-    if (!plan || !amount) {
-      return new Response(JSON.stringify({ error: "Missing plan or amount" }), {
+    if (!plan || !(plan in PLAN_CONFIG)) {
+      return new Response(JSON.stringify({ error: "Invalid plan selected" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Create Razorpay order
+    const planKey = plan as PlanKey;
     const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
-    const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+    const planId = await createOrFetchPlan(credentials, planKey);
+    const cfg = PLAN_CONFIG[planKey];
+
+    const startAt = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
+    const expireBy = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+
+    const subscriptionRes = await fetch("https://api.razorpay.com/v1/subscriptions", {
       method: "POST",
       headers: {
         Authorization: `Basic ${credentials}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: amount * 100, // Convert to paise
-        currency: "INR",
-        receipt: `sub_${userId.substring(0, 8)}_${Date.now()}`,
+        plan_id: planId,
+        total_count: cfg.totalCount,
+        quantity: 1,
+        customer_notify: true,
+        start_at: startAt,
+        expire_by: expireBy,
         notes: {
           user_id: userId,
-          plan: plan,
+          plan_key: planKey,
+          trial_days: String(TRIAL_DAYS),
         },
       }),
     });
 
-    const order = await orderRes.json();
-
-    if (!orderRes.ok) {
-      console.error("Razorpay order creation failed:", order);
-      const errorMsg = order?.error?.description || "Failed to create payment order";
-      throw new Error(errorMsg);
+    const subscriptionJson = await subscriptionRes.json();
+    if (!subscriptionRes.ok || !subscriptionJson?.id) {
+      throw new Error(subscriptionJson?.error?.description || "Failed to create Razorpay subscription");
     }
 
-    // Store order reference in payment_requests
     const adminSupabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -96,18 +154,22 @@ Deno.serve(async (req) => {
 
     await adminSupabase.from("payment_requests").insert({
       user_id: userId,
-      amount: amount,
+      amount: cfg.amount / 100,
       payment_method: "razorpay",
       status: "pending",
-      notes: JSON.stringify({ razorpay_order_id: order.id, plan }),
+      notes: JSON.stringify({
+        razorpay_plan_id: planId,
+        razorpay_subscription_id: subscriptionJson.id,
+        billing_cycle: planKey,
+        trial_days: TRIAL_DAYS,
+      }),
     });
 
     return new Response(
       JSON.stringify({
-        order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
+        subscription_id: subscriptionJson.id,
         key_id: RAZORPAY_KEY_ID,
+        description: `PG Manager ${cfg.label} subscription`,
       }),
       {
         status: 200,
@@ -115,7 +177,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error creating order:", error);
+    console.error("Error creating Razorpay subscription:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {

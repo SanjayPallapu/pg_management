@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { useAuth } from './useAuth';
@@ -9,7 +8,6 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const { subscription, refreshSubscription } = usePG();
   const queryClient = useQueryClient();
-  const [isUploading, setIsUploading] = useState(false);
 
   const createPaymentRequest = useMutation({
     mutationFn: async ({
@@ -36,62 +34,23 @@ export const useSubscription = () => {
         .single();
 
       if (error) throw error;
-
-      // Update subscription status to pending
-      await supabase
-        .from('subscriptions')
-        .update({
-          status: 'pending',
-          payment_requested_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
       return data;
     },
     onSuccess: () => {
       refreshSubscription();
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
-      toast.success('Payment request submitted! We will review and activate your Pro plan soon.');
+      toast.success('Payment request created');
     },
     onError: (error) => {
       console.error('Error creating payment request:', error);
-      toast.error('Failed to submit payment request');
+      toast.error('Failed to create payment request');
     },
   });
 
-  const uploadPaymentScreenshot = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `payment-${Date.now()}.${fileExt}`;
-      // Path is scoped to the user's folder so RLS only allows the owner to read it
-      const filePath = `${user.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Store the storage path; signed URLs are generated on demand by admins
-      return filePath;
-    } catch (err) {
-      console.error('Error uploading screenshot:', err);
-      toast.error('Failed to upload screenshot');
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // Admin functions
   const approvePaymentRequest = useMutation({
     mutationFn: async (requestId: string) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Get the payment request
       const { data: request, error: fetchError } = await supabase
         .from('payment_requests')
         .select('*')
@@ -100,7 +59,6 @@ export const useSubscription = () => {
 
       if (fetchError) throw fetchError;
 
-      // Update payment request status
       const { error: updateError } = await supabase
         .from('payment_requests')
         .update({
@@ -112,7 +70,6 @@ export const useSubscription = () => {
 
       if (updateError) throw updateError;
 
-      // Activate user's subscription
       const { error: subError } = await supabase
         .from('subscriptions')
         .update({
@@ -124,19 +81,20 @@ export const useSubscription = () => {
             auto_reminders: true,
             daily_reports: true,
             ai_logo: true,
+            billing_cycle: 'monthly',
           },
           payment_approved_at: new Date().toISOString(),
           approved_by: user.id,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .eq('user_id', request.user_id);
 
       if (subError) throw subError;
-
       return request;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+      refreshSubscription();
       toast.success('Subscription activated!');
     },
     onError: (error) => {
@@ -169,18 +127,16 @@ export const useSubscription = () => {
 
       if (updateError) throw updateError;
 
-      // Reset subscription status
       await supabase
         .from('subscriptions')
-        .update({
-          status: 'free',
-        })
+        .update({ status: 'free' })
         .eq('user_id', request.user_id);
 
       return request;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+      refreshSubscription();
       toast.success('Payment request rejected');
     },
     onError: (error) => {
@@ -192,8 +148,6 @@ export const useSubscription = () => {
   return {
     subscription,
     createPaymentRequest,
-    uploadPaymentScreenshot,
-    isUploading,
     approvePaymentRequest,
     rejectPaymentRequest,
     isPending: subscription?.status === 'pending',

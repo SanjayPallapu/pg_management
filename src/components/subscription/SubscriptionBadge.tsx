@@ -48,11 +48,14 @@ export const SubscriptionBadge = () => {
     );
   }
 
-  if (subscription?.status === 'pending') {
+  if (subscription?.billingCycle === 'trial' && subscription?.status === 'active') {
     return (
-      <Badge variant="outline" className="text-amber-600 border-amber-300">
-        Pending Approval
-      </Badge>
+      <>
+        <Badge variant="outline" className="text-amber-600 border-amber-300">
+          Trial Active
+        </Badge>
+        <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
+      </>
     );
   }
 
