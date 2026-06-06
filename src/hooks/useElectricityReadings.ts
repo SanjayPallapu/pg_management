@@ -10,6 +10,12 @@ type ElectricityReadingSource = "manual" | "imported";
 const normalizeSource = (source: string | null | undefined): ElectricityReadingSource =>
   source === "imported" ? "imported" : "manual";
 
+const isMissingSourceColumnError = (error: unknown) => {
+  if (!error || typeof error !== "object") return false;
+  const maybeError = error as { code?: string; message?: string };
+  return maybeError.code === "PGRST204" && (maybeError.message ?? "").includes("source");
+};
+
 export interface ElectricityReading {
   id: string;
   room_id: string;
@@ -62,20 +68,30 @@ export const useElectricityReadings = (month: number, year: number) => {
       unitPrice: number;
       source?: ElectricityReading["source"];
     }) => {
+      const payload = {
+        room_id: roomId,
+        month,
+        year,
+        units,
+        unit_price: unitPrice,
+      };
       const { error } = await supabase
         .from("room_electricity_readings")
         .upsert(
           {
-            room_id: roomId,
-            month,
-            year,
-            units,
-            unit_price: unitPrice,
+            ...payload,
             source,
           },
           { onConflict: "room_id,month,year" },
         );
-      if (error) throw error;
+      if (!error) return;
+
+      if (!isMissingSourceColumnError(error)) throw error;
+
+      const { error: fallbackError } = await supabase
+        .from("room_electricity_readings")
+        .upsert(payload, { onConflict: "room_id,month,year" });
+      if (fallbackError) throw fallbackError;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["electricity_readings", currentPG?.id, month, year] });

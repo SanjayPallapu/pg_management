@@ -164,17 +164,28 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
   const acTemplateRef = useState<HTMLDivElement | null>(null);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
 
-  const handleShareAC = async (item: typeof acRooms[number]) => {
-    if (item.units <= 0) {
+  const handleShareAC = async (item: typeof acRooms[number], draftUnits = item.units, draftUnitPrice = item.unitPrice) => {
+    if (draftUnits <= 0) {
       toast({ title: "Enter units first", variant: "destructive" });
       return;
     }
+    if (draftUnitPrice <= 0) {
+      toast({ title: "Enter unit price first", variant: "destructive" });
+      return;
+    }
+    try {
+      await setReading.mutateAsync({ roomId: item.room.id, units: draftUnits, unitPrice: draftUnitPrice });
+    } catch {
+      return;
+    }
+    const total = draftUnits * draftUnitPrice;
+    const share = calcAcShare(draftUnits, draftUnitPrice, item.activeTenants.length);
     setAcShareData({
       roomNo: item.room.roomNo,
-      units: item.units,
-      unitPrice: item.unitPrice,
-      totalAmount: item.total,
-      tenants: item.activeTenants.map((t) => ({ name: t.name, share: item.share })),
+      units: draftUnits,
+      unitPrice: draftUnitPrice,
+      totalAmount: total,
+      tenants: item.activeTenants.map((t) => ({ name: t.name, share })),
       monthLabel: `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
@@ -431,7 +442,7 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
                 share={item.share}
                 onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
                 onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
-                onShare={() => handleShareAC(item)}
+                onShare={(units, unitPrice) => handleShareAC(item, units, unitPrice)}
               />
             ))}
           </div>
@@ -502,10 +513,14 @@ const ACRoomCard = ({
   onUnitsChange, onPriceChange, onShare,
 }: {
   roomNo: string; tenantCount: number; units: number; unitPrice: number; total: number; share: number;
-  onUnitsChange: (u: number) => void; onPriceChange: (p: number) => void; onShare: () => void;
+  onUnitsChange: (u: number) => void; onPriceChange: (p: number) => void; onShare: (units: number, unitPrice: number) => void;
 }) => {
   const [u, setU] = useState(String(units || ""));
   const [p, setP] = useState(String(unitPrice || 12));
+  const draftUnits = parseInt(u) || 0;
+  const draftUnitPrice = parseInt(p) || 0;
+  const draftTotal = draftUnits * draftUnitPrice;
+  const draftShare = calcAcShare(draftUnits, draftUnitPrice, tenantCount);
   return (
     <Card className="border-cyan-500/20">
       <CardContent className="p-3 space-y-2">
@@ -515,7 +530,7 @@ const ACRoomCard = ({
             <span className="text-sm font-semibold">Room {roomNo}</span>
             <span className="text-xs text-muted-foreground">· {tenantCount} tenants</span>
           </div>
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onShare}>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onMouseDown={(e) => e.preventDefault()} onClick={() => onShare(draftUnits, draftUnitPrice)}>
             <Send className="h-3 w-3 mr-1" /> Share Bill
           </Button>
         </div>
@@ -538,12 +553,12 @@ const ACRoomCard = ({
           </div>
           <div>
             <Label className="text-[10px] uppercase text-muted-foreground">Total</Label>
-            <div className="h-8 flex items-center text-sm font-semibold">₹{total.toLocaleString()}</div>
+            <div className="h-8 flex items-center text-sm font-semibold">₹{(draftTotal || total).toLocaleString()}</div>
           </div>
         </div>
         <div className="text-xs text-muted-foreground flex items-center justify-between bg-cyan-500/5 rounded px-2 py-1.5">
           <span>Per tenant</span>
-          <span className="font-bold text-cyan-700 dark:text-cyan-300">₹{share.toLocaleString()}</span>
+          <span className="font-bold text-cyan-700 dark:text-cyan-300">₹{(draftShare || share).toLocaleString()}</span>
         </div>
       </CardContent>
     </Card>
