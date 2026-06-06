@@ -8,7 +8,6 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const { subscription, refreshSubscription } = usePG();
   const queryClient = useQueryClient();
-  const [isUploading;
 
   const createPaymentRequest = useMutation({
     mutationFn: async ({
@@ -35,35 +34,23 @@ export const useSubscription = () => {
         .single();
 
       if (error) throw error;
-
-      // Update subscription status to pending
-      await supabase
-        .from('subscriptions')
-        .update({
-          status: 'pending',
-          payment_requested_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
       return data;
     },
     onSuccess: () => {
       refreshSubscription();
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
-      toast.success('Payment request submitted! We will review and activate your Pro plan soon.');
+      toast.success('Payment request created');
     },
     onError: (error) => {
       console.error('Error creating payment request:', error);
-      toast.error('Failed to submit payment request');
+      toast.error('Failed to create payment request');
     },
   });
 
-  // Admin functions
   const approvePaymentRequest = useMutation({
     mutationFn: async (requestId: string) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Get the payment request
       const { data: request, error: fetchError } = await supabase
         .from('payment_requests')
         .select('*')
@@ -72,7 +59,6 @@ export const useSubscription = () => {
 
       if (fetchError) throw fetchError;
 
-      // Update payment request status
       const { error: updateError } = await supabase
         .from('payment_requests')
         .update({
@@ -84,7 +70,6 @@ export const useSubscription = () => {
 
       if (updateError) throw updateError;
 
-      // Activate user's subscription
       const { error: subError } = await supabase
         .from('subscriptions')
         .update({
@@ -100,16 +85,16 @@ export const useSubscription = () => {
           },
           payment_approved_at: new Date().toISOString(),
           approved_by: user.id,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .eq('user_id', request.user_id);
 
       if (subError) throw subError;
-
       return request;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+      refreshSubscription();
       toast.success('Subscription activated!');
     },
     onError: (error) => {
@@ -142,18 +127,16 @@ export const useSubscription = () => {
 
       if (updateError) throw updateError;
 
-      // Reset subscription status
       await supabase
         .from('subscriptions')
-        .update({
-          status: 'free',
-        })
+        .update({ status: 'free' })
         .eq('user_id', request.user_id);
 
       return request;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+      refreshSubscription();
       toast.success('Payment request rejected');
     },
     onError: (error) => {
