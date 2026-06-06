@@ -13,7 +13,6 @@ import {
   Clock, 
   Check, 
   X,
-  MessageCircle,
   Sparkles,
   Bell,
   BarChart3,
@@ -22,7 +21,6 @@ import {
 } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
-import { ADMIN_WHATSAPP } from '@/types/pg';
 import { UpgradeDialog } from './UpgradeDialog';
 
 interface SubscriptionDetailsSheetProps {
@@ -60,7 +58,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
       case 'pending':
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-300">
-            <Clock className="h-3 w-3 mr-1" /> Pending Approval
+            <Clock className="h-3 w-3 mr-1" /> Renewal Pending
           </Badge>
         );
       case 'expired':
@@ -78,10 +76,6 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
     }
   };
 
-  const openWhatsApp = () => {
-    const message = `Hi, I need help with my PG Manager subscription.`;
-    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
-  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -115,7 +109,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               </div>
               
               <div className="text-3xl font-bold capitalize mb-2">
-                {displaySubscription.plan} Plan
+                {displaySubscription.billingCycle === 'trial' ? 'Free Trial' : `${displaySubscription.plan} Plan`}
               </div>
               
               {isProUser && displaySubscription.expiresAt && (() => {
@@ -124,7 +118,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 const daysLeft = differenceInDays(expiresAt, now);
                 const hoursLeft = differenceInHours(expiresAt, now) % 24;
                 const isExpiringSoon = daysLeft <= 7;
-                const totalDays = 30; // Assuming 30-day subscription
+                const totalDays = displaySubscription.billingCycle === 'yearly' ? 365 : displaySubscription.billingCycle === 'quarterly' ? 90 : 30;
                 const progressValue = Math.max(0, Math.min(100, ((totalDays - daysLeft) / totalDays) * 100));
                 
                 return (
@@ -266,17 +260,6 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           
           <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
 
-          <Separator />
-
-          {/* Contact Admin */}
-          <Button 
-            variant="outline" 
-            onClick={openWhatsApp} 
-            className="w-full gap-2"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Contact Admin on WhatsApp
-          </Button>
         </div>
       </SheetContent>
     </Sheet>
