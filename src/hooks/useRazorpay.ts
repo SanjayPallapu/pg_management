@@ -5,8 +5,44 @@ import type { SubscriptionPlanKey } from "@/types/pg";
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: RazorpayCheckoutOptions) => RazorpayCheckoutInstance;
   }
+}
+
+interface RazorpayCheckoutResponse {
+  razorpay_payment_id?: string;
+  razorpay_subscription_id?: string;
+  razorpay_signature?: string;
+}
+
+interface RazorpayFailureResponse {
+  error?: {
+    code?: string;
+    description?: string;
+    reason?: string;
+  };
+}
+
+interface RazorpayCheckoutOptions {
+  key: string;
+  subscription_id: string;
+  name: string;
+  description: string;
+  handler: (response: RazorpayCheckoutResponse) => void | Promise<void>;
+  prefill: {
+    email?: string;
+  };
+  theme: {
+    color: string;
+  };
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
+interface RazorpayCheckoutInstance {
+  on: (event: "payment.failed", handler: (response: RazorpayFailureResponse) => void) => void;
+  open: () => void;
 }
 
 interface RazorpayOptions {
@@ -71,26 +107,26 @@ export const useRazorpay = () => {
           subscription_id: data.subscription_id,
           name: "PG Manager",
           description: data.description,
-          handler: async function (response: any) {
+          handler: async function (response: RazorpayCheckoutResponse) {
             try {
-              const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+              const razorpaySubscriptionId = response.razorpay_subscription_id || data.subscription_id;
+              const { data: syncData, error: syncError } = await supabase.functions.invoke("sync-razorpay-subscription", {
                 body: {
                   plan,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  razorpay_subscription_id: response.razorpay_subscription_id,
+                  razorpay_subscription_id: razorpaySubscriptionId,
                 },
               });
 
-              if (verifyError || !verifyData?.success) {
-                throw new Error(verifyError?.message || verifyData?.error || "Payment verification failed");
+              if (syncError || !syncData?.success) {
+                throw new Error(syncError?.message || syncData?.error || "Subscription authorization failed");
               }
 
-              toast.success("Subscription activated successfully!");
+              toast.success("Free trial activated. Auto-renewal is authorized.");
+              setIsLoading(false);
               onSuccess();
-            } catch (verifyErr) {
-              console.error("Error verifying payment:", verifyErr);
-              toast.error(verifyErr instanceof Error ? verifyErr.message : "Payment verification failed");
+            } catch (syncErr) {
+              console.error("Error syncing subscription:", syncErr);
+              toast.error(syncErr instanceof Error ? syncErr.message : "Subscription authorization failed");
               setIsLoading(false);
               onFailure?.();
             }
@@ -110,7 +146,7 @@ export const useRazorpay = () => {
         };
 
         const razorpay = new window.Razorpay(options);
-        razorpay.on("payment.failed", (response: any) => {
+        razorpay.on("payment.failed", (response: RazorpayFailureResponse) => {
           console.error("Payment failed:", response.error);
           toast.error("Payment failed. Please try again.");
           setIsLoading(false);

@@ -20,6 +20,42 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-razorpay-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type PlanKey = "monthly" | "quarterly" | "yearly";
+
+const TRIAL_DAYS = 30;
+const PAID_PLANS = new Set<PlanKey>(["monthly", "quarterly", "yearly"]);
+
+const getPlanDurationDays = (plan: PlanKey) => {
+  if (plan === "yearly") return 365;
+  if (plan === "quarterly") return 90;
+  return 30;
+};
+
+const getFutureIso = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+async function fetchRazorpaySubscription(subscriptionId: string) {
+  const keyId = Deno.env.get("RAZORPAY_KEY_ID");
+  const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+  if (!keyId || !keySecret) return null;
+
+  const credentials = btoa(`${keyId}:${keySecret}`);
+  const res = await fetch(`https://api.razorpay.com/v1/subscriptions/${subscriptionId}`, {
+    headers: { Authorization: `Basic ${credentials}` },
+  });
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+function getSubscriptionContext(entity: any): { userId?: string; plan?: PlanKey; subscriptionId?: string; status?: string } {
+  const plan = entity?.notes?.plan_key;
+  return {
+    userId: entity?.notes?.user_id,
+    plan: PAID_PLANS.has(plan) ? plan : undefined,
+    subscriptionId: entity?.id,
+    status: entity?.status,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,15 +96,79 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    if (event === "subscription.authenticated" || event === "subscription.activated") {
+      const subscription = payload.payload.subscription.entity;
+      const { userId, plan, subscriptionId, status } = getSubscriptionContext(subscription);
+
+      if (!userId || !plan || !subscriptionId) {
+        console.error("Missing subscription notes for event", event);
+        return new Response(JSON.stringify({ error: "Missing subscription notes" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const now = new Date().toISOString();
+      const { error: subError } = await supabase
+        .from("subscriptions")
+        .upsert(
+          {
+            user_id: userId,
+            plan: "pro",
+            status: "active",
+            max_pgs: -1,
+            max_tenants_per_pg: -1,
+            features: {
+              auto_reminders: true,
+              daily_reports: true,
+              ai_logo: true,
+              billing_cycle: "trial",
+              next_billing_cycle: plan,
+              razorpay_subscription_id: subscriptionId,
+              razorpay_status: status || event.replace("subscription.", ""),
+            },
+            payment_approved_at: now,
+            expires_at: getFutureIso(TRIAL_DAYS),
+          },
+          { onConflict: "user_id" },
+        );
+
+      if (subError) throw subError;
+
+      await supabase
+        .from("payment_requests")
+        .update({
+          status: "authenticated",
+          reviewed_at: now,
+          notes: JSON.stringify({
+            razorpay_subscription_id: subscriptionId,
+            billing_cycle: plan,
+            trial_days: TRIAL_DAYS,
+            razorpay_status: status || event.replace("subscription.", ""),
+          }),
+        })
+        .eq("user_id", userId)
+        .eq("status", "pending");
+
+      console.log(`Trial activated for user ${userId}, next billing cycle: ${plan}`);
+    }
+
     if (event === "payment.captured") {
       const payment = payload.payload.payment.entity;
       const orderId = payment.order_id;
-      const userId = payment.notes?.user_id;
-      const plan = payment.notes?.plan;
+      const subscriptionId = payment.subscription_id;
+      const subscription = subscriptionId ? await fetchRazorpaySubscription(subscriptionId) : null;
+      const context = subscription ? getSubscriptionContext(subscription) : {
+        userId: payment.notes?.user_id,
+        plan: payment.notes?.plan_key,
+        subscriptionId,
+      };
+      const userId = context.userId;
+      const plan = context.plan;
 
-      if (!userId) {
-        console.error("No user_id in payment notes");
-        return new Response(JSON.stringify({ error: "Missing user_id" }), {
+      if (!userId || !plan) {
+        console.error("Missing user_id or plan in payment/subscription notes");
+        return new Response(JSON.stringify({ error: "Missing billing context" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -94,6 +194,7 @@ Deno.serve(async (req) => {
             notes: JSON.stringify({
               razorpay_order_id: orderId,
               razorpay_payment_id: payment.id,
+              razorpay_subscription_id: context.subscriptionId,
               plan,
               auto_approved: true,
             }),
@@ -110,12 +211,15 @@ Deno.serve(async (req) => {
           max_pgs: -1,
           max_tenants_per_pg: -1,
           features: {
-            auto_reminders: plan === "automatic",
-            daily_reports: plan === "automatic",
+            auto_reminders: true,
+            daily_reports: true,
             ai_logo: true,
+            billing_cycle: plan,
+            razorpay_subscription_id: context.subscriptionId,
+            razorpay_payment_id: payment.id,
           },
           payment_approved_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          expires_at: getFutureIso(getPlanDurationDays(plan)),
         })
         .eq("user_id", userId);
 

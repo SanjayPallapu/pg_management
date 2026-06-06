@@ -15,6 +15,7 @@ import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculati
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
 import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
 import { useElectricityReadings, calcAcShare } from '@/hooks/useElectricityReadings';
+import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
 
@@ -31,6 +32,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const { payments } = useTenantPayments();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
+  const { currentPG } = usePG();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -51,7 +53,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     if (!room || !room.isAc) return undefined;
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
-    const unitPrice = reading?.unit_price ?? 12;
+    const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
@@ -65,7 +67,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
-    const unitPrice = reading?.unit_price ?? 12;
+    const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
@@ -80,6 +82,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       totalAmount: units * unitPrice,
       tenants: active.map((t) => ({ name: t.name, share })),
       monthLabel: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
     };
   };
 
@@ -287,7 +291,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           tenantName: reminderTenant.name,
           tenantPhone: reminderTenant.phone || '',
           joiningDate: reminderTenant.startDate || '',
-          forMonth: `${monthNames[selectedMonth]} ${selectedYear}`,
+          forMonth: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
           roomNo: reminderTenant.roomNo || '',
           sharingType: '',
           amount: reminderTenant.monthlyRent,

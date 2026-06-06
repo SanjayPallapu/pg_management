@@ -450,6 +450,7 @@ export type Database = {
           id: string
           month: number
           room_id: string
+          source: string
           unit_price: number
           units: number
           updated_at: string
@@ -460,6 +461,7 @@ export type Database = {
           id?: string
           month: number
           room_id: string
+          source?: string
           unit_price?: number
           units?: number
           updated_at?: string
@@ -470,6 +472,7 @@ export type Database = {
           id?: string
           month?: number
           room_id?: string
+          source?: string
           unit_price?: number
           units?: number
           updated_at?: string

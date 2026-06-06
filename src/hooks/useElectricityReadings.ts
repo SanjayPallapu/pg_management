@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/proxyClient";
+import type { Database } from "@/integrations/supabase/types";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "@/hooks/use-toast";
+
+type ElectricityReadingRow = Database["public"]["Tables"]["room_electricity_readings"]["Row"];
+type ElectricityReadingSource = "manual" | "imported";
+
+const normalizeSource = (source: string | null | undefined): ElectricityReadingSource =>
+  source === "imported" ? "imported" : "manual";
 
 export interface ElectricityReading {
   id: string;
@@ -10,6 +17,7 @@ export interface ElectricityReading {
   year: number;
   units: number;
   unit_price: number;
+  source: ElectricityReadingSource;
 }
 
 export const useElectricityReadings = (month: number, year: number) => {
@@ -27,13 +35,14 @@ export const useElectricityReadings = (month: number, year: number) => {
         .eq("month", month)
         .eq("year", year);
       if (error) throw error;
-      return (data || []).map((r: any) => ({
+      return ((data || []) as ElectricityReadingRow[]).map((r) => ({
         id: r.id,
         room_id: r.room_id,
         month: r.month,
         year: r.year,
         units: r.units,
         unit_price: r.unit_price,
+        source: normalizeSource(r.source),
       })) as ElectricityReading[];
     },
     enabled: !!currentPG?.id,
@@ -42,26 +51,40 @@ export const useElectricityReadings = (month: number, year: number) => {
   const byRoom = new Map(readings.map((r) => [r.room_id, r]));
 
   const setReading = useMutation({
-    mutationFn: async ({ roomId, units, unitPrice }: { roomId: string; units: number; unitPrice: number }) => {
-      const existing = byRoom.get(roomId);
-      if (existing) {
-        const { error } = await supabase
-          .from("room_electricity_readings")
-          .update({ units, unit_price: unitPrice })
-          .eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("room_electricity_readings")
-          .insert({ room_id: roomId, month, year, units, unit_price: unitPrice });
-        if (error) throw error;
-      }
+    mutationFn: async ({
+      roomId,
+      units,
+      unitPrice,
+      source = "manual",
+    }: {
+      roomId: string;
+      units: number;
+      unitPrice: number;
+      source?: ElectricityReading["source"];
+    }) => {
+      const { error } = await supabase
+        .from("room_electricity_readings")
+        .upsert(
+          {
+            room_id: roomId,
+            month,
+            year,
+            units,
+            unit_price: unitPrice,
+            source,
+          },
+          { onConflict: "room_id,month,year" },
+        );
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["electricity_readings", currentPG?.id, month, year] });
       toast({ title: "Electricity reading saved" });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => {
+      const message = e instanceof Error ? e.message : "Unable to save electricity reading";
+      toast({ title: "Failed", description: message, variant: "destructive" });
+    },
   });
 
   return { readings, isLoading, byRoom, setReading };

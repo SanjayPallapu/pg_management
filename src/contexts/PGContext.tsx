@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { PG, Subscription } from '@/types/pg';
 import { useAuth } from '@/hooks/useAuth';
+import type { Json } from '@/integrations/supabase/types';
 
 interface PGContextType {
   pgs: PG[];
@@ -32,6 +33,9 @@ interface PGProviderProps {
 }
 
 const CURRENT_PG_KEY = 'currentPgId';
+
+const getFeatureMap = (features: Json): Record<string, Json> =>
+  features && typeof features === 'object' && !Array.isArray(features) ? features : {};
 
 export const PGProvider = ({ children }: PGProviderProps) => {
   const { user, isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
@@ -66,6 +70,7 @@ export const PGProvider = ({ children }: PGProviderProps) => {
         address: pg.address || undefined,
         logoUrl: pg.logo_url || undefined,
         floors: pg.floors || 3,
+        electricityUnitPrice: pg.electricity_unit_price ?? 12,
         createdAt: pg.created_at,
         updatedAt: pg.updated_at,
       }));
@@ -108,7 +113,8 @@ export const PGProvider = ({ children }: PGProviderProps) => {
       if (fetchError) throw fetchError;
 
       if (data) {
-        const billingCycle = (data.features as any)?.billing_cycle as 'trial' | 'monthly' | 'quarterly' | 'yearly' | undefined;
+        const features = getFeatureMap(data.features);
+        const billingCycle = features.billing_cycle as 'trial' | 'monthly' | 'quarterly' | 'yearly' | undefined;
 
         setSubscription({
           id: data.id,
@@ -119,9 +125,9 @@ export const PGProvider = ({ children }: PGProviderProps) => {
           maxPgs: data.max_pgs,
           maxTenantsPerPg: data.max_tenants_per_pg,
           features: {
-            autoReminders: (data.features as any)?.auto_reminders ?? false,
-            dailyReports: (data.features as any)?.daily_reports ?? false,
-            aiLogo: (data.features as any)?.ai_logo ?? false,
+            autoReminders: features.auto_reminders === true,
+            dailyReports: features.daily_reports === true,
+            aiLogo: features.ai_logo === true,
           },
           paymentProofUrl: data.payment_proof_url || undefined,
           paymentRequestedAt: data.payment_requested_at || undefined,

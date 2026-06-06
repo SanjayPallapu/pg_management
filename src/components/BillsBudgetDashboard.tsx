@@ -154,7 +154,7 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         );
         const reading = acByRoom.get(r.id);
         const units = reading?.units ?? 0;
-        const unitPrice = reading?.unit_price ?? (currentPG as any)?.electricityUnitPrice ?? 12;
+        const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
         const total = units * unitPrice;
         const share = calcAcShare(units, unitPrice, activeTenants.length);
         return { room: r, activeTenants, units, unitPrice, total, share };
@@ -187,8 +187,11 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         const dataUrl = await generateReceiptImage(el);
         const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], `ac-bill-${item.room.roomNo}.png`, { type: "image/png" });
-        if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
-          await (navigator as any).share({ files: [file], title: "AC Electricity Bill" });
+        const shareNavigator = navigator as Navigator & {
+          canShare?: (data?: ShareData) => boolean;
+        };
+        if (shareNavigator.canShare?.({ files: [file] })) {
+          await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
         } else {
           const a = document.createElement("a");
           a.href = dataUrl;
@@ -196,8 +199,9 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           a.click();
           toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
         }
-      } catch (e: any) {
-        toast({ title: "Share failed", description: e?.message ?? "", variant: "destructive" });
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "";
+        toast({ title: "Share failed", description: message, variant: "destructive" });
       } finally {
         setAcShareData(null);
       }

@@ -7,6 +7,7 @@ export interface PG {
   address?: string;
   logoUrl?: string;
   floors: number;
+  electricityUnitPrice: number;
   createdAt: string;
   updatedAt: string;
 }
