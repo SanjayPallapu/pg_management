@@ -161,9 +161,11 @@ export const calcAcTenantShares = (
   tenants: AcTenantLike[],
   year: number,
   month: number,
+  sharingCount?: number,
 ): AcTenantShare[] => {
   const totalAmount = units * unitPrice;
   if (totalAmount <= 0) return [];
+  const daysInMonth = new Date(year, month, 0).getDate();
 
   const tenantDays = tenants
     .map((tenant) => ({
@@ -174,6 +176,32 @@ export const calcAcTenantShares = (
 
   const totalDays = tenantDays.reduce((sum, tenant) => sum + tenant.daysStayed, 0);
   if (totalDays <= 0) return [];
+
+  const capacity = sharingCount && sharingCount > 0 ? sharingCount : 0;
+  if (capacity > 0 && tenantDays.length > capacity) {
+    const slotAmount = totalAmount / capacity;
+    const fullMonthTenants = tenantDays
+      .filter((tenant) => tenant.daysStayed >= daysInMonth)
+      .slice(0, capacity);
+    const fullMonthNames = new Set(fullMonthTenants.map((tenant) => tenant.name));
+    const changingTenants = tenantDays.filter((tenant) => !fullMonthNames.has(tenant.name));
+    const changingDays = changingTenants.reduce((sum, tenant) => sum + tenant.daysStayed, 0);
+    const changingSlots = Math.max(capacity - fullMonthTenants.length, 0);
+    const changingAmount = totalAmount - slotAmount * fullMonthTenants.length;
+
+    if (fullMonthTenants.length > 0 && changingTenants.length > 0 && changingSlots > 0 && changingDays > 0) {
+      return [
+        ...fullMonthTenants.map((tenant) => ({
+          ...tenant,
+          share: Math.round(slotAmount),
+        })),
+        ...changingTenants.map((tenant) => ({
+          ...tenant,
+          share: Math.round((changingAmount * tenant.daysStayed) / changingDays),
+        })),
+      ];
+    }
+  }
 
   return tenantDays.map((tenant) => ({
     ...tenant,

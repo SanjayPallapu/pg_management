@@ -470,7 +470,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const units = reading?.units ?? 0;
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
         const total = units * unitPrice;
-        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth);
+        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity);
         return { room, activeTenants, units, unitPrice, total, tenantShares };
       });
   }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG?.electricityUnitPrice]);
@@ -500,7 +500,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const tenantShares =
       customSplitCount && customSplitCount > 0
         ? calcCustomAcSplitShares(total, customSplitCount)
-        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth);
+        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth, item.room.capacity);
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
@@ -974,6 +974,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         key={item.room.id}
                         roomNo={item.room.roomNo}
                         tenantCount={item.activeTenants.length}
+                        sharingCount={item.room.capacity}
                         units={item.units}
                         unitPrice={item.unitPrice}
                         total={item.total}
@@ -1086,7 +1087,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   const activeTenants = room.tenants.filter((roomTenant) =>
                     isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, selectedYear, selectedMonth),
                   );
-                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth);
+                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity);
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
                   if (tenantShare && tenantShare.share > 0) {
@@ -1800,6 +1801,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 const RentACRoomCard = ({
   roomNo,
   tenantCount,
+  sharingCount,
   units,
   unitPrice,
   total,
@@ -1810,6 +1812,7 @@ const RentACRoomCard = ({
 }: {
   roomNo: string;
   tenantCount: number;
+  sharingCount: number;
   units: number;
   unitPrice: number;
   total: number;
@@ -1849,7 +1852,9 @@ const RentACRoomCard = ({
             <Snowflake className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-300" />
             <span className="truncate text-sm font-semibold">Room {roomNo}</span>
           </div>
-          <div className="mt-0.5 text-xs text-muted-foreground">{tenantCount} active tenant{tenantCount === 1 ? "" : "s"}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {sharingCount} sharing · {tenantCount} tenant{tenantCount === 1 ? "" : "s"} this month
+          </div>
         </div>
         <Button
           size="sm"
@@ -1901,7 +1906,7 @@ const RentACRoomCard = ({
         </div>
       </div>
       <div className="mt-2 flex items-center justify-between rounded-md bg-cyan-500/5 px-2 py-1.5 text-xs text-muted-foreground">
-        <span>{customShare > 0 ? `Custom equal split by ${draftSplitCount}` : "Day-wise share"}</span>
+        <span>{customShare > 0 ? `Custom equal split by ${draftSplitCount}` : `${sharingCount}-sharing share`}</span>
         <span className="font-bold text-cyan-700 dark:text-cyan-300">{shareLabel}</span>
       </div>
       {splitCountDraft === "" && dayWiseShares.length > 0 && (

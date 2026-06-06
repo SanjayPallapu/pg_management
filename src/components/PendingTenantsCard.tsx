@@ -57,7 +57,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const tenantShare = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth)
+    const tenantShare = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity)
       .find((share) => share.name === tenant.name);
     return tenantShare && tenantShare.share > 0 ? { units, unitPrice, share: tenantShare.share } : undefined;
   };
@@ -72,7 +72,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth);
+    const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity);
     const tenantShare = tenantShares.find((share) => share.name === tenant.name);
 
     if (!tenantShare || tenantShare.share <= 0) return undefined;

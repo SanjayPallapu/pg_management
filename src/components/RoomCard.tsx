@@ -351,7 +351,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   const active = room.tenants.filter((t) =>
                     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
                   );
-                  const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth);
+                  const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity);
                   const tenantShare = tenantShares.find((share) => share.name === tenant.name);
                   if (tenantShare && tenantShare.share > 0) {
                     acSurcharge = { units, unitPrice, share: tenantShare.share };

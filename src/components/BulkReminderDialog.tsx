@@ -65,7 +65,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     if (!active.some((t) => t.id === tenantId)) return 0;
     const tenant = active.find((t) => t.id === tenantId);
     if (!tenant) return 0;
-    return calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth)
+    return calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity)
       .find((share) => share.name === tenant.name)?.share ?? 0;
   }, [acByRoom, selectedMonth, selectedYear]);
   const [messageType, setMessageType] = useState<"reminder" | "custom">("reminder");
