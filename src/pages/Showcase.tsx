@@ -399,7 +399,7 @@ const Showcase = () => {
               </span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
-              Free 14-day trial. No credit card. Set up your first PG in under 5 minutes.
+              Free 30-day trial. Set up your first PG in under 5 minutes, then continue on monthly, quarterly, or yearly billing.
             </p>
 
             <motion.div
