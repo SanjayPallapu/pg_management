@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { toast } from "sonner";
+import type { SubscriptionPlanKey } from "@/types/pg";
 
 declare global {
   interface Window {
@@ -9,8 +10,8 @@ declare global {
 }
 
 interface RazorpayOptions {
-  plan: "manual" | "automatic";
-  amount: number;
+  plan: SubscriptionPlanKey;
+  amount?: number;
   onSuccess: () => void;
   onFailure?: () => void;
 }
@@ -59,22 +60,40 @@ export const useRazorpay = () => {
           throw new Error(error?.message || "Failed to initiate payment. Please try later");
         }
 
-        if (!data?.order_id) {
+        if (!data?.subscription_id) {
           console.error("Invalid response from edge function:", data);
-          throw new Error("Failed to create payment order. Please try again");
+          throw new Error("Failed to start subscription checkout. Please try again");
         }
 
         // Open Razorpay checkout
         const options = {
           key: data.key_id,
-          amount: data.amount,
-          currency: data.currency,
+          subscription_id: data.subscription_id,
           name: "PG Manager",
-          description: `${plan === "automatic" ? "Automatic" : "Manual"} Plan - Monthly`,
-          order_id: data.order_id,
-          handler: function () {
-            toast.success("Payment successful! Activating your subscription...");
-            onSuccess();
+          description: data.description,
+          handler: async function (response: any) {
+            try {
+              const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+                body: {
+                  plan,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  razorpay_subscription_id: response.razorpay_subscription_id,
+                },
+              });
+
+              if (verifyError || !verifyData?.success) {
+                throw new Error(verifyError?.message || verifyData?.error || "Payment verification failed");
+              }
+
+              toast.success("Subscription activated successfully!");
+              onSuccess();
+            } catch (verifyErr) {
+              console.error("Error verifying payment:", verifyErr);
+              toast.error(verifyErr instanceof Error ? verifyErr.message : "Payment verification failed");
+              setIsLoading(false);
+              onFailure?.();
+            }
           },
           prefill: {
             email: session.user.email,
