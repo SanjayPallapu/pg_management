@@ -17,6 +17,8 @@ const getPlanDurationDays = (plan: PlanKey) => {
   return 30;
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,8 +50,8 @@ Deno.serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userSupabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) {
+    const { data: userData, error: userError } = await userSupabase.auth.getUser(token);
+    if (userError || !userData?.user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -64,14 +66,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = userData.user.id;
     const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
-    const subscriptionRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${razorpay_subscription_id}`, {
-      headers: { Authorization: `Basic ${credentials}` },
-    });
-    const subscription = await subscriptionRes.json();
+    let subscriptionRes: Response | null = null;
+    let subscription: any = null;
 
-    if (!subscriptionRes.ok || !subscription?.id) {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      subscriptionRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${razorpay_subscription_id}`, {
+        headers: { Authorization: `Basic ${credentials}` },
+      });
+      subscription = await subscriptionRes.json();
+
+      if (!subscriptionRes.ok || ["authenticated", "active"].includes(String(subscription?.status || ""))) {
+        break;
+      }
+
+      await sleep(1200);
+    }
+
+    if (!subscriptionRes?.ok || !subscription?.id) {
       return new Response(JSON.stringify({ error: subscription?.error?.description || "Unable to verify subscription" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

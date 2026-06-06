@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { toast } from "sonner";
 import type { SubscriptionPlanKey } from "@/types/pg";
@@ -52,6 +53,20 @@ interface RazorpayOptions {
   onFailure?: () => void;
 }
 
+const getFunctionErrorMessage = async (error: unknown, fallback: string) => {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = await error.context.json();
+      return body?.error || body?.message || fallback;
+    } catch {
+      return error.message || fallback;
+    }
+  }
+
+  if (error instanceof Error) return error.message || fallback;
+  return fallback;
+};
+
 export const useRazorpay = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -93,7 +108,7 @@ export const useRazorpay = () => {
 
         if (error) {
           console.error("Edge function error:", error);
-          throw new Error(error?.message || "Failed to initiate payment. Please try later");
+          throw new Error(await getFunctionErrorMessage(error, "Failed to initiate payment. Please try later"));
         }
 
         if (!data?.subscription_id) {
@@ -118,7 +133,9 @@ export const useRazorpay = () => {
               });
 
               if (syncError || !syncData?.success) {
-                throw new Error(syncError?.message || syncData?.error || "Subscription authorization failed");
+                throw new Error(syncError
+                  ? await getFunctionErrorMessage(syncError, "Subscription authorization failed")
+                  : syncData?.error || "Subscription authorization failed");
               }
 
               toast.success("Free trial activated. Auto-renewal is authorized.");
@@ -148,7 +165,7 @@ export const useRazorpay = () => {
         const razorpay = new window.Razorpay(options);
         razorpay.on("payment.failed", (response: RazorpayFailureResponse) => {
           console.error("Payment failed:", response.error);
-          toast.error("Payment failed. Please try again.");
+          toast.error(response.error?.description || response.error?.reason || "Payment failed. Please try again.");
           setIsLoading(false);
           onFailure?.();
         });
