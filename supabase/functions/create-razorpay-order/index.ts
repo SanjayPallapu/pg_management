@@ -8,9 +8,9 @@ const corsHeaders = {
 
 type PlanKey = "monthly" | "quarterly" | "yearly";
 
-const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "quarterly" | "yearly"; interval: number; totalCount: number; label: string }> = {
+const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly"; interval: number; totalCount: number; label: string }> = {
   monthly: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Monthly" },
-  quarterly: { amount: 269900, period: "quarterly", interval: 1, totalCount: 40, label: "Quarterly" },
+  quarterly: { amount: 269900, period: "monthly", interval: 3, totalCount: 40, label: "Quarterly" },
   yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Yearly" },
 };
 
@@ -62,6 +62,45 @@ async function createOrFetchPlan(credentials: string, plan: PlanKey) {
   }
 
   return planJson.id as string;
+}
+
+async function createSubscription(
+  credentials: string,
+  planId: string,
+  cfg: (typeof PLAN_CONFIG)[PlanKey],
+  planKey: PlanKey,
+  userId: string,
+  options: { useTrialStart: boolean },
+) {
+  const body: Record<string, unknown> = {
+    plan_id: planId,
+    total_count: cfg.totalCount,
+    quantity: 1,
+    customer_notify: true,
+    notes: {
+      user_id: userId,
+      plan_key: planKey,
+      trial_days: String(TRIAL_DAYS),
+    },
+  };
+
+  if (options.useTrialStart) {
+    const startAt = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
+    body.start_at = startAt;
+    body.expire_by = startAt + 7 * 24 * 60 * 60;
+  }
+
+  const res = await fetch("https://api.razorpay.com/v1/subscriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = await res.json();
+  return { res, json };
 }
 
 Deno.serve(async (req) => {
@@ -118,31 +157,15 @@ Deno.serve(async (req) => {
     const planId = await createOrFetchPlan(credentials, planKey);
     const cfg = PLAN_CONFIG[planKey];
 
-    const startAt = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
-    const expireBy = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+    const { res: subscriptionRes, json: subscriptionJson } = await createSubscription(
+      credentials,
+      planId,
+      cfg,
+      planKey,
+      userId,
+      { useTrialStart: true },
+    );
 
-    const subscriptionRes = await fetch("https://api.razorpay.com/v1/subscriptions", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        plan_id: planId,
-        total_count: cfg.totalCount,
-        quantity: 1,
-        customer_notify: true,
-        start_at: startAt,
-        expire_by: expireBy,
-        notes: {
-          user_id: userId,
-          plan_key: planKey,
-          trial_days: String(TRIAL_DAYS),
-        },
-      }),
-    });
-
-    const subscriptionJson = await subscriptionRes.json();
     if (!subscriptionRes.ok || !subscriptionJson?.id) {
       throw new Error(subscriptionJson?.error?.description || "Failed to create Razorpay subscription");
     }

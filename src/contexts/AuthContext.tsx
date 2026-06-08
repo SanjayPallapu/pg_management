@@ -186,16 +186,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = useCallback(async () => {
     const redirectTo = `${window.location.origin}/`;
+    sessionStorage.setItem('isNewSignup', 'true');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
+        scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
         queryParams: {
           access_type: 'offline',
           prompt: 'select_account',
         },
       },
     });
+    if (error) {
+      sessionStorage.removeItem('isNewSignup');
+    }
     return { error };
   }, []);
 

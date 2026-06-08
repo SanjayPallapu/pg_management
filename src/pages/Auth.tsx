@@ -26,6 +26,23 @@ const signupSchema = z.object({
   city: z.string().min(2, "Please enter your city")
 });
 
+const getGoogleAuthErrorMessage = (message: string) => {
+  let readableMessage = message;
+
+  try {
+    const parsed = JSON.parse(message);
+    readableMessage = parsed?.msg || parsed?.message || parsed?.error_description || message;
+  } catch {
+    readableMessage = message;
+  }
+
+  const normalized = readableMessage.toLowerCase();
+  if (normalized.includes("unsupported provider") || normalized.includes("provider is not enabled")) {
+    return "Google login is not enabled in this Supabase project. Enable the Google provider in Supabase Auth settings, then try again.";
+  }
+  return readableMessage || "Google login failed. Please try email sign in.";
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
@@ -157,7 +174,7 @@ const Auth = () => {
     const { error } = await signInWithGoogle();
     if (error) {
       setIsGoogleSubmitting(false);
-      toast.error(error.message);
+      toast.error(getGoogleAuthErrorMessage(error.message));
     }
   };
 
