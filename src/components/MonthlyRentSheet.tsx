@@ -93,7 +93,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
-  const [acSectionOpen, setAcSectionOpen] = useState(true);
+  const [acSectionOpen, setAcSectionOpen] = useState(false);
+  const [previousDuesOpen, setPreviousDuesOpen] = useState(true);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
@@ -430,6 +431,37 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       count: overdueCount,
     };
   }, [selectedMonth, selectedYear, payments, rooms]);
+  const previousOverdueCollections = useMemo(() => {
+    let prevMonth = selectedMonth - 1;
+    let prevYear = selectedYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear = selectedYear - 1;
+    }
+
+    let count = 0;
+    let total = 0;
+    rooms.forEach((room) => {
+      room.tenants.forEach((tenant) => {
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)) return;
+
+        const payment = payments.find((p) => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear);
+        const currentMonthEntries =
+          payment?.paymentEntries?.filter((entry) => {
+            const entryDate = new Date(entry.date);
+            return entryDate.getMonth() + 1 === selectedMonth && entryDate.getFullYear() === selectedYear;
+          }) || [];
+
+        if (currentMonthEntries.length > 0) {
+          count += 1;
+          total += currentMonthEntries.reduce((sum, entry) => sum + entry.amount, 0);
+        }
+      });
+    });
+
+    return { count, total };
+  }, [payments, rooms, selectedMonth, selectedYear]);
+  const showPreviousDuesPanel = previousMonthOverdue.count > 0 || previousOverdueCollections.count > 0;
   const stats = useMemo(() => {
     // Exclude locked tenants AND left tenants from stats
     const today = new Date();
@@ -931,6 +963,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             month={selectedMonth}
             year={selectedYear}
             onSelect={(roomNo) => {
+              setPreviousDuesOpen(false);
+              setAcSectionOpen(false);
               setSearchQuery(roomNo);
               setTimeout(() => {
                 const el = document.querySelector(`[data-room-no="${roomNo}"]`);
@@ -939,13 +973,38 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             }}
           />
 
-          {/* Previous Month Overdue Card - Interactive */}
-          <div className="mb-4">
-            <PreviousMonthOverdueCard />
-          </div>
-
-          {/* Overdue Paid Card - shows previous month overdue that was paid this month */}
-          <OverduePaidCard rooms={rooms} />
+          {showPreviousDuesPanel && (
+            <Collapsible open={previousDuesOpen} onOpenChange={setPreviousDuesOpen} className="mb-4">
+              <Card className="border-amber-500/25 bg-amber-500/5">
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-3 py-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10">
+                        <History className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">Previous Dues</div>
+                        <div className="text-xs text-muted-foreground">
+                          {previousMonthOverdue.count > 0
+                            ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
+                            : "No pending dues"}
+                          {previousOverdueCollections.count > 0 &&
+                            ` · ${previousOverdueCollections.count} collected · ₹${previousOverdueCollections.total.toLocaleString()}`}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", previousDuesOpen && "rotate-180")} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-3 px-3 pb-3 pt-0">
+                    <PreviousMonthOverdueCard />
+                    <OverduePaidCard rooms={rooms} />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
 
           {/* AC Electricity */}
           {acRooms.length > 0 && (
@@ -1010,6 +1069,26 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           </div>
 
           <div className="space-y-2">
+            {filteredTenants.length === 0 && (
+              <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-sm font-medium">
+                  {searchQuery.trim() ? "No matching tenants" : "No tenants for this month"}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {searchQuery.trim()
+                    ? "Clear the search or choose another room number."
+                    : "Add tenants in Rooms, or change the selected month."}
+                </div>
+                {searchQuery.trim() && (
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => setSearchQuery("")}>
+                    Clear Search
+                  </Button>
+                )}
+              </div>
+            )}
             {filteredTenants.map((tenant) => {
               const isPartial = tenant.paymentCategory === "partial";
               // Use pro-rata effective rent if applicable

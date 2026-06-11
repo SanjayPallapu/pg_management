@@ -19,6 +19,7 @@ const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 import SplashScreen from "./components/SplashScreen";
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -175,7 +176,9 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <AppContent />
+            <AppErrorBoundary>
+              <AppContent />
+            </AppErrorBoundary>
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
