@@ -35,6 +35,12 @@ interface PaymentReminderDialogProps {
   reminderData: ReminderInputData | null;
 }
 
+type NavigatorWithFileShare = Navigator & {
+  canShare?: (data?: ShareData) => boolean;
+};
+
+const isAbortError = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
+
 export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: PaymentReminderDialogProps) => {
   const { currentPG } = usePG();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -99,6 +105,22 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     }
   }, [reminderData, templateData]);
 
+  const getOrCreateReminderImage = useCallback(async () => {
+    if (generatedImage) return generatedImage;
+    if (!reminderData || !templateData || !reminderRef.current) {
+      throw new Error('Reminder data is not ready');
+    }
+
+    setIsGenerating(true);
+    try {
+      const dataUrl = await generateReceiptImage(reminderRef.current);
+      setGeneratedImage(dataUrl);
+      return dataUrl;
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [generatedImage, reminderData, templateData]);
+
   const handleDownload = () => {
     if (!generatedImage || !reminderData) return;
     downloadReceiptImage(generatedImage, `reminder-${reminderData.tenantName}`);
@@ -129,25 +151,26 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       let phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
       await navigator.clipboard.writeText(displayPhone);
-      const navAny = navigator as any;
-      if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
-        await navAny.share({ files: [file] });
+      const shareNavigator = navigator as NavigatorWithFileShare;
+      if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
+        await shareNavigator.share({ files: [file] });
       } else {
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
         window.location.href = `https://wa.me/${phone}`;
       }
-    } catch (e: any) {
-      if (e?.name !== 'AbortError') toast({ title: 'Share failed', variant: 'destructive' });
+    } catch (e) {
+      if (!isAbortError(e)) toast({ title: 'Share failed', variant: 'destructive' });
     }
   };
 
   const shareToWhatsApp = async () => {
-    if (!generatedImage || !reminderData) return;
+    if (!reminderData) return;
 
     setIsSending(true);
     try {
-      const res = await fetch(generatedImage);
+      const image = await getOrCreateReminderImage();
+      const res = await fetch(image);
       const blob = await res.blob();
       const safeName = reminderData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `reminder-${safeName}.png`, { type: 'image/png' });
@@ -164,18 +187,18 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      const navAny = navigator as any;
-      if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
+      const shareNavigator = navigator as NavigatorWithFileShare;
+      if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
         // Share only the image file, no text
-        await navAny.share({ files: [file] });
+        await shareNavigator.share({ files: [file] });
       } else {
         // Fallback: download image and open WhatsApp chat (no pre-filled text)
-        downloadReceiptImage(generatedImage, `reminder-${reminderData.tenantName}`);
+        downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
         window.location.href = `https://wa.me/${phone}`;
       }
-    } catch (e: any) {
-      if (e?.name !== 'AbortError') {
+    } catch (e) {
+      if (!isAbortError(e)) {
         toast({ title: 'Share failed', variant: 'destructive' });
       }
     } finally {
@@ -351,19 +374,17 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
           )}
 
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-            {generatedImage && (
-              <Button 
-                onClick={shareToWhatsApp} 
-                disabled={isSending} 
-                className="w-full gap-2 bg-green-600 hover:bg-green-700 h-11"
-              >
-                {isSending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />Sending...</>
-                ) : (
-                  <><MessageCircle className="h-4 w-4" />Send to WhatsApp</>
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={shareToWhatsApp}
+              disabled={isSending || isGenerating || !templateData}
+              className="w-full gap-2 bg-green-600 hover:bg-green-700 h-11"
+            >
+              {isSending || isGenerating ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />Preparing...</>
+              ) : (
+                <><MessageCircle className="h-4 w-4" />{generatedImage ? 'Send to WhatsApp' : 'Generate & Send to WhatsApp'}</>
+              )}
+            </Button>
             <AlertDialogCancel onClick={handleClose} className="w-full h-11 mt-0">
               Close
             </AlertDialogCancel>

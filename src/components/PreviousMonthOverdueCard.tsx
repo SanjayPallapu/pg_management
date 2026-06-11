@@ -41,6 +41,41 @@ interface StillPendingTenant {
   paymentEntries: PaymentEntry[];
 }
 
+interface OverdueReceiptData {
+  tenantName: string;
+  tenantPhone: string;
+  paymentMode: string;
+  paymentDate: string;
+  joiningDate: string;
+  forMonth: string;
+  roomNo: string;
+  sharingType: string;
+  amount: number;
+  amountPaid: number;
+  isFullPayment: boolean;
+  remainingBalance?: number;
+  tenantId?: string;
+  paymentEntries?: PaymentEntry[];
+  pgName?: string;
+  pgLogoUrl?: string;
+}
+
+interface OverdueReminderData {
+  tenantName: string;
+  tenantPhone: string;
+  joiningDate: string;
+  forMonth: string;
+  roomNo: string;
+  sharingType: string;
+  amount: number;
+  amountPaid?: number;
+  balance: number;
+  overrideMonth?: number;
+  overrideYear?: number;
+  pgName?: string;
+  pgLogoUrl?: string;
+}
+
 export const PreviousMonthOverdueCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, upsertPayment } = useTenantPayments();
@@ -60,8 +95,8 @@ export const PreviousMonthOverdueCard = () => {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [selectedPendingTenant, setSelectedPendingTenant] = useState<StillPendingTenant | null>(null);
-  const [receiptData, setReceiptData] = useState<any>(null);
-  const [reminderData, setReminderData] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<OverdueReceiptData | null>(null);
+  const [reminderData, setReminderData] = useState<OverdueReminderData | null>(null);
 
   useBackGesture(sheetOpen, () => setSheetOpen(false));
   useBackGesture(pendingSheetOpen, () => setPendingSheetOpen(false));
@@ -266,6 +301,7 @@ export const PreviousMonthOverdueCard = () => {
     existingPaid: number;
     discount?: number;
     notes?: string;
+    collectedBy?: string;
   }) => {
     const discount = data.discount || 0;
     const effectiveMonthlyRent = data.monthlyRent - discount;
@@ -284,7 +320,7 @@ export const PreviousMonthOverdueCard = () => {
       date: data.date,
       type: isFullPayment ? 'full' : 'partial',
       mode: data.mode,
-      collectedBy: (data as any).collectedBy || collectors[0]?.displayName || 'Sanjay',
+      collectedBy: data.collectedBy || collectors[0]?.displayName || 'Sanjay',
     };
 
     // Combine notes
@@ -418,7 +454,7 @@ export const PreviousMonthOverdueCard = () => {
         className="cursor-pointer transition-all hover:shadow-md border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10"
         onClick={() => setSheetOpen(true)}
       >
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-amber-600" />
@@ -426,9 +462,9 @@ export const PreviousMonthOverdueCard = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="text-2xl font-bold text-paid">₹{totalCollected.toLocaleString()}</div>
+              <div className="text-lg font-semibold text-paid">₹{totalCollected.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Collected this month</p>
             </div>
             <div 
@@ -438,7 +474,7 @@ export const PreviousMonthOverdueCard = () => {
                 setPendingSheetOpen(true);
               }}
             >
-              <div className="text-2xl font-bold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
+              <div className="text-lg font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground underline decoration-dashed">Still pending →</p>
             </div>
           </div>
@@ -447,11 +483,11 @@ export const PreviousMonthOverdueCard = () => {
             <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/50">
               <div className="flex items-center gap-1">
                 <UpiLogo className="h-4 w-4" />
-                <span className="text-sm font-medium">₹{upiTotal.toLocaleString()}</span>
+                <span className="text-xs font-medium">₹{upiTotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-1">
                 <CashLogo className="h-4 w-4" />
-                <span className="text-sm font-medium">₹{cashTotal.toLocaleString()}</span>
+                <span className="text-xs font-medium">₹{cashTotal.toLocaleString()}</span>
               </div>
             </div>
           )}
@@ -485,7 +521,7 @@ export const PreviousMonthOverdueCard = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-paid/10 rounded-lg">
                   <div className="text-xs text-muted-foreground">Total Collected</div>
-                  <div className="text-lg font-bold text-paid">₹{totalCollected.toLocaleString()}</div>
+                  <div className="text-base font-semibold text-paid">₹{totalCollected.toLocaleString()}</div>
                   <div className="text-xs text-muted-foreground mt-1">{collectedData.length} tenant(s)</div>
                 </div>
                 <div 
@@ -496,7 +532,7 @@ export const PreviousMonthOverdueCard = () => {
                   }}
                 >
                   <div className="text-xs text-muted-foreground">Still Pending</div>
-                  <div className="text-lg font-bold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
+                  <div className="text-base font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
                   <div className="text-xs text-muted-foreground mt-1 underline">View details →</div>
                 </div>
               </div>
@@ -507,14 +543,14 @@ export const PreviousMonthOverdueCard = () => {
                     <UpiLogo className="h-4 w-4" />
                     <span className="text-xs text-muted-foreground">UPI</span>
                   </div>
-                  <div className="text-lg font-bold">₹{upiTotal.toLocaleString()}</div>
+                  <div className="text-base font-semibold">₹{upiTotal.toLocaleString()}</div>
                 </div>
                 <div className="p-3 border rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <CashLogo className="h-4 w-4" />
                     <span className="text-xs text-muted-foreground">Cash</span>
                   </div>
-                  <div className="text-lg font-bold">₹{cashTotal.toLocaleString()}</div>
+                  <div className="text-base font-semibold">₹{cashTotal.toLocaleString()}</div>
                 </div>
               </div>
 
@@ -678,7 +714,7 @@ export const PreviousMonthOverdueCard = () => {
             <div className="space-y-3 pr-2">
               <div className="p-3 bg-amber-500/10 rounded-lg">
                 <div className="text-xs text-muted-foreground">Total Pending</div>
-                <div className="text-2xl font-bold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
+                <div className="text-lg font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
                 <div className="text-xs text-muted-foreground mt-1">{stillPendingTenants.length} tenant(s)</div>
               </div>
 

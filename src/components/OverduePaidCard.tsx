@@ -44,13 +44,30 @@ interface StillPendingTenant {
   status: 'Pending' | 'Partial';
 }
 
+interface OverduePaidReceiptData {
+  tenantName: string;
+  tenantPhone: string;
+  paymentMode: string;
+  paymentDate: string;
+  joiningDate: string;
+  forMonth: string;
+  roomNo: string;
+  sharingType: string;
+  amount: number;
+  amountPaid: number;
+  isFullPayment: boolean;
+  remainingBalance?: number;
+  tenantId?: string;
+  paymentEntries?: PaymentEntry[];
+}
+
 export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
-  const [receiptData, setReceiptData] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<OverduePaidReceiptData | null>(null);
   const [stillPendingSheetOpen, setStillPendingSheetOpen] = useState(false);
 
   // Calculate previous month
@@ -242,7 +259,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
           <div className="grid grid-cols-2 gap-3 mt-4">
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-xs text-muted-foreground">Total Collected</p>
-              <p className="text-xl font-bold text-paid">₹{totalCollected.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-paid">₹{totalCollected.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{overduePaidTenants.length} tenant(s)</p>
             </div>
             <div 
@@ -255,7 +272,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
               }}
             >
               <p className="text-xs text-muted-foreground">Still Pending</p>
-              <p className="text-xl font-bold text-pending">₹{stillPendingTotal.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-pending">₹{stillPendingTotal.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">From {months[prevMonth - 1]}</p>
             </div>
           </div>
@@ -266,13 +283,13 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <span className="text-blue-600 dark:text-blue-400 text-[10px]">UPI •</span> UPI
               </p>
-              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">₹{upiTotal.toLocaleString()}</p>
+              <p className="text-base font-semibold text-blue-600 dark:text-blue-400">₹{upiTotal.toLocaleString()}</p>
             </div>
             <div className="p-3 rounded-lg bg-green-500/10">
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <span className="text-green-600 dark:text-green-400 text-[10px]">💵</span> Cash
               </p>
-              <p className="text-lg font-bold text-green-600 dark:text-green-400">₹{cashTotal.toLocaleString()}</p>
+              <p className="text-base font-semibold text-green-600 dark:text-green-400">₹{cashTotal.toLocaleString()}</p>
             </div>
           </div>
 

@@ -94,7 +94,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
   const [acSectionOpen, setAcSectionOpen] = useState(false);
-  const [previousDuesOpen, setPreviousDuesOpen] = useState(true);
+  const [previousDuesOpen, setPreviousDuesOpen] = useState(false);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
@@ -462,6 +462,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     return { count, total };
   }, [payments, rooms, selectedMonth, selectedYear]);
   const showPreviousDuesPanel = previousMonthOverdue.count > 0 || previousOverdueCollections.count > 0;
+  const activeRoomFilter = useMemo(
+    () => rooms.some((room) => room.roomNo.toLowerCase() === searchQuery.trim().toLowerCase()),
+    [rooms, searchQuery],
+  );
   const stats = useMemo(() => {
     // Exclude locked tenants AND left tenants from stats
     const today = new Date();
@@ -973,7 +977,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             }}
           />
 
-          {showPreviousDuesPanel && (
+          {showPreviousDuesPanel && !activeRoomFilter && (
             <Collapsible open={previousDuesOpen} onOpenChange={setPreviousDuesOpen} className="mb-4">
               <Card className="border-amber-500/25 bg-amber-500/5">
                 <CollapsibleTrigger asChild>
@@ -1007,7 +1011,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           )}
 
           {/* AC Electricity */}
-          {acRooms.length > 0 && (
+          {acRooms.length > 0 && !activeRoomFilter && (
             <Collapsible open={acSectionOpen} onOpenChange={setAcSectionOpen} className="mb-4">
               <Card className="border-cyan-500/25 bg-cyan-500/5">
                 <CollapsibleTrigger asChild>
