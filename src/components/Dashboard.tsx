@@ -297,6 +297,62 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Financial Section - Collapsible - now comes after Bills & Budget */}
+        <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
+          <CollapsibleTrigger
+            className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
+              financialsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Financials</span>
+                <span className="text-xs text-muted-foreground">Payments, deposits, building rent</span>
+              </div>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? "rotate-180" : ""}`}
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <CollectedByCard />
+
+              {/* Payment Mode Card */}
+              <PaymentModeCard rooms={rooms} />
+
+              {/* Total Collected Card */}
+              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+
+              {/* All Collections Card - UPI/Cash breakdown */}
+              <AllCollectedCard rooms={rooms} />
+
+              {/* Security Deposit Card - Below PG Expenses */}
+              <SecurityDepositCard rooms={rooms} />
+
+              {/* Previous Month Overdue Card */}
+              <PreviousMonthOverdueCard />
+
+              {/* Overdue Collected Card - shows previous month overdue paid this month */}
+              <OverduePaidCard rooms={rooms} />
+
+              {/* Building Rent Card */}
+              <BuildingRentCard />
+
+              {/* Collected By Card - shows who collected payments */}
+
+              {/* Day Guest Revenue Card - right after Building Rent, always loads with it */}
+              <DayGuestRevenueCard
+                onClick={() => setDayGuestSheetOpen(true)}
+                stats={dayGuestStats ?? undefined}
+                isLoading={dayGuestStatsLoading}
+              />
+
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Split KPI Cards */}
         <div className="grid gap-3 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
@@ -391,62 +447,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Financial Section - Collapsible */}
-        <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
-          <CollapsibleTrigger
-            className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
-              financialsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" />
-              <div className="text-left">
-                <span className="block font-semibold text-sm">Financials</span>
-                <span className="text-xs text-muted-foreground">Payments, deposits, building rent</span>
-              </div>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? "rotate-180" : ""}`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              <CollectedByCard />
-
-              {/* Payment Mode Card */}
-              <PaymentModeCard rooms={rooms} />
-
-              {/* Total Collected Card */}
-              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
-
-              {/* All Collections Card - UPI/Cash breakdown */}
-              <AllCollectedCard rooms={rooms} />
-
-              {/* Security Deposit Card - Below PG Expenses */}
-              <SecurityDepositCard rooms={rooms} />
-
-              {/* Previous Month Overdue Card */}
-              <PreviousMonthOverdueCard />
-
-              {/* Overdue Collected Card - shows previous month overdue paid this month */}
-              <OverduePaidCard rooms={rooms} />
-
-              {/* Building Rent Card */}
-              <BuildingRentCard />
-
-              {/* Collected By Card - shows who collected payments */}
-
-              {/* Day Guest Revenue Card - right after Building Rent, always loads with it */}
-              <DayGuestRevenueCard
-                onClick={() => setDayGuestSheetOpen(true)}
-                stats={dayGuestStats ?? undefined}
-                isLoading={dayGuestStatsLoading}
-              />
-
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
         {/* Tenants Section - Collapsible */}
         <Collapsible open={tenantsOpen} onOpenChange={setTenantsOpen}>
           <CollapsibleTrigger
@@ -501,9 +501,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <Collapsible open={toolsOpen} onOpenChange={setToolsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
             <div className="flex items-center gap-2">
-              <Settings className={`h-4 w-4 text-primary transition-transform duration-500 ${toolsOpen ? "rotate-180" : ""}`} />
+              <Settings className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">Tools & Admin</span>
             </div>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3">
