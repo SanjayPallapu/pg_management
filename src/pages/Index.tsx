@@ -222,7 +222,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))]">
-      <div className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+      <div className="border-b border-border/60 bg-background">
         <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />

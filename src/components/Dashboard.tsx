@@ -393,7 +393,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
           <CollapsibleTrigger
             className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
-              financialsOpen ? "sticky top-[4.75rem] z-30 shadow-md shadow-background/60" : ""
+              financialsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
             }`}
           >
             <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <Collapsible open={tenantsOpen} onOpenChange={setTenantsOpen}>
           <CollapsibleTrigger
             className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
-              tenantsOpen ? "sticky top-[4.75rem] z-30 shadow-md shadow-background/60" : ""
+              tenantsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
             }`}
           >
             <div className="flex items-center gap-2">
