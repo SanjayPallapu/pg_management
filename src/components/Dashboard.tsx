@@ -279,7 +279,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
         {/* Bills & Budget Dashboard - replaces previous Balance/Enquiry summary */}
         <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen} defaultOpen>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+          <CollapsibleTrigger className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-4 ${
+            overviewOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
+          }`}>
             <div className="flex items-center gap-2">
               <Scale className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">Bills & Budget</span>
