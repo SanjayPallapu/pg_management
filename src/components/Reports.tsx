@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Room } from '@/types';
-import { AlertTriangle, CheckCircle, MapPin, Users } from 'lucide-react';
+import { AlertTriangle, BedDouble, CheckCircle, IndianRupee, MapPin, Users } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
@@ -133,24 +133,66 @@ export const Reports = ({ rooms }: ReportsProps) => {
   
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return <div className="space-y-4">
-      <div>
-        <h2 className="font-bold tracking-tight text-xl">Reports</h2>
-        <p className="text-muted-foreground">
-          {monthNames[selectedMonth - 1]} {selectedYear} - Detailed insights and analytics
-        </p>
+      <div className="rounded-xl border bg-card p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Reports</p>
+        <h2 className="mt-1 text-xl font-bold tracking-tight">{monthNames[selectedMonth - 1]} {selectedYear} health check</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Collections, vacant beds and dues in one place.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Collected</span>
+              <CheckCircle className="h-4 w-4 text-paid" />
+            </div>
+            <p className="mt-2 text-xl font-bold text-paid">₹{rentCollected.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">{paidTenants.length + partialTenants.length} tenant payments</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Pending</span>
+              <IndianRupee className="h-4 w-4 text-pending" />
+            </div>
+            <p className="mt-2 text-xl font-bold text-pending">₹{pendingRent.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">{sortedPendingTenants.length} tenants</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Vacant rooms</span>
+              <AlertTriangle className="h-4 w-4 text-vacant" />
+            </div>
+            <p className="mt-2 text-xl font-bold">{vacantRooms.length}</p>
+            <p className="text-xs text-muted-foreground">need tenant filling</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Open beds</span>
+              <BedDouble className="h-4 w-4 text-warning" />
+            </div>
+            <p className="mt-2 text-xl font-bold">{totalAvailableBeds}</p>
+            <p className="text-xs text-muted-foreground">across all rooms</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Vacant Rooms Report */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-5 w-5 text-vacant" />
               Vacant Rooms ({vacantRooms.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-4">
-            {vacantRooms.length === 0 ? <p className="text-muted-foreground">All rooms have at least one tenant!</p> : <div className="space-y-2">
+            {vacantRooms.length === 0 ? <p className="text-muted-foreground">All rooms have at least one tenant.</p> : <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1 scrollbar-hide">
                 {vacantRooms.map(room => <div key={room.roomNo} className="flex items-center justify-between p-3 bg-vacant-muted rounded-lg">
                     <div>
                       <div className="font-semibold">Room {room.roomNo}</div>
@@ -171,13 +213,13 @@ export const Reports = ({ rooms }: ReportsProps) => {
         {/* Available Beds Report - Grouped by Sharing Type */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-5 w-5 text-warning" />
               Available Beds ({totalAvailableBeds})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-4">
-            <div className="space-y-4">
+            <div className="max-h-[420px] space-y-4 overflow-y-auto pr-1 scrollbar-hide">
               {Object.keys(bedsByShareType)
                 .map(Number)
                 .sort((a, b) => b - a) // Sort by sharing type descending (5S, 4S, 3S...)
@@ -237,7 +279,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
         {/* Pending Rent Report - Sorted by due date */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-5 w-5 text-pending" />
               Pending Rent ({sortedPendingTenants.length} tenants)
             </CardTitle>
@@ -246,7 +288,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
             {sortedPendingTenants.length === 0 ? (
               <p className="text-muted-foreground">All tenants have paid rent for {monthNames[selectedMonth - 1]}!</p>
             ) : (
-              <div className="space-y-2">
+              <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1 scrollbar-hide">
                 {sortedPendingTenants.map(tenant => {
                   const isPartial = tenant.paymentCategory === 'partial';
                   const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
@@ -344,7 +386,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
         {/* Monthly Collection Summary */}
         <Card>
           <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle className="h-5 w-5 text-paid" />
               {monthNames[selectedMonth - 1]} {selectedYear} Collection
             </CardTitle>

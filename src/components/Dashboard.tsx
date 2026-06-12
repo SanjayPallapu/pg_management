@@ -75,10 +75,15 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   // Collapsible section states
   const pendingTenantsRef = useRef<PendingTenantsCardRef>(null);
-  const [financialsOpen, setFinancialsOpen] = useState(true);
-  const [tenantsOpen, setTenantsOpen] = useState(true);
+  const [financialsOpen, setFinancialsOpen] = useState(false);
+  const [tenantsOpen, setTenantsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
+
+  const openPendingTenants = () => {
+    setTenantsOpen(true);
+    window.setTimeout(() => pendingTenantsRef.current?.openSheet(), 0);
+  };
 
   const { rentCollected, pendingRent } = useRentCalculations({
     selectedMonth,
@@ -193,6 +198,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const totalPotentialAdditionalRevenue = roomStats.reduce((sum, r) => sum + r.potentialAdditionalRent, 0);
   const fullyOccupiedRooms = roomStats.filter((r) => r.isFull).length;
   const vacantRooms = roomStats.filter((r) => r.isEmpty).length;
+  const occupancyPercent = totalCapacity > 0 ? (totalOccupied / totalCapacity) * 100 : 0;
 
   // Current revenue from present tenants (sum of their monthly rents)
   const currentMonthlyRevenue = rooms.reduce((sum, room) => {
@@ -223,7 +229,53 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   return (
     <>
       <div className="space-y-6">
-        <CollectedByCard />
+        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Today overview</p>
+                <h2 className="mt-1 text-2xl font-bold leading-tight">₹{stats.pendingRent.toLocaleString()} pending</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  ₹{stats.rentCollected.toLocaleString()} collected · {totalEmptyBeds} empty bed{totalEmptyBeds === 1 ? "" : "s"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openPendingTenants}
+                className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm active:scale-95"
+              >
+                Collect
+              </button>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={openPendingTenants}
+                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
+              >
+                <p className="text-[11px] text-muted-foreground">Pending</p>
+                <p className="mt-1 text-base font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmptyBedsSheetOpen(true)}
+                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
+              >
+                <p className="text-[11px] text-muted-foreground">Occupancy</p>
+                <p className="mt-1 text-base font-bold">{Math.round(occupancyPercent)}%</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDayGuestSheetOpen(true)}
+                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
+              >
+                <p className="text-[11px] text-muted-foreground">Day guests</p>
+                <p className="mt-1 text-base font-bold">₹{(dayGuestStats?.collected || 0).toLocaleString()}</p>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Bills & Budget Dashboard - replaces previous Balance/Enquiry summary */}
         <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen} defaultOpen>
@@ -244,7 +296,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Collapsible>
 
         {/* Split KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
           <Card>
             <CardContent className="p-0">
@@ -270,9 +322,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                     <UserCheck className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="text-2xl font-bold">{stats.occupiedCount} rooms</div>
-                  <p className="text-xs text-muted-foreground">
-                    {((totalOccupied / totalCapacity) * 100).toFixed(1)}% total occupancy
-                  </p>
+                  <p className="text-xs text-muted-foreground">{occupancyPercent.toFixed(1)}% total occupancy</p>
                 </div>
               </div>
             </CardContent>
@@ -292,7 +342,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <p className="text-xs text-muted-foreground">This month</p>
                 </div>
                 {/* Right: Pending */}
-                <div className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={() => pendingTenantsRef.current?.openSheet()}>
+                <div className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={openPendingTenants}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Pending</span>
                     <AlertTriangle className="h-4 w-4 text-pending" />
@@ -341,10 +391,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
         {/* Financial Section - Collapsible */}
         <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3">
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Financials</span>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Financials</span>
+                <span className="text-xs text-muted-foreground">Payments, deposits, building rent</span>
+              </div>
             </div>
             <ChevronDown
               className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? "rotate-180" : ""}`}
@@ -352,6 +405,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <CollectedByCard />
+
               {/* Payment Mode Card */}
               <PaymentModeCard rooms={rooms} />
 
@@ -388,10 +443,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
         {/* Tenants Section - Collapsible */}
         <Collapsible open={tenantsOpen} onOpenChange={setTenantsOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Tenants</span>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Tenants</span>
+                <span className="text-xs text-muted-foreground">Pending, pricing and movement</span>
+              </div>
             </div>
             <ChevronDown
               className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${tenantsOpen ? "rotate-180" : ""}`}
