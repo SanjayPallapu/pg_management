@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import splashLogo from "@/assets/pg-box-logo.png";
+import splashLogo from "@/assets/splash-uploaded-logo.png";
 
 const SplashScreen = () => {
   // Floating bubbles
