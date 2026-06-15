@@ -1,11 +1,17 @@
 {
-  "name": "PG Management System",
+  "name": "PG Manager — PG & Hostel Management",
   "short_name": "PG Manager",
-  "description": "Professional PG management system to track rooms, tenants, and rent collection",
+  "description": "All-in-one PG management app for owners. Track rooms, tenants, collect rent via UPI, send WhatsApp reminders, generate receipts, manage bills & reports.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0361db",
-  "theme_color": "#0EA5E9",
+  "orientation": "portrait",
+  "background_color": "#f8f8fa",
+  "theme_color": "#7C85E8",
+  "categories": ["business", "finance", "productivity"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -18,6 +24,24 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "PG Manager Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "View PG overview and stats",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

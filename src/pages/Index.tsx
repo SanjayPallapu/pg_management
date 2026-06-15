@@ -1,4 +1,6 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+// Lazy load Settings page
+const SettingsPage = lazy(() => import("@/components/SettingsPage").then(m => ({ default: m.SettingsPage })));
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
@@ -36,6 +38,7 @@ import {
   Loader2,
   Mic,
   Bell,
+  Settings,
 } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,7 +63,7 @@ const Index = () => {
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 
   // Tab order for swipe navigation
-  const tabOrder = ["dashboard", "rooms", "rent-sheet", "reports"];
+  const tabOrder = ["dashboard", "rooms", "rent-sheet", "reports", "settings"];
   const { swipeHandlers } = useSwipeTabs({
     tabs: tabOrder,
     currentTab: activeTab,
@@ -73,6 +76,7 @@ const Index = () => {
       { value: "rooms", label: "Rooms", icon: Building },
       { value: "rent-sheet", label: "Rent", icon: Receipt },
       { value: "reports", label: "Reports", icon: FileBarChart },
+      { value: "settings", label: "Settings", icon: Settings },
     ],
     [],
   );
@@ -332,6 +336,12 @@ const Index = () => {
                 <Reports rooms={rooms} />
               </Suspense>
             </TabsContent>
+
+            <TabsContent value="settings" className="mt-3 space-y-4">
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SettingsPage />
+              </Suspense>
+            </TabsContent>
           </div>
         </Tabs>
 
@@ -370,7 +380,7 @@ const Index = () => {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-2xl bg-muted/40 p-1">
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5 rounded-2xl bg-muted/40 p-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.value;
@@ -379,7 +389,7 @@ const Index = () => {
                 key={item.value}
                 type="button"
                 onClick={() => setActiveTab(item.value)}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-medium transition-all ${
+                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground active:bg-background/80"
