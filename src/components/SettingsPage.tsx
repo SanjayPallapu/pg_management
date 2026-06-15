@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -34,6 +35,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionDetailsSheet } from "@/components/subscription";
 import { motion } from "framer-motion";
+import { ThreeDScene } from "@/components/ThreeDScene";
 
 const APP_VERSION = "1.0.0";
 const SUPPORT_EMAIL = "support@pgmanagement.app";
@@ -82,6 +84,7 @@ export const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const isDark = theme === "dark";
 
@@ -136,6 +139,10 @@ export const SettingsPage = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
   };
 
+  if (showHelp) {
+    return <HelpFAQ onBack={() => setShowHelp(false)} />;
+  }
+
   return (
     <>
       <motion.div
@@ -146,8 +153,12 @@ export const SettingsPage = () => {
       >
         {/* Profile Card */}
         <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/8 via-card to-card">
-            <CardContent className="p-5">
+          <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/8 via-card to-card relative">
+            {/* 3D Background */}
+            <div className="absolute right-0 top-0 h-full w-32 opacity-40">
+              <ThreeDScene variant="orbs" className="h-full w-full" />
+            </div>
+            <CardContent className="p-5 relative z-10">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
                   <User className="h-7 w-7 text-primary" />
@@ -258,7 +269,7 @@ export const SettingsPage = () => {
                 icon={<HelpCircle className="h-4 w-4 text-primary" />}
                 label="Help & FAQ"
                 description="Get answers to common questions"
-                onClick={() => window.open(`mailto:${SUPPORT_EMAIL}?subject=Help%20Request`, "_blank")}
+                onClick={() => setShowHelp(true)}
               />
               <SettingItem
                 icon={<Mail className="h-4 w-4 text-primary" />}

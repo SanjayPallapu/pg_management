@@ -17,7 +17,7 @@ import {
   Crown } from
 "lucide-react";
 import { motion } from "framer-motion";
-import appLogo from "@/assets/splash-uploaded-logo.png";
+import appLogo from "@/assets/pg-box-logo.png";
 import { SUBSCRIPTION_PLANS } from "@/types/pg";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FAQSection from "@/components/landing/FAQSection";

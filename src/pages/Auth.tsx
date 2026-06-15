@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import appLogo from "@/assets/splash-uploaded-logo.png";
+import appLogo from "@/assets/pg-box-logo.png";
 
 const authSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
@@ -217,8 +217,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6">
       <Card className="w-full max-w-md border-primary/20 shadow-lg shadow-primary/5">
         <CardHeader className="text-center px-6 pb-5 pt-6">
-          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-            <img src={appLogo} alt="PG logo" className="h-16 w-16 object-contain" decoding="async" />
+          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/15 to-indigo-500/15 ring-1 ring-primary/20 shadow-lg shadow-primary/10">
+            <img src={appLogo} alt="PG logo" className="h-16 w-16 object-contain rounded-xl" decoding="async" />
           </div>
           <CardTitle className="text-2xl">PG Management</CardTitle>
           <CardDescription className="text-sm font-medium">

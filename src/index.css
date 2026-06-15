@@ -230,3 +230,40 @@ All colors MUST be HSL.
 .overflow-x-hidden {
   overflow-x: hidden;
 }
+
+/* Premium glassmorphism card */
+.glass-card {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: hsl(var(--card) / 0.75);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+/* Premium gradient text */
+.text-gradient-primary {
+  background: linear-gradient(135deg, hsl(236 72% 70%), hsl(260 80% 65%), hsl(280 70% 60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth gradient backgrounds */
+.bg-gradient-premium {
+  background: linear-gradient(135deg, hsl(var(--background)), hsl(var(--primary) / 0.04), hsl(var(--background)));
+}
+
+/* Enhanced focus ring */
+.ring-premium {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15), 0 0 0 4px hsl(var(--primary) / 0.08);
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, hsl(var(--primary) / 0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}

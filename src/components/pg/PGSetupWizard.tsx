@@ -10,7 +10,7 @@ import { PGBrandingData } from '@/types/pg';
 import { usePGSetup } from '@/hooks/usePGSetup';
 import { usePG } from '@/contexts/PGContext';
 import { toast } from 'sonner';
-import ammaLogo from '@/assets/amma-logo-transparent.png';
+import pgBoxLogo from '@/assets/pg-box-logo.png';
 
 interface PGSetupWizardProps {
   onComplete: () => void;
@@ -202,10 +202,10 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
             <Card className="border-primary">
               <CardContent className="pt-4">
                 <div className="flex items-center gap-4 mb-4">
-                  <img src={ammaLogo} alt="Amma Logo" className="h-16 w-16 object-contain" />
+                  <img src={pgBoxLogo} alt="PG Logo" className="h-16 w-16 object-contain rounded-xl" />
                   <div>
-                    <h3 className="font-semibold">Amma Women's Hostel</h3>
-                    <p className="text-sm text-muted-foreground">{existingRoomCount} rooms • 3 floors</p>
+                    <h3 className="font-semibold">Your PG Property</h3>
+                    <p className="text-sm text-muted-foreground">{existingRoomCount} rooms found</p>
                   </div>
                 </div>
                 
