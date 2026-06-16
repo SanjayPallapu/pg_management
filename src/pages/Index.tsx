@@ -22,7 +22,7 @@ const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").th
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
-import { SubscriptionBadge, SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
+import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { Room } from "@/types";
 import {
   LayoutDashboard,
@@ -30,11 +30,8 @@ import {
   FileBarChart,
   Receipt,
   LogOut,
-  Shield,
-  User,
   History,
   CreditCard,
-  ExternalLink,
   Loader2,
   Mic,
   Bell,
@@ -231,10 +228,6 @@ const Index = () => {
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
             <MonthYearPicker />
-            {/* Mobile: show Upgrade right beside PG logo */}
-            <div className="flex items-center gap-1.5 sm:hidden">
-              <SubscriptionBadge />
-            </div>
             <div className="min-w-0 hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-sm font-bold leading-tight sm:text-base">
@@ -272,27 +265,6 @@ const Index = () => {
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleSignOut} title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>
-          </div>
-        </div>
-
-        <div className="mx-auto hidden w-full max-w-screen-2xl items-center justify-between gap-2 px-4 pb-2 sm:flex">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <SubscriptionBadge />
-            <div className="flex h-8 items-center gap-2 rounded-md bg-muted/60 px-2 text-xs text-muted-foreground">
-              {isAdmin ? <Shield className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
-              {isAdmin ? "Admin" : "Staff"}
-            </div>
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => window.open("https://pocket-parenthood-pro.vercel.app/bills", "_blank")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Bills
-              </Button>
-            )}
           </div>
         </div>
       </div>
