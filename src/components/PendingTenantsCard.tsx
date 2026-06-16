@@ -14,7 +14,7 @@ import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
 import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
-import { useElectricityReadings, calcAcTenantShares } from '@/hooks/useElectricityReadings';
+import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from '@/hooks/useElectricityReadings';
 import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
@@ -54,10 +54,12 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
     const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+    const apBill = calculateAPCommercialBill(units);
+    const totalAmount = apBill.totalBill;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const tenantShare = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity)
+    const tenantShare = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity, totalAmount)
       .find((share) => share.name === tenant.name);
     return tenantShare && tenantShare.share > 0 ? { units, unitPrice, share: tenantShare.share } : undefined;
   };
@@ -69,10 +71,12 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
     const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+    const apBill = calculateAPCommercialBill(units);
+    const totalAmount = apBill.totalBill;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
-    const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity);
+    const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity, totalAmount);
     const tenantShare = tenantShares.find((share) => share.name === tenant.name);
 
     if (!tenantShare || tenantShare.share <= 0) return undefined;
@@ -81,7 +85,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       roomNo: room.roomNo,
       units,
       unitPrice,
-      totalAmount: units * unitPrice,
+      totalAmount: totalAmount,
       tenants: tenantShares.map((share) => ({ name: `${share.name} (${share.daysStayed}d)`, share: share.share })),
       monthLabel: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
       pgName: currentPG?.name,

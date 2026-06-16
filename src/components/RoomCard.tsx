@@ -42,7 +42,7 @@ import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { format, differenceInDays } from "date-fns";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
-import { useElectricityReadings, calcAcTenantShares } from "@/hooks/useElectricityReadings";
+import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
   isTenantActiveNow,
@@ -348,10 +348,12 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
                   const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+                  const apBill = calculateAPCommercialBill(units);
+                  const totalAmount = apBill.totalBill;
                   const active = room.tenants.filter((t) =>
                     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
                   );
-                  const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity);
+                  const tenantShares = calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity, totalAmount);
                   const tenantShare = tenantShares.find((share) => share.name === tenant.name);
                   if (tenantShare && tenantShare.share > 0) {
                     acSurcharge = { units, unitPrice, share: tenantShare.share };
@@ -359,7 +361,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       roomNo: room.roomNo,
                       units,
                       unitPrice,
-                      totalAmount: units * unitPrice,
+                      totalAmount: totalAmount,
                       tenants: tenantShares.map((share) => ({ name: `${share.name} (${share.daysStayed}d)`, share: share.share })),
                       monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
                       pgName: currentPG?.name,

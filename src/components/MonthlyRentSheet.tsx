@@ -51,6 +51,7 @@ import {
   useElectricityReadings,
   calcAcTenantShares,
   calcCustomAcSplitShares,
+  calculateAPCommercialBill,
 } from "@/hooks/useElectricityReadings";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -505,8 +506,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const reading = acByRoom.get(room.id);
         const units = reading?.units ?? 0;
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
-        const total = units * unitPrice;
-        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity);
+        const apBill = calculateAPCommercialBill(units);
+        const total = apBill.totalBill;
+        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, total);
         return { room, activeTenants, units, unitPrice, total, tenantShares };
       });
   }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG?.electricityUnitPrice]);
@@ -532,11 +534,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       return;
     }
 
-    const total = draftUnits * draftUnitPrice;
+    const apBill = calculateAPCommercialBill(draftUnits);
+    const total = customSplitCount && customSplitCount > 0 ? draftUnits * draftUnitPrice : apBill.totalBill;
     const tenantShares =
       customSplitCount && customSplitCount > 0
         ? calcCustomAcSplitShares(total, customSplitCount)
-        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth, item.room.capacity);
+        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth, item.room.capacity, total);
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
@@ -1170,7 +1173,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   const activeTenants = room.tenants.filter((roomTenant) =>
                     isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, selectedYear, selectedMonth),
                   );
-                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity);
+                  const apBill = calculateAPCommercialBill(units);
+                  const totalAmount = apBill.totalBill;
+                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, totalAmount);
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
                   if (tenantShare && tenantShare.share > 0) {
@@ -1179,7 +1184,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       roomNo: room.roomNo,
                       units,
                       unitPrice,
-                      totalAmount: units * unitPrice,
+                      totalAmount: totalAmount,
                       tenants: tenantShares.map((shareItem) => ({
                         name: `${shareItem.name} (${shareItem.daysStayed}d)`,
                         share: shareItem.share,
@@ -1910,7 +1915,8 @@ const RentACRoomCard = ({
   const draftUnits = parseInt(unitsDraft) || 0;
   const draftUnitPrice = parseInt(priceDraft) || 0;
   const draftSplitCount = parseInt(splitCountDraft) || 0;
-  const draftTotal = draftUnits * draftUnitPrice;
+  const apBill = calculateAPCommercialBill(draftUnits);
+  const draftTotal = draftSplitCount > 0 ? draftUnits * draftUnitPrice : apBill.totalBill;
   const dayWiseShares = draftTotal > 0
     ? tenantShares.map((tenant) => ({
         ...tenant,

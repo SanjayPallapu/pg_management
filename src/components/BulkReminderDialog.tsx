@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format as fmtDate, addDays } from "date-fns";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
-import { useElectricityReadings, calcAcTenantShares } from "@/hooks/useElectricityReadings";
+import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 import { toast } from "@/hooks/use-toast";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
@@ -59,13 +59,15 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
     const unitPrice = reading?.unit_price ?? 12;
+    const apBill = calculateAPCommercialBill(units);
+    const totalAmount = apBill.totalBill;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );
     if (!active.some((t) => t.id === tenantId)) return 0;
     const tenant = active.find((t) => t.id === tenantId);
     if (!tenant) return 0;
-    return calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity)
+    return calcAcTenantShares(units, unitPrice, active, selectedYear, selectedMonth, room.capacity, totalAmount)
       .find((share) => share.name === tenant.name)?.share ?? 0;
   }, [acByRoom, selectedMonth, selectedYear]);
   const [messageType, setMessageType] = useState<"reminder" | "custom">("reminder");

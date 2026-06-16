@@ -155,6 +155,95 @@ export const getAcStayedDaysInMonth = (
   return Math.round((endNoon.getTime() - startNoon.getTime()) / msPerDay) + 1;
 };
 
+export interface APCalculationResult {
+  units: number;
+  slabBreakdown: {
+    slab: string;
+    units: number;
+    rate: number;
+    amount: number;
+  }[];
+  energyCharges: number;
+  fixedCharges: number;
+  totalBill: number;
+}
+
+export const calculateAPCommercialBill = (units: number): APCalculationResult => {
+  const breakdown: APCalculationResult["slabBreakdown"] = [];
+  let remaining = units;
+  let energyCharges = 0;
+
+  // Slab 1: 0-50 units @ ₹5.40
+  const s1Units = Math.min(remaining, 50);
+  if (s1Units > 0) {
+    const amt = s1Units * 5.40;
+    energyCharges += amt;
+    breakdown.push({ slab: "0-50 units", units: s1Units, rate: 5.40, amount: amt });
+    remaining -= s1Units;
+  } else {
+    breakdown.push({ slab: "0-50 units", units: 0, rate: 5.40, amount: 0 });
+  }
+
+  // Slab 2: 51-100 units @ ₹7.65
+  const s2Units = Math.min(remaining, 50);
+  if (s2Units > 0) {
+    const amt = s2Units * 7.65;
+    energyCharges += amt;
+    breakdown.push({ slab: "51-100 units", units: s2Units, rate: 7.65, amount: amt });
+    remaining -= s2Units;
+  } else {
+    breakdown.push({ slab: "51-100 units", units: 0, rate: 7.65, amount: 0 });
+  }
+
+  // Slab 3: 101-300 units @ ₹9.05
+  const s3Units = Math.min(remaining, 200);
+  if (s3Units > 0) {
+    const amt = s3Units * 9.05;
+    energyCharges += amt;
+    breakdown.push({ slab: "101-300 units", units: s3Units, rate: 9.05, amount: amt });
+    remaining -= s3Units;
+  } else {
+    breakdown.push({ slab: "101-300 units", units: 0, rate: 9.05, amount: 0 });
+  }
+
+  // Slab 4: 301-500 units @ ₹9.60
+  const s4Units = Math.min(remaining, 200);
+  if (s4Units > 0) {
+    const amt = s4Units * 9.60;
+    energyCharges += amt;
+    breakdown.push({ slab: "301-500 units", units: s4Units, rate: 9.60, amount: amt });
+    remaining -= s4Units;
+  } else {
+    breakdown.push({ slab: "301-500 units", units: 0, rate: 9.60, amount: 0 });
+  }
+
+  // Slab 5: Above 500 units @ ₹10.15
+  if (remaining > 0) {
+    const amt = remaining * 10.15;
+    energyCharges += amt;
+    breakdown.push({ slab: "Above 500 units", units: remaining, rate: 10.15, amount: amt });
+  } else {
+    breakdown.push({ slab: "Above 500 units", units: 0, rate: 10.15, amount: 0 });
+  }
+
+  let fixedCharges = 0;
+  if (units > 0) {
+    if (units <= 50) fixedCharges = 30;
+    else if (units <= 100) fixedCharges = 40;
+    else fixedCharges = 45;
+  }
+
+  const totalBill = energyCharges + fixedCharges;
+
+  return {
+    units,
+    slabBreakdown: breakdown,
+    energyCharges,
+    fixedCharges,
+    totalBill,
+  };
+};
+
 export const calcAcTenantShares = (
   units: number,
   unitPrice: number,
@@ -162,8 +251,9 @@ export const calcAcTenantShares = (
   year: number,
   month: number,
   sharingCount?: number,
+  customTotalAmount?: number,
 ): AcTenantShare[] => {
-  const totalAmount = units * unitPrice;
+  const totalAmount = customTotalAmount !== undefined ? customTotalAmount : units * unitPrice;
   if (totalAmount <= 0) return [];
   const daysInMonth = new Date(year, month, 0).getDate();
 

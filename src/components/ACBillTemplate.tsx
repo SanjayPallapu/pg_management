@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 
 export interface ACBillData {
   roomNo: string;
@@ -19,6 +20,7 @@ const fmt = (n: number) => `₹ ${Math.floor(n).toLocaleString("en-IN")}`;
 export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
   const pgName = data.pgName || "PG Management";
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
+  const apBill = calculateAPCommercialBill(data.units);
   return (
     <div
       ref={ref}
@@ -62,19 +64,31 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
 
       {/* Reading breakdown */}
       <div style={{ margin: "0 20px 10px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <tbody>
+            <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 600 }}>Units Consumed</td>
+              <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 700, textAlign: "right" }}>{data.units}</td>
+            </tr>
+            {apBill.slabBreakdown.map((slab, i) => (
+              <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "6px 12px 6px 20px", color: "#6b7280" }}>- {slab.slab}</td>
+                <td style={{ padding: "6px 12px", color: "#374151", textAlign: "right", fontStyle: slab.units === 0 ? "italic" : "normal" }}>
+                  {slab.units > 0 ? `${slab.units} units × ₹${slab.rate.toFixed(2)} = ₹${Math.round(slab.amount).toLocaleString("en-IN")}` : "0 units"}
+                </td>
+              </tr>
+            ))}
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-              <td style={{ padding: "9px 14px", color: "#6b7280" }}>Units Consumed</td>
-              <td style={{ padding: "9px 14px", color: "#1a1a1a", fontWeight: 600, textAlign: "right" }}>{data.units}</td>
+              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 500 }}>Energy Charges</td>
+              <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 600, textAlign: "right" }}>₹ {Math.round(apBill.energyCharges).toLocaleString("en-IN")}</td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-              <td style={{ padding: "9px 14px", color: "#6b7280" }}>Rate per Unit</td>
-              <td style={{ padding: "9px 14px", color: "#1a1a1a", fontWeight: 600, textAlign: "right" }}>₹ {data.unitPrice}</td>
+              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 500 }}>Fixed Charges</td>
+              <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 600, textAlign: "right" }}>₹ {apBill.fixedCharges}</td>
             </tr>
             <tr style={{ background: "#f0f9ff" }}>
-              <td style={{ padding: "10px 14px", color: "#0c4a6e", fontWeight: 600 }}>Total Bill</td>
-              <td style={{ padding: "10px 14px", color: "#0c4a6e", fontWeight: 700, textAlign: "right" }}>{fmt(data.totalAmount)}</td>
+              <td style={{ padding: "9px 12px", color: "#0c4a6e", fontWeight: 600 }}>Total Bill (AP LT-II Commercial)</td>
+              <td style={{ padding: "9px 12px", color: "#0c4a6e", fontWeight: 700, textAlign: "right" }}>{fmt(apBill.totalBill)}</td>
             </tr>
           </tbody>
         </table>
@@ -97,7 +111,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
           <>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#0c4a6e", marginBottom: 4 }}>{fmt(data.totalAmount)}</div>
             <div style={{ fontSize: 13, color: "#075985", fontWeight: 500 }}>
-              {data.units} units × ₹{data.unitPrice} • Room {data.roomNo}
+              {data.units} units • AP LT-II Commercial • Room {data.roomNo}
             </div>
           </>
         )}
