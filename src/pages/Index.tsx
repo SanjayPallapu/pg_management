@@ -230,6 +230,11 @@ const Index = () => {
         <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
+            <MonthYearPicker />
+            {/* Mobile: show Upgrade right beside PG logo */}
+            <div className="flex items-center gap-1.5 sm:hidden">
+              <SubscriptionBadge />
+            </div>
             <div className="min-w-0 hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-sm font-bold leading-tight sm:text-base">
@@ -242,7 +247,6 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-1">
-            <MonthYearPicker />
             {isAdmin && (
               <Button
                 variant="ghost"
