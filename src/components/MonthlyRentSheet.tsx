@@ -525,6 +525,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     draftUnits: number,
     draftUnitPrice: number,
     customSplitCount?: number,
+    targetTenantName?: string,
   ) => {
     if (draftUnits <= 0) {
       toast({ title: "Enter units first", variant: "destructive" });
@@ -559,6 +560,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       monthLabel: `${MONTHS[acMonth - 1]?.label} ${acYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
+      tenantName: targetTenantName,
     });
 
     setTimeout(async () => {
@@ -567,18 +569,51 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       try {
         const dataUrl = await generateReceiptImage(el);
         const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], `ac-bill-${item.room.roomNo}.png`, { type: "image/png" });
-        const shareNavigator = navigator as Navigator & {
-          canShare?: (data?: ShareData) => boolean;
-        };
-        if (shareNavigator.canShare?.({ files: [file] })) {
-          await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
+        const fileName = targetTenantName ? `ac-bill-${item.room.roomNo}-${targetTenantName.replace(/\s+/g, '-')}.png` : `ac-bill-${item.room.roomNo}.png`;
+        const file = new File([blob], fileName, { type: "image/png" });
+
+        const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
+        let phone = targetTenant?.phone?.replace(/\D/g, "");
+
+        if (phone) {
+          const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+          const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
+          try {
+            await navigator.clipboard.writeText(displayPhone);
+            toast({ 
+              title: `📱 Phone Copied: ${displayPhone}`, 
+              description: `Copied to clipboard for search!`,
+              duration: 5000,
+            });
+          } catch (e) {
+            console.error('Clipboard copy failed', e);
+          }
+
+          const shareNavigator = navigator as Navigator & {
+            canShare?: (data?: ShareData) => boolean;
+          };
+          if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
+            await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
+          } else {
+            const a = document.createElement("a");
+            a.href = dataUrl;
+            a.download = fileName;
+            a.click();
+            window.open(`https://wa.me/${formattedPhone}`, "_blank");
+          }
         } else {
-          const a = document.createElement("a");
-          a.href = dataUrl;
-          a.download = `ac-bill-${item.room.roomNo}.png`;
-          a.click();
-          toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
+          const shareNavigator = navigator as Navigator & {
+            canShare?: (data?: ShareData) => boolean;
+          };
+          if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
+            await shareNavigator.share({ files: [file], title: "AC Electricity Bill" });
+          } else {
+            const a = document.createElement("a");
+            a.href = dataUrl;
+            a.download = fileName;
+            a.click();
+            toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
+          }
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "";
@@ -1081,7 +1116,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         tenantShares={item.tenantShares}
                         onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
                         onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
-                        onShare={(units, unitPrice, customSplitCount) => handleShareAC(item, units, unitPrice, customSplitCount)}
+                        onShare={(units, unitPrice, customSplitCount, targetTenantName) => handleShareAC(item, units, unitPrice, customSplitCount, targetTenantName)}
                       />
                     ))}
                   </CardContent>
@@ -1941,7 +1976,7 @@ const RentACRoomCard = ({
   tenantShares: { name: string; daysStayed: number; share: number }[];
   onUnitsChange: (units: number) => void;
   onPriceChange: (unitPrice: number) => void;
-  onShare: (units: number, unitPrice: number, customSplitCount?: number) => void;
+  onShare: (units: number, unitPrice: number, customSplitCount?: number, targetTenantName?: string) => void;
 }) => {
   const [unitsDraft, setUnitsDraft] = useState(String(units || ""));
   const [priceDraft, setPriceDraft] = useState(String(unitPrice || 12));
@@ -1979,16 +2014,37 @@ const RentACRoomCard = ({
             {sharingCount} sharing · {tenantCount} tenant{tenantCount === 1 ? "" : "s"} this month
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 shrink-0 text-xs"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined)}
-        >
-          <Send className="mr-1 h-3 w-3" />
-          Share
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 text-xs"
+            >
+              <Send className="mr-1 h-3 w-3" />
+              Share
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuItem
+              onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined)}
+              className="cursor-pointer"
+            >
+              Share Room Bill (All)
+            </DropdownMenuItem>
+            {dayWiseShares.length > 0 && <DropdownMenuSeparator />}
+            {dayWiseShares.map((tenant) => (
+              <DropdownMenuItem
+                key={tenant.name}
+                onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined, tenant.name)}
+                className="cursor-pointer flex items-center justify-between"
+              >
+                <span className="truncate">Share with {tenant.name.split(" ")[0]}</span>
+                <span className="font-semibold text-[10px] text-muted-foreground ml-2">₹{tenant.share.toLocaleString()}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
