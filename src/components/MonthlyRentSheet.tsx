@@ -509,7 +509,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       .filter((room) => room.isAc)
       .map((room) => {
         const activeTenants = room.tenants.filter((tenant) =>
-          isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth),
+          isTenantActiveInMonth(tenant.startDate, tenant.endDate, acYear, acMonth),
         );
         const reading = acByRoom.get(room.id);
         const units = reading?.units ?? 0;
