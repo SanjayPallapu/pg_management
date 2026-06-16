@@ -93,8 +93,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
-  const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
+  const [acMonth, setAcMonth] = useState(selectedMonth);
+  const [acYear, setAcYear] = useState(selectedYear);
+  const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
   const [acSectionOpen, setAcSectionOpen] = useState(false);
+  
+  useEffect(() => {
+    setAcMonth(selectedMonth);
+    setAcYear(selectedYear);
+  }, [selectedMonth, selectedYear]);
   const [previousDuesOpen, setPreviousDuesOpen] = useState(false);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
@@ -508,10 +515,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
         const apBill = calculateAPCommercialBill(units);
         const total = apBill.totalBill;
-        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, total);
+        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, acYear, acMonth, room.capacity, total);
         return { room, activeTenants, units, unitPrice, total, tenantShares };
       });
-  }, [rooms, acByRoom, selectedMonth, selectedYear, currentPG?.electricityUnitPrice]);
+  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice]);
 
   const handleShareAC = async (
     item: typeof acRooms[number],
@@ -539,7 +546,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const tenantShares =
       customSplitCount && customSplitCount > 0
         ? calcCustomAcSplitShares(total, customSplitCount)
-        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, selectedYear, selectedMonth, item.room.capacity, total);
+        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, acYear, acMonth, item.room.capacity, total);
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
@@ -549,7 +556,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         name: tenant.daysStayed > 0 ? `${tenant.name} (${tenant.daysStayed}d)` : tenant.name,
         share: tenant.share,
       })),
-      monthLabel: `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`,
+      monthLabel: `${MONTHS[acMonth - 1]?.label} ${acYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
     });
@@ -1026,7 +1033,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <div>
                         <div className="text-sm font-semibold">AC Electricity</div>
                         <div className="text-xs text-muted-foreground">
-                          {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[selectedMonth - 1]?.label} {selectedYear}
+                          {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
                         </div>
                       </div>
                     </div>
@@ -1035,6 +1042,33 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-2 px-3 pb-3 pt-0">
+                    <div className="flex items-center justify-between mb-3 bg-cyan-500/5 p-2 rounded-lg border border-cyan-500/15">
+                      <Label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300">AC Bill Month:</Label>
+                      <div className="flex items-center gap-1">
+                        <select
+                          value={acMonth}
+                          onChange={(e) => setAcMonth(parseInt(e.target.value))}
+                          className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                        >
+                          {months.map((m) => (
+                            <option key={m.value} value={m.value}>
+                              {m.label}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={acYear}
+                          onChange={(e) => setAcYear(parseInt(e.target.value))}
+                          className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                        >
+                          {years.map((y) => (
+                            <option key={y} value={y}>
+                              {y}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                     {acRooms.map((item) => (
                       <RentACRoomCard
                         key={item.room.id}
