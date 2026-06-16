@@ -230,7 +230,7 @@ const Index = () => {
         <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
-            <div className="min-w-0">
+            <div className="min-w-0 hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-sm font-bold leading-tight sm:text-base">
                   {currentPG?.name || "PG Management"}
@@ -368,15 +368,17 @@ const Index = () => {
         {/* Admin Payment Approval Sheet */}
         <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
 
-        {/* Floating Voice Assistant button */}
-        <button
-          aria-label="Open voice assistant"
-          onClick={() => navigate('/voice')}
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition-transform active:scale-95 sm:bottom-6 sm:h-14 sm:w-14"
-        >
-          <Mic className="h-6 w-6" />
-          <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-        </button>
+        {/* Floating Voice Assistant button - only shown on Home tab */}
+        {activeTab === "dashboard" && (
+          <button
+            aria-label="Open voice assistant"
+            onClick={() => navigate('/voice')}
+            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition-transform active:scale-95 sm:bottom-6 sm:h-14 sm:w-14"
+          >
+            <Mic className="h-6 w-6" />
+            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+          </button>
+        )}
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">

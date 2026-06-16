@@ -34,12 +34,12 @@ export const PGSwitcher = () => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="h-10 w-10 p-0">
+          <Button variant="outline" size="icon" className="h-11 w-11 sm:h-10 sm:w-10 p-0 shrink-0">
             {currentPG?.logoUrl ? (
               <img 
                 src={currentPG.logoUrl} 
                 alt={currentPG.name} 
-                className="h-8 w-8 rounded object-cover"
+                className="h-9 w-9 sm:h-8 sm:w-8 rounded object-cover"
               />
             ) : (
               <Building className="h-5 w-5" />
