@@ -18,6 +18,7 @@ const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 import SplashScreen from "./components/SplashScreen";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
@@ -39,7 +40,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
+    return <Navigate to={hasCompleted ? "/auth" : "/onboarding"} replace />;
   }
 
   return <PGProvider>{children}</PGProvider>;
@@ -76,6 +78,9 @@ const AppContent = () => {
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
+      const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
+      if (!hasCompleted) return false;
+
       const hasSeen = sessionStorage.getItem("hasSeenSplash");
       const urlParams = new URLSearchParams(window.location.search);
       const forceSplash = urlParams.get('splash') === 'true';
@@ -122,6 +127,11 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/onboarding" element={
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#070913]"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>}>
+              <Onboarding />
+            </Suspense>
+          } />
           <Route path="/publish-guide" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <PublishGuide />

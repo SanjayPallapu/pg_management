@@ -207,8 +207,15 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate("/", { replace: true });
+    if (!isLoading) {
+      if (isAuthenticated) {
+        navigate("/", { replace: true });
+      } else {
+        const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
+        if (!hasCompleted) {
+          navigate("/onboarding", { replace: true });
+        }
+      }
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -353,34 +360,33 @@ const Auth = () => {
   }
 
   return (
-    <div ref={pageContainerRef} className="relative min-h-screen w-full flex items-center justify-center bg-[#070913] overflow-hidden px-4 py-8">
+    <div ref={pageContainerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-[#070913] overflow-x-hidden px-4">
       {/* Floating glowing background blobs */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1d2d5f] to-transparent opacity-50 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#121c3b] to-transparent opacity-40 blur-[120px] pointer-events-none" />
       <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-[#18214d]/20 blur-[90px] pointer-events-none" />
 
-      {/* Main glassmorphic card container */}
-      <Card ref={cardRef} className="w-full max-w-md border-white/[0.08] bg-black/40 backdrop-blur-2xl shadow-2xl overflow-hidden rounded-[24px]">
-        {/* Logo Header Section */}
-        <div className="w-full py-6 flex flex-col items-center justify-center border-b border-white/[0.06] relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-50 pointer-events-none" />
-          <div className="flex items-center gap-2 relative z-10">
-            <img 
-              src={appLogo} 
-              alt="PG Logo" 
-              className="h-10 w-auto object-contain" 
-              decoding="async" 
-            />
-            <span className="text-xl font-bold tracking-tight text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              PG Manager
-            </span>
+      {/* Main full-screen wrapper (centered on desktop, full bleed on mobile) */}
+      <div ref={cardRef} className="w-full max-w-md min-h-screen flex flex-col justify-between py-10 px-2 relative z-10">
+        <div className="space-y-6">
+          {/* Logo Header Section */}
+          <div className="w-full py-4 flex flex-col items-center justify-center relative">
+            <div className="flex items-center gap-2 relative z-10">
+              <img 
+                src={appLogo} 
+                alt="PG Logo" 
+                className="h-10 w-auto object-contain" 
+                decoding="async" 
+              />
+              <span className="text-xl font-bold tracking-tight text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                PG Manager
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div className="px-6 py-6 space-y-6">
           {/* Animated Header titles */}
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-center space-y-1.5">
+            <h2 className="text-3xl font-extrabold text-white tracking-tight">
               {mode === "signin" ? "Hi There!" : "Create an Account"}
             </h2>
             <p className="text-sm text-gray-400">
@@ -421,14 +427,14 @@ const Auth = () => {
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-white/[0.08]" />
               </div>
-              <span className="relative bg-[#090b14]/90 px-3 text-[10px] uppercase font-bold text-gray-500 tracking-widest">
+              <span className="relative bg-[#070913] px-3 text-[10px] uppercase font-bold text-gray-500 tracking-widest">
                 Or
               </span>
             </div>
           </div>
 
           {/* Form container with GSAP animated section */}
-          <div ref={formSectionRef} className="will-change-transform">
+          <div ref={formSectionRef} className="will-change-transform px-1">
             
             {/* SIGN IN VIEW */}
             {mode === "signin" && (
@@ -666,15 +672,16 @@ const Auth = () => {
 
           </div>
 
-          {/* Legal footer links */}
-          <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500 border-t border-white/[0.06] pt-4">
-            <Link to="/legal#privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
-            <Link to="/legal#terms" className="hover:text-gray-300 transition-colors">Terms</Link>
-            <Link to="/legal#refunds" className="hover:text-gray-300 transition-colors">Refunds</Link>
-            <Link to="/legal#deletion" className="hover:text-gray-300 transition-colors">Delete account</Link>
-          </div>
         </div>
-      </Card>
+
+        {/* Legal footer links */}
+        <div className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500 border-t border-white/[0.06] pt-4">
+          <Link to="/legal#privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
+          <Link to="/legal#terms" className="hover:text-gray-300 transition-colors">Terms</Link>
+          <Link to="/legal#refunds" className="hover:text-gray-300 transition-colors">Refunds</Link>
+          <Link to="/legal#deletion" className="hover:text-gray-300 transition-colors">Delete account</Link>
+        </div>
+      </div>
     </div>
   );
 };
