@@ -155,4 +155,43 @@ export function addStyledSheet(
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
 }
 
+/**
+ * Saves and shares an Excel workbook.
+ * If running on native platforms, writes the file to the native cache using @capacitor/filesystem and shares it natively via @capacitor/share.
+ * If running on the web, triggers standard browser download.
+ */
+export async function saveAndShareExcel(wb: any, fileName: string) {
+  const { Capacitor } = await import('@capacitor/core');
+  
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const { Share } = await import('@capacitor/share');
+      
+      const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+      
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Cache,
+      });
+      
+      const fileUriResult = await Filesystem.getUri({
+        path: fileName,
+        directory: Directory.Cache,
+      });
+      
+      await Share.share({
+        title: `Export ${fileName}`,
+        url: fileUriResult.uri,
+      });
+    } catch (error) {
+      console.error('Failed to export and share file natively:', error);
+      throw error;
+    }
+  } else {
+    XLSX.writeFile(wb, fileName);
+  }
+}
+
 export { XLSX };

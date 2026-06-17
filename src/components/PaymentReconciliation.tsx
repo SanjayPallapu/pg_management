@@ -16,7 +16,8 @@ import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
 import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { format, getDaysInMonth, subMonths } from 'date-fns';
-import { applyStyledExport, addStyledSheet, XLSX as styledXLSX } from '@/utils/excelStyles';
+import { applyStyledExport, addStyledSheet, XLSX as styledXLSX, saveAndShareExcel } from '@/utils/excelStyles';
+import { toast } from 'sonner';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ComposedChart, Line } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
@@ -441,7 +442,7 @@ export const PaymentReconciliation = ({
   const collapseAll = () => {
     setExpandedTenants(new Set());
   };
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     // Summary sheet data
     const summaryData = [{
       Metric: 'Month',
@@ -507,7 +508,12 @@ export const PaymentReconciliation = ({
       { wch: 8 }, { wch: 12 }, { wch: 15 }, { wch: 8 }, { wch: 12 },
     ], { statusColumns: [3], currencyColumns: [2, 4, 9] });
 
-    styledXLSX.writeFile(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
+    try {
+      await saveAndShareExcel(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
+      toast.success('Excel file exported and shared successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to export Excel file');
+    }
   };
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 

@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { Download, Pencil, Trash2, RotateCcw } from 'lucide-react';
-import { applyStyledExport, XLSX as styledXLSX } from '@/utils/excelStyles';
+import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from '@/utils/excelStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -70,7 +70,7 @@ const LeftTenants = () => {
     return all.filter(x => x.roomNo === roomNo);
   }, [rooms, roomNo]);
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     const data = leftTenants.map(({ roomNo: rn, tenant }) => ({
       'Room No': rn,
       'Tenant Name': tenant.name,
@@ -89,7 +89,16 @@ const LeftTenants = () => {
     const wb = applyStyledExport(data, 'Left Tenants', colWidths, {
       fileName: `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`,
     });
-    styledXLSX.writeFile(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    try {
+      await saveAndShareExcel(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+      toast({ title: 'Excel file exported and shared successfully' });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   }, [leftTenants, roomNo]);
 
   const handleStartEdit = (tenant: any) => {

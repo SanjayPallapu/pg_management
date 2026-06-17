@@ -7,6 +7,7 @@ import { Check, Clock, Crown, Loader2, Zap } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
 import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey } from '@/types/pg';
+import { Capacitor } from '@capacitor/core';
 
 interface UpgradeDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
   const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
   const isTrialActive = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
+  const isNative = Capacitor.isNativePlatform();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,25 +86,32 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             );
           })}
 
-          <Button
-            className="w-full gap-2 py-6 text-base"
-            onClick={() => {
-              initiatePayment({
-                plan: selectedPlan,
-                onSuccess: async () => {
-                  await refreshSubscription();
-                  onOpenChange(false);
-                },
-              });
-            }}
-            disabled={razorpayLoading}
-          >
-            {razorpayLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
-            ) : (
-              <><Zap className="h-5 w-5" /> Continue with Razorpay - ₹{currentPlan.price}</>
-            )}
-          </Button>
+          {isNative ? (
+            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-4 text-sm text-muted-foreground mt-2">
+              <p className="font-semibold text-foreground mb-1 text-amber-700 dark:text-amber-400">Manage Billing on Web</p>
+              To comply with mobile app store guidelines, plan upgrades cannot be purchased directly inside the mobile application. Please sign in via a web browser at <span className="font-semibold text-foreground">pgmanager.app</span> to manage your billing or upgrade your subscription.
+            </div>
+          ) : (
+            <Button
+              className="w-full gap-2 py-6 text-base"
+              onClick={() => {
+                initiatePayment({
+                  plan: selectedPlan,
+                  onSuccess: async () => {
+                    await refreshSubscription();
+                    onOpenChange(false);
+                  },
+                });
+              }}
+              disabled={razorpayLoading}
+            >
+              {razorpayLoading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
+              ) : (
+                <><Zap className="h-5 w-5" /> Continue with Razorpay - ₹{currentPlan.price}</>
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -5,6 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/proxyClient";
+import {
   User,
   Moon,
   Sun,
@@ -27,6 +38,7 @@ import {
   Smartphone,
   Globe,
   ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePG } from "@/contexts/PGContext";
@@ -85,6 +97,49 @@ export const SettingsPage = () => {
   const navigate = useNavigate();
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [confirmEmailInput, setConfirmEmailInput] = useState("");
+  const [confirmDeleteText, setConfirmDeleteText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) {
+      toast.error("Email address does not match your registered email.");
+      return;
+    }
+    if (confirmDeleteText.trim() !== "DELETE") {
+      toast.error("Please type DELETE to confirm.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.rpc('delete_user_account');
+      if (error) {
+        console.warn("RPC account deletion failed, attempting client-side data wipe fallback:", error.message);
+        
+        // Cascade fallback - delete properties (cascades to rooms/tenants under user RLS)
+        const { error: deletePgsError } = await supabase.from('pgs').delete().eq('owner_id', user?.id);
+        if (deletePgsError) throw deletePgsError;
+        
+        // Clean up profile
+        await supabase.from('profiles').delete().eq('user_id', user?.id);
+      }
+      
+      await signOut();
+      toast.success("Account and associated data deleted successfully");
+      window.location.href = "/auth";
+    } catch (err: any) {
+      console.error("Account deletion failed:", err);
+      toast.error(err?.message || "Failed to delete account. Please contact support.");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
+      setConfirmEmailInput("");
+      setConfirmDeleteText("");
+    }
+  };
 
   const isDark = theme === "dark";
 
@@ -320,7 +375,7 @@ export const SettingsPage = () => {
         {/* Danger Zone */}
         <motion.div variants={itemVariants}>
           <Card className="border-destructive/20">
-            <CardContent className="p-2">
+            <CardContent className="p-2 space-y-1">
               <SettingItem
                 icon={<LogOut className="h-4 w-4 text-destructive" />}
                 label="Sign Out"
@@ -328,7 +383,13 @@ export const SettingsPage = () => {
                 onClick={handleSignOut}
                 destructive
               />
-
+              <SettingItem
+                icon={<Trash2 className="h-4 w-4 text-destructive" />}
+                label="Delete Account"
+                description="Permanently delete your account and all PG data"
+                onClick={() => setDeleteConfirmOpen(true)}
+                destructive
+              />
             </CardContent>
           </Card>
         </motion.div>
@@ -351,6 +412,92 @@ export const SettingsPage = () => {
       </motion.div>
 
       <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
+
+      {/* 2-Step Verification Account Deletion Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Account (2-Step Verification)
+            </DialogTitle>
+            <DialogDescription className="text-foreground/90 pt-2 font-medium">
+              Are you absolutely sure you want to delete your account? This action is permanent and completely irreversible.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2 text-sm">
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-xs text-destructive">
+              <p className="font-semibold mb-1">What will be permanently deleted:</p>
+              <ul className="list-disc pl-4 space-y-0.5 mt-1">
+                <li>All properties (PGs) registered under this account</li>
+                <li>All rooms, tenants, payment history, and utility bills data</li>
+                <li>Your user profile, settings, and staff/owner permissions</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Step 1: Confirm your registered email address</Label>
+              <p className="text-xs text-muted-foreground">Type your email: <span className="font-mono text-foreground font-semibold select-all">{user?.email}</span></p>
+              <Input
+                type="email"
+                placeholder="Enter email address"
+                value={confirmEmailInput}
+                onChange={(e) => setConfirmEmailInput(e.target.value)}
+                className="h-10 bg-background/50 rounded-lg text-sm mt-1"
+                disabled={isDeleting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Step 2: Type DELETE to confirm</Label>
+              <p className="text-xs text-muted-foreground">Type <span className="font-mono text-foreground font-semibold">DELETE</span> in all capital letters below:</p>
+              <Input
+                type="text"
+                placeholder="Type DELETE"
+                value={confirmDeleteText}
+                onChange={(e) => setConfirmDeleteText(e.target.value)}
+                className="h-10 bg-background/50 rounded-lg text-sm mt-1"
+                disabled={isDeleting}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 pt-2 border-t border-border flex sm:justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setConfirmEmailInput("");
+                setConfirmDeleteText("");
+              }}
+              disabled={isDeleting}
+              className="h-9 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={
+                isDeleting ||
+                confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase() ||
+                confirmDeleteText.trim() !== "DELETE"
+              }
+              className="h-9 text-xs font-medium"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Account & Data"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

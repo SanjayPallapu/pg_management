@@ -56,7 +56,7 @@ import {
 } from "@/hooks/useElectricityReadings";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { applyStyledExport, XLSX as styledXLSX } from "@/utils/excelStyles";
+import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from "@/utils/excelStyles";
 import { toast } from "@/hooks/use-toast";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
@@ -903,7 +903,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     });
     setDeletePaymentTenant(null);
   };
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     const allTenants = rooms.flatMap((room) =>
       room.tenants.map((tenant) => ({
         ...tenant,
@@ -953,10 +953,18 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       currencyColumns: [4],
       fileName: `Rent_Sheet_${selectedYear}.xlsx`,
     });
-    styledXLSX.writeFile(wb, `Rent_Sheet_${selectedYear}.xlsx`);
-    toast({
-      title: "Excel file exported with full year data",
-    });
+    try {
+      await saveAndShareExcel(wb, `Rent_Sheet_${selectedYear}.xlsx`);
+      toast({
+        title: "Excel file exported with full year data",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
   return (
     <div className="space-y-4">
