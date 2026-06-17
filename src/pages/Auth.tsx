@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, Building } from "lucide-react";
 import { toast } from "sonner";
 import appLogo from "@/assets/splash-uploaded-logo.png";
 
@@ -43,16 +43,29 @@ const getGoogleAuthErrorMessage = (message: string) => {
   return readableMessage || "Google login failed. Please try email sign in.";
 };
 
+const GoogleIcon = () => (
+  <svg className="mr-2 h-4 w-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+  </svg>
+);
+
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
@@ -123,7 +136,6 @@ const Auth = () => {
         setIsSubmitting(false);
       } else {
         toast.success("Signed in successfully");
-        // Navigate immediately after successful sign-in
         navigate("/", { replace: true });
       }
     } catch {
@@ -147,7 +159,6 @@ const Auth = () => {
         toast.error(error.message);
       }
     } else if (data?.user) {
-      // Create profile after successful signup
       const { error: profileError } = await supabase.from("profiles").insert({
         user_id: data.user.id,
         full_name: fullName,
@@ -161,7 +172,6 @@ const Auth = () => {
       }
       setIsSubmitting(false);
       toast.success("Account created!");
-      // Navigate to dashboard — onboarding wizard triggers via isNewSignup flag
       navigate("/", { replace: true });
     } else {
       setIsSubmitting(false);
@@ -182,7 +192,8 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>);
+      </div>
+    );
   }
 
   const handlePendingSignOut = async () => {
@@ -196,7 +207,7 @@ const Auth = () => {
         <Card className="w-full max-w-md border-primary/20">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Building2 className="h-6 w-6 text-primary" />
+              <Building className="h-6 w-6 text-primary" />
             </div>
             <CardTitle>Workspace Setup Pending</CardTitle>
             <CardDescription>
@@ -209,211 +220,253 @@ const Auth = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>);
-
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6">
-      <Card className="w-full max-w-md border-primary/20 shadow-lg shadow-primary/5">
-        <CardHeader className="text-center px-6 pb-5 pt-6">
-          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-            <img src={appLogo} alt="PG logo" className="h-16 w-16 object-contain" decoding="async" />
-          </div>
-          <CardTitle className="text-2xl">PG Management</CardTitle>
-          <CardDescription className="text-sm font-medium">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background/90 to-primary/5 px-4 py-8">
+      <Card className="w-full max-w-md border-primary/10 shadow-2xl overflow-hidden rounded-2xl">
+        {/* Full-width premium Logo Header Banner */}
+        <div className="w-full overflow-hidden bg-primary/[0.03] dark:bg-primary/[0.01] border-b border-border/40 py-10 flex flex-col items-center justify-center relative">
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+          <img 
+            src={appLogo} 
+            alt="PG Manager Logo" 
+            className="h-20 w-auto object-contain max-w-[80%] drop-shadow-md hover:scale-102 transition-transform duration-300" 
+            decoding="async" 
+          />
+        </div>
+
+        <CardHeader className="text-center px-6 pb-2 pt-6">
+          <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            PG Manager
+          </CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground mt-1">
             Private workspace for every PG owner.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+
+        <CardContent className="px-6 pb-6 pt-4 space-y-6">
+          {/* Unified prominent Google Button at the top */}
+          <div className="space-y-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 h-11 border-border/80 hover:bg-muted/50 transition-all font-semibold shadow-sm active:scale-[0.99]"
+              onClick={handleGoogleAuth}
+              disabled={isSubmitting || isGoogleSubmitting}
+            >
+              {isGoogleSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              ) : (
+                <GoogleIcon />
+              )}
+              Continue with Google
+            </Button>
+
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/60" />
+              </div>
+              <span className="relative bg-card px-3 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
+                or email
+              </span>
+            </div>
+          </div>
+
+          <Tabs defaultValue="signin" className="w-full space-y-4">
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/60 rounded-xl h-11">
+              <TabsTrigger value="signin" className="rounded-lg font-semibold text-xs sm:text-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-lg font-semibold text-xs sm:text-sm">Sign Up</TabsTrigger>
             </TabsList>
-            <TabsContent value="signin">
+
+            <TabsContent value="signin" className="space-y-4 mt-2">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.email && <p className="text-xs text-destructive mt-1 font-medium">{errors.email}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signin-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-9 pr-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-destructive mt-1 font-medium">{errors.password}</p>}
                 </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ?
-                  <>
+
+                <Button type="submit" className="w-full h-11 font-semibold rounded-lg text-sm transition-all active:scale-[0.99]" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
-                    </> :
-
-                  "Sign In"
-                  }
-                </Button>
-                <div className="relative py-1">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={handleGoogleAuth}
-                  disabled={isSubmitting || isGoogleSubmitting}
-                >
-                  {isGoogleSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    </>
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-bold">G</span>
+                    "Sign In"
                   )}
-                  Continue with Google
                 </Button>
               </form>
             </TabsContent>
-            <TabsContent value="signup">
+
+            <TabsContent value="signup" className="space-y-4 mt-2">
               <form onSubmit={handleSignUp} className="space-y-4">
-                
-
-
-
-
-
-
-
-
-
-
-
-
                 <div className="space-y-2">
                   <Label htmlFor="signup-fullname">Full Name</Label>
-                  <Input
-                    id="signup-fullname"
-                    type="text"
-                    placeholder="Your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
+                  <div className="relative">
+                    <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signup-fullname"
+                      type="text"
+                      placeholder="Your full name"
+                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.fullName && <p className="text-xs text-destructive mt-1 font-medium">{errors.fullName}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-phone">Phone Number</Label>
-                  <Input
-                    id="signup-phone"
-                    type="tel"
-                    placeholder="9876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="9876543210"
+                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.phone && <p className="text-xs text-destructive mt-1 font-medium">{errors.phone}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-city">City</Label>
-                  <Input
-                    id="signup-city"
-                    type="text"
-                    placeholder="Your city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signup-city"
+                      type="text"
+                      placeholder="Your city"
+                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.city && <p className="text-xs text-destructive mt-1 font-medium">{errors.city}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.email && <p className="text-xs text-destructive mt-1 font-medium">{errors.email}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting} />
-
-                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-9 pr-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-destructive mt-1 font-medium">{errors.password}</p>}
                 </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ?
-                  <>
+
+                <Button type="submit" className="w-full h-11 font-semibold rounded-lg text-sm transition-all active:scale-[0.99]" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...
-                    </> :
-
-                  "Create Account"
-                  }
-                </Button>
-                <div className="relative py-1">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={handleGoogleAuth}
-                  disabled={isSubmitting || isGoogleSubmitting}
-                >
-                  {isGoogleSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    </>
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-bold">G</span>
+                    "Create Account"
                   )}
-                  Continue with Google
                 </Button>
-                <p className="rounded-lg bg-primary/5 px-3 py-2 text-center text-xs text-muted-foreground">
+
+                <p className="rounded-xl bg-primary/[0.03] dark:bg-primary/[0.01] border border-primary/5 px-4 py-3 text-center text-xs text-muted-foreground leading-relaxed mt-4">
                   Every signup creates a separate owner workspace. Your PG, tenants, and payments stay private to your account.
                 </p>
               </form>
             </TabsContent>
           </Tabs>
-          <div className="mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <Link to="/legal#privacy" className="hover:text-foreground">Privacy</Link>
-            <Link to="/legal#terms" className="hover:text-foreground">Terms</Link>
-            <Link to="/legal#refunds" className="hover:text-foreground">Refunds</Link>
-            <Link to="/legal#deletion" className="hover:text-foreground">Delete account</Link>
+
+          <div className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t border-border/30 pt-4">
+            <Link to="/legal#privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/legal#terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/legal#refunds" className="hover:text-foreground transition-colors">Refunds</Link>
+            <Link to="/legal#deletion" className="hover:text-foreground transition-colors">Delete account</Link>
           </div>
         </CardContent>
       </Card>
-    </div>);
-
+    </div>
+  );
 };
 
 export default Auth;

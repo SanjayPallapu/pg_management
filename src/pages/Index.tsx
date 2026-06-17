@@ -24,6 +24,7 @@ import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { Room } from "@/types";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LayoutDashboard,
   Building,
@@ -262,6 +263,7 @@ const Index = () => {
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setHistorySheetOpen(true)} title="Activity">
               <History className="h-4 w-4" />
             </Button>
+            <ThemeToggle className="h-9 w-9" />
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleSignOut} title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>
