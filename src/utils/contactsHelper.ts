@@ -142,3 +142,44 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null> =
     throw error;
   }
 };
+
+/**
+ * Gets the simulated contact list from localStorage, or returns default MOCK_CONTACTS if empty.
+ */
+export const getSimulatedContacts = (): MockContact[] => {
+  if (typeof window === 'undefined') return MOCK_CONTACTS;
+  
+  const stored = localStorage.getItem('simulated_contacts');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('Error parsing simulated contacts:', e);
+    }
+  }
+  return MOCK_CONTACTS;
+};
+
+/**
+ * Saves a new simulated contact to localStorage and returns the updated list.
+ */
+export const saveSimulatedContact = (name: string, phoneString: string): MockContact[] => {
+  const current = getSimulatedContacts();
+  
+  // Split phone numbers by comma, trim spaces, and filter out empties
+  const phones = phoneString
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+    
+  const newContact: MockContact = {
+    id: Date.now().toString(),
+    name,
+    phones,
+  };
+  
+  const updated = [...current, newContact];
+  localStorage.setItem('simulated_contacts', JSON.stringify(updated));
+  return updated;
+};
+

@@ -45,6 +45,8 @@ import {
   pickContactFromDevice,
   sanitizePhoneNumber,
   MOCK_CONTACTS,
+  getSimulatedContacts,
+  saveSimulatedContact,
 } from "@/utils/contactsHelper";
 import {
   DropdownMenu,
@@ -235,6 +237,11 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const [selectedContactName, setSelectedContactName] = useState("");
   const [searchMockQuery, setSearchMockQuery] = useState("");
 
+  const [simulatedContacts, setSimulatedContacts] = useState<any[]>([]);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactPhone, setNewContactPhone] = useState("");
+
   // Handle back gesture for contacts dialogs
   useBackGesture(mockPickerOpen, () => setMockPickerOpen(false));
   useBackGesture(numberSelectOpen, () => setNumberSelectOpen(false));
@@ -274,6 +281,10 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         handleContactSelected(contact.name, contact.phones);
       } else {
         setSearchMockQuery("");
+        setSimulatedContacts(getSimulatedContacts());
+        setIsAddingContact(false);
+        setNewContactName("");
+        setNewContactPhone("");
         setMockPickerOpen(true);
       }
     } catch (err: any) {
@@ -283,6 +294,29 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         variant: "destructive",
       });
     }
+  };
+
+  const handleAddSimulatedContact = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContactName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the contact.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const updated = saveSimulatedContact(newContactName.trim(), newContactPhone.trim());
+    setSimulatedContacts(updated);
+    setIsAddingContact(false);
+    toast({
+      title: "Contact added",
+      description: `Added ${newContactName} to simulated contacts.`,
+    });
+    // Auto select the newly added contact
+    const newlyAdded = updated[updated.length - 1];
+    handleContactSelected(newlyAdded.name, newlyAdded.phones);
+    setMockPickerOpen(false);
   };
 
   const handleSelectPhoneNumber = (phone: string) => {
@@ -1236,60 +1270,74 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
               <div className="p-4 border rounded-lg space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Label className="leading-none">Tenant Name</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-muted-foreground">Tenant Name</Label>
+                    <div className="relative flex items-center">
                       <Button
                         type="button"
-                        variant="link"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={handleChooseFromContacts}
-                        className="h-auto p-0 text-primary gap-1 text-xs font-normal hover:no-underline"
+                        className="absolute left-1.5 h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors rounded-lg z-10"
+                        title="Choose from Contacts"
                       >
-                        <Contact className="h-3 w-3" />
-                        Choose from Contacts
+                        <Contact className="h-4 w-4" />
                       </Button>
+                      <Input
+                        value={newTenant.name}
+                        onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
+                        placeholder="Enter name"
+                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                      />
                     </div>
-                    <Input
-                      value={newTenant.name}
-                      onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
-                      placeholder="Enter name"
-                    />
                   </div>
-                  <div>
-                    <Label className="mb-2.5 block leading-none pt-1">Phone Number</Label>
-                    <Input
-                      value={newTenant.phone}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                        setNewTenant({ ...newTenant, phone: value });
-                      }}
-                      placeholder="Enter phone"
-                      maxLength={10}
-                    />
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
+                    <div className="relative flex items-center">
+                      <Phone className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                      <Input
+                        value={newTenant.phone}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setNewTenant({ ...newTenant, phone: value });
+                        }}
+                        placeholder="Enter phone"
+                        maxLength={10}
+                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="monthlyRent">Monthly Rent (₹)</Label>
-                    <Input
-                      id="monthlyRent"
-                      type="number"
-                      value={newTenant.monthlyRent}
-                      onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: parseInt(e.target.value) || 0 })}
-                      placeholder="Enter amount"
-                    />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="monthlyRent" className="text-sm font-medium text-muted-foreground">Monthly Rent (₹)</Label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-4 text-primary font-medium pointer-events-none select-none text-base z-10">₹</span>
+                      <Input
+                        id="monthlyRent"
+                        type="number"
+                        value={newTenant.monthlyRent}
+                        onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: parseInt(e.target.value) || 0 })}
+                        placeholder="Enter amount"
+                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="startDate">Joining Date</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={newTenant.startDate}
-                      onChange={(e) => setNewTenant({ ...newTenant, startDate: e.target.value })}
-                      required
-                    />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Joining Date</Label>
+                    <div className="relative flex items-center">
+                      <CalendarIcon className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={newTenant.startDate}
+                        onChange={(e) => setNewTenant({ ...newTenant, startDate: e.target.value })}
+                        required
+                        className="pl-11 pr-10 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                      />
+                      <ChevronDown className="absolute right-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                    </div>
                   </div>
                 </div>
 
@@ -1702,7 +1750,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
       {/* Web Mock Contact Picker Dialog */}
       <Dialog open={mockPickerOpen} onOpenChange={setMockPickerOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-6">
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Contact className="h-5 w-5 text-primary" />
@@ -1713,53 +1761,109 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </DialogDescription>
           </DialogHeader>
 
-          <div className="my-2">
-            <Input
-              type="text"
-              placeholder="Search contacts..."
-              value={searchMockQuery}
-              onChange={(e) => setSearchMockQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[350px] space-y-2 pr-1 mt-2">
-            {MOCK_CONTACTS.filter((c) =>
-              c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
-            ).length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                No contacts found matching "{searchMockQuery}"
+          {isAddingContact ? (
+            <form onSubmit={handleAddSimulatedContact} className="space-y-4 my-4 p-4 border border-border rounded-xl bg-muted/20">
+              <h4 className="text-sm font-semibold text-foreground">Create Simulated Contact</h4>
+              <div className="space-y-2">
+                <Label htmlFor="contactName" className="text-xs">Contact Name</Label>
+                <Input
+                  id="contactName"
+                  placeholder="e.g. Rekha Devi"
+                  value={newContactName}
+                  onChange={(e) => setNewContactName(e.target.value)}
+                  className="h-10 bg-background/50 rounded-lg text-sm"
+                  required
+                />
               </div>
-            ) : (
-              MOCK_CONTACTS.filter((c) =>
-                c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
-              ).map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    handleContactSelected(c.name, c.phones);
-                    setMockPickerOpen(false);
-                  }}
-                  className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors flex items-center justify-between"
+              <div className="space-y-2">
+                <Label htmlFor="contactPhone" className="text-xs">Phone Number(s)</Label>
+                <Input
+                  id="contactPhone"
+                  placeholder="e.g. 6305967412 or 9876543210, 9123456789"
+                  value={newContactPhone}
+                  onChange={(e) => setNewContactPhone(e.target.value)}
+                  className="h-10 bg-background/50 rounded-lg text-sm"
+                />
+                <span className="text-[10px] text-muted-foreground block">
+                  Separate multiple numbers with commas to test the number chooser dialog.
+                </span>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsAddingContact(false)}
+                  className="h-9 text-xs"
                 >
-                  <div>
-                    <div className="font-medium text-sm">{c.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {c.phones.length === 0
-                        ? "No phone number"
-                        : c.phones.length === 1
-                        ? c.phones[0]
-                        : `${c.phones.length} phone numbers`}
-                    </div>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="h-9 text-xs"
+                >
+                  Save Contact
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <div className="my-2 flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={searchMockQuery}
+                  onChange={(e) => setSearchMockQuery(e.target.value)}
+                  className="w-full bg-background/50 h-10 rounded-lg text-sm"
+                />
+                <Button
+                  type="button"
+                  onClick={() => setIsAddingContact(true)}
+                  className="h-10 text-xs px-3 shrink-0 gap-1 rounded-lg"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Contact
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[380px] space-y-2 pr-1 mt-2">
+                {simulatedContacts.filter((c) =>
+                  c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
+                ).length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
+                    No contacts found matching "{searchMockQuery}"
                   </div>
-                  <Plus className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ))
-            )}
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setMockPickerOpen(false)}>
-              Cancel
+                ) : (
+                  simulatedContacts.filter((c) =>
+                    c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
+                  ).map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        handleContactSelected(c.name, c.phones);
+                        setMockPickerOpen(false);
+                      }}
+                      className="w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">{c.name}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {c.phones.length === 0
+                            ? "No phone number"
+                            : c.phones.length === 1
+                            ? c.phones[0]
+                            : `${c.phones.length} phone numbers: ${c.phones.join(', ')}`}
+                        </div>
+                      </div>
+                      <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
+            <Button variant="outline" onClick={() => setMockPickerOpen(false)} className="rounded-lg h-9 text-xs">
+              Close
             </Button>
           </div>
         </DialogContent>
