@@ -369,29 +369,30 @@ const Auth = () => {
       {/* Main full-screen wrapper (centered on desktop, full bleed on mobile) */}
       <div ref={cardRef} className="w-full max-w-md min-h-screen flex flex-col justify-between py-10 px-2 relative z-10">
         <div className="space-y-6">
-          {/* Logo Header Section */}
-          <div className="w-full py-4 flex flex-col items-center justify-center relative">
-            <div className="flex items-center gap-2 relative z-10">
-              <img 
-                src={appLogo} 
-                alt="PG Logo" 
-                className="h-10 w-auto object-contain" 
-                decoding="async" 
-              />
-              <span className="text-xl font-bold tracking-tight text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                PG Manager
-              </span>
-            </div>
-          </div>
-
-          {/* Animated Header titles */}
-          <div className="text-center space-y-1.5">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">
-              {mode === "signin" ? "Hi There!" : "Create an Account"}
-            </h2>
-            <p className="text-sm text-gray-400">
-              {mode === "signin" ? "Please enter required details." : "To create an account, enter details."}
-            </p>
+          {/* Animated Header titles with Logo in Sign-In */}
+          <div className="text-center pt-6 pb-2">
+            {mode === "signin" ? (
+              <div className="flex flex-col items-center justify-center gap-3">
+                <img 
+                  src={appLogo} 
+                  alt="PG Logo" 
+                  className="h-16 w-auto object-contain animate-in fade-in zoom-in-95 duration-300" 
+                  decoding="async" 
+                />
+                <h2 className="text-3xl font-extrabold tracking-tight text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  PG Manager
+                </h2>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                  Create an Account
+                </h2>
+                <p className="text-sm text-gray-400">
+                  To create an account, enter details.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Social Sign-In: side-by-side dark glassmorphic buttons */}
