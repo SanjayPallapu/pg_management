@@ -125,7 +125,7 @@ const Onboarding = () => {
             {/* Full screen screenshot image */}
             <img 
               src={slide.image} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-[#070913]"
               style={{ pointerEvents: 'none' }}
               alt={slide.title}
             />

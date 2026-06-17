@@ -106,6 +106,14 @@ const Auth = () => {
       { opacity: 0, y: 20, scale: 0.99 },
       { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out", delay: 0.1 }
     );
+  }, [isLoading]);
+
+  // Stagger-bounce character animation on title load or change
+  useEffect(() => {
+    if (isLoading) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
 
     if (logoTextRef.current) {
       const chars = logoTextRef.current.querySelectorAll(".char");
@@ -117,14 +125,14 @@ const Auth = () => {
           y: 0, 
           scale: 1, 
           rotateX: 0, 
-          duration: 0.5, 
-          stagger: 0.03, 
-          ease: "back.out(2.2)", 
-          delay: 0.25 
+          duration: 0.55, 
+          stagger: 0.025, 
+          ease: "back.out(2)", 
+          delay: 0.15 
         }
       );
     }
-  }, [isLoading]);
+  }, [mode, signupStep, isLoading]);
 
   // Mode transitions (Sign In <-> Sign Up)
   const handleModeChange = (newMode: "signin" | "signup") => {
@@ -150,23 +158,6 @@ const Auth = () => {
           { opacity: 0, x: newMode === "signup" ? 30 : -30 },
           { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }
         );
-
-        if (newMode === "signin" && logoTextRef.current) {
-          const chars = logoTextRef.current.querySelectorAll(".char");
-          gsap.fromTo(
-            chars,
-            { opacity: 0, y: 12, scale: 0.8, rotateX: -30 },
-            { 
-              opacity: 1, 
-              y: 0, 
-              scale: 1, 
-              rotateX: 0, 
-              duration: 0.4, 
-              stagger: 0.025, 
-              ease: "back.out(2)" 
-            }
-          );
-        }
       }
     });
 
@@ -396,17 +387,17 @@ const Auth = () => {
   }
 
   return (
-    <div ref={pageContainerRef} className="relative h-[100dvh] w-full flex flex-col items-center justify-center bg-[#070913] overflow-hidden px-4">
+    <div ref={pageContainerRef} className="relative h-[100dvh] w-full flex items-center justify-center bg-[#070913] overflow-hidden px-4">
       {/* Floating glowing background blobs */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1d2d5f] to-transparent opacity-50 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#121c3b] to-transparent opacity-40 blur-[120px] pointer-events-none" />
       <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-[#18214d]/20 blur-[90px] pointer-events-none" />
 
-      {/* Main full-screen wrapper (centered on desktop, full bleed on mobile) */}
-      <div ref={cardRef} className="w-full max-w-md h-[100dvh] flex flex-col justify-between py-6 px-2 relative z-10 overflow-hidden">
-        <div className="space-y-4">
-          {/* Animated Header titles with Logo in Sign-In */}
-          <div className="text-center pt-8 pb-2">
+      {/* Main centered content container (no full-height stretch, perfectly centered vertically) */}
+      <div ref={cardRef} className="w-full max-w-md flex flex-col justify-center py-6 px-2 relative z-10 overflow-hidden">
+        <div className="space-y-6">
+          {/* Animated Header titles for both Sign In and Sign Up */}
+          <div className="text-center pb-2">
             {mode === "signin" ? (
               <div className="flex flex-col items-center justify-center pt-2">
                 <h2 ref={logoTextRef} className="text-4xl font-extrabold tracking-tight text-white bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent flex justify-center gap-[1px] select-none perspective-[1000px]">
@@ -422,9 +413,17 @@ const Auth = () => {
                 </h2>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                <h2 className="text-3xl font-extrabold text-white tracking-tight">
-                  Create an Account
+              <div className="space-y-2">
+                <h2 ref={logoTextRef} className="text-4xl font-extrabold tracking-tight text-white bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent flex justify-center gap-[1px] select-none perspective-[1000px]">
+                  {"Create an Account".split("").map((char, index) => (
+                    <span 
+                      key={index} 
+                      className="char inline-block origin-bottom will-change-transform"
+                      style={{ width: char === " " ? "0.25em" : "auto" }}
+                    >
+                      {char}
+                    </span>
+                  ))}
                 </h2>
                 <p className="text-sm text-gray-400">
                   To create an account, enter details.
