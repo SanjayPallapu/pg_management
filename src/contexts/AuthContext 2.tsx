@@ -156,6 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
+    localStorage.removeItem("hasCompletedOnboarding");
     const { error } = await supabase.auth.signOut();
     return { error };
   }, []);
