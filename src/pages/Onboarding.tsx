@@ -126,7 +126,7 @@ const Onboarding = () => {
             <img 
               src={slide.image} 
               className="w-full h-full object-contain bg-[#070913]"
-              style={{ pointerEvents: 'none' }}
+              style={{ pointerEvents: 'none', objectPosition: 'top center' }}
               alt={slide.title}
             />
           </motion.div>
@@ -134,7 +134,7 @@ const Onboarding = () => {
       </div>
 
       {/* Bottom Controls Overlay */}
-      <div className="absolute bottom-8 left-6 right-6 z-20 flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md max-w-sm mx-auto shadow-2xl shadow-black/50">
+      <div className="absolute bottom-4 left-6 right-6 z-20 flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md max-w-sm mx-auto shadow-2xl shadow-black/50">
         {/* Pagination Dots */}
         <div className="flex gap-2">
           {ONBOARDING_DATA.map((_, idx) => (
