@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { z } from "zod";
@@ -7,20 +7,23 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, Building } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, Building, ChevronLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import appLogo from "@/assets/splash-uploaded-logo.png";
+import { gsap } from "gsap";
 
 const authSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
-const signupSchema = z.object({
+const signupStep1Schema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters")
+});
+
+const signupStep2Schema = z.object({
   fullName: z.string().min(2, "Please enter your name"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   city: z.string().min(2, "Please enter your city")
@@ -44,7 +47,7 @@ const getGoogleAuthErrorMessage = (message: string) => {
 };
 
 const GoogleIcon = () => (
-  <svg className="mr-2 h-4 w-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
@@ -52,9 +55,18 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const AppleIcon = () => (
+  <svg className="h-4 w-4 shrink-0 fill-current text-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.1.08 2.16-.52 2.82-1.33"/>
+  </svg>
+);
+
 const Auth = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasRole, isLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
+  
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [signupStep, setSignupStep] = useState<1 | 2>(1);
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,6 +86,126 @@ const Auth = () => {
     city?: string;
   }>({});
 
+  // GSAP animation references
+  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const formSectionRef = useRef<HTMLDivElement>(null);
+
+  // Initial load entry animation
+  useEffect(() => {
+    if (isLoading) return;
+
+    // Respect reduced-motion preferences
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    // Soft entrance for the card and background
+    gsap.fromTo(
+      cardRef.current,
+      { opacity: 0, y: 30, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power2.out", delay: 0.1 }
+    );
+  }, [isLoading]);
+
+  // Mode transitions (Sign In <-> Sign Up)
+  const handleModeChange = (newMode: "signin" | "signup") => {
+    if (newMode === mode) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setMode(newMode);
+      setSignupStep(1);
+      setErrors({});
+      return;
+    }
+
+    // GSAP Cross-fade & horizontal slide on mode toggle
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setMode(newMode);
+        setSignupStep(1);
+        setErrors({});
+        // Animate new form in
+        gsap.fromTo(
+          formSectionRef.current,
+          { opacity: 0, x: newMode === "signup" ? 30 : -30 },
+          { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }
+        );
+      }
+    });
+
+    tl.to(formSectionRef.current, {
+      opacity: 0,
+      x: newMode === "signup" ? -30 : 30,
+      duration: 0.25,
+      ease: "power2.in"
+    });
+  };
+
+  // Step transitions (Sign Up Step 1 <-> Step 2)
+  const handleSignUpStepContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      signupStep1Schema.parse({ email, password });
+      setErrors({});
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        setSignupStep(2);
+        return;
+      }
+
+      // Slide Step 1 out to the left, bring Step 2 in from the right
+      gsap.to(formSectionRef.current, {
+        opacity: 0,
+        x: -40,
+        duration: 0.25,
+        ease: "power2.in",
+        onComplete: () => {
+          setSignupStep(2);
+          gsap.fromTo(
+            formSectionRef.current,
+            { opacity: 0, x: 40 },
+            { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }
+          );
+        }
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: { email?: string; password?: string } = {};
+        err.errors.forEach((e) => {
+          if (e.path[0] === "email") newErrors.email = e.message;
+          if (e.path[0] === "password") newErrors.password = e.message;
+        });
+        setErrors(newErrors);
+      }
+    }
+  };
+
+  const handleSignUpStepBack = () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setSignupStep(1);
+      return;
+    }
+
+    // Slide Step 2 out to the right, bring Step 1 in from the left
+    gsap.to(formSectionRef.current, {
+      opacity: 0,
+      x: 40,
+      duration: 0.25,
+      ease: "power2.in",
+      onComplete: () => {
+        setSignupStep(1);
+        gsap.fromTo(
+          formSectionRef.current,
+          { opacity: 0, x: -40 },
+          { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }
+        );
+      }
+    });
+  };
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       navigate("/", { replace: true });
@@ -87,7 +219,7 @@ const Auth = () => {
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors: {email?: string;password?: string;} = {};
+        const newErrors: { email?: string; password?: string } = {};
         err.errors.forEach((e) => {
           if (e.path[0] === "email") newErrors.email = e.message;
           if (e.path[0] === "password") newErrors.password = e.message;
@@ -98,17 +230,15 @@ const Auth = () => {
     }
   };
 
-  const validateSignUpForm = () => {
+  const validateSignUpFormComplete = () => {
     try {
-      signupSchema.parse({ email, password, fullName, phone, city });
+      signupStep2Schema.parse({ fullName, phone, city });
       setErrors({});
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors: {email?: string;password?: string;fullName?: string;phone?: string;city?: string;} = {};
+        const newErrors: { fullName?: string; phone?: string; city?: string } = {};
         err.errors.forEach((e) => {
-          if (e.path[0] === "email") newErrors.email = e.message;
-          if (e.path[0] === "password") newErrors.password = e.message;
           if (e.path[0] === "fullName") newErrors.fullName = e.message;
           if (e.path[0] === "phone") newErrors.phone = e.message;
           if (e.path[0] === "city") newErrors.city = e.message;
@@ -119,7 +249,7 @@ const Auth = () => {
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateSignInForm()) return;
 
@@ -144,9 +274,9 @@ const Auth = () => {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateSignUpForm()) return;
+    if (!validateSignUpFormComplete()) return;
 
     setIsSubmitting(true);
     const { error, data } = await signUp(email, password);
@@ -190,8 +320,8 @@ const Auth = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#070913]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -203,112 +333,141 @@ const Auth = () => {
 
   if (isAuthenticated && !hasRole) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md border-primary/20">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Building className="h-6 w-6 text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#070913] p-4">
+        <Card className="w-full max-w-md border-white/[0.08] bg-black/40 backdrop-blur-2xl text-white">
+          <div className="text-center px-6 py-10 space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10">
+              <Building className="h-7 w-7 text-blue-500" />
             </div>
-            <CardTitle>Workspace Setup Pending</CardTitle>
-            <CardDescription>
+            <h3 className="text-xl font-bold tracking-tight">Workspace Setup Pending</h3>
+            <p className="text-sm text-gray-400">
               Your owner workspace is being created. Sign out and sign in again if this message stays visible.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" onClick={handlePendingSignOut}>
+            </p>
+            <Button variant="outline" className="w-full h-11 border-white/10 hover:bg-white/5 text-white" onClick={handlePendingSignOut}>
               Sign Out
             </Button>
-          </CardContent>
+          </div>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background/90 to-primary/5 px-4 py-8">
-      <Card className="w-full max-w-md border-primary/10 shadow-2xl overflow-hidden rounded-2xl">
-        {/* Full-width premium Logo Header Banner */}
-        <div className="w-full overflow-hidden bg-primary/[0.03] dark:bg-primary/[0.01] border-b border-border/40 py-10 flex flex-col items-center justify-center relative">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-          <img 
-            src={appLogo} 
-            alt="PG Manager Logo" 
-            className="h-20 w-auto object-contain max-w-[80%] drop-shadow-md hover:scale-102 transition-transform duration-300" 
-            decoding="async" 
-          />
+    <div ref={pageContainerRef} className="relative min-h-screen w-full flex items-center justify-center bg-[#070913] overflow-hidden px-4 py-8">
+      {/* Floating glowing background blobs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1d2d5f] to-transparent opacity-50 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#121c3b] to-transparent opacity-40 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-[#18214d]/20 blur-[90px] pointer-events-none" />
+
+      {/* Main glassmorphic card container */}
+      <Card ref={cardRef} className="w-full max-w-md border-white/[0.08] bg-black/40 backdrop-blur-2xl shadow-2xl overflow-hidden rounded-[24px]">
+        {/* Logo Header Section */}
+        <div className="w-full py-6 flex flex-col items-center justify-center border-b border-white/[0.06] relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-50 pointer-events-none" />
+          <div className="flex items-center gap-2 relative z-10">
+            <img 
+              src={appLogo} 
+              alt="PG Logo" 
+              className="h-10 w-auto object-contain" 
+              decoding="async" 
+            />
+            <span className="text-xl font-bold tracking-tight text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              PG Manager
+            </span>
+          </div>
         </div>
 
-        <CardHeader className="text-center px-6 pb-2 pt-6">
-          <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            PG Manager
-          </CardTitle>
-          <CardDescription className="text-sm font-medium text-muted-foreground mt-1">
-            Private workspace for every PG owner.
-          </CardDescription>
-        </CardHeader>
+        <div className="px-6 py-6 space-y-6">
+          {/* Animated Header titles */}
+          <div className="text-center space-y-1">
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              {mode === "signin" ? "Hi There!" : "Create an Account"}
+            </h2>
+            <p className="text-sm text-gray-400">
+              {mode === "signin" ? "Please enter required details." : "To create an account, enter details."}
+            </p>
+          </div>
 
-        <CardContent className="px-6 pb-6 pt-4 space-y-6">
-          {/* Unified prominent Google Button at the top */}
+          {/* Social Sign-In: side-by-side dark glassmorphic buttons */}
           <div className="space-y-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full gap-2 h-11 border-border/80 hover:bg-muted/50 transition-all font-semibold shadow-sm active:scale-[0.99]"
-              onClick={handleGoogleAuth}
-              disabled={isSubmitting || isGoogleSubmitting}
-            >
-              {isGoogleSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              ) : (
-                <GoogleIcon />
-              )}
-              Continue with Google
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-white/20 text-white font-medium gap-2 transition-all active:scale-[0.98] shadow-sm shadow-black/20"
+                onClick={handleGoogleAuth}
+                disabled={isSubmitting || isGoogleSubmitting}
+              >
+                {isGoogleSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-white/20 text-white font-medium gap-2 transition-all active:scale-[0.98] shadow-sm shadow-black/20"
+                onClick={() => toast.info("Apple Sign-In is coming soon!")}
+                disabled={isSubmitting}
+              >
+                <AppleIcon />
+                Apple
+              </Button>
+            </div>
 
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/60" />
+                <span className="w-full border-t border-white/[0.08]" />
               </div>
-              <span className="relative bg-card px-3 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
-                or email
+              <span className="relative bg-[#090b14]/90 px-3 text-[10px] uppercase font-bold text-gray-500 tracking-widest">
+                Or
               </span>
             </div>
           </div>
 
-          <Tabs defaultValue="signin" className="w-full space-y-4">
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/60 rounded-xl h-11">
-              <TabsTrigger value="signin" className="rounded-lg font-semibold text-xs sm:text-sm">Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-lg font-semibold text-xs sm:text-sm">Sign Up</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4 mt-2">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+          {/* Form container with GSAP animated section */}
+          <div ref={formSectionRef} className="will-change-transform">
+            
+            {/* SIGN IN VIEW */}
+            {mode === "signin" && (
+              <form onSubmit={handleSignInSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signin-email" className="text-gray-300 text-xs font-semibold">Email address</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
                     <Input
                       id="signin-email"
                       type="email"
-                      placeholder="you@example.com"
-                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      placeholder="Email address"
+                      className="pl-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isSubmitting} 
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-destructive mt-1 font-medium">{errors.email}</p>}
+                  {errors.email && <p className="text-xs text-red-400 font-medium mt-1">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="signin-password" className="text-gray-300 text-xs font-semibold">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => toast.info("Password reset flow is coming soon!")}
+                      className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
                     <Input
                       id="signin-password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="pl-9 pr-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      placeholder="Password"
+                      className="pl-10 pr-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isSubmitting} 
@@ -316,154 +475,205 @@ const Auth = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground focus:outline-none"
+                      className="absolute right-3.5 top-3.5 text-gray-500 hover:text-gray-300 focus:outline-none"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {errors.password && <p className="text-xs text-destructive mt-1 font-medium">{errors.password}</p>}
+                  {errors.password && <p className="text-xs text-red-400 font-medium mt-1">{errors.password}</p>}
                 </div>
 
-                <Button type="submit" className="w-full h-11 font-semibold rounded-lg text-sm transition-all active:scale-[0.99]" disabled={isSubmitting}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all" 
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
                       Signing in...
                     </>
                   ) : (
-                    "Sign In"
+                    "Log In"
                   )}
                 </Button>
-              </form>
-            </TabsContent>
 
-            <TabsContent value="signup" className="space-y-4 mt-2">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-fullname">Full Name</Label>
+                <div className="text-center pt-2 text-sm text-gray-400">
+                  Create an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("signup")}
+                    className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* SIGN UP VIEW - STEP 1 (Email / Password) */}
+            {mode === "signup" && signupStep === 1 && (
+              <form onSubmit={handleSignUpStepContinue} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-email" className="text-gray-300 text-xs font-semibold">Email address</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="Email address"
+                      className="pl-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                  </div>
+                  {errors.email && <p className="text-xs text-red-400 font-medium mt-1">{errors.email}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-password" className="text-gray-300 text-xs font-semibold">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      className="pl-10 pr-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isSubmitting} 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3.5 text-gray-500 hover:text-gray-300 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-red-400 font-medium mt-1">{errors.password}</p>}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5"
+                >
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+
+                <div className="text-center pt-2 text-sm text-gray-400">
+                  Have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("signin")}
+                    className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors"
+                  >
+                    Log In
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* SIGN UP VIEW - STEP 2 (Profile Details) */}
+            {mode === "signup" && signupStep === 2 && (
+              <form onSubmit={handleSignUpSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-fullname" className="text-gray-300 text-xs font-semibold">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-fullname"
                       type="text"
                       placeholder="Your full name"
-                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      className="pl-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       disabled={isSubmitting} 
                     />
                   </div>
-                  {errors.fullName && <p className="text-xs text-destructive mt-1 font-medium">{errors.fullName}</p>}
+                  {errors.fullName && <p className="text-xs text-red-400 font-medium mt-1">{errors.fullName}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-phone">Phone Number</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-phone" className="text-gray-300 text-xs font-semibold">Phone Number</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-phone"
                       type="tel"
                       placeholder="9876543210"
-                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      className="pl-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       disabled={isSubmitting} 
                     />
                   </div>
-                  {errors.phone && <p className="text-xs text-destructive mt-1 font-medium">{errors.phone}</p>}
+                  {errors.phone && <p className="text-xs text-red-400 font-medium mt-1">{errors.phone}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-city">City</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-city" className="text-gray-300 text-xs font-semibold">City</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
+                    <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-city"
                       type="text"
                       placeholder="Your city"
-                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
+                      className="pl-10 h-11 bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600 transition-all"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       disabled={isSubmitting} 
                     />
                   </div>
-                  {errors.city && <p className="text-xs text-destructive mt-1 font-medium">{errors.city}</p>}
+                  {errors.city && <p className="text-xs text-red-400 font-medium mt-1">{errors.city}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      className="pl-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isSubmitting} 
-                    />
-                  </div>
-                  {errors.email && <p className="text-xs text-destructive mt-1 font-medium">{errors.email}</p>}
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="flex-1 h-11 border-white/10 bg-white/[0.01] hover:bg-white/[0.05] text-white rounded-xl font-medium gap-1.5"
+                    onClick={handleSignUpStepBack}
+                    disabled={isSubmitting}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                  
+                  <Button 
+                    type="submit" 
+                    className="flex-[2] h-11 bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Sign Up"
+                    )}
+                  </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70" />
-                    <Input
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="pl-9 pr-9 h-11 rounded-lg border-border/80 focus-visible:ring-primary/20"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isSubmitting} 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground focus:outline-none"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password && <p className="text-xs text-destructive mt-1 font-medium">{errors.password}</p>}
-                </div>
-
-                <Button type="submit" className="w-full h-11 font-semibold rounded-lg text-sm transition-all active:scale-[0.99]" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
-                </Button>
-
-                <p className="rounded-xl bg-primary/[0.03] dark:bg-primary/[0.01] border border-primary/5 px-4 py-3 text-center text-xs text-muted-foreground leading-relaxed mt-4">
+                <p className="rounded-xl bg-white/[0.01] border border-white/[0.04] px-4 py-3 text-center text-xs text-gray-400 leading-relaxed mt-4">
                   Every signup creates a separate owner workspace. Your PG, tenants, and payments stay private to your account.
                 </p>
               </form>
-            </TabsContent>
-          </Tabs>
+            )}
 
-          <div className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t border-border/30 pt-4">
-            <Link to="/legal#privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/legal#terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/legal#refunds" className="hover:text-foreground transition-colors">Refunds</Link>
-            <Link to="/legal#deletion" className="hover:text-foreground transition-colors">Delete account</Link>
           </div>
-        </CardContent>
+
+          {/* Legal footer links */}
+          <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500 border-t border-white/[0.06] pt-4">
+            <Link to="/legal#privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
+            <Link to="/legal#terms" className="hover:text-gray-300 transition-colors">Terms</Link>
+            <Link to="/legal#refunds" className="hover:text-gray-300 transition-colors">Refunds</Link>
+            <Link to="/legal#deletion" className="hover:text-gray-300 transition-colors">Delete account</Link>
+          </div>
+        </div>
       </Card>
     </div>
   );

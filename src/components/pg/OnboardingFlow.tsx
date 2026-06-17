@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Lottie from 'lottie-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -74,6 +75,17 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [step, setStep] = useState<Step>('welcome');
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>('monthly');
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [welcomeLottieData, setWelcomeLottieData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('https://assets5.lottiefiles.com/packages/lf20_c0xkywh7.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load welcome animation');
+        return res.json();
+      })
+      .then((data) => setWelcomeLottieData(data))
+      .catch((err) => console.debug('Lottie welcome load deferred to fallback:', err));
+  }, []);
 
   const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
@@ -121,8 +133,12 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             exit={{ opacity: 0, y: -20 }}
             className="text-center space-y-6 max-w-md mx-auto"
           >
-            <div className="flex justify-center">
-              <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
+            <div className="flex justify-center h-28 w-28 mx-auto relative">
+              {welcomeLottieData ? (
+                <Lottie animationData={welcomeLottieData} loop className="h-full w-full object-contain" />
+              ) : (
+                <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
+              )}
             </div>
 
             <div>

@@ -1,9 +1,9 @@
 import { Moon, Sun } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
+import { gsap } from "gsap";
 
 interface ThemeToggleProps {
   className?: string;
@@ -12,13 +12,25 @@ interface ThemeToggleProps {
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const iconRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReducedMotion && iconRef.current) {
+      // 180-degree rotation and scale-bounce effect using GSAP
+      gsap.fromTo(iconRef.current, 
+        { rotate: 0, scale: 0.8, opacity: 0.5 },
+        { rotate: 180, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.8)" }
+      );
+    }
+    
+    setTheme(nextTheme);
   };
 
   if (!mounted) {
@@ -29,40 +41,20 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     );
   }
 
-  const isDark = theme === "dark";
-
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className={cn("relative h-9 w-9 rounded-full", className)}
+      className={cn("relative h-9 w-9 rounded-full overflow-hidden hover:bg-muted/50 transition-colors", className)}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {isDark ? (
-          <motion.div
-            key="moon"
-            initial={{ rotate: -90, scale: 0, opacity: 0 }}
-            animate={{ rotate: 0, scale: 1, opacity: 1 }}
-            exit={{ rotate: 90, scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute"
-          >
-            <Moon className="h-5 w-5 text-foreground" />
-          </motion.div>
+      <div ref={iconRef} className="flex items-center justify-center">
+        {theme === "dark" ? (
+          <Moon className="h-5 w-5 text-foreground" />
         ) : (
-          <motion.div
-            key="sun"
-            initial={{ rotate: 90, scale: 0, opacity: 0 }}
-            animate={{ rotate: 0, scale: 1, opacity: 1 }}
-            exit={{ rotate: -90, scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute"
-          >
-            <Sun className="h-5 w-5 text-foreground" />
-          </motion.div>
+          <Sun className="h-5 w-5 text-foreground" />
         )}
-      </AnimatePresence>
+      </div>
       <span className="sr-only">Toggle theme</span>
     </Button>
   );

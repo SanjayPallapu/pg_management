@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { gsap } from "gsap";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Building,
@@ -79,6 +80,21 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [tenantsOpen, setTenantsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
+
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    if (dashboardRef.current) {
+      gsap.fromTo(
+        dashboardRef.current.children,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.45, stagger: 0.05, ease: "power2.out", clearProps: "all" }
+      );
+    }
+  }, [currentPG?.id]);
 
   const openPendingTenants = () => {
     setTenantsOpen(true);
@@ -228,8 +244,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   return (
     <>
-      <div className="space-y-6">
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card">
+      <div ref={dashboardRef} className="space-y-6">
+        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.005]">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div>

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
+import Lottie from 'lottie-react';
+import { gsap } from 'gsap';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
@@ -44,6 +46,32 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   const [copied, setCopied] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReceiptData | null>(null);
+
+  const [successAnimationData, setSuccessAnimationData] = useState<any>(null);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const fallbackCheckRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    fetch('https://assets3.lottiefiles.com/packages/lf20_uq4j2n0u.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load checkmark');
+        return res.json();
+      })
+      .then((data) => setSuccessAnimationData(data))
+      .catch((err) => console.debug('Lottie load deferred to GSAP fallback:', err));
+  }, []);
+
+  useEffect(() => {
+    if (showSuccessAnimation && !successAnimationData && fallbackCheckRef.current) {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) return;
+
+      gsap.fromTo(fallbackCheckRef.current,
+        { scale: 0, rotate: -45, opacity: 0 },
+        { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: 'back.out(2)' }
+      );
+    }
+  }, [showSuccessAnimation, successAnimationData]);
 
   // Handle OS back gesture to close dialog
   useBackGesture(open, () => onOpenChange(false));
@@ -107,6 +135,8 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
     try {
       const dataUrl = await generateReceiptImage(receiptRef.current);
       setGeneratedImage(dataUrl);
+      setShowSuccessAnimation(true);
+      setTimeout(() => setShowSuccessAnimation(false), 2000);
       toast({ title: 'Receipt generated successfully!' });
     } catch (error) {
       console.error('Error generating receipt:', error);
@@ -281,6 +311,28 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
 
           {receiptData && (
             <div className="py-4 space-y-4">
+              {showSuccessAnimation && (
+                <div className="flex flex-col items-center justify-center p-4 bg-green-500/10 rounded-lg space-y-2 border border-green-500/20 animate-in fade-in zoom-in-95 duration-200">
+                  {successAnimationData ? (
+                    <div className="w-16 h-16">
+                      <Lottie animationData={successAnimationData} loop={false} />
+                    </div>
+                  ) : (
+                    <svg 
+                      ref={fallbackCheckRef} 
+                      className="w-12 h-12 text-green-500" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth={3}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">Receipt Generated successfully!</p>
+                </div>
+              )}
+
               <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tenant:</span>
