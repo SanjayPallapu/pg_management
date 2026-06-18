@@ -226,8 +226,8 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             onClick={() => setIsQuickNavOpen(!isQuickNavOpen)}
             className={`h-8 text-xs gap-1 border-primary/30 ml-auto transition-all ${isQuickNavOpen ? "" : "text-primary bg-primary/5 hover:bg-primary/10"}`}
           >
-            <Compass className={`h-3.5 w-3.5 transition-transform duration-300 ${isQuickNavOpen ? "rotate-180" : ""}`} />
-            Quick Access
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isQuickNavOpen ? "rotate-180" : ""}`} />
+            {isQuickNavOpen ? "Collapse" : "Expand"}
           </Button>
         </div>
 
