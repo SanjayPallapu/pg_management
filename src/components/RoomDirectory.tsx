@@ -5,7 +5,7 @@ import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
 import { Search, X, Plus, Settings2, ChevronDown, Snowflake, Compass } from 'lucide-react';
-import { RoomPicker } from './RoomPicker';
+import { RoomArcHoverPicker } from './RoomArcHoverPicker';
 import { gsap } from 'gsap';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TenantSearchResults } from './TenantSearchResults';
@@ -39,7 +39,6 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [acFilter, setAcFilter] = useState<'all' | 'ac' | 'normal'>('all');
-  const [roomPickerOpen, setRoomPickerOpen] = useState(false);
   
   // Smoothly scroll and spotlight animate selected room card
   const handleSelectRoom = useCallback((roomNo: string) => {
@@ -198,14 +197,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           >
             Normal ({rooms.filter(r => !r.isAc).length})
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setRoomPickerOpen(true)}
-            className="h-8 text-xs gap-1 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 ml-auto"
-          >
-            <Compass className="h-3.5 w-3.5" /> Pick Room
-          </Button>
+          <RoomArcHoverPicker rooms={rooms} onSelectRoom={handleSelectRoom} />
         </div>
       </div>
 
@@ -297,13 +289,6 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         open={floorManagementOpen}
         onOpenChange={setFloorManagementOpen}
         rooms={rooms}
-      />
-
-      <RoomPicker
-        isOpen={roomPickerOpen}
-        onClose={() => setRoomPickerOpen(false)}
-        rooms={rooms}
-        onSelectRoom={handleSelectRoom}
       />
     </div>
   );
