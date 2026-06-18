@@ -1,11 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
 import { Search, X, Plus, Settings2, ChevronDown, Snowflake, Compass } from 'lucide-react';
-import { RoomArcHoverPicker } from './RoomArcHoverPicker';
 import { gsap } from 'gsap';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TenantSearchResults } from './TenantSearchResults';
@@ -39,6 +38,30 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [acFilter, setAcFilter] = useState<'all' | 'ac' | 'normal'>('all');
+  const [isQuickNavOpen, setIsQuickNavOpen] = useState(false);
+  const quickNavContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Handle GSAP height slide open/close for Quick Access Grid
+  useEffect(() => {
+    const container = quickNavContainerRef.current;
+    if (!container) return;
+
+    gsap.killTweensOf(container);
+
+    if (isQuickNavOpen) {
+      gsap.fromTo(container,
+        { height: 0, opacity: 0 },
+        { height: 'auto', opacity: 1, duration: 0.35, ease: 'power2.out' }
+      );
+    } else {
+      gsap.to(container, {
+        height: 0,
+        opacity: 0,
+        duration: 0.25,
+        ease: 'power2.in'
+      });
+    }
+  }, [isQuickNavOpen]);
   
   // Smoothly scroll and spotlight animate selected room card
   const handleSelectRoom = useCallback((roomNo: string) => {
@@ -197,7 +220,46 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           >
             Normal ({rooms.filter(r => !r.isAc).length})
           </Button>
-          <RoomArcHoverPicker rooms={rooms} onSelectRoom={handleSelectRoom} />
+          <Button
+            size="sm"
+            variant={isQuickNavOpen ? "default" : "outline"}
+            onClick={() => setIsQuickNavOpen(!isQuickNavOpen)}
+            className={`h-8 text-xs gap-1 border-primary/30 ml-auto transition-all ${isQuickNavOpen ? "" : "text-primary bg-primary/5 hover:bg-primary/10"}`}
+          >
+            <Compass className={`h-3.5 w-3.5 transition-transform duration-300 ${isQuickNavOpen ? "rotate-180" : ""}`} />
+            Quick Access
+          </Button>
+        </div>
+
+        {/* Expandable Quick Room Access Grid */}
+        <div
+          ref={quickNavContainerRef}
+          className="overflow-hidden h-0 opacity-0"
+        >
+          <div className="pt-3 pb-1">
+            <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-muted/20 border border-border/40">
+              {[...rooms]
+                .sort((a, b) => a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true }))
+                .map((room) => {
+                  const isOccupied = room.tenants.length > 0;
+                  return (
+                    <button
+                      key={room.roomNo}
+                      onClick={() => handleSelectRoom(room.roomNo)}
+                      type="button"
+                      className={`min-w-[44px] h-9 px-2.5 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer ${
+                        isOccupied
+                          ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                          : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                      }`}
+                      title={`Room ${room.roomNo} • ${isOccupied ? "Occupied" : "Vacant"}`}
+                    >
+                      {room.roomNo}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
         </div>
       </div>
 
