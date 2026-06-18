@@ -4,7 +4,9 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
-import { Search, X, Plus, Settings2, ChevronDown, Snowflake } from 'lucide-react';
+import { Search, X, Plus, Settings2, ChevronDown, Snowflake, Compass } from 'lucide-react';
+import { RoomPicker } from './RoomPicker';
+import { gsap } from 'gsap';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TenantSearchResults } from './TenantSearchResults';
 import { usePG } from '@/contexts/PGContext';
@@ -37,6 +39,50 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [floorManagementOpen, setFloorManagementOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [acFilter, setAcFilter] = useState<'all' | 'ac' | 'normal'>('all');
+  const [roomPickerOpen, setRoomPickerOpen] = useState(false);
+  
+  // Smoothly scroll and spotlight animate selected room card
+  const handleSelectRoom = useCallback((roomNo: string) => {
+    const room = rooms.find(r => r.roomNo === roomNo);
+    if (!room) return;
+
+    // Switch AC filter if the target room would be hidden
+    if (acFilter === 'ac' && !room.isAc) {
+      setAcFilter('all');
+    } else if (acFilter === 'normal' && room.isAc) {
+      setAcFilter('all');
+    }
+
+    // Wait a brief tick for react rendering/filtering updates, then scroll and animate
+    setTimeout(() => {
+      const element = document.getElementById(`room-card-${roomNo}`);
+      if (element) {
+        // Smooth scroll to the element
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Trigger GSAP pulse/glow highlight animation
+        gsap.killTweensOf(element);
+        gsap.fromTo(
+          element,
+          { 
+            boxShadow: '0 0 0px rgba(59, 130, 246, 0)',
+            scale: 1,
+            borderColor: 'rgba(59, 130, 246, 0.2)'
+          },
+          {
+            boxShadow: '0 0 25px rgba(59, 130, 246, 0.85)',
+            scale: 1.03,
+            borderColor: 'rgba(59, 130, 246, 0.85)',
+            duration: 0.35,
+            yoyo: true,
+            repeat: 3,
+            ease: 'power2.inOut',
+            clearProps: 'boxShadow,scale,borderColor'
+          }
+        );
+      }
+    }, 120);
+  }, [rooms, acFilter]);
   
   // Fetch all day guests once at directory level to avoid N+1 queries
   const { dayGuests: allDayGuests } = useDayGuests();
@@ -152,6 +198,14 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           >
             Normal ({rooms.filter(r => !r.isAc).length})
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setRoomPickerOpen(true)}
+            className="h-8 text-xs gap-1 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 ml-auto"
+          >
+            <Compass className="h-3.5 w-3.5" /> Pick Room
+          </Button>
         </div>
       </div>
 
@@ -243,6 +297,13 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         open={floorManagementOpen}
         onOpenChange={setFloorManagementOpen}
         rooms={rooms}
+      />
+
+      <RoomPicker
+        isOpen={roomPickerOpen}
+        onClose={() => setRoomPickerOpen(false)}
+        rooms={rooms}
+        onSelectRoom={handleSelectRoom}
       />
     </div>
   );

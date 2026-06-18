@@ -247,7 +247,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const currentStatus =
     occupiedCount === room.capacity ? "Occupied" : occupiedCount === 0 ? "Vacant" : "Partially Occupied";
   return (
-    <Card className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
+    <Card id={`room-card-${room.roomNo}`} className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-semibold text-primary">

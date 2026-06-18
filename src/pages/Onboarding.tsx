@@ -95,9 +95,9 @@ const Onboarding = () => {
   const slide = ONBOARDING_DATA[currentSlide];
 
   return (
-    <div className="relative h-screen w-full bg-[#070913] text-white overflow-hidden select-none">
+    <div className="flex flex-col h-screen w-full bg-[#070913] text-white overflow-hidden select-none">
       {/* Header with Skip button */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-6 right-6 z-30">
         <button 
           onClick={completeOnboarding}
           className="text-sm font-semibold text-gray-400 hover:text-white transition-colors py-2 px-3 rounded-lg bg-black/40 backdrop-blur-md border border-white/5 active:scale-95 duration-100 shadow-lg shadow-black/40"
@@ -106,8 +106,8 @@ const Onboarding = () => {
         </button>
       </div>
 
-      {/* Slides Container */}
-      <div className="absolute inset-0 z-0">
+      {/* Slides Container - takes all remaining height */}
+      <div className="flex-1 relative w-full overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentSlide}
@@ -120,51 +120,53 @@ const Onboarding = () => {
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.4}
             onDragEnd={handleDragEnd}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing flex items-center justify-center"
           >
-            {/* Full screen screenshot image */}
+            {/* Image scales to fit exactly inside this area, preserving high quality */}
             <img 
               src={slide.image} 
-              className="w-full h-full object-contain bg-[#070913]"
-              style={{ pointerEvents: 'none', objectPosition: 'top center' }}
+              className="w-full h-full object-contain max-h-full"
+              style={{ pointerEvents: 'none', objectPosition: 'center center' }}
               alt={slide.title}
             />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Bottom Controls Overlay */}
-      <div className="absolute bottom-4 left-6 right-6 z-20 flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md max-w-sm mx-auto shadow-2xl shadow-black/50">
-        {/* Pagination Dots */}
-        <div className="flex gap-2">
-          {ONBOARDING_DATA.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setDirection(idx > currentSlide ? 1 : -1);
-                setCurrentSlide(idx);
-              }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                currentSlide === idx ? "w-6 bg-blue-500" : "w-2 bg-white/20 hover:bg-white/40"
-              }`}
-            />
-          ))}
-        </div>
+      {/* Bottom Controls Bar - Dedicated row to prevent overlapping image content */}
+      <div className="h-20 w-full flex-shrink-0 flex items-center justify-between px-6 bg-black/50 border-t border-white/5 backdrop-blur-lg shadow-2xl">
+        <div className="max-w-lg mx-auto w-full flex items-center justify-between">
+          {/* Pagination Dots */}
+          <div className="flex gap-2">
+            {ONBOARDING_DATA.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setDirection(idx > currentSlide ? 1 : -1);
+                  setCurrentSlide(idx);
+                }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  currentSlide === idx ? "w-6 bg-blue-500" : "w-2 bg-white/20 hover:bg-white/40"
+                }`}
+              />
+            ))}
+          </div>
 
-        {/* Action Button */}
-        <Button
-          onClick={nextSlide}
-          className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center gap-1.5"
-        >
-          {currentSlide === ONBOARDING_DATA.length - 1 ? (
-            "Get Started"
-          ) : (
-            <>
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
-        </Button>
+          {/* Action Button */}
+          <Button
+            onClick={nextSlide}
+            className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center gap-1.5"
+          >
+            {currentSlide === ONBOARDING_DATA.length - 1 ? (
+              "Get Started"
+            ) : (
+              <>
+                Next
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
