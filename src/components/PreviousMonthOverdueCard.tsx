@@ -320,7 +320,7 @@ export const PreviousMonthOverdueCard = () => {
       date: data.date,
       type: isFullPayment ? 'full' : 'partial',
       mode: data.mode,
-      collectedBy: data.collectedBy || collectors[0]?.displayName || 'Sanjay',
+      collectedBy: data.collectedBy || collectors[0]?.displayName || 'Owner',
     };
 
     // Combine notes

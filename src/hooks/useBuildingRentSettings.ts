@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from './useAuth';
 
 export interface BuildingRentSettings {
   amount: number;
@@ -7,29 +8,36 @@ export interface BuildingRentSettings {
   whatsappNumber: string;
 }
 
-const DEFAULT_SETTINGS: BuildingRentSettings = {
-  amount: 150000,
-  receivedFrom: 'Pallapu Sanjay Kumar',
-  paidTo: 'Vishvanathan',
-  whatsappNumber: '9989568666',
-};
-
 const STORAGE_KEY = 'building-rent-settings';
 
 export const useBuildingRentSettings = () => {
-  const [settings, setSettings] = useState<BuildingRentSettings>(DEFAULT_SETTINGS);
+  const { user } = useAuth();
+
+  const defaultSettings = useMemo<BuildingRentSettings>(() => {
+    const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || 'Owner';
+    return {
+      amount: 50000,
+      receivedFrom: fullName,
+      paidTo: 'Landlord',
+      whatsappNumber: '',
+    };
+  }, [user]);
+
+  const [settings, setSettings] = useState<BuildingRentSettings>(defaultSettings);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        setSettings({ ...defaultSettings, ...parsed });
       } catch {
-        setSettings(DEFAULT_SETTINGS);
+        setSettings(defaultSettings);
       }
+    } else {
+      setSettings(defaultSettings);
     }
-  }, []);
+  }, [defaultSettings]);
 
   const updateSettings = (newSettings: Partial<BuildingRentSettings>) => {
     const updated = { ...settings, ...newSettings };
@@ -38,8 +46,8 @@ export const useBuildingRentSettings = () => {
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
+    setSettings(defaultSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSettings));
   };
 
   return { settings, updateSettings, resetSettings };

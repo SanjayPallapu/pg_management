@@ -118,7 +118,7 @@ export const BuildingRentSettingsDialog = ({
                 value={amount || ''}
                 onChange={(e) => setAmount(Number(e.target.value) || 0)}
                 className="pl-7"
-                placeholder="150000"
+                placeholder="50000"
               />
             </div>
             {amount > 0 && (
@@ -134,7 +134,7 @@ export const BuildingRentSettingsDialog = ({
               id="receivedFrom"
               value={receivedFrom}
               onChange={(e) => setReceivedFrom(e.target.value)}
-              placeholder="Pallapu Sanjay Kumar"
+              placeholder="Enter payer name (e.g. John Doe)"
               className="mt-1"
             />
           </div>
@@ -145,7 +145,7 @@ export const BuildingRentSettingsDialog = ({
               id="paidTo"
               value={paidTo}
               onChange={(e) => setPaidTo(e.target.value)}
-              placeholder="Vishvanathan"
+              placeholder="Enter owner name (e.g. Landlord)"
               className="mt-1"
             />
           </div>
@@ -156,7 +156,7 @@ export const BuildingRentSettingsDialog = ({
               id="whatsapp"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
-              placeholder="9989568666"
+              placeholder="Enter WhatsApp number (e.g. 919999999999)"
               className="mt-1"
             />
           </div>

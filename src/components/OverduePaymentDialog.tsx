@@ -87,7 +87,7 @@ export const OverduePaymentDialog = ({
   const [dateOpen, setDateOpen] = useState(false);
   const [discount, setDiscount] = useState<number>(0);
   const { collectors } = useCollectorNames();
-  const [collectedBy, setCollectedBy] = useState<string>(collectors[0]?.displayName || 'Sanjay');
+  const [collectedBy, setCollectedBy] = useState<string>(collectors[0]?.displayName || 'Owner');
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -98,7 +98,7 @@ export const OverduePaymentDialog = ({
       setPaymentDate(new Date());
       setPaymentMode('upi');
       setDiscount(0);
-      setCollectedBy(collectors[0]?.displayName || 'Sanjay');
+      setCollectedBy(collectors[0]?.displayName || 'Owner');
     }
     onOpenChange(isOpen);
   };

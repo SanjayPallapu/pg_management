@@ -10,17 +10,18 @@ export interface CollectorConfig {
 const STORAGE_KEY = 'collector-names';
 
 const DEFAULT_COLLECTORS: CollectorConfig[] = [
-  { id: 'Me', displayName: 'Sanjay' },
-  { id: 'Brother', displayName: 'Sai' },
+  { id: 'Me', displayName: 'Owner' },
+  { id: 'Staff', displayName: 'Staff' },
 ];
 
 const DEFAULT_COLLECTOR_NAME_BY_ID = new Map(
   DEFAULT_COLLECTORS.map((collector) => [collector.id, collector.displayName])
 );
 
-const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
-  if (!Array.isArray(raw)) return DEFAULT_COLLECTORS;
+const normalizeCollectors = (raw: unknown, defaults: CollectorConfig[] = DEFAULT_COLLECTORS): CollectorConfig[] => {
+  if (!Array.isArray(raw)) return defaults;
 
+  const defaultNameById = new Map(defaults.map(c => [c.id, c.displayName]));
   const seen = new Set<string>();
   const normalized: CollectorConfig[] = [];
 
@@ -30,7 +31,7 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
 
     if (typeof item === 'string') {
       id = item.trim();
-      displayName = DEFAULT_COLLECTOR_NAME_BY_ID.get(id) ?? id;
+      displayName = defaultNameById.get(id) ?? id;
     } else if (item && typeof item === 'object') {
       const obj = item as Partial<CollectorConfig>;
       id = String(obj.id ?? '').trim();
@@ -40,7 +41,7 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
         id = displayName;
       }
       if (!displayName && id) {
-        displayName = DEFAULT_COLLECTOR_NAME_BY_ID.get(id) ?? id;
+        displayName = defaultNameById.get(id) ?? id;
       }
     }
 
@@ -51,12 +52,12 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
     normalized.push({ id, displayName });
   });
 
-  if (normalized.length === 0) return DEFAULT_COLLECTORS;
+  if (normalized.length === 0) return defaults;
 
   const normalizedIds = new Set(normalized.map((collector) => collector.id));
   const withDefaults = [...normalized];
 
-  DEFAULT_COLLECTORS.forEach((collector) => {
+  defaults.forEach((collector) => {
     if (!normalizedIds.has(collector.id)) {
       withDefaults.push(collector);
     }
@@ -66,8 +67,18 @@ const normalizeCollectors = (raw: unknown): CollectorConfig[] => {
 };
 
 export const useCollectorNames = () => {
-  const [collectors, setCollectors] = useState<CollectorConfig[]>(DEFAULT_COLLECTORS);
   const { user } = useAuth();
+
+  const defaultCollectors = useMemo<CollectorConfig[]>(() => {
+    const name = user?.user_metadata?.full_name || user?.user_metadata?.name || 'Owner';
+    const firstName = name.split(' ')[0];
+    return [
+      { id: 'Me', displayName: firstName },
+      { id: 'Staff', displayName: 'Staff' },
+    ];
+  }, [user]);
+
+  const [collectors, setCollectors] = useState<CollectorConfig[]>(defaultCollectors);
 
   const collectorDisplayNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -88,15 +99,16 @@ export const useCollectorNames = () => {
     [collectorDisplayNameMap]
   );
 
+  // Sync state with localStorage and dynamic defaults when defaults or user changes
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    let nextCollectors = DEFAULT_COLLECTORS;
+    let nextCollectors = defaultCollectors;
     let shouldPersist = !stored;
 
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        nextCollectors = normalizeCollectors(parsed);
+        nextCollectors = normalizeCollectors(parsed, defaultCollectors);
         if (JSON.stringify(nextCollectors) !== stored) {
           shouldPersist = true;
         }
@@ -109,7 +121,7 @@ export const useCollectorNames = () => {
     if (shouldPersist) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
     }
-  }, []);
+  }, [defaultCollectors]);
 
   const syncFromServer = useCallback(async () => {
     if (!user) return;
@@ -126,7 +138,7 @@ export const useCollectorNames = () => {
     }
 
     if (!data || data.length === 0) {
-      const seed = DEFAULT_COLLECTORS.map((collector) => ({
+      const seed = defaultCollectors.map((collector) => ({
         user_id: user.id,
         collector_key: collector.id,
         display_name: collector.displayName,
@@ -142,26 +154,27 @@ export const useCollectorNames = () => {
     }
 
     const nextCollectors = normalizeCollectors(
-      data.map((row: any) => ({ id: row.collector_key, displayName: row.display_name }))
+      data.map((row: any) => ({ id: row.collector_key, displayName: row.display_name })),
+      defaultCollectors
     );
 
     setCollectors(nextCollectors);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
     window.dispatchEvent(new Event('collector-names-changed'));
-  }, [user]);
+  }, [user, defaultCollectors]);
 
   useEffect(() => {
     const syncFromStorage = () => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
-        setCollectors(DEFAULT_COLLECTORS);
+        setCollectors(defaultCollectors);
         return;
       }
 
       try {
-        setCollectors(normalizeCollectors(JSON.parse(stored)));
+        setCollectors(normalizeCollectors(JSON.parse(stored), defaultCollectors));
       } catch {
-        setCollectors(DEFAULT_COLLECTORS);
+        setCollectors(defaultCollectors);
       }
     };
 
@@ -182,7 +195,7 @@ export const useCollectorNames = () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('collector-names-changed', handleCustomEvent as EventListener);
     };
-  }, []);
+  }, [defaultCollectors]);
 
   useEffect(() => {
     if (!user) return;
@@ -210,11 +223,11 @@ export const useCollectorNames = () => {
   }, [user, syncFromServer]);
 
   const saveCollectors = useCallback((updated: CollectorConfig[]) => {
-    const normalized = normalizeCollectors(updated);
+    const normalized = normalizeCollectors(updated, defaultCollectors);
     setCollectors(normalized);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     window.dispatchEvent(new Event('collector-names-changed'));
-  }, []);
+  }, [defaultCollectors]);
 
   const addCollector = useCallback((displayName: string) => {
     const id = displayName.trim();
@@ -297,7 +310,7 @@ export const useCollectorNames = () => {
             console.error('[Collectors] Failed to reset collectors', error);
             return;
           }
-          const seed = DEFAULT_COLLECTORS.map((collector) => ({
+          const seed = defaultCollectors.map((collector) => ({
             user_id: user.id,
             collector_key: collector.id,
             display_name: collector.displayName,
@@ -311,8 +324,8 @@ export const useCollectorNames = () => {
       return;
     }
 
-    saveCollectors(DEFAULT_COLLECTORS);
-  }, [saveCollectors, user]);
+    saveCollectors(defaultCollectors);
+  }, [saveCollectors, user, defaultCollectors]);
 
   return {
     collectors,

@@ -203,7 +203,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     setPaymentAmount(remaining);
     setPaymentDate(new Date());
     setPaymentMode('upi');
-    setPaymentCollectedBy(collectors[0]?.displayName || 'Sanjay');
+    setPaymentCollectedBy(collectors[0]?.displayName || 'Owner');
     setPaymentDialogOpen(true);
   };
 
@@ -220,7 +220,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       date: format(paymentDate, 'yyyy-MM-dd'),
       type: existingPaid === 0 ? (isFullPayment ? 'full' : 'partial') : (isFullPayment ? 'remaining' : 'partial'),
       mode: paymentMode,
-      collectedBy: paymentCollectedBy || collectors[0]?.displayName || 'Sanjay',
+      collectedBy: paymentCollectedBy || collectors[0]?.displayName || 'Owner',
     };
 
     const existingEntries: DayGuestPaymentEntry[] = (paymentGuest.payment_entries as DayGuestPaymentEntry[]) || [];

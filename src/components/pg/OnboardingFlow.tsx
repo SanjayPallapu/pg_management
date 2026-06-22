@@ -90,7 +90,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
   const hasActiveTrial = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
-  const isSubscriptionActive = subscription?.status === 'active';
+  const isSubscriptionActive = subscription?.status === 'active' || subscription?.status === 'free';
   const shouldSkipToSetup = isAdmin || isSubscriptionActive;
 
   useEffect(() => {

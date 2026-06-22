@@ -87,7 +87,7 @@ const ContactSection = () =>
           </div>
           <div>
             <p className="font-semibold text-foreground">Email Us</p>
-            <p className="text-sm text-primary font-medium">sanjaypallapuu@gmail.com</p>
+            <p className="text-sm text-primary font-medium">support@pgmanager.in</p>
             <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
           </div>
         </motion.a>
