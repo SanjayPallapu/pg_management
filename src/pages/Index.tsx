@@ -71,12 +71,11 @@ const Index = () => {
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
 
-  // Sync active tab from URL when searchParams change
+  // Sync active tab from URL when searchParams change (e.g. from BottomNav inside dialogs)
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTabLocal(tabFromUrl);
-      setContextTab(tabFromUrl);
+      setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
 
@@ -311,7 +310,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 sm:px-4">
+      <div className="mx-auto w-full max-w-screen-2xl px-1.5 py-3 sm:px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
