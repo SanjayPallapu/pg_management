@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import Lottie from 'lottie-react';
 import { gsap } from 'gsap';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -298,17 +298,17 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         </div>
       )}
       
-      <AlertDialog open={open} onOpenChange={handleClose}>
-        <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-green-600" />
               Send Payment Receipt
-            </AlertDialogTitle>
-            <AlertDialogDescription>
+            </DialogTitle>
+            <DialogDescription>
               Generate and send payment receipt to {receiptData?.tenantName} via WhatsApp.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+            </DialogDescription>
+          </DialogHeader>
 
           {receiptData && (
             <div className="py-4 space-y-4">
@@ -413,8 +413,8 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
             </div>
           )}
 
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleClose}>Close</AlertDialogCancel>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>Close</Button>
 
             {generatedImage && (
               <Button 
@@ -435,9 +435,9 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
                 )}
               </Button>
             )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

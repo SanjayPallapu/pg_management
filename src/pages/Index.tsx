@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { useActiveTab } from "@/contexts/ActiveTabContext";
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
@@ -54,7 +55,12 @@ const Index = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard');
+  const { setActiveTab: setContextTab } = useActiveTab();
+  const [activeTab, setActiveTabLocal] = useState(searchParams.get('tab') || 'dashboard');
+  const setActiveTab = (tab: string) => {
+    setActiveTabLocal(tab);
+    setContextTab(tab);
+  };
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Loader2, Download, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -116,17 +116,17 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleClose}>
-      <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
             Share Rules & Regulations
-          </AlertDialogTitle>
-          <AlertDialogDescription>
+          </DialogTitle>
+          <DialogDescription>
             Send PG rules to {shareData?.tenantName} via WhatsApp.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="py-4 space-y-4">
           {/* Language Toggle */}
@@ -172,7 +172,7 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
           </Button>
         </div>
 
-        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+        <DialogFooter className="flex-col gap-2 sm:flex-col">
           {generatedImage && (
             <Button
               onClick={shareToWhatsApp}
@@ -186,11 +186,11 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
               )}
             </Button>
           )}
-          <AlertDialogCancel onClick={handleClose} className="w-full h-11 mt-0">
+          <Button variant="outline" onClick={handleClose} className="w-full h-11 mt-0">
             Close
-          </AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

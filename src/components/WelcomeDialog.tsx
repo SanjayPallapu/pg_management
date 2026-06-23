@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -157,17 +157,17 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
         </div>
       )}
 
-      <AlertDialog open={open} onOpenChange={handleClose}>
-        <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <PartyPopper className="h-5 w-5 text-pink-600" />
               Welcome New Tenant
-            </AlertDialogTitle>
-            <AlertDialogDescription>
+            </DialogTitle>
+            <DialogDescription>
               Generate and send a welcome message to {welcomeData?.tenantName} via WhatsApp.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+            </DialogDescription>
+          </DialogHeader>
 
           {welcomeData && (
             <div className="py-4 space-y-4">
@@ -230,7 +230,7 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
             </div>
           )}
 
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
             {generatedImage && (
               <Button
                 onClick={shareToWhatsApp}
@@ -244,12 +244,12 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
                 )}
               </Button>
             )}
-            <AlertDialogCancel onClick={handleClose} className="w-full h-11 mt-0">
+            <Button variant="outline" onClick={handleClose} className="w-full h-11 mt-0">
               Close
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

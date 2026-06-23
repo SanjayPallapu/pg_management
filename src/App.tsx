@@ -24,6 +24,7 @@ import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ActiveTabProvider } from "@/contexts/ActiveTabContext";
 import { Loader2 } from "lucide-react";
 
 // Protected route component that wraps children with PGProvider
@@ -122,6 +123,7 @@ const AppContent = () => {
 
   return (
     <MonthProvider>
+    <ActiveTabProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
@@ -174,6 +176,7 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    </ActiveTabProvider>
     </MonthProvider>
   );
 };
