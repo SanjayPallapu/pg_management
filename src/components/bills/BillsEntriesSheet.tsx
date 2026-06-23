@@ -46,7 +46,7 @@ export const BillsEntriesSheet = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col">
+        <SheetContent side="bottom" className="p-0 flex flex-col">
           <SheetHeader className="p-4 pb-2 border-b">
             <SheetTitle className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onOpenChange(false)}>

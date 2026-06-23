@@ -183,7 +183,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       </Card>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="h-[85vh] [&>button]:hidden">
+        <SheetContent side="bottom" className="[&>button]:hidden">
           <Button
             variant="ghost"
             size="icon"

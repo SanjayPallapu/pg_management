@@ -1761,7 +1761,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
       {/* Web Mock Contact Picker Dialog */}
       <Dialog open={mockPickerOpen} onOpenChange={setMockPickerOpen}>
-        <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-6">
+        <DialogContent className="flex flex-col p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Contact className="h-5 w-5 text-primary" />
@@ -1882,7 +1882,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
       {/* Multiple Phone Numbers Selection Dialog */}
       <Dialog open={numberSelectOpen} onOpenChange={setNumberSelectOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Select Phone Number</DialogTitle>
             <DialogDescription>

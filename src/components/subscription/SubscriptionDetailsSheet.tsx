@@ -79,7 +79,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="right">
         <Button
           variant="ghost"
           size="icon"

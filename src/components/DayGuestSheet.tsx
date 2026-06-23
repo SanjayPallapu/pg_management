@@ -274,7 +274,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
+        <SheetContent side="bottom" className="p-0 bg-gradient-to-b from-background via-background to-muted/30">
           <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
             <SheetTitle className="text-left flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>

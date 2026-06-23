@@ -72,7 +72,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-xs">Quick entry — only what's needed.</DialogDescription>

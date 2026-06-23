@@ -146,7 +146,7 @@ export const BillUnitPricesCard = () => {
 
       {/* Full Sheet */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full md:w-2/3 flex flex-col p-0 [&>button]:hidden">
+        <SheetContent side="right" className="flex flex-col p-0 [&>button]:hidden">
           {/* Header */}
           <SheetHeader className="border-b px-4 py-4 space-y-0">
             <div className="flex items-center gap-2">

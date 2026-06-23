@@ -26,7 +26,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />

@@ -272,7 +272,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-screen p-0 bg-gradient-to-b from-background via-background to-muted/30">
+      <SheetContent side="bottom" className="p-0 bg-gradient-to-b from-background via-background to-muted/30">
         <SheetHeader className="p-4 pb-2">
           <SheetTitle className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>

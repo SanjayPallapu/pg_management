@@ -391,7 +391,7 @@ export const SecurityDepositCard = ({
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent>
           <Button
             variant="ghost"
             size="icon"

@@ -129,7 +129,7 @@ export const AdminPaymentApproval = ({ open, onOpenChange }: AdminPaymentApprova
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetContent side="right">
           <Button
             variant="ghost"
             size="icon"

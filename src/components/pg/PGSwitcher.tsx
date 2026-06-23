@@ -104,7 +104,7 @@ export const PGSwitcher = () => {
       </DropdownMenu>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+        <DialogContent className="p-0 overflow-hidden">
           <PGSetupWizard 
             isAddingNew 
             onComplete={() => setShowAddDialog(false)} 

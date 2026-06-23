@@ -119,7 +119,7 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">Add Rooms to Floor {floor}</DialogTitle>
         </DialogHeader>

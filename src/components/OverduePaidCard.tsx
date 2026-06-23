@@ -237,7 +237,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent 
           side={isMobile ? "right" : "bottom"} 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[80vh]"}
+          className={isMobile ? "p-4 [&>button]:hidden" : ""}
         >
           <SheetHeader>
             <div className="flex items-center justify-between">
@@ -375,7 +375,7 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
       <Sheet open={stillPendingSheetOpen} onOpenChange={setStillPendingSheetOpen}>
         <SheetContent 
           side={isMobile ? "right" : "bottom"} 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "h-[70vh]"}
+          className={isMobile ? "p-4 [&>button]:hidden" : ""}
         >
           <SheetHeader>
             <div className="flex items-center justify-between">

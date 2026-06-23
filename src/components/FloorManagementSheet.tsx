@@ -143,7 +143,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[80vh]">
+        <SheetContent side="bottom">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />

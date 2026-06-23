@@ -98,7 +98,7 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
       </Card>
 
       <Sheet open={sheetType !== null} onOpenChange={() => setSheetType(null)}>
-        <SheetContent side="bottom" className="h-[70vh]">
+        <SheetContent side="bottom">
           <SheetHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetType(null)}>

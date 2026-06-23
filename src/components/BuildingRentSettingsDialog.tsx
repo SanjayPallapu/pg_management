@@ -70,7 +70,7 @@ export const BuildingRentSettingsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Building Rent Settings</DialogTitle>
         </DialogHeader>

@@ -94,7 +94,7 @@ export const LogoUpdateDialog = ({ open, onOpenChange, pgId }: LogoUpdateDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Logo - {pg?.name}</DialogTitle>
         </DialogHeader>

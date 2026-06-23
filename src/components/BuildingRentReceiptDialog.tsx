@@ -172,7 +172,7 @@ export const BuildingRentReceiptDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Building Rent Receipt - {forMonth}</DialogTitle>
         </DialogHeader>

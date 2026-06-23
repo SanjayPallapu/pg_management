@@ -87,7 +87,7 @@ export const TenantsByDueDaySheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-md"}
+        className={isMobile ? "p-4 [&>button]:hidden" : ""}
       >
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">

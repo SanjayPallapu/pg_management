@@ -110,7 +110,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Room {room.roomNo}</DialogTitle>
           </DialogHeader>

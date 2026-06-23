@@ -222,7 +222,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-screen bg-gradient-to-b from-background via-background to-muted/30">
+      <SheetContent side="bottom" className="bg-gradient-to-b from-background via-background to-muted/30">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>

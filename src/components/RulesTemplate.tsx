@@ -129,7 +129,7 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="[&>button]:hidden w-full md:w-3/4 lg:w-2/3 flex flex-col p-0">
+      <SheetContent side="right" className="[&>button]:hidden flex flex-col p-0">
         <SheetHeader className="relative border-b px-6 pb-4 pt-6 pl-16">
           <Button
             type="button"

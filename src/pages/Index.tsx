@@ -60,6 +60,12 @@ const Index = () => {
   const setActiveTab = (tab: string) => {
     setActiveTabLocal(tab);
     setContextTab(tab);
+    // Close all open dialogs/sheets when switching tabs
+    setIsDialogOpen(false);
+    setSelectedRoom(null);
+    setSubscriptionSheetOpen(false);
+    setHistorySheetOpen(false);
+    setAdminApprovalOpen(false);
   };
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
