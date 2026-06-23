@@ -23,3 +23,17 @@ try {
   document.body.innerHTML = '';
   document.body.appendChild(errorDiv);
 }
+
+// Register Service Worker for offline support & Play Store PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/serviceWorker.js')
+      .then((registration) => {
+        console.log('SW registered:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
