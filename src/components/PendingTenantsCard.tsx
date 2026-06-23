@@ -183,7 +183,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       </Card>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="[&>button]:hidden">
+        <SheetContent>
           <Button
             variant="ghost"
             size="icon"
@@ -242,7 +242,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
             )}
 
             <TabsContent value="overdue" className="mt-4">
-              <ScrollArea className="h-[calc(85vh-220px)]">
+              <div>
                 <div className="space-y-2 pr-4">
                   {overdueCombined.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
@@ -261,11 +261,11 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                     ))
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             <TabsContent value="not-yet-due" className="mt-4">
-              <ScrollArea className="h-[calc(85vh-220px)]">
+              <div>
                 <div className="space-y-2 pr-4">
                   {notYetDue.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No upcoming dues</p>
@@ -284,7 +284,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                     ))
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
           </Tabs>
         </SheetContent>
