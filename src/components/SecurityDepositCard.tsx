@@ -402,23 +402,27 @@ export const SecurityDepositCard = ({
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-4 rounded-full"
-            onClick={() => setSheetOpen(false)}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <SheetHeader>
-            <SheetTitle className="flex items-center justify-center gap-2 pl-8">
-              <Wallet className="h-5 w-5" />
-              Security Deposits
-            </SheetTitle>
-            <SheetDescription>
-              Track security deposits from tenants (optional formality)
-            </SheetDescription>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <SheetTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Security Deposits
+                </SheetTitle>
+                <SheetDescription>
+                  Track security deposits from tenants (optional formality)
+                </SheetDescription>
+              </div>
+            </div>
           </SheetHeader>
 
           <div className="mt-6 space-y-6">

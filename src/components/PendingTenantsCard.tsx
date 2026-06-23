@@ -184,17 +184,19 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-4 rounded-full z-10"
-            onClick={() => setSheetOpen(false)}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <SheetHeader>
-            <SheetTitle className="pl-8">Select Pending Tenants</SheetTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <SheetTitle>Select Pending Tenants</SheetTitle>
+            </div>
           </SheetHeader>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">

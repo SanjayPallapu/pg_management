@@ -130,18 +130,22 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
-        <SheetHeader className="relative border-b px-6 pb-4 pt-6 pl-16">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="absolute left-4 top-5 h-8 w-8 rounded-full p-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <SheetTitle>Rules Template Preview</SheetTitle>
-          <SheetDescription>Choose language & style, then share or save</SheetDescription>
+        <SheetHeader>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => onOpenChange(false)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <SheetTitle>Rules Template Preview</SheetTitle>
+              <SheetDescription>Choose language & style, then share or save</SheetDescription>
+            </div>
+          </div>
         </SheetHeader>
 
         {/* Language selector */}

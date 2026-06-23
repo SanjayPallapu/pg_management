@@ -376,31 +376,29 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-4 rounded-full"
-            onClick={() => onOpenChange(false)}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <SheetHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-base text-destructive pl-8">
+          <SheetHeader>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => onOpenChange(false)}
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <SheetTitle className="text-base text-destructive flex-1">
                 Previous Month Overdue
               </SheetTitle>
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setHistoryOpen(true)} 
-                  className="h-8 w-8"
-                  title="Payment History"
-                >
-                  <History className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setHistoryOpen(true)} 
+                className="h-8 w-8 shrink-0"
+                title="Payment History"
+              >
+                <History className="h-4 w-4" />
+              </Button>
             </div>
             <p className="text-sm text-muted-foreground">
               {months[prevMonth - 1]} {prevYear} • {overdueTenants.length} tenant(s) • ₹{totalOverdue.toLocaleString()}

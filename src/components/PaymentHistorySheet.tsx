@@ -170,19 +170,21 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
 
-        <SheetHeader className="pb-2 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-0 top-0 rounded-full h-8 w-8"
-            aria-label="Back"
-            onClick={() => onOpenChange(false)}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <SheetTitle className="text-base pl-8">
-            Payment History
-          </SheetTitle>
+        <SheetHeader>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              aria-label="Back"
+              onClick={() => onOpenChange(false)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <SheetTitle className="text-base">
+              Payment History
+            </SheetTitle>
+          </div>
         </SheetHeader>
 
         {/* Filters */}
