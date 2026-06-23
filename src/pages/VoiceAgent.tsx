@@ -284,7 +284,7 @@ export default function VoiceAgent() {
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">
-            {currentPG?.name || "Select a PG"} · {autoListen ? "Always listening" : "Tap to speak"} · {lang === "te-IN" ? "తెలుగు" : "English"}
+            {currentPG?.name || "Select a PG"}
           </p>
         </div>
         <Button variant="ghost" size="sm" className="gap-1 px-2"
