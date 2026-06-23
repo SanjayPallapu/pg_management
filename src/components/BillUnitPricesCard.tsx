@@ -17,11 +17,10 @@ import {
   Download,
   MessageCircle,
   Loader2,
-  Home,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { usePG } from "@/contexts/PGContext";
-import { BED_PRICING, DEFAULT_BED_PRICE } from "@/constants/pricing";
+
 import { generateReceiptImage, downloadReceiptImage } from "@/utils/generateReceiptImage";
 import { BillUnitPricesTemplate, type BillPricesData } from "./BillUnitPricesTemplate";
 
@@ -50,34 +49,11 @@ export const BillUnitPricesCard = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const templateRef = useRef<HTMLDivElement>(null);
 
-  // Read AC unit price from localStorage (same pattern as useElectricityReadings)
-  const getAcUnitPrice = () => {
-    if (!currentPG?.id) return 10;
-    try {
-      const stored = localStorage.getItem(`ac_unit_price_${currentPG.id}`);
-      return stored ? parseFloat(stored) || 10 : 10;
-    } catch {
-      return 10;
-    }
-  };
-
-  const acUnitPrice = getAcUnitPrice();
-
-  // Build bed pricing list from constants
-  const bedPricing = Object.entries(BED_PRICING)
-    .map(([sharing, price]) => ({
-      sharing: parseInt(sharing),
-      price,
-    }))
-    .sort((a, b) => a.sharing - b.sharing);
-
   const pricesData: BillPricesData = {
     pgName: currentPG?.name || "PG Management",
     pgLogoUrl: currentPG?.logoUrl || "/icon-512.png",
-    bedPricing,
     electricitySlabs: AP_SLABS,
     fixedCharges: FIXED_CHARGES,
-    acUnitPrice,
     effectiveDate: new Date().toLocaleDateString("en-IN", {
       month: "long",
       year: "numeric",
@@ -163,7 +139,7 @@ export const BillUnitPricesCard = () => {
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground">
-            View current electricity rates, room rent & share via WhatsApp
+            View current electricity rates & share via WhatsApp
           </p>
         </CardContent>
       </Card>
@@ -189,7 +165,7 @@ export const BillUnitPricesCard = () => {
                     Current Pricing & Rates
                   </SheetTitle>
                   <SheetDescription className="text-xs">
-                    Electricity slabs • Room rent • AC charges
+                    Electricity slabs • Fixed charges
                   </SheetDescription>
                 </div>
               </div>
@@ -198,43 +174,6 @@ export const BillUnitPricesCard = () => {
 
           <ScrollArea className="flex-1 px-4">
             <div className="space-y-5 py-4">
-              {/* Room Rent Section */}
-              <div>
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                  <Home className="h-4 w-4 text-violet-500" />
-                  Room Rent (per bed / month)
-                </h3>
-                <div className="border rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">
-                          Sharing Type
-                        </th>
-                        <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">
-                          Rent / Month
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bedPricing.map((bp, i) => (
-                        <tr
-                          key={bp.sharing}
-                          className={i < bedPricing.length - 1 ? "border-b" : ""}
-                        >
-                          <td className="px-4 py-2.5 font-medium">
-                            {bp.sharing === 1 ? "Single Occupancy" : `${bp.sharing}-Sharing`}
-                          </td>
-                          <td className="px-4 py-2.5 text-right font-bold text-primary">
-                            {fmt(bp.price)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
               {/* Electricity Slabs Section */}
               <div>
                 <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
@@ -292,21 +231,6 @@ export const BillUnitPricesCard = () => {
                       ))}
                     </tbody>
                   </table>
-                </div>
-              </div>
-
-              {/* AC Unit Price Highlight */}
-              <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                    AC Room Extra Charge
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Per unit consumed
-                  </div>
-                </div>
-                <div className="text-xl font-extrabold text-blue-800 dark:text-blue-300">
-                  ₹{acUnitPrice}/unit
                 </div>
               </div>
 

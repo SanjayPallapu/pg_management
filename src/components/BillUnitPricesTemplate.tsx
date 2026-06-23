@@ -3,18 +3,14 @@ import { forwardRef } from "react";
 export interface BillPricesData {
   pgName: string;
   pgLogoUrl: string;
-  bedPricing: { sharing: number; price: number }[];
   electricitySlabs: { slab: string; rate: number }[];
   fixedCharges: { range: string; charge: number }[];
-  acUnitPrice: number;
   effectiveDate: string;
 }
 
 interface Props {
   data: BillPricesData;
 }
-
-const fmt = (n: number) => `₹${Math.floor(n).toLocaleString("en-IN")}`;
 
 export const BillUnitPricesTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
   const pgName = data.pgName || "PG Management";
@@ -67,7 +63,7 @@ export const BillUnitPricesTemplate = forwardRef<HTMLDivElement, Props>(({ data 
               width: 30,
               height: 30,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              background: "linear-gradient(135deg, #0ea5e9, #3b82f6)",
               color: "#fff",
               display: "flex",
               alignItems: "center",
@@ -76,93 +72,12 @@ export const BillUnitPricesTemplate = forwardRef<HTMLDivElement, Props>(({ data 
               fontSize: 16,
             }}
           >
-            💰
+            ⚡
           </div>
-          <span>Current Pricing & Rates</span>
+          <span>Electricity Rates</span>
         </div>
         <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
           Effective from {data.effectiveDate}
-        </div>
-      </div>
-
-      {/* Bed Pricing / Rent by Sharing */}
-      <div style={{ margin: "10px 20px 8px" }}>
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#1e293b",
-            marginBottom: 6,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          🏠 Room Rent (per bed / month)
-        </div>
-        <div
-          style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: "#f8fafc" }}>
-                <th
-                  style={{
-                    padding: "8px 12px",
-                    textAlign: "left",
-                    color: "#4b5563",
-                    fontWeight: 600,
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  Sharing Type
-                </th>
-                <th
-                  style={{
-                    padding: "8px 12px",
-                    textAlign: "right",
-                    color: "#4b5563",
-                    fontWeight: 600,
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  Rent / Month
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.bedPricing.map((bp, i) => (
-                <tr
-                  key={i}
-                  style={{
-                    borderBottom:
-                      i < data.bedPricing.length - 1 ? "1px solid #f1f5f9" : "none",
-                    background: i % 2 === 1 ? "#fafbfc" : "#ffffff",
-                  }}
-                >
-                  <td style={{ padding: "8px 12px", color: "#374151", fontWeight: 500 }}>
-                    {bp.sharing === 1
-                      ? "Single Occupancy"
-                      : `${bp.sharing}-Sharing`}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px 12px",
-                      textAlign: "right",
-                      color: "#1a1a1a",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {fmt(bp.price)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -299,32 +214,6 @@ export const BillUnitPricesTemplate = forwardRef<HTMLDivElement, Props>(({ data 
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* AC Unit Price highlight */}
-      <div
-        style={{
-          margin: "10px 20px 14px",
-          background: "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)",
-          borderRadius: 12,
-          padding: "14px 16px",
-          border: "1px solid #93c5fd",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 11, color: "#4338ca", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
-            AC Room Extra Charge
-          </div>
-          <div style={{ fontSize: 12, color: "#4b5563", marginTop: 2 }}>
-            Per unit consumed
-          </div>
-        </div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#1e3a8a" }}>
-          ₹{data.acUnitPrice}/unit
         </div>
       </div>
 
