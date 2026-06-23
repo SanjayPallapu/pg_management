@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { useBackGesture } from "@/hooks/useBackGesture";
-import { BottomNav } from "@/components/layout/BottomNav";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -776,27 +775,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed inset-0 w-full h-full max-w-none max-h-none translate-x-0 translate-y-0 rounded-none border-0 p-0 flex flex-col data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=closed]:animate-out">
-        {/* Fullscreen header */}
-        <div className="sticky top-0 z-10 border-b border-border/70 bg-background/95 backdrop-blur-xl">
-          <div className="flex h-14 items-center gap-3 px-4">
-            <button
-              type="button"
-              onClick={() => onClose(false)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-            >
-              <ArrowRightLeft className="h-5 w-5 rotate-180" />
-            </button>
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              Room {room.roomNo}
-              <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
-            </DialogTitle>
-          </div>
-          <DialogDescription className="px-4 pb-2 text-xs text-muted-foreground">Manage tenants, room capacity, rent amounts, and payment status</DialogDescription>
-        </div>
-
-        {/* Scrollable content with bottom nav padding */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Room {room.roomNo}
+            <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
+          </DialogTitle>
+          <DialogDescription>Manage tenants, room capacity, rent amounts, and payment status</DialogDescription>
+        </DialogHeader>
 
         <div className="space-y-6">
           {/* Room Info */}
@@ -1402,10 +1388,6 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
           )}
         </div>
-        </div>
-
-        {/* Bottom nav inside fullscreen dialog */}
-        <BottomNav />
       </DialogContent>
 
       <AlertDialog open={confirmAction?.type === "paid"} onOpenChange={() => setConfirmAction(null)}>
