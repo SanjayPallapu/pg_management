@@ -18,6 +18,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { DayGuestReminderDialog, type DayGuestReminderInput } from '@/components/DayGuestReminderDialog';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const DEFAULT_PER_DAY_RATE = 350;
 
@@ -161,25 +162,7 @@ const DayGuestPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold">Day Guest</h1>
-            <p className="text-sm text-muted-foreground">Room {roomNo}</p>
-          </div>
-        </div>
-      </div>
-
+    <AppLayout title={`Day Guest — Room ${roomNo}`}>
       <div className="p-4 space-y-6 max-w-2xl mx-auto">
         {/* Add Day Guest Form */}
         <Card>
@@ -557,7 +540,7 @@ const DayGuestPage = () => {
         onOpenChange={setReminderDialogOpen}
         reminderData={reminderData}
       />
-    </div>
+    </AppLayout>
   );
 };
 

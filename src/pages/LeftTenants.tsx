@@ -15,6 +15,7 @@ import { Download, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from '@/utils/excelStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const setMeta = (name: string, content: string) => {
   const el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -142,30 +143,25 @@ const LeftTenants = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 space-y-4">
-        <header className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h1 className="text-xl font-semibold">Left Tenants</h1>
-            <p className="text-sm text-muted-foreground">
-              {roomNo ? (
-                <>Showing left tenants for Room <span className="font-medium text-foreground">{roomNo}</span>.</>
-              ) : (
-                <>All left tenants across rooms.</>
-              )}
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            {leftTenants.length > 0 && (
-              <Button variant="outline" onClick={handleExportExcel}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => navigate('/')}>Back</Button>
-          </div>
-        </header>
+    <AppLayout
+      title="Left Tenants"
+      headerActions={
+        leftTenants.length > 0 ? (
+          <Button variant="outline" size="sm" onClick={handleExportExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        ) : undefined
+      }
+    >
+      <div className="container mx-auto px-4 py-4 space-y-4">
+        <p className="text-sm text-muted-foreground">
+          {roomNo ? (
+            <>Showing left tenants for Room <span className="font-medium text-foreground">{roomNo}</span>.</>
+          ) : (
+            <>All left tenants across rooms.</>
+          )}
+        </p>
 
         <Separator />
 
@@ -351,7 +347,7 @@ const LeftTenants = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </AppLayout>
   );
 };
 

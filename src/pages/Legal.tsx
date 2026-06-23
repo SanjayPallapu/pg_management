@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const supportEmail = "support@pgmanagement.app";
 
@@ -56,18 +57,8 @@ const Legal = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
-          </Button>
-          <Link to="/" className="text-sm font-semibold">PG Management</Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+    <AppLayout title="Legal & Support">
+      <main className="mx-auto max-w-3xl space-y-4 px-4 py-4">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Legal & Support</h1>
           <p className="text-sm text-muted-foreground">
@@ -106,7 +97,7 @@ const Legal = () => {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </AppLayout>
   );
 };
 
