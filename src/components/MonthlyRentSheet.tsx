@@ -104,6 +104,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setAcYear(selectedYear);
   }, [selectedMonth, selectedYear]);
   const [previousDuesOpen, setPreviousDuesOpen] = useState(false);
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
@@ -1015,21 +1016,33 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         </CardHeader>
         <CardContent className="px-3 pb-4">
           {/* Room quick-nav — tap a room number to jump to its tenant card */}
-          <RoomQuickNav
-            rooms={rooms}
-            payments={payments}
-            month={selectedMonth}
-            year={selectedYear}
-            onSelect={(roomNo) => {
-              setPreviousDuesOpen(false);
-              setAcSectionOpen(false);
-              setSearchQuery(roomNo);
-              setTimeout(() => {
-                const el = document.querySelector(`[data-room-no="${roomNo}"]`);
-                el?.scrollIntoView({ behavior: "smooth", block: "center" });
-              }, 50);
-            }}
-          />
+          <Collapsible open={quickNavOpen} onOpenChange={setQuickNavOpen} className="mb-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold text-muted-foreground">Quick Room Access</div>
+              <CollapsibleTrigger asChild>
+                <button className="p-1 rounded-md hover:bg-muted/60 transition-colors">
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", quickNavOpen && "rotate-180")} />
+                </button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <RoomQuickNav
+                rooms={rooms}
+                payments={payments}
+                month={selectedMonth}
+                year={selectedYear}
+                onSelect={(roomNo) => {
+                  setPreviousDuesOpen(false);
+                  setAcSectionOpen(false);
+                  setSearchQuery(roomNo);
+                  setTimeout(() => {
+                    const el = document.querySelector(`[data-room-no="${roomNo}"]`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 50);
+                }}
+              />
+            </CollapsibleContent>
+          </Collapsible>
 
           {showPreviousDuesPanel && !activeRoomFilter && (
             <Collapsible open={previousDuesOpen} onOpenChange={setPreviousDuesOpen} className="mb-4">

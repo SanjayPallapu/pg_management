@@ -32,15 +32,13 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange }: BottomNavPr
   const currentTab = propActiveTab ?? contextActiveTab;
 
   const handleClick = (item: typeof NAV_ITEMS[0]) => {
+    setContextTab(item.value);
     if (isOnIndex && onTabChange) {
-      // In-page tab switch on Index
+      // In-page tab switch on Index — call onTabChange to close dialogs + switch
       onTabChange(item.value);
-      setContextTab(item.value);
-    } else {
-      // Navigate to Index with tab param
-      setContextTab(item.value);
-      navigate(`/?tab=${item.value}`);
     }
+    // Always navigate to ensure URL updates and any portaled dialogs close
+    navigate(`/?tab=${item.value}`, { replace: true });
   };
 
   return (

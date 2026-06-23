@@ -103,10 +103,7 @@ export const EmptyBedsSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side={isMobile ? "right" : "bottom"} 
-        className={isMobile ? "p-4 [&>button]:hidden" : ""}
-      >
+      <SheetContent>
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
@@ -119,7 +116,7 @@ export const EmptyBedsSheet = ({
           </div>
         </SheetHeader>
 
-        <div className={`${isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto scrollbar-none' : ''}`}>
+        <div>
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">

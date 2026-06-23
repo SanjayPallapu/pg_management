@@ -43,7 +43,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           className
         )}
         {...props}>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           {children}
         </div>
       </SheetPrimitive.Content>

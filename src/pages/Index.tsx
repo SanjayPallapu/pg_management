@@ -71,6 +71,15 @@ const Index = () => {
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
 
+  // Sync active tab from URL when searchParams change
+  React.useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTabLocal(tabFromUrl);
+      setContextTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
   // Pull to refresh
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 
