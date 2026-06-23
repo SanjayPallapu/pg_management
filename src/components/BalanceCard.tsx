@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useTotalCollected } from "@/hooks/useTotalCollected";
+import { useBuildingRentSettings } from "@/hooks/useBuildingRentSettings";
 
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = {
@@ -112,7 +113,7 @@ export const BalanceCard = () => {
       const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
       try {
         const response = await fetch(
-          `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-summary-api?month=${monthStr}`,
         );
         if (!response.ok) {
           console.warn('[BalanceCard] Expense API failed:', response.status);
@@ -129,7 +130,8 @@ export const BalanceCard = () => {
     retry: 2,
   });
 
-  const PG_RENT = 150000;
+  const { settings: buildingRentSettings } = useBuildingRentSettings();
+  const PG_RENT = buildingRentSettings.amount;
 
   // Family expenses value
   const familyExpensesValue = currentExpenseData?.familyExpenses || 0;
@@ -293,7 +295,7 @@ export const BalanceCard = () => {
                       />
                     </div>
                     <span className={`font-medium ${toggles.pgRent ? "text-destructive" : "text-muted-foreground"}`}>
-                      -₹{(150000).toLocaleString()}
+                      -₹{(PG_RENT).toLocaleString()}
                     </span>
                   </div>
 

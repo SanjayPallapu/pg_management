@@ -15,8 +15,7 @@ interface BuildingRentReceiptTemplateProps {
   data: BuildingRentReceiptData;
 }
 
-// Fixed building rent amount - always displayed as 1,50,000
-const FIXED_BUILDING_RENT = 150000;
+// Use data.amount for the building rent (configured per user in settings)
 
 export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplateProps) => {
   const formatDate = (dateStr: string) => {
@@ -117,7 +116,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
               paddingBottom: "5px",
             }}
           >
-            ₹{formatIndianCurrency(FIXED_BUILDING_RENT)} ({numberToWords(FIXED_BUILDING_RENT)})
+            ₹{formatIndianCurrency(data.amount)} ({numberToWords(data.amount)})
           </span>
         </div>
       </div>

@@ -215,8 +215,8 @@ const Index = () => {
     );
   }
 
-  // Show onboarding flow only for new users who just signed up (not for sign-ins)
-  if (needsSetup && isNewSignup) {
+  // Show onboarding flow for any user who has no PGs (new signup or returning user)
+  if (needsSetup) {
     return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
   }
 

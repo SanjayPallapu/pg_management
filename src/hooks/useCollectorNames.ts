@@ -7,7 +7,7 @@ export interface CollectorConfig {
   displayName: string;
 }
 
-const STORAGE_KEY = 'collector-names';
+const STORAGE_KEY_PREFIX = 'collector-names';
 
 const DEFAULT_COLLECTORS: CollectorConfig[] = [
   { id: 'Me', displayName: 'Owner' },
@@ -69,6 +69,9 @@ const normalizeCollectors = (raw: unknown, defaults: CollectorConfig[] = DEFAULT
 export const useCollectorNames = () => {
   const { user } = useAuth();
 
+  // Scope localStorage key by user ID to prevent data leaking between accounts
+  const STORAGE_KEY = user?.id ? `${STORAGE_KEY_PREFIX}_${user.id}` : STORAGE_KEY_PREFIX;
+
   const defaultCollectors = useMemo<CollectorConfig[]>(() => {
     const name = user?.user_metadata?.full_name || user?.user_metadata?.name || 'Owner';
     const firstName = name.split(' ')[0];
@@ -121,7 +124,7 @@ export const useCollectorNames = () => {
     if (shouldPersist) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
     }
-  }, [defaultCollectors]);
+  }, [defaultCollectors, STORAGE_KEY]);
 
   const syncFromServer = useCallback(async () => {
     if (!user) return;
@@ -161,7 +164,7 @@ export const useCollectorNames = () => {
     setCollectors(nextCollectors);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCollectors));
     window.dispatchEvent(new Event('collector-names-changed'));
-  }, [user, defaultCollectors]);
+  }, [user, defaultCollectors, STORAGE_KEY]);
 
   useEffect(() => {
     const syncFromStorage = () => {
@@ -195,7 +198,7 @@ export const useCollectorNames = () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('collector-names-changed', handleCustomEvent as EventListener);
     };
-  }, [defaultCollectors]);
+  }, [defaultCollectors, STORAGE_KEY]);
 
   useEffect(() => {
     if (!user) return;

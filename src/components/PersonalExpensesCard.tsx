@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Wallet } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
+import { useBuildingRentSettings } from "@/hooks/useBuildingRentSettings";
 
 const STORAGE_KEY_PREFIX = "pg-expenses-toggles";
 const DEFAULT_TOGGLES = { familyExpenses: true, currentBills: false, pgRent: true };
@@ -56,7 +57,8 @@ export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCar
     }
   }, [includeFamilyExpenses, includeCurrentBills, includePgRent, selectedMonth, selectedYear]);
 
-  const PG_RENT = 150000;
+  const { settings: buildingRentSettings } = useBuildingRentSettings();
+  const PG_RENT = buildingRentSettings.amount;
 
   // Fetch monthly summary data
   const {
@@ -68,7 +70,7 @@ export const PersonalExpensesCard = ({ totalCollected = 0 }: PersonalExpensesCar
     queryFn: async () => {
       const monthStr = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
       const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-summary-api?month=${monthStr}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-summary-api?month=${monthStr}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch expenses");

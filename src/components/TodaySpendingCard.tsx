@@ -49,7 +49,7 @@ export const TodaySpendingCard = () => {
     queryKey: ["today-spending", dateString],
     queryFn: async () => {
       const response = await fetch(
-        `https://tiqjpwununrlbdtsqzfm.supabase.co/functions/v1/get-todays-spending-api?date=${dateString}`
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-todays-spending-api?date=${dateString}`
       );
       
       if (!response.ok) {
