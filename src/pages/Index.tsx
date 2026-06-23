@@ -72,7 +72,7 @@ const Index = () => {
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
 
   // Sync active tab from URL when searchParams change
-  React.useEffect(() => {
+  useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && tabFromUrl !== activeTab) {
       setActiveTabLocal(tabFromUrl);
