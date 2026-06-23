@@ -121,7 +121,7 @@ export const TenantsByDueDaySheet = ({
 
           {/* Tenant List */}
           <div>
-            <div className="space-y-3 pr-4">
+            <div className="space-y-3">
               {tenantsDueOnDay.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No pending payments for Day {day}

@@ -243,7 +243,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
             <TabsContent value="overdue" className="mt-4">
               <div>
-                <div className="space-y-2 pr-4">
+                <div className="space-y-2">
                   {overdueCombined.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
                   ) : (
@@ -266,7 +266,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
             <TabsContent value="not-yet-due" className="mt-4">
               <div>
-                <div className="space-y-2 pr-4">
+                <div className="space-y-2">
                   {notYetDue.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No upcoming dues</p>
                   ) : (

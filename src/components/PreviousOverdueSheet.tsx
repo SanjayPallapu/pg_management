@@ -411,7 +411,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
           </SheetHeader>
 
           <div className="mt-4">
-            <div className="space-y-3 pr-2">
+            <div className="space-y-3">
               {overdueTenants.map(tenant => {
                 const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
                 const hasPaymentEntries = tenant.paymentEntries.length > 0;

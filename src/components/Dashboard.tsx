@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -83,6 +84,16 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [overviewOpen, setOverviewOpen] = useState(false);
 
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  // Close all sheets/dialogs when URL changes (bottom nav navigation)
+  useEffect(() => {
+    setDayGuestSheetOpen(false);
+    setEmptyBedsSheetOpen(false);
+    setSettlementSheetOpen(false);
+    setCalculatorSheetOpen(false);
+    setRulesTemplateOpen(false);
+  }, [location.search]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

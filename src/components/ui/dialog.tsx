@@ -44,7 +44,7 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}>
-      <div className="flex-1 overflow-y-auto px-1.5 py-3 pb-4">
+      <div className="flex-1 overflow-y-auto px-1.5 pb-4">
         {children}
       </div>
       <BottomNav />
@@ -54,7 +54,7 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-<div className={cn("sticky top-0 z-10 bg-background pb-2 flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />;
+<div className={cn("sticky top-0 z-10 bg-background pt-3 pb-2 flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />;
 
 DialogHeader.displayName = "DialogHeader";
 

@@ -98,6 +98,15 @@ export const SecurityDepositCard = ({
     setDepositCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
   }, [collectors, defaultCollectorId]);
 
+  // Close all sheets/dialogs when URL changes (bottom nav navigation)
+  useEffect(() => {
+    setSheetOpen(false);
+    setDepositDialog(null);
+    setEditDialog(null);
+    setRemoveDialog(null);
+    setReceiptDialogOpen(false);
+  }, [location.search]);
+
   useEffect(() => {
     if (depositDialog && !editDialog) {
       setDepositCollectedBy(defaultCollectorId);
@@ -492,12 +501,25 @@ export const SecurityDepositCard = ({
                     return (
                     <div 
                       key={tenant.id} 
-                      className="flex items-center justify-between p-3 rounded-lg bg-paid-muted border"
+                      className="rounded-xl border bg-card p-3 space-y-2"
                     >
-                      <div>
-                        <div className="font-medium">{tenant.name}</div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-2">
-                          Room {tenant.roomNo} • {tenant.securityDepositDate && format(new Date(tenant.securityDepositDate), 'dd MMM yyyy')}
+                      {/* Top row: name + amount */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-sm truncate">{tenant.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            Room {tenant.roomNo} • {tenant.securityDepositDate && format(new Date(tenant.securityDepositDate), 'dd MMM yyyy')}
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-paid text-paid-foreground shrink-0">
+                          <IndianRupee className="h-3 w-3 mr-0.5" />
+                          {tenant.securityDepositAmount?.toLocaleString()}
+                        </Badge>
+                      </div>
+
+                      {/* Bottom row: badges + actions */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {(tenant as any).securityDepositMode && (
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                               (tenant as any).securityDepositMode === 'upi' 
@@ -507,81 +529,76 @@ export const SecurityDepositCard = ({
                               {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
                             </span>
                           )}
-                            {tenant.securityDepositCollectedBy && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                                {getCollectorDisplayName(tenant.securityDepositCollectedBy)}
-                              </span>
-                            )}
+                          {tenant.securityDepositCollectedBy && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                              {getCollectorDisplayName(tenant.securityDepositCollectedBy)}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Call badge */}
-                        {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <a 
-                            href={`tel:${tenant.phone}`}
-                            className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                            title={`Call ${tenant.name}`}
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                          </a>
-                        )}
-                        {/* WhatsApp dropdown menu */}
-                        {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button 
-                                className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                                title="WhatsApp options"
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <a 
+                              href={`tel:${tenant.phone}`}
+                              className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                              title={`Call ${tenant.name}`}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button 
+                                  className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                  title="WhatsApp options"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={openReceiptDialog} className="gap-2">
+                                  <Receipt className="h-4 w-4" />
+                                  Generate Receipt
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                                  <MessageCircle className="h-4 w-4" />
+                                  Chat with Tenant
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                          {canManageDeposits && showEditActions && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDepositAmount(tenant.securityDepositAmount || 5000);
+                                  setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
+                                  setDepositMode((tenant.securityDepositMode as 'upi' | 'cash') || 'upi');
+                                  setDepositCollectedBy(tenant.securityDepositCollectedBy || defaultCollectorId);
+                                  setEditDialog(tenant);
+                                }}
                               >
-                                <MessageCircle className="h-3.5 w-3.5" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={openReceiptDialog} className="gap-2">
-                                <Receipt className="h-4 w-4" />
-                                Generate Receipt
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat with Tenant
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        <Badge variant="secondary" className="bg-paid text-paid-foreground">
-                          <IndianRupee className="h-3 w-3 mr-1" />
-                          {tenant.securityDepositAmount?.toLocaleString()}
-                        </Badge>
-                        {canManageDeposits && showEditActions && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="h-7 px-2"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setDepositAmount(tenant.securityDepositAmount || 5000);
-                                setDepositDate(tenant.securityDepositDate ? new Date(tenant.securityDepositDate) : new Date());
-                                setDepositMode((tenant.securityDepositMode as 'upi' | 'cash') || 'upi');
-                                setDepositCollectedBy(tenant.securityDepositCollectedBy || defaultCollectorId);
-                                setEditDialog(tenant);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="h-7 px-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setRemoveDialog(tenant);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </>
-                        )}
+                                <SquarePen className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setRemoveDialog(tenant);
+                                }}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );})}

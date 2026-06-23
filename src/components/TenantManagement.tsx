@@ -39,6 +39,7 @@ import {
   Wallet,
   Loader2,
   ArrowRightLeft,
+  ArrowLeft,
   Contact,
 } from "lucide-react";
 import {
@@ -783,7 +784,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               onClick={() => onClose(false)}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
             >
-              <ArrowRightLeft className="h-5 w-5 rotate-180" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
               <DialogTitle className="flex items-center gap-2">

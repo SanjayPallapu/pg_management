@@ -48,7 +48,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           className
         )}
         {...props}>
-        <div className="flex-1 overflow-y-auto px-1.5 py-3 pb-4">
+        <div className="flex-1 overflow-y-auto px-1.5 pb-4">
           {children}
         </div>
         <BottomNav />
@@ -59,7 +59,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-<div className={cn("sticky top-0 z-10 bg-background pb-2 flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />;
+<div className={cn("sticky top-0 z-10 bg-background pt-3 pb-2 flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />;
 
 SheetHeader.displayName = "SheetHeader";
 

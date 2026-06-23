@@ -255,7 +255,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
 
         {/* Grouped Transaction List */}
         <div className="mt-2">
-          <div className="space-y-3 pr-2">
+          <div className="space-y-3">
             {groupedPayments.map((group) => {
               const key = `${group.tenantId}-${group.month}-${group.year}`;
               const isExpanded = expandedCards.has(key) || group.entries.length <= 2;
