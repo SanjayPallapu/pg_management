@@ -273,7 +273,7 @@ export const EmptyBedsSheet = ({
         </div>
 
         {/* Room List */}
-        <ScrollArea className={isMobile ? "h-[calc(100vh-380px)]" : "h-[calc(80vh-220px)]"}>
+        <div>
           <div className="space-y-2">
             {roomsWithEmptyBeds.map(room => (
               <div
@@ -319,7 +319,7 @@ export const EmptyBedsSheet = ({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
         </div>
       </SheetContent>
     </Sheet>

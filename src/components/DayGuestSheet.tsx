@@ -274,7 +274,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="p-0 bg-gradient-to-b from-background via-background to-muted/30">
+        <SheetContent>
           <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
             <SheetTitle className="text-left flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
@@ -294,7 +294,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
             </div>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(100vh-100px)]">
+          <div>
             <div className="p-4 space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -480,7 +480,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   ))
               )}
             </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
 

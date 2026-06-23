@@ -222,7 +222,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="bg-gradient-to-b from-background via-background to-muted/30">
+      <SheetContent>
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
@@ -295,7 +295,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
               </Button>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-360px)]">
+            <div>
               <div className="space-y-3 py-4">
                 {filteredTenants.map((tenant) => {
                 const mode = getRateMode(tenant.id);
@@ -446,7 +446,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
 
               })}
               </div>
-            </ScrollArea>
+            </div>
           </>
         }
       </SheetContent>

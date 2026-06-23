@@ -360,7 +360,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="[&>button]:hidden">
+      <SheetContent>
         <SheetHeader>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
@@ -465,7 +465,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-220px)] mt-4 pr-4">
+        <div className="mt-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -524,7 +524,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );

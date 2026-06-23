@@ -152,7 +152,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
       </Card>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex flex-col p-0 [&>button]:hidden">
+        <SheetContent>
           {/* Clean Header */}
           <SheetHeader className="border-b px-4 py-4 space-y-0">
             <div className="flex items-center gap-2">

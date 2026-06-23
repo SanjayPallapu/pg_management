@@ -120,10 +120,7 @@ export const SettlementSummarySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side={isMobile ? "right" : "bottom"} 
-        className={isMobile ? "w-full max-w-full sm:max-w-full h-full p-4 [&>button]:hidden" : "h-[85vh]"}
-      >
+      <SheetContent>
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
@@ -136,7 +133,7 @@ export const SettlementSummarySheet = ({
           </div>
         </SheetHeader>
 
-        <div className={isMobile ? 'h-[calc(100vh-100px)] overflow-y-auto scrollbar-none' : ''}>
+        <div>
           {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="bg-muted rounded-lg p-3 text-center">
@@ -178,7 +175,7 @@ export const SettlementSummarySheet = ({
           </div>
 
           {/* Tenant List */}
-          <ScrollArea className={isMobile ? "h-[calc(100vh-380px)]" : "h-[calc(85vh-280px)]"}>
+          <div>
             <div className="space-y-3">
               {leftTenants.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -261,7 +258,7 @@ export const SettlementSummarySheet = ({
                 ))
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

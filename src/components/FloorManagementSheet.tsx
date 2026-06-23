@@ -143,7 +143,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom">
+        <SheetContent>
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
@@ -151,7 +151,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4 overflow-y-auto max-h-[calc(80vh-120px)]">
+          <div className="mt-6 space-y-4 overflow-y-auto">
             {allFloors.map(floor => {
               const stats = getFloorStats(floor);
               const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));

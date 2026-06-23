@@ -272,7 +272,7 @@ export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }:
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom">
+        <SheetContent>
           <SheetHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

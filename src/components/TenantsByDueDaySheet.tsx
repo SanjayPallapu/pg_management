@@ -120,7 +120,7 @@ export const TenantsByDueDaySheet = ({
           </div>
 
           {/* Tenant List */}
-          <ScrollArea className="h-[calc(100vh-250px)]">
+          <div>
             <div className="space-y-3 pr-4">
               {tenantsDueOnDay.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -207,7 +207,7 @@ export const TenantsByDueDaySheet = ({
                 })
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

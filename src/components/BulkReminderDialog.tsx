@@ -272,7 +272,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="p-0 bg-gradient-to-b from-background via-background to-muted/30">
+      <SheetContent>
         <SheetHeader className="p-4 pb-2">
           <SheetTitle className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
@@ -292,7 +292,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             <TabsTrigger value="custom">Custom Message</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <div>
             <div className="p-4 space-y-4">
               <TabsContent value="reminder" className="mt-0 space-y-4">
                 <div className="flex items-center gap-4 flex-wrap">
@@ -383,7 +383,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
                 )}
               </div>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
 
         {/* Fixed bottom action button */}

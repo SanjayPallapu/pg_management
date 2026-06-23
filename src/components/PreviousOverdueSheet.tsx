@@ -375,10 +375,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent 
-          side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
-        >
+        <SheetContent>
           <Button
             variant="ghost"
             size="icon"
@@ -413,7 +410,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
             </p>
           </SheetHeader>
 
-          <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
+          <div className="mt-4">
             <div className="space-y-3 pr-2">
               {overdueTenants.map(tenant => {
                 const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
@@ -632,7 +629,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
 
