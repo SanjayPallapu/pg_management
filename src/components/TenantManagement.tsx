@@ -777,11 +777,22 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Room {room.roomNo}
-            <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
-          </DialogTitle>
-          <DialogDescription>Manage tenants, room capacity, rent amounts, and payment status</DialogDescription>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onClose(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+            >
+              <ArrowRightLeft className="h-5 w-5 rotate-180" />
+            </button>
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                Room {room.roomNo}
+                <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
+              </DialogTitle>
+              <DialogDescription className="text-xs mt-1">Manage tenants, room capacity, rent amounts, and payment status</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

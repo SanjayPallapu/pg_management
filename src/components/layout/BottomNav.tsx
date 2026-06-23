@@ -44,7 +44,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange }: BottomNavPr
   };
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[60] border-t border-border/70 bg-background/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+    <nav className="fixed inset-x-0 bottom-0 z-[100] border-t border-border/70 bg-background/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5 rounded-2xl bg-muted/40 p-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;

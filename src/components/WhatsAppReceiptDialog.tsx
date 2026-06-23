@@ -4,7 +4,7 @@ import Lottie from 'lottie-react';
 import { gsap } from 'gsap';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, Download, Copy, Check } from 'lucide-react';
+import { Loader2, MessageCircle, Download, Copy, Check, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -301,10 +301,15 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-green-600" />
-              Send Payment Receipt
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-green-600" />
+                Send Payment Receipt
+              </DialogTitle>
+            </div>
             <DialogDescription>
               Generate and send payment receipt to {receiptData?.tenantName} via WhatsApp.
             </DialogDescription>

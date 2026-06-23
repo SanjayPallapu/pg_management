@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Loader2, Download, MessageCircle } from 'lucide-react';
+import { BookOpen, Loader2, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { generateRulesImage } from '@/utils/generateRulesImage';
 import { downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -119,10 +119,15 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            Share Rules & Regulations
-          </DialogTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Share Rules & Regulations
+            </DialogTitle>
+          </div>
           <DialogDescription>
             Send PG rules to {shareData?.tenantName} via WhatsApp.
           </DialogDescription>

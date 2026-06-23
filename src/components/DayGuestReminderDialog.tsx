@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Bell, Download, MessageCircle } from 'lucide-react';
+import { Loader2, Bell, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DayGuestReminderTemplate, type DayGuestReminderData } from '@/components/DayGuestReminderTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -135,10 +135,15 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-green-600" />
-              Send Payment Reminder
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-green-600" />
+                Send Payment Reminder
+              </DialogTitle>
+            </div>
             <DialogDescription>
               Generate and send day guest payment reminder to {reminderData?.guestName} via WhatsApp.
             </DialogDescription>

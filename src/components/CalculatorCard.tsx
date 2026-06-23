@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Calculator, History, Delete, Trash2 } from 'lucide-react';
+import { Calculator, History, Delete, Trash2, ArrowLeft } from 'lucide-react';
 
 interface CalculationHistory {
   expression: string;
@@ -275,7 +275,12 @@ export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }:
         <SheetContent side="bottom" className="h-[80vh]">
           <SheetHeader>
             <div className="flex items-center justify-between">
-              <SheetTitle>Calculator</SheetTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetOpen(false)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle>Calculator</SheetTitle>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"

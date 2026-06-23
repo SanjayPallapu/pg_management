@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Loader2, PartyPopper, Download, MessageCircle } from 'lucide-react';
+import { Loader2, PartyPopper, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { WelcomeTemplate, type WelcomeData } from '@/components/WelcomeTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -160,10 +160,15 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PartyPopper className="h-5 w-5 text-pink-600" />
-              Welcome New Tenant
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                <PartyPopper className="h-5 w-5 text-pink-600" />
+                Welcome New Tenant
+              </DialogTitle>
+            </div>
             <DialogDescription>
               Generate and send a welcome message to {welcomeData?.tenantName} via WhatsApp.
             </DialogDescription>

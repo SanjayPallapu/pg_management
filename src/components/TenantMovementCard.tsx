@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserPlus, UserMinus, Phone, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft } from 'lucide-react';
 import { Room, Tenant } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { format } from 'date-fns';
@@ -99,9 +100,14 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
       <Sheet open={sheetType !== null} onOpenChange={() => setSheetType(null)}>
         <SheetContent side="bottom" className="h-[70vh]">
           <SheetHeader>
-            <SheetTitle>
-              {sheetType === 'joined' ? 'Tenants Joined' : 'Tenants Left'} in {months[selectedMonth - 1]} {selectedYear}
-            </SheetTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetType(null)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <SheetTitle>
+                {sheetType === 'joined' ? 'Tenants Joined' : 'Tenants Left'} in {months[selectedMonth - 1]} {selectedYear}
+              </SheetTitle>
+            </div>
           </SheetHeader>
           <ScrollArea className="h-[calc(70vh-80px)] mt-4">
             <div className="space-y-3 pr-4">

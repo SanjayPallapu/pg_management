@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Loader2, Bell, Download, MessageCircle } from 'lucide-react';
+import { Loader2, Bell, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
 import { ACBillTemplate, type ACBillData } from '@/components/ACBillTemplate';
@@ -243,10 +243,15 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-green-600" />
-              Send Payment Reminder
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-green-600" />
+                Send Payment Reminder
+              </DialogTitle>
+            </div>
             <DialogDescription>
               Generate and send payment reminder to {reminderData?.tenantName} via WhatsApp.
             </DialogDescription>

@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Calendar, Banknote, CreditCard } from 'lucide-react';
+import { Trash2, Calendar, Banknote, CreditCard, ArrowLeft } from 'lucide-react';
 import { BuildingRentPayment } from '@/hooks/useBuildingRentHistory';
 import { formatIndianCurrency } from '@/utils/numberToWords';
 import {
@@ -60,10 +60,15 @@ export const BuildingRentHistorySheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="flex items-center justify-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Building Rent History
-          </SheetTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <SheetTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Building Rent History
+            </SheetTitle>
+          </div>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">

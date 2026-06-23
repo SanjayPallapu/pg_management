@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, Download, Copy, Check, Wallet } from 'lucide-react';
+import { Loader2, MessageCircle, Download, Copy, Check, Wallet, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SecurityDepositReceiptTemplate, type SecurityDepositReceiptData } from '@/components/SecurityDepositReceiptTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -174,10 +174,15 @@ export const SecurityDepositReceiptDialog = ({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-purple-600" />
-              Security Deposit Receipt
-            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <DialogTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-purple-600" />
+                Security Deposit Receipt
+              </DialogTitle>
+            </div>
             <DialogDescription>
               Generate and send security deposit receipt to {data?.tenant.name} via WhatsApp.
             </DialogDescription>
