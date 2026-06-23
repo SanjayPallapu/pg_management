@@ -170,12 +170,10 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
 
   if (isCheckingData) {
     return (
-      <Card className="w-full max-w-lg mx-auto">
-        <CardContent className="pt-8 pb-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-muted-foreground">Checking for existing data...</p>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-lg mx-auto text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+        <p className="mt-4 text-gray-400">Checking for existing data...</p>
+      </div>
     );
   }
 
@@ -608,25 +606,23 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building className="h-5 w-5" />
+    <div className="w-full max-w-lg mx-auto">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <Building className="h-5 w-5 text-blue-500" />
           {isAddingNew ? 'Add New PG' : 'PG Setup'}
-        </CardTitle>
-        <CardDescription>
+        </h2>
+        <p className="text-sm text-gray-400 mt-1">
           {step === 'migrate' && 'Import your existing data'}
           {step === 'count' && 'Tell us about your properties'}
           {step === 'branding' && 'Brand your PG'}
           {step === 'structure' && 'Define your PG structure'}
           {step === 'complete' && 'All done!'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <AnimatePresence mode="wait">
-          {renderStep()}
-        </AnimatePresence>
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+      <AnimatePresence mode="wait">
+        {renderStep()}
+      </AnimatePresence>
+    </div>
   );
 };

@@ -142,8 +142,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold mb-2">Welcome to PG Manager</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-3xl font-bold mb-2 text-white">Welcome to PG Manager</h1>
+              <p className="text-gray-400">
                 Multi-owner PG management with 1 month free trial and auto-renewing subscriptions.
               </p>
             </div>
@@ -152,7 +152,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <Button size="lg" onClick={() => setStep('features')} className="w-full">
                 Get Started <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="ghost" onClick={handleSignOut} className="w-full gap-2 text-muted-foreground">
+              <Button variant="ghost" onClick={handleSignOut} className="w-full gap-2 text-gray-400 hover:text-white hover:bg-white/5">
                 <LogOut className="h-4 w-4" /> Sign Out
               </Button>
             </div>
@@ -171,7 +171,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <Badge className="mb-4">
                 <Sparkles className="h-3 w-3 mr-1" /> Features
               </Badge>
-              <h2 className="text-2xl font-bold">Everything you need to manage your PG</h2>
+              <h2 className="text-2xl font-bold text-white">Everything you need to manage your PG</h2>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -182,13 +182,13 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="h-full hover:border-primary/50 transition-colors">
+                  <Card className="h-full border-white/[0.08] bg-white/[0.03] hover:border-blue-500/50 transition-colors">
                     <CardContent className="pt-4 text-center">
                       <div className="h-14 w-14 rounded-2xl mx-auto mb-3 overflow-hidden shadow-md">
                         <img src={feature.image} alt={feature.title} className="h-full w-full object-cover" />
                       </div>
-                      <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
-                      <p className="text-xs text-muted-foreground">{feature.description}</p>
+                      <h3 className="font-semibold text-sm mb-1 text-white">{feature.title}</h3>
+                      <p className="text-xs text-gray-400">{feature.description}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -218,8 +218,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <Badge variant="secondary" className="mb-4">
                 <Crown className="h-3 w-3 mr-1" /> Pricing
               </Badge>
-              <h2 className="text-2xl font-bold">Start free, then choose your billing cycle</h2>
-              <p className="text-muted-foreground mt-2">Every owner gets 1 month free trial. Paid plans auto-renew through Razorpay.</p>
+              <h2 className="text-2xl font-bold text-white">Start free, then choose your billing cycle</h2>
+              <p className="text-gray-400 mt-2">Every owner gets 1 month free trial. Paid plans auto-renew through Razorpay.</p>
             </div>
 
             <Card className="border-primary ring-2 ring-primary/20 bg-primary/5">
@@ -299,8 +299,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <Badge variant="secondary" className="mb-4">
                 <CreditCard className="h-3 w-3 mr-1" /> Subscription Checkout
               </Badge>
-              <h2 className="text-2xl font-bold">{currentPlan.name} - ₹{currentPlan.price}</h2>
-              <p className="text-sm text-muted-foreground mt-2">
+              <h2 className="text-2xl font-bold text-white">{currentPlan.name} - ₹{currentPlan.price}</h2>
+              <p className="text-sm text-gray-400 mt-2">
                 {hasActiveTrial ? 'Your free trial is already active. Authorize auto-renewal for later billing.' : 'You will start with a 1 month free trial, then billing begins automatically.'}
               </p>
             </div>
@@ -356,10 +356,17 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <AnimatePresence mode="wait">
-        {renderStep()}
-      </AnimatePresence>
+    <div className="relative min-h-[100dvh] w-full flex items-center justify-center bg-[#070913] overflow-hidden px-4">
+      {/* Floating glowing background blobs — same as Auth page */}
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1d2d5f] to-transparent opacity-50 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#121c3b] to-transparent opacity-40 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full bg-[#18214d]/20 blur-[90px] pointer-events-none" />
+
+      <div className="w-full max-w-2xl relative z-10 py-8">
+        <AnimatePresence mode="wait">
+          {renderStep()}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
