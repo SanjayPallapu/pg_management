@@ -42,6 +42,7 @@ import { CalculatorCard } from "./CalculatorCard";
 import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
 import { PGRulesCard } from "./PGRulesCard";
+import { BillUnitPricesCard } from "./BillUnitPricesCard";
 import { RulesTemplate } from "./RulesTemplate";
 import { SettlementSummarySheet } from "./SettlementSummarySheet";
 import { DayGuestRevenueCard } from "./DayGuestRevenueCard";
@@ -537,6 +538,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* PG Rules Card */}
               <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+
+              {/* Bill Unit Prices Card */}
+              <BillUnitPricesCard />
             </div>
           </CollapsibleContent>
         </Collapsible>
