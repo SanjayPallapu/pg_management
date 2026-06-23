@@ -44,7 +44,7 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}>
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-2 py-3 pb-4">
         {children}
       </div>
       <BottomNav />

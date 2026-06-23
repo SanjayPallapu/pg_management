@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -650,14 +651,21 @@ export const SecurityDepositCard = ({
       </Sheet>
 
       {/* Add Deposit Dialog */}
-      <AlertDialog open={!!depositDialog} onOpenChange={() => setDepositDialog(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Record Security Deposit</AlertDialogTitle>
-            <AlertDialogDescription>
-              Enter the deposit details for {depositDialog?.name} (Room {depositDialog?.roomNo})
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+      <Dialog open={!!depositDialog} onOpenChange={() => setDepositDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDepositDialog(null)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <DialogTitle>Record Security Deposit</DialogTitle>
+                <DialogDescription>
+                  Enter the deposit details for {depositDialog?.name} (Room {depositDialog?.roomNo})
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
               <Label>Deposit Amount (₹)</Label>
@@ -733,14 +741,12 @@ export const SecurityDepositCard = ({
               </Popover>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAddDeposit} disabled={depositAmount <= 0}>
-              Record Deposit
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDepositDialog(null)}>Cancel</Button>
+            <Button onClick={handleAddDeposit} disabled={depositAmount <= 0}>Record Deposit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Remove Deposit Confirmation Dialog */}
       <AlertDialog open={!!removeDialog} onOpenChange={() => setRemoveDialog(null)}>
@@ -762,14 +768,21 @@ export const SecurityDepositCard = ({
       </AlertDialog>
 
       {/* Edit Deposit Dialog */}
-      <AlertDialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Edit Security Deposit</AlertDialogTitle>
-            <AlertDialogDescription>
-              Update the deposit details for {editDialog?.name} (Room {editDialog?.roomNo})
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+      <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditDialog(null)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <DialogTitle>Edit Security Deposit</DialogTitle>
+                <DialogDescription>
+                  Update the deposit details for {editDialog?.name} (Room {editDialog?.roomNo})
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
               <Label>Deposit Amount (₹)</Label>
@@ -845,14 +858,12 @@ export const SecurityDepositCard = ({
               </Popover>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditDeposit} disabled={depositAmount <= 0}>
-              Update Deposit
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditDialog(null)}>Cancel</Button>
+            <Button onClick={handleEditDeposit} disabled={depositAmount <= 0}>Update Deposit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Security Deposit Receipt Dialog */}
       <SecurityDepositReceiptDialog
