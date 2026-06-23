@@ -246,7 +246,7 @@ const Index = () => {
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-screen bg-background">
       <div className="border-b border-border/60 bg-background">
         <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -294,6 +294,7 @@ const Index = () => {
         </div>
       </div>
 
+      <div className="flex-1 overflow-y-auto">
       {apiErrorMessage && (
         <div className="mx-auto w-full max-w-screen-2xl px-3 pt-4 sm:px-4">
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
@@ -380,6 +381,7 @@ const Index = () => {
             <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
           </button>
         )}
+      </div>
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

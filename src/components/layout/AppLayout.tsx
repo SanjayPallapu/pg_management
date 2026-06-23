@@ -25,10 +25,10 @@ export const AppLayout = ({
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header with back button */}
       {(showBack || title || headerActions) && (
-        <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
+        <header className="shrink-0 border-b border-border/70 bg-background/95 backdrop-blur-xl z-40">
           <div className="flex h-14 items-center gap-3 px-4">
             {showBack && (
               <button
@@ -51,12 +51,12 @@ export const AppLayout = ({
         </header>
       )}
 
-      {/* Page content with bottom padding for nav */}
-      <div className={showBottomNav ? 'pb-[calc(5rem+env(safe-area-inset-bottom))]' : ''}>
+      {/* Page content - scrollable */}
+      <div className="flex-1 overflow-y-auto">
         {children}
       </div>
 
-      {/* Bottom navigation */}
+      {/* Bottom navigation - always at bottom */}
       {showBottomNav && <BottomNav />}
     </div>
   );

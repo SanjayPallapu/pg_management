@@ -2,8 +2,11 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
+import { BottomNav } from "@/components/layout/BottomNav";
 
-const Dialog = DialogPrimitive.Root;
+const Dialog = ({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root modal={false} {...props} />
+);
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
@@ -34,14 +37,17 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      onPointerDownOutside={(e) => e.preventDefault()}
+      onInteractOutside={(e) => e.preventDefault()}
       className={cn(
-        "fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+        "fixed inset-0 z-50 flex flex-col bg-background duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
         className
       )}
       {...props}>
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-4">
         {children}
       </div>
+      <BottomNav />
     </DialogPrimitive.Content>
   </DialogPortal>
 );
