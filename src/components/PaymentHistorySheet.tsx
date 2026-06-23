@@ -168,9 +168,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}>
+      <SheetContent>
 
         <SheetHeader className="pb-2 relative">
           <Button
@@ -256,7 +254,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
         </div>
 
         {/* Grouped Transaction List */}
-        <ScrollArea className={isMobile ? "h-[calc(100vh-320px)]" : "h-[calc(100vh-300px)] mt-2"}>
+        <div className="mt-2">
           <div className="space-y-3 pr-2">
             {groupedPayments.map((group) => {
               const key = `${group.tenantId}-${group.month}-${group.year}`;
@@ -352,7 +350,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
               </div>
             }
           </div>
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>);
 
