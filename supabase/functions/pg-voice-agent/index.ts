@@ -105,7 +105,7 @@ const tools = [
           status: { type: "string", enum: ["Paid", "Partial", "Pending"], description: "Resulting status. 'Paid' = full month rent." },
           amount: { type: "number", description: "Amount paid in this entry (rupees). For status=Paid leave empty to use full monthly rent." },
           mode: { type: "string", enum: ["upi", "cash"], description: "Defaults upi." },
-          collectedBy: { type: "string", description: "Collector name. Defaults 'Sanjay'." },
+          collectedBy: { type: "string", description: "Collector name. Defaults to PG owner." },
           confirmed: { type: "boolean", description: "Must be true to actually write. If false, returns a preview." },
         },
         required: ["status"],
@@ -311,7 +311,7 @@ async function executeTool(
       ? (args.amount ?? monthlyRent)
       : status === "Pending" ? 0 : (args.amount ?? 0);
     const mode = args.mode || "upi";
-    const collectedBy = args.collectedBy || "Sanjay";
+    const collectedBy = args.collectedBy || "Owner";
     const preview = {
       tenant: t.name, room: t.rooms?.room_no, month, year,
       status, entry_amount: entryAmount, mode, collected_by: collectedBy,

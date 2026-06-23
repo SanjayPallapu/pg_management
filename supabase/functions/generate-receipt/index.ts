@@ -19,6 +19,7 @@ interface ReceiptData {
   amountPaid: number;
   isFullPayment: boolean;
   remainingBalance?: number;
+  pgName?: string;
 }
 
 serve(async (req) => {
@@ -87,11 +88,12 @@ serve(async (req) => {
       ? "Your full payment has been successfully completed."
       : `You have successfully made a partial payment of ₹ ${receiptData.amountPaid.toLocaleString()}. Please pay the remaining ₹ ${receiptData.remainingBalance?.toLocaleString()} at your earliest convenience.`;
 
-    const prompt = `Generate a beautiful payment receipt image for a women's hostel called "Amma Women's Hostel".
+    const pgDisplayName = receiptData.pgName || 'PG Management';
+
+    const prompt = `Generate a beautiful payment receipt image for a PG/hostel called "${pgDisplayName}".
 
 The receipt should have:
-- A beautiful header with the hostel logo showing a mother and daughter embrace in pink/magenta crescent moon design with flowers and leaves
-- "Amma" in elegant script font, "WOMEN'S HOSTEL" below it
+- A professional header with the PG name "${pgDisplayName}" in elegant font
 - A green checkmark with "Payment Successful!" text
 
 Payment Section (light green background):
@@ -114,11 +116,10 @@ Stay & Payment Details:
 - Amount: ₹ ${receiptData.amount.toLocaleString()}
 
 Footer:
-- Decorative illustration of a pink hostel building with green checkmark, money stacks, coins, and plants
 - "Thank You!" in elegant green script
 - "${thankYouMessage}"
 
-Style: Clean, professional, feminine, with pink, green, and white color scheme. Use soft gradients and decorative flower elements.`;
+Style: Clean, professional, with green and white color scheme. Use soft gradients and modern design.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
