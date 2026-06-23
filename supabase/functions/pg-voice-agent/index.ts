@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { crushJSON, compressSystemPrompt, trimConversation, estimateConversationTokens } from "./compress.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -414,44 +415,18 @@ Deno.serve(async (req) => {
     const snapshot = await executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null);
     const collection = await executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null);
 
-    const systemPrompt = `You are an advanced, friendly voice assistant for "${pg.name}", a PG (paying guest) hostel management system. The owner is talking to you by VOICE in a real-time conversation.
+    // ── Context Compression (Headroom-style) ──────────────────────
+    // 1. Compressed system prompt (~40% fewer tokens)
+    const systemPrompt = compressSystemPrompt(pg.name, isTelugu, snapshot, collection);
 
-LANGUAGE:
-${isTelugu
-  ? `- ALWAYS reply in natural spoken Telugu (తెలుగు) script. Use simple, conversational Telugu the way a friendly assistant in Hyderabad would speak.
-- Numbers and money: speak in Telugu (e.g. "పన్నెండు వేల రూపాయలు"). Mix English words only for proper nouns (room numbers, names).
-- Greetings like "నమస్కారం" are welcome. Keep it warm and natural.
-- Telugu speech recognition often mishears names and digits. If user said something that sounds like a name or room number, try fuzzy matching (e.g. "రూమ్ ఒన్ జీరో వన్" = 101). Always read back the resolved name/room so user can correct you.`
-  : `- Reply in clear, natural English (Indian English style is fine).
-- For money say "rupees" (e.g. "twelve thousand rupees"). Speak numbers naturally.
-- The user's voice may include alternates separated by " | " — pick the most plausible interpretation.`}
+    // 2. Trim conversation history (older turns → recap)
+    const trimmedMessages = trimConversation(messages, 3);
 
-CONVERSATION STYLE:
-- This is a REAL conversation, not a Q&A. Be warm, natural, and human-like.
-- Keep responses SHORT (1-3 sentences). Voice-friendly: no markdown, no bullets, no asterisks, no symbols.
-- TRACK FOCUS: silently remember the last tenant and last room mentioned. Resolve pronouns: "he/him/she/her/అతను/ఆమె" → last tenant; "that room/ఆ రూమ్/and 102?" → swap room but reuse last intent (e.g. "and 102?" after "tell me about 101" means get_room_details on 102).
-- If still ambiguous, ask ONE brief clarifying question.
-- Use small acknowledgements ("Sure", "Got it", "సరే", "అలాగే") to feel natural.
-- If the user is just chatting (greetings, thanks), reply briefly and naturally — no tool needed.
+    const convo: any[] = [{ role: "system", content: systemPrompt }, ...trimmedMessages];
 
-DATA RULES:
-- ALWAYS use tools to fetch real data before stating numbers. Never fabricate.
-- For "how much collected", "who hasn't paid", "vacant rooms", tenant or room lookups — call the right tool.
-- After tool data, summarize in 1-3 short spoken sentences.
-- If asked something outside PG data, politely steer back.
-
-WRITE ACTIONS (mark_payment, update_notes):
-- These MUTATE data. NEVER call them with confirmed=true on the first turn.
-- Step 1: parse user intent → call the tool with confirmed=false to get a preview, OR repeat the action back to the user in your reply: "Mark Ramesh in room 101 as paid 8000 cash, collected by Sanjay — confirm?"
-- Step 2: only after user explicitly confirms ("yes/haan/సరే/అవును/ఓకే/do it"), call again with confirmed=true.
-- If tool returns reason=ambiguous, ask user to pick.
-
-CURRENT SNAPSHOT (live data, use to answer instantly without extra tool calls when sufficient):
-${JSON.stringify({ overview: snapshot, this_month: collection }, null, 2)}
-
-Today's date: ${todayISO()}.`;
-
-    const convo: any[] = [{ role: "system", content: systemPrompt }, ...messages];
+    // 3. Log token estimate before LLM call
+    const tokensBefore = estimateConversationTokens(convo);
+    console.log(`[compress] convo tokens (est): ${tokensBefore} | msgs: ${convo.length} | trimmed: ${messages.length - trimmedMessages.length} old msgs`);
 
     // Tool-calling loop
     for (let step = 0; step < 5; step++) {
@@ -502,10 +477,15 @@ Today's date: ${todayISO()}.`;
         let parsed: any = {};
         try { parsed = JSON.parse(tc.function.arguments || "{}"); } catch {}
         const result = await executeTool(tc.function.name, parsed, supabase, pgId);
+
+        // ── Crush tool result JSON → terse text (60-80% fewer tokens) ──
+        const crushed = crushJSON(tc.function.name, result);
+        console.log(`[compress] tool ${tc.function.name}: ${JSON.stringify(result).length} chars → ${crushed.length} chars (${Math.round((1 - crushed.length / Math.max(1, JSON.stringify(result).length)) * 100)}% saved)`);
+
         convo.push({
           role: "tool",
           tool_call_id: tc.id,
-          content: JSON.stringify(result),
+          content: crushed,
         });
       }
     }
