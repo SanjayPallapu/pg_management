@@ -128,7 +128,6 @@ export const usePGSetup = () => {
             const capacity = 3; // Can be customized later
             rooms.push({
               pg_id: pg.id,
-              property_id: pg.id, // For backward compatibility
               room_no: roomNo,
               floor: floor,
               capacity: capacity,
