@@ -510,7 +510,6 @@ export const PaymentReconciliation = ({
 
     try {
       await saveAndShareExcel(wb, `Reconciliation_${months[selectedMonth - 1]}_${selectedYear}.xlsx`);
-      toast.success('Excel file exported and shared successfully');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to export Excel file');
     }

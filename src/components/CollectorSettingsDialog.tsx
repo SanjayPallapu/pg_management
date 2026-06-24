@@ -33,12 +33,12 @@ export const CollectorSettingsDialog = ({ open, onOpenChange }: CollectorSetting
     }
     addCollector(name);
     setNewName('');
-    toast({ title: `Added "${name}"` });
+
   };
 
   const handleReset = () => {
     resetToDefaults();
-    toast({ title: 'Reset to defaults' });
+
   };
 
   return (
@@ -65,7 +65,7 @@ export const CollectorSettingsDialog = ({ open, onOpenChange }: CollectorSetting
                 className="h-8 w-8 text-destructive hover:text-destructive"
                 onClick={() => {
                   removeCollector(index);
-                  toast({ title: `Removed "${collector.displayName}"` });
+
                 }}
                 disabled={collectors.length <= 1}
               >

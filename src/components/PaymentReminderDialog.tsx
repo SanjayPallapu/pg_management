@@ -96,7 +96,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     try {
       const dataUrl = await generateReceiptImage(reminderRef.current);
       setGeneratedImage(dataUrl);
-      toast({ title: 'Reminder image generated!' });
+
     } catch (error) {
       console.error('Error generating reminder:', error);
       toast({ title: 'Failed to generate', variant: 'destructive' });
@@ -124,7 +124,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const handleDownload = () => {
     if (!generatedImage || !reminderData) return;
     downloadReceiptImage(generatedImage, `reminder-${reminderData.tenantName}`);
-    toast({ title: 'Reminder downloaded!' });
+
   };
 
   const generateAcBill = useCallback(async () => {
@@ -133,7 +133,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     try {
       const dataUrl = await generateReceiptImage(acRef.current);
       setGeneratedAcImage(dataUrl);
-      toast({ title: 'AC bill image generated!' });
+
     } catch (e) {
       console.error(e);
       toast({ title: 'Failed to generate AC bill', variant: 'destructive' });
@@ -179,11 +179,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       await navigator.clipboard.writeText(displayPhone);
-      toast({ 
-        title: `📱 Search: ${reminderData.tenantName}`, 
-        description: `Phone ${displayPhone} copied!`,
-        duration: 8000,
-      });
+
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -226,7 +222,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       roomNo: reminderData.roomNo,
     };
     navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
-    toast({ title: 'Reminder data copied!' });
+
   };
 
   return (

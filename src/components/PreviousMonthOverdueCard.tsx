@@ -136,7 +136,7 @@ export const PreviousMonthOverdueCard = () => {
     });
 
     setCollectorEditTenantId(null);
-    toast({ title: `Updated collector to ${collectorName}` });
+
   }, [payments, upsertPayment]);
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -341,10 +341,7 @@ export const PreviousMonthOverdueCard = () => {
       notes: notes || undefined,
     });
 
-    toast({
-      title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',
-      description: `₹${data.amount.toLocaleString()} paid via ${data.mode.toUpperCase()} for ${months[data.month - 1]} ${data.year}${discount > 0 ? ` (Discount: ₹${discount})` : ''}`
-    });
+
 
     // Auto-open Send Payment Receipt dialog after recording
     const tenant = selectedPendingTenant;
@@ -517,7 +514,7 @@ export const PreviousMonthOverdueCard = () => {
           </SheetHeader>
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
-            <div className="space-y-4 pr-2">
+            <div className="space-y-4 px-1">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-paid/10 rounded-lg">
                   <div className="text-xs text-muted-foreground">Total Collected</div>
@@ -711,7 +708,7 @@ export const PreviousMonthOverdueCard = () => {
           </SheetHeader>
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
-            <div className="space-y-3 pr-2">
+            <div className="space-y-3 px-1">
               <div className="p-3 bg-amber-500/10 rounded-lg">
                 <div className="text-xs text-muted-foreground">Total Pending</div>
                 <div className="text-lg font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>

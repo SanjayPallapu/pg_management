@@ -82,7 +82,6 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
       await refreshPGs();
       await queryClient.refetchQueries({ queryKey: ['rooms'] });
       
-      toast.success(`Floor ${newFloorCount} added`);
     } catch (err) {
       console.error('Error adding floor:', err);
       toast.error('Failed to add floor');
@@ -120,9 +119,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
         await refreshPGs();
         await queryClient.refetchQueries({ queryKey: ['rooms'] });
         
-        toast.success(`Floor ${floor} removed`);
       } else {
-        toast.info('Can only remove the top floor. Delete rooms on higher floors first.');
       }
     } catch (err) {
       console.error('Error deleting floor:', err);

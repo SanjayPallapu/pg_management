@@ -58,7 +58,7 @@ export const KeyNumbersCard = () => {
       queryClient.invalidateQueries({ queryKey: ['key-numbers'] });
       setNewSerial('');
       setNewRoom('');
-      toast({ title: 'Key number added' });
+
     },
     onError: (err: any) => {
       toast({ title: 'Failed to add key', description: err?.message ?? String(err), variant: 'destructive' as any });
@@ -76,7 +76,7 @@ export const KeyNumbersCard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['key-numbers'] });
       setEditingId(null);
-      toast({ title: 'Key number updated' });
+
     },
   });
 
@@ -90,19 +90,19 @@ export const KeyNumbersCard = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['key-numbers'] });
-      toast({ title: 'Key number deleted' });
+
     },
   });
 
   const copyToClipboard = (serial: string, room: string) => {
     navigator.clipboard.writeText(`${serial} - ${room}`);
-    toast({ title: 'Copied to clipboard', description: `${serial} - ${room}` });
+
   };
 
   const copyAll = () => {
     const text = keyNumbers.map(k => `${k.serial_number} - ${k.room_number}`).join('\n');
     navigator.clipboard.writeText(text);
-    toast({ title: 'All key numbers copied' });
+
   };
 
   const handleAdd = () => {

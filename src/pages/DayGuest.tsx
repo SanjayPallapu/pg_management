@@ -143,7 +143,6 @@ const DayGuestPage = () => {
       total_amount: total,
       notes: editGuest.notes.trim() || null,
     });
-    toast.success('Day guest updated');
     setEditDialogOpen(false);
     setEditGuest(null);
   };

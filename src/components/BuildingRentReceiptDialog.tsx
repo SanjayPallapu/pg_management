@@ -78,7 +78,6 @@ export const BuildingRentReceiptDialog = ({
     try {
       await navigator.clipboard.writeText(settings.whatsappNumber);
       setCopied(true);
-      toast.success('Phone number copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy');
@@ -116,11 +115,9 @@ export const BuildingRentReceiptDialog = ({
       // Try native share API first (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
-        toast.success('Receipt shared! Phone number copied.');
       } else {
         // Fallback: open WhatsApp and download
         window.open(`https://wa.me/91${settings.whatsappNumber}`, '_blank');
-        toast.success('WhatsApp opened. Phone number copied!');
 
         // Also download the receipt
         const link = document.createElement('a');
@@ -160,7 +157,6 @@ export const BuildingRentReceiptDialog = ({
       link.download = `building-rent-${forMonth.replace(/\s+/g, '-')}.png`;
       link.href = dataUrl;
       link.click();
-      toast.success('Receipt downloaded!');
       onOpenChange(false);
     } catch (error) {
       console.error('Error generating receipt:', error);

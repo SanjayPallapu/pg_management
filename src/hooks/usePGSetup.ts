@@ -89,7 +89,6 @@ export const usePGSetup = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pgs'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      toast.success('Existing data migrated successfully!');
       setIsMigrating(false);
     },
     onError: (error) => {
@@ -151,7 +150,6 @@ export const usePGSetup = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pgs'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      toast.success('PG created successfully!');
     },
     onError: (error) => {
       console.error('Error creating PG:', error);

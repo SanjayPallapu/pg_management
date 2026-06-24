@@ -108,7 +108,6 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     setIsCheckingStatus(true);
     try {
       await refreshSubscription();
-      toast.success('Subscription refreshed');
     } catch {
       toast.error('Failed to refresh subscription');
     } finally {

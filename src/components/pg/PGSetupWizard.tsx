@@ -107,7 +107,6 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
     const url = await uploadLogo(file, currentPg.name || `pg-${currentPgIndex}`);
     if (url) {
       updateCurrentPg({ logoUrl: url });
-      toast.success('Logo uploaded!');
     }
   };
 
@@ -125,7 +124,6 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
     );
     if (url) {
       updateCurrentPg({ logoUrl: url });
-      toast.success('Logo generated!');
     }
   };
 

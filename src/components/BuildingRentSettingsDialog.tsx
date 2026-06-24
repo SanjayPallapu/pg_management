@@ -58,13 +58,11 @@ export const BuildingRentSettingsDialog = ({
       paidTo: paidTo.trim(),
       whatsappNumber: whatsappNumber.trim(),
     });
-    toast.success('Settings saved');
     onOpenChange(false);
   };
 
   const handleReset = () => {
     onReset();
-    toast.success('Settings reset to defaults');
     onOpenChange(false);
   };
 

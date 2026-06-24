@@ -302,7 +302,6 @@ export const SecurityDepositCard = ({
         securityDepositMode: depositMode,
         securityDepositCollectedBy: depositCollectedBy,
       }, depositDialog.name);
-      toast.success(`Deposit of ₹${depositAmount.toLocaleString()} recorded for ${depositDialog.name}`);
       setDepositDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
@@ -323,7 +322,6 @@ export const SecurityDepositCard = ({
         securityDepositMode: depositMode,
         securityDepositCollectedBy: depositCollectedBy,
       }, editDialog.name);
-      toast.success(`Deposit updated to ₹${depositAmount.toLocaleString()} for ${editDialog.name}`);
       setEditDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
@@ -351,7 +349,6 @@ export const SecurityDepositCard = ({
         delete cache[removeDialog.id];
         writeDepositCollectedByCache(cache);
       }
-      toast.success(`Deposit removed for ${removeDialog.name}`);
       setRemoveDialog(null);
     } catch (error) {
       toast.error('Failed to remove deposit');

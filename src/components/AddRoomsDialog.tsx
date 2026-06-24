@@ -73,7 +73,6 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       }
 
       if (roomsToAdd.length === 0) {
-        toast.info("All rooms in this range already exist");
         setIsAdding(false);
         return;
       }
@@ -86,9 +85,6 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       await queryClient.invalidateQueries({ queryKey: ["rooms"], refetchType: "active" });
       await queryClient.refetchQueries({ queryKey: ["rooms"] });
 
-      toast.success(
-        `Added ${roomsToAdd.length} rooms (${roomsToAdd[0].room_no} to ${roomsToAdd[roomsToAdd.length - 1].room_no})`,
-      );
       onOpenChange(false);
     } catch (err) {
       console.error("Error adding rooms:", err);

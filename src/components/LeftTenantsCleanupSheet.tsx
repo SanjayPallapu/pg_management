@@ -170,10 +170,7 @@ export const LeftTenantsCleanupSheet = ({ open, onOpenChange, rooms }: LeftTenan
           oldData: { isLocked: false }
         });
       }
-      toast({
-        title: `${tenantsToLock.length} tenant(s) locked`,
-        description: 'They have been removed from rent sheet and reports'
-      });
+
       setSelectedIds(new Set());
       onOpenChange(false);
     } catch (error) {

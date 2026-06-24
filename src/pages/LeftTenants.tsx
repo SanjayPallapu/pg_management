@@ -92,7 +92,7 @@ const LeftTenants = () => {
     });
     try {
       await saveAndShareExcel(wb, `Left_Tenants${roomNo ? `_Room_${roomNo}` : ''}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-      toast({ title: 'Excel file exported and shared successfully' });
+
     } catch (error) {
       toast({
         variant: "destructive",
@@ -123,13 +123,13 @@ const LeftTenants = () => {
         endDate: editForm.endDate || undefined,
       },
     });
-    toast({ title: 'Tenant updated successfully' });
+
     setEditingTenantId(null);
   };
 
   const handleDelete = async (tenantId: string, tenantName?: string) => {
     await removeTenant.mutateAsync({ tenantId, tenantName });
-    toast({ title: 'Tenant deleted successfully' });
+
     setDeleteConfirm(null);
   };
 
@@ -138,7 +138,7 @@ const LeftTenants = () => {
       tenantId,
       updates: { endDate: undefined },
     });
-    toast({ title: 'Tenant reactivated successfully' });
+
     setReactivateConfirm(null);
   };
 

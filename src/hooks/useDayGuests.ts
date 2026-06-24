@@ -156,9 +156,7 @@ export const useDayGuests = (roomId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'], refetchType: 'active' });
       queryClient.invalidateQueries({ queryKey: ['day-guest-stats'], refetchType: 'active' });
     },
-    onSuccess: () => {
-      toast.success('Day guest added successfully');
-    },
+
   });
 
   const updateDayGuest = useMutation({
@@ -233,9 +231,7 @@ export const useDayGuests = (roomId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['day-guests'], refetchType: 'active' });
       queryClient.invalidateQueries({ queryKey: ['day-guest-stats'], refetchType: 'active' });
     },
-    onSuccess: () => {
-      toast.success('Day guest deleted successfully');
-    },
+
   });
 
   return {

@@ -51,7 +51,6 @@ export const LogoUpdateDialog = ({ open, onOpenChange, pgId }: LogoUpdateDialogP
     const url = await uploadLogo(file, pg.name);
     if (url) {
       setLogoUrl(url);
-      toast.success('Logo uploaded!');
     }
   };
 
@@ -61,7 +60,6 @@ export const LogoUpdateDialog = ({ open, onOpenChange, pgId }: LogoUpdateDialogP
     const url = await generateAILogo(pg.name, logoStyle as any, logoColor);
     if (url) {
       setLogoUrl(url);
-      toast.success('Logo generated!');
     }
   };
 
@@ -81,7 +79,6 @@ export const LogoUpdateDialog = ({ open, onOpenChange, pgId }: LogoUpdateDialogP
       if (error) throw error;
 
       await refreshPGs();
-      toast.success('Logo updated!');
       onOpenChange(false);
       setLogoUrl('');
     } catch (err) {

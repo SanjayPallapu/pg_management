@@ -299,7 +299,6 @@ const Auth = () => {
         }
         setIsSubmitting(false);
       } else {
-        toast.success("Signed in successfully");
         navigate("/", { replace: true });
       }
     } catch {
@@ -335,11 +334,9 @@ const Auth = () => {
         console.error("Error creating profile:", profileError);
       }
       setIsSubmitting(false);
-      toast.success("Account created!");
       navigate("/", { replace: true });
     } else {
       setIsSubmitting(false);
-      toast.success("Account created! You can now sign in.");
     }
   };
 
@@ -453,7 +450,7 @@ const Auth = () => {
                 type="button"
                 variant="outline"
                 className="h-11 rounded-xl bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-white/20 text-white font-medium gap-2 transition-all active:scale-[0.98] shadow-sm shadow-black/20"
-                onClick={() => toast.info("Apple Sign-In is coming soon!")}
+                onClick={() => {}}
                 disabled={isSubmitting}
               >
                 <AppleIcon />
@@ -499,7 +496,7 @@ const Auth = () => {
                     <Label htmlFor="signin-password" className="text-gray-300 text-xs font-semibold">Password</Label>
                     <button
                       type="button"
-                      onClick={() => toast.info("Password reset flow is coming soon!")}
+                      onClick={() => {}}
                       className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors"
                     >
                       Forgot Password?

@@ -248,10 +248,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     }
 
     setIsSending(false);
-    toast({
-      title: "Reminders initiated",
-      description: `Opened WhatsApp for ${tenantsToSend.length} tenant(s). Complete sending in each tab.`,
-    });
+
     onOpenChange(false);
   };
 

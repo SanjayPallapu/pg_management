@@ -64,7 +64,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     try {
       const dataUrl = await generateReceiptImage(reminderRef.current);
       setGeneratedImage(dataUrl);
-      toast({ title: 'Reminder image generated!' });
+
     } catch (error) {
       console.error('Error generating reminder:', error);
       toast({ title: 'Failed to generate', variant: 'destructive' });
@@ -76,7 +76,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const handleDownload = () => {
     if (!generatedImage || !reminderData) return;
     downloadReceiptImage(generatedImage, `dayguest-reminder-${reminderData.guestName}`);
-    toast({ title: 'Reminder downloaded!' });
+
   };
 
   const shareToWhatsApp = async () => {
@@ -92,11 +92,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       await navigator.clipboard.writeText(displayPhone);
-      toast({
-        title: `📱 Search: ${reminderData.guestName}`,
-        description: `Phone ${displayPhone} copied!`,
-        duration: 8000,
-      });
+
 
       await new Promise(resolve => setTimeout(resolve, 500));
 

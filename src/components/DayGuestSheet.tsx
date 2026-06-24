@@ -179,7 +179,6 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     setEditDialogOpen(false);
     setEditingGuest(null);
     setEditGuestData(null);
-    toast.success('Day guest updated successfully');
   };
 
   const handleDeleteStart = (guest: DayGuest) => {
@@ -233,9 +232,6 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       payment_entries: updatedEntries,
     });
 
-    toast.success(isFullPayment ? 'Payment marked as Paid' : 'Partial payment recorded', {
-      description: `₹${totalPaid.toLocaleString()} paid${!isFullPayment ? ` • ₹${(paymentGuest.total_amount - totalPaid).toLocaleString()} remaining` : ''}`
-    });
 
     setPaymentDialogOpen(false);
     setPaymentGuest(null);
@@ -261,7 +257,6 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       amount_paid: 0,
       payment_entries: [],
     });
-    toast.success('Payment status reset to Pending');
     setUnpaidDialogOpen(false);
     setUnpaidGuest(null);
   };

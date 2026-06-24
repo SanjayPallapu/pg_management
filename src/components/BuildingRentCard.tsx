@@ -46,7 +46,6 @@ export const BuildingRentCard = () => {
     // Auto copy phone number when clicking WhatsApp
     try {
       await navigator.clipboard.writeText(settings.whatsappNumber);
-      toast.success('Phone number copied!');
     } catch {
       // Silent fail for copy
     }

@@ -66,7 +66,6 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       await queryClient.invalidateQueries({ queryKey: ["rooms"] });
       await queryClient.refetchQueries({ queryKey: ["rooms"], type: "active" });
       
-      toast.success(`Room ${room.roomNo} updated`);
       onOpenChange(false);
     } catch (err) {
       console.error("Error updating room:", err);
@@ -89,7 +88,6 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       await queryClient.refetchQueries({
         queryKey: ["rooms"],
       });
-      toast.success(`Room ${room.roomNo} deleted`);
       setShowDeleteConfirm(false);
       onOpenChange(false);
     } catch (err) {

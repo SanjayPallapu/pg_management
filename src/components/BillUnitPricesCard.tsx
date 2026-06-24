@@ -66,7 +66,7 @@ export const BillUnitPricesCard = () => {
     try {
       const dataUrl = await generateReceiptImage(templateRef.current);
       setGeneratedImage(dataUrl);
-      toast({ title: "Price card generated!" });
+
     } catch (e) {
       console.error("Price card generation failed:", e);
       toast({ title: "Failed to generate image", variant: "destructive" });
@@ -78,7 +78,7 @@ export const BillUnitPricesCard = () => {
   const handleDownload = () => {
     if (!generatedImage) return;
     downloadReceiptImage(generatedImage, `bill-prices-${currentPG?.name || "pg"}`);
-    toast({ title: "Price card downloaded!" });
+
   };
 
   const shareToWhatsApp = async () => {
@@ -97,14 +97,11 @@ export const BillUnitPricesCard = () => {
           title: "Current Bill & Unit Prices",
           text: `Current pricing and electricity rates for ${currentPG?.name || "PG"}`,
         });
-        toast({ title: "Shared successfully!" });
+
       } else {
         // Fallback: download + open WhatsApp
         downloadReceiptImage(generatedImage, `bill-prices-${pgName}`);
-        toast({
-          title: "Image downloaded!",
-          description: "Open WhatsApp and share the downloaded image.",
-        });
+
       }
     } catch (e: any) {
       if (e?.name !== "AbortError") {

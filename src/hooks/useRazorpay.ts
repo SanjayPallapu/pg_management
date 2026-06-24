@@ -138,7 +138,6 @@ export const useRazorpay = () => {
                   : syncData?.error || "Subscription authorization failed");
               }
 
-              toast.success("Free trial activated. Auto-renewal is authorized.");
               setIsLoading(false);
               onSuccess();
             } catch (syncErr) {

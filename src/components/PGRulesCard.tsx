@@ -69,7 +69,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
   const handleSaveRule = () => {
     if (!editingRule) return;
     if (!editingRule.title.trim()) {
-      toast({ title: 'Error', description: 'Rule title cannot be empty' });
+
       return;
     }
     setShowSaveConfirm(true);
@@ -86,7 +86,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
     persistRules(nextRules);
     setEditingRule(null);
     setShowSaveConfirm(false);
-    toast({ title: 'Success', description: 'Rule updated successfully' });
+
   };
 
   const handleAddRule = () => {
@@ -103,7 +103,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
     persistRules(rules.filter(r => r.id !== id));
     setShowDeleteDialog(false);
     setRuleToDelete(null);
-    toast({ title: 'Deleted', description: 'Rule removed successfully' });
+
   };
 
   const handleAddDetail = () => {

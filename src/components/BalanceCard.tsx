@@ -79,7 +79,7 @@ export const BalanceCard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["monthly-balance"] });
       setIsEditingBalance(false);
-      toast({ title: "Balance saved" });
+
     },
     onError: () => {
       toast({ title: "Failed to save balance", variant: "destructive" });

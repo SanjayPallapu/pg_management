@@ -340,10 +340,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
       notes: notes || undefined,
     });
 
-    toast({
-      title: isFullPayment ? 'Payment completed' : 'Partial payment recorded',
-      description: `₹${data.amount.toLocaleString()} paid via ${data.mode.toUpperCase()} for ${months[data.month - 1]} ${data.year}${discount > 0 ? ` (Discount: ₹${discount})` : ''}`
-    });
+
 
     // Auto-open Send Payment Receipt dialog after recording
     const tenant = selectedTenant;

@@ -128,7 +128,6 @@ export const SettingsPage = () => {
       }
       
       await signOut();
-      toast.success("Account and associated data deleted successfully");
       window.location.href = "/auth";
     } catch (err: any) {
       console.error("Account deletion failed:", err);
@@ -145,7 +144,6 @@ export const SettingsPage = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out successfully");
     window.location.href = "/auth";
   };
 
@@ -160,7 +158,6 @@ export const SettingsPage = () => {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
-        toast.success("Link copied to clipboard!");
       }
     } catch {
       // User cancelled share
@@ -259,7 +256,7 @@ export const SettingsPage = () => {
                 icon={<Bell className="h-4 w-4 text-primary" />}
                 label="Notifications"
                 description="Manage push notification preferences"
-                onClick={() => toast.info("Notification settings coming soon")}
+                onClick={() => {}}
               />
             </CardContent>
           </Card>
@@ -274,14 +271,14 @@ export const SettingsPage = () => {
                 icon={<Building className="h-4 w-4 text-primary" />}
                 label="Manage Properties"
                 description={currentPG ? `Current: ${currentPG.name}` : "Setup your PG"}
-                onClick={() => toast.info("Switch PG from the top-left dropdown")}
+                onClick={() => {}}
               />
               {isAdmin && (
                 <SettingItem
                   icon={<Users className="h-4 w-4 text-primary" />}
                   label="Staff Management"
                   description="Add or manage staff access"
-                  onClick={() => toast.info("Staff management coming soon")}
+                  onClick={() => {}}
                 />
               )}
               <SettingItem
@@ -303,13 +300,13 @@ export const SettingsPage = () => {
                 icon={<Lock className="h-4 w-4 text-primary" />}
                 label="Change Password"
                 description="Update your account password"
-                onClick={() => toast.info("Password change coming soon")}
+                onClick={() => {}}
               />
               <SettingItem
                 icon={<ShieldCheck className="h-4 w-4 text-primary" />}
                 label="Login Activity"
                 description="View recent sign-in sessions"
-                onClick={() => toast.info("Login activity coming soon")}
+                onClick={() => {}}
               />
             </CardContent>
           </Card>

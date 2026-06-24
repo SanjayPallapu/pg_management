@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Download,
@@ -35,8 +27,10 @@ import {
   ChevronDown,
   Send,
   Snowflake,
+  ArrowLeft,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   DropdownMenu,
@@ -94,6 +88,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+  const isMobile = useIsMobile();
   const [acMonth, setAcMonth] = useState(selectedMonth);
   const [acYear, setAcYear] = useState(selectedYear);
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
@@ -582,11 +577,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
           try {
             await navigator.clipboard.writeText(displayPhone);
-            toast({ 
-              title: `📱 Phone Copied: ${displayPhone}`, 
-              description: `Copied to clipboard for search!`,
-              duration: 5000,
-            });
+
           } catch (e) {
             console.error('Clipboard copy failed', e);
           }
@@ -614,7 +605,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             a.href = dataUrl;
             a.download = fileName;
             a.click();
-            toast({ title: "Image downloaded", description: "Share manually via WhatsApp." });
+
           }
         }
       } catch (error) {
@@ -759,10 +750,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       tenantName: tenant.name,
       roomNo: tenant.roomNo,
     });
-    toast({
-      title: isFullPayment ? "Payment marked as Paid" : "Partial payment recorded",
-      description: `₹${paymentAmount.toLocaleString()} paid${isOverpayment ? ` (includes extra ₹${(paymentAmount - tenant.monthlyRent).toLocaleString()})` : !isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ""}`,
-    });
+
 
     // Prepare receipt data for WhatsApp
     const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
@@ -845,12 +833,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       roomNo: tenant.roomNo,
       notes: notes || undefined,
     });
-    toast({
-      title: isFullPayment ? "Payment completed" : "Partial payment recorded",
-      description: isFullPayment
-        ? `Full payment of ₹${finalAmount.toLocaleString()} recorded${tenant.isProRata ? ` (${tenant.daysStayed} days)` : ""}${payRemainingDiscount > 0 ? ` (Discount: ₹${payRemainingDiscount})` : ""}${payRemainingExtra > 0 ? ` (Extra: ₹${payRemainingExtra})` : ""}`
-        : `₹${totalPaid.toLocaleString()} paid • ₹${(adjustedTarget - totalPaid).toLocaleString()} remaining`,
-    });
+
 
     // Prepare receipt data for WhatsApp
     const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
@@ -895,13 +878,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       amountPaid: newAmountPaid,
       paymentEntries: newEntries,
     });
-    toast({
-      title: `${entriesToDelete.length} payment(s) deleted`,
-      description:
-        newAmountPaid > 0
-          ? `Balance to pay: ₹${(deletePaymentTenant.monthlyRent - newAmountPaid).toLocaleString()}`
-          : "Status updated to Pending",
-    });
+
     setDeletePaymentTenant(null);
   };
   const exportToExcel = async () => {
@@ -956,9 +933,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     });
     try {
       await saveAndShareExcel(wb, `Rent_Sheet_${selectedYear}.xlsx`);
-      toast({
-        title: "Excel file exported with full year data",
-      });
+
     } catch (error) {
       toast({
         variant: "destructive",
@@ -1553,14 +1528,23 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         </CardContent>
       </Card>
 
-      {/* Payment Amount Dialog */}
-      <AlertDialog open={!!paymentAmountTenant} onOpenChange={() => setPaymentAmountTenant(null)}>
-        <AlertDialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Enter Payment Amount</AlertDialogTitle>
-            <AlertDialogDescription>Enter the amount received and select date.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
+      {/* Payment Amount Sheet */}
+      <Sheet open={!!paymentAmountTenant} onOpenChange={(open) => !open && setPaymentAmountTenant(null)}>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        >
+          <SheetHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base">Enter Payment Amount</SheetTitle>
+              <Button variant="ghost" size="icon" onClick={() => setPaymentAmountTenant(null)} className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Enter the amount received and select date.</p>
+          </SheetHeader>
+          <ScrollArea className={isMobile ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-160px)] mt-4"}>
+            <div className="space-y-4 px-1">
             <div>
               <div className="flex items-center justify-between">
                 <Label>Amount (₹)</Label>
@@ -1727,24 +1711,34 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 className={cn("rounded-md border mt-2 pointer-events-auto")}
               />
             </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPaymentAmountTenant(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPaymentAmount} disabled={paymentAmount <= 0}>
-              Confirm Payment
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </div>
+            <div className="flex gap-2 pt-4 pb-2">
+              <Button variant="outline" className="flex-1" onClick={() => setPaymentAmountTenant(null)}>Cancel</Button>
+              <Button className="flex-1" onClick={confirmPaymentAmount} disabled={paymentAmount <= 0}>
+                Confirm Payment
+              </Button>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       {/* Pay Remaining Dialog */}
-      <AlertDialog open={!!payRemainingTenant} onOpenChange={() => setPayRemainingTenant(null)}>
-        <AlertDialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Pay Remaining Amount</AlertDialogTitle>
-            <AlertDialogDescription>Enter amount and select payment date.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
+      <Sheet open={!!payRemainingTenant} onOpenChange={(open) => !open && setPayRemainingTenant(null)}>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        >
+          <SheetHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base">Pay Remaining Amount</SheetTitle>
+              <Button variant="ghost" size="icon" onClick={() => setPayRemainingTenant(null)} className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Enter amount and select payment date.</p>
+          </SheetHeader>
+          <ScrollArea className={isMobile ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-160px)] mt-4"}>
+            <div className="space-y-4 px-1">
             <div>
               <Label>Amount (₹)</Label>
               <Input
@@ -1900,15 +1894,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 className={cn("rounded-md border mt-2 pointer-events-auto")}
               />
             </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPayRemainingTenant(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPayRemaining} disabled={payRemainingAmount <= 0}>
-              Confirm Payment
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </div>
+            <div className="flex gap-2 pt-4 pb-2">
+              <Button variant="outline" className="flex-1" onClick={() => setPayRemainingTenant(null)}>Cancel</Button>
+              <Button className="flex-1" onClick={confirmPayRemaining} disabled={payRemainingAmount <= 0}>
+                Confirm Payment
+              </Button>
+            </div>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Payment Dialog */}
       <DeletePaymentDialog

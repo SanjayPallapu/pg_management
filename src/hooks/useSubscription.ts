@@ -39,7 +39,6 @@ export const useSubscription = () => {
     onSuccess: () => {
       refreshSubscription();
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
-      toast.success('Payment request created');
     },
     onError: (error) => {
       console.error('Error creating payment request:', error);
@@ -95,7 +94,6 @@ export const useSubscription = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
       refreshSubscription();
-      toast.success('Subscription activated!');
     },
     onError: (error) => {
       console.error('Error approving payment:', error);
@@ -137,7 +135,6 @@ export const useSubscription = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
       refreshSubscription();
-      toast.success('Payment request rejected');
     },
     onError: (error) => {
       console.error('Error rejecting payment:', error);

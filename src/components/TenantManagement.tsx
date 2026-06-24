@@ -264,10 +264,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
         name: name,
         phone: cleaned,
       }));
-      toast({
-        title: "Contact imported",
-        description: `Imported ${name} with phone number ${cleaned}.`,
-      });
+
     } else {
       setSelectedContactName(name);
       setNumbersToSelect(phones);
@@ -310,10 +307,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const updated = saveSimulatedContact(newContactName.trim(), newContactPhone.trim());
     setSimulatedContacts(updated);
     setIsAddingContact(false);
-    toast({
-      title: "Contact added",
-      description: `Added ${newContactName} to simulated contacts.`,
-    });
+
     // Auto select the newly added contact
     const newlyAdded = updated[updated.length - 1];
     handleContactSelected(newlyAdded.name, newlyAdded.phones);
@@ -403,9 +397,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       startDate: new Date().toISOString().split("T")[0],
     });
 
-    toast({
-      title: "Tenant added successfully",
-    });
+
   };
 
   const handleUpdateTenant = async (tenantId: string, updates: Partial<Tenant>) => {
@@ -434,9 +426,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       status: newStatus as any,
     });
 
-    toast({
-      title: "Tenant removed successfully",
-    });
+
   };
 
   const isSelectedCurrentMonth = (() => {
@@ -531,13 +521,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       paymentEntries: newEntries,
     });
 
-    toast({
-      title: `${entriesToDelete.length} payment(s) deleted`,
-      description:
-        newAmountPaid > 0
-          ? `Balance to pay: ₹${(deletePaymentTenant.monthlyRent - newAmountPaid).toLocaleString()}`
-          : "Status updated to Pending",
-    });
+
 
     setDeletePaymentTenant(null);
   };
@@ -600,10 +584,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       notes,
     });
 
-    toast({
-      title: isFullPayment ? "Payment marked as Paid" : "Partial payment recorded",
-      description: `₹${partialAmount.toLocaleString()} paid${isOverpayment ? ` (includes extra ₹${(partialAmount - tenant.monthlyRent).toLocaleString()})` : !isFullPayment ? ` • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining` : ""}`,
-    });
+
 
     // Show receipt dialog
     setReceiptData({
@@ -683,12 +664,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       paymentEntries: updatedEntries,
     });
 
-    toast({
-      title: isFullPayment ? "Payment completed" : "Partial payment recorded",
-      description: isFullPayment
-        ? `Full payment of ₹${tenant.monthlyRent.toLocaleString()} recorded`
-        : `₹${totalPaid.toLocaleString()} paid • ₹${(tenant.monthlyRent - totalPaid).toLocaleString()} remaining`,
-    });
+
 
     // Show receipt dialog
     setReceiptData({
@@ -1194,10 +1170,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                   className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
                                   onClick={() => {
                                     handleUpdateTenant(tenant.id, { endDate: undefined });
-                                    toast({
-                                      title: "Tenant reactivated",
-                                      description: `${tenant.name} is now active again`,
-                                    });
+
                                   }}
                                 >
                                   Reactivate
@@ -1728,10 +1701,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             });
           }
 
-          toast({
-            title: "Tenant marked as left",
-            description: `${markLeftTenant.name} has been settled and marked as left`,
-          });
+
 
           setMarkLeftTenant(null);
         }}

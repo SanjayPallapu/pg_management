@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo, useRef, useCallback } from "react";
 // Lazy load Settings page
 const SettingsPage = lazy(() => import("@/components/SettingsPage").then(m => ({ default: m.SettingsPage })));
 import { useQuery } from "@tanstack/react-query";
@@ -34,7 +34,6 @@ import {
   History,
   CreditCard,
   Loader2,
-  Mic,
   Bell,
   Settings,
 } from "lucide-react";
@@ -43,7 +42,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
+
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
 
@@ -70,6 +69,27 @@ const Index = () => {
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
+
+  // Swiggy-style header: hide on scroll down, show on scroll up
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const currentScrollY = container.scrollTop;
+    const delta = currentScrollY - lastScrollY.current;
+    // Show header when scrolling up (delta < 0) or near top
+    if (currentScrollY < 10) {
+      setHeaderVisible(true);
+    } else if (delta > 5) {
+      setHeaderVisible(false);
+    } else if (delta < -5) {
+      setHeaderVisible(true);
+    }
+    lastScrollY.current = currentScrollY;
+  }, []);
 
   // Sync active tab from URL when searchParams change (e.g. from BottomNav inside dialogs)
   useEffect(() => {
@@ -151,7 +171,6 @@ const Index = () => {
   });
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out successfully");
     // Full page reload to clear all cached state
     window.location.href = "/auth";
   };
@@ -246,8 +265,8 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex-1 overflow-y-auto">
-      <div className="border-b border-border/60 bg-background">
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} onScroll={handleScroll}>
+      <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
@@ -369,17 +388,7 @@ const Index = () => {
         {/* Admin Payment Approval Sheet */}
         <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
 
-        {/* Floating Voice Assistant button - only shown on Home tab */}
-        {activeTab === "dashboard" && (
-          <button
-            aria-label="Open voice assistant"
-            onClick={() => navigate('/voice')}
-            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition-transform active:scale-95 sm:bottom-6 sm:h-14 sm:w-14"
-          >
-            <Mic className="h-6 w-6" />
-            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-          </button>
-        )}
+
       </div>
       </div>
 
