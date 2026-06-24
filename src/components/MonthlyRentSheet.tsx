@@ -1894,7 +1894,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 className={cn("rounded-md border mt-2 pointer-events-auto")}
               />
             </div>
-            </div>
             <div className="flex gap-2 pt-4 pb-2">
               <Button variant="outline" className="flex-1" onClick={() => setPayRemainingTenant(null)}>Cancel</Button>
               <Button className="flex-1" onClick={confirmPayRemaining} disabled={payRemainingAmount <= 0}>
