@@ -71,7 +71,6 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast({ title: 'Success', description: 'Rules image saved successfully' });
     } catch (error) {
       console.error('Error generating image:', error);
       toast({ title: 'Error', description: 'Failed to generate image' });
@@ -107,7 +106,6 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
       if (navigator.share && navAny.canShare?.({ files: [file] })) {
         // Image-only share (no text) per project policy
         await navigator.share({ files: [file] });
-        toast({ title: 'Shared', description: 'Rules image ready to send on WhatsApp' });
       } else {
         // Fallback: download then open WhatsApp Web
         const link = document.createElement('a');
@@ -117,7 +115,6 @@ export const RulesTemplate = ({ open, onOpenChange, rules = [], language = 'en' 
         link.click();
         document.body.removeChild(link);
         window.open('https://web.whatsapp.com/', '_blank');
-        toast({ title: 'Image saved', description: 'Attach the downloaded image in WhatsApp' });
       }
     } catch (error) {
       console.error('Error sharing rules:', error);

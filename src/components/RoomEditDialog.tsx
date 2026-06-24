@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trash2, Snowflake } from "lucide-react";
+import { Loader2, Trash2, Snowflake, ArrowLeft } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ interface RoomEditDialogProps {
 export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps) => {
   const queryClient = useQueryClient();
   const { currentPG } = usePG();
+  const isMobile = useIsMobile();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -107,11 +109,19 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
   if (!room) return null;
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Room {room.roomNo}</DialogTitle>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full px-1.5 pt-4 pb-0 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        >
+          <SheetHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 shrink-0">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <SheetTitle className="text-base">Edit Room {room.roomNo}</SheetTitle>
+            </div>
+          </SheetHeader>
 
           <div className="space-y-4 py-4 pt-[5px] pb-0">
             <div className="space-y-2">
@@ -196,11 +206,11 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
             )}
           </div>
 
-          <DialogFooter>
-            <Button className="mt-2" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex gap-2 pt-4">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button className="flex-1" onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -210,9 +220,9 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
                 "Save Changes"
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

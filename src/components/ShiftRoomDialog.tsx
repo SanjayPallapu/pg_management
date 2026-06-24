@@ -51,10 +51,7 @@ export const ShiftRoomDialog = ({ open, onOpenChange, tenant, currentRoom }: Shi
         tenantName: tenant.name,
         updates: { roomId: targetRoom.id, monthlyRent: perBed } as any,
       });
-      toast({
-        title: "Tenant shifted",
-        description: `${tenant.name} moved to Room ${targetRoom.roomNo}. New rent: ₹${perBed.toLocaleString()}`,
-      });
+
       onOpenChange(false);
       setTargetRoomId("");
     } catch (err) {

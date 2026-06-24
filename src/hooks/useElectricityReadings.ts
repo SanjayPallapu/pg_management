@@ -95,7 +95,7 @@ export const useElectricityReadings = (month: number, year: number) => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["electricity_readings", currentPG?.id, month, year] });
-      toast({ title: "Electricity reading saved" });
+
     },
     onError: (e: unknown) => {
       const message = e instanceof Error ? e.message : "Unable to save electricity reading";

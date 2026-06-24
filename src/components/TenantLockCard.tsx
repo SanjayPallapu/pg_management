@@ -58,12 +58,7 @@ export const TenantLockCard = ({ rooms }: TenantLockCardProps) => {
       { tenantId: tenant.id, updates: { isLocked: newLockState } },
       {
         onSuccess: () => {
-          toast({
-            title: newLockState ? 'Tenant locked' : 'Tenant unlocked',
-            description: newLockState 
-              ? `${tenant.name}'s rent excluded from totals` 
-              : `${tenant.name}'s rent included in totals`,
-          });
+
         },
       }
     );

@@ -52,7 +52,6 @@ export const SecurityDepositReceiptDialog = ({
     try {
       const dataUrl = await generateReceiptImage(receiptRef.current);
       setGeneratedImage(dataUrl);
-      toast({ title: 'Receipt generated successfully!' });
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
@@ -68,7 +67,6 @@ export const SecurityDepositReceiptDialog = ({
   const handleDownload = () => {
     if (!generatedImage || !data) return;
     downloadReceiptImage(generatedImage, `${data.tenant.name}-deposit`);
-    toast({ title: 'Receipt downloaded!' });
   };
 
   const shareReceiptToWhatsApp = async () => {
@@ -98,11 +96,6 @@ export const SecurityDepositReceiptDialog = ({
       await navigator.clipboard.writeText(displayPhone);
 
       // Show tenant details in toast for searching
-      toast({ 
-        title: `📱 Search: ${data.tenant.name}`, 
-        description: `Phone ${displayPhone} copied! Paste in WhatsApp search.`,
-        duration: 8000,
-      });
 
       // Small delay so user sees the toast
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -142,7 +135,6 @@ export const SecurityDepositReceiptDialog = ({
 
     navigator.clipboard.writeText(jsonData);
     setCopied(true);
-    toast({ title: 'Receipt data copied to clipboard!' });
     setTimeout(() => setCopied(false), 2000);
   };
 

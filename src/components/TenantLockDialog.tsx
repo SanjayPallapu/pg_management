@@ -33,12 +33,7 @@ export const TenantLockDialog = ({ open, onOpenChange, tenant }: TenantLockDialo
       { tenantId: tenant.id, updates: { isLocked: checked } },
       {
         onSuccess: () => {
-          toast({
-            title: checked ? 'Tenant locked' : 'Tenant unlocked',
-            description: checked 
-              ? `${tenant.name}'s rent will not be added to totals` 
-              : `${tenant.name}'s rent will be included in totals`,
-          });
+
           onOpenChange(false);
         },
       }

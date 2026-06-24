@@ -322,10 +322,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       phone: cleaned,
     }));
     setNumberSelectOpen(false);
-    toast({
-      title: "Contact imported",
-      description: `Imported ${selectedContactName} with phone number ${cleaned}.`,
-    });
+
   };
 
   const getFloorName = (floor: number) => {

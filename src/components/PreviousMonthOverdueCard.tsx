@@ -497,7 +497,7 @@ export const PreviousMonthOverdueCard = () => {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full px-1.5 pt-4 pb-0 [&>button]:hidden" : "w-full sm:max-w-lg"}
         >
           <SheetHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -514,7 +514,7 @@ export const PreviousMonthOverdueCard = () => {
           </SheetHeader>
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
-            <div className="space-y-4 px-1">
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-paid/10 rounded-lg">
                   <div className="text-xs text-muted-foreground">Total Collected</div>
@@ -691,7 +691,7 @@ export const PreviousMonthOverdueCard = () => {
       <Sheet open={pendingSheetOpen} onOpenChange={setPendingSheetOpen}>
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full px-1.5 pt-4 pb-0 [&>button]:hidden" : "w-full sm:max-w-lg"}
         >
           <SheetHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -708,7 +708,7 @@ export const PreviousMonthOverdueCard = () => {
           </SheetHeader>
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
-            <div className="space-y-3 px-1">
+            <div className="space-y-3">
               <div className="p-3 bg-amber-500/10 rounded-lg">
                 <div className="text-xs text-muted-foreground">Total Pending</div>
                 <div className="text-lg font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>

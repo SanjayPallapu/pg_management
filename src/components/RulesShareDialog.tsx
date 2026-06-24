@@ -57,7 +57,6 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
         templateStyle: 'professional',
       });
       setGeneratedImage(dataUrl);
-      toast({ title: 'Rules image generated!' });
     } catch (e) {
       console.error('Rules generation failed:', e);
       toast({ title: 'Failed to generate', variant: 'destructive' });
@@ -69,7 +68,6 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
   const handleDownload = () => {
     if (!generatedImage || !shareData) return;
     downloadReceiptImage(generatedImage, `rules-${shareData.tenantName}`);
-    toast({ title: 'Rules image downloaded!' });
   };
 
   const shareToWhatsApp = async () => {
@@ -85,11 +83,6 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       try { await navigator.clipboard.writeText(displayPhone); } catch {}
-      toast({
-        title: `📱 Search: ${shareData.tenantName}`,
-        description: `Phone ${displayPhone} copied!`,
-        duration: 8000,
-      });
 
       await new Promise(r => setTimeout(r, 500));
 

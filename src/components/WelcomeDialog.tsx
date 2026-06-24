@@ -86,7 +86,6 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
     try {
       const dataUrl = await generateReceiptImage(welcomeRef.current);
       setGeneratedImage(dataUrl);
-      toast({ title: 'Welcome image generated!' });
     } catch (error) {
       console.error('Error generating welcome image:', error);
       toast({ title: 'Failed to generate', variant: 'destructive' });
@@ -98,7 +97,6 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
   const handleDownload = () => {
     if (!generatedImage || !welcomeData) return;
     downloadReceiptImage(generatedImage, `welcome-${welcomeData.tenantName}`);
-    toast({ title: 'Welcome image downloaded!' });
   };
 
   const shareToWhatsApp = async () => {
@@ -115,11 +113,6 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       await navigator.clipboard.writeText(displayPhone);
-      toast({
-        title: `📱 Search: ${welcomeData.tenantName}`,
-        description: `Phone ${displayPhone} copied!`,
-        duration: 8000,
-      });
 
       await new Promise(resolve => setTimeout(resolve, 500));
 

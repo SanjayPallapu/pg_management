@@ -137,7 +137,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       setGeneratedImage(dataUrl);
       setShowSuccessAnimation(true);
       setTimeout(() => setShowSuccessAnimation(false), 2000);
-      toast({ title: 'Receipt generated successfully!' });
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
@@ -153,7 +152,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   const handleDownload = () => {
     if (!generatedImage || !receiptData) return;
     downloadReceiptImage(generatedImage, receiptData.tenantName);
-    toast({ title: 'Receipt downloaded!' });
   };
 
   const shareReceiptToWhatsApp = async () => {
@@ -183,11 +181,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       await navigator.clipboard.writeText(displayPhone);
 
       // Show tenant details in toast for searching
-      toast({ 
-        title: `📱 Search: ${receiptData.tenantName}`, 
-        description: `Phone ${displayPhone} copied! Paste in WhatsApp search.`,
-        duration: 8000,
-      });
 
       // Small delay so user sees the toast
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -268,7 +261,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
 
     navigator.clipboard.writeText(jsonData);
     setCopied(true);
-    toast({ title: 'Receipt data copied to clipboard!' });
     setTimeout(() => setCopied(false), 2000);
   };
 
