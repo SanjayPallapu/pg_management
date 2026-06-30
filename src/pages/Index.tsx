@@ -6,7 +6,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { Dashboard } from "@/components/Dashboard";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
-import { DashboardSkeleton, RentSheetSkeleton } from "@/components/skeletons";
+import { DashboardSkeleton, RentSheetSkeleton, ListSkeleton, CardSkeleton } from "@/components/skeletons";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -340,8 +340,8 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="rooms" className="mt-3 space-y-4">
-              <Suspense fallback={<DashboardSkeleton />}>
-                <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />
+              <Suspense fallback={<CardSkeleton />}>
+                {isLoading ? <CardSkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
               </Suspense>
             </TabsContent>
 
@@ -352,13 +352,13 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="reports" className="mt-3 space-y-4">
-              <Suspense fallback={<DashboardSkeleton />}>
-                <Reports rooms={rooms} />
+              <Suspense fallback={<ListSkeleton />}>
+                {isLoading ? <ListSkeleton /> : <Reports rooms={rooms} />}
               </Suspense>
             </TabsContent>
 
             <TabsContent value="settings" className="mt-3 space-y-4">
-              <Suspense fallback={<DashboardSkeleton />}>
+              <Suspense fallback={<ListSkeleton />}>
                 <SettingsPage />
               </Suspense>
             </TabsContent>

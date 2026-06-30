@@ -19,7 +19,7 @@ const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-import SplashScreen from "./components/SplashScreen";
+import { IntroSplash } from "./components/IntroSplash";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
@@ -60,63 +60,32 @@ const queryClient = new QueryClient({
   },
 });
 
- // Simple splash handler
- const SplashHandler = ({ onComplete }: { onComplete: () => void }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      sessionStorage.setItem("hasSeenSplash", "true");
-      onComplete();
-     }, 1500);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-  
-  return <SplashScreen />;
-};
-
-// Inner app component that handles splash screen logic
+// Inner app component that handles first-time-only intro splash logic
 const AppContent = () => {
-  // Initialize synchronously so we never flash splash for returning users
-  const [showSplash, setShowSplash] = useState(() => {
+  const [showIntroSplash, setShowIntroSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
-      const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
-      if (!hasCompleted) return false;
-
-      const hasSeen = sessionStorage.getItem("hasSeenSplash");
-      const urlParams = new URLSearchParams(window.location.search);
-      const forceSplash = urlParams.get('splash') === 'true';
-      return forceSplash || !hasSeen;
+      // First-time only GSAP intro animation gated by localStorage
+      const hasSeenIntro = localStorage.getItem("hasSeenIntroSplash") === "true";
+      return !hasSeenIntro;
     } catch {
       return false;
     }
   });
 
-  // Safety net: ALWAYS dismiss splash after 3s, no matter what.
-  // Also dismiss immediately when the app comes back from background — users
-  // resuming the app should never see the splash again.
-  useEffect(() => {
-    if (!showSplash) return;
-    const hardTimer = setTimeout(() => {
-      sessionStorage.setItem("hasSeenSplash", "true");
-      setShowSplash(false);
-    }, 3000);
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        sessionStorage.setItem("hasSeenSplash", "true");
-        setShowSplash(false);
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      clearTimeout(hardTimer);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [showSplash]);
+  const handleIntroComplete = () => {
+    try {
+      localStorage.setItem("hasSeenIntroSplash", "true");
+    } catch (e) {
+      console.error(e);
+    }
+    setShowIntroSplash(false);
+  };
 
-  if (showSplash) {
+  if (showIntroSplash) {
     return (
       <AnimatePresence mode="wait">
-         <SplashHandler key="splash" onComplete={() => setShowSplash(false)} />
+        <IntroSplash key="intro-splash" onComplete={handleIntroComplete} />
       </AnimatePresence>
     );
   }
