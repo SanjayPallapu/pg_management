@@ -13,7 +13,6 @@ import { usePG } from "@/contexts/PGContext";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import type { ExpenseEntry } from "@/hooks/useExpenseEntries";
-
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -21,9 +20,7 @@ interface Props {
   units: number;
   originalNotes: string;
 }
-
 const fmt = (n: number) => `₹ ${Math.floor(n).toLocaleString("en-IN")}`;
-
 export const CurrentBillReceiptDialog = ({
   open,
   onOpenChange,
@@ -35,9 +32,7 @@ export const CurrentBillReceiptDialog = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
-
   if (!entry) return null;
-
   const pgName = currentPG?.name || "PG Management";
   const pgLogoUrl = currentPG?.logoUrl || "/icon-512.png";
   const apBill = calculateAPCommercialBill(units);
@@ -45,7 +40,6 @@ export const CurrentBillReceiptDialog = ({
   // Format Month Year
   const dateObj = new Date(entry.entry_date);
   const monthYearLabel = format(dateObj, "MMMM yyyy");
-
   const handleDownload = async () => {
     if (!receiptRef.current) return;
     setIsGenerating(true);
@@ -61,7 +55,6 @@ export const CurrentBillReceiptDialog = ({
       setIsGenerating(false);
     }
   };
-
   const handleShareWhatsApp = async () => {
     if (!receiptRef.current) return;
     setIsSending(true);
@@ -71,7 +64,6 @@ export const CurrentBillReceiptDialog = ({
       const blob = await res.blob();
       const filename = `current-bill-${(entry.subcategory || "floor").toLowerCase().replace(/\s+/g, "-")}.png`;
       const file = new File([blob], filename, { type: "image/png" });
-
       const nav = navigator as any;
       if (nav?.share && nav?.canShare?.({ files: [file] })) {
         await nav.share({
@@ -96,7 +88,6 @@ export const CurrentBillReceiptDialog = ({
           `*Total Bill Amount:* ${fmt(apBill.totalBill)}\n\n` +
           (originalNotes ? `*Notes:* ${originalNotes}\n\n` : "") +
           `Receipt image downloaded. Please pay standard electricity dues. Thank you! 🙏`;
-
         await navigator.clipboard.writeText(messageText);
         toast({ 
           title: "Share message copied!", 
@@ -115,14 +106,12 @@ export const CurrentBillReceiptDialog = ({
       setIsSending(false);
     }
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[550px] p-0 overflow-hidden bg-white">
         <DialogHeader className="p-4 border-b bg-slate-50">
           <DialogTitle className="text-sm font-semibold text-slate-800">Electricity Bill Receipt</DialogTitle>
         </DialogHeader>
-
         {/* Receipt Container wrapped in a hidden parent styled cleanly */}
         <div className="flex justify-center bg-slate-100 p-6 overflow-y-auto max-h-[70vh]">
           <div
@@ -156,7 +145,6 @@ export const CurrentBillReceiptDialog = ({
                 {pgName}
               </div>
             </div>
-
             {/* Bill Title & Period */}
             <div style={{ textAlign: "center", padding: "8px 20px 16px" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>
@@ -167,7 +155,6 @@ export const CurrentBillReceiptDialog = ({
                 {monthYearLabel}
               </div>
             </div>
-
             {/* Service metadata strip */}
             <div style={{ margin: "0 24px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "8px 12px" }}>
@@ -187,7 +174,6 @@ export const CurrentBillReceiptDialog = ({
                 </div>
               </div>
             </div>
-
             {/* Reading breakdown */}
             <div style={{ margin: "0 24px 16px", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -238,7 +224,6 @@ export const CurrentBillReceiptDialog = ({
                 </tbody>
               </table>
             </div>
-
             {/* Total Highlight Panel */}
             <div
               style={{
@@ -260,7 +245,6 @@ export const CurrentBillReceiptDialog = ({
                 Calculated for {entry.subcategory || "Floor"}
               </div>
             </div>
-
             {/* Notes if any */}
             {originalNotes && (
               <div style={{ margin: "0 24px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 12px" }}>
@@ -272,7 +256,6 @@ export const CurrentBillReceiptDialog = ({
                 </div>
               </div>
             )}
-
             {/* Footer banner */}
             <div
               style={{
@@ -290,7 +273,6 @@ export const CurrentBillReceiptDialog = ({
             </div>
           </div>
         </div>
-
         {/* Share actions */}
         <div className="p-4 border-t bg-slate-50 flex gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={isGenerating}>

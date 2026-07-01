@@ -16,6 +16,7 @@ import {
   Users,
   Settings,
   Scale,
+  MessageSquare,
 } from "lucide-react";
 import { Room, DashboardStats } from "@/types";
 import { useTotalCollected } from "@/hooks/useTotalCollected";
@@ -30,6 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DayGuestSheet } from "./DayGuestSheet";
 import { SecurityDepositCard } from "./SecurityDepositCard";
 import { PaymentModeCard } from "./PaymentModeCard";
+import { VisitorFollowUpDialog } from "./VisitorFollowUpDialog";
 import { EmptyBedsSheet } from "./EmptyBedsSheet";
 import { TenantLockCard } from "./TenantLockCard";
 import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
@@ -73,6 +75,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
+  const [visitorFollowUpOpen, setVisitorFollowUpOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
   const [rulesLanguage, setRulesLanguage] = useState<'en' | 'te'>('en');
 
@@ -93,6 +96,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
     setSettlementSheetOpen(false);
     setCalculatorSheetOpen(false);
     setRulesTemplateOpen(false);
+    setVisitorFollowUpOpen(false);
   }, [location.search]);
 
   useEffect(() => {
@@ -552,6 +556,21 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
               {/* Bill Unit Prices Card */}
               <BillUnitPricesCard />
+
+              {/* Visitor Follow-up Card */}
+              <Card
+                className="cursor-pointer transition-colors hover:bg-accent/50"
+                onClick={() => setVisitorFollowUpOpen(true)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Follow-up</span>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground animate-none" />
+                  </div>
+                  <div className="text-lg font-bold">Visitor Follow-up</div>
+                  <p className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</p>
+                </CardContent>
+              </Card>
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -567,10 +586,20 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         roomStats={roomStats}
         totalEmptyBeds={totalEmptyBeds}
         totalPotentialRevenue={totalPotentialAdditionalRevenue}
+        onVisitorFollowUp={() => {
+          setEmptyBedsSheetOpen(false);
+          setVisitorFollowUpOpen(true);
+        }}
       />
       <SettlementSummarySheet open={settlementSheetOpen} onOpenChange={setSettlementSheetOpen} rooms={rooms} />
       {/* Hidden calculator triggered by building icon */}
       <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
+
+      <VisitorFollowUpDialog
+        open={visitorFollowUpOpen}
+        onOpenChange={setVisitorFollowUpOpen}
+        rooms={rooms}
+      />
     </>
   );
 };

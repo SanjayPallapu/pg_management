@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Building2, Droplet, Receipt, Home, Wallet, IndianRupee, Plus, Settings,
   Flame, Egg, Milk, Drumstick, Coffee, ShoppingBag,
@@ -16,15 +20,23 @@ import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
+import { usePG } from "@/contexts/PGContext";
 
 interface Props { rooms: Room[]; }
 
-const FLOOR_NAMES: Record<number, string> = {
-  0: "Ground Floor",
-  1: "1st Floor",
-  2: "2nd Floor",
-  3: "3rd Floor",
-  4: "4th Floor",
+export const getFloorLabel = (floor: number): string => {
+  if (floor === 0) return "Ground Floor";
+  const j = floor % 10, k = floor % 100;
+  if (j === 1 && k !== 11) {
+    return `${floor}st Floor`;
+  }
+  if (j === 2 && k !== 12) {
+    return `${floor}nd Floor`;
+  }
+  if (j === 3 && k !== 13) {
+    return `${floor}rd Floor`;
+  }
+  return `${floor}th Floor`;
 };
 
 const UTILITY_PRESETS = [
@@ -39,13 +51,18 @@ const UTILITY_PRESETS = [
 ];
 
 const SectionHeader = ({
-  title, icon: Icon, color = "text-primary", onSettings, onAdd,
-}: { title: string; icon: React.ElementType; color?: string; onSettings?: () => void; onAdd?: () => void }) => (
+  title, icon: Icon, color = "text-primary", onSettings, onAdd, onConfigureFloors,
+}: { title: string; icon: React.ElementType; color?: string; onSettings?: () => void; onAdd?: () => void; onConfigureFloors?: () => void }) => (
   <div className="flex items-center justify-between px-1">
     <h3 className="text-sm font-semibold flex items-center gap-2">
       <Icon className={cn("h-4 w-4", color)} /> {title}
     </h3>
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
+      {onConfigureFloors && (
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20" onClick={onConfigureFloors}>
+          <Settings className="h-3 w-3 mr-1 animate-none" /> Configure Floors
+        </Button>
+      )}
       {onSettings && (
         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onSettings}>
           <Settings className="h-3.5 w-3.5" />
@@ -90,6 +107,9 @@ const TotalBar = ({ label, total, tone }: { label: string; total: number; tone: 
 
 export const BillsBudgetDashboard = ({ rooms }: Props) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { currentPG } = usePG();
+  const pgId = currentPG?.id;
+
   const {
     entries, byCategory, totalFor, grandTotal,
     addEntry, updateEntry, deleteEntry,
@@ -104,18 +124,54 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
     floor?: number | null; defaultLabel?: string; lockLabel?: boolean;
   } | null>(null);
 
-  // Floors derived from rooms (+ Motor as a fixed "common" tile)
+  // Custom floor state
+  const [numFloors, setNumFloors] = useState<number>(3);
+  const [includeGround, setIncludeGround] = useState<boolean>(false);
+  const [isFloorsConfigOpen, setIsFloorsConfigOpen] = useState(false);
+  const [tempNumFloors, setTempNumFloors] = useState<string>("3");
+  const [tempIncludeGround, setTempIncludeGround] = useState<boolean>(false);
+
+  const storageKey = pgId ? `current_bills_floors_${pgId}` : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setNumFloors(parsed.n || 3);
+        setIncludeGround(!!parsed.includeGround);
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      const maxFloorInRooms = rooms.length > 0 ? Math.max(...rooms.map((r) => r.floor)) : 0;
+      const defaultFloors = maxFloorInRooms || currentPG?.floors || 3;
+      const hasGround = rooms.some((r) => r.floor === 0);
+      setNumFloors(defaultFloors);
+      setIncludeGround(hasGround);
+    }
+  }, [storageKey, rooms, currentPG]);
+
+  // Floors list derived from custom configuration
   const floors = useMemo(() => {
-    const set = new Set<number>();
-    rooms.forEach((r) => set.add(r.floor));
-    return Array.from(set).sort();
-  }, [rooms]);
+    const list: number[] = [];
+    if (includeGround) {
+      list.push(0);
+    }
+    for (let i = 1; i <= numFloors; i++) {
+      list.push(i);
+    }
+    return list;
+  }, [numFloors, includeGround]);
 
   const currentBillTiles = useMemo(() => {
     const tiles: { key: string; label: string; subcategory: string; floor: number | null }[] =
       floors.map((f) => ({
-        key: `floor-${f}`, label: FLOOR_NAMES[f] || `Floor ${f}`,
-        subcategory: FLOOR_NAMES[f] || `Floor ${f}`, floor: f,
+        key: `floor-${f}`,
+        label: getFloorLabel(f),
+        subcategory: getFloorLabel(f),
+        floor: f,
       }));
     tiles.push({ key: "motor", label: "Motor Bill", subcategory: "Motor", floor: null });
     return tiles;
@@ -166,7 +222,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
               </Button>
             ) : null}
           </div>
-
           {editingBudget ? (
             <div className="flex gap-2 items-end">
               <div className="flex-1">
@@ -218,6 +273,11 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           title="Current Bills"
           icon={Building2}
           color="text-amber-500"
+          onConfigureFloors={() => {
+            setTempNumFloors(String(numFloors));
+            setTempIncludeGround(includeGround);
+            setIsFloorsConfigOpen(true);
+          }}
           onSettings={() => setSheetState({
             title: "Current Bills · All Entries", category: "current",
           })}
@@ -247,7 +307,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         </div>
         <TotalBar label="Total Current Bills" total={currentTotal} tone="bg-amber-500/10 text-amber-700 dark:text-amber-300" />
       </section>
-
       {/* Utility Bills */}
       <section className="space-y-2">
         <SectionHeader
@@ -278,7 +337,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         </div>
         <TotalBar label="Total Utility Bills" total={utilityTotal} tone="bg-sky-500/10 text-sky-700 dark:text-sky-300" />
       </section>
-
       {/* Other Bills */}
       <section className="space-y-2">
         <SectionHeader
@@ -310,7 +368,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         )}
         <TotalBar label="Total Other Bills" total={otherTotal} tone="bg-violet-500/10 text-violet-700 dark:text-violet-300" />
       </section>
-
       {/* Family Expenses */}
       <section className="space-y-2">
         <SectionHeader
@@ -342,7 +399,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
         )}
         <TotalBar label="Total Family Expenses" total={familyTotal} tone="bg-pink-500/10 text-pink-700 dark:text-pink-300" />
       </section>
-
       {/* Quick add dialog */}
       <QuickExpenseDialog
         open={!!quickAdd}
@@ -354,7 +410,6 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           setQuickAdd(null);
         }}
       />
-
       {/* Settings sheet for category */}
       {sheetState && (
         <BillsEntriesSheet
@@ -377,9 +432,73 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           onDelete={(id) => deleteEntry.mutate(id)}
         />
       )}
+      {/* Floors Configuration Dialog */}
+      <Dialog open={isFloorsConfigOpen} onOpenChange={setIsFloorsConfigOpen}>
+        <DialogContent className="max-w-[340px] rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Configure Floors</DialogTitle>
+            <DialogDescription className="text-xs">
+              Configure how many floors are tracked for current bills.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="num-floors" className="text-xs">Number of Floors (1 - 20)</Label>
+              <Input
+                id="num-floors"
+                type="number"
+                min={1}
+                max={20}
+                value={tempNumFloors}
+                onChange={(e) => setTempNumFloors(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="ground-floor"
+                checked={tempIncludeGround}
+                onCheckedChange={(checked) => setTempIncludeGround(!!checked)}
+              />
+              <Label htmlFor="ground-floor" className="text-xs cursor-pointer select-none">
+                Include Ground Floor (Floor 0)
+              </Label>
+            </div>
+          </div>
+          <DialogFooter className="flex-row gap-2 mt-2">
+            <Button
+              className="flex-1 text-xs h-9"
+              variant="outline"
+              onClick={() => setIsFloorsConfigOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 text-xs h-9"
+              onClick={() => {
+                const parsed = parseInt(tempNumFloors);
+                if (isNaN(parsed) || parsed < 1 || parsed > 20) {
+                  return;
+                }
+                setNumFloors(parsed);
+                setIncludeGround(tempIncludeGround);
+                if (storageKey) {
+                  localStorage.setItem(
+                    storageKey,
+                    JSON.stringify({ n: parsed, includeGround: tempIncludeGround })
+                  );
+                }
+                setIsFloorsConfigOpen(false);
+              }}
+            >
+              Save Configuration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Analytics dashboard */}
       <BillsAnalytics />
     </div>
   );
 };
+

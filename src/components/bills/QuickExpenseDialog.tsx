@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Room } from "@/types";
 import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
+import { calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 
 export interface QuickExpenseInitial {
   category: ExpenseCategory;
@@ -40,22 +42,61 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
   const [notes, setNotes] = useState("");
   const [entryDate, setEntryDate] = useState(todayISO());
   const [roomId, setRoomId] = useState<string>("");
+  const [useTariff, setUseTariff] = useState(false);
+  const [units, setUnits] = useState("");
 
   useEffect(() => {
     if (!open || !initial) return;
     const e = initial.editing;
+    
+    // Parse units out of notes
+    let initialNotes = e?.notes ?? "";
+    let initialUnits = "";
+    let isTariff = false;
+
+    if (initialNotes.startsWith("Units: ")) {
+      const match = initialNotes.match(/^Units:\s*(\d+)(?:\s*\|\s*(.*))?$/);
+      if (match) {
+        initialUnits = match[1];
+        initialNotes = match[2] ?? "";
+        isTariff = true;
+      }
+    } else if (initial.category === "current" && !e) {
+      isTariff = true;
+    }
+
     setAmount(e ? String(e.amount) : "");
     setLabel(e?.label ?? initial.label ?? "");
-    setNotes(e?.notes ?? "");
+    setNotes(initialNotes);
     setEntryDate(e?.entry_date ?? todayISO());
     setRoomId(e?.room_id ?? initial.room_id ?? "");
+    setUseTariff(isTariff);
+    setUnits(initialUnits);
   }, [open, initial]);
+
+  const calculatedBill = useMemo(() => {
+    if (!useTariff || !units) return null;
+    const val = parseInt(units) || 0;
+    return calculateAPCommercialBill(val);
+  }, [useTariff, units]);
+
+  useEffect(() => {
+    if (useTariff && calculatedBill) {
+      setAmount(String(Math.round(calculatedBill.totalBill)));
+    }
+  }, [useTariff, calculatedBill]);
 
   if (!initial) return null;
 
   const handleSave = () => {
     const amt = parseInt(amount) || 0;
     if (!label.trim() || amt <= 0) return;
+
+    let finalNotes = notes.trim();
+    if (useTariff && units) {
+      finalNotes = `Units: ${units}` + (finalNotes ? ` | ${finalNotes}` : "");
+    }
+
     onSave({
       category: initial.category,
       subcategory: initial.subcategory ?? null,
@@ -64,7 +105,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
       entry_date: entryDate,
       floor: initial.floor ?? null,
       room_id: roomId || null,
-      notes: notes.trim() || null,
+      notes: finalNotes || null,
     });
   };
 
@@ -88,10 +129,64 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
               autoFocus
             />
           </div>
+          
+          {initial.category === "current" && (
+            <div className="flex items-center space-x-2 py-1">
+              <Checkbox
+                id="use-tariff"
+                checked={useTariff}
+                onCheckedChange={(checked) => {
+                  setUseTariff(!!checked);
+                  if (!checked) {
+                    setUnits("");
+                  }
+                }}
+              />
+              <Label htmlFor="use-tariff" className="text-xs cursor-pointer select-none">
+                Calculate from units (AP Commercial LT-II)
+              </Label>
+            </div>
+          )}
+
+          {initial.category === "current" && useTariff && (
+            <div>
+              <Label className="text-xs">Units Consumed *</Label>
+              <Input
+                type="number"
+                value={units}
+                onChange={(e) => setUnits(e.target.value)}
+                placeholder="e.g. 250"
+              />
+            </div>
+          )}
+
+          {initial.category === "current" && useTariff && calculatedBill && (
+            <div className="text-xs p-3 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 dark:border-amber-900/30 space-y-1 text-amber-900 dark:text-amber-200">
+              <div className="font-semibold flex justify-between">
+                <span>AP LT-II Commercial Tariff</span>
+                <span>{units} units</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-2 text-[11px] text-amber-800 dark:text-amber-300">
+                <span>Energy Charges:</span>
+                <span className="text-right">₹{Math.round(calculatedBill.energyCharges)}</span>
+                <span>Fixed Charges:</span>
+                <span className="text-right">₹{calculatedBill.fixedCharges}</span>
+                <span className="font-medium">Total Calculated:</span>
+                <span className="text-right font-medium">₹{Math.round(calculatedBill.totalBill)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Amount (₹) *</Label>
-              <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                disabled={useTariff}
+                placeholder="0"
+              />
             </div>
             <div>
               <Label className="text-xs">Date</Label>

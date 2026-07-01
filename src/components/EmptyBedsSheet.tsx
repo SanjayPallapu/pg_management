@@ -24,6 +24,7 @@ interface EmptyBedsSheetProps {
   roomStats: RoomStat[];
   totalEmptyBeds: number;
   totalPotentialRevenue: number;
+  onVisitorFollowUp?: () => void;
 }
 
 export const EmptyBedsSheet = ({
@@ -32,6 +33,7 @@ export const EmptyBedsSheet = ({
   roomStats,
   totalEmptyBeds,
   totalPotentialRevenue,
+  onVisitorFollowUp,
 }: EmptyBedsSheetProps) => {
   const isMobile = useIsMobile();
   const [floorFilter, setFloorFilter] = useState<number | null>(null);
@@ -319,6 +321,17 @@ export const EmptyBedsSheet = ({
               </div>
             )}
           </div>
+
+          {onVisitorFollowUp && (
+            <div className="pt-4 border-t bg-background mt-4 shrink-0">
+              <Button
+                onClick={onVisitorFollowUp}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs h-10 flex items-center justify-center gap-2 animate-none"
+              >
+                🏡 Follow up with a Visitor
+              </Button>
+            </div>
+          )}
         </div>
         </div>
       </SheetContent>
