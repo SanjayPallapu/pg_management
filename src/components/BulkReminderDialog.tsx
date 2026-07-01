@@ -59,8 +59,9 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     const reading = acByRoom.get(room.id);
     const units = reading?.units ?? 0;
     const unitPrice = reading?.unit_price ?? 12;
+    const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom";
     const apBill = calculateAPCommercialBill(units);
-    const totalAmount = apBill.totalBill;
+    const totalAmount = isCustom ? units * unitPrice : apBill.totalBill;
     const active = room.tenants.filter((t) =>
       isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
     );

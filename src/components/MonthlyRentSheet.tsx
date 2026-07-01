@@ -137,6 +137,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [hideLeftTenants, setHideLeftTenants] = useState(true);
+  const [customModeRooms, setCustomModeRooms] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    rooms.forEach((r) => {
+      initial[r.id] = localStorage.getItem(`ac_bill_mode_${r.id}`) === "custom";
+    });
+    return initial;
+  });
+
+  useEffect(() => {
+    const updated: Record<string, boolean> = {};
+    rooms.forEach((r) => {
+      updated[r.id] = localStorage.getItem(`ac_bill_mode_${r.id}`) === "custom";
+    });
+    setCustomModeRooms(updated);
+  }, [rooms]);
+
   const [welcomeData, setWelcomeData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -165,6 +181,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       monthLabel: string;
       pgName?: string;
       pgLogoUrl?: string;
+      calcMode?: "commercial" | "custom";
     };
   } | null>(null);
   const [receiptData, setReceiptData] = useState<{
@@ -510,12 +527,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const reading = acByRoom.get(room.id);
         const units = reading?.units ?? 0;
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+        const isCustom = !!customModeRooms[room.id];
         const apBill = calculateAPCommercialBill(units);
-        const total = apBill.totalBill;
+        const total = isCustom ? units * unitPrice : apBill.totalBill;
         const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, acYear, acMonth, room.capacity, total);
-        return { room, activeTenants, units, unitPrice, total, tenantShares };
+        return { room, activeTenants, units, unitPrice, total, tenantShares, isCustom };
       });
-  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice]);
+  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms]);
 
   const handleShareAC = async (
     item: typeof acRooms[number],
@@ -539,8 +557,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       return;
     }
 
+    const isCustom = localStorage.getItem(`ac_bill_mode_${item.room.id}`) === "custom";
     const apBill = calculateAPCommercialBill(draftUnits);
-    const total = customSplitCount && customSplitCount > 0 ? draftUnits * draftUnitPrice : apBill.totalBill;
+    const total = (customSplitCount && customSplitCount > 0) || isCustom ? draftUnits * draftUnitPrice : apBill.totalBill;
     const tenantShares =
       customSplitCount && customSplitCount > 0
         ? calcCustomAcSplitShares(total, customSplitCount)
@@ -558,6 +577,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
       tenantName: targetTenantName,
+      calcMode: isCustom ? "custom" : "commercial",
     });
 
     setTimeout(async () => {
@@ -1111,6 +1131,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         unitPrice={item.unitPrice}
                         total={item.total}
                         tenantShares={item.tenantShares}
+                        isCustom={item.isCustom}
+                        onModeToggle={(isCustom) => {
+                          localStorage.setItem(`ac_bill_mode_${item.room.id}`, isCustom ? "custom" : "commercial");
+                          setCustomModeRooms((prev) => ({ ...prev, [item.room.id]: isCustom }));
+                        }}
                         onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
                         onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
                         onShare={(units, unitPrice, customSplitCount, targetTenantName) => handleShareAC(item, units, unitPrice, customSplitCount, targetTenantName)}
@@ -1980,6 +2005,8 @@ const RentACRoomCard = ({
   unitPrice,
   total,
   tenantShares,
+  isCustom,
+  onModeToggle,
   onUnitsChange,
   onPriceChange,
   onShare,
@@ -1991,6 +2018,8 @@ const RentACRoomCard = ({
   unitPrice: number;
   total: number;
   tenantShares: { name: string; daysStayed: number; share: number }[];
+  isCustom: boolean;
+  onModeToggle: (isCustom: boolean) => void;
   onUnitsChange: (units: number) => void;
   onPriceChange: (unitPrice: number) => void;
   onShare: (units: number, unitPrice: number, customSplitCount?: number, targetTenantName?: string) => void;
@@ -2002,7 +2031,7 @@ const RentACRoomCard = ({
   const draftUnitPrice = parseInt(priceDraft) || 0;
   const draftSplitCount = parseInt(splitCountDraft) || 0;
   const apBill = calculateAPCommercialBill(draftUnits);
-  const draftTotal = draftSplitCount > 0 ? draftUnits * draftUnitPrice : apBill.totalBill;
+  const draftTotal = draftSplitCount > 0 || isCustom ? draftUnits * draftUnitPrice : apBill.totalBill;
   const dayWiseShares = draftTotal > 0
     ? tenantShares.map((tenant) => ({
         ...tenant,
@@ -2029,6 +2058,18 @@ const RentACRoomCard = ({
           </div>
           <div className="mt-0.5 text-xs text-muted-foreground">
             {sharingCount} sharing · {tenantCount} tenant{tenantCount === 1 ? "" : "s"} this month
+          </div>
+          <div className="flex items-center space-x-2 mt-1.5">
+            <input
+              type="checkbox"
+              id={`ac-mode-${roomNo}`}
+              checked={isCustom}
+              onChange={(e) => onModeToggle(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+            />
+            <label htmlFor={`ac-mode-${roomNo}`} className="text-[11px] text-muted-foreground cursor-pointer select-none">
+              Use flat rate (₹{draftUnitPrice}/unit)
+            </label>
           </div>
         </div>
         <DropdownMenu>
