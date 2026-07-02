@@ -5,6 +5,12 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRooms } from '@/hooks/useRooms';
 import { usePG } from '@/contexts/PGContext';
+import {
+  useElectricityReadings,
+  useAllElectricityReadings,
+  calcAcTenantShares,
+  calculateAPCommercialBill,
+} from '@/hooks/useElectricityReadings';
 import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -50,10 +56,21 @@ interface OverdueTenant {
 
 export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  
+  let prevMonth = selectedMonth - 1;
+  let prevYear = selectedYear;
+  if (prevMonth === 0) {
+    prevMonth = 12;
+    prevYear = selectedYear - 1;
+  }
+
   const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();
   const { currentPG } = usePG();
   const isMobile = useIsMobile();
+
+  const { byRoom: acByRoom } = useElectricityReadings(prevMonth, prevYear);
+  const { data: allReadings = [] } = useAllElectricityReadings();
 
   const [selectedTenant, setSelectedTenant] = useState<OverdueTenant | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -74,7 +91,78 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const { overdueTenants, leftUnpaidTenants, prevMonth, prevYear, totalOverdue, leftUnpaidTotal } = useMemo(() => {
+  const getOverdueAcBills = (tenantId: string, room: Room) => {
+    const overdue: { month: number; year: number; share: number; monthLabel: string }[] = [];
+    const tenant = room.tenants.find((t) => t.id === tenantId);
+    if (!tenant) return overdue;
+
+    const joinDate = new Date(tenant.startDate);
+    const checkMonths: { month: number; year: number }[] = [];
+    
+    let curM = prevMonth - 1;
+    let curY = prevYear;
+    if (curM === 0) {
+      curM = 12;
+      curY = prevYear - 1;
+    }
+
+    const currentDate = new Date();
+    const limitDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1); // 12 months limit
+    const startDateLimit = joinDate > limitDate ? joinDate : limitDate;
+
+    while (true) {
+      const checkDate = new Date(curY, curM - 1, 1);
+      if (checkDate < startDateLimit) break;
+      checkMonths.push({ month: curM, year: curY });
+      curM--;
+      if (curM === 0) {
+        curM = 12;
+        curY--;
+      }
+    }
+
+    for (const { month: m, year: y } of checkMonths) {
+      if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, y, m)) continue;
+
+      const payment = payments.find((p) => p.tenantId === tenantId && p.month === m && p.year === y);
+      const isPaid = payment?.acPaymentStatus === "Paid";
+
+      if (!isPaid) {
+        const reading = allReadings.find((r) => r.room_id === room.id && r.month === m && r.year === y);
+        if (reading && reading.units > 0) {
+          const activeTenants = room.tenants.filter((t) =>
+            isTenantActiveInMonth(t.startDate, t.endDate, y, m)
+          );
+          const apBill = calculateAPCommercialBill(reading.units);
+          const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom";
+          const totalAmount = isCustom ? reading.units * reading.unit_price : apBill.totalBill;
+
+          const shares = calcAcTenantShares(
+            reading.units,
+            reading.unit_price,
+            activeTenants,
+            y,
+            m,
+            room.capacity,
+            totalAmount
+          );
+          const myShare = shares.find((s) => s.name === tenant.name)?.share || 0;
+          if (myShare > 0) {
+            overdue.push({
+              month: m,
+              year: y,
+              share: myShare,
+              monthLabel: `${months[m - 1]} ${y}`,
+            });
+          }
+        }
+      }
+    }
+
+    return overdue;
+  };
+
+  const { overdueTenants, leftUnpaidTenants, totalOverdue, leftUnpaidTotal } = useMemo(() => {
     let pMonth = selectedMonth - 1;
     let pYear = selectedYear;
     if (pMonth === 0) {
@@ -432,22 +520,71 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 };
 
                 const handleOpenReminder = () => {
+                  const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
+                  let acSurcharge: any = undefined;
+                  let acBill: any = undefined;
+
+                  if (room && room.isAc) {
+                    const reading = acByRoom.get(room.id);
+                    const units = reading?.units ?? 0;
+                    const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+                    const activeTenants = room.tenants.filter((roomTenant) =>
+                      isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, prevYear, prevMonth),
+                    );
+                    const apBill = calculateAPCommercialBill(units);
+                    const totalAmount = apBill.totalBill;
+                    const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, prevYear, prevMonth, room.capacity, totalAmount);
+                    const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
+
+                    const currentPayment = payments.find((p) => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear);
+                    const isCurrentPaid = currentPayment?.acPaymentStatus === "Paid";
+                    const currentShare = isCurrentPaid ? 0 : (tenantShare?.share || 0);
+
+                    const overdueAc = getOverdueAcBills(tenant.id, room);
+                    const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+
+                    if (currentShare > 0 || overdueAcTotal > 0) {
+                      acSurcharge = {
+                        units,
+                        unitPrice,
+                        share: currentShare,
+                        overdueMonths: overdueAc.map((om) => ({
+                          monthLabel: om.monthLabel,
+                          share: om.share,
+                        })),
+                      };
+                      acBill = {
+                        roomNo: room.roomNo,
+                        units,
+                        unitPrice,
+                        totalAmount: totalAmount,
+                        tenants: tenantShares.map((shareItem) => ({
+                          name: `${shareItem.name} (${shareItem.daysStayed}d)`,
+                          share: shareItem.share,
+                        })),
+                        monthLabel: `${months[prevMonth - 1]} ${prevYear}`,
+                        pgName: currentPG?.name,
+                        pgLogoUrl: currentPG?.logoUrl,
+                      };
+                    }
+                  }
+
                   setReminderData({
                     tenantName: tenant.name,
                     tenantPhone: tenant.phone,
                     joiningDate: tenant.startDate,
                     roomNo: tenant.roomNo,
                     forMonth: `${months[prevMonth - 1]} ${prevYear}`,
-                    sharingType: '', // Not needed for reminder
+                    sharingType: room ? `${room.capacity} Sharing` : '',
                     amount: tenant.monthlyRent,
                     amountPaid: tenant.amountPaid,
                     balance: tenant.remaining,
-                    // Pass the previous month context for billing range calculation
                     overrideMonth: prevMonth,
                     overrideYear: prevYear,
-                    // Add PG branding
                     pgName: currentPG?.name,
                     pgLogoUrl: currentPG?.logoUrl,
+                    acSurcharge,
+                    acBill,
                   });
                   setReminderDialogOpen(true);
                 };
