@@ -27,6 +27,7 @@ export interface ReminderData {
     units: number;
     unitPrice: number;
     share: number; // per-tenant share already computed
+    overdueMonths?: { monthLabel: string; share: number }[];
   };
   // PG Branding
   pgName?: string;
@@ -127,7 +128,8 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
   const hideTenantName = data.hideTenantName === true;
   const ac = data.acSurcharge;
-  const totalDue = data.payment.balance + (ac?.share || 0);
+  const overdueAcTotal = ac?.overdueMonths?.reduce((sum: number, om: any) => sum + om.share, 0) || 0;
+  const totalDue = data.payment.balance + (ac?.share || 0) + overdueAcTotal;
 
   return (
     <div
@@ -302,6 +304,14 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
                 </td>
               </tr>
             )}
+            {ac?.overdueMonths?.map((om: any, idx: number) => (
+              <tr key={idx} style={{ borderBottom: "1px solid #e5e7eb", background: "#fffbeb" }}>
+                <td style={{ padding: "10px 16px", color: "#b45309" }}>Overdue AC ({om.monthLabel}):</td>
+                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#b45309" }}>
+                  {formatCurrency(om.share)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

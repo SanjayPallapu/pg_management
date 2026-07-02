@@ -106,6 +106,28 @@ export const useElectricityReadings = (month: number, year: number) => {
   return { readings, isLoading, byRoom, setReading };
 };
 
+export const useAllElectricityReadings = () => {
+  const { currentPG } = usePG();
+
+  return useQuery({
+    queryKey: ["all_electricity_readings", currentPG?.id],
+    queryFn: async () => {
+      if (!currentPG?.id) return [];
+      const currentDate = new Date();
+      const cutoffYear = currentDate.getFullYear() - 1;
+      const { data, error } = await supabase
+        .from("room_electricity_readings")
+        .select("*, rooms!inner(pg_id)")
+        .eq("rooms.pg_id", currentPG.id)
+        .gte("year", cutoffYear);
+      if (error) throw error;
+      return (data || []) as ElectricityReadingRow[];
+    },
+    enabled: !!currentPG?.id,
+  });
+};
+
+
 /**
  * Calculate per-tenant AC surcharge for a room.
  * units × unitPrice ÷ activeTenants  (rounded).

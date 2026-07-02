@@ -25,7 +25,12 @@ interface ReminderInputData {
   // Optional overrides for when called from Previous Overdue sheet
   overrideMonth?: number;
   overrideYear?: number;
-  acSurcharge?: { units: number; unitPrice: number; share: number };
+  acSurcharge?: {
+    units: number;
+    unitPrice: number;
+    share: number;
+    overdueMonths?: { monthLabel: string; share: number }[];
+  };
   acBill?: ACBillData;
 }
 
@@ -133,7 +138,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     try {
       const dataUrl = await generateReceiptImage(acRef.current);
       setGeneratedAcImage(dataUrl);
-
     } catch (e) {
       console.error(e);
       toast({ title: 'Failed to generate AC bill', variant: 'destructive' });
@@ -179,16 +183,12 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       await navigator.clipboard.writeText(displayPhone);
-
-
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const shareNavigator = navigator as NavigatorWithFileShare;
       if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
-        // Share only the image file, no text
         await shareNavigator.share({ files: [file] });
       } else {
-        // Fallback: download image and open WhatsApp chat (no pre-filled text)
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
         if (!phone.startsWith('91')) phone = `91${phone}`;
         window.location.href = `https://wa.me/${phone}`;
@@ -212,17 +212,18 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
   const copyDataToClipboard = () => {
     if (!reminderData) return;
+    const overdueAcTotal = reminderData.acSurcharge?.overdueMonths?.reduce((sum, om) => sum + om.share, 0) || 0;
     const jsonData = {
       tenant: reminderData.tenantName,
       phone: reminderData.tenantPhone,
-      amountDue: reminderData.balance,
+      amountDue: reminderData.balance + (reminderData.acSurcharge?.share || 0) + overdueAcTotal,
       totalAmount: reminderData.amount,
       amountPaid: reminderData.amountPaid || 0,
       forMonth: reminderData.forMonth,
       roomNo: reminderData.roomNo,
     };
     navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
-
+    toast({ title: 'Copied', description: 'Reminder data copied to clipboard' });
   };
 
   return (
@@ -237,7 +238,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       )}
       
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
@@ -255,7 +256,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
           {reminderData && (
             <div className="py-4 space-y-4">
-              {/* Custom: hide tenant name (for common/shared room reminders) */}
               <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
                 <div className="flex flex-col">
                   <Label htmlFor="hideTenantName" className="cursor-pointer font-medium">Hide Tenant Name</Label>
@@ -268,7 +268,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 />
               </div>
 
-              {/* Summary Card matching the receipt dialog style */}
               <div className="rounded-lg p-4 text-sm space-y-2 border border-border bg-muted/30">
                 {!hideTenantName && (
                   <div className="flex justify-between">
@@ -279,7 +278,11 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Due:</span>
                   <span className="font-semibold text-amber-600">
-                    ₹{Math.floor(reminderData.balance + (reminderData.acSurcharge?.share || 0)).toLocaleString('en-IN')}
+                    ₹{Math.floor(
+                      reminderData.balance +
+                      (reminderData.acSurcharge?.share || 0) +
+                      (reminderData.acSurcharge?.overdueMonths?.reduce((sum, om) => sum + om.share, 0) || 0)
+                    ).toLocaleString('en-IN')}
                   </span>
                 </div>
                 {reminderData.acSurcharge && reminderData.acSurcharge.share > 0 && (
@@ -293,6 +296,12 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                     </span>
                   </div>
                 )}
+                {reminderData.acSurcharge?.overdueMonths?.map((om, index) => (
+                  <div key={index} className="flex justify-between pl-3 text-amber-600 dark:text-amber-400 text-xs">
+                    <span>↳ Overdue AC ({om.monthLabel}):</span>
+                    <span className="font-semibold">₹{om.share.toLocaleString('en-IN')}</span>
+                  </div>
+                ))}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">For Month:</span>
                   <span className="font-semibold">{reminderData.forMonth}</span>

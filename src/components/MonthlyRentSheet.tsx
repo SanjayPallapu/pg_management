@@ -44,6 +44,7 @@ import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import {
   useElectricityReadings,
+  useAllElectricityReadings,
   calcAcTenantShares,
   calcCustomAcSplitShares,
   calculateAPCommercialBill,
@@ -92,6 +93,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [acMonth, setAcMonth] = useState(selectedMonth);
   const [acYear, setAcYear] = useState(selectedYear);
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
+  const { data: allReadings = [] } = useAllElectricityReadings();
   const [acSectionOpen, setAcSectionOpen] = useState(false);
   
   useEffect(() => {
@@ -218,6 +220,77 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
+
+  const getOverdueAcBills = (tenantId: string, room: Room) => {
+    const overdue: { month: number; year: number; share: number; monthLabel: string }[] = [];
+    const tenant = room.tenants.find((t) => t.id === tenantId);
+    if (!tenant) return overdue;
+
+    const joinDate = new Date(tenant.startDate);
+    const checkMonths: { month: number; year: number }[] = [];
+    
+    let curM = selectedMonth - 1;
+    let curY = selectedYear;
+    if (curM === 0) {
+      curM = 12;
+      curY = selectedYear - 1;
+    }
+
+    const currentDate = new Date();
+    const limitDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1); // 12 months limit
+    const startDateLimit = joinDate > limitDate ? joinDate : limitDate;
+
+    while (true) {
+      const checkDate = new Date(curY, curM - 1, 1);
+      if (checkDate < startDateLimit) break;
+      checkMonths.push({ month: curM, year: curY });
+      curM--;
+      if (curM === 0) {
+        curM = 12;
+        curY--;
+      }
+    }
+
+    for (const { month: m, year: y } of checkMonths) {
+      if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, y, m)) continue;
+
+      const payment = payments.find((p) => p.tenantId === tenantId && p.month === m && p.year === y);
+      const isPaid = payment?.paymentStatus === "Paid";
+
+      if (!isPaid) {
+        const reading = allReadings.find((r) => r.room_id === room.id && r.month === m && r.year === y);
+        if (reading && reading.units > 0) {
+          const activeTenants = room.tenants.filter((t) =>
+            isTenantActiveInMonth(t.startDate, t.endDate, y, m)
+          );
+          const apBill = calculateAPCommercialBill(reading.units);
+          const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom";
+          const totalAmount = isCustom ? reading.units * reading.unit_price : apBill.totalBill;
+
+          const shares = calcAcTenantShares(
+            reading.units,
+            reading.unit_price,
+            activeTenants,
+            y,
+            m,
+            room.capacity,
+            totalAmount
+          );
+          const myShare = shares.find((s) => s.name === tenant.name)?.share || 0;
+          if (myShare > 0) {
+            overdue.push({
+              month: m,
+              year: y,
+              share: myShare,
+              monthLabel: `${MONTHS[m - 1]?.label} ${y}`,
+            });
+          }
+        }
+      }
+    }
+
+    return overdue;
+  };
   const months = [
     {
       value: 1,
@@ -530,10 +603,20 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const isCustom = !!customModeRooms[room.id];
         const apBill = calculateAPCommercialBill(units);
         const total = isCustom ? units * unitPrice : apBill.totalBill;
-        const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, acYear, acMonth, room.capacity, total);
+        const baseShares = calcAcTenantShares(units, unitPrice, activeTenants, acYear, acMonth, room.capacity, total);
+        const tenantShares = baseShares.map((share) => {
+          const tenantObj = activeTenants.find((t) => t.name === share.name);
+          const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, room) : [];
+          const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+          return {
+            ...share,
+            overdueAc,
+            overdueAcTotal,
+          };
+        });
         return { room, activeTenants, units, unitPrice, total, tenantShares, isCustom };
       });
-  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms]);
+  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms, payments, allReadings]);
 
   const handleShareAC = async (
     item: typeof acRooms[number],
@@ -1269,8 +1352,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, totalAmount);
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
-                  if (tenantShare && tenantShare.share > 0) {
-                    acSurcharge = { units, unitPrice, share: tenantShare.share };
+                  const overdueAc = getOverdueAcBills(tenant.id, room);
+                  const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+
+                  if ((tenantShare && tenantShare.share > 0) || overdueAcTotal > 0) {
+                    acSurcharge = {
+                      units,
+                      unitPrice,
+                      share: tenantShare?.share || 0,
+                      overdueMonths: overdueAc.map((om) => ({
+                        monthLabel: om.monthLabel,
+                        share: om.share,
+                      })),
+                    };
                     acBill = {
                       roomNo: room.roomNo,
                       units,
@@ -2017,7 +2111,13 @@ const RentACRoomCard = ({
   units: number;
   unitPrice: number;
   total: number;
-  tenantShares: { name: string; daysStayed: number; share: number }[];
+  tenantShares: { 
+    name: string; 
+    daysStayed: number; 
+    share: number;
+    overdueAc?: { monthLabel: string; share: number }[];
+    overdueAcTotal?: number;
+  }[];
   isCustom: boolean;
   onModeToggle: (isCustom: boolean) => void;
   onUnitsChange: (units: number) => void;
@@ -2147,11 +2247,26 @@ const RentACRoomCard = ({
         <span className="font-bold text-cyan-700 dark:text-cyan-300">{shareLabel}</span>
       </div>
       {splitCountDraft === "" && dayWiseShares.length > 0 && (
-        <div className="mt-2 grid gap-1 text-[11px] text-muted-foreground">
+        <div className="mt-2 grid gap-2 text-[11px] text-muted-foreground">
           {dayWiseShares.map((tenant) => (
-            <div key={tenant.name} className="flex items-center justify-between">
-              <span className="truncate">{tenant.name} · {tenant.daysStayed}d</span>
-              <span className="font-medium text-foreground">₹{tenant.share.toLocaleString()}</span>
+            <div key={tenant.name} className="flex flex-col border-b border-dashed border-cyan-500/10 pb-1.5 last:border-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <span className="truncate font-medium text-foreground/95">{tenant.name} · {tenant.daysStayed}d</span>
+                <span className="font-semibold text-foreground">
+                  ₹{tenant.share.toLocaleString()}
+                  {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
+                    <span className="text-amber-600 dark:text-amber-400 ml-1">
+                      + ₹{tenant.overdueAcTotal.toLocaleString()}
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+              {tenant.overdueAc && tenant.overdueAc.map((om) => (
+                <div key={om.monthLabel} className="flex items-center justify-between text-[10px] text-amber-600 dark:text-amber-400 pl-3">
+                  <span>↳ Overdue AC ({om.monthLabel})</span>
+                  <span>₹{om.share.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
           ))}
         </div>

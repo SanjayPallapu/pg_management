@@ -22,7 +22,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format as fmtDate, addDays } from "date-fns";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
-import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
+import {
+  useElectricityReadings,
+  useAllElectricityReadings,
+  calcAcTenantShares,
+  calculateAPCommercialBill,
+} from "@/hooks/useElectricityReadings";
 import { toast } from "@/hooks/use-toast";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
@@ -44,6 +49,8 @@ interface TenantWithPayment {
   amountPaid: number;
   balance: number;
   acShare: number;
+  overdueAc?: { monthLabel: string; share: number }[];
+  overdueAcTotal?: number;
   paymentStatus: "Paid" | "Pending" | "Partial";
 }
 
@@ -52,6 +59,78 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
   const { payments } = useTenantPayments();
   const { isSnoozed, snoozeTenants } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
+  const { data: allReadings = [] } = useAllElectricityReadings();
+
+  const getOverdueAcBills = useCallback((tenantId: string, room: Room) => {
+    const overdue: { month: number; year: number; share: number; monthLabel: string }[] = [];
+    const tenant = room.tenants.find((t) => t.id === tenantId);
+    if (!tenant) return overdue;
+
+    const joinDate = new Date(tenant.startDate);
+    const checkMonths: { month: number; year: number }[] = [];
+    
+    let curM = selectedMonth - 1;
+    let curY = selectedYear;
+    if (curM === 0) {
+      curM = 12;
+      curY = selectedYear - 1;
+    }
+
+    const currentDate = new Date();
+    const limitDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1); // 12 months limit
+    const startDateLimit = joinDate > limitDate ? joinDate : limitDate;
+
+    while (true) {
+      const checkDate = new Date(curY, curM - 1, 1);
+      if (checkDate < startDateLimit) break;
+      checkMonths.push({ month: curM, year: curY });
+      curM--;
+      if (curM === 0) {
+        curM = 12;
+        curY--;
+      }
+    }
+
+    for (const { month: m, year: y } of checkMonths) {
+      if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, y, m)) continue;
+
+      const payment = payments.find((p) => p.tenantId === tenantId && p.month === m && p.year === y);
+      const isPaid = payment?.paymentStatus === "Paid";
+
+      if (!isPaid) {
+        const reading = allReadings.find((r) => r.room_id === room.id && r.month === m && r.year === y);
+        if (reading && reading.units > 0) {
+          const activeTenants = room.tenants.filter((t) =>
+            isTenantActiveInMonth(t.startDate, t.endDate, y, m)
+          );
+          const apBill = calculateAPCommercialBill(reading.units);
+          const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom";
+          const totalAmount = isCustom ? reading.units * reading.unit_price : apBill.totalBill;
+
+          const shares = calcAcTenantShares(
+            reading.units,
+            reading.unit_price,
+            activeTenants,
+            y,
+            m,
+            room.capacity,
+            totalAmount
+          );
+          const myShare = shares.find((s) => s.name === tenant.name)?.share || 0;
+          if (myShare > 0) {
+            overdue.push({
+              month: m,
+              year: y,
+              share: myShare,
+              monthLabel: `${MONTHS[m - 1]?.label} ${y}`,
+            });
+          }
+        }
+      }
+    }
+
+    return overdue;
+  }, [payments, allReadings, selectedMonth, selectedYear]);
 
   // Helper: compute AC surcharge share for a tenant in the given room
   const getAcShareForTenant = useCallback((room: Room, tenantId: string): number => {
@@ -104,6 +183,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
           );
           const amountPaid = payment?.amountPaid || 0;
           const acShare = getAcShareForTenant(room, tenant.id);
+          const overdueAc = getOverdueAcBills(tenant.id, room);
+          const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
           return {
             id: tenant.id,
             name: tenant.name,
@@ -111,8 +192,10 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             roomNo: room.roomNo,
             monthlyRent: tenant.monthlyRent,
             amountPaid,
-            balance: tenant.monthlyRent - amountPaid + acShare,
+            balance: tenant.monthlyRent - amountPaid + acShare + overdueAcTotal,
             acShare,
+            overdueAc,
+            overdueAcTotal,
             paymentStatus: (payment?.paymentStatus || "Pending") as "Paid" | "Pending" | "Partial",
           };
         })
@@ -120,7 +203,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
     // Filter to only pending and partial
     return allTenants.filter((t) => t.paymentStatus !== "Paid" && !isSnoozed(t.id));
-  }, [rooms, payments, selectedMonth, selectedYear, isSnoozed, getAcShareForTenant]);
+  }, [rooms, payments, selectedMonth, selectedYear, isSnoozed, getAcShareForTenant, getOverdueAcBills]);
 
   // Get all tenants for custom message (excluding left tenants)
   const allTenants = useMemo(() => {
@@ -204,6 +287,11 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
       }
       if (tenant.acShare > 0) {
         message += `\n(Includes AC Electricity: ₹${tenant.acShare.toLocaleString()})`;
+      }
+      if (tenant.overdueAc && tenant.overdueAc.length > 0) {
+        tenant.overdueAc.forEach((om) => {
+          message += `\n(Overdue AC for ${om.monthLabel}: ₹${om.share.toLocaleString()})`;
+        });
       }
     }
 
