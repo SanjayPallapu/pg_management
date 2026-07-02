@@ -231,7 +231,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
             {hasSecurityDeposit && (
               <>
                 <br />
-                <strong>Security advance:</strong> {formatCurrency(data.payment.securityDeposit!)}
+                <strong>Security deposit:</strong> {formatCurrency(data.payment.securityDeposit!)}
               </>
             )}
           </p>
@@ -247,7 +247,7 @@ export const WelcomeTemplate = forwardRef<HTMLDivElement, WelcomeTemplateProps>(
               margin: 0,
             }}
           >
-            Please let me know once the payment{hasSecurityDeposit ? " and advance are" : " is"} completed. If you have any questions, feel free to ask.
+            Please let me know once the payment{hasSecurityDeposit ? " and deposit are" : " is"} completed. If you have any questions, feel free to ask.
           </p>
         </div>
 
