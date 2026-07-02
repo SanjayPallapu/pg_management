@@ -2243,6 +2243,11 @@ const RentACRoomCard = ({
             value={unitsDraft}
             onChange={(event) => setUnitsDraft(event.target.value)}
             onBlur={() => onUnitsChange(parseInt(unitsDraft) || 0)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="0"
             className="h-8 text-sm"
           />
@@ -2254,6 +2259,11 @@ const RentACRoomCard = ({
             value={priceDraft}
             onChange={(event) => setPriceDraft(event.target.value)}
             onBlur={() => onPriceChange(parseInt(priceDraft) || 0)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             className="h-8 text-sm"
           />
         </div>
@@ -2268,6 +2278,11 @@ const RentACRoomCard = ({
             min="1"
             value={splitCountDraft}
             onChange={(event) => setSplitCountDraft(event.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="Day-wise"
             className="h-8 text-sm"
           />
@@ -2281,50 +2296,82 @@ const RentACRoomCard = ({
         <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
           {dayWiseShares.map((tenant) => {
             const isPaid = tenant.acPaymentStatus === "Paid";
+            const hasOverdue = tenant.overdueAcTotal && tenant.overdueAcTotal > 0;
+            
+            let cardClass = "";
+            let btnClass = "";
+            let shareBtnClass = "";
+            let textClass = "";
+            
+            if (isPaid) {
+              cardClass = "bg-paid-muted border-paid/20 dark:border-paid/10 text-paid";
+              btnClass = "bg-paid text-paid-foreground hover:bg-paid/90 border-none";
+              shareBtnClass = "border-paid/30 text-paid hover:bg-paid-muted/80";
+              textClass = "text-paid";
+            } else if (hasOverdue) {
+              cardClass = "bg-overdue-muted border-overdue/25 dark:border-overdue/10 text-overdue";
+              btnClass = "border-overdue/35 text-overdue hover:bg-overdue-muted/80 bg-background dark:bg-slate-900";
+              shareBtnClass = "border-overdue/35 text-overdue hover:bg-overdue-muted/80";
+              textClass = "text-overdue";
+            } else {
+              cardClass = "bg-not-due-muted border-not-due/25 dark:border-not-due/10 text-not-due";
+              btnClass = "border-not-due/35 text-not-due hover:bg-not-due-muted/80 bg-background dark:bg-slate-900";
+              shareBtnClass = "border-not-due/35 text-not-due hover:bg-not-due-muted/80";
+              textClass = "text-not-due";
+            }
+
             return (
               <div
                 key={tenant.name}
                 className={cn(
-                  "p-2.5 rounded-xl border transition-all duration-200 flex flex-col justify-between gap-1.5",
-                  isPaid
-                    ? "bg-emerald-50/35 border-emerald-500/20 dark:bg-emerald-950/10 dark:border-emerald-500/10"
-                    : "bg-cyan-50/20 border-cyan-100/80 dark:bg-cyan-950/5 dark:border-cyan-900/15"
+                  "p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between gap-1.5 shadow-sm",
+                  cardClass
                 )}
               >
-                <div className="flex items-start justify-between gap-1">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <span className="truncate text-xs font-semibold text-foreground/90 block">
                       {tenant.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/90">
+                    <span className="text-[10px] text-muted-foreground/80 block mt-0.5">
                       {tenant.daysStayed} days stayed
                     </span>
                   </div>
-                  <Button
-                    size="xs"
-                    variant={isPaid ? "secondary" : "outline"}
-                    className={cn(
-                      "h-6 px-2 text-[10px] font-medium rounded-lg shrink-0",
-                      isPaid
-                        ? "bg-emerald-100/80 text-emerald-800 hover:bg-emerald-200/80 dark:bg-emerald-900/20 dark:text-emerald-300 border-none"
-                        : "border-cyan-200 text-cyan-700 hover:bg-cyan-50/60 dark:border-cyan-800 dark:text-cyan-400 dark:hover:bg-cyan-950/30"
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (tenant.id && onTogglePaymentStatus) {
-                        onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending');
-                      }
-                    }}
-                  >
-                    {isPaid ? "Paid" : "Mark Paid"}
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      className={cn("h-6 w-6 p-0 rounded-lg font-medium", shareBtnClass)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined, tenant.name);
+                      }}
+                      title={`Send payment reminder to ${tenant.name}`}
+                    >
+                      <Send className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant={isPaid ? "default" : "outline"}
+                      className={cn("h-6 px-2 text-[10px] font-semibold rounded-lg", btnClass)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (tenant.id && onTogglePaymentStatus) {
+                          onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending');
+                        }
+                      }}
+                    >
+                      {isPaid ? "Paid" : "Mark Paid"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-baseline justify-between mt-0.5">
-                  <span className="text-[10px] text-muted-foreground/80">AC Share:</span>
-                  <span className={cn("font-bold text-xs", isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-cyan-800 dark:text-cyan-300")}>
+                
+                <div className="flex items-baseline justify-between mt-1 pt-1 border-t border-border/10">
+                  <span className="text-[10px] text-muted-foreground/85">AC Share:</span>
+                  <span className={cn("font-bold text-xs", textClass)}>
                     ₹{tenant.share.toLocaleString()}
                     {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
-                      <span className="text-amber-600 dark:text-amber-400 ml-1 font-semibold text-[10px]">
+                      <span className="text-amber-600 dark:text-amber-400 ml-1 font-bold text-[10px]">
                         + ₹{tenant.overdueAcTotal.toLocaleString()}
                       </span>
                     ) : null}
