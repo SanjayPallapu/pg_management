@@ -113,10 +113,11 @@ export const useTenantPayments = () => {
       return payment;
     },
     onMutate: async (newPayment) => {
-      await queryClient.cancelQueries({ queryKey: ['tenant-payments'] });
-      const previousPayments = queryClient.getQueryData<TenantPayment[]>(['tenant-payments']);
+      const queryKey = ['tenant-payments', currentPG?.id];
+      await queryClient.cancelQueries({ queryKey });
+      const previousPayments = queryClient.getQueryData<TenantPayment[]>(queryKey);
       
-      queryClient.setQueryData<TenantPayment[]>(['tenant-payments'], (old = []) => {
+      queryClient.setQueryData<TenantPayment[]>(queryKey, (old = []) => {
         const existingIndex = old.findIndex(
           p => p.tenantId === newPayment.tenantId && p.month === newPayment.month && p.year === newPayment.year
         );
@@ -147,12 +148,12 @@ export const useTenantPayments = () => {
     },
     onError: (err: any, _newPayment, context) => {
       if (context?.previousPayments) {
-        queryClient.setQueryData(['tenant-payments'], context.previousPayments);
+        queryClient.setQueryData(['tenant-payments', currentPG?.id], context.previousPayments);
       }
       toast.error(err?.message || "Failed to record payment");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments', currentPG?.id] });
     },
   });
 
@@ -198,7 +199,7 @@ export const useTenantPayments = () => {
       toast.error(err?.message || "Failed to update WhatsApp status");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments', currentPG?.id] });
     },
   });
 

@@ -2287,8 +2287,8 @@ const RentACRoomCard = ({
                 className={cn(
                   "p-2.5 rounded-xl border transition-all duration-200 flex flex-col justify-between gap-1.5",
                   isPaid
-                    ? "bg-emerald-50/50 border-emerald-500/25 dark:bg-emerald-950/20 dark:border-emerald-500/10"
-                    : "bg-slate-50/70 border-slate-200 dark:bg-slate-900/40 dark:border-slate-800"
+                    ? "bg-emerald-50/35 border-emerald-500/20 dark:bg-emerald-950/10 dark:border-emerald-500/10"
+                    : "bg-cyan-50/20 border-cyan-100/80 dark:bg-cyan-950/5 dark:border-cyan-900/15"
                 )}
               >
                 <div className="flex items-start justify-between gap-1">
@@ -2296,7 +2296,7 @@ const RentACRoomCard = ({
                     <span className="truncate text-xs font-semibold text-foreground/90 block">
                       {tenant.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground/90">
                       {tenant.daysStayed} days stayed
                     </span>
                   </div>
@@ -2306,10 +2306,11 @@ const RentACRoomCard = ({
                     className={cn(
                       "h-6 px-2 text-[10px] font-medium rounded-lg shrink-0",
                       isPaid
-                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border-none"
-                        : "hover:bg-cyan-50 dark:hover:bg-cyan-950/20"
+                        ? "bg-emerald-100/80 text-emerald-800 hover:bg-emerald-200/80 dark:bg-emerald-900/20 dark:text-emerald-300 border-none"
+                        : "border-cyan-200 text-cyan-700 hover:bg-cyan-50/60 dark:border-cyan-800 dark:text-cyan-400 dark:hover:bg-cyan-950/30"
                     )}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (tenant.id && onTogglePaymentStatus) {
                         onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending');
                       }
@@ -2319,8 +2320,8 @@ const RentACRoomCard = ({
                   </Button>
                 </div>
                 <div className="flex items-baseline justify-between mt-0.5">
-                  <span className="text-[10px] text-muted-foreground">AC Share:</span>
-                  <span className={cn("font-bold text-xs", isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+                  <span className="text-[10px] text-muted-foreground/80">AC Share:</span>
+                  <span className={cn("font-bold text-xs", isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-cyan-800 dark:text-cyan-300")}>
                     ₹{tenant.share.toLocaleString()}
                     {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
                       <span className="text-amber-600 dark:text-amber-400 ml-1 font-semibold text-[10px]">
