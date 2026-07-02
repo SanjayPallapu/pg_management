@@ -4,6 +4,7 @@ import { Room, Tenant } from "@/types";
 import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
 import { usePG } from "@/contexts/PGContext";
+import { toast } from "sonner";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
@@ -136,10 +137,11 @@ export const useRooms = () => {
       });
       return { previousRooms };
     },
-    onError: (_err, _newRoom, context) => {
+    onError: (err: any, _newRoom, context) => {
       if (context?.previousRooms) {
         queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
+      toast.error(err?.message || "Failed to update room details");
     },
     onSuccess: () => {
       // Immediate refetch for faster UX
@@ -214,11 +216,12 @@ export const useRooms = () => {
       
       return { previousRooms };
     },
-    onError: (_err, _variables, context) => {
+    onError: (err: any, _variables, context) => {
       // Rollback to previous state on error
       if (context?.previousRooms) {
         queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
+      toast.error(err?.message || "Failed to add tenant");
     },
     onSuccess: () => {
       // Immediate refetch to get the real ID from the server
@@ -298,10 +301,11 @@ export const useRooms = () => {
       });
       return { previousRooms };
     },
-    onError: (_err, _variables, context) => {
+    onError: (err: any, _variables, context) => {
       if (context?.previousRooms) {
         queryClient.setQueryData(["rooms", currentPG?.id], context.previousRooms);
       }
+      toast.error(err?.message || "Failed to update tenant details");
     },
     onSuccess: () => {
       // Immediate refetch for faster UX
@@ -322,6 +326,9 @@ export const useRooms = () => {
         recordId: tenantId,
         recordName: tenantName,
       });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to remove tenant");
     },
     onSuccess: () => {
       // Immediate refetch for faster UX
@@ -349,6 +356,9 @@ export const useRooms = () => {
         .in("room_id", roomIds);
 
       if (error) throw error;
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to reset rent cycle");
     },
     onSuccess: () => {
       // Immediate refetch for faster UX

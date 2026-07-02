@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/proxyClient';
 import { TenantPayment, PaymentEntry } from '@/types';
 import { useAuditLog } from './useAuditLog';
 import { usePG } from '@/contexts/PGContext';
+import { toast } from 'sonner';
 
 export const useTenantPayments = () => {
   const { logAudit } = useAuditLog();
@@ -141,10 +142,11 @@ export const useTenantPayments = () => {
       
       return { previousPayments };
     },
-    onError: (_err, _newPayment, context) => {
+    onError: (err: any, _newPayment, context) => {
       if (context?.previousPayments) {
         queryClient.setQueryData(['tenant-payments'], context.previousPayments);
       }
+      toast.error(err?.message || "Failed to record payment");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
@@ -188,6 +190,9 @@ export const useTenantPayments = () => {
         .eq('year', year);
 
       if (error) throw error;
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update WhatsApp status");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });

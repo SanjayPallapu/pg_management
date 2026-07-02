@@ -337,10 +337,33 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   };
 
   const handleAddTenant = async () => {
-    if (!newTenant.name || !newTenant.phone) return;
+    if (!newTenant.name?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter the tenant's name",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!newTenant.phone || newTenant.phone.length < 10) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid 10-digit phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newTenant.monthlyRent !== undefined && newTenant.monthlyRent <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Monthly rent must be greater than zero",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const tenant = {
-      name: newTenant.name,
+      name: newTenant.name.trim(),
       phone: newTenant.phone,
       startDate: newTenant.startDate || new Date().toISOString().split("T")[0],
       monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity),
@@ -1228,11 +1251,12 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                             value={tenant.monthlyRent}
                             readOnly={isTenantPaidForMonth(tenant.id)}
                             className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
                               handleUpdateTenant(tenant.id, {
-                                monthlyRent: parseInt(e.target.value) || 0,
-                              })
-                            }
+                                monthlyRent: val,
+                              });
+                            }}
                           />
                         </div>
                       )}
@@ -1300,7 +1324,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                         id="monthlyRent"
                         type="number"
                         value={newTenant.monthlyRent}
-                        onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: parseInt(e.target.value) || 0 })}
+                        onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: Math.max(0, parseInt(e.target.value) || 0) })}
                         placeholder="Enter amount"
                         className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
                       />
@@ -1416,7 +1440,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                 type="number"
                 value={partialAmount}
                 onChange={(e) => {
-                  setPartialAmount(parseInt(e.target.value) || 0);
+                  setPartialAmount(Math.max(0, parseInt(e.target.value) || 0));
                   setOverpaymentReason("");
                   setOverpaymentError(false);
                 }}
@@ -1538,7 +1562,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
               <Input
                 type="number"
                 value={payRemainingAmount}
-                onChange={(e) => setPayRemainingAmount(parseInt(e.target.value) || 0)}
+                onChange={(e) => setPayRemainingAmount(Math.max(0, parseInt(e.target.value) || 0))}
                 className="mt-2"
               />
               {payRemainingTenant &&

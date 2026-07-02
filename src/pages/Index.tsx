@@ -22,7 +22,6 @@ const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").th
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
-import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { Room } from "@/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -62,13 +61,9 @@ const Index = () => {
     // Close all open dialogs/sheets when switching tabs
     setIsDialogOpen(false);
     setSelectedRoom(null);
-    setSubscriptionSheetOpen(false);
     setHistorySheetOpen(false);
-    setAdminApprovalOpen(false);
   };
-  const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
-  const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -155,20 +150,7 @@ const Index = () => {
   const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch pending approval count for admin badge
-  const { data: pendingApprovalCount = 0 } = useQuery({
-    queryKey: ['pending-approval-count'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('payment_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-      if (error) return 0;
-      return count || 0;
-    },
-    enabled: isAdmin,
-    refetchInterval: 30000, // refresh every 30s
-  });
+
   const handleSignOut = async () => {
     await signOut();
     // Full page reload to clear all cached state
@@ -283,25 +265,6 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-1">
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-9 w-9"
-                onClick={() => setAdminApprovalOpen(true)}
-                title="Payment approvals"
-              >
-                <Bell className="h-4 w-4" />
-                {pendingApprovalCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
-                    {pendingApprovalCount > 9 ? "9+" : pendingApprovalCount}
-                  </span>
-                )}
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSubscriptionSheetOpen(true)} title="Subscription">
-              <CreditCard className="h-4 w-4" />
-            </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setHistorySheetOpen(true)} title="Activity">
               <History className="h-4 w-4" />
             </Button>
@@ -382,11 +345,7 @@ const Index = () => {
           <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
         </Suspense>
 
-        {/* Subscription Details Sheet */}
-        <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
 
-        {/* Admin Payment Approval Sheet */}
-        <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
 
 
       </div>

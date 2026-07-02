@@ -61,7 +61,13 @@ export const useExpenseEntries = (month: number, year: number) => {
       const { error } = await supabase.from("expense_entries").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] });
+      toast({ title: "Expense updated" });
+    },
+    onError: (e: any) => {
+      toast({ title: "Failed to update expense", description: e.message, variant: "destructive" });
+    },
   });
 
   const deleteEntry = useMutation({
@@ -72,6 +78,9 @@ export const useExpenseEntries = (month: number, year: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] });
       toast({ title: "Expense deleted" });
+    },
+    onError: (e: any) => {
+      toast({ title: "Failed to delete expense", description: e.message, variant: "destructive" });
     },
   });
 

@@ -81,6 +81,9 @@ export const useTenantSnoozes = () => {
       qc.invalidateQueries({ queryKey: ["tenant_snoozes", currentPG?.id] });
       toast({ title: "Snooze removed" });
     },
+    onError: (e: any) => {
+      toast({ title: "Failed to remove snooze", description: e.message, variant: "destructive" });
+    },
   });
 
   const isSnoozed = (tenantId: string) => activeByTenant.has(tenantId);

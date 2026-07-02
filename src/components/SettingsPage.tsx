@@ -45,7 +45,8 @@ import { usePG } from "@/contexts/PGContext";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { SubscriptionDetailsSheet } from "@/components/subscription";
+import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ThreeDScene } from "@/components/ThreeDScene";
 
@@ -96,7 +97,23 @@ export const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
+  const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Fetch pending approval count for admin badge
+  const { data: pendingApprovalCount = 0 } = useQuery({
+    queryKey: ['pending-approval-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('payment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: isAdmin,
+    refetchInterval: 30000, // refresh every 30s
+  });
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [confirmEmailInput, setConfirmEmailInput] = useState("");
@@ -274,12 +291,20 @@ export const SettingsPage = () => {
                 onClick={() => {}}
               />
               {isAdmin && (
-                <SettingItem
-                  icon={<Users className="h-4 w-4 text-primary" />}
-                  label="Staff Management"
-                  description="Add or manage staff access"
-                  onClick={() => {}}
-                />
+                <>
+                  <SettingItem
+                    icon={<Users className="h-4 w-4 text-primary" />}
+                    label="Staff Management"
+                    description="Add or manage staff access"
+                    onClick={() => {}}
+                  />
+                  <SettingItem
+                    icon={<Bell className="h-4 w-4 text-primary" />}
+                    label={pendingApprovalCount > 0 ? `Payment Approvals (${pendingApprovalCount} pending)` : "Payment Approvals"}
+                    description="Review and approve pro plan proof of payments"
+                    onClick={() => setAdminApprovalOpen(true)}
+                  />
+                </>
               )}
               <SettingItem
                 icon={<CreditCard className="h-4 w-4 text-primary" />}
@@ -409,6 +434,9 @@ export const SettingsPage = () => {
       </motion.div>
 
       <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
+      {isAdmin && (
+        <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
+      )}
 
       {/* 2-Step Verification Account Deletion Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

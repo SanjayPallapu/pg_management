@@ -48,6 +48,12 @@ export const AddRoomsDialog = ({ open, onOpenChange, floor, existingRoomNos }: A
       return;
     }
 
+    const roomCount = endNum - startNum + 1;
+    if (roomCount > 50) {
+      toast.error("You can add a maximum of 50 rooms at a time.");
+      return;
+    }
+
     setIsAdding(true);
     try {
       const roomsToAdd = [];

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export interface CollectorConfig {
   id: string;
@@ -243,6 +244,7 @@ export const useCollectorNames = () => {
         .then(({ error }) => {
           if (error) {
             console.error('[Collectors] Failed to add collector', error);
+            toast.error(error.message || 'Failed to add collector');
           }
         });
       return;
@@ -268,6 +270,7 @@ export const useCollectorNames = () => {
         .then(({ error }) => {
           if (error) {
             console.error('[Collectors] Failed to update collector', error);
+            toast.error(error.message || 'Failed to update collector');
           }
         });
       return;
@@ -293,6 +296,7 @@ export const useCollectorNames = () => {
         .then(({ error }) => {
           if (error) {
             console.error('[Collectors] Failed to remove collector', error);
+            toast.error(error.message || 'Failed to remove collector');
           }
         });
       return;
@@ -311,6 +315,7 @@ export const useCollectorNames = () => {
         .then(({ error }) => {
           if (error) {
             console.error('[Collectors] Failed to reset collectors', error);
+            toast.error(error.message || 'Failed to reset collectors');
             return;
           }
           const seed = defaultCollectors.map((collector) => ({
@@ -321,6 +326,7 @@ export const useCollectorNames = () => {
           (supabase as any).from('collector_names').insert(seed).then(({ error: seedError }: any) => {
             if (seedError) {
               console.error('[Collectors] Failed to seed collectors', seedError);
+              toast.error(seedError.message || 'Failed to seed defaults');
             }
           });
         });
