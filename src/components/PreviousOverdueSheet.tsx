@@ -493,8 +493,8 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
             </p>
           </SheetHeader>
 
-          <div className="mt-4">
-            <div className="space-y-3">
+          <ScrollArea className="h-[calc(100vh-135px)] mt-4 pr-3">
+            <div className="space-y-3 pb-8">
               {overdueTenants.map(tenant => {
                 const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
                 const hasPaymentEntries = tenant.paymentEntries.length > 0;
@@ -761,7 +761,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 </div>
               )}
             </div>
-          </div>
+          </ScrollArea>
         </SheetContent>
       </Sheet>
 

@@ -226,6 +226,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const tenant = room.tenants.find((t) => t.id === tenantId);
     if (!tenant) return overdue;
 
+    // Prevent overdue AC bills calculation if the viewed month is in the past
+    const now = new Date();
+    const currentM = now.getMonth() + 1;
+    const currentY = now.getFullYear();
+    const isPastMonth = acYear < currentY || (acYear === currentY && acMonth < currentM);
+    if (isPastMonth) {
+      return [];
+    }
+
     const joinDate = new Date(tenant.startDate);
     const checkMonths: { month: number; year: number }[] = [];
     
