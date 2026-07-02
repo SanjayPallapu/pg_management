@@ -47,6 +47,7 @@ export interface TenantPayment {
   whatsappSent?: boolean;
   whatsappSentAt?: string;
   notes?: string;
+  acPaymentStatus?: 'Paid' | 'Pending';
 }
 
 export interface DashboardStats {

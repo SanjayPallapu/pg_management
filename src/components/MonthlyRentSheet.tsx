@@ -255,7 +255,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, y, m)) continue;
 
       const payment = payments.find((p) => p.tenantId === tenantId && p.month === m && p.year === y);
-      const isPaid = payment?.paymentStatus === "Paid";
+      const isPaid = payment?.acPaymentStatus === "Paid";
 
       if (!isPaid) {
         const reading = allReadings.find((r) => r.room_id === room.id && r.month === m && r.year === y);
@@ -290,6 +290,29 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
 
     return overdue;
+  };
+
+  const handleToggleAcPaymentStatus = (tenantId: string, currentStatus: 'Paid' | 'Pending') => {
+    const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
+    const existingPayment = payments.find(p => p.tenantId === tenantId && p.month === acMonth && p.year === acYear);
+    const allTenants = rooms.flatMap(r => r.tenants);
+    const tenant = allTenants.find(t => t.id === tenantId);
+    if (!tenant) return;
+    
+    upsertPayment.mutate({
+      tenantId,
+      month: acMonth,
+      year: acYear,
+      paymentStatus: existingPayment?.paymentStatus || 'Pending',
+      paymentDate: existingPayment?.paymentDate,
+      amount: existingPayment?.amount || tenant.monthlyRent,
+      amountPaid: existingPayment?.amountPaid || 0,
+      paymentEntries: existingPayment?.paymentEntries || [],
+      notes: existingPayment?.notes,
+      acPaymentStatus: newStatus,
+      tenantName: tenant.name,
+      roomNo: rooms.find(r => r.tenants.some(t => t.id === tenantId))?.roomNo,
+    });
   };
   const months = [
     {
@@ -608,8 +631,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           const tenantObj = activeTenants.find((t) => t.name === share.name);
           const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, room) : [];
           const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+          const payment = tenantObj ? payments.find((p) => p.tenantId === tenantObj.id && p.month === acMonth && p.year === acYear) : undefined;
           return {
             ...share,
+            id: tenantObj?.id,
+            acPaymentStatus: payment?.acPaymentStatus || 'Pending',
             overdueAc,
             overdueAcTotal,
           };
@@ -1222,6 +1248,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
                         onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
                         onShare={(units, unitPrice, customSplitCount, targetTenantName) => handleShareAC(item, units, unitPrice, customSplitCount, targetTenantName)}
+                        onTogglePaymentStatus={handleToggleAcPaymentStatus}
                       />
                     ))}
                   </CardContent>
@@ -1352,14 +1379,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, totalAmount);
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
-                  const overdueAc = getOverdueAcBills(tenant.id, room);
-                  const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+                  const currentPayment = payments.find((p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
+                  const isCurrentPaid = currentPayment?.acPaymentStatus === "Paid";
+                  const currentShare = isCurrentPaid ? 0 : (tenantShare?.share || 0);
 
-                  if ((tenantShare && tenantShare.share > 0) || overdueAcTotal > 0) {
+                  if (currentShare > 0 || overdueAcTotal > 0) {
                     acSurcharge = {
                       units,
                       unitPrice,
-                      share: tenantShare?.share || 0,
+                      share: currentShare,
                       overdueMonths: overdueAc.map((om) => ({
                         monthLabel: om.monthLabel,
                         share: om.share,
@@ -2115,6 +2143,8 @@ const RentACRoomCard = ({
     name: string; 
     daysStayed: number; 
     share: number;
+    id?: string;
+    acPaymentStatus?: 'Paid' | 'Pending';
     overdueAc?: { monthLabel: string; share: number }[];
     overdueAcTotal?: number;
   }[];
@@ -2123,6 +2153,7 @@ const RentACRoomCard = ({
   onUnitsChange: (units: number) => void;
   onPriceChange: (unitPrice: number) => void;
   onShare: (units: number, unitPrice: number, customSplitCount?: number, targetTenantName?: string) => void;
+  onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
 }) => {
   const [unitsDraft, setUnitsDraft] = useState(String(units || ""));
   const [priceDraft, setPriceDraft] = useState(String(unitPrice || 12));
@@ -2247,28 +2278,66 @@ const RentACRoomCard = ({
         <span className="font-bold text-cyan-700 dark:text-cyan-300">{shareLabel}</span>
       </div>
       {splitCountDraft === "" && dayWiseShares.length > 0 && (
-        <div className="mt-2 grid gap-2 text-[11px] text-muted-foreground">
-          {dayWiseShares.map((tenant) => (
-            <div key={tenant.name} className="flex flex-col border-b border-dashed border-cyan-500/10 pb-1.5 last:border-0 last:pb-0">
-              <div className="flex items-center justify-between">
-                <span className="truncate font-medium text-foreground/95">{tenant.name} · {tenant.daysStayed}d</span>
-                <span className="font-semibold text-foreground">
-                  ₹{tenant.share.toLocaleString()}
-                  {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
-                    <span className="text-amber-600 dark:text-amber-400 ml-1">
-                      + ₹{tenant.overdueAcTotal.toLocaleString()}
+        <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
+          {dayWiseShares.map((tenant) => {
+            const isPaid = tenant.acPaymentStatus === "Paid";
+            return (
+              <div
+                key={tenant.name}
+                className={cn(
+                  "p-2.5 rounded-xl border transition-all duration-200 flex flex-col justify-between gap-1.5",
+                  isPaid
+                    ? "bg-emerald-50/50 border-emerald-500/25 dark:bg-emerald-950/20 dark:border-emerald-500/10"
+                    : "bg-slate-50/70 border-slate-200 dark:bg-slate-900/40 dark:border-slate-800"
+                )}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <div className="min-w-0">
+                    <span className="truncate text-xs font-semibold text-foreground/90 block">
+                      {tenant.name}
                     </span>
-                  ) : null}
-                </span>
-              </div>
-              {tenant.overdueAc && tenant.overdueAc.map((om) => (
-                <div key={om.monthLabel} className="flex items-center justify-between text-[10px] text-amber-600 dark:text-amber-400 pl-3">
-                  <span>↳ Overdue AC ({om.monthLabel})</span>
-                  <span>₹{om.share.toLocaleString()}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {tenant.daysStayed} days stayed
+                    </span>
+                  </div>
+                  <Button
+                    size="xs"
+                    variant={isPaid ? "secondary" : "outline"}
+                    className={cn(
+                      "h-6 px-2 text-[10px] font-medium rounded-lg shrink-0",
+                      isPaid
+                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border-none"
+                        : "hover:bg-cyan-50 dark:hover:bg-cyan-950/20"
+                    )}
+                    onClick={() => {
+                      if (tenant.id && onTogglePaymentStatus) {
+                        onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending');
+                      }
+                    }}
+                  >
+                    {isPaid ? "Paid" : "Mark Paid"}
+                  </Button>
                 </div>
-              ))}
-            </div>
-          ))}
+                <div className="flex items-baseline justify-between mt-0.5">
+                  <span className="text-[10px] text-muted-foreground">AC Share:</span>
+                  <span className={cn("font-bold text-xs", isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+                    ₹{tenant.share.toLocaleString()}
+                    {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
+                      <span className="text-amber-600 dark:text-amber-400 ml-1 font-semibold text-[10px]">
+                        + ₹{tenant.overdueAcTotal.toLocaleString()}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                {tenant.overdueAc && tenant.overdueAc.map((om) => (
+                  <div key={om.monthLabel} className="flex items-center justify-between text-[10px] text-amber-600 dark:text-amber-400 pl-2">
+                    <span>↳ Overdue AC ({om.monthLabel})</span>
+                    <span>₹{om.share.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

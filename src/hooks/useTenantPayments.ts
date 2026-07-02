@@ -23,7 +23,7 @@ export const useTenantPayments = () => {
 
       const { data, error } = await supabase
         .from('tenant_payments')
-        .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, tenants!inner(room_id, rooms!inner(pg_id))')
+        .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, ac_payment_status, tenants!inner(room_id, rooms!inner(pg_id))')
         .eq('tenants.rooms.pg_id', currentPG.id)
         .gte('year', cutoffYear)
         .order('year', { ascending: false })
@@ -47,6 +47,7 @@ export const useTenantPayments = () => {
         whatsappSent: (payment as any).whatsapp_sent || false,
         whatsappSentAt: (payment as any).whatsapp_sent_at || undefined,
         notes: (payment as any).notes || undefined,
+        acPaymentStatus: (payment as any).ac_payment_status as 'Paid' | 'Pending',
       })) as TenantPayment[];
 
       console.debug('[Payments] Fetched payments', { count: mappedPayments.length, pgId: currentPG.id });
@@ -74,6 +75,7 @@ export const useTenantPayments = () => {
           amount_paid: payment.amountPaid,
           payment_entries: payment.paymentEntries,
           notes: payment.notes || null,
+          ac_payment_status: payment.acPaymentStatus || 'Pending',
         } as any, {
           onConflict: 'tenant_id,month,year',
         });
@@ -130,6 +132,7 @@ export const useTenantPayments = () => {
           amountPaid: newPayment.amountPaid,
           paymentEntries: newPayment.paymentEntries,
           notes: newPayment.notes,
+          acPaymentStatus: newPayment.acPaymentStatus || 'Pending',
         };
         
         if (existingIndex >= 0) {

@@ -95,7 +95,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
       if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, y, m)) continue;
 
       const payment = payments.find((p) => p.tenantId === tenantId && p.month === m && p.year === y);
-      const isPaid = payment?.paymentStatus === "Paid";
+      const isPaid = payment?.acPaymentStatus === "Paid";
 
       if (!isPaid) {
         const reading = allReadings.find((r) => r.room_id === room.id && r.month === m && r.year === y);
@@ -182,7 +182,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
           );
           const amountPaid = payment?.amountPaid || 0;
-          const acShare = getAcShareForTenant(room, tenant.id);
+          const isAcPaid = payment?.acPaymentStatus === "Paid";
+          const acShare = isAcPaid ? 0 : getAcShareForTenant(room, tenant.id);
           const overdueAc = getOverdueAcBills(tenant.id, room);
           const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
           return {
