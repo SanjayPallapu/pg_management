@@ -2164,8 +2164,17 @@ const RentACRoomCard = ({
   onShare: (units: number, unitPrice: number, customSplitCount?: number, targetTenantName?: string) => void;
   onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
 }) => {
-  const [unitsDraft, setUnitsDraft] = useState(String(units || ""));
-  const [priceDraft, setPriceDraft] = useState(String(unitPrice || 12));
+  const [unitsDraft, setUnitsDraft] = useState(String(units ?? 0));
+  const [priceDraft, setPriceDraft] = useState(String(unitPrice ?? 12));
+
+  useEffect(() => {
+    setUnitsDraft(String(units ?? 0));
+  }, [units]);
+
+  useEffect(() => {
+    setPriceDraft(String(unitPrice ?? 12));
+  }, [unitPrice]);
+
   const [splitCountDraft, setSplitCountDraft] = useState("");
   const draftUnits = parseInt(unitsDraft) || 0;
   const draftUnitPrice = parseInt(priceDraft) || 0;
