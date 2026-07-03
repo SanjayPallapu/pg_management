@@ -29,6 +29,10 @@ interface ReminderInputData {
     units: number;
     unitPrice: number;
     share: number;
+    startReading?: number | null;
+    endReading?: number | null;
+    splitType?: string;
+    splitCount?: number | null;
     overdueMonths?: { monthLabel: string; share: number }[];
   };
   acBill?: ACBillData;
@@ -291,7 +295,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                     <span className="font-semibold text-blue-600 dark:text-blue-400 text-xs">
                       ₹{reminderData.acSurcharge.share.toLocaleString('en-IN')}
                       <span className="opacity-70 ml-1">
-                        ({reminderData.acSurcharge.units}u × ₹{reminderData.acSurcharge.unitPrice})
+                        ({reminderData.acSurcharge.startReading !== undefined && reminderData.acSurcharge.startReading !== null && reminderData.acSurcharge.endReading !== undefined && reminderData.acSurcharge.endReading !== null
+                          ? `${reminderData.acSurcharge.startReading}-${reminderData.acSurcharge.endReading} | `
+                          : ""}
+                        {reminderData.acSurcharge.units}u × ₹{reminderData.acSurcharge.unitPrice})
                       </span>
                     </span>
                   </div>

@@ -12,6 +12,10 @@ export interface ACBillData {
   pgLogoUrl?: string;
   calcMode?: "commercial" | "custom";
   tenantName?: string;
+  startReading?: number | null;
+  endReading?: number | null;
+  splitType?: string;
+  splitCount?: number | null;
 }
 
 interface Props { data: ACBillData; }
@@ -69,6 +73,18 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       <div style={{ margin: "0 20px 10px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <tbody>
+            {data.startReading !== undefined && data.startReading !== null && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "8px 12px", color: "#6b7280" }}>Previous Reading</td>
+                <td style={{ padding: "8px 12px", color: "#374151", fontWeight: 600, textAlign: "right" }}>{data.startReading}</td>
+              </tr>
+            )}
+            {data.endReading !== undefined && data.endReading !== null && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "8px 12px", color: "#6b7280" }}>Current Reading</td>
+                <td style={{ padding: "8px 12px", color: "#374151", fontWeight: 600, textAlign: "right" }}>{data.endReading}</td>
+              </tr>
+            )}
             <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
               <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 600 }}>Units Consumed</td>
               <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 700, textAlign: "right" }}>{data.units} Units</td>
@@ -124,12 +140,26 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
               {fmt(data.tenants.find(t => t.name === data.tenantName)?.share ?? data.totalAmount)}
             </div>
             <div style={{ fontSize: 12, color: "#075985", marginTop: 4 }}>{data.monthLabel} • Room {data.roomNo}</div>
+            <div style={{ fontSize: 10, color: "#075985", opacity: 0.8, marginTop: 4 }}>
+              {data.splitType === "custom"
+                ? `Split: Custom Split (${data.splitCount} persons)`
+                : data.splitType === "capacity"
+                  ? `Split: Capped by room capacity`
+                  : `Split: Divided by active tenants`}
+            </div>
           </>
         ) : (
           <>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#0c4a6e", marginBottom: 4 }}>{fmt(data.totalAmount)}</div>
             <div style={{ fontSize: 13, color: "#075985", fontWeight: 500 }}>
               {data.units} units • {isCustomMode ? `Flat Rate ₹${data.unitPrice}/unit` : "AP LT-II Commercial"} • Room {data.roomNo}
+            </div>
+            <div style={{ fontSize: 10, color: "#075985", opacity: 0.8, marginTop: 4 }}>
+              {data.splitType === "custom"
+                ? `Split: Custom Split (${data.splitCount} persons)`
+                : data.splitType === "capacity"
+                  ? `Split: Capped by room capacity`
+                  : `Split: Divided by active tenants`}
             </div>
           </>
         )}

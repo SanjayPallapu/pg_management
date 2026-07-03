@@ -27,6 +27,10 @@ export interface ReminderData {
     units: number;
     unitPrice: number;
     share: number; // per-tenant share already computed
+    startReading?: number | null;
+    endReading?: number | null;
+    splitType?: string;
+    splitCount?: number | null;
     overdueMonths?: { monthLabel: string; share: number }[];
   };
   // PG Branding
@@ -298,8 +302,17 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
                 <td style={{ padding: "10px 16px", color: "#1d4ed8" }}>AC Electricity:</td>
                 <td style={{ padding: "10px 16px", fontWeight: 600, color: "#1d4ed8" }}>
                   {formatCurrency(ac.share)}
-                  <span style={{ fontSize: 11, color: "#3b82f6", marginLeft: 6 }}>
-                    ({ac.units} units × ₹{ac.unitPrice}/unit ÷ share)
+                  <span style={{ fontSize: 10, color: "#3b82f6", marginLeft: 6 }}>
+                    ({ac.startReading !== undefined && ac.startReading !== null && ac.endReading !== undefined && ac.endReading !== null
+                      ? `Readings: ${ac.startReading}-${ac.endReading} | `
+                      : ""}
+                    {ac.units} units × ₹{ac.unitPrice}/unit
+                    {ac.splitType === "custom"
+                      ? ` ÷ ${ac.splitCount} split`
+                      : ac.splitType === "capacity"
+                        ? ` ÷ capacity`
+                        : " ÷ share"}
+                    )
                   </span>
                 </td>
               </tr>

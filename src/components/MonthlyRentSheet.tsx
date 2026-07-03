@@ -657,7 +657,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     item: typeof acRooms[number],
     draftUnits: number,
     draftUnitPrice: number,
-    customSplitCount?: number,
+    startReading?: number | null,
+    endReading?: number | null,
+    splitType?: string,
+    splitCount?: number | null,
     targetTenantName?: string,
   ) => {
     if (draftUnits <= 0) {
@@ -670,18 +673,39 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
 
     try {
-      await setReading.mutateAsync({ roomId: item.room.id, units: draftUnits, unitPrice: draftUnitPrice });
+      await setReading.mutateAsync({
+        roomId: item.room.id,
+        units: draftUnits,
+        unitPrice: draftUnitPrice,
+        startReading,
+        endReading,
+        splitType,
+        splitCount,
+      });
     } catch {
       return;
     }
 
     const isCustom = localStorage.getItem(`ac_bill_mode_${item.room.id}`) === "custom";
     const apBill = calculateAPCommercialBill(draftUnits);
-    const total = (customSplitCount && customSplitCount > 0) || isCustom ? draftUnits * draftUnitPrice : apBill.totalBill;
-    const tenantShares =
-      customSplitCount && customSplitCount > 0
-        ? calcCustomAcSplitShares(total, customSplitCount)
-        : calcAcTenantShares(draftUnits, draftUnitPrice, item.activeTenants, acYear, acMonth, item.room.capacity, total);
+    const total = splitType === "custom" && splitCount && splitCount > 0
+      ? draftUnits * draftUnitPrice
+      : isCustom
+        ? draftUnits * draftUnitPrice
+        : apBill.totalBill;
+
+    const tenantShares = calcAcTenantShares(
+      draftUnits,
+      draftUnitPrice,
+      item.activeTenants,
+      acYear,
+      acMonth,
+      item.room.capacity,
+      total,
+      splitType || 'active_tenants',
+      splitCount ?? undefined
+    );
+
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
@@ -696,6 +720,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       pgLogoUrl: currentPG?.logoUrl,
       tenantName: targetTenantName,
       calcMode: isCustom ? "custom" : "commercial",
+      startReading,
+      endReading,
+      splitType,
+      splitCount,
     });
 
     setTimeout(async () => {
@@ -1250,13 +1278,37 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         total={item.total}
                         tenantShares={item.tenantShares}
                         isCustom={item.isCustom}
+                        startReading={item.startReading}
+                        endReading={item.endReading}
+                        splitType={item.splitType}
+                        splitCount={item.splitCount}
                         onModeToggle={(isCustom) => {
                           localStorage.setItem(`ac_bill_mode_${item.room.id}`, isCustom ? "custom" : "commercial");
                           setCustomModeRooms((prev) => ({ ...prev, [item.room.id]: isCustom }));
                         }}
-                        onUnitsChange={(units) => setReading.mutate({ roomId: item.room.id, units, unitPrice: item.unitPrice })}
-                        onPriceChange={(unitPrice) => setReading.mutate({ roomId: item.room.id, units: item.units, unitPrice })}
-                        onShare={(units, unitPrice, customSplitCount, targetTenantName) => handleShareAC(item, units, unitPrice, customSplitCount, targetTenantName)}
+                        onSaveReading={(units, unitPrice, startReading, endReading, splitType, splitCount) => {
+                          setReading.mutate({
+                            roomId: item.room.id,
+                            units,
+                            unitPrice,
+                            startReading,
+                            endReading,
+                            splitType,
+                            splitCount,
+                          });
+                        }}
+                        onShare={(units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName) => {
+                          handleShareAC(
+                            item,
+                            units,
+                            unitPrice,
+                            startReading,
+                            endReading,
+                            splitType,
+                            splitCount,
+                            targetTenantName
+                          );
+                        }}
                         onTogglePaymentStatus={handleToggleAcPaymentStatus}
                       />
                     ))}
@@ -1362,30 +1414,44 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 const sharingType = room ? `${room.capacity} Sharing` : "N/A";
                 const amountPaid = tenant.payment.amountPaid || 0;
                 const balance = targetRent - amountPaid;
-                let acSurcharge: { units: number; unitPrice: number; share: number } | undefined;
-                let acBill:
-                  | {
-                      roomNo: string;
-                      units: number;
-                      unitPrice: number;
-                      totalAmount: number;
-                      tenants: { name: string; share: number }[];
-                      monthLabel: string;
-                      pgName?: string;
-                      pgLogoUrl?: string;
-                    }
-                  | undefined;
+                let acSurcharge: { 
+                  units: number; 
+                  unitPrice: number; 
+                  share: number; 
+                  startReading?: number | null; 
+                  endReading?: number | null; 
+                  splitType?: string; 
+                  splitCount?: number | null; 
+                  overdueMonths?: { monthLabel: string; share: number }[] 
+                } | undefined;
+                let acBill: any | undefined;
 
                 if (room?.isAc) {
                   const reading = acByRoom.get(room.id);
                   const units = reading?.units ?? 0;
                   const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+                  const startReading = reading?.start_reading ?? null;
+                  const endReading = reading?.end_reading ?? null;
+                  const splitType = reading?.split_type || 'active_tenants';
+                  const splitCount = reading?.split_count ?? null;
+                  const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom" || splitType === "custom";
+
                   const activeTenants = room.tenants.filter((roomTenant) =>
                     isTenantActiveInMonth(roomTenant.startDate, roomTenant.endDate, selectedYear, selectedMonth),
                   );
                   const apBill = calculateAPCommercialBill(units);
-                  const totalAmount = apBill.totalBill;
-                  const tenantShares = calcAcTenantShares(units, unitPrice, activeTenants, selectedYear, selectedMonth, room.capacity, totalAmount);
+                  const totalAmount = isCustom ? units * unitPrice : apBill.totalBill;
+                  const tenantShares = calcAcTenantShares(
+                    units,
+                    unitPrice,
+                    activeTenants,
+                    selectedYear,
+                    selectedMonth,
+                    room.capacity,
+                    totalAmount,
+                    splitType,
+                    splitCount ?? undefined
+                  );
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
                   const currentPayment = payments.find((p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
@@ -1397,6 +1463,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       units,
                       unitPrice,
                       share: currentShare,
+                      startReading,
+                      endReading,
+                      splitType,
+                      splitCount,
                       overdueMonths: overdueAc.map((om) => ({
                         monthLabel: om.monthLabel,
                         share: om.share,
@@ -1414,6 +1484,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       monthLabel: `${months[selectedMonth - 1].label} ${selectedYear}`,
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,
+                      startReading,
+                      endReading,
+                      splitType,
+                      splitCount,
                     };
                   }
                 }
@@ -2137,10 +2211,14 @@ const RentACRoomCard = ({
   total,
   tenantShares,
   isCustom,
+  startReading,
+  endReading,
+  splitType,
+  splitCount,
   onModeToggle,
-  onUnitsChange,
-  onPriceChange,
+  onSaveReading,
   onShare,
+  onTogglePaymentStatus,
 }: {
   roomNo: string;
   tenantCount: number;
@@ -2158,14 +2236,44 @@ const RentACRoomCard = ({
     overdueAcTotal?: number;
   }[];
   isCustom: boolean;
+  startReading: number | null;
+  endReading: number | null;
+  splitType: string;
+  splitCount: number | null;
   onModeToggle: (isCustom: boolean) => void;
-  onUnitsChange: (units: number) => void;
-  onPriceChange: (unitPrice: number) => void;
-  onShare: (units: number, unitPrice: number, customSplitCount?: number, targetTenantName?: string) => void;
+  onSaveReading: (
+    units: number,
+    unitPrice: number,
+    startReading: number | null,
+    endReading: number | null,
+    splitType: string,
+    splitCount: number | null
+  ) => void;
+  onShare: (
+    units: number,
+    unitPrice: number,
+    startReading: number | null,
+    endReading: number | null,
+    splitType: string,
+    splitCount: number | null,
+    targetTenantName?: string
+  ) => void;
   onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
 }) => {
+  const [startReadingDraft, setStartReadingDraft] = useState(startReading !== null ? String(startReading) : "");
+  const [endReadingDraft, setEndReadingDraft] = useState(endReading !== null ? String(endReading) : "");
   const [unitsDraft, setUnitsDraft] = useState(String(units ?? 0));
   const [priceDraft, setPriceDraft] = useState(String(unitPrice ?? 12));
+  const [selectedSplitType, setSelectedSplitType] = useState(splitType || "active_tenants");
+  const [splitCountDraft, setSplitCountDraft] = useState(splitCount !== null ? String(splitCount) : "");
+
+  useEffect(() => {
+    setStartReadingDraft(startReading !== null ? String(startReading) : "");
+  }, [startReading]);
+
+  useEffect(() => {
+    setEndReadingDraft(endReading !== null ? String(endReading) : "");
+  }, [endReading]);
 
   useEffect(() => {
     setUnitsDraft(String(units ?? 0));
@@ -2175,31 +2283,118 @@ const RentACRoomCard = ({
     setPriceDraft(String(unitPrice ?? 12));
   }, [unitPrice]);
 
-  const [splitCountDraft, setSplitCountDraft] = useState("");
+  useEffect(() => {
+    setSelectedSplitType(splitType || "active_tenants");
+  }, [splitType]);
+
+  useEffect(() => {
+    setSplitCountDraft(splitCount !== null ? String(splitCount) : "");
+  }, [splitCount]);
+
   const draftUnits = parseInt(unitsDraft) || 0;
   const draftUnitPrice = parseInt(priceDraft) || 0;
-  const draftSplitCount = parseInt(splitCountDraft) || 0;
+  const startVal = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+  const endVal = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+  const draftSplitCount = splitCountDraft === "" ? null : parseInt(splitCountDraft);
+
   const apBill = calculateAPCommercialBill(draftUnits);
-  const draftTotal = draftSplitCount > 0 || isCustom ? draftUnits * draftUnitPrice : apBill.totalBill;
+  const draftTotal = selectedSplitType === "custom" && draftSplitCount && draftSplitCount > 0
+    ? draftUnits * draftUnitPrice
+    : isCustom
+      ? draftUnits * draftUnitPrice
+      : apBill.totalBill;
+
+  // Day wise shares scaling
   const dayWiseShares = draftTotal > 0
     ? tenantShares.map((tenant) => ({
         ...tenant,
         share: total > 0 ? Math.round((draftTotal * tenant.share) / total) : tenant.share,
       }))
     : tenantShares;
-  const customShare = draftSplitCount > 0 ? Math.round(draftTotal / draftSplitCount) : 0;
+
+  const customShare = selectedSplitType === "custom" && draftSplitCount && draftSplitCount > 0
+    ? Math.round(draftTotal / draftSplitCount)
+    : 0;
+
   const shareValues = dayWiseShares.map((tenant) => tenant.share).filter((share) => share > 0);
   const minShare = shareValues.length ? Math.min(...shareValues) : 0;
   const maxShare = shareValues.length ? Math.max(...shareValues) : 0;
-  const shareLabel = customShare > 0
-    ? `₹${customShare.toLocaleString()} each`
-    : minShare === maxShare
+
+  let shareLabel = "";
+  if (selectedSplitType === "custom" && customShare > 0) {
+    shareLabel = `₹${customShare.toLocaleString()} each`;
+  } else if (selectedSplitType === "capacity") {
+    const activeShare = minShare === maxShare
       ? `₹${minShare.toLocaleString()}`
       : `₹${minShare.toLocaleString()} - ₹${maxShare.toLocaleString()}`;
+    shareLabel = `${activeShare} (Vacancy absorbed)`;
+  } else {
+    shareLabel = minShare === maxShare
+      ? `₹${minShare.toLocaleString()}`
+      : `₹${minShare.toLocaleString()} - ₹${maxShare.toLocaleString()}`;
+  }
+
+  const triggerSave = (
+    newUnits: number,
+    newPrice: number,
+    newStart: number | null,
+    newEnd: number | null,
+    newSplit: string,
+    newSplitCnt: number | null
+  ) => {
+    onSaveReading(newUnits, newPrice, newStart, newEnd, newSplit, newSplitCnt);
+  };
+
+  const handleStartBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    let u = parseInt(unitsDraft) || 0;
+    if (s !== null && e !== null) {
+      u = Math.max(0, e - s);
+      setUnitsDraft(String(u));
+    }
+    triggerSave(u, parseInt(priceDraft) || 0, s, e, selectedSplitType, draftSplitCount);
+  };
+
+  const handleEndBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    let u = parseInt(unitsDraft) || 0;
+    if (s !== null && e !== null) {
+      u = Math.max(0, e - s);
+      setUnitsDraft(String(u));
+    }
+    triggerSave(u, parseInt(priceDraft) || 0, s, e, selectedSplitType, draftSplitCount);
+  };
+
+  const handleUnitsBlur = () => {
+    const u = parseInt(unitsDraft) || 0;
+    triggerSave(u, parseInt(priceDraft) || 0, startVal, endVal, selectedSplitType, draftSplitCount);
+  };
+
+  const handlePriceBlur = () => {
+    triggerSave(draftUnits, parseInt(priceDraft) || 0, startVal, endVal, selectedSplitType, draftSplitCount);
+  };
+
+  const handleSplitTypeChange = (type: string) => {
+    setSelectedSplitType(type);
+    let sCount = draftSplitCount;
+    if (type === 'custom' && !sCount) {
+      sCount = tenantCount || sharingCount;
+      setSplitCountDraft(String(sCount));
+    }
+    triggerSave(draftUnits, draftUnitPrice, startVal, endVal, type, sCount);
+  };
+
+  const handleSplitCountBlur = () => {
+    const sCount = splitCountDraft === "" ? null : parseInt(splitCountDraft);
+    triggerSave(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, sCount);
+  };
 
   return (
     <div className="rounded-lg border border-cyan-500/20 bg-background p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
+      {/* Title & Share button */}
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Snowflake className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-300" />
@@ -2221,6 +2416,7 @@ const RentACRoomCard = ({
             </label>
           </div>
         </div>
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -2234,7 +2430,7 @@ const RentACRoomCard = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem
-              onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined)}
+              onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
               className="cursor-pointer"
             >
               Share Room Bill (All)
@@ -2243,7 +2439,7 @@ const RentACRoomCard = ({
             {dayWiseShares.map((tenant) => (
               <DropdownMenuItem
                 key={tenant.name}
-                onClick={() => onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined, tenant.name)}
+                onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
                 className="cursor-pointer flex items-center justify-between"
               >
                 <span className="truncate">Share with {tenant.name.split(" ")[0]}</span>
@@ -2253,21 +2449,43 @@ const RentACRoomCard = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+
+      {/* Grid of inputs */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 mb-2">
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Units</Label>
+          <Label className="text-[10px] uppercase text-muted-foreground">Prev Reading</Label>
+          <Input
+            type="number"
+            value={startReadingDraft}
+            onChange={(event) => setStartReadingDraft(event.target.value)}
+            onBlur={handleStartBlur}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            placeholder="Start"
+            className="h-8 text-xs px-2"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Curr Reading</Label>
+          <Input
+            type="number"
+            value={endReadingDraft}
+            onChange={(event) => setEndReadingDraft(event.target.value)}
+            onBlur={handleEndBlur}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            placeholder="End"
+            className="h-8 text-xs px-2"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Units Consumed</Label>
           <Input
             type="number"
             value={unitsDraft}
             onChange={(event) => setUnitsDraft(event.target.value)}
-            onBlur={() => onUnitsChange(parseInt(unitsDraft) || 0)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.currentTarget.blur();
-              }
-            }}
+            onBlur={handleUnitsBlur}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
             placeholder="0"
-            className="h-8 text-sm"
+            className="h-8 text-xs px-2"
           />
         </div>
         <div>
@@ -2276,41 +2494,66 @@ const RentACRoomCard = ({
             type="number"
             value={priceDraft}
             onChange={(event) => setPriceDraft(event.target.value)}
-            onBlur={() => onPriceChange(parseInt(priceDraft) || 0)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.currentTarget.blur();
-              }
-            }}
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Total</Label>
-          <div className="flex h-8 items-center text-sm font-semibold">₹{(draftTotal || total).toLocaleString()}</div>
-        </div>
-        <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Split persons</Label>
-          <Input
-            type="number"
-            min="1"
-            value={splitCountDraft}
-            onChange={(event) => setSplitCountDraft(event.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.currentTarget.blur();
-              }
-            }}
-            placeholder="Day-wise"
-            className="h-8 text-sm"
+            onBlur={handlePriceBlur}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            className="h-8 text-xs px-2"
           />
         </div>
       </div>
+
+      {/* Split Strategy Selection */}
+      <div className="grid grid-cols-2 gap-2 mb-2 items-end">
+        <div>
+          <Label className="text-[10px] uppercase text-muted-foreground">Split Strategy</Label>
+          <select
+            value={selectedSplitType}
+            onChange={(e) => handleSplitTypeChange(e.target.value)}
+            className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground w-full cursor-pointer"
+          >
+            <option value="active_tenants">Split by Active Tenants</option>
+            <option value="capacity">Split by Capacity ({sharingCount} sharing)</option>
+            <option value="custom">Split Equally (Custom Count)</option>
+          </select>
+        </div>
+        <div>
+          {selectedSplitType === "custom" ? (
+            <>
+              <Label className="text-[10px] uppercase text-muted-foreground">Persons Count</Label>
+              <Input
+                type="number"
+                min="1"
+                value={splitCountDraft}
+                onChange={(event) => setSplitCountDraft(event.target.value)}
+                onBlur={handleSplitCountBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                placeholder="Count"
+                className="h-8 text-xs px-2"
+              />
+            </>
+          ) : (
+            <div>
+              <Label className="text-[10px] uppercase text-muted-foreground">Total Bill</Label>
+              <div className="flex h-8 items-center text-sm font-bold text-cyan-800 dark:text-cyan-300">
+                ₹{draftTotal.toLocaleString()}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Split Strategy Summary Label */}
       <div className="mt-2 flex items-center justify-between rounded-md bg-cyan-500/5 px-2 py-1.5 text-xs text-muted-foreground">
-        <span>{customShare > 0 ? `Custom equal split by ${draftSplitCount}` : `${sharingCount}-sharing share`}</span>
+        <span>
+          {selectedSplitType === "custom"
+            ? `Custom split by ${draftSplitCount} persons`
+            : selectedSplitType === "capacity"
+              ? `Split by ${sharingCount} slots (capacity)`
+              : `Proportional split by active tenants`}
+        </span>
         <span className="font-bold text-cyan-700 dark:text-cyan-300">{shareLabel}</span>
       </div>
-      {splitCountDraft === "" && dayWiseShares.length > 0 && (
+
+      {dayWiseShares.length > 0 && (
         <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
           {dayWiseShares.map((tenant) => {
             const isPaid = tenant.acPaymentStatus === "Paid";
@@ -2362,7 +2605,7 @@ const RentACRoomCard = ({
                       className={cn("h-6 w-6 p-0 rounded-lg font-medium", shareBtnClass)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onShare(draftUnits, draftUnitPrice, draftSplitCount > 0 ? draftSplitCount : undefined, tenant.name);
+                        onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name);
                       }}
                       title={`Send payment reminder to ${tenant.name}`}
                     >

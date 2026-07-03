@@ -24,6 +24,10 @@ export interface ElectricityReading {
   units: number;
   unit_price: number;
   source: ElectricityReadingSource;
+  start_reading?: number | null;
+  end_reading?: number | null;
+  split_type?: string;
+  split_count?: number | null;
 }
 
 export const useElectricityReadings = (month: number, year: number) => {
@@ -41,7 +45,7 @@ export const useElectricityReadings = (month: number, year: number) => {
         .eq("month", month)
         .eq("year", year);
       if (error) throw error;
-      return ((data || []) as ElectricityReadingRow[]).map((r) => ({
+      return ((data || []) as any[]).map((r) => ({
         id: r.id,
         room_id: r.room_id,
         month: r.month,
@@ -49,6 +53,10 @@ export const useElectricityReadings = (month: number, year: number) => {
         units: r.units,
         unit_price: r.unit_price,
         source: normalizeSource(r.source),
+        start_reading: r.start_reading,
+        end_reading: r.end_reading,
+        split_type: r.split_type || 'active_tenants',
+        split_count: r.split_count,
       })) as ElectricityReading[];
     },
     enabled: !!currentPG?.id,
@@ -62,11 +70,19 @@ export const useElectricityReadings = (month: number, year: number) => {
       units,
       unitPrice,
       source = "manual",
+      startReading = null,
+      endReading = null,
+      splitType = "active_tenants",
+      splitCount = null,
     }: {
       roomId: string;
       units: number;
       unitPrice: number;
       source?: ElectricityReading["source"];
+      startReading?: number | null;
+      endReading?: number | null;
+      splitType?: string;
+      splitCount?: number | null;
     }) => {
       const payload = {
         room_id: roomId,
@@ -74,6 +90,10 @@ export const useElectricityReadings = (month: number, year: number) => {
         year,
         units,
         unit_price: unitPrice,
+        start_reading: startReading,
+        end_reading: endReading,
+        split_type: splitType,
+        split_count: splitCount,
       };
       const { error } = await supabase
         .from("room_electricity_readings")
@@ -95,7 +115,7 @@ export const useElectricityReadings = (month: number, year: number) => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["electricity_readings", currentPG?.id, month, year] });
-
+      qc.invalidateQueries({ queryKey: ["all_electricity_readings", currentPG?.id] });
     },
     onError: (e: unknown) => {
       const message = e instanceof Error ? e.message : "Unable to save electricity reading";
@@ -274,6 +294,8 @@ export const calcAcTenantShares = (
   month: number,
   sharingCount?: number,
   customTotalAmount?: number,
+  splitType: string = 'active_tenants',
+  splitCount?: number,
 ): AcTenantShare[] => {
   const totalAmount = customTotalAmount !== undefined ? customTotalAmount : units * unitPrice;
   if (totalAmount <= 0) return [];
@@ -286,10 +308,37 @@ export const calcAcTenantShares = (
     }))
     .filter((tenant) => tenant.daysStayed > 0);
 
-  const totalDays = tenantDays.reduce((sum, tenant) => sum + tenant.daysStayed, 0);
-  if (totalDays <= 0) return [];
+  if (tenantDays.length <= 0) return [];
 
+  // Strategy 1: custom split count
+  if (splitType === 'custom' && splitCount && splitCount > 0) {
+    return tenantDays.map((tenant) => {
+      // Split equally, but scaled by the stay duration fraction in the month
+      const stayFraction = tenant.daysStayed / daysInMonth;
+      return {
+        ...tenant,
+        share: Math.round((totalAmount / splitCount) * stayFraction),
+      };
+    });
+  }
+
+  // Strategy 2: room capacity split
+  if (splitType === 'capacity') {
+    const cap = sharingCount && sharingCount > 0 ? sharingCount : 1;
+    return tenantDays.map((tenant) => {
+      // Each tenant pays their share of the capacity scaled by stay duration
+      const stayFraction = tenant.daysStayed / daysInMonth;
+      return {
+        ...tenant,
+        share: Math.round((totalAmount / cap) * stayFraction),
+      };
+    });
+  }
+
+  // Strategy 3: active tenants (default/proportional)
   const capacity = sharingCount && sharingCount > 0 ? sharingCount : 0;
+  const totalDays = tenantDays.reduce((sum, tenant) => sum + tenant.daysStayed, 0);
+
   if (capacity > 0 && tenantDays.length > capacity) {
     const slotAmount = totalAmount / capacity;
     const fullMonthTenants = tenantDays
@@ -315,6 +364,7 @@ export const calcAcTenantShares = (
     }
   }
 
+  if (totalDays <= 0) return [];
   return tenantDays.map((tenant) => ({
     ...tenant,
     share: Math.round((totalAmount * tenant.daysStayed) / totalDays),
