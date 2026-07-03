@@ -15,6 +15,7 @@ import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/ut
 import { calculateProRataRent } from '@/utils/proRataRent';
 import { Button } from '@/components/ui/button';
 import { Phone, MessageCircle, ArrowLeft, History, Receipt, Bell, CreditCard } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
