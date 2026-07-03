@@ -587,14 +587,21 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                   setReminderDialogOpen(true);
                 };
 
+                const bgClass = tenant.status === 'Partial'
+                  ? 'bg-partial-muted border-l-4 border-partial'
+                  : 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid';
+                const textClass = tenant.status === 'Partial'
+                  ? 'text-partial font-bold'
+                  : 'text-advance-not-paid font-bold';
+
                 return (
                   <div 
                     key={tenant.id} 
-                    className="p-4 rounded-xl bg-advance-not-paid/20 border-l-4 border-advance-not-paid"
+                    className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{tenant.name}</span>
+                        <span className="font-semibold text-sm">{tenant.name}</span>
                         {hasPhone && (
                           <>
                             <a 
@@ -635,42 +642,46 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                           </>
                         )}
                       </div>
-                      <span className="font-bold text-lg text-advance-not-paid">₹{tenant.remaining.toLocaleString()}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground mb-2">Room {tenant.roomNo}</div>
-                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3">
-                      <div>Rent: <span className="text-foreground font-medium">₹{tenant.monthlyRent.toLocaleString()}</span></div>
-                      <div>Paid: <span className="text-paid font-medium">₹{tenant.amountPaid.toLocaleString()}</span></div>
-                      <div>Balance: <span className="text-advance-not-paid font-medium">₹{tenant.remaining.toLocaleString()}</span></div>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        tenant.status === 'Pending' 
-                          ? 'bg-advance-not-paid/20 text-advance-not-paid' 
-                          : 'bg-partial/20 text-partial'
-                      }`}>
-                        {tenant.status}
+                      <span className={cn("text-sm", textClass)}>
+                        ₹{tenant.remaining.toLocaleString()}
                       </span>
-                      <Button 
-                        size="sm" 
+                    </div>
+
+                    <div className="text-xs text-muted-foreground mb-2">Room {tenant.roomNo}</div>
+
+                    <div className="flex justify-between items-end mt-2">
+                      <div className="space-y-0.5">
+                        <div className="text-xs text-muted-foreground">
+                          Joined: {format(new Date(tenant.startDate), "dd MMM yyyy")}
+                        </div>
+                        {/* Display payment entries if partial */}
+                        {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
+                          <div className="mt-1 space-y-1">
+                            {tenant.paymentEntries.map((entry, idx) => (
+                              <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span>
+                                  Paid: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), "dd MMM yyyy")}
+                                </span>
+                                {entry.mode && (
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                                    {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7 px-3 bg-background hover:bg-muted text-foreground border-border"
                         onClick={() => handleMarkPaidClick(tenant)}
                         disabled={upsertPayment.isPending}
-                        className="gap-1"
                       >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Pay Now
+                        Mark Paid
                       </Button>
                     </div>
-                    {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
-                      <div className="text-xs mt-2 text-paid">
-                        Paid: {tenant.paymentEntries.map((entry, idx) => (
-                          <span key={idx}>
-                            {idx > 0 && ' + '}
-                            {format(new Date(entry.date), 'dd MMM')} (₹{entry.amount.toLocaleString()})
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -684,70 +695,84 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                   <div className="space-y-3">
                     {leftUnpaidTenants.map(tenant => {
                       const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
-                      
-                      return (
-                        <div 
-                          key={tenant.id} 
-                          className="p-4 rounded-xl bg-destructive/10 border-l-4 border-destructive"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{tenant.name}</span>
-                              <span className="text-xs px-2 py-0.5 rounded bg-destructive/20 text-destructive">LEFT</span>
-                              {hasPhone && (
-                                <a 
-                                  href={`tel:${tenant.phone}`}
-                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                >
-                                  <Phone className="h-4 w-4" />
-                                </a>
+                      const bgClass = tenant.status === 'Partial'
+                          ? 'bg-partial-muted border-l-4 border-partial'
+                          : 'bg-destructive/10 border-l-4 border-destructive';
+                        const textClass = tenant.status === 'Partial'
+                          ? 'text-partial font-bold'
+                          : 'text-destructive font-bold';
+
+                        return (
+                          <div 
+                            key={tenant.id} 
+                            className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-sm">{tenant.name}</span>
+                                <span className="text-xs px-2 py-0.5 rounded bg-destructive/20 text-destructive font-medium">LEFT</span>
+                                {hasPhone && (
+                                  <a 
+                                    href={`tel:${tenant.phone}`}
+                                    className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  >
+                                    <Phone className="h-4 w-4" />
+                                  </a>
+                                )}
+                              </div>
+                              <span className={cn("text-sm", textClass)}>
+                                ₹{tenant.remaining.toLocaleString()}
+                              </span>
+                            </div>
+
+                            <div className="text-xs text-muted-foreground mb-2">
+                              Room {tenant.roomNo}
+                              {tenant.endDate && (
+                                <span className="ml-2">• Left: {format(new Date(tenant.endDate), 'dd MMM yyyy')}</span>
                               )}
                             </div>
-                            <span className="font-bold text-lg text-destructive">₹{tenant.remaining.toLocaleString()}</span>
-                          </div>
-                          <div className="text-sm text-muted-foreground mb-2">
-                            Room {tenant.roomNo}
-                            {tenant.endDate && (
-                              <span className="ml-2">• Left: {format(new Date(tenant.endDate), 'dd MMM yyyy')}</span>
+
+                            {tenant.proRataInfo && (
+                              <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/40 rounded max-w-max">
+                                Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
+                              </div>
                             )}
-                          </div>
-                          {/* Pro-rata breakdown for left tenants */}
-                          {tenant.proRataInfo && (
-                            <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/30 rounded">
-                              Pro-rata: {tenant.proRataInfo.daysStayed} days × ₹{tenant.proRataInfo.dailyRate}/day = ₹{tenant.proRataInfo.effectiveRent.toLocaleString()}
+
+                            <div className="flex justify-between items-end mt-2">
+                              <div className="space-y-0.5">
+                                <div className="text-xs text-muted-foreground">
+                                  Joined: {format(new Date(tenant.startDate), "dd MMM yyyy")}
+                                </div>
+                                {/* Display payment entries if partial */}
+                                {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
+                                  <div className="mt-1 space-y-1">
+                                    {tenant.paymentEntries.map((entry, idx) => (
+                                      <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <span>
+                                          Paid: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), "dd MMM yyyy")}
+                                        </span>
+                                        {entry.mode && (
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                                            {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleMarkPaidClick(tenant)}
+                                disabled={upsertPayment.isPending}
+                                className="text-xs h-7 px-3"
+                              >
+                                Mark Paid
+                              </Button>
                             </div>
-                          )}
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              tenant.status === 'Pending' 
-                                ? 'bg-destructive/20 text-destructive' 
-                                : 'bg-partial/20 text-partial'
-                            }`}>
-                              {tenant.status}
-                            </span>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleMarkPaidClick(tenant)}
-                              disabled={upsertPayment.isPending}
-                              className="gap-1"
-                            >
-                              <CreditCard className="h-3.5 w-3.5" />
-                              Pay Now
-                            </Button>
                           </div>
-                          {tenant.status === 'Partial' && tenant.paymentEntries.length > 0 && (
-                            <div className="text-xs mt-2 text-paid">
-                              Paid: {tenant.paymentEntries.map((entry, idx) => (
-                                <span key={idx}>
-                                  {idx > 0 && ' + '}
-                                  {format(new Date(entry.date), 'dd MMM')} (₹{entry.amount.toLocaleString()})
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
+                        );
                     })}
                   </div>
                 </div>
