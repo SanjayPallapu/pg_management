@@ -168,6 +168,11 @@ export const KeyNumbersCard = () => {
     updateKeyNumber.mutate({ id: editingId, serial_number: editSerial.trim(), room_number: editRoom.trim() });
   };
 
+  const filteredKeyNumbers = keyNumbers.filter(k => 
+    (k.serial_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (k.room_number || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <Card 
