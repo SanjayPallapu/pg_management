@@ -137,7 +137,12 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
           <>
             <div style={{ fontSize: 12, color: "#075985", fontWeight: 500, marginBottom: 4 }}>Your Share</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#0c4a6e" }}>
-              {fmt(data.tenants.find(t => t.name === data.tenantName)?.share ?? data.totalAmount)}
+              {(() => {
+                const tenant = data.tenants.find(t => t.name === data.tenantName || t.name.startsWith(data.tenantName + " ("));
+                const baseShare = tenant?.share ?? 0;
+                const overdue = (tenant as any)?.overdueAcTotal ?? 0;
+                return fmt(baseShare + overdue);
+              })()}
             </div>
             <div style={{ fontSize: 12, color: "#075985", marginTop: 4 }}>{data.monthLabel} • Room {data.roomNo}</div>
             <div style={{ fontSize: 10, color: "#075985", opacity: 0.8, marginTop: 4 }}>
@@ -171,12 +176,30 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            {data.tenants.map((t, i) => (
-              <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 500 }}>{t.name}</td>
-                <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 600, textAlign: "right" }}>{fmt(t.share)}</td>
-              </tr>
-            ))}
+            {data.tenants.map((t: any, i) => {
+              const hasOverdue = t.overdueAcTotal && t.overdueAcTotal > 0;
+              const totalTenantDue = t.share + (t.overdueAcTotal || 0);
+              return (
+                <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 500, verticalAlign: "top" }}>
+                    <div>{t.name}</div>
+                    {t.overdueAc && t.overdueAc.map((om: any) => (
+                      <div key={om.monthLabel} style={{ fontSize: 10, color: "#b45309", marginTop: 2 }}>
+                        ↳ Overdue AC ({om.monthLabel}): {fmt(om.share)}
+                      </div>
+                    ))}
+                  </td>
+                  <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 600, textAlign: "right", verticalAlign: "top" }}>
+                    <div>{fmt(t.share)}</div>
+                    {hasOverdue && (
+                      <div style={{ fontSize: 11, color: "#b45309", fontWeight: 700, marginTop: 2 }}>
+                        Total: {fmt(totalTenantDue)}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

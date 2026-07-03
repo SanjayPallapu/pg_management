@@ -221,7 +221,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
 
-  const getOverdueAcBills = (tenantId: string, room: Room) => {
+  const getOverdueAcBills = (
+    tenantId: string, 
+    room: Room, 
+    refMonth: number = selectedMonth, 
+    refYear: number = selectedYear
+  ) => {
     const overdue: { month: number; year: number; share: number; monthLabel: string }[] = [];
     const tenant = room.tenants.find((t) => t.id === tenantId);
     if (!tenant) return overdue;
@@ -230,7 +235,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const now = new Date();
     const currentM = now.getMonth() + 1;
     const currentY = now.getFullYear();
-    const isPastMonth = acYear < currentY || (acYear === currentY && acMonth < currentM);
+    const isPastMonth = refYear < currentY || (refYear === currentY && refMonth < currentM);
     if (isPastMonth) {
       return [];
     }
@@ -238,11 +243,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const joinDate = new Date(tenant.startDate);
     const checkMonths: { month: number; year: number }[] = [];
     
-    let curM = selectedMonth - 1;
-    let curY = selectedYear;
+    let curM = refMonth - 1;
+    let curY = refYear;
     if (curM === 0) {
       curM = 12;
-      curY = selectedYear - 1;
+      curY = refYear - 1;
     }
 
     const currentDate = new Date();
@@ -273,7 +278,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             isTenantActiveInMonth(t.startDate, t.endDate, y, m)
           );
           const apBill = calculateAPCommercialBill(reading.units);
-          const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom";
+          const splitType = reading.split_type || 'active_tenants';
+          const splitCount = reading.split_count ?? undefined;
+          const isCustom = localStorage.getItem(`ac_bill_mode_${room.id}`) === "custom" || splitType === "custom";
           const totalAmount = isCustom ? reading.units * reading.unit_price : apBill.totalBill;
 
           const shares = calcAcTenantShares(
@@ -283,7 +290,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             y,
             m,
             room.capacity,
-            totalAmount
+            totalAmount,
+            splitType,
+            splitCount
           );
           const myShare = shares.find((s) => s.name === tenant.name)?.share || 0;
           if (myShare > 0) {
@@ -634,11 +643,29 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
         const isCustom = !!customModeRooms[room.id];
         const apBill = calculateAPCommercialBill(units);
-        const total = isCustom ? units * unitPrice : apBill.totalBill;
-        const baseShares = calcAcTenantShares(units, unitPrice, activeTenants, acYear, acMonth, room.capacity, total);
+        const splitType = reading?.split_type || 'active_tenants';
+        const splitCount = reading?.split_count ?? null;
+
+        const total = splitType === 'custom' && splitCount && splitCount > 0
+          ? units * unitPrice
+          : isCustom
+            ? units * unitPrice
+            : apBill.totalBill;
+
+        const baseShares = calcAcTenantShares(
+          units,
+          unitPrice,
+          activeTenants,
+          acYear,
+          acMonth,
+          room.capacity,
+          total,
+          splitType,
+          splitCount ?? undefined
+        );
         const tenantShares = baseShares.map((share) => {
           const tenantObj = activeTenants.find((t) => t.name === share.name);
-          const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, room) : [];
+          const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, room, acMonth, acYear) : [];
           const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
           const payment = tenantObj ? payments.find((p) => p.tenantId === tenantObj.id && p.month === acMonth && p.year === acYear) : undefined;
           return {
@@ -649,7 +676,34 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             overdueAcTotal,
           };
         });
-        return { room, activeTenants, units, unitPrice, total, tenantShares, isCustom };
+
+        let prevMonth = acMonth - 1;
+        let prevYear = acYear;
+        if (prevMonth === 0) {
+          prevMonth = 12;
+          prevYear = acYear - 1;
+        }
+        const prevReading = allReadings.find((r) => r.room_id === room.id && r.month === prevMonth && r.year === prevYear);
+        const autoStartReading = prevReading?.end_reading ?? null;
+
+        const startReading = reading?.start_reading !== undefined && reading?.start_reading !== null
+          ? reading.start_reading
+          : autoStartReading;
+        const endReading = reading?.end_reading ?? null;
+
+        return {
+          room,
+          activeTenants,
+          units,
+          unitPrice,
+          total,
+          tenantShares,
+          isCustom,
+          startReading,
+          endReading,
+          splitType,
+          splitCount,
+        };
       });
   }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms, payments, allReadings]);
 
@@ -706,15 +760,24 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       splitCount ?? undefined
     );
 
+    const tenantsWithOverdue = tenantShares.map((share) => {
+      const tenantObj = item.activeTenants.find((t) => t.name === share.name);
+      const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, item.room, acMonth, acYear) : [];
+      const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+      return {
+        name: share.daysStayed > 0 ? `${share.name} (${share.daysStayed}d)` : share.name,
+        share: share.share,
+        overdueAc,
+        overdueAcTotal,
+      };
+    });
+
     setAcShareData({
       roomNo: item.room.roomNo,
       units: draftUnits,
       unitPrice: draftUnitPrice,
       totalAmount: total,
-      tenants: tenantShares.map((tenant) => ({
-        name: tenant.daysStayed > 0 ? `${tenant.name} (${tenant.daysStayed}d)` : tenant.name,
-        share: tenant.share,
-      })),
+      tenants: tenantsWithOverdue,
       monthLabel: `${MONTHS[acMonth - 1]?.label} ${acYear}`,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
