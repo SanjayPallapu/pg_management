@@ -25,6 +25,7 @@ import {
   PartyPopper,
   BookOpen,
   ChevronDown,
+  ChevronRight,
   Send,
   Snowflake,
   ArrowLeft,
@@ -57,6 +58,7 @@ import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { PreviousOverdueSheet } from "./PreviousOverdueSheet";
 import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
+import { ACElectricitySheet } from "./ACElectricitySheet";
 import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
@@ -94,13 +96,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [acYear, setAcYear] = useState(selectedYear);
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
   const { data: allReadings = [] } = useAllElectricityReadings();
-  const [acSectionOpen, setAcSectionOpen] = useState(false);
+  const [acSheetOpen, setAcSheetOpen] = useState(false);
   
   useEffect(() => {
     setAcMonth(selectedMonth);
     setAcYear(selectedYear);
   }, [selectedMonth, selectedYear]);
-  const [previousDuesOpen, setPreviousDuesOpen] = useState(false);
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
   const [splitMode, setSplitMode] = useState(false);
@@ -1236,8 +1237,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 month={selectedMonth}
                 year={selectedYear}
                 onSelect={(roomNo) => {
-                  setPreviousDuesOpen(false);
-                  setAcSectionOpen(false);
                   setSearchQuery(roomNo);
                   setTimeout(() => {
                     const el = document.querySelector(`[data-room-no="${roomNo}"]`);
@@ -1249,136 +1248,52 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           </Collapsible>
 
           {showPreviousDuesPanel && !activeRoomFilter && (
-            <Collapsible open={previousDuesOpen} onOpenChange={setPreviousDuesOpen} className="mb-4">
-              <Card className="border-amber-500/25 bg-amber-500/5">
-                <CollapsibleTrigger asChild>
-                  <button className="flex w-full items-center justify-between px-3 py-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10">
-                        <History className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">Previous Dues</div>
-                        <div className="text-xs text-muted-foreground">
-                          {previousMonthOverdue.count > 0
-                            ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
-                            : "No pending dues"}
-                          {previousOverdueCollections.count > 0 &&
-                            ` · ${previousOverdueCollections.count} collected · ₹${previousOverdueCollections.total.toLocaleString()}`}
-                        </div>
-                      </div>
+            <Card
+              className="border-amber-500/25 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors mb-4"
+              onClick={() => setPreviousOverdueOpen(true)}
+            >
+              <div className="flex w-full items-center justify-between px-3 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10">
+                    <History className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">Previous Dues</div>
+                    <div className="text-xs text-muted-foreground">
+                      {previousMonthOverdue.count > 0
+                        ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
+                        : "No pending dues"}
+                      {previousOverdueCollections.count > 0 &&
+                        ` · ${previousOverdueCollections.count} collected · ₹${previousOverdueCollections.total.toLocaleString()}`}
                     </div>
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", previousDuesOpen && "rotate-180")} />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-3 px-3 pb-3 pt-0">
-                    <PreviousMonthOverdueCard />
-                    <OverduePaidCard rooms={rooms} />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </Card>
           )}
 
           {/* AC Electricity */}
           {acRooms.length > 0 && !activeRoomFilter && (
-            <Collapsible open={acSectionOpen} onOpenChange={setAcSectionOpen} className="mb-4">
-              <Card className="border-cyan-500/25 bg-cyan-500/5">
-                <CollapsibleTrigger asChild>
-                  <button className="flex w-full items-center justify-between px-3 py-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10">
-                        <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">AC Electricity</div>
-                        <div className="text-xs text-muted-foreground">
-                          {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
-                        </div>
-                      </div>
+            <Card
+              className="border-cyan-500/25 bg-cyan-500/5 cursor-pointer hover:bg-cyan-500/10 transition-colors mb-4"
+              onClick={() => setAcSheetOpen(true)}
+            >
+              <div className="flex w-full items-center justify-between px-3 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10">
+                    <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-cyan-800 dark:text-cyan-300">AC Electricity Billing</div>
+                    <div className="text-xs text-muted-foreground">
+                      {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
                     </div>
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", acSectionOpen && "rotate-180")} />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-2 px-3 pb-3 pt-0">
-                    <div className="flex items-center justify-between mb-3 bg-cyan-500/5 p-2 rounded-lg border border-cyan-500/15">
-                      <Label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300">AC Bill Month:</Label>
-                      <div className="flex items-center gap-1">
-                        <select
-                          value={acMonth}
-                          onChange={(e) => setAcMonth(parseInt(e.target.value))}
-                          className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
-                        >
-                          {months.map((m) => (
-                            <option key={m.value} value={m.value}>
-                              {m.label}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={acYear}
-                          onChange={(e) => setAcYear(parseInt(e.target.value))}
-                          className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
-                        >
-                          {years.map((y) => (
-                            <option key={y} value={y}>
-                              {y}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    {acRooms.map((item) => (
-                      <RentACRoomCard
-                        key={item.room.id}
-                        roomNo={item.room.roomNo}
-                        tenantCount={item.activeTenants.length}
-                        sharingCount={item.room.capacity}
-                        units={item.units}
-                        unitPrice={item.unitPrice}
-                        total={item.total}
-                        tenantShares={item.tenantShares}
-                        isCustom={item.isCustom}
-                        startReading={item.startReading}
-                        endReading={item.endReading}
-                        splitType={item.splitType}
-                        splitCount={item.splitCount}
-                        onModeToggle={(isCustom) => {
-                          localStorage.setItem(`ac_bill_mode_${item.room.id}`, isCustom ? "custom" : "commercial");
-                          setCustomModeRooms((prev) => ({ ...prev, [item.room.id]: isCustom }));
-                        }}
-                        onSaveReading={(units, unitPrice, startReading, endReading, splitType, splitCount) => {
-                          setReading.mutate({
-                            roomId: item.room.id,
-                            units,
-                            unitPrice,
-                            startReading,
-                            endReading,
-                            splitType,
-                            splitCount,
-                          });
-                        }}
-                        onShare={(units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName) => {
-                          handleShareAC(
-                            item,
-                            units,
-                            unitPrice,
-                            startReading,
-                            endReading,
-                            splitType,
-                            splitCount,
-                            targetTenantName
-                          );
-                        }}
-                        onTogglePaymentStatus={handleToggleAcPaymentStatus}
-                      />
-                    ))}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </Card>
           )}
 
           {/* Search Bar */}
@@ -2234,6 +2149,35 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Previous Month Overdue Sheet */}
       <PreviousOverdueSheet open={previousOverdueOpen} onOpenChange={setPreviousOverdueOpen} />
 
+      {/* AC Electricity Sheet */}
+      <ACElectricitySheet
+        open={acSheetOpen}
+        onOpenChange={setAcSheetOpen}
+        acRooms={acRooms}
+        acMonth={acMonth}
+        acYear={acYear}
+        setAcMonth={setAcMonth}
+        setAcYear={setAcYear}
+        setReading={setReading}
+        customModeRooms={customModeRooms}
+        setCustomModeRooms={setCustomModeRooms}
+        onShare={(item, units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName) => {
+          handleShareAC(
+            item,
+            units,
+            unitPrice,
+            startReading,
+            endReading,
+            splitType,
+            splitCount,
+            targetTenantName
+          );
+        }}
+        onTogglePaymentStatus={handleToggleAcPaymentStatus}
+        months={months}
+        years={years}
+      />
+
       {/* Payment History Sheet */}
       <PaymentHistorySheet open={historyOpen} onOpenChange={setHistoryOpen} />
 
@@ -2265,7 +2209,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   );
 };
 
-const RentACRoomCard = ({
+export const RentACRoomCard = ({
   roomNo,
   tenantCount,
   sharingCount,
