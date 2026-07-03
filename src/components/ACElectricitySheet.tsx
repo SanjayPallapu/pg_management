@@ -64,12 +64,12 @@ export const ACElectricitySheet = ({
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10 shrink-0">
-                <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+              <div className="flex items-center gap-1.5 flex-1">
+                <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300 shrink-0" />
+                <SheetTitle className="text-base text-cyan-800 dark:text-cyan-300">
+                  AC Electricity Bill
+                </SheetTitle>
               </div>
-              <SheetTitle className="text-base text-cyan-800 dark:text-cyan-300 flex-1">
-                AC Electricity Management
-              </SheetTitle>
             </div>
             <div className="flex items-center gap-1.5 mt-2 px-1 text-xs font-medium">
               <span className="text-muted-foreground mr-0.5">AC Bill Month:</span>
