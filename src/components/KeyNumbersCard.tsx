@@ -24,6 +24,15 @@ export const KeyNumbersCard = () => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const handleClose = () => {
+      setIsOpen(false);
+      setIsBulkOpen(false);
+    };
+    window.addEventListener('tab-click', handleClose);
+    return () => window.removeEventListener('tab-click', handleClose);
+  }, []);
   const [editMode, setEditMode] = useState(false);
   const [newSerial, setNewSerial] = useState('');
   const [newRoom, setNewRoom] = useState('');
@@ -176,20 +185,25 @@ export const KeyNumbersCard = () => {
   return (
     <>
       <Card 
-        className="cursor-pointer transition-all duration-200 hover:bg-muted/55 border border-border/40"
+        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
         onClick={() => setIsOpen(true)}
       >
         <CardContent className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl text-primary shrink-0">
-              <Key className="h-5 w-5" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+              <Key className="h-4 w-4 text-primary" />
             </div>
             <div className="text-left">
-              <h4 className="text-sm font-semibold text-foreground">Room Key Numbers</h4>
-              <p className="text-xs text-muted-foreground">{keyNumbers.length} keys configured</p>
+              <span className="block font-semibold text-sm">Room Key Numbers</span>
+              <span className="text-xs text-muted-foreground">Manage serial numbers for room keys</span>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground animate-pulse" />
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+              {keyNumbers.length} keys
+            </span>
+            <span className="text-xs text-primary font-medium">Open →</span>
+          </div>
         </CardContent>
       </Card>
 
@@ -330,43 +344,40 @@ export const KeyNumbersCard = () => {
                     ))
                   )}
 
-                  {/* Add new row in edit mode */}
-                  {editMode && (
-                    <div className="flex items-center gap-1.5 pt-3 border-t mt-4 justify-between flex-wrap sm:flex-nowrap">
-                      <div className="flex items-center gap-1 flex-1">
-                        <Input
-                          value={newSerial}
-                          onChange={(e) => setNewSerial(e.target.value)}
-                          className="h-8 text-xs w-28"
-                          placeholder="Serial #"
-                        />
-                        <span className="text-muted-foreground">-</span>
-                        <Input
-                          value={newRoom}
-                          onChange={(e) => setNewRoom(e.target.value)}
-                          className="h-8 text-xs w-20"
-                          placeholder="Room"
-                        />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={handleAdd}
-                          disabled={!newSerial.trim() || !newRoom.trim()}
-                        >
-                          <Plus className="h-5 w-5 text-paid" />
-                        </Button>
-                      </div>
+                  <div className="flex items-center gap-1.5 pt-3 border-t mt-4 justify-between flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-1 flex-1">
+                      <Input
+                        value={newSerial}
+                        onChange={(e) => setNewSerial(e.target.value)}
+                        className="h-8 text-xs w-28"
+                        placeholder="Serial #"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input
+                        value={newRoom}
+                        onChange={(e) => setNewRoom(e.target.value)}
+                        className="h-8 text-xs w-20"
+                        placeholder="Room"
+                      />
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs px-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
-                        onClick={() => setIsBulkOpen(true)}
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={handleAdd}
+                        disabled={!newSerial.trim() || !newRoom.trim()}
                       >
-                        Bulk Add
+                        <Plus className="h-5 w-5 text-paid" />
                       </Button>
                     </div>
-                  )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs px-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={() => setIsBulkOpen(true)}
+                    >
+                      Bulk Add
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

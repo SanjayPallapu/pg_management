@@ -18,6 +18,7 @@ import {
   MessageCircle,
   Loader2,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import { usePG } from "@/contexts/PGContext";
 
@@ -42,8 +43,17 @@ const FIXED_CHARGES = [
 const fmt = (n: number) => `₹${Math.floor(n).toLocaleString("en-IN")}`;
 
 export const BillUnitPricesCard = () => {
+  const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClose = () => {
+      setOpen(false);
+    };
+    window.addEventListener('tab-click', handleClose);
+    return () => window.removeEventListener('tab-click', handleClose);
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -117,36 +127,41 @@ export const BillUnitPricesCard = () => {
     <>
       {/* Summary Card */}
       <Card
-        className="cursor-pointer transition-colors hover:bg-accent/50"
+        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
         onClick={() => {
           setOpen(true);
           setGeneratedImage(null);
         }}
       >
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center justify-between text-sm font-medium">
-            <div className="flex items-center gap-2">
-              <IndianRupee className="h-4 w-4 text-muted-foreground" />
-              Bill Unit Prices
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+              <IndianRupee className="h-4 w-4 text-primary" />
             </div>
-            <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-1 rounded">
+            <div className="text-left">
+              <span className="block font-semibold text-sm">Bill Unit Prices</span>
+              <span className="text-xs text-muted-foreground">View current electricity rates & share via WhatsApp</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
               {AP_SLABS.length} slabs
             </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            View current electricity rates & share via WhatsApp
-          </p>
+            <span className="text-xs text-primary font-medium">Open →</span>
+          </div>
         </CardContent>
       </Card>
 
       {/* Full Sheet */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent>
-          {/* Header */}
-          <SheetHeader className="border-b px-4 py-4 space-y-0">
-            <div className="flex items-center gap-2">
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            {/* Header */}
+            <SheetHeader className="border-b bg-background px-4 py-4 space-y-0 shrink-0">
+              <div className="flex items-center gap-2">
               <Button
                 size="icon"
                 variant="ghost"
@@ -169,8 +184,8 @@ export const BillUnitPricesCard = () => {
             </div>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 px-4">
-            <div className="space-y-5 py-4">
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 bg-background">
+              <div className="space-y-5 pb-12">
               {/* Electricity Slabs Section */}
               <div>
                 <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
@@ -295,7 +310,8 @@ export const BillUnitPricesCard = () => {
                 )}
               </div>
             </div>
-          </ScrollArea>
+          </div>
+          </div>
         </SheetContent>
       </Sheet>
 

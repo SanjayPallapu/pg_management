@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Calculator, History, Delete, Trash2, ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalculationHistory {
   expression: string;
@@ -18,6 +19,7 @@ interface CalculatorCardProps {
 }
 
 export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }: CalculatorCardProps = {}) => {
+  const isMobile = useIsMobile();
   const [internalOpen, setInternalOpen] = useState(false);
   const sheetOpen = externalOpen !== undefined ? externalOpen : internalOpen;
   const setSheetOpen = (open: boolean) => {
@@ -251,101 +253,109 @@ export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }:
     <>
       {!hideCard && (
         <Card 
-          className="cursor-pointer transition-colors hover:bg-accent/50"
+          className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
           onClick={() => setSheetOpen(true)}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Calculator</CardTitle>
-            <Calculator className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold font-mono">
-              {history.length > 0 ? history[0].result : '0'}
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                <Calculator className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Calculator</span>
+                <span className="text-xs text-muted-foreground">
+                  {history.length > 0 
+                    ? `Last: ${history[0].expression} = ${history[0].result}` 
+                    : 'Simple calculator for monthly dues calculations'}
+                </span>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {history.length > 0 
-                ? `Last: ${history[0].expression}` 
-                : 'Tap to open calculator'}
-            </p>
+            <span className="text-xs text-primary font-medium shrink-0">Open →</span>
           </CardContent>
         </Card>
       )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetOpen(false)}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <SheetTitle>Calculator</SheetTitle>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowHistory(!showHistory)}
-              >
-                <History className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
-
-          {showHistory ? (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">History</h3>
-                {history.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearHistory}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Clear All
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetOpen(false)}>
+                    <ArrowLeft className="h-5 w-5" />
                   </Button>
-                )}
+                  <SheetTitle className="text-base text-foreground font-bold text-left">Calculator</SheetTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  <History className="h-4 w-4" />
+                </Button>
               </div>
-              <ScrollArea className="h-[calc(80vh-150px)]">
-                {history.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No calculations yet</p>
-                ) : (
-                  <div className="space-y-2 pr-4">
-                    {history.map((item, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-muted/50 border">
-                        <div className="text-sm text-muted-foreground font-mono">{item.expression}</div>
-                        <div className="text-xl font-bold font-mono">= {item.result}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {item.timestamp.toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-4">
-              {/* Display */}
-              <div className="p-4 rounded-lg bg-muted/50 border text-right">
-                <div className="text-sm text-muted-foreground font-mono truncate">{expression || '0'}</div>
-                <div className="text-3xl font-bold font-mono truncate">{display}</div>
-              </div>
+            </SheetHeader>
 
-              {/* Buttons */}
-              <div className="grid grid-cols-4 gap-2">
-                {buttons.flat().map((btn, idx) => {
-                  if (!btn) return <div key={idx} />;
-                  return (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      className={`h-14 text-xl font-medium ${getButtonClass(btn)}`}
-                      onClick={() => handleButtonClick(btn)}
-                    >
-                      {btn === '⌫' ? <Delete className="h-5 w-5" /> : btn}
-                    </Button>
-                  );
-                })}
-              </div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 bg-background">
+              {showHistory ? (
+                <div className="px-2.5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm">History</h3>
+                    {history.length > 0 && (
+                      <Button variant="ghost" size="sm" onClick={clearHistory} className="h-8 text-xs">
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
+                  {history.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8 text-sm">No calculations yet</p>
+                  ) : (
+                    <div className="space-y-2 pb-12">
+                      {history.map((item, idx) => (
+                        <div key={idx} className="p-3 rounded-lg bg-muted/30 border border-border/30 text-left">
+                          <div className="text-xs text-muted-foreground font-mono">{item.expression}</div>
+                          <div className="text-lg font-bold font-mono text-foreground">= {item.result}</div>
+                          <div className="text-[10px] text-muted-foreground mt-1">
+                            {item.timestamp.toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="px-2.5 space-y-4 pb-12">
+                  {/* Display */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border/30 text-right">
+                    <div className="text-xs text-muted-foreground font-mono truncate">{expression || '0'}</div>
+                    <div className="text-2xl font-bold font-mono truncate text-foreground">{display}</div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {buttons.flat().map((btn, idx) => {
+                      if (!btn) return <div key={idx} />;
+                      return (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          className={`h-14 text-lg font-medium border-border/30 ${getButtonClass(btn)}`}
+                          onClick={() => handleButtonClick(btn)}
+                        >
+                          {btn === '⌫' ? <Delete className="h-5 w-5" /> : btn}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </SheetContent>
       </Sheet>
     </>

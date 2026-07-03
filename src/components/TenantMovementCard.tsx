@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Room, Tenant } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { format } from 'date-fns';
@@ -20,6 +21,7 @@ interface TenantWithRoom extends Tenant {
 export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [sheetType, setSheetType] = useState<'joined' | 'left' | null>(null);
+  const isMobile = useIsMobile();
 
   const { joined, left, joinedTenants, leftTenants, joinedTotal, leftTotal } = useMemo(() => {
     const joinedList: TenantWithRoom[] = [];
@@ -98,75 +100,80 @@ export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
       </Card>
 
       <Sheet open={sheetType !== null} onOpenChange={() => setSheetType(null)}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetType(null)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <SheetTitle>
-                {sheetType === 'joined' ? 'Tenants Joined' : 'Tenants Left'} in {months[selectedMonth - 1]} {selectedYear}
-              </SheetTitle>
-            </div>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(70vh-80px)] mt-4">
-            <div className="space-y-3 pr-4">
-              {(sheetType === 'joined' ? joinedTenants : leftTenants).map(tenant => (
-                <div 
-                  key={tenant.id} 
-                  className={`p-4 rounded-lg border ${
-                    sheetType === 'joined' 
-                      ? 'bg-paid-muted border-paid/30' 
-                      : 'bg-pending-muted border-pending/30'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{tenant.name}</span>
-                        {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <>
-                            <a 
-                              href={`tel:${tenant.phone}`}
-                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                            >
-                              <Phone className="h-4 w-4" />
-                            </a>
-                            <a 
-                              href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </a>
-                          </>
-                        )}
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetType(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle className="text-base text-foreground font-bold text-left">
+                  {sheetType === 'joined' ? 'Tenants Joined' : 'Tenants Left'} in {months[selectedMonth - 1]} {selectedYear}
+                </SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 bg-background">
+              <div className="space-y-3 pb-12">
+                {(sheetType === 'joined' ? joinedTenants : leftTenants).map(tenant => (
+                  <div 
+                    key={tenant.id} 
+                    className={`p-4 rounded-lg border ${
+                      sheetType === 'joined' 
+                        ? 'bg-paid/5 border-paid/20 text-foreground' 
+                        : 'bg-pending/5 border-pending/20 text-foreground'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{tenant.name}</span>
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <>
+                              <a 
+                                href={`tel:${tenant.phone}`}
+                                className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                              >
+                                <Phone className="h-4 w-4" />
+                              </a>
+                              <a 
+                                href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                              </a>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Room {tenant.roomNo} • Floor {tenant.floor}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Room {tenant.roomNo} • Floor {tenant.floor}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">₹{tenant.monthlyRent.toLocaleString()}/mo</p>
-                      <p className="text-xs text-muted-foreground">
-                        {sheetType === 'joined' 
-                          ? `Joined: ${format(new Date(tenant.startDate), 'dd MMM yyyy')}`
-                          : `Left: ${format(new Date(tenant.endDate!), 'dd MMM yyyy')}`
-                        }
-                      </p>
+                      <div className="text-right">
+                        <p className="font-medium text-foreground">₹{tenant.monthlyRent.toLocaleString()}/mo</p>
+                        <p className="text-xs text-muted-foreground">
+                          {sheetType === 'joined' 
+                            ? `Joined: ${format(new Date(tenant.startDate), 'dd MMM yyyy')}`
+                            : `Left: ${format(new Date(tenant.endDate!), 'dd MMM yyyy')}`
+                          }
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {(sheetType === 'joined' ? joinedTenants : leftTenants).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No tenants {sheetType === 'joined' ? 'joined' : 'left'} this month
-                </div>
-              )}
+                {(sheetType === 'joined' ? joinedTenants : leftTenants).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No tenants {sheetType === 'joined' ? 'joined' : 'left'} this month
+                  </div>
+                )}
+              </div>
             </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
     </>

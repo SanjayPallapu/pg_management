@@ -33,6 +33,14 @@ interface PGRulesCardProps {
 export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
   const { currentPG } = usePG();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClose = () => {
+      setOpen(false);
+    };
+    window.addEventListener('tab-click', handleClose);
+    return () => window.removeEventListener('tab-click', handleClose);
+  }, []);
   const [rules, setRules] = useState<Rule[]>(DEFAULT_RULES);
   const [editMode, setEditMode] = useState(false);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
@@ -127,270 +135,269 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
     setEditingRule({ ...editingRule, details: newDetails });
   };
 
+  const handleAddDetailTe = () => {
+    if (!editingRule) return;
+    const currentTe = editingRule.detailsTe || [];
+    setEditingRule({ ...editingRule, detailsTe: [...currentTe, ''] });
+  };
+
+  const handleUpdateDetailTe = (index: number, value: string) => {
+    if (!editingRule) return;
+    const newDetailsTe = [...(editingRule.detailsTe || [])];
+    newDetailsTe[index] = value;
+    setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
+  };
+
+  const handleRemoveDetailTe = (index: number) => {
+    if (!editingRule) return;
+    const newDetailsTe = (editingRule.detailsTe || []).filter((_, i) => i !== index);
+    setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
+  };
+
   return (
     <>
       <Card
-        className="cursor-pointer transition-colors hover:bg-accent/50"
+        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
         onClick={() => setOpen(true)}
       >
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center justify-between text-sm font-medium">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-              PG Rules & Regulations
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+              <BookOpen className="h-4 w-4 text-primary" />
             </div>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-              {rules.length}
+            <div className="text-left">
+              <span className="block font-semibold text-sm">PG Rules & Regulations</span>
+              <span className="text-xs text-muted-foreground">View and manage PG rules and regulations for residents</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+              {rules.length} rules
             </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            View and manage PG rules and regulations for residents
-          </p>
+            <span className="text-xs text-primary font-medium">View →</span>
+          </div>
         </CardContent>
       </Card>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent>
-          {/* Clean Header */}
-          <SheetHeader className="border-b px-4 py-4 space-y-0">
-            <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setOpen(false)}
-                className="h-9 w-9 shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <BookOpen className="h-5 w-5 text-primary shrink-0" />
-                <div className="min-w-0">
-                  <SheetTitle className="text-base leading-tight">Rules & Regulations</SheetTitle>
-                  <SheetDescription className="text-xs">{rules.length} rules • {language === 'te' ? 'తెలుగు' : 'English'}</SheetDescription>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0 space-y-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setOpen(false)}
+                    className="h-8 w-8 shrink-0"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <BookOpen className="h-5 w-5 text-primary shrink-0" />
+                    <div className="min-w-0 text-left">
+                      <SheetTitle className="text-base leading-tight font-bold">Rules & Regulations</SheetTitle>
+                      <SheetDescription className="text-xs">{rules.length} rules • {language === 'te' ? 'తెలుగు' : 'English'}</SheetDescription>
+                    </div>
+                  </div>
                 </div>
+                {!editMode ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditMode(true)}
+                    className="gap-1.5 shrink-0 h-8 text-xs font-semibold"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Manage
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditingRule(null);
+                    }}
+                    className="shrink-0 h-8 text-xs font-semibold"
+                  >
+                    Done
+                  </Button>
+                )}
               </div>
-              {!editMode ? (
+
+              <div className="grid grid-cols-2 gap-2 pt-3">
                 <Button
+                  variant={language === 'en' ? 'default' : 'outline'}
                   size="sm"
-                  variant="outline"
-                  onClick={() => setEditMode(true)}
-                  className="gap-1.5 shrink-0"
+                  onClick={() => handleLanguageChange('en')}
+                  className="h-8 text-xs font-semibold"
                 >
-                  <Settings className="h-3.5 w-3.5" />
-                  Manage
+                  English
                 </Button>
-              ) : (
                 <Button
+                  variant={language === 'te' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => {
-                    setEditMode(false);
-                    setEditingRule(null);
-                  }}
-                  className="shrink-0"
+                  onClick={() => handleLanguageChange('te')}
+                  className="h-8 text-xs font-semibold"
                 >
-                  Done
+                  తెలుగు Telugu
                 </Button>
-              )}
-            </div>
+              </div>
+            </SheetHeader>
 
-            {/* Language Toggle - prominent row */}
-            <div className="grid grid-cols-2 gap-2 pt-3">
-              <Button
-                variant={language === 'en' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleLanguageChange('en')}
-                className="h-9"
-              >
-                English
-              </Button>
-              <Button
-                variant={language === 'te' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleLanguageChange('te')}
-                className="h-9"
-              >
-                తెలుగు Telugu
-              </Button>
-            </div>
-          </SheetHeader>
-
-          <ScrollArea className="flex-1 px-4">
-            <div className="space-y-3 py-4">
-              {editMode && editingRule ? (
-                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
-                  {/* English Fields */}
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-primary uppercase tracking-wider">English</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Rule Title</label>
-                    <Input
-                      value={editingRule.title}
-                      onChange={(e) => setEditingRule({ ...editingRule, title: e.target.value })}
-                      placeholder="Enter rule title (English)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Description</label>
-                    <Input
-                      value={editingRule.description}
-                      onChange={(e) => setEditingRule({ ...editingRule, description: e.target.value })}
-                      placeholder="Enter description (English)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Details</label>
-                      <Button size="sm" variant="ghost" onClick={handleAddDetail} className="gap-1 h-7">
-                        <Plus className="h-3 w-3" /> Add
-                      </Button>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 bg-background">
+              <div className="space-y-3 pb-12">
+                {editMode && editingRule ? (
+                  <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider text-left">English</p>
                     </div>
-                    <div className="space-y-2">
-                      {editingRule.details.map((detail, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Textarea
-                            value={detail}
-                            onChange={(e) => handleUpdateDetail(idx, e.target.value)}
-                            placeholder={`Detail ${idx + 1} (English)`}
-                            className="text-sm"
-                            rows={2}
-                          />
-                          <Button size="sm" variant="ghost" onClick={() => handleRemoveDetail(idx)} className="h-fit">
-                            <X className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      ))}
+                    <div className="space-y-2 text-left">
+                      <label className="text-sm font-medium">Rule Title</label>
+                      <Input
+                        value={editingRule.title}
+                        onChange={(e) => setEditingRule({ ...editingRule, title: e.target.value })}
+                        placeholder="Enter rule title (English)"
+                      />
                     </div>
-                  </div>
-
-                  {/* Telugu Fields */}
-                  <div className="border-t pt-3 mt-3 space-y-1">
-                    <p className="text-xs font-bold text-primary uppercase tracking-wider">తెలుగు (Telugu)</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Rule Title (Telugu)</label>
-                    <Input
-                      value={editingRule.titleTe || ''}
-                      onChange={(e) => setEditingRule({ ...editingRule, titleTe: e.target.value })}
-                      placeholder="నియమం శీర్షిక"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Description (Telugu)</label>
-                    <Input
-                      value={editingRule.descriptionTe || ''}
-                      onChange={(e) => setEditingRule({ ...editingRule, descriptionTe: e.target.value })}
-                      placeholder="వివరణ"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Details (Telugu)</label>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        if (!editingRule) return;
-                        const currentTe = editingRule.detailsTe || [];
-                        setEditingRule({ ...editingRule, detailsTe: [...currentTe, ''] });
-                      }} className="gap-1 h-7">
-                        <Plus className="h-3 w-3" /> Add
-                      </Button>
+                    <div className="space-y-2 text-left">
+                      <label className="text-sm font-medium">Description</label>
+                      <Input
+                        value={editingRule.description}
+                        onChange={(e) => setEditingRule({ ...editingRule, description: e.target.value })}
+                        placeholder="Enter description (English)"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      {(editingRule.detailsTe || []).map((detail, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Textarea
-                            value={detail}
-                            onChange={(e) => {
-                              const newDetailsTe = [...(editingRule.detailsTe || [])];
-                              newDetailsTe[idx] = e.target.value;
-                              setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
-                            }}
-                            placeholder={`వివరాలు ${idx + 1}`}
-                            className="text-sm"
-                            rows={2}
-                          />
-                          <Button size="sm" variant="ghost" onClick={() => {
-                            const newDetailsTe = (editingRule.detailsTe || []).filter((_, i) => i !== idx);
-                            setEditingRule({ ...editingRule, detailsTe: newDetailsTe });
-                          }} className="h-fit">
-                            <X className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button onClick={handleSaveRule} className="flex-1" size="sm">Save Rule</Button>
-                    <Button variant="outline" onClick={() => setEditingRule(null)} size="sm" className="flex-1">Cancel</Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {rules.map((rule, idx) => (
-                    <div
-                      key={rule.id}
-                      className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                          {idx + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base leading-tight">{getRuleTitle(rule)}</h3>
-                          {getRuleDescription(rule) && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{getRuleDescription(rule)}</p>
-                          )}
-                        </div>
-                        {editMode && (
-                          <div className="flex gap-1 shrink-0">
-                            <Button size="icon" variant="ghost" onClick={() => handleEditRule(rule)} className="h-8 w-8">
-                              <Settings className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => { setRuleToDelete(rule.id); setShowDeleteDialog(true); }}
-                              className="h-8 w-8"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    <div className="space-y-2 text-left">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Details</label>
+                        <Button size="sm" variant="ghost" onClick={handleAddDetail} className="gap-1 h-7">
+                          <Plus className="h-3 w-3" /> Add
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {editingRule.details.map((detail, idx) => (
+                          <div key={idx} className="flex gap-2">
+                            <Textarea
+                              value={detail}
+                              onChange={(e) => handleUpdateDetail(idx, e.target.value)}
+                              placeholder="Detail point (English)"
+                              className="text-sm flex-1"
+                            />
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveDetail(idx)} className="h-10 w-10 text-destructive shrink-0">
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
-                        )}
-                      </div>
-                      <ul className="space-y-1.5 pl-11">
-                        {getRuleDetails(rule).map((detail, dIdx) => (
-                          <li key={dIdx} className="text-sm text-foreground/80 leading-relaxed flex gap-2">
-                            <span className="text-primary mt-1.5 shrink-0">•</span>
-                            <span>{detail}</span>
-                          </li>
                         ))}
-                      </ul>
+                      </div>
                     </div>
-                  ))}
-                  {editMode && (
-                    <Button onClick={handleAddRule} variant="outline" className="w-full gap-2" size="sm">
-                      <Plus className="h-4 w-4" /> Add New Rule
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-          </ScrollArea>
 
-          {!editMode && (
-            <div className="border-t p-4">
-              <Button
-                onClick={() => onEditableTemplate?.(rules, language)}
-                className="w-full gap-2 h-12"
-                size="lg"
-              >
-                <BookOpen className="h-4 w-4" />
-                Preview & Share Template
-              </Button>
+                    <div className="border-t pt-4 mt-4 space-y-4 text-left">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider">Telugu (Optional)</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Rule Title (Telugu)</label>
+                        <Input
+                          value={editingRule.titleTe || ''}
+                          onChange={(e) => setEditingRule({ ...editingRule, titleTe: e.target.value })}
+                          placeholder="Enter rule title (Telugu)"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Description (Telugu)</label>
+                        <Input
+                          value={editingRule.descriptionTe || ''}
+                          onChange={(e) => setEditingRule({ ...editingRule, descriptionTe: e.target.value })}
+                          placeholder="Enter description (Telugu)"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium">Details (Telugu)</label>
+                          <Button size="sm" variant="ghost" onClick={handleAddDetailTe} className="gap-1 h-7">
+                            <Plus className="h-3 w-3" /> Add
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {(editingRule.detailsTe || []).map((detail, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <Textarea
+                                value={detail}
+                                onChange={(e) => handleUpdateDetailTe(idx, e.target.value)}
+                                placeholder="Detail point (Telugu)"
+                                className="text-sm flex-1"
+                              />
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveDetailTe(idx)} className="h-10 w-10 text-destructive shrink-0">
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t mt-4">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditingRule(null)}>Cancel</Button>
+                      <Button size="sm" className="flex-1" onClick={handleSaveRule} disabled={!editingRule.title.trim()}>Save Rule</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {rules.map((rule) => (
+                      <div key={rule.id} className="border rounded-lg p-4 space-y-3 bg-card hover:bg-muted/10 transition-colors text-left">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <h3 className="font-semibold text-base leading-tight text-foreground">{getRuleTitle(rule)}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">{getRuleDescription(rule)}</p>
+                          </div>
+                          {editMode && (
+                            <div className="flex gap-1 shrink-0">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => handleEditRule(rule)}>
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => triggerDeleteRule(rule.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <ul className="space-y-1.5 pl-11">
+                          {getRuleDetails(rule).map((detail, dIdx) => (
+                            <li key={dIdx} className="text-sm text-foreground/80 leading-relaxed flex gap-2">
+                              <span className="text-primary mt-1.5 shrink-0">•</span>
+                              <span>{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    {editMode && (
+                      <Button onClick={handleAddRule} variant="outline" className="w-full gap-2 h-10 text-xs font-semibold" size="sm">
+                        <Plus className="h-4 w-4" /> Add New Rule
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          )}
+
+            {!editMode && (
+              <div className="border-t p-4 bg-background shrink-0">
+                <Button
+                  onClick={() => onEditableTemplate?.(rules, language)}
+                  className="w-full gap-2 h-12 text-sm font-semibold"
+                  size="lg"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Preview & Share Template
+                </Button>
+              </div>
+            )}
+          </div>
         </SheetContent>
       </Sheet>
 

@@ -94,6 +94,17 @@ const Index = () => {
     }
   }, [searchParams]);
 
+  // Handle same tab click / any tab click stack reset
+  useEffect(() => {
+    const handleTabClick = () => {
+      setIsDialogOpen(false);
+      setSelectedRoom(null);
+      setHistorySheetOpen(false);
+    };
+    window.addEventListener('tab-click', handleTabClick);
+    return () => window.removeEventListener('tab-click', handleTabClick);
+  }, []);
+
   // Pull to refresh
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 

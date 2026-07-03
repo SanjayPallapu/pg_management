@@ -93,18 +93,25 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
-  // Close all sheets/dialogs when URL changes (bottom nav navigation)
+  // Close all sheets/dialogs when URL changes or tab-click is triggered (handles same tab click reset)
   useEffect(() => {
-    setDayGuestSheetOpen(false);
-    setEmptyBedsSheetOpen(false);
-    setSettlementSheetOpen(false);
-    setCalculatorSheetOpen(false);
-    setRulesTemplateOpen(false);
-    setVisitorFollowUpOpen(false);
-    setBillsBudgetOpen(false);
-    setFinancialsOpen(false);
-    setTenantsOpen(false);
-    setToolsOpen(false);
+    const handleCloseAll = () => {
+      setDayGuestSheetOpen(false);
+      setEmptyBedsSheetOpen(false);
+      setSettlementSheetOpen(false);
+      setCalculatorSheetOpen(false);
+      setRulesTemplateOpen(false);
+      setVisitorFollowUpOpen(false);
+      setBillsBudgetOpen(false);
+      setFinancialsOpen(false);
+      setTenantsOpen(false);
+      setToolsOpen(false);
+    };
+
+    handleCloseAll();
+
+    window.addEventListener('tab-click', handleCloseAll);
+    return () => window.removeEventListener('tab-click', handleCloseAll);
   }, [location.search]);
 
   useEffect(() => {
@@ -612,19 +619,23 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               <PGRulesCard onEditableTemplate={(rules, language) => { setToolsOpen(false); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
               <BillUnitPricesCard />
               <Card
-                className="cursor-pointer transition-colors hover:bg-accent/50"
+                className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
                 onClick={() => {
                   setToolsOpen(false);
                   setVisitorFollowUpOpen(true);
                 }}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Follow-up</span>
-                    <MessageSquare className="h-4 w-4 text-muted-foreground animate-none" />
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                      <MessageSquare className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-semibold text-sm">Visitor Follow-up</span>
+                      <span className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</span>
+                    </div>
                   </div>
-                  <div className="text-lg font-bold">Visitor Follow-up</div>
-                  <p className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</p>
+                  <span className="text-xs text-primary font-medium shrink-0">Open →</span>
                 </CardContent>
               </Card>
             </div>

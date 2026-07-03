@@ -38,6 +38,9 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange }: BottomNavPr
     }
     // Always navigate — this will cause React to re-render and close any open dialogs
     navigate(`/?tab=${item.value}`, { replace: true });
+    
+    // Dispatch tab-click event to notify components to reset their stack / close active sheets
+    window.dispatchEvent(new CustomEvent('tab-click', { detail: { tab: item.value } }));
   };
 
   return (
