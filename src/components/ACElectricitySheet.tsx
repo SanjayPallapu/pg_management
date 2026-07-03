@@ -47,7 +47,17 @@ export const ACElectricitySheet = ({
   months,
   years,
 }: ACElectricitySheetProps) => {
-  useBackGesture(open, () => onOpenChange(false));
+  const expectedTotal = acRooms.reduce((sum, item) => {
+    return sum + (item.tenantShares || []).reduce((tSum: number, share: any) => tSum + (share.share || 0), 0);
+  }, 0);
+
+  const collectedTotal = acRooms.reduce((sum, item) => {
+    return sum + (item.tenantShares || []).reduce((tSum: number, share: any) => {
+      return tSum + (share.acPaymentStatus === 'Paid' ? (share.share || 0) : 0);
+    }, 0);
+  }, 0);
+
+  const pendingTotal = Math.max(0, expectedTotal - collectedTotal);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -115,6 +125,34 @@ export const ACElectricitySheet = ({
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto px-1.5 pt-4">
+            {/* Stats Dashboard Grid */}
+            <div className="grid grid-cols-3 gap-2 px-1.5 mb-4">
+              <div className="bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900/30 rounded-xl p-3 text-center">
+                <span className="block text-[10px] uppercase tracking-wider font-semibold text-cyan-600 dark:text-cyan-400">
+                  Expected
+                </span>
+                <span className="block text-base font-black text-cyan-900 dark:text-cyan-100 mt-1">
+                  ₹{expectedTotal.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-3 text-center">
+                <span className="block text-[10px] uppercase tracking-wider font-semibold text-emerald-600 dark:text-emerald-400">
+                  Collected
+                </span>
+                <span className="block text-base font-black text-emerald-900 dark:text-emerald-100 mt-1">
+                  ₹{collectedTotal.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3 text-center">
+                <span className="block text-[10px] uppercase tracking-wider font-semibold text-amber-600 dark:text-amber-400">
+                  Pending
+                </span>
+                <span className="block text-base font-black text-amber-900 dark:text-amber-100 mt-1">
+                  ₹{pendingTotal.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
             <div className="space-y-4 pb-12">
               {acRooms.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
