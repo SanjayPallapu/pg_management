@@ -8,7 +8,6 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { Room, PaymentEntry } from '@/types';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { format } from 'date-fns';
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { FileSearch } from 'lucide-react';
 import { PaymentReconciliation } from './PaymentReconciliation';
 
@@ -92,26 +91,28 @@ export const PaymentModeCard = ({ rooms }: PaymentModeCardProps) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
           <CardTitle className="text-sm font-medium">Payment Mode</CardTitle>
-          <div>
-            <ThemeToggle className="rounded-md border-primary" />
-            <button onClick={() => setReconciliationOpen(true)} className="p-1 rounded hover:bg-muted transition-colors" title="View Reconciliation">
-            <FileSearch className="h-4 w-4 text-muted-foreground mb-[11px] ml-[8px]" />
-          </button>
+          <div className="flex items-center">
+            <button 
+              onClick={() => setReconciliationOpen(true)} 
+              className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center" 
+              title="View Reconciliation"
+            >
+              <FileSearch className="h-4 w-4" />
+            </button>
           </div>
-          
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             {/* UPI Section with Tooltip */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-3 cursor-pointer">
-                  <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
                     <UpiLogo className="h-10 w-10" />
                   </div>
-                  <div>
-                    <div className="text-lg font-bold">₹{stats.upiAmount.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">UPI ({stats.upiCount})</p>
+                  <div className="flex flex-col justify-center text-left">
+                    <div className="text-lg font-bold leading-tight">₹{stats.upiAmount.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground leading-normal">UPI ({stats.upiCount})</p>
                   </div>
                 </div>
               </TooltipTrigger>
@@ -137,12 +138,12 @@ export const PaymentModeCard = ({ rooms }: PaymentModeCardProps) => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-3 cursor-pointer">
-                  <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
                     <CashLogo className="h-10 w-10" />
                   </div>
-                  <div>
-                    <div className="text-lg font-bold">₹{stats.cashAmount.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">Cash ({stats.cashCount})</p>
+                  <div className="flex flex-col justify-center text-left">
+                    <div className="text-lg font-bold leading-tight">₹{stats.cashAmount.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground leading-normal">Cash ({stats.cashCount})</p>
                   </div>
                 </div>
               </TooltipTrigger>
