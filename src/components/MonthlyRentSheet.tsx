@@ -1465,7 +1465,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <div className="font-semibold text-sm">
-                        {tenant.isLocked && "🔒 "}
                         {tenant.name}
                       </div>
                       {isSnoozed(tenant.id) && (
@@ -1582,7 +1581,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-xs text-muted-foreground">
                       Room {tenant.roomNo}
-                      {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
                     </div>
                     {/* Collected By badges - right of room number */}
                     {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 && (() => {

@@ -37,7 +37,6 @@ import { SecurityDepositCard } from "./SecurityDepositCard";
 import { PaymentModeCard } from "./PaymentModeCard";
 import { VisitorFollowUpDialog } from "./VisitorFollowUpDialog";
 import { EmptyBedsSheet } from "./EmptyBedsSheet";
-import { TenantLockCard } from "./TenantLockCard";
 import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
 import { TenantMovementCard } from "./TenantMovementCard";
 import { TotalCollectedCard } from "./TotalCollectedCard";
@@ -610,7 +609,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
               <CalculatorCard />
               <KeyNumbersCard />
-              <TenantLockCard rooms={rooms} />
               <PGRulesCard onEditableTemplate={(rules, language) => { setToolsOpen(false); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
               <BillUnitPricesCard />
               <Card

@@ -391,7 +391,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               
               // Determine tenant payment category for color coding
               const getTenantBgClass = () => {
-                if (tenant.isLocked) return '';
                 if (isPaid) return 'bg-paid/10 border border-paid/30 rounded-lg px-2 py-1.5';
                 if (isPartial) return 'bg-partial/10 border border-partial/30 rounded-lg px-2 py-1.5';
                 // Check if due date has passed (tenant's join day in the current month)
@@ -416,7 +415,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium truncate">
-                          {tenant.isLocked && "🔒 "}
                           {tenant.name}
                         </span>
                         {isNew && !leftThisMonth && (
@@ -543,7 +541,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       }
                       onClick={isPaid || isPartial ? handlePaidClick : undefined}
                     >
-                      {tenant.isLocked ? "🔒" : ""}
                       {isPaid ? "Paid" : isPartial ? "Partial" : "Not Paid"}
                     </Badge>
                   </div>

@@ -105,7 +105,6 @@ export const TenantRentCard = ({
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <div className="font-semibold text-sm">
-            {tenant.isLocked && "🔒 "}
             {tenant.name}
           </div>
           {/* Call badge */}
@@ -167,7 +166,6 @@ export const TenantRentCard = ({
       
       <div className="text-xs text-muted-foreground mb-2">
         Room {tenant.roomNo}
-        {tenant.isLocked && <span className="text-destructive ml-1">(Excluded from totals)</span>}
       </div>
 
       {/* Pro-rata visual indicator for mid-month leavers */}
