@@ -267,46 +267,40 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         <TenantSearchResults rooms={rooms} searchQuery={searchQuery} onNavigateToRoom={onViewDetails} />
       )}
 
-      {floorData.map(({ floor, rooms: roomsOnFloor, name }, index) => {
+      {floorData.map(({ floor, rooms: roomsOnFloor, name }) => {
         const colorClass = 'from-primary/15 via-primary/8 to-accent/10 border-primary/20';
 
         return (
-        <Collapsible key={floor} defaultOpen={true}>
-          <div className="space-y-2">
+          <div key={floor} className="space-y-2">
             <div className={`relative rounded-xl bg-gradient-to-r ${colorClass} border overflow-hidden`}>
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
               <div className="p-4 pl-5 space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg">{name}</h3>
-                <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
-                  <span className="group-data-[state=closed]:hidden">Collapse</span>
-                  <span className="hidden group-data-[state=closed]:inline">Expand</span>
-                </CollapsibleTrigger>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
-                  {roomsOnFloor.filter(r => {
-                    const c = occupiedCountForMonth(r);
-                    return c > 0 && c < r.capacity;
-                  }).length} partially occupied,{' '}
-                  {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
-                  className="bg-background/60 backdrop-blur-sm flex items-center gap-1"
-                >
-                  <Settings2 className="h-4 w-4" />
-                  Add Room
-                </Button>
-              </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">{name}</h3>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
+                    {roomsOnFloor.filter(r => {
+                      const c = occupiedCountForMonth(r);
+                      return c > 0 && c < r.capacity;
+                    }).length} partially occupied,{' '}
+                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
+                    className="bg-background/60 backdrop-blur-sm flex items-center gap-1"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Add Room
+                  </Button>
+                </div>
               </div>
             </div>
             
-            <CollapsibleContent>
+            <div className="pt-1">
               {roomsOnFloor.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {roomsOnFloor.map(room => (
@@ -328,9 +322,8 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                   </Button>
                 </div>
               )}
-            </CollapsibleContent>
+            </div>
           </div>
-        </Collapsible>
         );
       })}
 

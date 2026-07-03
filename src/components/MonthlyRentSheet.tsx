@@ -1173,79 +1173,69 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
   };
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3 px-3 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">Rent Sheet</CardTitle>
-              {leftTenantsCount > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCleanupSheetOpen(true)}
-                  className="h-7 px-2 text-xs text-destructive border-destructive/50 hover:bg-destructive/10 mr-[15px]"
-                  title="Left Tenants Cleanup"
-                >
-                  {leftTenantsCount} left
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-1 items-center">
-              {/* Edit Mode Toggle */}
-              <div className="flex items-center gap-1.5 mr-2">
-                <Switch
-                  id="edit-mode"
-                  checked={editModeEnabled}
-                  onCheckedChange={setEditModeEnabled}
-                  className="data-[state=checked]:bg-destructive"
-                />
-              </div>
-              <Button
-                onClick={() => setBulkReminderOpen(true)}
-                variant="outline"
-                size="icon"
-                title="Bulk WhatsApp Reminders"
-                className="text-cash hover:text-cash hover:bg-cash-muted"
-              >
-                <Users className="h-4 w-4" />
-              </Button>
-              <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History">
-                <History className="h-4 w-4" />
-              </Button>
-              <Button onClick={exportToExcel} variant="outline" size="icon" title="Export Excel">
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="space-y-4 px-1.5 pb-20">
+      {/* Header Row */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-foreground">Rent Sheet</h2>
+          {leftTenantsCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCleanupSheetOpen(true)}
+              className="h-7 px-2 text-xs text-destructive border-destructive/50 hover:bg-destructive/10"
+              title="Left Tenants Cleanup"
+            >
+              {leftTenantsCount} left
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-1.5 items-center">
+          {/* Edit Mode Toggle */}
+          <div className="flex items-center gap-1.5 mr-1">
+            <Switch
+              id="edit-mode"
+              checked={editModeEnabled}
+              onCheckedChange={setEditModeEnabled}
+              className="data-[state=checked]:bg-destructive"
+            />
           </div>
-        </CardHeader>
-        <CardContent className="px-3 pb-4">
+          <Button
+            onClick={() => setBulkReminderOpen(true)}
+            variant="outline"
+            size="icon"
+            title="Bulk WhatsApp Reminders"
+            className="text-cash hover:text-cash hover:bg-cash-muted h-8 w-8 shrink-0"
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History" className="h-8 w-8 shrink-0">
+            <History className="h-4 w-4" />
+          </Button>
+          <Button onClick={exportToExcel} variant="outline" size="icon" title="Export Excel" className="h-8 w-8 shrink-0">
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
           {/* Room quick-nav — tap a room number to jump to its tenant card */}
-          <Collapsible open={quickNavOpen} onOpenChange={setQuickNavOpen} className="mb-3">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold text-muted-foreground">Quick Room Access</div>
-              <CollapsibleTrigger asChild>
-                <button className="p-1 rounded-md hover:bg-muted/60 transition-colors">
-                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", quickNavOpen && "rotate-180")} />
-                </button>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>
-              <RoomQuickNav
-                rooms={rooms}
-                payments={payments}
-                month={selectedMonth}
-                year={selectedYear}
-                onSelect={(roomNo) => {
-                  setSearchQuery(roomNo);
-                  setTimeout(() => {
-                    const el = document.querySelector(`[data-room-no="${roomNo}"]`);
-                    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }, 50);
-                }}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          <div className="mb-3 space-y-1.5">
+            <div className="text-xs font-semibold text-muted-foreground px-0.5">Quick Room Access</div>
+            <RoomQuickNav
+              rooms={rooms}
+              payments={payments}
+              month={selectedMonth}
+              year={selectedYear}
+              onSelect={(roomNo) => {
+                setSearchQuery(roomNo);
+                setTimeout(() => {
+                  const el = document.querySelector(`[data-room-no="${roomNo}"]`);
+                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 50);
+              }}
+            />
+          </div>
 
           {showPreviousDuesPanel && !activeRoomFilter && (
             <Card
@@ -1733,8 +1723,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               );
             })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
       {/* Payment Amount Sheet */}
       <Sheet open={!!paymentAmountTenant} onOpenChange={(open) => !open && setPaymentAmountTenant(null)}>
