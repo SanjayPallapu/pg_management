@@ -267,3 +267,9 @@ All colors MUST be HSL.
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
+
+/* Fix Radix UI dialog scroll lock / pointer events lock issues when nested sheets/dialogs close simultaneously */
+body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
+  pointer-events: auto !important;
+  overflow: auto !important;
+}
