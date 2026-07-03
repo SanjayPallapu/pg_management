@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Users } from 'lucide-react';
+import { ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useRooms } from '@/hooks/useRooms';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
@@ -26,6 +29,7 @@ interface SharingGroup {
 export const TenantPricingOverviewCard = () => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { rooms } = useRooms();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
   const [selectedSharing, setSelectedSharing] = useState<number | null>(null);
@@ -110,89 +114,106 @@ export const TenantPricingOverviewCard = () => {
   };
 
   return (
-    <Card>
-      <Collapsible open={isOpen} onOpenChange={(open) => {
+    <>
+      <Card 
+        className="cursor-pointer transition-all hover:shadow-md border bg-card hover:bg-muted/30"
+        onClick={() => setIsOpen(true)}
+      >
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-sm text-foreground">Tenant Pricing Overview</h3>
+              <p className="text-xs text-muted-foreground">
+                {totalTenants} active tenants · ₹{grandTotal.toLocaleString()}/mo
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-primary font-medium shrink-0">View details →</span>
+        </CardContent>
+      </Card>
+
+      <Sheet open={isOpen} onOpenChange={(open) => {
         setIsOpen(open);
         if (!open) {
           setExpandedGroups(new Set());
         }
       }}>
-        <CollapsibleTrigger className="w-full">
-          <CardContent className="p-4 pb-3">
-            <div className="flex items-center justify-between">
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-sm">Tenant Pricing Overview</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {totalTenants} tenants · ₹{grandTotal.toLocaleString()}/mo
-                  </p>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setIsOpen(false)} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Users className="h-4 w-4 text-primary shrink-0" />
+                  <SheetTitle className="text-base text-foreground font-bold">Tenant Pricing Overview</SheetTitle>
                 </div>
               </div>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </CardContent>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="p-4 pt-0 space-y-3">
-            <div className="space-y-2">
-              {sharingGroups.map(group => {
-                const isExpanded = expandedGroups.has(group.sharing);
-                return (
-                  <div key={group.sharing}>
-                    <button
-                      onClick={() => toggleGroup(group.sharing)}
-                      className={`w-full p-3 rounded-lg border text-left transition-colors ${SHARE_COLORS[group.sharing] || 'bg-muted/50 border-border'}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                          <div>
-                            <div className="text-sm font-semibold">{group.label}</div>
-                            <div className="text-xs opacity-80">
-                              {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · {group.totalBeds} beds · ₹{group.standardRate.toLocaleString()}/bed
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <div className="space-y-2">
+                {sharingGroups.map(group => {
+                  const isExpanded = expandedGroups.has(group.sharing);
+                  return (
+                    <div key={group.sharing}>
+                      <button
+                        onClick={() => toggleGroup(group.sharing)}
+                        className={`w-full p-3 rounded-lg border text-left transition-colors ${SHARE_COLORS[group.sharing] || 'bg-muted/50 border-border'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                            <div>
+                              <div className="text-sm font-semibold">{group.label}</div>
+                              <div className="text-xs opacity-80">
+                                {group.tenantCount} tenant{group.tenantCount !== 1 ? 's' : ''} · {group.totalBeds} beds · ₹{group.standardRate.toLocaleString()}/bed
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold">₹{group.totalRent.toLocaleString()}</div>
-                          <div className="text-xs opacity-70">/month</div>
-                        </div>
-                      </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="mt-1 ml-2 border-l-2 border-border pl-3 space-y-1 py-1">
-                        {group.tenants.map((t, i) => (
-                          <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/30 text-sm">
-                            <span className="font-medium truncate mr-2">{t.name}</span>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <span className="text-xs text-muted-foreground">Room {t.roomNo}</span>
-                              <span className="font-semibold text-xs">₹{t.monthlyRent.toLocaleString()}</span>
-                            </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold">₹{group.totalRent.toLocaleString()}</div>
+                            <div className="text-xs opacity-70">/month</div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div className="mt-1 ml-2 border-l-2 border-border pl-3 space-y-1 py-1">
+                          {group.tenants.map((t, i) => (
+                            <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/30 text-sm">
+                              <span className="font-medium truncate mr-2">{t.name}</span>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-xs text-muted-foreground">Room {t.roomNo}</span>
+                                <span className="font-semibold text-xs">₹{t.monthlyRent.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* Grand Total */}
-            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-muted-foreground">Total Monthly Revenue</div>
-                  <div className="text-xs text-muted-foreground">{totalTenants} active tenants</div>
-                </div>
-                <div className="text-xl font-bold text-primary">
-                  ₹{grandTotal.toLocaleString()}
+              {/* Grand Total */}
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Total Monthly Revenue</div>
+                    <div className="text-xs text-muted-foreground">{totalTenants} active tenants</div>
+                  </div>
+                  <div className="text-xl font-bold text-primary">
+                    ₹{grandTotal.toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
