@@ -248,7 +248,19 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   useBackGesture(numberSelectOpen, () => setNumberSelectOpen(false));
 
   const handleContactSelected = (name: string, phones: string[]) => {
-    if (phones.length === 0) {
+    // Deduplicate phone numbers by their sanitized (10-digit) values
+    const seenCleaned = new Set<string>();
+    const uniquePhones: string[] = [];
+
+    (phones || []).forEach((phone) => {
+      const cleaned = sanitizePhoneNumber(phone);
+      if (cleaned && !seenCleaned.has(cleaned)) {
+        seenCleaned.add(cleaned);
+        uniquePhones.push(phone);
+      }
+    });
+
+    if (uniquePhones.length === 0) {
       toast({
         title: "No phone number found",
         description: `${name} does not have any phone numbers saved.`,
@@ -257,17 +269,16 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       return;
     }
 
-    if (phones.length === 1) {
-      const cleaned = sanitizePhoneNumber(phones[0]);
+    if (uniquePhones.length === 1) {
+      const cleaned = sanitizePhoneNumber(uniquePhones[0]);
       setNewTenant((prev) => ({
         ...prev,
         name: name,
         phone: cleaned,
       }));
-
     } else {
       setSelectedContactName(name);
-      setNumbersToSelect(phones);
+      setNumbersToSelect(uniquePhones);
       setNumberSelectOpen(true);
     }
   };
