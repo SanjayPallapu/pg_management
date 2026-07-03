@@ -13,7 +13,6 @@ import {
 } from '@/hooks/useElectricityReadings';
 import { isTenantActiveInMonth, hasTenantLeftNow, tenantLeftInMonth } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Phone, MessageCircle, ArrowLeft, History, Receipt, Bell, CreditCard } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -493,8 +492,7 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
             </p>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(100vh-135px)] mt-4 pr-3">
-            <div className="space-y-3 pb-8">
+          <div className="space-y-3 pb-8 mt-4">
               {overdueTenants.map(tenant => {
                 const hasPhone = tenant.phone && tenant.phone !== '••••••••••';
                 const hasPaymentEntries = tenant.paymentEntries.length > 0;
@@ -761,7 +759,6 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 </div>
               )}
             </div>
-          </ScrollArea>
         </SheetContent>
       </Sheet>
 

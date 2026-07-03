@@ -1,5 +1,4 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Snowflake } from 'lucide-react';
@@ -101,7 +100,7 @@ export const ACElectricitySheet = ({
             </div>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 p-4">
+          <div className="flex-1 overflow-y-auto px-1.5 pt-4">
             <div className="space-y-4 pb-12">
               {acRooms.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
@@ -146,7 +145,7 @@ export const ACElectricitySheet = ({
                 ))
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
