@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/proxyClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Key, Copy, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +27,8 @@ export const KeyNumbersCard = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSerial, setEditSerial] = useState('');
   const [editRoom, setEditRoom] = useState('');
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
   
   // Long press handling
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,7 +68,29 @@ export const KeyNumbersCard = () => {
       toast({ title: 'Failed to add key', description: err?.message ?? String(err), variant: 'destructive' as any });
     },
   });
-
+  const addBulkKeyNumbers = useMutation({
+    mutationFn: async (entries: { serial_number: string; room_number: string }[]) => {
+      if (!currentPG?.id) throw new Error('No PG selected');
+      const records = entries.map(e => ({
+        serial_number: e.serial_number,
+        room_number: e.room_number,
+        pg_id: currentPG.id
+      }));
+      const { error } = await supabase
+        .from('key_numbers')
+        .insert(records);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['key-numbers'] });
+      setBulkText('');
+      setIsBulkOpen(false);
+      toast({ title: 'Success', description: 'Bulk key numbers added successfully' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Failed to add keys', description: err?.message ?? String(err), variant: 'destructive' });
+    },
+  });
   const updateKeyNumber = useMutation({
     mutationFn: async ({ id, serial_number, room_number }: { id: string; serial_number: string; room_number: string }) => {
       const { error } = await supabase
@@ -108,6 +134,28 @@ export const KeyNumbersCard = () => {
   const handleAdd = () => {
     if (!newSerial.trim() || !newRoom.trim()) return;
     addKeyNumber.mutate({ serial_number: newSerial.trim(), room_number: newRoom.trim() });
+  };
+
+  const handleBulkAdd = () => {
+    if (!bulkText.trim()) return;
+    const lines = bulkText.split('\n');
+    const parsed: { serial_number: string; room_number: string }[] = [];
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+      const match = line.match(/(\d+)\D+(\d+)/);
+      if (match) {
+        parsed.push({
+          serial_number: match[1],
+          room_number: match[2]
+        });
+      }
+    }
+    if (parsed.length === 0) {
+      toast({ title: 'No valid key mappings found', description: 'Please format as: Serial -> Room (e.g. 2831317 -> 103)', variant: 'destructive' });
+      return;
+    }
+    addBulkKeyNumbers.mutate(parsed);
   };
 
   const handleEdit = (key: KeyNumber) => {
@@ -276,28 +324,38 @@ export const KeyNumbersCard = () => {
 
                   {/* Add new row in edit mode */}
                   {editMode && (
-                    <div className="flex items-center gap-1 pt-2 border-t">
-                      <Input
-                        value={newSerial}
-                        onChange={(e) => setNewSerial(e.target.value)}
-                        className="h-7 text-xs w-24"
-                        placeholder="Serial #"
-                      />
-                      <span className="text-muted-foreground">-</span>
-                      <Input
-                        value={newRoom}
-                        onChange={(e) => setNewRoom(e.target.value)}
-                        className="h-7 text-xs w-14"
-                        placeholder="Room"
-                      />
+                    <div className="flex items-center gap-1.5 pt-2 border-t justify-between flex-wrap sm:flex-nowrap">
+                      <div className="flex items-center gap-1 flex-1">
+                        <Input
+                          value={newSerial}
+                          onChange={(e) => setNewSerial(e.target.value)}
+                          className="h-7 text-xs w-24"
+                          placeholder="Serial #"
+                        />
+                        <span className="text-muted-foreground">-</span>
+                        <Input
+                          value={newRoom}
+                          onChange={(e) => setNewRoom(e.target.value)}
+                          className="h-7 text-xs w-14"
+                          placeholder="Room"
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={handleAdd}
+                          disabled={!newSerial.trim() || !newRoom.trim()}
+                        >
+                          <Plus className="h-4 w-4 text-paid" />
+                        </Button>
+                      </div>
                       <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={handleAdd}
-                        disabled={!newSerial.trim() || !newRoom.trim()}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs px-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                        onClick={() => setIsBulkOpen(true)}
                       >
-                        <Plus className="h-4 w-4 text-paid" />
+                        Bulk Add
                       </Button>
                     </div>
                   )}
@@ -307,6 +365,37 @@ export const KeyNumbersCard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+        <DialogContent className="max-w-md w-[95%] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Add Key Numbers</DialogTitle>
+            <DialogDescription>
+              Paste serial numbers and room mappings. You can use arrows (→, {"->"}), hyphens (-), spaces, or commas as separators.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Textarea
+              placeholder="Example:&#10;2831317 -> 103&#10;2822934 -> 104&#10;3328825 - 105"
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              className="min-h-[200px] font-mono text-sm mt-1"
+            />
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setIsBulkOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1" 
+              onClick={handleBulkAdd}
+              disabled={!bulkText.trim() || addBulkKeyNumbers.isPending}
+            >
+              {addBulkKeyNumbers.isPending ? 'Adding...' : 'Add All'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
