@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Settings, Plus, Trash2, X, ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/hooks/use-toast';
 import { usePG } from '@/contexts/PGContext';
 import { DEFAULT_RULES, getStoredPGRules, getStoredRulesLanguage, saveStoredPGRules, saveStoredRulesLanguage, type Rule, type RulesLanguage } from '@/lib/pgRules';
@@ -31,6 +32,7 @@ interface PGRulesCardProps {
 }
 
 export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
+  const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(false);
 
