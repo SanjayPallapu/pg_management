@@ -71,27 +71,41 @@ export const ACElectricitySheet = ({
                 AC Electricity Management
               </SheetTitle>
             </div>
-            <div className="flex items-center justify-between mt-3 bg-cyan-500/5 p-2 rounded-lg border border-cyan-500/15">
-              <Label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300">AC Bill Month:</Label>
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 mt-2 px-1 text-xs font-medium">
+              <span className="text-muted-foreground mr-0.5">AC Bill Month:</span>
+              <div className="relative inline-block">
                 <select
                   value={acMonth}
                   onChange={(e) => setAcMonth(parseInt(e.target.value))}
-                  className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                  className="h-6 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 px-3.5 pr-7 text-xs font-semibold border-none focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(6, 182, 212)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 8px center',
+                    backgroundSize: '12px'
+                  }}
                 >
                   {months.map((m) => (
-                    <option key={m.value} value={m.value}>
+                    <option key={m.value} value={m.value} className="text-foreground bg-background font-medium">
                       {m.label}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="relative inline-block">
                 <select
                   value={acYear}
                   onChange={(e) => setAcYear(parseInt(e.target.value))}
-                  className="h-8 rounded border border-input bg-background px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                  className="h-6 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 px-3.5 pr-7 text-xs font-semibold border-none focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(6, 182, 212)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 8px center',
+                    backgroundSize: '12px'
+                  }}
                 >
                   {years.map((y) => (
-                    <option key={y} value={y}>
+                    <option key={y} value={y} className="text-foreground bg-background font-medium">
                       {y}
                     </option>
                   ))}
