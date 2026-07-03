@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Key, Copy, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Key, Copy, Plus, Trash2, Edit2, Check, X, ChevronRight, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePG } from '@/contexts/PGContext';
 
 interface KeyNumber {
@@ -20,7 +21,9 @@ interface KeyNumber {
 export const KeyNumbersCard = () => {
   const queryClient = useQueryClient();
   const { currentPG } = usePG();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [newSerial, setNewSerial] = useState('');
   const [newRoom, setNewRoom] = useState('');
@@ -29,10 +32,6 @@ export const KeyNumbersCard = () => {
   const [editRoom, setEditRoom] = useState('');
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
-  
-  // Long press handling
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPress = useRef(false);
 
   const { data: keyNumbers = [], isLoading } = useQuery({
     queryKey: ['key-numbers', currentPG?.id],
@@ -169,190 +168,194 @@ export const KeyNumbersCard = () => {
     updateKeyNumber.mutate({ id: editingId, serial_number: editSerial.trim(), room_number: editRoom.trim() });
   };
 
-  // Long press handlers
-  const handleTouchStart = useCallback(() => {
-    isLongPress.current = false;
-    longPressTimer.current = setTimeout(() => {
-      isLongPress.current = true;
-      setIsExpanded(true);
-    }, 500);
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  const handleHeaderClick = () => {
-    // Toggle on regular click as well for accessibility
-    if (!isLongPress.current) {
-      setIsExpanded(!isExpanded);
-    }
-    isLongPress.current = false;
-  };
-
   return (
-    <Card>
-      <CardHeader 
-        className="flex flex-row items-center justify-between p-4 pb-2 cursor-pointer select-none"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}
-        onClick={handleHeaderClick}
+    <>
+      <Card 
+        className="cursor-pointer transition-all duration-200 hover:bg-muted/55 border border-border/40"
+        onClick={() => setIsOpen(true)}
       >
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Key className="h-4 w-4 text-muted-foreground" />
-          Room Key Numbers
-          <span className="text-xs text-muted-foreground font-normal">
-            ({keyNumbers.length})
-          </span>
-        </CardTitle>
-        <div className="flex gap-1 items-center">
-          {isExpanded && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => { e.stopPropagation(); copyAll(); }}
-                title="Copy all"
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant={editMode ? "secondary" : "ghost"}
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => { e.stopPropagation(); setEditMode(!editMode); }}
-                title="Edit mode"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-              </Button>
-            </>
-          )}
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </div>
-      </CardHeader>
-      
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <CardContent className="p-4 pt-0">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl text-primary shrink-0">
+              <Key className="h-5 w-5" />
+            </div>
+            <div className="text-left">
+              <h4 className="text-sm font-semibold text-foreground">Room Key Numbers</h4>
+              <p className="text-xs text-muted-foreground">{keyNumbers.length} keys configured</p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground animate-pulse" />
+        </CardContent>
+      </Card>
+
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-lg p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8 shrink-0">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <div className="flex flex-col text-left">
+                    <SheetTitle className="text-base text-foreground font-bold">Room Key Numbers</SheetTitle>
+                    <p className="text-xs text-muted-foreground">Manage serial numbers for room keys</p>
+                  </div>
+                </div>
+                <div className="flex gap-1.5 items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={copyAll}
+                    title="Copy all"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={editMode ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setEditMode(!editMode)}
+                    title="Edit mode"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </SheetHeader>
+
+            {/* Search Filter Box */}
+            <div className="px-4 py-2 border-b bg-background shrink-0">
+              <Input
+                type="text"
+                placeholder="Search by serial number or room..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
               {isLoading ? (
-                <div className="text-sm text-muted-foreground">Loading...</div>
+                <div className="text-sm text-muted-foreground text-center py-8">Loading...</div>
               ) : (
-                <div className="space-y-1.5">
-                  {keyNumbers.map((key) => (
-                    <div key={key.id} className="flex items-center justify-between text-sm">
-                      {editingId === key.id ? (
-                        <div className="flex items-center gap-1 flex-1">
-                          <Input
-                            value={editSerial}
-                            onChange={(e) => setEditSerial(e.target.value)}
-                            className="h-7 text-xs w-24"
-                            placeholder="Serial"
-                          />
-                          <span className="text-muted-foreground">-</span>
-                          <Input
-                            value={editRoom}
-                            onChange={(e) => setEditRoom(e.target.value)}
-                            className="h-7 text-xs w-14"
-                            placeholder="Room"
-                          />
-                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveEdit}>
-                            <Check className="h-3 w-3 text-paid" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingId(null)}>
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <span className="font-mono">
-                            <span className="text-muted-foreground">{key.serial_number}</span>
-                            <span className="mx-1.5 text-muted-foreground">→</span>
-                            <span className="font-semibold">{key.room_number}</span>
-                          </span>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => copyToClipboard(key.serial_number, key.room_number)}
-                            >
-                              <Copy className="h-3 w-3" />
+                <div className="space-y-2">
+                  {filteredKeyNumbers.length === 0 ? (
+                     <div className="text-sm text-muted-foreground text-center py-8">
+                       No keys found matching "{searchQuery}"
+                     </div>
+                  ) : (
+                    filteredKeyNumbers.map((key) => (
+                      <div 
+                        key={key.id} 
+                        className="flex items-center justify-between p-3 rounded-lg border border-border/30 bg-muted/20 text-sm hover:bg-muted/30 transition-colors"
+                      >
+                        {editingId === key.id ? (
+                          <div className="flex items-center gap-1.5 flex-1">
+                            <Input
+                              value={editSerial}
+                              onChange={(e) => setEditSerial(e.target.value)}
+                              className="h-8 text-xs w-28"
+                              placeholder="Serial"
+                            />
+                            <span className="text-muted-foreground">-</span>
+                            <Input
+                              value={editRoom}
+                              onChange={(e) => setEditRoom(e.target.value)}
+                              className="h-8 text-xs w-20"
+                              placeholder="Room"
+                            />
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={handleSaveEdit}>
+                              <Check className="h-4 w-4 text-paid" />
                             </Button>
-                            {editMode && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => handleEdit(key)}
-                                >
-                                  <Edit2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-destructive"
-                                  onClick={() => deleteKeyNumber.mutate(key.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </>
-                            )}
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)}>
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-primary/45" />
+                              <span className="font-mono text-foreground font-medium">
+                                <span className="text-muted-foreground">{key.serial_number}</span>
+                                <span className="mx-2 text-muted-foreground/60">→</span>
+                                <span className="font-semibold text-primary">{key.room_number}</span>
+                              </span>
+                            </div>
+                            <div className="flex gap-1.5 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => copyToClipboard(key.serial_number, key.room_number)}
+                                title="Copy mapping"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                              {editMode && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    onClick={() => handleEdit(key)}
+                                    title="Edit"
+                                  >
+                                    <Edit2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={() => deleteKeyNumber.mutate(key.id)}
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
 
                   {/* Add new row in edit mode */}
                   {editMode && (
-                    <div className="flex items-center gap-1.5 pt-2 border-t justify-between flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-1.5 pt-3 border-t mt-4 justify-between flex-wrap sm:flex-nowrap">
                       <div className="flex items-center gap-1 flex-1">
                         <Input
                           value={newSerial}
                           onChange={(e) => setNewSerial(e.target.value)}
-                          className="h-7 text-xs w-24"
+                          className="h-8 text-xs w-28"
                           placeholder="Serial #"
                         />
                         <span className="text-muted-foreground">-</span>
                         <Input
                           value={newRoom}
                           onChange={(e) => setNewRoom(e.target.value)}
-                          className="h-7 text-xs w-14"
+                          className="h-8 text-xs w-20"
                           placeholder="Room"
                         />
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7"
+                          className="h-8 w-8"
                           onClick={handleAdd}
                           disabled={!newSerial.trim() || !newRoom.trim()}
                         >
-                          <Plus className="h-4 w-4 text-paid" />
+                          <Plus className="h-5 w-5 text-paid" />
                         </Button>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs px-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                        className="h-8 text-xs px-2 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
                         onClick={() => setIsBulkOpen(true)}
                       >
                         Bulk Add
@@ -361,10 +364,10 @@ export const KeyNumbersCard = () => {
                   )}
                 </div>
               )}
-            </CardContent>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-2xl">
@@ -396,6 +399,6 @@ export const KeyNumbersCard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 };
