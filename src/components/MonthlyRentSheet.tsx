@@ -874,27 +874,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     return 0; // Fully paid
   };
   const handlePaymentToggle = (tenantId: string, tenantName: string, currentStatus: "Paid" | "Pending" | "Partial") => {
-    if (currentStatus === "Pending") {
-      const tenant = tenantsWithPayments.find((t) => t.id === tenantId);
-      if (tenant) {
-        setPaymentAmountTenant(tenantId);
-        setPaymentAmount(tenant.monthlyRent);
-        setPaymentDate(new Date());
-      }
-    } else {
-      // For Paid or Partial, only allow delete if edit mode is enabled
-      if (!editModeEnabled) {
-        return; // Do nothing if edit mode is off
-      }
-      const tenant = tenantsWithPayments.find((t) => t.id === tenantId);
-      if (tenant && tenant.payment.paymentEntries.length > 0) {
-        setDeletePaymentTenant({
-          id: tenantId,
-          name: tenantName,
-          monthlyRent: tenant.monthlyRent,
-          paymentEntries: tenant.payment.paymentEntries,
-        });
-      }
+    const tenant = tenantsWithPayments.find((t) => t.id === tenantId);
+    if (tenant) {
+      setPaymentAmountTenant(tenantId);
+      const remainingRent = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
+      setPaymentAmount(remainingRent > 0 ? remainingRent : tenant.monthlyRent);
+      setPaymentDate(new Date());
     }
   };
   const handlePayRemaining = (tenantId: string) => {
