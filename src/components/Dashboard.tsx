@@ -403,177 +403,100 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Bills & Budget Dashboard - appears below If PG Gets Full */}
-        <Collapsible open={overviewOpen} onOpenChange={setOverviewOpen} defaultOpen>
-          <CollapsibleTrigger className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-4 ${
-            overviewOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
-          }`}>
-            <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Bills & Budget</span>
+        {/* Bills & Budget Section - Flat */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <Scale className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm text-foreground">Bills & Budget</h3>
+          </div>
+          <div className="mb-6">
+            <BillsBudgetDashboard rooms={rooms} />
+          </div>
+        </div>
+
+        {/* Financial Section - Flat */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <Wallet className="h-4 w-4 text-primary" />
+            <div className="text-left">
+              <h3 className="font-semibold text-sm text-foreground">Financials</h3>
+              <p className="text-xs text-muted-foreground">Payments, deposits, building rent</p>
             </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${overviewOpen ? "rotate-180" : ""}`}
+          </div>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
+            <CollectedByCard />
+            <PaymentModeCard rooms={rooms} />
+            <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+            <AllCollectedCard rooms={rooms} />
+            <SecurityDepositCard rooms={rooms} />
+            <PreviousMonthOverdueCard />
+            <OverduePaidCard rooms={rooms} />
+            <BuildingRentCard />
+            <DayGuestRevenueCard
+              onClick={() => setDayGuestSheetOpen(true)}
+              stats={dayGuestStats ?? undefined}
+              isLoading={dayGuestStatsLoading}
             />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="mb-6">
-              <BillsBudgetDashboard rooms={rooms} />
+          </div>
+        </div>
+
+        {/* Tenants Section - Flat */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <Users className="h-4 w-4 text-primary" />
+            <div className="text-left">
+              <h3 className="font-semibold text-sm text-foreground">Tenants</h3>
+              <p className="text-xs text-muted-foreground">Pending, pricing and movement</p>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
+            <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
+            <ExpectedCollectionCard />
+            <TenantPricingOverviewCard />
+            <TenantMovementCard rooms={rooms} />
+            <Card
+              className="cursor-pointer transition-colors hover:bg-accent/50"
+              onClick={() => setSettlementSheetOpen(true)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
+                  <UserMinus className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="text-lg font-bold">Settlement Summary</div>
+                <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-        {/* Financial Section - Collapsible */}
-        <Collapsible open={financialsOpen} onOpenChange={setFinancialsOpen}>
-          <CollapsibleTrigger
-            className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
-              financialsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" />
-              <div className="text-left">
-                <span className="block font-semibold text-sm">Financials</span>
-                <span className="text-xs text-muted-foreground">Payments, deposits, building rent</span>
-              </div>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${financialsOpen ? "rotate-180" : ""}`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              <CollectedByCard />
-
-              {/* Payment Mode Card */}
-              <PaymentModeCard rooms={rooms} />
-
-              {/* Total Collected Card */}
-              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
-
-              {/* All Collections Card - UPI/Cash breakdown */}
-              <AllCollectedCard rooms={rooms} />
-
-              {/* Security Deposit Card - Below PG Expenses */}
-              <SecurityDepositCard rooms={rooms} />
-
-              {/* Previous Month Overdue Card */}
-              <PreviousMonthOverdueCard />
-
-              {/* Overdue Collected Card - shows previous month overdue paid this month */}
-              <OverduePaidCard rooms={rooms} />
-
-              {/* Building Rent Card */}
-              <BuildingRentCard />
-
-              {/* Collected By Card - shows who collected payments */}
-
-              {/* Day Guest Revenue Card - right after Building Rent, always loads with it */}
-              <DayGuestRevenueCard
-                onClick={() => setDayGuestSheetOpen(true)}
-                stats={dayGuestStats ?? undefined}
-                isLoading={dayGuestStatsLoading}
-              />
-
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Tenants Section - Collapsible */}
-        <Collapsible open={tenantsOpen} onOpenChange={setTenantsOpen}>
-          <CollapsibleTrigger
-            className={`flex items-center justify-between w-full p-3 rounded-lg border bg-card hover:bg-muted/70 transition-colors mb-3 ${
-              tenantsOpen ? "sticky top-0 z-30 bg-background shadow-md shadow-background/60" : ""
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              <div className="text-left">
-                <span className="block font-semibold text-sm">Tenants</span>
-                <span className="text-xs text-muted-foreground">Pending, pricing and movement</span>
-              </div>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${tenantsOpen ? "rotate-180" : ""}`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              {/* Pending Tenants Card */}
-              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
-
-              {/* Expected Collection by Due Date */}
-              <ExpectedCollectionCard />
-
-              {/* Tenant Pricing Overview */}
-              <TenantPricingOverviewCard />
-
-              {/* Tenant Movement Card */}
-              <TenantMovementCard rooms={rooms} />
-
-              {/* Settlement Summary Card */}
-              <Card
-                className="cursor-pointer transition-colors hover:bg-accent/50"
-                onClick={() => setSettlementSheetOpen(true)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
-                    <UserMinus className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="text-lg font-bold">Settlement Summary</div>
-                  <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
-                </CardContent>
-              </Card>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Tools Section - Collapsible (collapsed by default) */}
-        <Collapsible open={toolsOpen} onOpenChange={setToolsOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors mb-4">
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Tools & Admin</span>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Calculator Card */}
-              <CalculatorCard />
-
-              {/* Key Numbers Card */}
-              <KeyNumbersCard />
-
-              {/* Tenant Lock Card */}
-              <TenantLockCard rooms={rooms} />
-
-              {/* PG Rules Card */}
-              <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
-
-              {/* Bill Unit Prices Card */}
-              <BillUnitPricesCard />
-
-              {/* Visitor Follow-up Card */}
-              <Card
-                className="cursor-pointer transition-colors hover:bg-accent/50"
-                onClick={() => setVisitorFollowUpOpen(true)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Follow-up</span>
-                    <MessageSquare className="h-4 w-4 text-muted-foreground animate-none" />
-                  </div>
-                  <div className="text-lg font-bold">Visitor Follow-up</div>
-                  <p className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</p>
-                </CardContent>
-              </Card>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        {/* Tools Section - Flat */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <Settings className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm text-foreground">Tools & Admin</h3>
+          </div>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
+            <CalculatorCard />
+            <KeyNumbersCard />
+            <TenantLockCard rooms={rooms} />
+            <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+            <BillUnitPricesCard />
+            <Card
+              className="cursor-pointer transition-colors hover:bg-accent/50"
+              onClick={() => setVisitorFollowUpOpen(true)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Follow-up</span>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground animate-none" />
+                </div>
+                <div className="text-lg font-bold">Visitor Follow-up</div>
+                <p className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Rules Template Sheet */}
