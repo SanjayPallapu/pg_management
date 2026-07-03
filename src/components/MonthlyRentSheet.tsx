@@ -1729,193 +1729,199 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <Sheet open={!!paymentAmountTenant} onOpenChange={(open) => !open && setPaymentAmountTenant(null)}>
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-lg p-0"}
         >
-          <SheetHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-base">Enter Payment Amount</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => setPaymentAmountTenant(null)} className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">Enter the amount received and select date.</p>
-          </SheetHeader>
-          <ScrollArea className={isMobile ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-160px)] mt-4"}>
-            <div className="space-y-4 px-1">
-            <div>
-              <div className="flex items-center justify-between">
-                <Label>Amount (₹)</Label>
-                {paymentAmountTenant && (() => {
-                  const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
-                  if (!tenant) return null;
-                  return (
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant={paymentAmount === tenant.monthlyRent ? "default" : "outline"}
-                        size="sm"
-                        className="h-6 text-xs px-2"
-                        onClick={() => { setPaymentAmount(tenant.monthlyRent); setOverpaymentReason(""); }}
-                      >
-                        Full Rent
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={paymentAmount !== tenant.monthlyRent && paymentAmount > 0 ? "default" : "outline"}
-                        size="sm"
-                        className="h-6 text-xs px-2"
-                        onClick={() => { setPaymentAmount(0); setOverpaymentReason(""); }}
-                      >
-                        Custom / Luggage
-                      </Button>
-                    </div>
-                  );
-                })()}
-              </div>
-              <Input
-                type="number"
-                value={paymentAmount}
-                onChange={(e) => {
-                  setPaymentAmount(parseInt(e.target.value) || 0);
-                  setOverpaymentReason("");
-                }}
-                className="mt-2"
-                placeholder="Enter custom amount"
-              />
-              {paymentAmountTenant &&
-                (() => {
-                  const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
-                  if (tenant) {
-                    if (paymentAmount < tenant.monthlyRent && paymentAmount > 0) {
-                      return (
-                        <p className="text-sm text-partial mt-2">
-                          Partial payment. Remaining: ₹
-                          {(tenant.monthlyRent - paymentAmount).toLocaleString()}
-                        </p>
-                      );
-                    } else if (paymentAmount > tenant.monthlyRent) {
-                      const extra = paymentAmount - tenant.monthlyRent;
-                      return (
-                        <div className="mt-2 space-y-2">
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                            Extra payment: ₹{extra.toLocaleString()} above rent of ₹
-                            {tenant.monthlyRent.toLocaleString()}
-                          </p>
-                          <div>
-                            <Label className="text-sm">Reason for extra amount *</Label>
-                            <Input
-                              type="text"
-                              value={overpaymentReason}
-                              onChange={(e) => {
-                                setOverpaymentReason(e.target.value);
-                                setOverpaymentError(false);
-                              }}
-                              placeholder="e.g., Advance, Electricity, Next month"
-                              className={cn("mt-1", overpaymentError && "border-destructive")}
-                            />
-                            {overpaymentError && (
-                              <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                  }
-                  return null;
-                })()}
-            </div>
-            <div>
-              <Label>Payment Mode</Label>
-              <div className="flex items-center justify-between mt-2 mb-2">
-                <span className="text-xs text-muted-foreground">
-                  {splitMode ? `Split total: ₹${(upiAmount + cashAmount).toLocaleString()}` : "Single mode"}
-                </span>
-                <Button
-                  type="button" size="sm" variant={splitMode ? "default" : "outline"}
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    const next = !splitMode;
-                    setSplitMode(next);
-                    if (next) { setUpiAmount(paymentAmount); setCashAmount(0); }
-                    else { setPaymentAmount(upiAmount + cashAmount || paymentAmount); }
-                  }}
-                >
-                  {splitMode ? "Single mode" : "Split UPI + Cash"}
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setPaymentAmountTenant(null)} className="h-8 w-8 shrink-0">
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
-              </div>
-              {splitMode ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">UPI ₹</Label>
-                    <Input type="number" value={upiAmount || ""}
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value) || 0;
-                        setUpiAmount(v); setPaymentAmount(v + cashAmount);
-                      }} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Cash ₹</Label>
-                    <Input type="number" value={cashAmount || ""}
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value) || 0;
-                        setCashAmount(v); setPaymentAmount(upiAmount + v);
-                      }} />
-                  </div>
+                <div className="flex flex-col text-left">
+                  <SheetTitle className="text-base text-foreground font-bold">Enter Payment Amount</SheetTitle>
+                  <p className="text-xs text-muted-foreground">Enter the amount received and select date.</p>
                 </div>
-              ) : (
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={paymentMode === "upi" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setPaymentMode("upi")}
-                >
-                  UPI/Online
-                </Button>
-                <Button
-                  type="button"
-                  variant={paymentMode === "cash" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setPaymentMode("cash")}
-                >
-                  Cash
-                </Button>
               </div>
-              )}
-            </div>
-            <div>
-              <Label>Collected By</Label>
-              <div className="flex gap-2 mt-2">
-                {collectors.map((collector) => (
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-background">
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label>Amount (₹)</Label>
+                  {paymentAmountTenant && (() => {
+                    const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
+                    if (!tenant) return null;
+                    return (
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant={paymentAmount === tenant.monthlyRent ? "default" : "outline"}
+                          size="sm"
+                          className="h-6 text-xs px-2"
+                          onClick={() => { setPaymentAmount(tenant.monthlyRent); setOverpaymentReason(""); }}
+                        >
+                          Full Rent
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={paymentAmount !== tenant.monthlyRent && paymentAmount > 0 ? "default" : "outline"}
+                          size="sm"
+                          className="h-6 text-xs px-2"
+                          onClick={() => { setPaymentAmount(0); setOverpaymentReason(""); }}
+                        >
+                          Custom / Luggage
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <Input
+                  type="number"
+                  value={paymentAmount || ""}
+                  onChange={(e) => {
+                    setPaymentAmount(parseInt(e.target.value) || 0);
+                    setOverpaymentReason("");
+                  }}
+                  className="mt-2"
+                  placeholder="Enter custom amount"
+                />
+                {paymentAmountTenant &&
+                  (() => {
+                    const tenant = tenantsWithPayments.find((t) => t.id === paymentAmountTenant);
+                    if (tenant) {
+                      if (paymentAmount < tenant.monthlyRent && paymentAmount > 0) {
+                        return (
+                          <p className="text-sm text-partial mt-2">
+                            Partial payment. Remaining: ₹
+                            {(tenant.monthlyRent - paymentAmount).toLocaleString()}
+                          </p>
+                        );
+                      } else if (paymentAmount > tenant.monthlyRent) {
+                        const extra = paymentAmount - tenant.monthlyRent;
+                        return (
+                          <div className="mt-2 space-y-2">
+                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                              Extra payment: ₹{extra.toLocaleString()} above rent of ₹
+                              {tenant.monthlyRent.toLocaleString()}
+                            </p>
+                            <div>
+                              <Label className="text-sm">Reason for extra amount *</Label>
+                              <Input
+                                type="text"
+                                value={overpaymentReason}
+                                onChange={(e) => {
+                                  setOverpaymentReason(e.target.value);
+                                  setOverpaymentError(false);
+                                }}
+                                placeholder="e.g., Advance, Electricity, Next month"
+                                className={cn("mt-1", overpaymentError && "border-destructive")}
+                              />
+                              {overpaymentError && (
+                                <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                    }
+                    return null;
+                  })()}
+              </div>
+
+              <div>
+                <Label>Payment Mode</Label>
+                <div className="flex items-center justify-between mt-2 mb-2">
+                  <span className="text-xs text-muted-foreground">
+                    {splitMode ? `Split total: ₹${(upiAmount + cashAmount).toLocaleString()}` : "Single mode"}
+                  </span>
                   <Button
-                    key={collector.id}
-                    type="button"
-                    variant={collectedBy === collector.id ? "default" : "outline"}
-                    className="flex-1"
-                    onClick={() => setCollectedBy(collector.id)}
+                    type="button" size="sm" variant={splitMode ? "default" : "outline"}
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const next = !splitMode;
+                      setSplitMode(next);
+                      if (next) { setUpiAmount(paymentAmount); setCashAmount(0); }
+                      else { setPaymentAmount(upiAmount + cashAmount || paymentAmount); }
+                    }}
                   >
-                    {collector.displayName}
+                    {splitMode ? "Single mode" : "Split UPI + Cash"}
                   </Button>
-                ))}
+                </div>
+                {splitMode ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">UPI ₹</Label>
+                      <Input type="number" value={upiAmount || ""}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value) || 0;
+                          setUpiAmount(v); setPaymentAmount(v + cashAmount);
+                        }} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Cash ₹</Label>
+                      <Input type="number" value={cashAmount || ""}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value) || 0;
+                          setCashAmount(v); setPaymentAmount(upiAmount + v);
+                        }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={paymentMode === "upi" ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setPaymentMode("upi")}
+                    >
+                      UPI/Online
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={paymentMode === "cash" ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setPaymentMode("cash")}
+                    >
+                      Cash
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label>Collected By</Label>
+                <div className="flex gap-2 mt-2">
+                  {collectors.map((collector) => (
+                    <Button
+                      key={collector.id}
+                      type="button"
+                      variant={collectedBy === collector.id ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setCollectedBy(collector.id)}
+                    >
+                      {collector.displayName}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Payment Date</Label>
+                <Calendar
+                  mode="single"
+                  selected={paymentDate}
+                  onSelect={(date) => date && setPaymentDate(date)}
+                  className={cn("rounded-md border mt-2 pointer-events-auto w-full flex justify-center")}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4 pb-2 border-t mt-4 shrink-0">
+                <Button variant="outline" className="flex-1" onClick={() => setPaymentAmountTenant(null)}>Cancel</Button>
+                <Button className="flex-1" onClick={confirmPaymentAmount} disabled={paymentAmount <= 0}>
+                  Confirm Payment
+                </Button>
               </div>
             </div>
-            <div>
-              <Label>Payment Date</Label>
-              <Calendar
-                mode="single"
-                selected={paymentDate}
-                onSelect={(date) => date && setPaymentDate(date)}
-                className={cn("rounded-md border mt-2 pointer-events-auto")}
-              />
-            </div>
-            </div>
-            <div className="flex gap-2 pt-4 pb-2">
-              <Button variant="outline" className="flex-1" onClick={() => setPaymentAmountTenant(null)}>Cancel</Button>
-              <Button className="flex-1" onClick={confirmPaymentAmount} disabled={paymentAmount <= 0}>
-                Confirm Payment
-              </Button>
-            </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -1923,182 +1929,187 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <Sheet open={!!payRemainingTenant} onOpenChange={(open) => !open && setPayRemainingTenant(null)}>
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-lg p-0"}
         >
-          <SheetHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-base">Pay Remaining Amount</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => setPayRemainingTenant(null)} className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">Enter amount and select payment date.</p>
-          </SheetHeader>
-          <ScrollArea className={isMobile ? "h-[calc(100vh-180px)]" : "h-[calc(100vh-160px)] mt-4"}>
-            <div className="space-y-4 px-1">
-            <div>
-              <Label>Amount (₹)</Label>
-              <Input
-                type="number"
-                value={payRemainingAmount}
-                onChange={(e) => setPayRemainingAmount(parseInt(e.target.value) || 0)}
-                className="mt-2"
-              />
-              {payRemainingTenant &&
-                (() => {
-                  const tenant = tenantsWithPayments.find((t) => t.id === payRemainingTenant);
-                  if (tenant) {
-                    // Use pro-rata effective rent if applicable
-                    const targetRent =
-                      tenant.isProRata && tenant.effectiveRent !== undefined
-                        ? tenant.effectiveRent
-                        : tenant.monthlyRent;
-                    const remaining = targetRent - (tenant.payment.amountPaid || 0);
-                    const newTotal = (tenant.payment.amountPaid || 0) + payRemainingAmount;
-
-                    // Show pro-rata info if applicable
-                    if (tenant.isProRata && tenant.daysStayed) {
-                      return (
-                        <div className="mt-2 space-y-2">
-                          {/* Visual Stay Period Calendar */}
-                          <StayPeriodIndicator
-                            startDate={tenant.startDate}
-                            endDate={tenant.endDate}
-                            year={selectedYear}
-                            month={selectedMonth}
-                            daysStayed={tenant.daysStayed}
-                            dailyRate={Math.round(tenant.monthlyRent / 30)}
-                            effectiveRent={targetRent}
-                            paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
-                            allowCustomStart
-                          />
-                          {payRemainingAmount < remaining && (
-                            <p className="text-sm text-partial">
-                              Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹
-                              {(targetRent - newTotal).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    if (payRemainingAmount < remaining) {
-                      return (
-                        <p className="text-sm text-partial mt-2">
-                          Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹
-                          {(targetRent - newTotal).toLocaleString()}
-                        </p>
-                      );
-                    }
-                  }
-                  return null;
-                })()}
-            </div>
-
-            {/* Discount and Extra Amount boxes */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Discount (₹)</Label>
-                <Input
-                  type="number"
-                  value={payRemainingDiscount || ""}
-                  onChange={(e) => setPayRemainingDiscount(parseInt(e.target.value) || 0)}
-                  className="mt-1"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Extra Amount (₹)</Label>
-                <Input
-                  type="number"
-                  value={payRemainingExtra || ""}
-                  onChange={(e) => setPayRemainingExtra(parseInt(e.target.value) || 0)}
-                  className="mt-1"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            {/* Show final calculation */}
-            {(payRemainingDiscount > 0 || payRemainingExtra > 0) && (
-              <div className="p-2 bg-muted rounded text-xs">
-                <div className="flex justify-between">
-                  <span>Base Amount:</span>
-                  <span>₹{payRemainingAmount.toLocaleString()}</span>
-                </div>
-                {payRemainingDiscount > 0 && (
-                  <div className="flex justify-between text-paid">
-                    <span>Discount:</span>
-                    <span>-₹{payRemainingDiscount.toLocaleString()}</span>
-                  </div>
-                )}
-                {payRemainingExtra > 0 && (
-                  <div className="flex justify-between text-pending">
-                    <span>Extra:</span>
-                    <span>+₹{payRemainingExtra.toLocaleString()}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-semibold border-t pt-1 mt-1">
-                  <span>Final Amount:</span>
-                  <span>₹{(payRemainingAmount - payRemainingDiscount + payRemainingExtra).toLocaleString()}</span>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setPayRemainingTenant(null)} className="h-8 w-8 shrink-0">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex flex-col text-left">
+                  <SheetTitle className="text-base text-foreground font-bold">Pay Remaining Amount</SheetTitle>
+                  <p className="text-xs text-muted-foreground">Enter amount and select payment date.</p>
                 </div>
               </div>
-            )}
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-background">
+              <div>
+                <Label>Amount (₹)</Label>
+                <Input
+                  type="number"
+                  value={payRemainingAmount || ""}
+                  onChange={(e) => setPayRemainingAmount(parseInt(e.target.value) || 0)}
+                  className="mt-2"
+                />
+                {payRemainingTenant &&
+                  (() => {
+                    const tenant = tenantsWithPayments.find((t) => t.id === payRemainingTenant);
+                    if (tenant) {
+                      // Use pro-rata effective rent if applicable
+                      const targetRent =
+                        tenant.isProRata && tenant.effectiveRent !== undefined
+                          ? tenant.effectiveRent
+                          : tenant.monthlyRent;
+                      const remaining = targetRent - (tenant.payment.amountPaid || 0);
+                      const newTotal = (tenant.payment.amountPaid || 0) + payRemainingAmount;
 
-            <div>
-              <Label>Payment Mode</Label>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={remainingPaymentMode === "upi" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setRemainingPaymentMode("upi")}
-                >
-                  UPI/Online
-                </Button>
-                <Button
-                  type="button"
-                  variant={remainingPaymentMode === "cash" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setRemainingPaymentMode("cash")}
-                >
-                  Cash
-                </Button>
+                      // Show pro-rata info if applicable
+                      if (tenant.isProRata && tenant.daysStayed) {
+                        return (
+                          <div className="mt-2 space-y-2">
+                            {/* Visual Stay Period Calendar */}
+                            <StayPeriodIndicator
+                              startDate={tenant.startDate}
+                              endDate={tenant.endDate}
+                              year={selectedYear}
+                              month={selectedMonth}
+                              daysStayed={tenant.daysStayed}
+                              dailyRate={Math.round(tenant.monthlyRent / 30)}
+                              effectiveRent={targetRent}
+                              paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
+                              allowCustomStart
+                            />
+                            {payRemainingAmount < remaining && (
+                              <p className="text-sm text-partial">
+                                Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹
+                                {(targetRent - newTotal).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      if (payRemainingAmount < remaining) {
+                        return (
+                          <p className="text-sm text-partial mt-2">
+                            Partial payment. Total paid: ₹{newTotal.toLocaleString()} • Still due: ₹
+                            {(targetRent - newTotal).toLocaleString()}
+                          </p>
+                        );
+                      }
+                    }
+                    return null;
+                  })()}
               </div>
-            </div>
-            <div>
-              <Label>Collected By</Label>
-              <div className="flex gap-2 mt-2">
-                {collectors.map((collector) => (
+
+              {/* Discount and Extra Amount boxes */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Discount (₹)</Label>
+                  <Input
+                    type="number"
+                    value={payRemainingDiscount || ""}
+                    onChange={(e) => setPayRemainingDiscount(parseInt(e.target.value) || 0)}
+                    className="mt-1"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Extra Amount (₹)</Label>
+                  <Input
+                    type="number"
+                    value={payRemainingExtra || ""}
+                    onChange={(e) => setPayRemainingExtra(parseInt(e.target.value) || 0)}
+                    className="mt-1"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Show final calculation */}
+              {(payRemainingDiscount > 0 || payRemainingExtra > 0) && (
+                <div className="p-2 bg-muted rounded text-xs">
+                  <div className="flex justify-between">
+                    <span>Base Amount:</span>
+                    <span>₹{payRemainingAmount.toLocaleString()}</span>
+                  </div>
+                  {payRemainingDiscount > 0 && (
+                    <div className="flex justify-between text-paid">
+                      <span>Discount:</span>
+                      <span>-₹{payRemainingDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {payRemainingExtra > 0 && (
+                    <div className="flex justify-between text-pending">
+                      <span>Extra:</span>
+                      <span>+₹{payRemainingExtra.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold border-t pt-1 mt-1">
+                    <span>Final Amount:</span>
+                    <span>₹{(payRemainingAmount - payRemainingDiscount + payRemainingExtra).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label>Payment Mode</Label>
+                <div className="flex gap-2 mt-2">
                   <Button
-                    key={collector.id}
                     type="button"
-                    variant={remainingCollectedBy === collector.id ? "default" : "outline"}
+                    variant={remainingPaymentMode === "upi" ? "default" : "outline"}
                     className="flex-1"
-                    onClick={() => setRemainingCollectedBy(collector.id)}
+                    onClick={() => setRemainingPaymentMode("upi")}
                   >
-                    {collector.displayName}
+                    UPI/Online
                   </Button>
-                ))}
+                  <Button
+                    type="button"
+                    variant={remainingPaymentMode === "cash" ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setRemainingPaymentMode("cash")}
+                  >
+                    Cash
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label>Collected By</Label>
+                <div className="flex gap-2 mt-2">
+                  {collectors.map((collector) => (
+                    <Button
+                      key={collector.id}
+                      type="button"
+                      variant={remainingCollectedBy === collector.id ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setRemainingCollectedBy(collector.id)}
+                    >
+                      {collector.displayName}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Payment Date</Label>
+                <Calendar
+                  mode="single"
+                  selected={payRemainingDate}
+                  onSelect={(date) => date && setPayRemainingDate(date)}
+                  className={cn("rounded-md border mt-2 pointer-events-auto w-full flex justify-center")}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4 pb-2 border-t mt-4 shrink-0">
+                <Button variant="outline" className="flex-1" onClick={() => setPayRemainingTenant(null)}>Cancel</Button>
+                <Button className="flex-1" onClick={confirmPayRemaining} disabled={payRemainingAmount <= 0}>
+                  Confirm Payment
+                </Button>
               </div>
             </div>
-            <div>
-              <Label>Payment Date</Label>
-              <Calendar
-                mode="single"
-                selected={payRemainingDate}
-                onSelect={(date) => date && setPayRemainingDate(date)}
-                className={cn("rounded-md border mt-2 pointer-events-auto")}
-              />
-            </div>
-            <div className="flex gap-2 pt-4 pb-2">
-              <Button variant="outline" className="flex-1" onClick={() => setPayRemainingTenant(null)}>Cancel</Button>
-              <Button className="flex-1" onClick={confirmPayRemaining} disabled={payRemainingAmount <= 0}>
-                Confirm Payment
-              </Button>
-            </div>
-            </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
 
