@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
+import paidStamp from "@/assets/paid-stamp.png";
 
 export interface ACBillData {
   roomNo: string;
@@ -142,23 +143,23 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        position: "relative",
       }}>
         {isPaid && (
-          <div style={{
-            background: "#10b981",
-            color: "#ffffff",
-            borderRadius: 6,
-            padding: "3px 10px",
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: 0.8,
-            textTransform: "uppercase",
-            marginBottom: 8,
-            display: "inline-block",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-          }}>
-            Paid Receipt
-          </div>
+          <img 
+            src={paidStamp} 
+            alt="PAID" 
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "15px",
+              width: "75px",
+              height: "75px",
+              objectFit: "contain",
+              opacity: 0.9,
+              pointerEvents: "none",
+            }} 
+          />
         )}
         {data.tenantName ? (
           <>
@@ -220,41 +221,39 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         )}
       </div>
 
-      {!data.tenantName && (
-        <div style={{ margin: "0 20px 12px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ background: isPaid ? "#c8e6c9" : "#dbeafe", color: isPaid ? "#1b5e20" : "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
-            Per-Tenant Share
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              {data.tenants.map((t: any, i) => {
-                const hasOverdue = t.overdueAcTotal > 0;
-                const totalTenantDue = t.share + (t.overdueAcTotal || 0);
-                return (
-                  <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                    <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 500, verticalAlign: "top" }}>
-                      <div>{t.name}</div>
-                      {t.overdueAc && t.overdueAc.map((om: any) => (
-                        <div key={om.monthLabel} style={{ fontSize: 10, color: "#b45309", marginTop: 2 }}>
-                          ↳ Overdue AC ({om.monthLabel}): {fmt(om.share)}
-                        </div>
-                      ))}
-                    </td>
-                    <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 600, textAlign: "right", verticalAlign: "top" }}>
-                      <div>{fmt(t.share)}</div>
-                      {hasOverdue ? (
-                        <div style={{ fontSize: 11, color: "#b45309", fontWeight: 700, marginTop: 2 }}>
-                          Total: {fmt(totalTenantDue)}
-                        </div>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <div style={{ margin: "0 20px 12px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ background: isPaid ? "#c8e6c9" : "#dbeafe", color: isPaid ? "#1b5e20" : "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
+          Per-Tenant Share
         </div>
-      )}
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            {data.tenants.map((t: any, i) => {
+              const hasOverdue = t.overdueAcTotal > 0;
+              const totalTenantDue = t.share + (t.overdueAcTotal || 0);
+              return (
+                <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 500, verticalAlign: "top" }}>
+                    <div>{t.name}</div>
+                    {t.overdueAc && t.overdueAc.map((om: any) => (
+                      <div key={om.monthLabel} style={{ fontSize: 10, color: "#b45309", marginTop: 2 }}>
+                        ↳ Overdue AC ({om.monthLabel}): {fmt(om.share)}
+                      </div>
+                    ))}
+                  </td>
+                  <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 600, textAlign: "right", verticalAlign: "top" }}>
+                    <div>{fmt(t.share)}</div>
+                    {hasOverdue ? (
+                      <div style={{ fontSize: 11, color: "#b45309", fontWeight: 700, marginTop: 2 }}>
+                        Total: {fmt(totalTenantDue)}
+                      </div>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <div style={{
         background: isPaid ? "linear-gradient(180deg,#e8f5e9 0%,#c8e6c9 100%)" : "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
