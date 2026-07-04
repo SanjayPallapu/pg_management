@@ -2790,7 +2790,7 @@ export const RentACRoomCard = ({
         <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
           {dayWiseShares.map((tenant) => {
             const isPaid = tenant.acPaymentStatus === "Paid";
-            const hasOverdue = tenant.overdueAcTotal && tenant.overdueAcTotal > 0;
+            const hasOverdue = tenant.overdueAcTotal > 0;
             
             let cardClass = "";
             let btnClass = "";
@@ -2827,7 +2827,7 @@ export const RentACRoomCard = ({
                     <span className="truncate text-xs font-semibold text-foreground/90 block">
                       {tenant.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/80 block mt-0.5">
+                    <span className="text-[10px] text-muted-foreground/85 block mt-0.5">
                       {tenant.daysStayed} days stayed
                     </span>
                   </div>
@@ -2864,7 +2864,7 @@ export const RentACRoomCard = ({
                   <span className="text-[10px] text-muted-foreground/85">AC Share:</span>
                   <span className={cn("font-bold text-xs", textClass)}>
                     ₹{tenant.share.toLocaleString()}
-                    {tenant.overdueAcTotal && tenant.overdueAcTotal > 0 ? (
+                    {tenant.overdueAcTotal > 0 ? (
                       <span className="text-amber-600 dark:text-amber-400 ml-1 font-bold text-[10px]">
                         + ₹{tenant.overdueAcTotal.toLocaleString()}
                       </span>
