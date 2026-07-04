@@ -200,8 +200,8 @@ export const OverduePaymentDialog = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <Button onClick={handleProceedToPayment}>
+              <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+              <Button onClick={handleProceedToPayment} className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5">
                 Proceed to Payment
               </Button>
             </AlertDialogFooter>
@@ -224,13 +224,14 @@ export const OverduePaymentDialog = ({
                   type="number"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                  className="text-lg"
+                  className="text-lg rounded-xl"
                 />
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPaymentAmount(tenant.remaining)}
+                    className="rounded-xl text-xs h-8"
                   >
                     ₹{tenant.remaining.toLocaleString()} (Full)
                   </Button>
@@ -239,6 +240,7 @@ export const OverduePaymentDialog = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setPaymentAmount(1000)}
+                      className="rounded-xl text-xs h-8"
                     >
                       ₹1,000
                     </Button>
@@ -248,6 +250,7 @@ export const OverduePaymentDialog = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setPaymentAmount(2000)}
+                      className="rounded-xl text-xs h-8"
                     >
                       ₹2,000
                     </Button>
@@ -261,14 +264,14 @@ export const OverduePaymentDialog = ({
                         const discountedAmount = tenant.remaining - discount;
                         setPaymentAmount(Math.max(0, discountedAmount));
                       }}
-                      className="text-xs"
+                      className="rounded-xl text-xs h-8"
                     >
                       Apply Discount
                     </Button>
                   )}
                 </div>
               </div>
-
+ 
               {/* Discount */}
               <div className="space-y-2">
                 <Label htmlFor="discount">Discount (₹)</Label>
@@ -281,7 +284,7 @@ export const OverduePaymentDialog = ({
                     setDiscount(val);
                   }}
                   placeholder="0"
-                  className="text-lg"
+                  className="text-lg rounded-xl"
                 />
                 {discount > 0 && (
                   <div className="text-xs text-muted-foreground">
@@ -289,7 +292,7 @@ export const OverduePaymentDialog = ({
                   </div>
                 )}
               </div>
-
+ 
               {/* Payment Date */}
               <div className="space-y-2">
                 <Label>Payment Date</Label>
@@ -298,7 +301,7 @@ export const OverduePaymentDialog = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal rounded-xl",
                         !paymentDate && "text-muted-foreground"
                       )}
                     >
@@ -317,12 +320,12 @@ export const OverduePaymentDialog = ({
                         }
                       }}
                       initialFocus
-                      className="p-3 pointer-events-auto"
+                      className="p-3 pointer-events-auto rounded-xl border"
                     />
                   </PopoverContent>
                 </Popover>
               </div>
-
+ 
               {/* Payment Mode */}
               <div className="space-y-2">
                 <Label>Payment Mode</Label>
@@ -331,7 +334,7 @@ export const OverduePaymentDialog = ({
                     type="button"
                     variant={paymentMode === 'upi' ? 'default' : 'outline'}
                     onClick={() => setPaymentMode('upi')}
-                    className="flex-1 h-12"
+                    className="flex-1 h-12 rounded-xl"
                   >
                     <UpiLogo className="h-5 w-5 mr-2" />
                     UPI
@@ -340,14 +343,14 @@ export const OverduePaymentDialog = ({
                     type="button"
                     variant={paymentMode === 'cash' ? 'default' : 'outline'}
                     onClick={() => setPaymentMode('cash')}
-                    className="flex-1 h-12"
+                    className="flex-1 h-12 rounded-xl"
                   >
                     <CashLogo className="h-5 w-5 mr-2" />
                     Cash
                   </Button>
                 </div>
               </div>
-
+ 
               {/* Collected By */}
               <div className="space-y-2">
                 <Label>Collected By</Label>
@@ -358,7 +361,7 @@ export const OverduePaymentDialog = ({
                       type="button"
                       variant={collectedBy === c.displayName ? 'default' : 'outline'}
                       onClick={() => setCollectedBy(c.displayName)}
-                      className="flex-1 h-10"
+                      className="flex-1 h-10 rounded-xl"
                     >
                       {c.displayName}
                     </Button>
@@ -366,14 +369,15 @@ export const OverduePaymentDialog = ({
                 </div>
               </div>
             </div>
-
+ 
             <AlertDialogFooter className="gap-[10px]">
-              <Button variant="outline" onClick={() => setStep('confirm')}>
+              <Button variant="outline" onClick={() => setStep('confirm')} className="rounded-xl">
                 Back
               </Button>
               <Button 
                 onClick={handleConfirmPayment}
                 disabled={paymentAmount <= 0}
+                className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5"
               >
                 Record Payment
               </Button>

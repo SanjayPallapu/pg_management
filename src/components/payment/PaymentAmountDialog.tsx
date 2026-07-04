@@ -90,7 +90,7 @@ export const PaymentAmountDialog = ({
                   type="button"
                   variant={splitMode ? "default" : "outline"}
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-7 text-xs rounded-xl"
                   onClick={() => {
                     const next = !splitMode;
                     onSplitModeChange(next);
@@ -115,6 +115,7 @@ export const PaymentAmountDialog = ({
                   onAmountChange(parseInt(e.target.value) || 0);
                   onOverpaymentReasonChange?.("");
                 }}
+                className="rounded-xl text-lg h-11"
               />
             ) : (
               <div className="grid grid-cols-2 gap-2">
@@ -128,6 +129,7 @@ export const PaymentAmountDialog = ({
                       onUpiAmountChange?.(v);
                       onAmountChange(v + cashAmount);
                     }}
+                    className="rounded-xl"
                   />
                 </div>
                 <div>
@@ -140,6 +142,7 @@ export const PaymentAmountDialog = ({
                       onCashAmountChange?.(v);
                       onAmountChange(upiAmount + v);
                     }}
+                    className="rounded-xl"
                   />
                 </div>
                 <div className="col-span-2 text-xs text-muted-foreground text-right">
@@ -178,7 +181,7 @@ export const PaymentAmountDialog = ({
                     value={overpaymentReason}
                     onChange={(e) => onOverpaymentReasonChange(e.target.value)}
                     placeholder="e.g., Advance, Electricity, Next month"
-                    className={cn("mt-1", overpaymentError && "border-destructive")}
+                    className={cn("mt-1 rounded-xl", overpaymentError && "border-destructive")}
                   />
                   {overpaymentError && (
                     <p className="text-sm text-destructive mt-1">Reason is required for extra payment</p>
@@ -195,7 +198,7 @@ export const PaymentAmountDialog = ({
               <Button
                 type="button"
                 variant={paymentMode === "upi" ? "default" : "outline"}
-                className="flex-1"
+                className="flex-1 rounded-xl h-11"
                 onClick={() => onPaymentModeChange("upi")}
               >
                 UPI/Online
@@ -203,7 +206,7 @@ export const PaymentAmountDialog = ({
               <Button
                 type="button"
                 variant={paymentMode === "cash" ? "default" : "outline"}
-                className="flex-1"
+                className="flex-1 rounded-xl h-11"
                 onClick={() => onPaymentModeChange("cash")}
               >
                 Cash
@@ -218,13 +221,17 @@ export const PaymentAmountDialog = ({
               mode="single"
               selected={paymentDate}
               onSelect={(date) => date && onPaymentDateChange(date)}
-              className={cn("rounded-md border mt-2 pointer-events-auto")}
+              className={cn("rounded-xl border mt-2 pointer-events-auto")}
             />
           </div>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={confirmDisabled || amount <= 0}>
+          <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onConfirm} 
+            disabled={confirmDisabled || amount <= 0}
+            className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5"
+          >
             Confirm Payment
           </AlertDialogAction>
         </AlertDialogFooter>
