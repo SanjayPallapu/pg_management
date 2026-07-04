@@ -78,7 +78,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         {/* Top Right: Receipt/Bill Details */}
         <div style={{
           position: "absolute",
-          top: "16px",
+          top: "24px",
           right: "20px",
           textAlign: "right",
           fontSize: "9px",
@@ -163,10 +163,11 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
               </tr>
             )}
             <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "12px" }}>🔌</span> Units Consumed
+              <td style={{ padding: "8px 12px", color: "#1e293b", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Units Consumed
               </td>
-              <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 700, textAlign: "right" }}>{data.units} Units</td>
+              <td style={{ padding: "8px 12px", color: "#0f172a", fontWeight: 800, fontSize: "13px", textAlign: "right" }}>{data.units} Units</td>
             </tr>
             {isCustomMode ? (
               <>
