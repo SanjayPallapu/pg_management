@@ -84,44 +84,22 @@ const convertImagesToDataUrl = async (element: HTMLElement): Promise<void> => {
 };
 
 export const generateReceiptImage = async (element: HTMLElement): Promise<string> => {
-  // Clone the element and position it for capture
-  // IMPORTANT: Do NOT use visibility:hidden - it prevents html-to-image from capturing content
-  const clone = element.cloneNode(true) as HTMLElement;
-  clone.style.position = 'fixed';
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.zIndex = '9999';
-  clone.style.pointerEvents = 'none';
-  // Keep visibility visible but make it non-interactive
-  clone.style.visibility = 'visible';
-  clone.style.opacity = '1';
-  // Use transform to move it offscreen after rendering
-  clone.style.transform = 'translateX(-200vw)';
-
-  document.body.appendChild(clone);
-
   try {
     // Ensure all images (logo) are inlined as data URLs before capture
-    await convertImagesToDataUrl(clone);
+    await convertImagesToDataUrl(element);
 
     // Wait for images to fully load
-    await waitForImages(clone);
+    await waitForImages(element);
 
     // Additional wait for rendering
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Temporarily move to visible area for capture
-    clone.style.transform = 'translateX(0)';
-    
-    // Wait for reflow
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-
-    const rect = clone.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const width = Math.max(1, Math.ceil(rect.width));
     const height = Math.max(1, Math.ceil(rect.height));
 
     // Generate PNG with high quality
-    const dataUrl = await toPng(clone, {
+    const dataUrl = await toPng(element, {
       quality: 1.0,
       pixelRatio: 2,
       cacheBust: true,
@@ -135,9 +113,9 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
     });
 
     return dataUrl;
-  } finally {
-    // Clean up
-    document.body.removeChild(clone);
+  } catch (error) {
+    console.error('generateReceiptImage error:', error);
+    throw error;
   }
 };
 
