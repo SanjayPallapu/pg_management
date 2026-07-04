@@ -260,7 +260,7 @@ const Index = () => {
     <div className="flex flex-col h-screen bg-background">
       <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-1 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
             <MonthYearPicker />

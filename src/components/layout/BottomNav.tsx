@@ -44,7 +44,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange }: BottomNavPr
   };
 
   return (
-    <nav className="shrink-0 border-t border-border/70 bg-background/95 px-3 pb-2 pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+    <nav className="shrink-0 border-t border-border/70 bg-background/95 px-3 py-1 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5 rounded-2xl bg-muted/40 p-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -54,7 +54,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange }: BottomNavPr
               key={item.value}
               type="button"
               onClick={() => handleClick(item)}
-              className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all ${
+              className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground active:bg-background/80'
