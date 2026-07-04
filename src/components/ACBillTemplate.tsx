@@ -65,13 +65,14 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         </div>
 
         {/* Right Side: PG Details & Invoice Title */}
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "left", flexGrow: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", alignItems: "center", flexGrow: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             {pgName}
           </div>
           <div style={{ 
             display: "flex", 
             alignItems: "center", 
+            justifyContent: "center",
             gap: "6px", 
             fontSize: 18, 
             fontWeight: 700, 
