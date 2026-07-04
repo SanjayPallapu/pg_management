@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, PartyPopper, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { WelcomeTemplate, type WelcomeData } from '@/components/WelcomeTemplate';
-import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { generateReceiptImage, downloadReceiptImage, dataURLtoBlob } from '@/utils/generateReceiptImage';
 import { usePG } from '@/contexts/PGContext';
 
 const FIXED_SECURITY_DEPOSIT = 2000;
@@ -104,8 +104,7 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
 
     setIsSending(true);
     try {
-      const res = await fetch(generatedImage);
-      const blob = await res.blob();
+      const blob = dataURLtoBlob(generatedImage);
       const safeName = welcomeData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `welcome-${safeName}.png`, { type: 'image/png' });
 

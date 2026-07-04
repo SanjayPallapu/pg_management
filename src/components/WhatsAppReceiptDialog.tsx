@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, Download, Copy, Check, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReceiptTemplate, type ReceiptData } from '@/components/ReceiptTemplate';
-import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { generateReceiptImage, downloadReceiptImage, dataURLtoBlob } from '@/utils/generateReceiptImage';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { PaymentEntry } from '@/types';
 import { usePG } from '@/contexts/PGContext';
@@ -168,8 +168,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
 
     try {
       // Convert base64 to blob and create file
-      const res = await fetch(generatedImage);
-      const blob = await res.blob();
+      const blob = dataURLtoBlob(generatedImage);
       const safeName = receiptData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `receipt-${safeName}.png`, { type: 'image/png' });
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, Loader2, Download, MessageCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { generateRulesImage } from '@/utils/generateRulesImage';
-import { downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { downloadReceiptImage, dataURLtoBlob } from '@/utils/generateReceiptImage';
 import { getStoredPGRules, getStoredRulesLanguage, saveStoredRulesLanguage, type RulesLanguage } from '@/lib/pgRules';
 import { usePG } from '@/contexts/PGContext';
 
@@ -74,10 +74,9 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
     if (!generatedImage || !shareData) return;
     setIsSending(true);
     try {
-      const res = await fetch(generatedImage);
-      const blob = await res.blob();
-      const safeName = shareData.tenantName.replace(/\s+/g, '-').toLowerCase();
-      const file = new File([blob], `rules-${safeName}.png`, { type: 'image/png' });
+       const blob = dataURLtoBlob(generatedImage);
+       const safeName = shareData.tenantName.replace(/\s+/g, '-').toLowerCase();
+       const file = new File([blob], `rules-${safeName}.png`, { type: 'image/png' });
 
       let phone = shareData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
