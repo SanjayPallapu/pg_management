@@ -371,22 +371,27 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenuItem 
-                      onClick={(e) => { e.stopPropagation(); onReminder?.(tenant); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setTimeout(() => {
+                          onReminder?.(tenant); 
+                        }, 100);
+                      }}
                       className="flex items-center gap-2"
                     >
                       <Bell className="h-4 w-4" />
                       Payment Reminder
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <a
-                        href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        Chat with Tenant
-                      </a>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const phone = tenant.phone.replace(/\D/g, '');
+                        window.location.href = `https://wa.me/${phone}`;
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Chat with Tenant
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

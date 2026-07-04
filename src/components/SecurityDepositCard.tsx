@@ -494,13 +494,15 @@ export const SecurityDepositCard = ({
                         },
                         phone: tenant.phone,
                       });
-                      setReceiptDialogOpen(true);
+                      setTimeout(() => {
+                        setReceiptDialogOpen(true);
+                      }, 100);
                     };
 
                     const openWhatsAppChat = () => {
                       const phone = tenant.phone.replace(/\D/g, '');
                       const formattedPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                      window.open(`https://wa.me/${formattedPhone}`, '_blank');
+                      window.location.href = `https://wa.me/${formattedPhone}`;
                     };
 
                     return (
@@ -555,6 +557,7 @@ export const SecurityDepositCard = ({
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button 
+                                  onClick={(e) => e.stopPropagation()}
                                   className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                                   title="WhatsApp options"
                                 >

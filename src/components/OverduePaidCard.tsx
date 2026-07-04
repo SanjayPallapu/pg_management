@@ -200,7 +200,9 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
       tenantId: tenant.id,
       paymentEntries: tenant.allPaymentEntries, // Use all entries for full history
     });
-    setWhatsappDialogOpen(true);
+    setTimeout(() => {
+      setWhatsappDialogOpen(true);
+    }, 100);
   };
 
   if (overduePaidTenants.length === 0 && stillPendingTenants.length === 0) {
@@ -313,7 +315,10 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                             </a>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                >
                                   <MessageCircle className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
@@ -323,7 +328,10 @@ export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
                                   Generate Receipt
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
-                                  onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, '')}`, '_blank')} 
+                                  onClick={() => {
+                                    const phone = tenant.phone.replace(/\D/g, '');
+                                    window.location.href = `https://wa.me/${phone}`;
+                                  }} 
                                   className="gap-2"
                                 >
                                   <MessageSquare className="h-4 w-4" />

@@ -213,7 +213,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
   const openRulesDialog = (tenantName: string, tenantPhone: string) => {
     setRulesShareData({ tenantName, tenantPhone });
-    setRulesDialogOpen(true);
+    setTimeout(() => {
+      setRulesDialogOpen(true);
+    }, 100);
   };
 
   // Handle OS back gesture to close dialogs
@@ -988,7 +990,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       paymentEntries: updatedEntries,
       previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
-    setWhatsappDialogOpen(true);
+    setTimeout(() => {
+      setWhatsappDialogOpen(true);
+    }, 100);
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
     setOverpaymentReason("");
@@ -1071,7 +1075,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       paymentEntries: updatedEntries,
       previousMonthPending: prevMonthPending > 0 ? prevMonthPending : undefined,
     });
-    setWhatsappDialogOpen(true);
+    setTimeout(() => {
+      setWhatsappDialogOpen(true);
+    }, 100);
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
     setPayRemainingDiscount(0);
@@ -1360,7 +1366,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   tenantId: tenant.id,
                   paymentEntries: tenant.payment.paymentEntries as PaymentEntry[],
                 });
-                setWhatsappDialogOpen(true);
+                setTimeout(() => {
+                  setWhatsappDialogOpen(true);
+                }, 100);
               };
               const openPaymentReminder = () => {
                 const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
@@ -1458,7 +1466,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   acSurcharge,
                   acBill,
                 });
-                setReminderDialogOpen(true);
+                setTimeout(() => {
+                  setReminderDialogOpen(true);
+                }, 100);
               };
               return (
                 <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
@@ -1493,6 +1503,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
+                              onClick={(e) => e.stopPropagation()}
                               className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
                               title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
                             >
@@ -1508,7 +1519,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, "")}`, "_blank")}
+                              onClick={() => {
+                                const phone = tenant.phone.replace(/\D/g, "");
+                                window.location.href = `https://wa.me/${phone}`;
+                              }}
                               className="gap-2"
                             >
                               <MessageSquare className="h-4 w-4" />
@@ -1525,17 +1539,18 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                 onClick={() => {
                                   const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
                                   // Dispatch custom event to open security deposit dialog directly
-                                  window.dispatchEvent(
-                                    new CustomEvent("openSecurityDeposit", {
-                                      detail: {
-                                        tenantId: tenant.id,
-                                        tenantName: tenant.name,
-                                        tenantPhone: tenant.phone,
-                                        roomNo: tenant.roomNo,
-                                        roomCapacity: room?.capacity,
-                                      },
-                                    }),
-                                  );
+                                  const event = new CustomEvent("openSecurityDeposit", {
+                                    detail: {
+                                      tenantId: tenant.id,
+                                      tenantName: tenant.name,
+                                      tenantPhone: tenant.phone,
+                                      roomNo: tenant.roomNo,
+                                      roomCapacity: room?.capacity,
+                                    },
+                                  });
+                                  setTimeout(() => {
+                                    window.dispatchEvent(event);
+                                  }, 100);
                                 }}
                                 className="gap-2"
                               >
@@ -1554,7 +1569,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                   sharingType: room ? `${room.capacity} Sharing` : "",
                                   monthlyRent: tenant.monthlyRent,
                                 });
-                                setWelcomeDialogOpen(true);
+                                setTimeout(() => {
+                                  setWelcomeDialogOpen(true);
+                                }, 100);
                               }}
                               className="gap-2"
                             >

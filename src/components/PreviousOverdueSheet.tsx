@@ -515,7 +515,9 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     pgName: currentPG?.name,
                     pgLogoUrl: currentPG?.logoUrl,
                   });
-                  setReceiptDialogOpen(true);
+                  setTimeout(() => {
+                    setReceiptDialogOpen(true);
+                  }, 100);
                 };
 
                 const handleOpenReminder = () => {
@@ -585,7 +587,9 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     acSurcharge,
                     acBill,
                   });
-                  setReminderDialogOpen(true);
+                  setTimeout(() => {
+                    setReminderDialogOpen(true);
+                  }, 100);
                 };
 
                 const bgClass = tenant.status === 'Partial'
@@ -613,7 +617,10 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                             </a>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10">
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                >
                                   <MessageCircle className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
@@ -628,15 +635,14 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                                     Generate Receipt
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem asChild>
-                                  <a
-                                    href={`https://wa.me/91${tenant.phone}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <MessageCircle className="h-4 w-4 mr-2" />
-                                    Chat with Tenant
-                                  </a>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const phone = tenant.phone.replace(/\D/g, '');
+                                    window.location.href = `https://wa.me/91${phone}`;
+                                  }}
+                                >
+                                  <MessageCircle className="h-4 w-4 mr-2" />
+                                  Chat with Tenant
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

@@ -391,7 +391,9 @@ export const PreviousMonthOverdueCard = () => {
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
     });
-    setReminderDialogOpen(true);
+    setTimeout(() => {
+      setReminderDialogOpen(true);
+    }, 100);
   };
   
   const handleOpenReceipt = (tenant: StillPendingTenant) => {
@@ -414,7 +416,9 @@ export const PreviousMonthOverdueCard = () => {
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
     });
-    setReceiptDialogOpen(true);
+    setTimeout(() => {
+      setReceiptDialogOpen(true);
+    }, 100);
   };
 
   if (totalCollected === 0 && totalOverdue === 0) {
@@ -743,7 +747,10 @@ export const PreviousMonthOverdueCard = () => {
                             </a>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                >
                                   <MessageCircle className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
@@ -758,15 +765,14 @@ export const PreviousMonthOverdueCard = () => {
                                     Generate Receipt
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem asChild>
-                                  <a
-                                    href={`https://wa.me/91${tenant.phone.replace(/\D/g, '')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <MessageCircle className="h-4 w-4 mr-2" />
-                                    Chat with Tenant
-                                  </a>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const phone = tenant.phone.replace(/\D/g, '');
+                                    window.location.href = `https://wa.me/91${phone}`;
+                                  }}
+                                >
+                                  <MessageCircle className="h-4 w-4 mr-2" />
+                                  Chat with Tenant
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

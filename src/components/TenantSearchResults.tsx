@@ -108,7 +108,9 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
       remainingBalance: remaining > 0 ? remaining : 0,
       paymentEntries: tenant.paymentEntries,
     });
-    setReceiptDialogOpen(true);
+    setTimeout(() => {
+      setReceiptDialogOpen(true);
+    }, 100);
   };
 
   const handleOpenReminder = (tenant: typeof searchResults[0]) => {
@@ -127,7 +129,9 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
       amountPaid: amountPaid > 0 ? amountPaid : undefined,
       balance: balance,
     });
-    setReminderDialogOpen(true);
+    setTimeout(() => {
+      setReminderDialogOpen(true);
+    }, 100);
   };
 
   const handleLongPressStart = (tenantId: string) => {
@@ -191,7 +195,10 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
                       </a>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                          >
                             <MessageCircle className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
@@ -208,15 +215,14 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
                               Payment Reminder
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={`https://wa.me/91${tenant.phone}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              Chat with Tenant
-                            </a>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const phone = tenant.phone.replace(/\D/g, '');
+                              window.location.href = `https://wa.me/91${phone}`;
+                            }}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Chat with Tenant
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -122,6 +122,7 @@ export const TenantRentCard = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
+                  onClick={(e) => e.stopPropagation()}
                   className={cn(
                     "h-6 w-6 flex items-center justify-center rounded-full transition-colors",
                     whatsappSent
@@ -135,20 +136,37 @@ export const TenantRentCard = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {(tenant.payment.paymentStatus === "Paid" || tenant.payment.paymentStatus === "Partial") && (
-                  <DropdownMenuItem onClick={onGenerateReceipt} className="gap-2">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setTimeout(() => {
+                        onGenerateReceipt?.();
+                      }, 100);
+                    }}
+                    className="gap-2"
+                  >
                     <Receipt className="h-4 w-4" />
                     Generate Receipt
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
-                  onClick={() => window.open(`https://wa.me/${tenant.phone.replace(/\D/g, "")}`, "_blank")}
+                  onClick={() => {
+                    const phone = tenant.phone.replace(/\D/g, "");
+                    window.location.href = `https://wa.me/${phone}`;
+                  }}
                   className="gap-2"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Chat with Tenant
                 </DropdownMenuItem>
                 {tenant.payment.paymentStatus !== "Paid" && (
-                  <DropdownMenuItem onClick={onPaymentReminder} className="gap-2">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setTimeout(() => {
+                        onPaymentReminder?.();
+                      }, 100);
+                    }}
+                    className="gap-2"
+                  >
                     <Bell className="h-4 w-4" />
                     Payment Reminder
                   </DropdownMenuItem>

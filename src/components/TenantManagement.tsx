@@ -632,7 +632,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
       tenantId: tenant.id,
     });
-    setWhatsappDialogOpen(true);
+    setTimeout(() => {
+      setWhatsappDialogOpen(true);
+    }, 100);
 
     setPartialPaymentTenant(null);
     setPartialAmount(0);
@@ -712,7 +714,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
       remainingBalance: isFullPayment ? 0 : tenant.monthlyRent - totalPaid,
       tenantId: tenant.id,
     });
-    setWhatsappDialogOpen(true);
+    setTimeout(() => {
+      setWhatsappDialogOpen(true);
+    }, 100);
 
     setPayRemainingTenant(null);
     setPayRemainingAmount(0);
