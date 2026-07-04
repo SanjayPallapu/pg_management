@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, MessageCircle, Download, ArrowLeft, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { VisitorFollowUpTemplate, type VisitorFollowUpData } from "./VisitorFollowUpTemplate";
-import { generateReceiptImage, downloadReceiptImage } from "@/utils/generateReceiptImage";
+import { generateReceiptImage, downloadReceiptImage, dataURLtoBlob } from "@/utils/generateReceiptImage";
 import { usePG } from "@/contexts/PGContext";
 import { Room } from "@/types";
 
@@ -83,15 +83,14 @@ export const VisitorFollowUpDialog = ({ open, onOpenChange, rooms }: Props) => {
     if (!generatedImage) return;
     setIsSending(true);
     try {
-      const res = await fetch(generatedImage);
-      const blob = await res.blob();
+      const blob = dataURLtoBlob(generatedImage);
       const safeName = visitorName.replace(/\s+/g, "-").toLowerCase();
       const file = new File([blob], `visit-followup-${safeName}.png`, { type: "image/png" });
 
       let phone = visitorPhone.replace(/\D/g, "");
       const displayPhone = phone.startsWith("91") ? phone.slice(2) : phone;
 
-      // Copy template text message
+      // Copy template text message to clipboard for sharing
       const pgName = currentPG?.name || "our hostel";
       const messageText = 
         `🏡 *Visit Confirmation - ${pgName}* 🏡\n` +
@@ -103,7 +102,20 @@ export const VisitorFollowUpDialog = ({ open, onOpenChange, rooms }: Props) => {
         `Warm regards,\n` +
         `Management`;
 
-      await navigator.clipboard.writeText(messageText);
+      // Copy phone number or message to clipboard
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
 
       const nav = navigator as any;
       if (nav?.share && nav?.canShare?.({ files: [file] })) {
@@ -115,11 +127,10 @@ export const VisitorFollowUpDialog = ({ open, onOpenChange, rooms }: Props) => {
       } else {
         downloadReceiptImage(generatedImage, `visit-followup-${safeName}`);
         toast({ 
-          title: "Followup message copied!", 
-          description: "WhatsApp message copied to clipboard. Redirecting to WhatsApp..." 
+          title: "Visitor details copied!", 
+          description: "Visitor phone number copied to clipboard. Redirecting to WhatsApp..." 
         });
-        const finalPhone = phone ? (phone.startsWith("91") ? phone : `91${phone}`) : "";
-        window.open(`https://wa.me/${finalPhone}`, "_blank");
+        window.location.href = "https://wa.me/";
       }
     } catch (e: any) {
       if (e?.name !== "AbortError") {
@@ -160,16 +171,11 @@ export const VisitorFollowUpDialog = ({ open, onOpenChange, rooms }: Props) => {
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-[420px] rounded-lg">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
-                🏡 Send Visit Confirmation
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs ml-10">
+          <DialogHeader className="text-center flex flex-col items-center justify-center">
+            <DialogTitle className="flex items-center gap-2 text-base font-bold justify-center">
+              🏡 Send Visit Confirmation
+            </DialogTitle>
+            <DialogDescription className="text-xs mt-1 max-w-[320px] text-center">
               Send a polite followup template to visitors asking if they plan to join.
             </DialogDescription>
           </DialogHeader>
