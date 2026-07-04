@@ -177,9 +177,19 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search
-      await navigator.clipboard.writeText(displayPhone);
-
-      // Show tenant details in toast for searching
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
 
       // Small delay so user sees the toast
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -191,10 +201,9 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         // Mark as sent after successful share
         onWhatsappSent?.();
       } else {
-        // Fallback: download and open WhatsApp chat (no pre-filled text)
+        // Fallback: download and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, receiptData.tenantName);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = `https://wa.me/`;
         // Also mark as sent for fallback
         onWhatsappSent?.();
       }

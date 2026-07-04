@@ -111,7 +111,20 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       let phone = welcomeData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      await navigator.clipboard.writeText(displayPhone);
+      // Copy phone number to clipboard for easy search
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -120,10 +133,9 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
         // Share only the image file, no text
         await navAny.share({ files: [file] });
       } else {
-        // Fallback: download image and open WhatsApp chat (no pre-filled text)
+        // Fallback: download image and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, `welcome-${welcomeData.tenantName}`);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = `https://wa.me/`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {

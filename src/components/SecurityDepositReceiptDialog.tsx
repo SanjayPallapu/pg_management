@@ -93,7 +93,19 @@ export const SecurityDepositReceiptDialog = ({
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search
-      await navigator.clipboard.writeText(displayPhone);
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
 
       // Show tenant details in toast for searching
 
@@ -105,10 +117,9 @@ export const SecurityDepositReceiptDialog = ({
       if (navAny?.share && navAny?.canShare?.({ files: [file] })) {
         await navAny.share({ files: [file] });
       } else {
-        // Fallback: download and open WhatsApp chat (no pre-filled text)
+        // Fallback: download and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, `${data.tenant.name}-deposit`);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = `https://wa.me/`;
       }
     } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);

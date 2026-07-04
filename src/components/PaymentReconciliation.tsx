@@ -517,9 +517,9 @@ export const PaymentReconciliation = ({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-4 [&>button]:hidden" : "w-full sm:max-w-lg"}
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
       >
-        <SheetHeader className="pb-2">
+        <SheetHeader className="pb-2 px-4 pt-4 border-b bg-background">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">
               Payment Reconciliation
@@ -530,8 +530,8 @@ export const PaymentReconciliation = ({
           </div>
         </SheetHeader>
 
-        <div>
-          <div className="mt-4">
+        <div className="px-4 pb-4 mt-2">
+          <div>
           <div className="space-y-6">
             {/* Date Range Filter */}
             <div className="flex items-center gap-3 flex-wrap">

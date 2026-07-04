@@ -81,7 +81,20 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
       let phone = shareData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      try { await navigator.clipboard.writeText(displayPhone); } catch {}
+      // Copy phone number to clipboard for easy search
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
 
       await new Promise(r => setTimeout(r, 500));
 
@@ -90,8 +103,7 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
         await navAny.share({ files: [file] });
       } else {
         downloadReceiptImage(generatedImage, `rules-${shareData.tenantName}`);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = `https://wa.me/`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {

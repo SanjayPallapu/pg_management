@@ -112,9 +112,9 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full px-1.5 pt-4 pb-0 [&>button]:hidden" : "w-full sm:max-w-lg"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
         >
-          <SheetHeader className="pb-2">
+          <SheetHeader className="pb-2 px-4 pt-4 border-b bg-background">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 shrink-0">
                 <ArrowLeft className="h-5 w-5" />
@@ -123,7 +123,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
             </div>
           </SheetHeader>
 
-          <div className="space-y-4 py-4 pt-[5px] pb-0">
+          <div className="space-y-4 p-4 flex-1 overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="capacity">Room Capacity</Label>
               <Select value={capacity} onValueChange={handleCapacityChange}>
