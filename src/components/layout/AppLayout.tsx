@@ -26,6 +26,9 @@ export const AppLayout = ({
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
+      <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
+
       {/* Header with back button */}
       {(showBack || title || headerActions) && (
         <header className="shrink-0 border-b border-border/70 bg-background/95 backdrop-blur-xl z-40">
