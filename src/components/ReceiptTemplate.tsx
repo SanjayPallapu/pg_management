@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { formatBillingRange } from "./PaymentReminderTemplate";
 import { PaymentEntry } from "@/types";
+import paidStamp from "@/assets/paid-stamp.png";
 
 export interface ReceiptData {
   tenant: {
@@ -133,8 +134,23 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           padding: "12px",
           textAlign: "center",
           border: "1px solid #a7f3d0",
+          position: "relative",
         }}
       >
+        <img 
+          src={paidStamp} 
+          alt="PAID" 
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "12px",
+            width: "60px",
+            height: "60px",
+            objectFit: "contain",
+            opacity: 0.85,
+            pointerEvents: "none",
+          }} 
+        />
         <div
           style={{
             fontSize: "24px",

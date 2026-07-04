@@ -228,13 +228,14 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
             {data.tenants.map((t: any, i) => {
-              const hasOverdue = t.overdueAcTotal > 0;
+              const isCurrentTenant = !data.tenantName || (t.name === data.tenantName || t.name.startsWith(data.tenantName + " ("));
+              const hasOverdue = isCurrentTenant && t.overdueAcTotal > 0;
               const totalTenantDue = t.share + (t.overdueAcTotal || 0);
               return (
                 <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "10px 16px", color: "#1a1a1a", fontWeight: 500, verticalAlign: "top" }}>
                     <div>{t.name}</div>
-                    {t.overdueAc && t.overdueAc.map((om: any) => (
+                    {isCurrentTenant && t.overdueAc && t.overdueAc.map((om: any) => (
                       <div key={om.monthLabel} style={{ fontSize: 10, color: "#b45309", marginTop: 2 }}>
                         ↳ Overdue AC ({om.monthLabel}): {fmt(om.share)}
                       </div>
