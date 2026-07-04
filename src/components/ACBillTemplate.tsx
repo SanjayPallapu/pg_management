@@ -16,6 +16,10 @@ export interface ACBillData {
   endReading?: number | null;
   splitType?: string;
   splitCount?: number | null;
+  isPaid?: boolean;
+  paymentDate?: string;
+  paymentMode?: string;
+  collectedBy?: string;
 }
 
 interface Props { data: ACBillData; }
@@ -27,6 +31,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
   const apBill = calculateAPCommercialBill(data.units);
   const isCustomMode = data.calcMode === "custom";
+  const isPaid = data.isPaid;
 
   return (
     <div
@@ -47,10 +52,10 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       <div style={{ textAlign: "center", padding: "6px 0 2px" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>
           <div style={{
-            width: 28, height: 28, borderRadius: "50%", background: "#0ea5e9",
+            width: 28, height: 28, borderRadius: "50%", background: isPaid ? "#10b981" : "#0ea5e9",
             color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold",
-          }}>⚡</div>
-          <span>AC Electricity Bill</span>
+          }}>{isPaid ? "🧾" : "⚡"}</div>
+          <span>{isPaid ? "AC Bill Payment Receipt" : "AC Electricity Bill"}</span>
         </div>
         <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{data.monthLabel}</div>
       </div>
@@ -130,13 +135,33 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
 
       <div style={{
         margin: "0 20px 12px",
-        background: "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
-        borderRadius: 12, padding: 16, textAlign: "center", border: "1px solid #93c5fd",
+        background: isPaid ? "linear-gradient(180deg,#e8f5e9 0%,#c8e6c9 100%)" : "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
+        borderRadius: 12, padding: 16, textAlign: "center", 
+        border: isPaid ? "1px solid #a5d6a7" : "1px solid #93c5fd",
+        position: "relative",
       }}>
+        {isPaid && (
+          <div style={{
+            position: "absolute",
+            top: 10,
+            right: 15,
+            border: "3px solid #2e7d32",
+            color: "#2e7d32",
+            borderRadius: 6,
+            padding: "2px 8px",
+            fontSize: 12,
+            fontWeight: 800,
+            transform: "rotate(10deg)",
+            letterSpacing: 1,
+            background: "#fff",
+          }}>PAID</div>
+        )}
         {data.tenantName ? (
           <>
-            <div style={{ fontSize: 12, color: "#075985", fontWeight: 500, marginBottom: 4 }}>Your Share</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#0c4a6e" }}>
+            <div style={{ fontSize: 12, color: isPaid ? "#1b5e20" : "#075985", fontWeight: 500, marginBottom: 4 }}>
+              {isPaid ? "Amount Paid" : "Your Share"}
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: isPaid ? "#1b5e20" : "#0c4a6e" }}>
               {(() => {
                 const tenant = data.tenants.find(t => t.name === data.tenantName || t.name.startsWith(data.tenantName + " ("));
                 const baseShare = tenant?.share ?? 0;
@@ -144,8 +169,14 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
                 return fmt(baseShare + overdue);
               })()}
             </div>
-            <div style={{ fontSize: 12, color: "#075985", marginTop: 4 }}>{data.monthLabel} • Room {data.roomNo}</div>
-            <div style={{ fontSize: 10, color: "#075985", opacity: 0.8, marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: isPaid ? "#2e7d32" : "#075985", marginTop: 4, fontWeight: isPaid ? 600 : 400 }}>
+              {isPaid ? (
+                `Paid via ${data.paymentMode?.toUpperCase()} on ${data.paymentDate}${data.collectedBy ? ` • Received by ${data.collectedBy}` : ""}`
+              ) : (
+                `${data.monthLabel} • Room ${data.roomNo}`
+              )}
+            </div>
+            <div style={{ fontSize: 10, color: isPaid ? "#2e7d32" : "#075985", opacity: 0.8, marginTop: 4 }}>
               {data.splitType === "custom"
                 ? `Split: Custom Split (${data.splitCount} persons)`
                 : data.splitType === "capacity"
@@ -155,11 +186,11 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
           </>
         ) : (
           <>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#0c4a6e", marginBottom: 4 }}>{fmt(data.totalAmount)}</div>
-            <div style={{ fontSize: 13, color: "#075985", fontWeight: 500 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: isPaid ? "#1b5e20" : "#0c4a6e", marginBottom: 4 }}>{fmt(data.totalAmount)}</div>
+            <div style={{ fontSize: 13, color: isPaid ? "#1b5e20" : "#075985", fontWeight: 500 }}>
               {data.units} units • {isCustomMode ? `Flat Rate ₹${data.unitPrice}/unit` : "AP LT-II Commercial"} • Room {data.roomNo}
             </div>
-            <div style={{ fontSize: 10, color: "#075985", opacity: 0.8, marginTop: 4 }}>
+            <div style={{ fontSize: 10, color: isPaid ? "#2e7d32" : "#075985", opacity: 0.8, marginTop: 4 }}>
               {data.splitType === "custom"
                 ? `Split: Custom Split (${data.splitCount} persons)`
                 : data.splitType === "capacity"
@@ -171,7 +202,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       </div>
 
       <div style={{ margin: "0 20px 12px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ background: "#dbeafe", color: "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ background: isPaid ? "#c8e6c9" : "#dbeafe", color: isPaid ? "#1b5e20" : "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
           Per-Tenant Share
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -205,10 +236,14 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       </div>
 
       <div style={{
-        background: "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
-        padding: "14px 20px", textAlign: "left", fontSize: 12, color: "#0c4a6e", lineHeight: 1.5,
+        background: isPaid ? "linear-gradient(180deg,#e8f5e9 0%,#c8e6c9 100%)" : "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
+        padding: "14px 20px", textAlign: "left", fontSize: 12, color: isPaid ? "#1b5e20" : "#0c4a6e", lineHeight: 1.5,
       }}>
-        <p style={{ margin: 0 }}>Please pay your AC share along with this month's rent. Thank you! 🙏</p>
+        <p style={{ margin: 0 }}>
+          {isPaid 
+            ? "Thank you! The AC bill payment has been successfully received and recorded." 
+            : "Please pay your AC share along with this month's rent. Thank you! 🙏"}
+        </p>
       </div>
     </div>
   );

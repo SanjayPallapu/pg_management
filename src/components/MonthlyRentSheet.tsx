@@ -41,6 +41,16 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import {
@@ -104,6 +114,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   }, [selectedMonth, selectedYear]);
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [acShareData, setAcShareData] = useState<ACBillData | null>(null);
+  const [acPaymentRecord, setAcPaymentRecord] = useState<{
+    tenantId: string;
+    tenantName: string;
+    roomNo: string;
+    amount: number;
+  } | null>(null);
+  const [acPaymentModeState, setAcPaymentModeState] = useState<"upi" | "cash">("upi");
+  const [acPaymentDateState, setAcPaymentDateState] = useState<Date>(new Date());
+  const [acPaymentCollectedBy, setAcPaymentCollectedBy] = useState<string>("Me");
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
   const [cashAmount, setCashAmount] = useState(0);
@@ -304,28 +323,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     return overdue;
   };
 
-  const handleToggleAcPaymentStatus = (tenantId: string, currentStatus: 'Paid' | 'Pending') => {
-    const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
-    const existingPayment = payments.find(p => p.tenantId === tenantId && p.month === acMonth && p.year === acYear);
-    const allTenants = rooms.flatMap(r => r.tenants);
-    const tenant = allTenants.find(t => t.id === tenantId);
-    if (!tenant) return;
-    
-    upsertPayment.mutate({
-      tenantId,
-      month: acMonth,
-      year: acYear,
-      paymentStatus: existingPayment?.paymentStatus || 'Pending',
-      paymentDate: existingPayment?.paymentDate,
-      amount: existingPayment?.amount || tenant.monthlyRent,
-      amountPaid: existingPayment?.amountPaid || 0,
-      paymentEntries: existingPayment?.paymentEntries || [],
-      notes: existingPayment?.notes,
-      acPaymentStatus: newStatus,
-      tenantName: tenant.name,
-      roomNo: rooms.find(r => r.tenants.some(t => t.id === tenantId))?.roomNo,
-    });
-  };
+
   const months = [
     {
       value: 1,
@@ -754,6 +752,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       splitCount ?? undefined
     );
 
+    const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
+    const existingPayment = targetTenant ? payments.find(p => p.tenantId === targetTenant.id && p.month === acMonth && p.year === acYear) : undefined;
+    const isPaid = existingPayment?.acPaymentStatus === 'Paid';
+    const acEntry = existingPayment?.paymentEntries?.find((e: any) => e.type === 'ac');
+    const paymentDate = acEntry ? format(new Date(acEntry.date), 'dd MMM yyyy') : (existingPayment?.paymentDate ? format(new Date(existingPayment.paymentDate), 'dd MMM yyyy') : undefined);
+    const paymentMode = acEntry?.mode;
+    const collectedBy = acEntry?.collectedBy;
+
     const tenantsWithOverdue = tenantShares.map((share) => {
       const tenantObj = item.activeTenants.find((t) => t.name === share.name);
       const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, item.room, acMonth, acYear) : [];
@@ -781,6 +787,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       endReading,
       splitType,
       splitCount,
+      isPaid,
+      paymentDate,
+      paymentMode,
+      collectedBy,
     });
 
     setTimeout(async () => {
@@ -845,6 +855,137 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       }
     }, 250);
   };
+
+  const handleToggleAcPaymentStatus = (tenantId: string, currentStatus: 'Paid' | 'Pending') => {
+    const allTenants = rooms.flatMap(r => r.tenants);
+    const tenant = allTenants.find(t => t.id === tenantId);
+    if (!tenant) return;
+
+    if (currentStatus === 'Paid') {
+      // Toggle back to Pending
+      const existingPayment = payments.find(p => p.tenantId === tenantId && p.month === acMonth && p.year === acYear);
+      upsertPayment.mutate({
+        tenantId,
+        month: acMonth,
+        year: acYear,
+        paymentStatus: existingPayment?.paymentStatus || 'Pending',
+        paymentDate: existingPayment?.paymentDate,
+        amount: existingPayment?.amount || tenant.monthlyRent,
+        amountPaid: existingPayment?.amountPaid || 0,
+        paymentEntries: existingPayment?.paymentEntries?.filter((e: any) => e.type !== 'ac') || [],
+        notes: existingPayment?.notes,
+        acPaymentStatus: 'Pending',
+        tenantName: tenant.name,
+        roomNo: rooms.find(r => r.tenants.some(t => t.id === tenantId))?.roomNo,
+      });
+    } else {
+      // Open AC Payment Record Dialog!
+      const room = rooms.find(r => r.tenants.some(t => t.id === tenantId));
+      const roomNo = room?.roomNo || "";
+      const roomItem = acRooms.find(r => r.room.roomNo === roomNo);
+      
+      let share = 0;
+      let overdueAcTotal = 0;
+
+      if (roomItem) {
+        const total = localStorage.getItem(`ac_bill_mode_${roomItem.room.id}`) === "custom"
+          ? roomItem.units * (currentPG?.electricityUnitPrice ?? 12)
+          : calculateAPCommercialBill(roomItem.units).totalBill;
+          
+        const tenantShares = calcAcTenantShares(
+          roomItem.units,
+          currentPG?.electricityUnitPrice ?? 12,
+          roomItem.activeTenants,
+          acYear,
+          acMonth,
+          roomItem.room.capacity,
+          total,
+          roomItem.splitType || 'active_tenants',
+          roomItem.splitCount ?? undefined
+        );
+        
+        const tenantShare = tenantShares.find(s => s.id === tenantId || s.name === tenant.name);
+        share = tenantShare?.share ?? 0;
+        
+        const overdue = getOverdueAcBills(tenantId, roomItem.room, acMonth, acYear);
+        overdueAcTotal = overdue.reduce((sum, om) => sum + om.share, 0);
+      }
+
+      setAcPaymentRecord({
+        tenantId,
+        tenantName: tenant.name,
+        roomNo,
+        amount: share + overdueAcTotal,
+      });
+      setAcPaymentModeState("upi");
+      setAcPaymentDateState(new Date());
+      setAcPaymentCollectedBy(defaultCollectorId);
+    }
+  };
+
+  const handleConfirmAcPayment = () => {
+    if (!acPaymentRecord) return;
+    const { tenantId, tenantName, roomNo, amount } = acPaymentRecord;
+
+    const existingPayment = payments.find(p => p.tenantId === tenantId && p.month === acMonth && p.year === acYear);
+    const existingEntries = existingPayment?.paymentEntries || [];
+    
+    // Add AC payment entry
+    const formattedDate = format(acPaymentDateState, "yyyy-MM-dd");
+    const collectorName = getCollectorDisplayName(acPaymentCollectedBy);
+    const acEntry: PaymentEntry = {
+      amount,
+      date: formattedDate,
+      type: 'ac' as any,
+      mode: acPaymentModeState,
+      collectedBy: collectorName,
+    };
+
+    upsertPayment.mutate({
+      tenantId,
+      month: acMonth,
+      year: acYear,
+      paymentStatus: existingPayment?.paymentStatus || 'Pending',
+      paymentDate: existingPayment?.paymentDate,
+      amount: existingPayment?.amount || 0,
+      amountPaid: existingPayment?.amountPaid || 0,
+      paymentEntries: [...existingEntries, acEntry],
+      notes: existingPayment?.notes,
+      acPaymentStatus: 'Paid',
+      tenantName,
+      roomNo,
+    }, {
+      onSuccess: () => {
+        toast({ title: "AC Bill Payment recorded successfully!" });
+        setAcPaymentRecord(null);
+
+        // Sequence flow: Open the share dialog automatically after marking paid!
+        // We find the room item to share
+        const roomItem = acRooms.find(r => r.room.roomNo === roomNo);
+        if (roomItem) {
+          const reading = allReadings.find(r => r.roomId === roomItem.room.id && r.month === acMonth && r.year === acYear);
+          const units = reading?.units ?? 0;
+          const unitPrice = reading?.unitPrice ?? currentPG?.electricityUnitPrice ?? 12;
+          const startReading = reading?.startReading ?? null;
+          const endReading = reading?.endReading ?? null;
+          const splitType = reading?.splitType ?? "active_tenants";
+          const splitCount = reading?.splitCount ?? null;
+
+          handleShareAC(
+            roomItem,
+            units,
+            unitPrice,
+            startReading,
+            endReading,
+            splitType,
+            splitCount,
+            tenantName
+          );
+        }
+      }
+    });
+  };
+
 
   // Helper function to get previous month pending for a tenant
   const getPreviousMonthPendingForTenant = (tenantId: string): number => {
@@ -2187,6 +2328,89 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Welcome Dialog */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
       <RulesShareDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} shareData={rulesShareData} />
+      
+      {acPaymentRecord && (
+        <AlertDialog open={acPaymentRecord !== null} onOpenChange={(open) => !open && setAcPaymentRecord(null)}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Record AC Bill Payment</AlertDialogTitle>
+              <AlertDialogDescription>
+                Record AC electricity bill payment for <span className="font-semibold text-foreground">{acPaymentRecord.tenantName}</span> (Room {acPaymentRecord.roomNo}).
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="space-y-2">
+                <Label>Amount (₹)</Label>
+                <Input
+                  type="number"
+                  value={acPaymentRecord.amount}
+                  disabled
+                  className="rounded-xl text-lg h-11 bg-muted text-muted-foreground"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Payment Mode</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={acPaymentModeState === "upi" ? "default" : "outline"}
+                    className="flex-1 rounded-xl h-11"
+                    onClick={() => setAcPaymentModeState("upi")}
+                  >
+                    UPI
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={acPaymentModeState === "cash" ? "default" : "outline"}
+                    className="flex-1 rounded-xl h-11"
+                    onClick={() => setAcPaymentModeState("cash")}
+                  >
+                    Cash
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Payment Date</Label>
+                <Calendar
+                  mode="single"
+                  selected={acPaymentDateState}
+                  onSelect={(date) => date && setAcPaymentDateState(date)}
+                  className="rounded-xl border mt-2 pointer-events-auto flex justify-center"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Collected By</Label>
+                <div className="flex gap-2">
+                  {collectors.map((c) => (
+                    <Button
+                      key={c.id}
+                      type="button"
+                      variant={acPaymentCollectedBy === c.id ? "default" : "outline"}
+                      className="flex-1 h-10 rounded-xl"
+                      onClick={() => setAcPaymentCollectedBy(c.id)}
+                    >
+                      {c.displayName}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl" onClick={() => setAcPaymentRecord(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5"
+                onClick={handleConfirmAcPayment}
+              >
+                Confirm Payment
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       {acShareData && (
         <div
           id="rent-ac-bill-template-host"
@@ -2440,16 +2664,21 @@ export const RentACRoomCard = ({
               Share Room Bill (All)
             </DropdownMenuItem>
             {dayWiseShares.length > 0 && <DropdownMenuSeparator />}
-            {dayWiseShares.map((tenant) => (
-              <DropdownMenuItem
-                key={tenant.name}
-                onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
-                className="cursor-pointer flex items-center justify-between"
-              >
-                <span className="truncate">Share with {tenant.name.split(" ")[0]}</span>
-                <span className="font-semibold text-[10px] text-muted-foreground ml-2">₹{tenant.share.toLocaleString()}</span>
-              </DropdownMenuItem>
-            ))}
+            {dayWiseShares.map((tenant) => {
+              const isPaid = tenant.acPaymentStatus === "Paid";
+              return (
+                <DropdownMenuItem
+                  key={tenant.name}
+                  onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
+                  className="cursor-pointer flex items-center justify-between"
+                >
+                  <span className="truncate flex items-center gap-1">
+                    {isPaid ? "🧾" : "⚡"} {isPaid ? "Share Receipt with" : "Share Bill with"} {tenant.name.split(" ")[0]}
+                  </span>
+                  <span className="font-semibold text-[10px] text-muted-foreground ml-2">₹{tenant.share.toLocaleString()}</span>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
