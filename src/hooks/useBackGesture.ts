@@ -3,13 +3,19 @@ import { useEffect, useCallback } from 'react';
 // Global stack of active close callbacks
 const activeModals: (() => void)[] = [];
 let globalHistoryPushed = false;
+let isHandlingPopState = false;
 
 const handleGlobalPopState = () => {
   // Back gesture detected: close the most recently opened modal (top of stack)
   if (activeModals.length > 0) {
     const onClose = activeModals.pop();
     if (onClose) {
-      onClose();
+      isHandlingPopState = true;
+      try {
+        onClose();
+      } finally {
+        isHandlingPopState = false;
+      }
     }
   }
 
@@ -60,7 +66,9 @@ export const useBackGesture = (open: boolean, onClose: () => void) => {
       // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
-        window.history.back();
+        if (!isHandlingPopState) {
+          window.history.back();
+        }
         globalHistoryPushed = false;
       }
     };
