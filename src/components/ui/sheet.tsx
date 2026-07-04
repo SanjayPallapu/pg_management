@@ -67,7 +67,7 @@ const SheetContent = React.forwardRef<
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
 
-      <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden px-1.5 pb-4">
+      <div className="flex-1 flex flex-col min-h-0 w-full overflow-y-auto px-1.5 pb-4">
         {children}
       </div>
       <BottomNav />

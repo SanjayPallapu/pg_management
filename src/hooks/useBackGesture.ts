@@ -1,53 +1,74 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
+
+// Global stack of active close callbacks
+const activeModals: (() => void)[] = [];
+let globalHistoryPushed = false;
+
+const handleGlobalPopState = () => {
+  // Back gesture detected: close the most recently opened modal (top of stack)
+  if (activeModals.length > 0) {
+    const onClose = activeModals.pop();
+    if (onClose) {
+      onClose();
+    }
+  }
+
+  // If there are still active modals, push the state back so the next swipe-back works
+  if (activeModals.length > 0) {
+    window.history.pushState({ modalOpen: true }, '');
+  } else {
+    globalHistoryPushed = false;
+  }
+};
 
 /**
  * Hook to handle OS back gesture for modal/sheet components.
- * When the modal opens, it pushes a history state. When the user
- * uses the OS back gesture (swipe from edge), it closes the modal
- * instead of exiting the app.
- * 
- * If closed manually (e.g. clicking Cancel/Close button), it automatically
- * pops the history state to keep the navigation stack in sync.
- * 
- * @param open - Whether the modal/sheet is open
- * @param onClose - Callback to close the modal/sheet
+ * Manages modal closures using a global stack to handle nested dialogs/sheets
+ * correctly without conflicting with browser history.
  */
 export const useBackGesture = (open: boolean, onClose: () => void) => {
-  const historyPushed = useRef(false);
-
-  const handleClose = useCallback(() => {
+  // Wrap in a stable callback reference
+  const stableClose = useCallback(() => {
     onClose();
   }, [onClose]);
 
   useEffect(() => {
     if (open) {
-      if (!historyPushed.current) {
-        window.history.pushState({ modalOpen: true, timestamp: Date.now() }, '');
-        historyPushed.current = true;
+      // Add to stack
+      activeModals.push(stableClose);
+
+      if (!globalHistoryPushed) {
+        window.history.pushState({ modalOpen: true }, '');
+        globalHistoryPushed = true;
+        window.addEventListener('popstate', handleGlobalPopState);
       }
-      
-      const handlePopState = () => {
-        // Closed via browser back gesture, history state is already popped by browser
-        historyPushed.current = false;
-        handleClose();
-      };
-      
-      window.addEventListener('popstate', handlePopState);
-      
+
       return () => {
-        window.removeEventListener('popstate', handlePopState);
-        // If the component unmounts while open, pop the state we pushed
-        if (historyPushed.current) {
+        // Remove from stack when unmounting or state changes
+        const index = activeModals.indexOf(stableClose);
+        if (index > -1) {
+          activeModals.splice(index, 1);
+        }
+
+        // If no more modals are active, clean up listeners and history
+        if (activeModals.length === 0 && globalHistoryPushed) {
+          window.removeEventListener('popstate', handleGlobalPopState);
           window.history.back();
-          historyPushed.current = false;
+          globalHistoryPushed = false;
         }
       };
     } else {
-      // If closed manually by state change, pop the history state to clean up stack
-      if (historyPushed.current) {
+      // Ensure it is removed from stack if it was there
+      const index = activeModals.indexOf(stableClose);
+      if (index > -1) {
+        activeModals.splice(index, 1);
+      }
+
+      if (activeModals.length === 0 && globalHistoryPushed) {
+        window.removeEventListener('popstate', handleGlobalPopState);
         window.history.back();
-        historyPushed.current = false;
+        globalHistoryPushed = false;
       }
     }
-  }, [open, handleClose]);
+  }, [open, stableClose]);
 };

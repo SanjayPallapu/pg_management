@@ -118,7 +118,7 @@ export const EmptyBedsSheet = ({
           </div>
         </SheetHeader>
 
-        <div>
+        <div className="flex-1 overflow-y-auto pr-1">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">

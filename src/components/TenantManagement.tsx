@@ -781,28 +781,29 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onClose(false)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <DialogTitle className="flex items-center gap-2">
-                Room {room.roomNo}
-                <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
-              </DialogTitle>
-              <DialogDescription className="text-xs mt-1">Manage tenants, room capacity, rent amounts, and payment status</DialogDescription>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-xl p-0"}>
+        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onClose()}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <SheetTitle className="flex items-center gap-2">
+                  Room {room.roomNo}
+                  <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
+                </SheetTitle>
+                <span className="text-xs text-muted-foreground block mt-1">Manage tenants, room capacity, rent amounts, and payment status</span>
+              </div>
             </div>
-          </div>
-        </DialogHeader>
+          </SheetHeader>
 
-        <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
           {/* Room Info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -1404,7 +1405,8 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
           )}
         </div>
-      </DialogContent>
+      </div>
+    </SheetContent>
 
       {/* Enter Payment Amount Sheet */}
       <Sheet open={!!partialPaymentTenant} onOpenChange={(open) => !open && setPartialPaymentTenant(null)}>
@@ -1946,6 +1948,6 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
       {/* Welcome Dialog for new tenants */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
-    </Dialog>
+    </Sheet>
   );
 };
