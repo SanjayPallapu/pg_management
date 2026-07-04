@@ -27,48 +27,42 @@ const handleGlobalPopState = () => {
  * correctly without conflicting with browser history.
  */
 export const useBackGesture = (open: boolean, onClose: () => void) => {
-  // Wrap in a stable callback reference
-  const stableClose = useCallback(() => {
-    onClose();
+  const onCloseRef = useRef(onClose);
+
+  // Keep the close callback ref up to date
+  useEffect(() => {
+    onCloseRef.current = onClose;
   }, [onClose]);
 
   useEffect(() => {
-    if (open) {
-      // Add to stack
-      activeModals.push(stableClose);
+    if (!open) return;
 
-      if (!globalHistoryPushed) {
-        window.history.pushState({ modalOpen: true }, '');
-        globalHistoryPushed = true;
-        window.addEventListener('popstate', handleGlobalPopState);
-      }
+    const stableClose = () => {
+      onCloseRef.current();
+    };
 
-      return () => {
-        // Remove from stack when unmounting or state changes
-        const index = activeModals.indexOf(stableClose);
-        if (index > -1) {
-          activeModals.splice(index, 1);
-        }
+    // Add to stack
+    activeModals.push(stableClose);
 
-        // If no more modals are active, clean up listeners and history
-        if (activeModals.length === 0 && globalHistoryPushed) {
-          window.removeEventListener('popstate', handleGlobalPopState);
-          window.history.back();
-          globalHistoryPushed = false;
-        }
-      };
-    } else {
-      // Ensure it is removed from stack if it was there
+    if (!globalHistoryPushed) {
+      window.history.pushState({ modalOpen: true }, '');
+      globalHistoryPushed = true;
+      window.addEventListener('popstate', handleGlobalPopState);
+    }
+
+    return () => {
+      // Remove from stack when unmounting or when dialog closes
       const index = activeModals.indexOf(stableClose);
       if (index > -1) {
         activeModals.splice(index, 1);
       }
 
+      // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
         window.history.back();
         globalHistoryPushed = false;
       }
-    }
-  }, [open, stableClose]);
+    };
+  }, [open]);
 };
