@@ -84,7 +84,14 @@ const convertImagesToDataUrl = async (element: HTMLElement): Promise<void> => {
 };
 
 export const generateReceiptImage = async (element: HTMLElement): Promise<string> => {
+  const originalTransform = element.style.transform;
   try {
+    // Temporarily reset transform/offset for accurate rendering capture
+    element.style.transform = 'none';
+    
+    // Wait for reflow
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
     // Ensure all images (logo) are inlined as data URLs before capture
     await convertImagesToDataUrl(element);
 
@@ -116,6 +123,9 @@ export const generateReceiptImage = async (element: HTMLElement): Promise<string
   } catch (error) {
     console.error('generateReceiptImage error:', error);
     throw error;
+  } finally {
+    // Restore original transform/offset style
+    element.style.transform = originalTransform;
   }
 };
 

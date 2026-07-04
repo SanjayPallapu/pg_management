@@ -76,7 +76,7 @@ import { usePG } from "@/contexts/PGContext";
 import { RoomQuickNav } from "./RoomQuickNav";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import { CalendarClock, X as XIcon } from "lucide-react";
-import { generateReceiptImage } from "@/utils/generateReceiptImage";
+import { generateReceiptImage, dataURLtoBlob } from "@/utils/generateReceiptImage";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -788,7 +788,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       if (!el) return;
       try {
         const dataUrl = await generateReceiptImage(el);
-        const blob = await (await fetch(dataUrl)).blob();
+        const blob = dataURLtoBlob(dataUrl);
         const fileName = targetTenantName ? `ac-bill-${item.room.roomNo}-${targetTenantName.replace(/\s+/g, '-')}.png` : `ac-bill-${item.room.roomNo}.png`;
         const file = new File([blob], fileName, { type: "image/png" });
 
@@ -796,13 +796,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         let phone = targetTenant?.phone?.replace(/\D/g, "");
 
         if (phone) {
-          const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
           const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
           try {
             await navigator.clipboard.writeText(displayPhone);
-
-          } catch (e) {
-            console.error('Clipboard copy failed', e);
+          } catch (err) {
+            const textArea = document.createElement("textarea");
+            textArea.value = displayPhone;
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
           }
 
           const shareNavigator = navigator as Navigator & {
@@ -815,7 +821,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             a.href = dataUrl;
             a.download = fileName;
             a.click();
-            window.open(`https://wa.me/${formattedPhone}`, "_blank");
+            window.location.href = "https://wa.me/";
           }
         } else {
           const shareNavigator = navigator as Navigator & {

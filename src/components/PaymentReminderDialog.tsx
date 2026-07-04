@@ -8,7 +8,7 @@ import { Loader2, Bell, Download, MessageCircle, ArrowLeft } from 'lucide-react'
 import { toast } from '@/hooks/use-toast';
 import { PaymentReminderTemplate, type ReminderData } from '@/components/PaymentReminderTemplate';
 import { ACBillTemplate, type ACBillData } from '@/components/ACBillTemplate';
-import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
+import { generateReceiptImage, downloadReceiptImage, dataURLtoBlob } from '@/utils/generateReceiptImage';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { usePG } from '@/contexts/PGContext';
 
@@ -153,19 +153,31 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const shareAcToWhatsApp = async () => {
     if (!generatedAcImage || !reminderData) return;
     try {
-      const res = await fetch(generatedAcImage);
-      const blob = await res.blob();
+      const blob = dataURLtoBlob(generatedAcImage);
       const file = new File([blob], `ac-bill-room-${reminderData.roomNo}.png`, { type: 'image/png' });
       let phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
-      await navigator.clipboard.writeText(displayPhone);
+
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
       const shareNavigator = navigator as NavigatorWithFileShare;
       if (shareNavigator.share && shareNavigator.canShare?.({ files: [file] })) {
         await shareNavigator.share({ files: [file] });
       } else {
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = "https://wa.me/";
       }
     } catch (e) {
       if (!isAbortError(e)) toast({ title: 'Share failed', variant: 'destructive' });
@@ -178,15 +190,26 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     setIsSending(true);
     try {
       const image = await getOrCreateReminderImage();
-      const res = await fetch(image);
-      const blob = await res.blob();
+      const blob = dataURLtoBlob(image);
       const safeName = reminderData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `reminder-${safeName}.png`, { type: 'image/png' });
 
       let phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
-      await navigator.clipboard.writeText(displayPhone);
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = displayPhone;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const shareNavigator = navigator as NavigatorWithFileShare;
@@ -194,8 +217,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         await shareNavigator.share({ files: [file] });
       } else {
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
-        if (!phone.startsWith('91')) phone = `91${phone}`;
-        window.location.href = `https://wa.me/${phone}`;
+        window.location.href = "https://wa.me/";
       }
     } catch (e) {
       if (!isAbortError(e)) {
