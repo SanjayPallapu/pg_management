@@ -42,6 +42,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         background: "#ffffff",
         fontFamily: "'Segoe UI','Roboto',Arial,sans-serif",
         overflow: "hidden",
+        paddingBottom: "8px",
       }}
     >
       <div style={{ 
@@ -66,8 +67,8 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         }}>
           <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
             style={{ 
-              width: "80px", 
-              height: "80px", 
+              width: "90px", 
+              height: "90px", 
               objectFit: "contain",
               display: "block"
             }} 
@@ -112,12 +113,16 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       <div style={{ margin: "4px 20px 8px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {data.tenantName && (
           <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 10px" }}>
-            <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4 }}>Tenant</div>
+            <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "11px" }}>👤</span> Tenant
+            </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{data.tenantName}</div>
           </div>
         )}
         <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 10px" }}>
-          <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4 }}>Room</div>
+          <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ fontSize: "11px" }}>🚪</span> Room
+          </div>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{data.roomNo}</div>
         </div>
       </div>
@@ -139,7 +144,9 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
               </tr>
             )}
             <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 600 }}>Units Consumed</td>
+              <td style={{ padding: "8px 12px", color: "#4b5563", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px" }}>🔌</span> Units Consumed
+              </td>
               <td style={{ padding: "8px 12px", color: "#1a1a1a", fontWeight: 700, textAlign: "right" }}>{data.units} Units</td>
             </tr>
             {isCustomMode ? (
@@ -270,7 +277,9 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
 
       <div style={{ margin: "0 20px 12px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ background: isPaid ? "#c8e6c9" : "#dbeafe", color: isPaid ? "#1b5e20" : "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
-          Per-Tenant Share
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "15px" }}>👥</span> Per-Tenant Share
+          </span>
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
