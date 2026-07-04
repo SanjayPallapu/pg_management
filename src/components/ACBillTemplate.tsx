@@ -44,21 +44,57 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         overflow: "hidden",
       }}
     >
-      <div style={{ width: "100%", textAlign: "center", padding: "20px 0 1px" }}>
-        <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
-          style={{ width: "240px", height: "auto", margin: "0 auto", display: "block", maxHeight: "130px", objectFit: "contain" }} />
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#4b5563", marginTop: 4 }}>{pgName}</div>
-      </div>
-
-      <div style={{ textAlign: "center", padding: "6px 0 2px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 20, fontWeight: 600, color: "#1a1a1a" }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: "50%", background: isPaid ? "#10b981" : "#0ea5e9",
-            color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold",
-          }}>{isPaid ? "🧾" : "⚡"}</div>
-          <span>{isPaid ? "AC Bill Payment Receipt" : "AC Electricity Bill"}</span>
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        padding: "16px 20px 12px", 
+        borderBottom: "1px solid #f1f5f9",
+        marginBottom: "12px",
+        gap: "16px"
+      }}>
+        {/* Left Side: Logo */}
+        <div style={{ flexShrink: 0 }}>
+          <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
+            style={{ 
+              width: "100px", 
+              height: "100px", 
+              objectFit: "contain",
+              display: "block"
+            }} 
+          />
         </div>
-        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{data.monthLabel}</div>
+
+        {/* Right Side: PG Details & Invoice Title */}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "left", flexGrow: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            {pgName}
+          </div>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "6px", 
+            fontSize: 18, 
+            fontWeight: 700, 
+            color: "#0f172a",
+            marginTop: "2px"
+          }}>
+            <span style={{ fontSize: "16px" }}>{isPaid ? "🧾" : "⚡"}</span>
+            <span>{isPaid ? "AC Payment Receipt" : "AC Electricity Bill"}</span>
+          </div>
+          <div style={{ 
+            fontSize: 12, 
+            fontWeight: 600, 
+            color: "#64748b", 
+            marginTop: "4px",
+            background: "#f1f5f9",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            display: "inline-block",
+            width: "fit-content"
+          }}>
+            {data.monthLabel}
+          </div>
+        </div>
       </div>
 
       {/* Tenant + Room meta strip */}
