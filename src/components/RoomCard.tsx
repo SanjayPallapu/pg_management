@@ -322,12 +322,14 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   pgLogoUrl: currentPG?.logoUrl,
                   pgName: currentPG?.name,
                 });
-                setWhatsappDialogOpen(true);
+                setTimeout(() => {
+                  setWhatsappDialogOpen(true);
+                }, 100);
               };
               const openWhatsAppChat = () => {
                 const phone = tenant.phone.replace(/\D/g, "");
                 const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                window.open(`https://wa.me/${formattedPhone}`, "_blank");
+                window.location.href = `https://wa.me/${formattedPhone}`;
               };
               const openPaymentReminder = () => {
                 const payment = getSelectedMonthPayment(tenant.id);
@@ -385,7 +387,9 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   acSurcharge,
                   acBill,
                 });
-                setReminderDialogOpen(true);
+                setTimeout(() => {
+                  setReminderDialogOpen(true);
+                }, 100);
               };
               const isNew = isNewTenant(tenant.startDate);
               
@@ -463,6 +467,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
+                          onClick={(e) => e.stopPropagation()}
                           className={`p-1 rounded-full transition-colors ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
                           title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
                         >
@@ -501,7 +506,9 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                                   roomCapacity: room.capacity
                                 } 
                               });
-                              window.dispatchEvent(event);
+                              setTimeout(() => {
+                                window.dispatchEvent(event);
+                              }, 100);
                             }}
                             className="gap-2"
                           >
@@ -520,7 +527,9 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                                 sharingType: `${room.capacity} Sharing`,
                                 monthlyRent: tenant.monthlyRent,
                               });
-                              setWelcomeDialogOpen(true);
+                              setTimeout(() => {
+                                setWelcomeDialogOpen(true);
+                              }, 100);
                             }}
                             className="gap-2"
                           >

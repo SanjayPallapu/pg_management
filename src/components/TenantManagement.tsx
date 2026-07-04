@@ -1054,6 +1054,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <button
+                                        onClick={(e) => e.stopPropagation()}
                                         className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                                         title="WhatsApp options"
                                       >
@@ -1083,7 +1084,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                               remainingBalance: isPartial ? remaining : 0,
                                               tenantId: tenant.id,
                                             });
-                                            setWhatsappDialogOpen(true);
+                                            setTimeout(() => {
+                                              setWhatsappDialogOpen(true);
+                                            }, 100);
                                           }}
                                           className="gap-2"
                                         >
@@ -1095,7 +1098,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                         onClick={() => {
                                           const phone = tenant.phone.replace(/\D/g, "");
                                           const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                                          window.open(`https://wa.me/${formattedPhone}`, "_blank");
+                                          window.location.href = `https://wa.me/${formattedPhone}`;
                                         }}
                                         className="gap-2"
                                       >
@@ -1116,7 +1119,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                               amountPaid: payment?.amountPaid,
                                               balance: isPartial ? remaining : tenant.monthlyRent,
                                             });
-                                            setReminderDialogOpen(true);
+                                            setTimeout(() => {
+                                              setReminderDialogOpen(true);
+                                            }, 100);
                                           }}
                                           className="gap-2"
                                         >
@@ -1137,7 +1142,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                                 roomCapacity: room.capacity
                                               } 
                                             });
-                                            window.dispatchEvent(event);
+                                            setTimeout(() => {
+                                              window.dispatchEvent(event);
+                                            }, 100);
                                           }}
                                           className="gap-2"
                                         >
@@ -1156,7 +1163,9 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                             monthlyRent: tenant.monthlyRent,
                                             securityDeposit: undefined,
                                           });
-                                          setWelcomeDialogOpen(true);
+                                          setTimeout(() => {
+                                            setWelcomeDialogOpen(true);
+                                          }, 100);
                                         }}
                                         className="gap-2"
                                       >
