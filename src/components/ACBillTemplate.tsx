@@ -45,27 +45,37 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       }}
     >
       <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
+        position: "relative",
         padding: "16px 20px 12px", 
         borderBottom: "1px solid #f1f5f9",
         marginBottom: "12px",
-        gap: "16px"
+        minHeight: "100px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        textAlign: "center",
       }}>
         {/* Left Side: Logo */}
-        <div style={{ flexShrink: 0 }}>
+        <div style={{ 
+          position: "absolute", 
+          left: "20px", 
+          top: "50%", 
+          transform: "translateY(-50%)",
+          zIndex: 10 
+        }}>
           <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
             style={{ 
-              width: "100px", 
-              height: "100px", 
+              width: "80px", 
+              height: "80px", 
               objectFit: "contain",
               display: "block"
             }} 
           />
         </div>
 
-        {/* Right Side: PG Details & Invoice Title */}
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", alignItems: "center", flexGrow: 1 }}>
+        {/* Center: PG Details & Invoice Title */}
+        <div style={{ width: "100%" }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             {pgName}
           </div>
