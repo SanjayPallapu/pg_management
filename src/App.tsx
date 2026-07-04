@@ -62,6 +62,24 @@ const queryClient = new QueryClient({
 
 // Inner app component that handles first-time-only intro splash logic
 const AppContent = () => {
+  useEffect(() => {
+    // Configure native status bar behaviour at startup
+    const initStatusBar = async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (Capacitor.isNativePlatform()) {
+          const { StatusBar, Style } = await import("@capacitor/status-bar");
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setBackgroundColor({ color: "#0e6ce7" });
+          await StatusBar.setStyle({ style: Style.Dark });
+        }
+      } catch (e) {
+        console.warn("[StatusBar] Failed to configure status bar:", e);
+      }
+    };
+    initStatusBar();
+  }, []);
+
   const [showIntroSplash, setShowIntroSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
