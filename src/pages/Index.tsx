@@ -303,7 +303,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-screen-2xl px-1.5 py-3 sm:px-4">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 py-2 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}

@@ -1158,7 +1158,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
   };
   return (
-    <div className="space-y-4 px-1.5 pb-20">
+    <div className="space-y-4 px-0 pb-20">
       {/* Header Row */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
