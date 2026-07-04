@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Global stack of active close callbacks
 const activeModals: (() => void)[] = [];
