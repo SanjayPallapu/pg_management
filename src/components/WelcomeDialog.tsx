@@ -152,14 +152,12 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader>
-            <div className="flex items-center gap-2 pt-1">
-              <DialogTitle className="flex items-center gap-2">
-                <PartyPopper className="h-5 w-5 text-pink-600" />
-                Welcome New Tenant
-              </DialogTitle>
-            </div>
-            <DialogDescription>
+          <DialogHeader className="flex flex-col items-center justify-center text-center">
+            <DialogTitle className="flex items-center justify-center gap-2 text-center w-full pt-1">
+              <PartyPopper className="h-5 w-5 text-pink-600" />
+              Welcome New Tenant
+            </DialogTitle>
+            <DialogDescription className="text-center">
               Generate and send a welcome message to {welcomeData?.tenantName} via WhatsApp.
             </DialogDescription>
           </DialogHeader>

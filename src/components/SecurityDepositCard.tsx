@@ -26,6 +26,8 @@ import { SecurityDepositReceiptDialog } from './SecurityDepositReceiptDialog';
 import { SecurityDepositReceiptData } from './SecurityDepositReceiptTemplate';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
 
+import { isTenantActiveNow } from '@/utils/dateOnly';
+
 const DEPOSIT_COLLECTED_BY_CACHE_KEY = 'security-deposit-collected-by';
 
 const readDepositCollectedByCache = (): Record<string, string> => {
@@ -113,13 +115,15 @@ export const SecurityDepositCard = ({
     }
   }, [depositDialog, editDialog, defaultCollectorId]);
 
-  // Flatten all tenants with their room info
+  // Flatten all active tenants with their room info
   const allTenants: TenantWithRoom[] = rooms.flatMap(room => 
-    room.tenants.map(tenant => ({
-      ...tenant,
-      roomNo: room.roomNo,
-      roomCapacity: room.capacity,
-    }))
+    room.tenants
+      .filter(tenant => isTenantActiveNow(tenant.startDate, tenant.endDate))
+      .map(tenant => ({
+        ...tenant,
+        roomNo: room.roomNo,
+        roomCapacity: room.capacity,
+      }))
   );
 
   // Keep latest tenants list for event callbacks (prevents stale-closure bugs)
@@ -671,14 +675,12 @@ export const SecurityDepositCard = ({
       {/* Add Deposit Dialog */}
       <Dialog open={!!depositDialog} onOpenChange={() => setDepositDialog(null)}>
         <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader>
-            <div className="flex items-center gap-2 pt-1">
-              <div>
-                <DialogTitle>Record Security Deposit</DialogTitle>
-                <DialogDescription>
-                  Enter the deposit details for {depositDialog?.name} (Room {depositDialog?.roomNo})
-                </DialogDescription>
-              </div>
+          <DialogHeader className="flex flex-col items-center justify-center text-center">
+            <div className="pt-1 text-center w-full">
+              <DialogTitle className="text-center w-full">Record Security Deposit</DialogTitle>
+              <DialogDescription className="text-center">
+                Enter the deposit details for {depositDialog?.name} (Room {depositDialog?.roomNo})
+              </DialogDescription>
             </div>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -785,14 +787,12 @@ export const SecurityDepositCard = ({
       {/* Edit Deposit Dialog */}
       <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
         <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader>
-            <div className="flex items-center gap-2 pt-1">
-              <div>
-                <DialogTitle>Edit Security Deposit</DialogTitle>
-                <DialogDescription>
-                  Update the deposit details for {editDialog?.name} (Room {editDialog?.roomNo})
-                </DialogDescription>
-              </div>
+          <DialogHeader className="flex flex-col items-center justify-center text-center">
+            <div className="pt-1 text-center w-full">
+              <DialogTitle className="text-center w-full">Edit Security Deposit</DialogTitle>
+              <DialogDescription className="text-center">
+                Update the deposit details for {editDialog?.name} (Room {editDialog?.roomNo})
+              </DialogDescription>
             </div>
           </DialogHeader>
           <div className="py-4 space-y-4">

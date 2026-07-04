@@ -111,14 +111,12 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-        <DialogHeader>
-          <div className="flex items-center gap-2 pt-1">
-            <DialogTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              Share Rules & Regulations
-            </DialogTitle>
-          </div>
-          <DialogDescription>
+        <DialogHeader className="flex flex-col items-center justify-center text-center">
+          <DialogTitle className="flex items-center justify-center gap-2 text-center w-full pt-1">
+            <BookOpen className="h-5 w-5 text-primary" />
+            Share Rules & Regulations
+          </DialogTitle>
+          <DialogDescription className="text-center">
             Send PG rules to {shareData?.tenantName} via WhatsApp.
           </DialogDescription>
         </DialogHeader>
