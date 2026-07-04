@@ -161,9 +161,9 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-3">
       <div>
-        <div className="flex items-center justify-between mb-3 rounded-xl p-4 bg-gradient-to-r from-primary/15 via-primary/8 to-accent/10 border border-primary/20">
+        <div className="flex items-center justify-between mb-2 rounded-xl p-3 bg-gradient-to-r from-primary/15 via-primary/8 to-accent/10 border border-primary/20">
           <div>
             <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
             <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
@@ -195,7 +195,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             </button>
           )}
         </div>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <Button
             size="sm"
             variant={acFilter === 'all' ? 'default' : 'outline'}

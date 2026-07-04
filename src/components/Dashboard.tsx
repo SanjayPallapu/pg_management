@@ -275,7 +275,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   return (
     <>
-      <div ref={dashboardRef} className="space-y-6">
+      <div ref={dashboardRef} className="space-y-3">
         <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.005]">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
@@ -295,7 +295,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={openPendingTenants}
@@ -325,7 +325,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Card>
 
         {/* Split KPI Cards */}
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
           <Card>
             <CardContent className="p-0">
@@ -419,7 +419,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Card>
 
         {/* Summary Cards Grid */}
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
           {/* Bills & Budget Summary Card */}
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"

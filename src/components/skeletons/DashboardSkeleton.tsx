@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const DashboardSkeleton = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* KPI Cards Row */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Capacity & Occupancy Card */}

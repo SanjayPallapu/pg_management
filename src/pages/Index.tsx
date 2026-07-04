@@ -303,35 +303,35 @@ const Index = () => {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-screen-2xl px-4 py-2 sm:px-6">
+      <div className="mx-auto w-full max-w-screen-2xl px-3 py-1 sm:px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
 
-            <TabsContent value="dashboard" className="mt-3 space-y-4">
+            <TabsContent value="dashboard" className="mt-1">
               {isLoading ? <DashboardSkeleton /> : <Dashboard rooms={rooms} onStartRentCycle={() => {}} />}
             </TabsContent>
 
-            <TabsContent value="rooms" className="mt-3 space-y-4">
+            <TabsContent value="rooms" className="mt-1">
               <Suspense fallback={<CardSkeleton />}>
                 {isLoading ? <CardSkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="rent-sheet" className="mt-3 space-y-4">
+            <TabsContent value="rent-sheet" className="mt-1">
               <Suspense fallback={<RentSheetSkeleton />}>
                 {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="reports" className="mt-3 space-y-4">
+            <TabsContent value="reports" className="mt-1">
               <Suspense fallback={<ListSkeleton />}>
                 {isLoading ? <ListSkeleton /> : <Reports rooms={rooms} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-3 space-y-4">
+            <TabsContent value="settings" className="mt-1">
               <Suspense fallback={<ListSkeleton />}>
                 <SettingsPage />
               </Suspense>
