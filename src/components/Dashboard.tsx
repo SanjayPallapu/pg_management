@@ -20,6 +20,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Room, DashboardStats } from "@/types";
@@ -498,134 +499,150 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Bills & Budget Dialog */}
-      <Dialog open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
-        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader className="pb-2 border-b bg-background shrink-0">
-            <div className="flex items-center gap-2 pt-1">
-              <Scale className="h-5 w-5 text-primary shrink-0" />
-              <DialogTitle className="text-base text-foreground font-bold">Bills & Budget</DialogTitle>
-            </div>
-            <DialogDescription>
-              Manage room utility bills & budgets
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-4">
-            <BillsBudgetDashboard rooms={rooms} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Financials Dialog */}
-      <Dialog open={financialsOpen} onOpenChange={setFinancialsOpen}>
-        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader className="pb-2 border-b bg-background shrink-0">
-            <div className="flex items-center gap-2 pt-1">
-              <Wallet className="h-5 w-5 text-primary shrink-0" />
-              <DialogTitle className="text-base text-foreground font-bold">Financials</DialogTitle>
-            </div>
-            <DialogDescription>
-              Payments, deposits, and building rent reports
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-3">
-            <CollectedByCard />
-            <PaymentModeCard rooms={rooms} />
-            <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
-            <AllCollectedCard rooms={rooms} />
-            <SecurityDepositCard rooms={rooms} />
-            <PreviousMonthOverdueCard />
-            <OverduePaidCard rooms={rooms} />
-            <BuildingRentCard />
-            <DayGuestRevenueCard
-              onClick={() => {
-                setFinancialsOpen(false);
-                setDayGuestSheetOpen(true);
-              }}
-              stats={dayGuestStats ?? undefined}
-              isLoading={dayGuestStatsLoading}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Tenants Dialog */}
-      <Dialog open={tenantsOpen} onOpenChange={setTenantsOpen}>
-        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader className="pb-2 border-b bg-background shrink-0">
-            <div className="flex items-center gap-2 pt-1">
-              <Users className="h-5 w-5 text-primary shrink-0" />
-              <DialogTitle className="text-base text-foreground font-bold">Tenants Overview</DialogTitle>
-            </div>
-            <DialogDescription>
-              Pending Collections, pricing, movements, and settlements
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-3">
-            <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
-            <ExpectedCollectionCard />
-            <TenantPricingOverviewCard />
-            <TenantMovementCard rooms={rooms} />
-            <Card
-              className="cursor-pointer transition-colors hover:bg-accent/50"
-              onClick={() => {
-                setTenantsOpen(false);
-                setSettlementSheetOpen(true);
-              }}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
-                  <UserMinus className="h-4 w-4 text-muted-foreground" />
+      {/* Bills & Budget Sheet */}
+      <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Scale className="h-4 w-4 text-primary shrink-0" />
+                  <SheetTitle className="text-base text-foreground font-bold">Bills & Budget</SheetTitle>
                 </div>
-                <div className="text-lg font-bold">Settlement Summary</div>
-                <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
-              </CardContent>
-            </Card>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Tools Dialog */}
-      <Dialog open={toolsOpen} onOpenChange={setToolsOpen}>
-        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
-          <DialogHeader className="pb-2 border-b bg-background shrink-0">
-            <div className="flex items-center gap-2 pt-1">
-              <Settings className="h-5 w-5 text-primary shrink-0" />
-              <DialogTitle className="text-base text-foreground font-bold">Tools & Admin</DialogTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-4">
+              <BillsBudgetDashboard rooms={rooms} />
             </div>
-            <DialogDescription>
-              Rent calculator, key stats, templates, rules, and billing configurations
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-3">
-            <CalculatorCard />
-            <KeyNumbersCard />
-            <PGRulesCard onEditableTemplate={(rules, language) => { setToolsOpen(false); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
-            <BillUnitPricesCard />
-            <Card
-              className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
-              onClick={() => {
-                setToolsOpen(false);
-                setVisitorFollowUpOpen(true);
-              }}
-            >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block font-semibold text-sm">Visitor Follow-up</span>
-                    <span className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</span>
-                  </div>
-                </div>
-                <span className="text-xs text-primary font-medium shrink-0">Open →</span>
-              </CardContent>
-            </Card>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
+
+      {/* Financials Sheet */}
+      <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setFinancialsOpen(false)} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Wallet className="h-4 w-4 text-primary shrink-0" />
+                  <SheetTitle className="text-base text-foreground font-bold">Financials</SheetTitle>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <CollectedByCard />
+              <PaymentModeCard rooms={rooms} />
+              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+              <AllCollectedCard rooms={rooms} />
+              <SecurityDepositCard rooms={rooms} />
+              <PreviousMonthOverdueCard />
+              <OverduePaidCard rooms={rooms} />
+              <BuildingRentCard />
+              <DayGuestRevenueCard
+                onClick={() => {
+                  setFinancialsOpen(false);
+                  setDayGuestSheetOpen(true);
+                }}
+                stats={dayGuestStats ?? undefined}
+                isLoading={dayGuestStatsLoading}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tenants Sheet */}
+      <Sheet open={tenantsOpen} onOpenChange={setTenantsOpen}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setTenantsOpen(false)} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Users className="h-4 w-4 text-primary shrink-0" />
+                  <SheetTitle className="text-base text-foreground font-bold">Tenants Overview</SheetTitle>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
+              <ExpectedCollectionCard />
+              <TenantPricingOverviewCard />
+              <TenantMovementCard rooms={rooms} />
+              <Card
+                className="cursor-pointer transition-colors hover:bg-accent/50"
+                onClick={() => {
+                  setTenantsOpen(false);
+                  setSettlementSheetOpen(true);
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
+                    <UserMinus className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-lg font-bold">Settlement Summary</div>
+                  <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tools Sheet */}
+      <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setToolsOpen(false)} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Settings className="h-4 w-4 text-primary shrink-0" />
+                  <SheetTitle className="text-base text-foreground font-bold">Tools & Admin</SheetTitle>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <CalculatorCard />
+              <KeyNumbersCard />
+              <PGRulesCard onEditableTemplate={(rules, language) => { setToolsOpen(false); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+              <BillUnitPricesCard />
+              <Card
+                className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+                onClick={() => {
+                  setToolsOpen(false);
+                  setVisitorFollowUpOpen(true);
+                }}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                      <MessageSquare className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-semibold text-sm">Visitor Follow-up</span>
+                      <span className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-primary font-medium shrink-0">Open →</span>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />

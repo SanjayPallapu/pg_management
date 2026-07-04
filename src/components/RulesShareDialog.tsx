@@ -110,12 +110,9 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center gap-2 pt-1">
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
               Share Rules & Regulations

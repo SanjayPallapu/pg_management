@@ -670,12 +670,9 @@ export const SecurityDepositCard = ({
 
       {/* Add Deposit Dialog */}
       <Dialog open={!!depositDialog} onOpenChange={() => setDepositDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDepositDialog(null)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+            <div className="flex items-center gap-2 pt-1">
               <div>
                 <DialogTitle>Record Security Deposit</DialogTitle>
                 <DialogDescription>
@@ -787,12 +784,9 @@ export const SecurityDepositCard = ({
 
       {/* Edit Deposit Dialog */}
       <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditDialog(null)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+            <div className="flex items-center gap-2 pt-1">
               <div>
                 <DialogTitle>Edit Security Deposit</DialogTitle>
                 <DialogDescription>
