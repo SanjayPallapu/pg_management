@@ -37,13 +37,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isMounted) {
         setIsLoading(prev => {
           if (prev) {
-            console.warn('[Auth] Force-ending loading state after 5s deadline');
+            console.warn('[Auth] Force-ending loading state after 1.5s deadline');
             return false;
           }
           return prev;
         });
       }
-    }, 5000);
+    }, 1500);
 
     const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
       try {
@@ -111,21 +111,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         console.log('[Auth] onAuthStateChange event:', event, 'session:', !!newSession);
         
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        try {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
 
-        if (newSession?.user) {
-          await ensureOAuthProfile(newSession.user);
-          const r = await fetchUserRole(newSession.user.id);
-          if (isMounted) {
-            setRole(r);
-            setIsNewSignup(checkIsNewSignup());
+          if (newSession?.user) {
+            // Unblock UI immediately so the app loads instantly
             setIsLoading(false);
+            
+            // Run background sync operations without blocking UI
+            (async () => {
+              try {
+                await ensureOAuthProfile(newSession.user);
+              } catch (e) {
+                console.error('[Auth] Error ensuring profile:', e);
+              }
+              try {
+                const r = await fetchUserRole(newSession.user.id);
+                if (isMounted) {
+                  setRole(r);
+                  setIsNewSignup(checkIsNewSignup());
+                }
+              } catch (e) {
+                console.error('[Auth] Error fetching user role:', e);
+              }
+            })();
+          } else {
+            if (isMounted) {
+              setRole(null);
+              setIsNewSignup(false);
+              setIsLoading(false);
+            }
           }
-        } else {
+        } catch (e) {
+          console.error('[Auth] Error in onAuthStateChange:', e);
           if (isMounted) {
-            setRole(null);
-            setIsNewSignup(false);
             setIsLoading(false);
           }
         }
