@@ -845,12 +845,29 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             a.href = dataUrl;
             a.download = fileName;
             a.click();
-
           }
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "";
-        toast({ title: "Share failed", description: message, variant: "destructive" });
+        const isAbort = error instanceof DOMException && error.name === 'AbortError';
+        if (isAbort) return;
+        
+        console.warn('Native AC share failed, falling back to download + redirect:', error);
+        try {
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = fileName;
+          a.click();
+          
+          const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
+          let phone = targetTenant?.phone?.replace(/\D/g, "");
+          if (phone) {
+            const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+            window.location.href = `https://wa.me/${cleanPhone}`;
+          }
+        } catch (fallbackError) {
+          const message = error instanceof Error ? error.message : "";
+          toast({ title: "Share failed", description: message, variant: "destructive" });
+        }
       } finally {
         setAcShareData(null);
       }
