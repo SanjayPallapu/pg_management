@@ -1670,7 +1670,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <DropdownMenuContent align="start">
                             {(tenant.payment.paymentStatus === "Paid" ||
                               tenant.payment.paymentStatus === "Partial") && (
-                              <DropdownMenuItem onClick={handleResendReceipt} className="gap-2">
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => {
+                                    handleResendReceipt();
+                                  }, 100);
+                                }} 
+                                className="gap-2"
+                              >
                                 <Receipt className="h-4 w-4" />
                                 Generate Receipt
                               </DropdownMenuItem>
@@ -1686,7 +1694,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               Chat with Tenant
                             </DropdownMenuItem>
                             {tenant.payment.paymentStatus !== "Paid" && (
-                              <DropdownMenuItem onClick={openPaymentReminder} className="gap-2">
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => {
+                                    openPaymentReminder();
+                                  }, 100);
+                                }} 
+                                className="gap-2"
+                              >
                                 <Bell className="h-4 w-4" />
                                 Payment Reminder
                               </DropdownMenuItem>
