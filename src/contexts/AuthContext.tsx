@@ -106,52 +106,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         if (!isMounted) return;
+        
+        console.log('[Auth] onAuthStateChange event:', event, 'session:', !!newSession);
+        
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
-          ensureOAuthProfile(newSession.user);
-          fetchUserRole(newSession.user.id).then(r => {
-            if (isMounted) setRole(r);
-          });
-          if (isMounted) setIsNewSignup(checkIsNewSignup());
-          // End loading immediately when we get a valid session from auth state change
-          if (isMounted) setIsLoading(false);
-        } else {
-          setRole(null);
-          setIsNewSignup(false);
-        }
-      }
-    );
-
-    const initializeAuth = async () => {
-      try {
-        // Always wait for the real session — never wipe persisted tokens on a timeout.
-        const { data, error } = await supabase.auth.getSession();
-        if (error) console.error('[Auth] getSession error:', error.message);
-        const result = data?.session ?? null;
-
-        if (!isMounted) return;
-
-        setSession(result);
-        setUser(result?.user ?? null);
-
-        if (result?.user) {
-          await ensureOAuthProfile(result.user);
-          const r = await fetchUserRole(result.user.id);
+          await ensureOAuthProfile(newSession.user);
+          const r = await fetchUserRole(newSession.user.id);
           if (isMounted) {
             setRole(r);
             setIsNewSignup(checkIsNewSignup());
+            setIsLoading(false);
+          }
+        } else {
+          if (isMounted) {
+            setRole(null);
+            setIsNewSignup(false);
+            setIsLoading(false);
           }
         }
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
-    };
-
-    initializeAuth();
+    );
 
     return () => {
       isMounted = false;
