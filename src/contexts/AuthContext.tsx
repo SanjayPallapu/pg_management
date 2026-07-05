@@ -27,11 +27,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    // If there is no cached token, we know the user is not authenticated, so load instantly (no spinner)
+    const hasToken = Object.keys(localStorage).some(
+      key => key.startsWith('sb-') && key.endsWith('-auth-token')
+    );
+    return hasToken;
+  });
   const [isNewSignup, setIsNewSignup] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    let initialCheckDone = false;
 
     const forceLoadingTimer = setTimeout(() => {
       if (isMounted) {
@@ -105,6 +112,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) console.error('[Auth] Error ensuring Google profile:', error.message);
     };
 
+    // Synchronous storage check
+    const hasCachedSession = Object.keys(localStorage).some(
+      key => key.startsWith('sb-') && key.endsWith('-auth-token')
+    );
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!isMounted) return;
@@ -118,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (newSession?.user) {
             // Unblock UI immediately so the app loads instantly
             setIsLoading(false);
+            initialCheckDone = true;
             
             // Run background sync operations without blocking UI
             (async () => {
@@ -140,17 +153,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (isMounted) {
               setRole(null);
               setIsNewSignup(false);
-              setIsLoading(false);
+              
+              // Only set isLoading to false if the initial check is complete
+              // or if we have confirmed there is no session.
+              if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT' || !hasCachedSession) {
+                setIsLoading(false);
+                initialCheckDone = true;
+              }
             }
           }
         } catch (e) {
           console.error('[Auth] Error in onAuthStateChange:', e);
           if (isMounted) {
             setIsLoading(false);
+            initialCheckDone = true;
           }
         }
       }
     );
+
+    // Fallback getSession check (handles cases where onAuthStateChange does not fire immediately)
+    if (hasCachedSession) {
+      supabase.auth.getSession().then(({ data: { session: initSession } }) => {
+        if (!isMounted || initialCheckDone) return;
+        
+        console.log('[Auth] getSession fallback check:', !!initSession);
+        if (initSession) {
+          setSession(initSession);
+          setUser(initSession.user);
+          setIsLoading(false);
+          initialCheckDone = true;
+          
+          fetchUserRole(initSession.user.id).then(r => {
+            if (isMounted) {
+              setRole(r);
+              setIsNewSignup(checkIsNewSignup());
+            }
+          });
+          ensureOAuthProfile(initSession.user);
+        } else {
+          setIsLoading(false);
+          initialCheckDone = true;
+        }
+      }).catch(err => {
+        console.error('[Auth] getSession error on initialization:', err);
+        if (isMounted && !initialCheckDone) {
+          setIsLoading(false);
+          initialCheckDone = true;
+        }
+      });
+    }
 
     return () => {
       isMounted = false;
