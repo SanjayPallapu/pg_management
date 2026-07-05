@@ -1558,6 +1558,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   const isCurrentPaid = currentPayment?.acPaymentStatus === "Paid";
                   const currentShare = isCurrentPaid ? 0 : (tenantShare?.share || 0);
 
+                  const overdueAc = getOverdueAcBills(tenant.id, room, selectedMonth, selectedYear);
+                  const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
+
                   if (currentShare > 0 || overdueAcTotal > 0) {
                     acSurcharge = {
                       units,
