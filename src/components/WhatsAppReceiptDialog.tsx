@@ -307,7 +307,11 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       )}
       
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl">
+        <DialogContent
+          className="max-w-md w-[95%] p-4 sm:p-6 overflow-y-auto max-h-[90vh] rounded-2xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader className="flex flex-col items-center justify-center text-center">
             <DialogTitle className="flex items-center justify-center gap-2 text-center w-full pt-1">
               <MessageCircle className="h-5 w-5 text-green-600" />

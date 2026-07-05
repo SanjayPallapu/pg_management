@@ -191,9 +191,6 @@ export const SecurityDepositCard = ({
        const detail = event.detail;
        if (!detail?.tenantId) return;
        
-       // Always open sheet first
-       setSheetOpen(true);
-       
         // Try to find the tenant in latest data, otherwise use event data
         setTimeout(() => {
           const tenant = allTenantsRef.current.find(t => t.id === detail.tenantId);
