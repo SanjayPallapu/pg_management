@@ -1667,7 +1667,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             {(tenant.payment.paymentStatus === "Paid" ||
                               tenant.payment.paymentStatus === "Partial") && (
                               <DropdownMenuItem 
-                                onSelect={() => handleResendReceipt()} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => handleResendReceipt(), 100);
+                                }} 
                                 className="gap-2"
                               >
                                 <Receipt className="h-4 w-4" />
@@ -1675,7 +1678,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onSelect={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 const phone = tenant.phone.replace(/\D/g, "");
                                 window.location.href = `https://wa.me/${phone}`;
                               }}
@@ -1686,7 +1690,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             </DropdownMenuItem>
                             {tenant.payment.paymentStatus !== "Paid" && (
                               <DropdownMenuItem 
-                                onSelect={() => openPaymentReminder()} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTimeout(() => openPaymentReminder(), 100);
+                                }} 
                                 className="gap-2"
                               >
                                 <Bell className="h-4 w-4" />
@@ -1695,7 +1702,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             )}
                             {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                               <DropdownMenuItem
-                                onSelect={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
                                   const event = new CustomEvent("openSecurityDeposit", {
                                     detail: {
@@ -1706,7 +1714,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                       roomCapacity: room?.capacity,
                                     },
                                   });
-                                  window.dispatchEvent(event);
+                                  setTimeout(() => window.dispatchEvent(event), 100);
                                 }}
                                 className="gap-2"
                               >
@@ -1715,7 +1723,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onSelect={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
                                 setWelcomeData({
                                   tenantName: tenant.name,
@@ -1725,7 +1734,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                   sharingType: room ? `${room.capacity} Sharing` : "",
                                   monthlyRent: tenant.monthlyRent,
                                 });
-                                setWelcomeDialogOpen(true);
+                                setTimeout(() => setWelcomeDialogOpen(true), 100);
                               }}
                               className="gap-2"
                             >
@@ -1733,7 +1742,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               Welcome
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onSelect={() => openRulesDialog(tenant.name, tenant.phone)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTimeout(() => openRulesDialog(tenant.name, tenant.phone), 100);
+                              }}
                               className="gap-2"
                             >
                               <BookOpen className="h-4 w-4" />
