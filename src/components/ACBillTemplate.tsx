@@ -1,3 +1,4 @@
+// AC Electricity Bill and Payment Receipt Template - Refined Layout
 import { forwardRef } from "react";
 import { calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 import paidStamp from "@/assets/paid-stamp.png";
