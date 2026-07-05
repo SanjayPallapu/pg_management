@@ -62,12 +62,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   const [templateData, setTemplateData] = useState<ReminderData | null>(null);
   const { selectedMonth, selectedYear } = useMonthContext();
   const [hideTenantName, setHideTenantName] = useState(false);
-  const openedAtRef = useRef<number>(0);
-
-  // Track when dialog opened to suppress Radix DropdownMenu focus-restoration close
-  useEffect(() => {
-    if (open) openedAtRef.current = Date.now();
-  }, [open]);
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -257,8 +251,6 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
   };
 
   const handleClose = () => {
-    // Ignore spurious close calls within 300ms of opening (Radix dropdown focus-restoration)
-    if (Date.now() - openedAtRef.current < 300) return;
     setGeneratedImage(null);
     setGeneratedAcImage(null);
     setTemplateData(null);

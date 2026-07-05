@@ -46,7 +46,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   const [copied, setCopied] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<ReceiptData | null>(null);
-  const openedAtRef = useRef<number>(0);
 
   const [successAnimationData, setSuccessAnimationData] = useState<any>(null);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
@@ -73,11 +72,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       );
     }
   }, [showSuccessAnimation, successAnimationData]);
-
-  // Track when dialog opened to suppress Radix DropdownMenu focus-restoration close
-  useEffect(() => {
-    if (open) openedAtRef.current = Date.now();
-  }, [open]);
 
   // Handle OS back gesture to close dialog
   useBackGesture(open, () => onOpenChange(false));
@@ -287,8 +281,6 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   };
 
   const handleClose = () => {
-    // Ignore spurious close calls within 300ms of opening (Radix dropdown focus-restoration)
-    if (Date.now() - openedAtRef.current < 300) return;
     setGeneratedImage(null);
     setCopied(false);
     setTemplateData(null);

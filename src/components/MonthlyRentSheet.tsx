@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBackGesture } from "@/hooks/useBackGesture";
@@ -149,8 +149,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const whatsappOpenedAt = useRef<number>(0);
-  const reminderOpenedAt = useRef<number>(0);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
@@ -1524,8 +1522,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   tenantId: tenant.id,
                   paymentEntries: tenant.payment.paymentEntries as PaymentEntry[],
                 });
-                setWhatsappDialogOpen(true);
-                whatsappOpenedAt.current = Date.now();
+                setTimeout(() => {
+                  setWhatsappDialogOpen(true);
+                }, 100);
               };
               const openPaymentReminder = () => {
                 const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
@@ -1624,8 +1623,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
                 });
-                setReminderDialogOpen(true);
-                reminderOpenedAt.current = Date.now();
+                setTimeout(() => {
+                  setReminderDialogOpen(true);
+                }, 100);
               };
               return (
                 <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
@@ -1671,10 +1671,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             {(tenant.payment.paymentStatus === "Paid" ||
                               tenant.payment.paymentStatus === "Partial") && (
                               <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setTimeout(() => handleResendReceipt(), 100);
-                                }} 
+                                onClick={handleResendReceipt}
                                 className="gap-2"
                               >
                                 <Receipt className="h-4 w-4" />
@@ -1694,10 +1691,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             </DropdownMenuItem>
                             {tenant.payment.paymentStatus !== "Paid" && (
                               <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setTimeout(() => openPaymentReminder(), 100);
-                                }} 
+                                onClick={openPaymentReminder}
                                 className="gap-2"
                               >
                                 <Bell className="h-4 w-4" />
@@ -2296,10 +2290,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* WhatsApp Receipt Dialog */}
       <WhatsAppReceiptDialog
         open={whatsappDialogOpen}
-        onOpenChange={(v) => {
-          if (!v && Date.now() - whatsappOpenedAt.current < 300) return;
-          setWhatsappDialogOpen(v);
-        }}
+        onOpenChange={setWhatsappDialogOpen}
         receiptData={receiptData}
         onWhatsappSent={() => {
           if (receiptData?.tenantId) {
@@ -2315,10 +2306,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Payment Reminder Dialog */}
       <PaymentReminderDialog
         open={reminderDialogOpen}
-        onOpenChange={(v) => {
-          if (!v && Date.now() - reminderOpenedAt.current < 300) return;
-          setReminderDialogOpen(v);
-        }}
+        onOpenChange={setReminderDialogOpen}
         reminderData={reminderData}
       />
 
