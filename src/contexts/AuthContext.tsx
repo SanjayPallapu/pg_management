@@ -124,11 +124,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('[Auth] onAuthStateChange event:', event, 'session:', !!newSession);
         
         try {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-
-          if (newSession?.user) {
-            // Unblock UI immediately so the app loads instantly
+          if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
             setIsLoading(false);
             initialCheckDone = true;
             
@@ -151,14 +149,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             })();
           } else {
             if (isMounted) {
-              setRole(null);
-              setIsNewSignup(false);
-              
-              // Only set isLoading to false if the initial check is complete
-              // or if we have confirmed there is no session.
-              if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT' || !hasCachedSession) {
+              // Only clear session and set isLoading to false if the check is complete
+              // (meaning event is INITIAL_SESSION and we have no cached session, or getSession completed, or user explicitly signed out)
+              if (event === 'SIGNED_OUT') {
+                setSession(null);
+                setUser(null);
+                setRole(null);
+                setIsNewSignup(false);
                 setIsLoading(false);
                 initialCheckDone = true;
+              } else if (event === 'INITIAL_SESSION') {
+                if (!hasCachedSession) {
+                  setSession(null);
+                  setUser(null);
+                  setRole(null);
+                  setIsNewSignup(false);
+                  setIsLoading(false);
+                  initialCheckDone = true;
+                }
               }
             }
           }
@@ -192,12 +200,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           ensureOAuthProfile(initSession.user);
         } else {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setIsNewSignup(false);
           setIsLoading(false);
           initialCheckDone = true;
         }
       }).catch(err => {
         console.error('[Auth] getSession error on initialization:', err);
         if (isMounted && !initialCheckDone) {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setIsNewSignup(false);
           setIsLoading(false);
           initialCheckDone = true;
         }
