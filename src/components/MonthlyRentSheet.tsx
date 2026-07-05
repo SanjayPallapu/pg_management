@@ -831,7 +831,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             a.href = dataUrl;
             a.download = fileName;
             a.click();
-            window.location.href = "https://wa.me/";
+            const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+            window.location.href = `https://wa.me/${cleanPhone}`;
           }
         } else {
           const shareNavigator = navigator as Navigator & {

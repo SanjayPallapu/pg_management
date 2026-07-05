@@ -119,7 +119,8 @@ export const SecurityDepositReceiptDialog = ({
       } else {
         // Fallback: download and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, `${data.tenant.name}-deposit`);
-        window.location.href = `https://wa.me/`;
+        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+        window.location.href = `https://wa.me/${cleanPhone}`;
       }
     } catch (e: any) {
       console.error('shareReceiptToWhatsApp error', e);

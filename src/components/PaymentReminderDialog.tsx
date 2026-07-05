@@ -177,7 +177,8 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         await shareNavigator.share({ files: [file] });
       } else {
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
-        window.location.href = "https://wa.me/";
+        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+        window.location.href = `https://wa.me/${cleanPhone}`;
       }
     } catch (e) {
       if (!isAbortError(e)) toast({ title: 'Share failed', variant: 'destructive' });
@@ -217,7 +218,8 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         await shareNavigator.share({ files: [file] });
       } else {
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
-        window.location.href = "https://wa.me/";
+        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+        window.location.href = `https://wa.me/${cleanPhone}`;
       }
     } catch (e) {
       if (!isAbortError(e)) {

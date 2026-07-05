@@ -135,7 +135,8 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       } else {
         // Fallback: download image and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, `welcome-${welcomeData.tenantName}`);
-        window.location.href = `https://wa.me/`;
+        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+        window.location.href = `https://wa.me/${cleanPhone}`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {

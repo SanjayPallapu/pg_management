@@ -203,7 +203,13 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       } else {
         // Fallback: download and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, receiptData.tenantName);
-        window.location.href = `https://wa.me/`;
+        let phone = receiptData.tenantPhone?.replace(/\D/g, '');
+        if (phone) {
+          const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+          window.location.href = `https://wa.me/${cleanPhone}`;
+        } else {
+          window.location.href = `https://wa.me/`;
+        }
         // Also mark as sent for fallback
         onWhatsappSent?.();
       }

@@ -103,7 +103,8 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
         await navAny.share({ files: [file] });
       } else {
         downloadReceiptImage(generatedImage, `rules-${shareData.tenantName}`);
-        window.location.href = `https://wa.me/`;
+        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+        window.location.href = `https://wa.me/${cleanPhone}`;
       }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
