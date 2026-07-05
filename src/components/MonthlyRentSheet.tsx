@@ -77,7 +77,7 @@ import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
 import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
-import { isTenantActiveInMonth } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, parseDateOnly } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
