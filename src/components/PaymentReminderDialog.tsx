@@ -257,11 +257,10 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
 
   const copyDataToClipboard = () => {
     if (!reminderData) return;
-    const overdueAcTotal = reminderData.acSurcharge?.overdueMonths?.reduce((sum, om) => sum + om.share, 0) || 0;
     const jsonData = {
       tenant: reminderData.tenantName,
       phone: reminderData.tenantPhone,
-      amountDue: reminderData.balance + (reminderData.acSurcharge?.share || 0) + overdueAcTotal,
+      amountDue: reminderData.balance,
       totalAmount: reminderData.amount,
       amountPaid: reminderData.amountPaid || 0,
       forMonth: reminderData.forMonth,
@@ -318,33 +317,9 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Due:</span>
                   <span className="font-semibold text-amber-600">
-                    ₹{Math.floor(
-                      reminderData.balance +
-                      (reminderData.acSurcharge?.share || 0) +
-                      (reminderData.acSurcharge?.overdueMonths?.reduce((sum, om) => sum + om.share, 0) || 0)
-                    ).toLocaleString('en-IN')}
+                    ₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}
                   </span>
                 </div>
-                {reminderData.acSurcharge && reminderData.acSurcharge.share > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-400 text-xs">↳ AC Electricity:</span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400 text-xs">
-                      ₹{reminderData.acSurcharge.share.toLocaleString('en-IN')}
-                      <span className="opacity-70 ml-1">
-                        ({reminderData.acSurcharge.startReading !== undefined && reminderData.acSurcharge.startReading !== null && reminderData.acSurcharge.endReading !== undefined && reminderData.acSurcharge.endReading !== null
-                          ? `${reminderData.acSurcharge.startReading}-${reminderData.acSurcharge.endReading} | `
-                          : ""}
-                        {reminderData.acSurcharge.units}u × ₹{reminderData.acSurcharge.unitPrice})
-                      </span>
-                    </span>
-                  </div>
-                )}
-                {reminderData.acSurcharge?.overdueMonths?.map((om, index) => (
-                  <div key={index} className="flex justify-between pl-3 text-amber-600 dark:text-amber-400 text-xs">
-                    <span>↳ Overdue AC ({om.monthLabel}):</span>
-                    <span className="font-semibold">₹{om.share.toLocaleString('en-IN')}</span>
-                  </div>
-                ))}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">For Month:</span>
                   <span className="font-semibold">{reminderData.forMonth}</span>

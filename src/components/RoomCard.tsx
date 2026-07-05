@@ -384,8 +384,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
-                  acSurcharge,
-                  acBill,
                 });
                 setTimeout(() => {
                   setReminderDialogOpen(true);

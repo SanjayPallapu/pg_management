@@ -159,9 +159,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
   const pgName = data.pgName || "PG Management";
   const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
   const hideTenantName = data.hideTenantName === true;
-  const ac = data.acSurcharge;
-  const overdueAcTotal = ac?.overdueMonths?.reduce((sum: number, om: any) => sum + om.share, 0) || 0;
-  const totalDue = data.payment.balance + (ac?.share || 0) + overdueAcTotal;
+  const totalDue = data.payment.balance;
 
   return (
     <div
@@ -265,7 +263,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         </div>
 
         <div style={{ fontSize: "14px", color: "#92400e", fontWeight: 500 }}>
-          {hasPaid ? "Remaining Balance Due" : "Amount Due"}{ac?.share ? " (incl. AC)" : ""}
+          {hasPaid ? "Remaining Balance Due" : "Amount Due"}
         </div>
 
         {hasPaid && (
@@ -325,34 +323,7 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
                 {formatCurrency(data.payment.amount)}
               </td>
             </tr>
-            {ac && ac.share > 0 && (
-              <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#eff6ff" }}>
-                <td style={{ padding: "10px 16px", color: "#1d4ed8" }}>AC Electricity:</td>
-                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#1d4ed8" }}>
-                  {formatCurrency(ac.share)}
-                  <span style={{ fontSize: 10, color: "#3b82f6", marginLeft: 6 }}>
-                    ({ac.startReading !== undefined && ac.startReading !== null && ac.endReading !== undefined && ac.endReading !== null
-                      ? `Readings: ${ac.startReading}-${ac.endReading} | `
-                      : ""}
-                    {ac.units} units × ₹{ac.unitPrice}/unit
-                    {ac.splitType === "custom"
-                      ? ` ÷ ${ac.splitCount} split`
-                      : ac.splitType === "capacity"
-                        ? ` ÷ capacity`
-                        : " ÷ share"}
-                    )
-                  </span>
-                </td>
-              </tr>
-            )}
-            {ac?.overdueMonths?.map((om: any, idx: number) => (
-              <tr key={idx} style={{ borderBottom: "1px solid #e5e7eb", background: "#fffbeb" }}>
-                <td style={{ padding: "10px 16px", color: "#b45309" }}>Overdue AC ({om.monthLabel}):</td>
-                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#b45309" }}>
-                  {formatCurrency(om.share)}
-                </td>
-              </tr>
-            ))}
+
           </tbody>
         </table>
       </div>

@@ -1622,8 +1622,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
-                  acSurcharge,
-                  acBill,
                 });
                 setTimeout(() => {
                   setReminderDialogOpen(true);

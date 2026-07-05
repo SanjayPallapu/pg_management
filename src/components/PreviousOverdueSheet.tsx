@@ -584,8 +584,6 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                     overrideYear: prevYear,
                     pgName: currentPG?.name,
                     pgLogoUrl: currentPG?.logoUrl,
-                    acSurcharge,
-                    acBill,
                   });
                   setTimeout(() => {
                     setReminderDialogOpen(true);

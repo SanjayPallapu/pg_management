@@ -308,8 +308,6 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amount: reminderTenant.monthlyRent,
           amountPaid: reminderTenant.amountPaid || 0,
           balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
-          acSurcharge: getAcSurchargeFor(reminderTenant),
-          acBill: getAcBillFor(reminderTenant),
         } : null}
       />
     </>
