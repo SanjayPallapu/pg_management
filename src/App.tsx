@@ -19,7 +19,6 @@ const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-import { IntroSplash } from "./components/IntroSplash";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
@@ -60,7 +59,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Inner app component that handles first-time-only intro splash logic
+// Inner app component that handles startup behaviours
 const AppContent = () => {
   useEffect(() => {
     // Configure native status bar behaviour at startup
@@ -79,34 +78,6 @@ const AppContent = () => {
     };
     initStatusBar();
   }, []);
-
-  const [showIntroSplash, setShowIntroSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      // First-time only GSAP intro animation gated by localStorage
-      const hasSeenIntro = localStorage.getItem("hasSeenIntroSplash") === "true";
-      return !hasSeenIntro;
-    } catch {
-      return false;
-    }
-  });
-
-  const handleIntroComplete = () => {
-    try {
-      localStorage.setItem("hasSeenIntroSplash", "true");
-    } catch (e) {
-      console.error(e);
-    }
-    setShowIntroSplash(false);
-  };
-
-  if (showIntroSplash) {
-    return (
-      <AnimatePresence mode="wait">
-        <IntroSplash key="intro-splash" onComplete={handleIntroComplete} />
-      </AnimatePresence>
-    );
-  }
 
   return (
     <MonthProvider>
