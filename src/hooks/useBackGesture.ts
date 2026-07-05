@@ -4,8 +4,21 @@ import { useEffect, useRef } from 'react';
 const activeModals: (() => void)[] = [];
 let globalHistoryPushed = false;
 let isHandlingPopState = false;
+// Timestamp of last modal registration — used to suppress stale popstate events
+let lastModalRegisteredAt = 0;
+const POPSTATE_SUPPRESS_MS = 350;
 
 const handleGlobalPopState = () => {
+  // Suppress popstate events that fire within POPSTATE_SUPPRESS_MS of a modal opening.
+  // This prevents the Radix dropdown "close" popstate from consuming the dialog's history entry.
+  if (Date.now() - lastModalRegisteredAt < POPSTATE_SUPPRESS_MS) {
+    // Re-push the state so the next back gesture still works
+    if (activeModals.length > 0) {
+      window.history.pushState({ modalOpen: true }, '');
+    }
+    return;
+  }
+
   // Back gesture detected: close the most recently opened modal (top of stack)
   if (activeModals.length > 0) {
     const onClose = activeModals.pop();
@@ -46,6 +59,9 @@ export const useBackGesture = (open: boolean, onClose: () => void) => {
     const stableClose = () => {
       onCloseRef.current();
     };
+
+    // Record when this modal was registered so we can suppress stale popstate events
+    lastModalRegisteredAt = Date.now();
 
     // Add to stack
     activeModals.push(stableClose);
