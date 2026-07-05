@@ -92,6 +92,9 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         hideTenantName,
         acSurcharge: reminderData.acSurcharge,
       });
+    } else if (!open) {
+      setGeneratedImage(null);
+      setGeneratedAcImage(null);
     }
   }, [reminderData, open, selectedMonth, selectedYear, currentPG, hideTenantName]);
 

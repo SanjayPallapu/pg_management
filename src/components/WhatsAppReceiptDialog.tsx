@@ -117,6 +117,8 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
         pgName: effectivePgName,
       };
       setTemplateData(data);
+    } else if (!open) {
+      setGeneratedImage(null);
     }
   }, [receiptData, open, currentPG?.logoUrl, currentPG?.name]);
 

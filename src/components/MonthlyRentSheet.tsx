@@ -1671,8 +1671,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             {(tenant.payment.paymentStatus === "Paid" ||
                               tenant.payment.paymentStatus === "Partial") && (
                               <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                                onSelect={() => {
                                   setTimeout(() => {
                                     handleResendReceipt();
                                   }, 100);
@@ -1684,7 +1683,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onClick={() => {
+                              onSelect={() => {
                                 const phone = tenant.phone.replace(/\D/g, "");
                                 window.location.href = `https://wa.me/${phone}`;
                               }}
@@ -1695,8 +1694,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             </DropdownMenuItem>
                             {tenant.payment.paymentStatus !== "Paid" && (
                               <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                                onSelect={() => {
                                   setTimeout(() => {
                                     openPaymentReminder();
                                   }, 100);
@@ -1709,7 +1707,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             )}
                             {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
                               <DropdownMenuItem
-                                onClick={() => {
+                                onSelect={() => {
                                   const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
                                   // Dispatch custom event to open security deposit dialog directly
                                   const event = new CustomEvent("openSecurityDeposit", {
@@ -1732,7 +1730,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onClick={() => {
+                              onSelect={() => {
                                 const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
                                 setWelcomeData({
                                   tenantName: tenant.name,
@@ -1752,7 +1750,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                               Welcome
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => openRulesDialog(tenant.name, tenant.phone)}
+                              onSelect={() => {
+                                setTimeout(() => {
+                                  openRulesDialog(tenant.name, tenant.phone);
+                                }, 100);
+                              }}
                               className="gap-2"
                             >
                               <BookOpen className="h-4 w-4" />
