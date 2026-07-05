@@ -1078,7 +1078,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                               paymentDate: lastEntry?.date
                                                 ? format(new Date(lastEntry.date), "dd-MMM-yyyy")
                                                 : format(new Date(), "dd-MMM-yyyy"),
-                                              joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+                                              joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
                                               forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
                                               roomNo: room.roomNo,
                                               sharingType: `${room.capacity} Sharing`,
@@ -1115,7 +1115,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                                             setReminderData({
                                               tenantName: tenant.name,
                                               tenantPhone: tenant.phone,
-                                              joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+                                              joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
                                               forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
                                               roomNo: room.roomNo,
                                               sharingType: `${room.capacity} Sharing`,

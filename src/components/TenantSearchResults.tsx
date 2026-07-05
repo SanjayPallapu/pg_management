@@ -2,7 +2,7 @@ import { useMemo, useState, useRef } from 'react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
-import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow, parseDateOnly } from '@/utils/dateOnly';
 import { Phone, MessageCircle, Receipt, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -98,7 +98,7 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
       tenantPhone: tenant.phone,
       paymentMode: lastEntry?.mode || 'cash',
       paymentDate: lastEntry?.date ? format(new Date(lastEntry.date), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
-      joiningDate: format(new Date(tenant.startDate), 'dd-MMM-yyyy'),
+      joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), 'dd-MMM-yyyy') : '',
       forMonth: `${months[selectedMonth - 1]} ${selectedYear}`,
       roomNo: tenant.roomNo,
       sharingType: sharingType,

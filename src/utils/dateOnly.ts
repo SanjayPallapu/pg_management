@@ -1,7 +1,8 @@
 // Date helpers for YYYY-MM-DD strings (date-only) without timezone shifts
 
 export const parseDateOnly = (dateStr: string) => {
-  const [year, month, day] = dateStr.split('-').map(Number);
+  if (!dateStr) return new Date(NaN);
+  const [year, month, day] = dateStr.substring(0, 10).split('-').map(Number);
   return new Date(year, month - 1, day);
 };
 

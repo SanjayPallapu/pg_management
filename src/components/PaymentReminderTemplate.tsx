@@ -52,8 +52,36 @@ const formatCurrency = (amount: number): string => `₹ ${Math.floor(amount).toL
 
 const getLastDayOfMonth = (year: number, month: number): number => new Date(year, month, 0).getDate();
 
+export const parseAnyDate = (dateStr: string): Date => {
+  if (!dateStr) return new Date(NaN);
+  
+  // Try standard Date parsing first
+  let parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) return parsed;
+  
+  // Try dd-MMM-yyyy parsing (e.g. 05-Jul-2026)
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const monthStr = parts[1].toLowerCase();
+    const year = parseInt(parts[2], 10);
+    
+    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    let month = months.findIndex(m => monthStr.startsWith(m));
+    if (month === -1) {
+      month = parseInt(monthStr, 10) - 1;
+    }
+    
+    if (!isNaN(day) && month >= 0 && month < 12 && !isNaN(year)) {
+      return new Date(year, month, day);
+    }
+  }
+  
+  return new Date(NaN);
+};
+
 export const formatBillingRange = (joiningDate: string, selectedYear: number, selectedMonth: number): string => {
-  const joinDate = new Date(joiningDate);
+  const joinDate = parseAnyDate(joiningDate);
   if (isNaN(joinDate.getTime())) return "—";
 
   const joinDay = joinDate.getDate();

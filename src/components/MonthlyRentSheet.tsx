@@ -1117,7 +1117,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       tenantPhone: tenant.phone,
       paymentMode: paymentMode,
       paymentDate: format(paymentDate, "dd-MMM-yyyy"),
-      joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+      joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
       forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
       roomNo: tenant.roomNo,
       sharingType: sharingType,
@@ -1202,7 +1202,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       tenantPhone: tenant.phone,
       paymentMode: remainingPaymentMode,
       paymentDate: format(payRemainingDate, "dd-MMM-yyyy"),
-      joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+      joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
       forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
       roomNo: tenant.roomNo,
       sharingType: sharingType,
@@ -1252,7 +1252,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       const row: Record<string, string | number> = {
         Name: tenant.name,
         "Room No": tenant.roomNo,
-        "Join Date": format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+        "Join Date": tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
         Phone: tenant.phone,
         "Monthly Rent": tenant.monthlyRent,
       };
@@ -1494,7 +1494,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   paymentDate: lastEntry?.date
                     ? format(new Date(lastEntry.date), "dd-MMM-yyyy")
                     : format(new Date(), "dd-MMM-yyyy"),
-                  joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+                  joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
                   forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
                   roomNo: tenant.roomNo,
                   sharingType: sharingType,
@@ -1595,7 +1595,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 setReminderData({
                   tenantName: tenant.name,
                   tenantPhone: tenant.phone,
-                  joiningDate: format(new Date(tenant.startDate), "dd-MMM-yyyy"),
+                  joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
                   forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
                   roomNo: tenant.roomNo,
                   sharingType: sharingType,
