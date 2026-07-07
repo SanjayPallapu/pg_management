@@ -161,12 +161,22 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
   const hideTenantName = data.hideTenantName === true;
   const totalDue = data.payment.balance;
 
+  const formattedJoiningDate = (() => {
+    const d = parseAnyDate(data.tenant.joiningDate);
+    if (isNaN(d.getTime())) return data.tenant.joiningDate;
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  })();
+
   return (
     <div
       ref={ref}
       style={{
         width: "500px",
-        height: "625px",
+        height: "680px",
         background: "#ffffff",
         fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
         overflow: "hidden",
@@ -366,6 +376,16 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Room No:</td>
               <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.stay.roomNo}</td>
+            </tr>
+
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Sharing Type:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.stay.sharingType}</td>
+            </tr>
+
+            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+              <td style={{ padding: "10px 16px", color: "#6b7280" }}>Joining Date:</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{formattedJoiningDate}</td>
             </tr>
 
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
