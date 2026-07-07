@@ -50,6 +50,17 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
     const pgName = data.pgName || "PG Management";
     const pgLogoUrl = data.pgLogoUrl || "/icon-512.png";
 
+    const depositMonthAbbr = (() => {
+      try {
+        const d = new Date(data.deposit.date);
+        if (isNaN(d.getTime())) return "";
+        const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        return `${monthNames[d.getMonth()]}${d.getFullYear()}`;
+      } catch {
+        return "";
+      }
+    })();
+
     return (
       <div
         ref={ref}
@@ -60,34 +71,113 @@ export const SecurityDepositReceiptTemplate = forwardRef<HTMLDivElement, Securit
           overflow: 'hidden',
         }}
       >
-        {/* Header with Logo (kept in-sync with PaymentReminderTemplate) */}
-        <div style={{
-          width: '100%',
-          textAlign: 'center',
-          padding: '20px 0 1px',
-          background: '#ffffff',
-        }}>
-          <img 
-            src={pgLogoUrl}
-            alt={pgName}
-            crossOrigin="anonymous"
-            loading="eager"
+        <div
+          style={{
+            position: "relative",
+            padding: "16px 20px 12px",
+            borderBottom: "1px solid #f1f5f9",
+            marginBottom: "12px",
+            minHeight: "115px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
+          {/* Left Side: Logo */}
+          <div
             style={{
-              width: '260px',
-              height: 'auto',
-              margin: '0 auto',
-              display: 'block',
-              maxHeight: '140px',
-              objectFit: 'contain',
+              position: "absolute",
+              left: "20px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
             }}
-          />
-          <div style={{ 
-            fontSize: '14px', 
-            fontWeight: 600, 
-            color: '#4b5563', 
-            marginTop: '4px' 
-          }}>
-            {pgName}
+          >
+            <img
+              src={pgLogoUrl}
+              alt={pgName}
+              crossOrigin="anonymous"
+              loading="eager"
+              style={{
+                width: "105px",
+                height: "105px",
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
+          </div>
+
+          {/* Top Right: Receipt Details */}
+          <div
+            style={{
+              position: "absolute",
+              top: "24px",
+              right: "20px",
+              textAlign: "right",
+              fontSize: "9px",
+              color: "#64748b",
+              lineHeight: "1.3",
+              fontWeight: 500,
+            }}
+          >
+            <div style={{ textTransform: "uppercase", letterSpacing: "0.3px" }}>Receipt No:</div>
+            <div
+              style={{
+                fontWeight: 700,
+                color: "#334155",
+                fontFamily: "monospace",
+                fontSize: "10px",
+              }}
+            >
+              SD-{data.room.roomNo}-{depositMonthAbbr}
+            </div>
+          </div>
+
+          {/* Center: PG Details & Invoice Title */}
+          <div style={{ width: "100%", paddingLeft: "80px", paddingRight: "80px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "#475569",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              {pgName}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                fontSize: "17px",
+                fontWeight: 700,
+                color: "#0f172a",
+                marginTop: "3px",
+              }}
+            >
+              <span style={{ fontSize: "15px" }}>🔒</span>
+              <span>Security Deposit Receipt</span>
+            </div>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#475569",
+                marginTop: "5px",
+                background: "#f1f5f9",
+                padding: "2px 8px",
+                borderRadius: "6px",
+                display: "inline-block",
+                width: "fit-content",
+              }}
+            >
+              {formattedDepositDate}
+            </div>
           </div>
         </div>
 

@@ -174,69 +174,120 @@ export const PaymentReminderTemplate = forwardRef<HTMLDivElement, PaymentReminde
         flexDirection: "column",
       }}
     >
-      {/* Header with Logo */}
       <div
         style={{
-          width: "100%",
+          position: "relative",
+          padding: "16px 20px 12px",
+          borderBottom: "1px solid #f1f5f9",
+          marginBottom: "12px",
+          minHeight: "115px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
           textAlign: "center",
-          padding: "20px 0 1px",
-          background: "#ffffff",
         }}
       >
-        <img
-          src={pgLogoUrl}
-          alt={pgName}
-          crossOrigin="anonymous"
-          loading="eager"
-          style={{
-            width: "260px",
-            height: "auto",
-            margin: "0 auto",
-            display: "block",
-            maxHeight: "140px",
-            objectFit: "contain",
-          }}
-        />
+        {/* Left Side: Logo */}
         <div
           style={{
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "#4b5563",
-            marginTop: "4px",
+            position: "absolute",
+            left: "20px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 10,
           }}
         >
-          {pgName}
+          <img
+            src={pgLogoUrl}
+            alt={pgName}
+            crossOrigin="anonymous"
+            loading="eager"
+            style={{
+              width: "105px",
+              height: "105px",
+              objectFit: "contain",
+              display: "block",
+            }}
+          />
         </div>
-      </div>
 
-      {/* Title */}
-      <div style={{ textAlign: "center", padding: "4px 0" }}>
+        {/* Top Right: Bill Details */}
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            fontSize: "20px",
-            fontWeight: 600,
-            color: "#1a1a1a",
+            position: "absolute",
+            top: "24px",
+            right: "20px",
+            textAlign: "right",
+            fontSize: "9px",
+            color: "#64748b",
+            lineHeight: "1.3",
+            fontWeight: 500,
           }}
         >
+          <div style={{ textTransform: "uppercase", letterSpacing: "0.3px" }}>Bill No:</div>
           <div
             style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              background: "#f59e0b",
+              fontWeight: 700,
+              color: "#334155",
+              fontFamily: "monospace",
+              fontSize: "10px",
+            }}
+          >
+            {(() => {
+              const monthAbbrs = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+              const currentMonthAbbr = monthAbbrs[data.selectedMonth - 1] || "";
+              return `REM-${data.stay.roomNo}-${currentMonthAbbr}${data.selectedYear}`;
+            })()}
+          </div>
+        </div>
+
+        {/* Center: PG Details & Invoice Title */}
+        <div style={{ width: "100%", paddingLeft: "80px", paddingRight: "80px" }}>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "#475569",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            {pgName}
+          </div>
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#ffffff",
-              fontWeight: "bold",
+              gap: "6px",
+              fontSize: "17px",
+              fontWeight: 700,
+              color: "#0f172a",
+              marginTop: "3px",
             }}
           >
-            🔔
+            <span style={{ fontSize: "15px" }}>🔔</span>
+            <span>Rent Payment Reminder</span>
           </div>
-          <span>Payment Reminder</span>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#475569",
+              marginTop: "5px",
+              background: "#f1f5f9",
+              padding: "2px 8px",
+              borderRadius: "6px",
+              display: "inline-block",
+              width: "fit-content",
+            }}
+          >
+            {(() => {
+              const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+              return `${monthNames[data.selectedMonth - 1] || ""} ${data.selectedYear || ""}`.trim();
+            })()}
+          </div>
         </div>
       </div>
 
