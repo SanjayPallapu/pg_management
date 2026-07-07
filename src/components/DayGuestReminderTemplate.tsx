@@ -252,14 +252,14 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
         style={{
           background: "linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)",
           padding: "16px 20px",
-          textAlign: "left",
+          textAlign: "center",
           fontSize: "12px",
           color: "#1a1a1a",
           fontWeight: 400,
           lineHeight: 1.5,
         }}
       >
-        <p style={{ margin: "8px 0 0 0", color: "#92400e" }}>
+        <p style={{ margin: 0, color: "#92400e" }}>
           Please let me know once the payment is done. Thank you! 🙏
         </p>
       </div>
