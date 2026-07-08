@@ -435,7 +435,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <div className="grid grid-cols-5 sm:grid-cols-9 gap-x-2 gap-y-3">
             {[
               { key: "collected-by", icon: "/icons/pending-3d.jpg", label: "Collected By" },
-              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode" },
+              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode", contain: true },
               { key: "total-collected", icon: "/icons/money-bag-3d.png", label: "Total Collected" },
               { key: "all-collected", icon: "/icons/cash-stack-3d.jpg", label: "All Collected" },
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
@@ -453,7 +453,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-110"
+                    className={`w-full h-full transition-transform duration-200 group-hover:scale-110 ${item.contain ? 'object-contain p-2' : 'object-contain p-1.5'}`}
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
@@ -473,7 +473,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               { key: "expected-collection", icon: "/icons/expected-collection-3d.jpg", label: "Expected" },
               { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing" },
               { key: "tenant-movement", icon: "/icons/tenant-movement-3d.png", label: "Movement" },
-              { key: "settlement", icon: "/icons/pending-3d.jpg", label: "Settlement" },
+              { key: "settlement", icon: "/icons/settlement-final.jpg", label: "Settlement" },
             ].map((item) => (
               <div
                 key={item.key}
@@ -527,11 +527,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "calculator", icon: "/icons/calculator-3d.png", label: "Calculator" },
+              { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", emoji: "📋", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/bill-prices-3d.jpg", label: "Bill Prices" },
-              { key: "visitor-followup", icon: "/icons/settlement-3d.png", label: "Visitor" },
+              { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
             ].map((item) => (
               <div
                 key={item.key}
