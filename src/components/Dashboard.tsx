@@ -427,6 +427,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
            ═══════════════════════════════════════════════ */}
 
         {/* ── Financials ── */}
+        {/* ── Financials ── */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 py-1 px-1">
             <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Financials</span>
@@ -438,8 +439,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               { key: "total-collected", icon: "/icons/money-bag-3d.png", label: "Total Collected", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "all-collected", icon: "/icons/cash-stack-3d.jpg", label: "All Collected", scale: "scale-[1.1] group-hover:scale-[1.18]" },
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit", scale: "scale-[1.05] group-hover:scale-[1.12]" },
-              { key: "prev-overdue", icon: "/icons/overdue-3d.jpg", label: "Prev Overdue", scale: "scale-[1.1] group-hover:scale-[1.18]" },
-              { key: "overdue-paid", emoji: "✅", bg: "bg-emerald-50/60 dark:bg-emerald-950/20", label: "Overdue Paid" },
+              { key: "prev-overdue", icon: "/icons/prev-overdue-3d.jpg", label: "Prev Overdue", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "overdue-paid", icon: "/icons/overdue-paid-3d.jpg", label: "Overdue Paid", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "building-rent", icon: "/icons/rent-house-3d.png", label: "Building Rent", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests", scale: "scale-[1.05] group-hover:scale-[1.12]" },
             ].map((item) => (
@@ -448,7 +449,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -473,17 +474,17 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
               { key: "pending-tenants", icon: "/icons/avatar-3d.png", label: "Pending", scale: "scale-[1.05] group-hover:scale-[1.12]" },
-              { key: "expected-collection", emoji: "🎯", bg: "bg-blue-50/60 dark:bg-blue-950/20", label: "Expected" },
-              { key: "tenant-pricing", emoji: "💰", bg: "bg-green-50/60 dark:bg-green-950/20", label: "Pricing" },
-              { key: "tenant-movement", emoji: "🔄", bg: "bg-purple-50/60 dark:bg-purple-950/20", label: "Movement" },
-              { key: "settlement", emoji: "🤝", bg: "bg-rose-50/60 dark:bg-rose-950/20", label: "Settlement" },
+              { key: "expected-collection", icon: "/icons/expected-collection-3d.jpg", label: "Expected", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "tenant-movement", icon: "/icons/tenant-movement-3d.png", label: "Movement", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "settlement", icon: "/icons/settlement-3d.png", label: "Settlement", scale: "scale-[1.05] group-hover:scale-[1.12]" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -507,15 +508,23 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "bills-budget", emoji: "⚖️", bg: "bg-purple-50/60 dark:bg-purple-950/20", label: "Overview" },
+              { key: "bills-budget", icon: "/icons/bills-budget-overview-3d.jpg", label: "Overview", scale: "scale-[1.05] group-hover:scale-[1.12]" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => setBillsBudgetOpen(true)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
-                  <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
+                  {item.icon ? (
+                    <img 
+                      src={item.icon} 
+                      alt={item.label} 
+                      className={`w-full h-full object-cover transition-transform duration-200 ${item.scale || 'scale-100 group-hover:scale-105'}`} 
+                    />
+                  ) : (
+                    <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                  )}
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
               </div>
@@ -530,10 +539,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "calculator", emoji: "🔢", bg: "bg-blue-50/60 dark:bg-blue-950/20", label: "Calculator" },
-              { key: "key-numbers", emoji: "🔑", bg: "bg-amber-50/60 dark:bg-amber-950/20", label: "Key Numbers" },
+              { key: "calculator", icon: "/icons/calculator-3d.png", label: "Calculator", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "pg-rules", emoji: "📋", bg: "bg-indigo-50/60 dark:bg-indigo-950/20", label: "PG Rules" },
-              { key: "bill-prices", emoji: "⚡", bg: "bg-yellow-50/60 dark:bg-yellow-950/20", label: "Bill Prices" },
+              { key: "bill-prices", icon: "/icons/bill-prices-3d.jpg", label: "Bill Prices", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "visitor-followup", emoji: "💬", bg: "bg-teal-50/60 dark:bg-teal-950/20", label: "Visitor" },
             ].map((item) => (
               <div
@@ -541,7 +550,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
                   <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
