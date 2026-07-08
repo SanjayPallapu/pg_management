@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 scripts/
+
+# Android build artifacts
+android/
