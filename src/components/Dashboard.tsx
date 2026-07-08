@@ -433,15 +433,15 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-9 gap-x-2 gap-y-3">
             {[
-              { key: "collected-by", icon: "/icons/collected-by.jpg", label: "Collected By" },
-              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode" },
-              { key: "total-collected", icon: "/icons/total-collected.jpg", label: "Total Collected" },
-              { key: "all-collected", icon: "/icons/all-collected.jpg", label: "All Collected" },
-              { key: "security-deposit", icon: "/icons/security-deposit.jpg", label: "Security Deposit" },
-              { key: "prev-overdue", icon: "/icons/overdue.jpg", label: "Prev Overdue" },
+              { key: "collected-by", icon: "/icons/collected-by.jpg", label: "Collected By", scale: "scale-[1.28] group-hover:scale-[1.35]" },
+              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode", scale: "scale-[1.28] group-hover:scale-[1.35]" },
+              { key: "total-collected", icon: "/icons/money-bag-3d.png", label: "Total Collected", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "all-collected", icon: "/icons/cash-stack-3d.jpg", label: "All Collected", scale: "scale-[1.1] group-hover:scale-[1.18]" },
+              { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "prev-overdue", icon: "/icons/overdue-3d.jpg", label: "Prev Overdue", scale: "scale-[1.1] group-hover:scale-[1.18]" },
               { key: "overdue-paid", emoji: "✅", bg: "bg-emerald-50/60 dark:bg-emerald-950/20", label: "Overdue Paid" },
-              { key: "building-rent", emoji: "🏢", bg: "bg-slate-50/60 dark:bg-slate-900/40", label: "Building Rent" },
-              { key: "day-guest", emoji: "🛏️", bg: "bg-amber-50/60 dark:bg-amber-950/20", label: "Day Guests" },
+              { key: "building-rent", icon: "/icons/rent-house-3d.png", label: "Building Rent", scale: "scale-[1.05] group-hover:scale-[1.12]" },
+              { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests", scale: "scale-[1.05] group-hover:scale-[1.12]" },
             ].map((item) => (
               <div
                 key={item.key}
@@ -453,7 +453,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                     <img 
                       src={item.icon} 
                       alt={item.label} 
-                      className="w-full h-full object-cover scale-[1.28] transition-transform duration-200 group-hover:scale-[1.35]" 
+                      className={`w-full h-full object-cover transition-transform duration-200 ${item.scale || 'scale-100 group-hover:scale-105'}`} 
                     />
                   ) : (
                     <span className="text-2xl sm:text-3xl">{item.emoji}</span>
@@ -472,7 +472,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "pending-tenants", emoji: "⏳", bg: "bg-orange-50/60 dark:bg-orange-950/20", label: "Pending" },
+              { key: "pending-tenants", icon: "/icons/avatar-3d.png", label: "Pending", scale: "scale-[1.05] group-hover:scale-[1.12]" },
               { key: "expected-collection", emoji: "🎯", bg: "bg-blue-50/60 dark:bg-blue-950/20", label: "Expected" },
               { key: "tenant-pricing", emoji: "💰", bg: "bg-green-50/60 dark:bg-green-950/20", label: "Pricing" },
               { key: "tenant-movement", emoji: "🔄", bg: "bg-purple-50/60 dark:bg-purple-950/20", label: "Movement" },
@@ -484,7 +484,15 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
               >
                 <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
-                  <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                  {item.icon ? (
+                    <img 
+                      src={item.icon} 
+                      alt={item.label} 
+                      className={`w-full h-full object-cover transition-transform duration-200 ${item.scale || 'scale-100 group-hover:scale-105'}`} 
+                    />
+                  ) : (
+                    <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                  )}
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
               </div>
