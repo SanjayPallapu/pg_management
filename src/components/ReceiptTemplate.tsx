@@ -95,7 +95,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         <div
           style={{
             position: "absolute",
-            top: "24px",
+            top: "38px",
             right: "20px",
             textAlign: "right",
             fontSize: "9px",
@@ -290,48 +290,55 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 {data.tenant.name}
               </td>
             </tr>
-            {/* Always show all payment entries with dates */}
-            {data.paymentEntries && data.paymentEntries.length > 0 ? (
-              data.paymentEntries.map((entry, idx) => {
-                const formattedDate = (() => {
-                  try {
-                    return new Date(entry.date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    });
-                  } catch {
-                    return entry.date;
-                  }
-                })();
-                const label = entry.type === "partial" ? "Partial" : entry.type === "remaining" ? "Final" : "Payment";
-                return (
-                  <tr key={idx} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                    <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>
-                      {label} ({formattedDate}):
-                    </td>
-                    <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
-                      ₹{entry.amount.toLocaleString("en-IN")} via {entry.mode === "upi" ? "UPI" : "Cash"}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <>
-                <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Payment Mode:</td>
-                  <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
-                    {data.payment.mode}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Payment Date:</td>
-                  <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
-                    {data.payment.date}
-                  </td>
-                </tr>
-              </>
+            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+              <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Payment Mode:</td>
+              <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
+                {data.payment.mode}
+              </td>
+            </tr>
+            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+              <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Paid Amount:</td>
+              <td style={{ padding: "6px 12px", fontWeight: 600, fontSize: "12px", color: "#166534" }}>
+                {formatCurrency(data.payment.paid)}
+              </td>
+            </tr>
+            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+              <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Payment Date:</td>
+              <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
+                {data.payment.date}
+              </td>
+            </tr>
+            {data.paymentEntries && data.paymentEntries.length > 0 && (
+              <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+                <td colSpan={2} style={{ padding: "4px 12px", background: "#f9fafb", fontSize: "10px", fontWeight: 600, color: "#4b5563" }}>
+                  Payment History / Breakdown:
+                </td>
+              </tr>
             )}
+            {data.paymentEntries && data.paymentEntries.length > 0 && data.paymentEntries.map((entry, idx) => {
+              const formattedDate = (() => {
+                try {
+                  return new Date(entry.date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  });
+                } catch {
+                  return entry.date;
+                }
+              })();
+              const label = entry.type === "partial" ? "Partial" : entry.type === "remaining" ? "Final" : "Payment";
+              return (
+                <tr key={idx} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                  <td style={{ padding: "6px 12px 6px 20px", color: "#6b7280", fontSize: "11px" }}>
+                    • {label} ({formattedDate}):
+                  </td>
+                  <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "11px", color: "#1a1a1a" }}>
+                    ₹{entry.amount.toLocaleString("en-IN")} via {entry.mode === "upi" ? "UPI" : "Cash"}
+                  </td>
+                </tr>
+              );
+            })}
             <tr>
               <td style={{ padding: "6px 12px", color: "#6b7280", fontSize: "12px" }}>Joining Date:</td>
               <td style={{ padding: "6px 12px", fontWeight: 500, fontSize: "12px", color: "#1a1a1a" }}>
