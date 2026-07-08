@@ -423,18 +423,15 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Card>
 
         {/* ═══════════════════════════════════════════════
-            Category Sections – Swiggy-style 3D icon grids
+            Category Sections – Swiggy-style compact grids
            ═══════════════════════════════════════════════ */}
 
         {/* ── Financials ── */}
-        <div>
-          <div className="flex items-center gap-3 py-2 px-1 mb-2">
-            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
-              <img src="/icons/financials-3d.jpg" alt="Financials" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-base text-foreground">Financials</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 py-1 px-1">
+            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Financials</span>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-5 sm:grid-cols-9 gap-x-2 gap-y-3">
             {[
               { key: "collected-by", icon: "/icons/collected-by.jpg", label: "Collected By" },
               { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode" },
@@ -442,97 +439,104 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               { key: "all-collected", icon: "/icons/all-collected.jpg", label: "All Collected" },
               { key: "security-deposit", icon: "/icons/security-deposit.jpg", label: "Security Deposit" },
               { key: "prev-overdue", icon: "/icons/overdue.jpg", label: "Prev Overdue" },
-              { key: "overdue-paid", emoji: "✅", bg: "from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30", label: "Overdue Paid" },
-              { key: "building-rent", emoji: "🏢", bg: "from-slate-50 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/30", label: "Building Rent" },
-              { key: "day-guest", emoji: "🛏️", bg: "from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30", label: "Day Guests" },
+              { key: "overdue-paid", emoji: "✅", bg: "bg-emerald-50/60 dark:bg-emerald-950/20", label: "Overdue Paid" },
+              { key: "building-rent", emoji: "🏢", bg: "bg-slate-50/60 dark:bg-slate-900/40", label: "Building Rent" },
+              { key: "day-guest", emoji: "🛏️", bg: "bg-amber-50/60 dark:bg-amber-950/20", label: "Day Guests" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow ${!item.icon ? `bg-gradient-to-br ${item.bg} flex items-center justify-center` : ''}`}>
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
                   {item.icon ? (
-                    <img src={item.icon} alt={item.label} className="w-full h-full object-cover" />
+                    <img 
+                      src={item.icon} 
+                      alt={item.label} 
+                      className="w-full h-full object-cover scale-[1.28] transition-transform duration-200 group-hover:scale-[1.35]" 
+                    />
                   ) : (
-                    <span className="text-3xl">{item.emoji}</span>
+                    <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                   )}
                 </div>
-                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── Tenants ── */}
-        <div>
-          <div className="flex items-center gap-3 py-2 px-1 mb-2">
-            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
-              <img src="/icons/tenants-3d.jpg" alt="Tenants" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-base text-foreground">Tenants</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 py-1 px-1">
+            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Tenants</span>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "pending-tenants", emoji: "⏳", bg: "from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30", label: "Pending" },
-              { key: "expected-collection", emoji: "🎯", bg: "from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30", label: "Expected" },
-              { key: "tenant-pricing", emoji: "💰", bg: "from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30", label: "Pricing" },
-              { key: "tenant-movement", emoji: "🔄", bg: "from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30", label: "Movement" },
-              { key: "settlement", emoji: "🤝", bg: "from-rose-50 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30", label: "Settlement" },
+              { key: "pending-tenants", emoji: "⏳", bg: "bg-orange-50/60 dark:bg-orange-950/20", label: "Pending" },
+              { key: "expected-collection", emoji: "🎯", bg: "bg-blue-50/60 dark:bg-blue-950/20", label: "Expected" },
+              { key: "tenant-pricing", emoji: "💰", bg: "bg-green-50/60 dark:bg-green-950/20", label: "Pricing" },
+              { key: "tenant-movement", emoji: "🔄", bg: "bg-purple-50/60 dark:bg-purple-950/20", label: "Movement" },
+              { key: "settlement", emoji: "🤝", bg: "bg-rose-50/60 dark:bg-rose-950/20", label: "Settlement" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow bg-gradient-to-br ${item.bg} flex items-center justify-center`}>
-                  <span className="text-3xl">{item.emoji}</span>
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                  <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                 </div>
-                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── Bills & Budget ── */}
-        <div>
-          <div
-            className="flex items-center gap-3 py-2 px-1 mb-2 cursor-pointer group"
-            onClick={() => setBillsBudgetOpen(true)}
-          >
-            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
-              <img src="/icons/bills-budget-3d.jpg" alt="Bills & Budget" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-base text-foreground group-hover:text-primary transition-colors">Bills & Budget</span>
-            <span className="text-xs text-primary font-medium ml-auto">Open →</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 py-1 px-1">
+            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Bills & Budget</span>
+          </div>
+          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
+            {[
+              { key: "bills-budget", emoji: "⚖️", bg: "bg-purple-50/60 dark:bg-purple-950/20", label: "Overview" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => setBillsBudgetOpen(true)}
+              >
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                  <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* ── Tools & Admin ── */}
-        <div>
-          <div className="flex items-center gap-3 py-2 px-1 mb-2">
-            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
-              <img src="/icons/tools-admin-3d.jpg" alt="Tools & Admin" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold text-base text-foreground">Tools & Admin</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 py-1 px-1">
+            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Tools & Admin</span>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "calculator", emoji: "🔢", bg: "from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30", label: "Calculator" },
-              { key: "key-numbers", emoji: "🔑", bg: "from-amber-50 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30", label: "Key Numbers" },
-              { key: "pg-rules", emoji: "📋", bg: "from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30", label: "PG Rules" },
-              { key: "bill-prices", emoji: "⚡", bg: "from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30", label: "Bill Prices" },
-              { key: "visitor-followup", emoji: "💬", bg: "from-teal-50 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30", label: "Visitor" },
+              { key: "calculator", emoji: "🔢", bg: "bg-blue-50/60 dark:bg-blue-950/20", label: "Calculator" },
+              { key: "key-numbers", emoji: "🔑", bg: "bg-amber-50/60 dark:bg-amber-950/20", label: "Key Numbers" },
+              { key: "pg-rules", emoji: "📋", bg: "bg-indigo-50/60 dark:bg-indigo-950/20", label: "PG Rules" },
+              { key: "bill-prices", emoji: "⚡", bg: "bg-yellow-50/60 dark:bg-yellow-950/20", label: "Bill Prices" },
+              { key: "visitor-followup", emoji: "💬", bg: "bg-teal-50/60 dark:bg-teal-950/20", label: "Visitor" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key)}
               >
-                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow bg-gradient-to-br ${item.bg} flex items-center justify-center`}>
-                  <span className="text-3xl">{item.emoji}</span>
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative`}>
+                  <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                 </div>
-                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
               </div>
             ))}
           </div>
