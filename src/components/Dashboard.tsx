@@ -91,6 +91,9 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
 
+  // Active sheet state for Swiggy-style icon grid
+  const [activeSheet, setActiveSheet] = useState<string | null>(null);
+
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
@@ -420,126 +423,339 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Card>
 
         {/* ═══════════════════════════════════════════════
-            Category Sections – Swiggy-style 3D icon headers
+            Category Sections – Swiggy-style 3D icon grids
            ═══════════════════════════════════════════════ */}
 
         {/* ── Financials ── */}
-        <Collapsible defaultOpen>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
-              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 p-0.5">
-                <img src="/icons/financials-3d.jpg" alt="Financials" className="w-full h-full object-cover rounded-[10px]" />
-              </div>
-              <span className="font-bold text-base text-foreground">Financials</span>
-              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        <div>
+          <div className="flex items-center gap-3 py-2 px-1 mb-2">
+            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
+              <img src="/icons/financials-3d.jpg" alt="Financials" className="w-full h-full object-cover" />
             </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 mt-1">
-            <CollectedByCard />
-            <PaymentModeCard rooms={rooms} />
-            <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
-            <AllCollectedCard rooms={rooms} />
-            <SecurityDepositCard rooms={rooms} />
-            <PreviousMonthOverdueCard />
-            <OverduePaidCard rooms={rooms} />
-            <BuildingRentCard />
-            <DayGuestRevenueCard
-              onClick={() => setDayGuestSheetOpen(true)}
-              stats={dayGuestStats ?? undefined}
-              isLoading={dayGuestStatsLoading}
-            />
-          </CollapsibleContent>
-        </Collapsible>
+            <span className="font-bold text-base text-foreground">Financials</span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { key: "collected-by", icon: "/icons/collected-by.jpg", label: "Collected By" },
+              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode" },
+              { key: "total-collected", icon: "/icons/total-collected.jpg", label: "Total Collected" },
+              { key: "all-collected", icon: "/icons/all-collected.jpg", label: "All Collected" },
+              { key: "security-deposit", icon: "/icons/security-deposit.jpg", label: "Security Deposit" },
+              { key: "prev-overdue", icon: "/icons/overdue.jpg", label: "Prev Overdue" },
+              { key: "overdue-paid", emoji: "✅", bg: "from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30", label: "Overdue Paid" },
+              { key: "building-rent", emoji: "🏢", bg: "from-slate-50 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/30", label: "Building Rent" },
+              { key: "day-guest", emoji: "🛏️", bg: "from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30", label: "Day Guests" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key)}
+              >
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow ${!item.icon ? `bg-gradient-to-br ${item.bg} flex items-center justify-center` : ''}`}>
+                  {item.icon ? (
+                    <img src={item.icon} alt={item.label} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl">{item.emoji}</span>
+                  )}
+                </div>
+                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ── Tenants ── */}
-        <Collapsible defaultOpen>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
-              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30 p-0.5">
-                <img src="/icons/tenants-3d.jpg" alt="Tenants" className="w-full h-full object-cover rounded-[10px]" />
-              </div>
-              <span className="font-bold text-base text-foreground">Tenants</span>
-              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        <div>
+          <div className="flex items-center gap-3 py-2 px-1 mb-2">
+            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
+              <img src="/icons/tenants-3d.jpg" alt="Tenants" className="w-full h-full object-cover" />
             </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 mt-1">
-            <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
-            <ExpectedCollectionCard />
-            <TenantPricingOverviewCard />
-            <TenantMovementCard rooms={rooms} />
-            <Card
-              className="cursor-pointer transition-colors hover:bg-accent/50"
-              onClick={() => setSettlementSheetOpen(true)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
-                  <UserMinus className="h-4 w-4 text-muted-foreground" />
+            <span className="font-bold text-base text-foreground">Tenants</span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { key: "pending-tenants", emoji: "⏳", bg: "from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30", label: "Pending" },
+              { key: "expected-collection", emoji: "🎯", bg: "from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30", label: "Expected" },
+              { key: "tenant-pricing", emoji: "💰", bg: "from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30", label: "Pricing" },
+              { key: "tenant-movement", emoji: "🔄", bg: "from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30", label: "Movement" },
+              { key: "settlement", emoji: "🤝", bg: "from-rose-50 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30", label: "Settlement" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
+              >
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow bg-gradient-to-br ${item.bg} flex items-center justify-center`}>
+                  <span className="text-3xl">{item.emoji}</span>
                 </div>
-                <div className="text-lg font-bold">Settlement Summary</div>
-                <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
-              </CardContent>
-            </Card>
-          </CollapsibleContent>
-        </Collapsible>
+                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ── Bills & Budget ── */}
-        <Collapsible defaultOpen>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
-              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-0.5">
-                <img src="/icons/bills-budget-3d.jpg" alt="Bills & Budget" className="w-full h-full object-cover rounded-[10px]" />
-              </div>
-              <span className="font-bold text-base text-foreground">Bills & Budget</span>
-              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        <div>
+          <div
+            className="flex items-center gap-3 py-2 px-1 mb-2 cursor-pointer group"
+            onClick={() => setBillsBudgetOpen(true)}
+          >
+            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
+              <img src="/icons/bills-budget-3d.jpg" alt="Bills & Budget" className="w-full h-full object-cover" />
             </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 mt-1">
-            <BillsBudgetDashboard rooms={rooms} />
-          </CollapsibleContent>
-        </Collapsible>
+            <span className="font-bold text-base text-foreground group-hover:text-primary transition-colors">Bills & Budget</span>
+            <span className="text-xs text-primary font-medium ml-auto">Open →</span>
+          </div>
+        </div>
 
         {/* ── Tools & Admin ── */}
-        <Collapsible defaultOpen>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
-              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 p-0.5">
-                <img src="/icons/tools-admin-3d.jpg" alt="Tools & Admin" className="w-full h-full object-cover rounded-[10px]" />
-              </div>
-              <span className="font-bold text-base text-foreground">Tools & Admin</span>
-              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        <div>
+          <div className="flex items-center gap-3 py-2 px-1 mb-2">
+            <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm shrink-0">
+              <img src="/icons/tools-admin-3d.jpg" alt="Tools & Admin" className="w-full h-full object-cover" />
             </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 mt-1">
-            <CalculatorCard />
-            <KeyNumbersCard />
-            <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
-            <BillUnitPricesCard />
-            <Card
-              className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
-              onClick={() => setVisitorFollowUpOpen(true)}
-            >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block font-semibold text-sm">Visitor Follow-up</span>
-                    <span className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</span>
-                  </div>
+            <span className="font-bold text-base text-foreground">Tools & Admin</span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { key: "calculator", emoji: "🔢", bg: "from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30", label: "Calculator" },
+              { key: "key-numbers", emoji: "🔑", bg: "from-amber-50 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30", label: "Key Numbers" },
+              { key: "pg-rules", emoji: "📋", bg: "from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30", label: "PG Rules" },
+              { key: "bill-prices", emoji: "⚡", bg: "from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30", label: "Bill Prices" },
+              { key: "visitor-followup", emoji: "💬", bg: "from-teal-50 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30", label: "Visitor" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key)}
+              >
+                <div className={`w-full aspect-square rounded-2xl overflow-hidden mb-1.5 shadow-sm group-hover:shadow-md transition-shadow bg-gradient-to-br ${item.bg} flex items-center justify-center`}>
+                  <span className="text-3xl">{item.emoji}</span>
                 </div>
-                <span className="text-xs text-primary font-medium shrink-0">Open →</span>
-              </CardContent>
-            </Card>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Personal Expenses */}
-        <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
-        <TodaySpendingCard />
-        <BalanceCard rooms={rooms} rentCollected={rentCollected} />
+                <span className="font-medium text-[10px] sm:text-xs text-foreground/80 leading-tight">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════
+          Active Card Sheets – opened by Swiggy icon clicks
+         ═══════════════════════════════════════════════ */}
+      <Sheet open={activeSheet === "collected-by"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Collected By</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "payment-mode"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Payment Mode</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PaymentModeCard rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "total-collected"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Total Collected</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TotalCollectedCard rooms={rooms} rentCollected={rentCollected} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "all-collected"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">All Collected</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><AllCollectedCard rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "security-deposit"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Security Deposit</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><SecurityDepositCard rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "prev-overdue"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Previous Month Overdue</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PreviousMonthOverdueCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "overdue-paid"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Overdue Paid</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><OverduePaidCard rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "building-rent"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Building Rent</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BuildingRentCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tenant Sheets */}
+      <Sheet open={activeSheet === "pending-tenants"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Pending Tenants</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "expected-collection"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Expected Collection</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><ExpectedCollectionCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "tenant-pricing"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Tenant Pricing</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantPricingOverviewCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "tenant-movement"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Tenant Movement</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantMovementCard rooms={rooms} /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tool Sheets */}
+      <Sheet open={activeSheet === "calculator"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Calculator</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CalculatorCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "key-numbers"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Key Numbers</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><KeyNumbersCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "pg-rules"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">PG Rules</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <PGRulesCard onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={activeSheet === "bill-prices"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Bill Unit Prices</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BillUnitPricesCard /></div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Bills & Budget Sheet */}
       <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
