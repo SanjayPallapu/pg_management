@@ -419,83 +419,67 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Summary Cards Grid */}
-        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
-          {/* Bills & Budget Summary Card */}
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+        {/* Summary Cards Grid - Swiggy Style */}
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          {/* Bills & Budget */}
+          <div 
+            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
             onClick={() => setBillsBudgetOpen(true)}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                  <Scale className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-semibold text-sm">Bills & Budget</span>
-                  <span className="text-xs text-muted-foreground">Manage room utility bills & budgets</span>
-                </div>
-              </div>
-              <span className="text-xs text-primary font-medium shrink-0">View details →</span>
-            </CardContent>
-          </Card>
+            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-2">
+              <img 
+                src="/icons/bills-budget-3d.jpg" 
+                alt="Bills & Budget" 
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Bills &<br/>Budget</span>
+          </div>
 
-          {/* Financials Summary Card */}
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          {/* Financials */}
+          <div 
+            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
             onClick={() => setFinancialsOpen(true)}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                  <Wallet className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-semibold text-sm">Financials</span>
-                  <span className="text-xs text-muted-foreground">Payments, deposits, building rent</span>
-                </div>
-              </div>
-              <span className="text-xs text-primary font-medium shrink-0">View details →</span>
-            </CardContent>
-          </Card>
+            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 p-2">
+              <img 
+                src="/icons/financials-3d.jpg" 
+                alt="Financials" 
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Financials</span>
+          </div>
 
-          {/* Tenants Summary Card */}
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          {/* Tenants */}
+          <div 
+            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
             onClick={() => setTenantsOpen(true)}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                  <Users className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-semibold text-sm">Tenants</span>
-                  <span className="text-xs text-muted-foreground">Pending, pricing and movement</span>
-                </div>
-              </div>
-              <span className="text-xs text-primary font-medium shrink-0">View details →</span>
-            </CardContent>
-          </Card>
+            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30 p-2">
+              <img 
+                src="/icons/tenants-3d.jpg" 
+                alt="Tenants" 
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Tenants</span>
+          </div>
 
-          {/* Tools & Admin Summary Card */}
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          {/* Tools & Admin */}
+          <div 
+            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
             onClick={() => setToolsOpen(true)}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-                  <Settings className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-semibold text-sm">Tools & Admin</span>
-                  <span className="text-xs text-muted-foreground">App settings, calculators & rules</span>
-                </div>
-              </div>
-              <span className="text-xs text-primary font-medium shrink-0">Open tools →</span>
-            </CardContent>
-          </Card>
+            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 p-2">
+              <img 
+                src="/icons/tools-admin-3d.jpg" 
+                alt="Tools & Admin" 
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Tools &<br/>Admin</span>
+          </div>
         </div>
       </div>
 
