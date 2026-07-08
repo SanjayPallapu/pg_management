@@ -76,13 +76,13 @@ interface OverdueReminderData {
   pgLogoUrl?: string;
 }
 
-export const PreviousMonthOverdueCard = () => {
+export const PreviousMonthOverdueCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();
   const { currentPG } = usePG();
   const isMobile = useIsMobile();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
   const [collectorSettingsOpen, setCollectorSettingsOpen] = useState(false);
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());

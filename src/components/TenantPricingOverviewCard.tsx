@@ -26,11 +26,11 @@ interface SharingGroup {
   tenants: TenantInfo[];
 }
 
-export const TenantPricingOverviewCard = () => {
+export const TenantPricingOverviewCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
   const [selectedSharing, setSelectedSharing] = useState<number | null>(null);
 

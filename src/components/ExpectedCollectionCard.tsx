@@ -14,12 +14,12 @@ import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
-export const ExpectedCollectionCard = () => {
+export const ExpectedCollectionCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [collectionFromDay, setCollectionFromDay] = useState<number>(new Date().getDate());
   const [collectionToDay, setCollectionToDay] = useState<number>(31);
   const [selectedDueDay, setSelectedDueDay] = useState<number | null>(null);

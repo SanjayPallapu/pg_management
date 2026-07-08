@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OverduePaidCardProps {
   rooms: Room[];
+  defaultOpen?: boolean;
 }
 
 interface TenantWithPayment {
@@ -61,11 +62,11 @@ interface OverduePaidReceiptData {
   paymentEntries?: PaymentEntry[];
 }
 
-export const OverduePaidCard = ({ rooms }: OverduePaidCardProps) => {
+export const OverduePaidCard = ({ rooms, defaultOpen = false }: OverduePaidCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const isMobile = useIsMobile();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<OverduePaidReceiptData | null>(null);
   const [stillPendingSheetOpen, setStillPendingSheetOpen] = useState(false);

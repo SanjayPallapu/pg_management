@@ -54,6 +54,7 @@ interface SecurityDepositCardProps {
   showSummaryCard?: boolean;
   /** Enables responding to external triggers (CustomEvent / navigation state). */
   enableExternalTriggers?: boolean;
+  defaultOpen?: boolean;
 }
 
 interface TenantWithRoom extends Tenant {
@@ -65,11 +66,12 @@ export const SecurityDepositCard = ({
   rooms,
   showSummaryCard = true,
   enableExternalTriggers = false,
+  defaultOpen = false,
 }: SecurityDepositCardProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentPG } = usePG();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Handle OS back gesture to close sheet

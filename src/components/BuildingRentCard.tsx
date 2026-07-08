@@ -16,7 +16,7 @@ import { formatIndianCurrency } from '@/utils/numberToWords';
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const COLLAPSE_KEY = 'buildingRentCard_collapsed';
 
-export const BuildingRentCard = () => {
+export const BuildingRentCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear } = useMonthContext();
   const { settings, updateSettings, resetSettings } = useBuildingRentSettings();
   const { payments, addPayment, deletePayment } = useBuildingRentHistory();
@@ -25,6 +25,7 @@ export const BuildingRentCard = () => {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(() => {
+    if (defaultOpen) return true;
     const saved = localStorage.getItem(COLLAPSE_KEY);
     return saved !== 'true';
   });

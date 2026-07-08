@@ -620,7 +620,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Security Deposit</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><SecurityDepositCard rooms={rooms} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><SecurityDepositCard rooms={rooms} defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -633,7 +633,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Previous Month Overdue</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PreviousMonthOverdueCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PreviousMonthOverdueCard defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -646,7 +646,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Overdue Paid</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><OverduePaidCard rooms={rooms} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><OverduePaidCard rooms={rooms} defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -659,7 +659,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Building Rent</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BuildingRentCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BuildingRentCard defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -687,7 +687,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Expected Collection</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><ExpectedCollectionCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><ExpectedCollectionCard defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -700,7 +700,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Tenant Pricing</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantPricingOverviewCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantPricingOverviewCard defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -728,7 +728,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Calculator</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CalculatorCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CalculatorCard defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>

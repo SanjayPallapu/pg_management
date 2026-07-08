@@ -16,11 +16,12 @@ interface CalculatorCardProps {
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
   hideCard?: boolean;
+  defaultOpen?: boolean;
 }
 
-export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard }: CalculatorCardProps = {}) => {
+export const CalculatorCard = ({ externalOpen, onExternalOpenChange, hideCard, defaultOpen = false }: CalculatorCardProps = {}) => {
   const isMobile = useIsMobile();
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const sheetOpen = externalOpen !== undefined ? externalOpen : internalOpen;
   const setSheetOpen = (open: boolean) => {
     if (onExternalOpenChange) {
