@@ -529,7 +529,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             {[
               { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
-              { key: "pg-rules", emoji: "📋", label: "PG Rules" },
+              { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/bill-prices-3d.jpg", label: "Bill Prices" },
               { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
             ].map((item) => (
