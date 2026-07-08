@@ -44,6 +44,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
+import { RentProvider } from '@/contexts/RentContext';
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
@@ -257,7 +258,8 @@ const Index = () => {
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
+      <div className="flex flex-col h-screen bg-background">
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} onScroll={handleScroll}>
@@ -365,7 +367,8 @@ const Index = () => {
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-    </div>
+      </div>
+    </RentProvider>
   );
 };
 export default Index;

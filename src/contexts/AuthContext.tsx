@@ -40,6 +40,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
     let initialCheckDone = false;
 
+    // DEV MOCK AUTO-LOGIN BYPASS
+    if (import.meta.env.DEV) {
+      const mockUser = {
+        id: "92f3d1db-3e91-4b72-9712-ac756da63006",
+        email: "sanjaypallapuu@gmail.com",
+        app_metadata: {},
+        user_metadata: { full_name: "Sanjay Pallapu" },
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+      };
+      const mockSession = {
+        access_token: "mock-token",
+        token_type: "bearer",
+        expires_in: 3600,
+        refresh_token: "mock-refresh-token",
+        user: mockUser,
+      };
+      setSession(mockSession as any);
+      setUser(mockUser as any);
+      setRole('admin');
+      setIsLoading(false);
+      return () => {};
+    }
+
     const forceLoadingTimer = setTimeout(() => {
       if (isMounted) {
         setIsLoading(prev => {
