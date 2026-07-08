@@ -28,21 +28,24 @@ import { usePG } from '@/contexts/PGContext';
 import { DEFAULT_RULES, getStoredPGRules, getStoredRulesLanguage, saveStoredPGRules, saveStoredRulesLanguage, type Rule, type RulesLanguage } from '@/lib/pgRules';
 
 interface PGRulesCardProps {
+  defaultOpen?: boolean;
+  onClose?: () => void;
   onEditableTemplate?: (rules: Rule[], language: RulesLanguage) => void;
 }
 
-export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
+export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose }: PGRulesCardProps) => {
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   useEffect(() => {
     const handleClose = () => {
       setOpen(false);
+      onClose?.();
     };
     window.addEventListener('tab-click', handleClose);
     return () => window.removeEventListener('tab-click', handleClose);
-  }, []);
+  }, [onClose]);
   const [rules, setRules] = useState<Rule[]>(DEFAULT_RULES);
   const [editMode, setEditMode] = useState(false);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
@@ -181,7 +184,7 @@ export const PGRulesCard = ({ onEditableTemplate }: PGRulesCardProps) => {
         </CardContent>
       </Card>
 
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}

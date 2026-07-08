@@ -29,13 +29,14 @@ interface TenantCollection {
   type?: 'rent' | 'deposit' | 'overdue' | 'dayguest';
 }
 
-export const CollectedByCard = () => {
+export const CollectedByCard = ({ onClose }: { onClose?: () => void }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, isLoading: paymentsLoading } = useTenantPayments();
   const { rooms, isLoading: roomsLoading } = useRooms();
   const { dayGuests } = useDayGuests();
   const { getCollectorDisplayName } = useCollectorNames();
   const [expandedCollector, setExpandedCollector] = useState<string | null>(null);
+  // Collapsed by default means no expanded collector initially
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { collectionsByPerson, tenantsByCollector, categoryTotals } = useMemo(() => {

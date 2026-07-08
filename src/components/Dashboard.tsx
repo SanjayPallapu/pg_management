@@ -568,7 +568,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Collected By</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -620,7 +620,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Security Deposit</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><SecurityDepositCard rooms={rooms} defaultOpen={true} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><SecurityDepositCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -713,7 +713,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Tenant Movement</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantMovementCard rooms={rooms} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantMovementCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -741,7 +741,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Key Numbers</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><KeyNumbersCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -755,7 +755,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
-              <PGRulesCard onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+              <PGRulesCard defaultOpen={true} onClose={() => setActiveSheet(null)} onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
             </div>
           </div>
         </SheetContent>
@@ -769,7 +769,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Bill Unit Prices</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BillUnitPricesCard /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BillUnitPricesCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>

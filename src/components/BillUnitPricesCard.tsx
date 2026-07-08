@@ -42,18 +42,19 @@ const FIXED_CHARGES = [
 
 const fmt = (n: number) => `₹${Math.floor(n).toLocaleString("en-IN")}`;
 
-export const BillUnitPricesCard = () => {
+export const BillUnitPricesCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   useEffect(() => {
     const handleClose = () => {
       setOpen(false);
+      onClose?.();
     };
     window.addEventListener('tab-click', handleClose);
     return () => window.removeEventListener('tab-click', handleClose);
-  }, []);
+  }, [onClose]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -153,7 +154,7 @@ export const BillUnitPricesCard = () => {
       </Card>
 
       {/* Full Sheet */}
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}

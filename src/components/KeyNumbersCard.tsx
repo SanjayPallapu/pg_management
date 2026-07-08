@@ -18,21 +18,22 @@ interface KeyNumber {
   room_number: string;
 }
 
-export const KeyNumbersCard = () => {
+export const KeyNumbersCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
   const queryClient = useQueryClient();
   const { currentPG } = usePG();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const handleClose = () => {
       setIsOpen(false);
       setIsBulkOpen(false);
+      onClose?.();
     };
     window.addEventListener('tab-click', handleClose);
     return () => window.removeEventListener('tab-click', handleClose);
-  }, []);
+  }, [onClose]);
   const [editMode, setEditMode] = useState(false);
   const [newSerial, setNewSerial] = useState('');
   const [newRoom, setNewRoom] = useState('');
@@ -207,7 +208,7 @@ export const KeyNumbersCard = () => {
         </CardContent>
       </Card>
 
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) onClose?.(); }}>
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-lg p-0"}
@@ -216,7 +217,7 @@ export const KeyNumbersCard = () => {
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8 shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => { setIsOpen(false); onClose?.(); }} className="h-8 w-8 shrink-0">
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                   <div className="flex flex-col text-left">

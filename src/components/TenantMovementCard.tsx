@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 
 interface TenantMovementCardProps {
   rooms: Room[];
+  defaultOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface TenantWithRoom extends Tenant {
@@ -18,7 +20,7 @@ interface TenantWithRoom extends Tenant {
   floor: number;
 }
 
-export const TenantMovementCard = ({ rooms }: TenantMovementCardProps) => {
+export const TenantMovementCard = ({ rooms, defaultOpen, onClose }: TenantMovementCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [sheetType, setSheetType] = useState<'joined' | 'left' | null>(null);
   const isMobile = useIsMobile();

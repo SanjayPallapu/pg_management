@@ -75,7 +75,7 @@ export const SecurityDepositCard = ({
   const [searchQuery, setSearchQuery] = useState('');
   
   // Handle OS back gesture to close sheet
-  useBackGesture(sheetOpen, () => setSheetOpen(false));
+  useBackGesture(sheetOpen, () => { setSheetOpen(false); onClose?.(); });
   const [depositDialog, setDepositDialog] = useState<TenantWithRoom | null>(null);
   const [removeDialog, setRemoveDialog] = useState<TenantWithRoom | null>(null);
   const [editDialog, setEditDialog] = useState<TenantWithRoom | null>(null);
@@ -400,7 +400,7 @@ export const SecurityDepositCard = ({
         </Card>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>
           <SheetHeader>
             <div className="flex items-center gap-2">
