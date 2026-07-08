@@ -419,68 +419,126 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Summary Cards Grid - Swiggy Style */}
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-          {/* Bills & Budget */}
-          <div 
-            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
-            onClick={() => setBillsBudgetOpen(true)}
-          >
-            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-2">
-              <img 
-                src="/icons/bills-budget-3d.jpg" 
-                alt="Bills & Budget" 
-                className="w-full h-full object-cover rounded-xl"
-              />
-            </div>
-            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Bills &<br/>Budget</span>
-          </div>
+        {/* ═══════════════════════════════════════════════
+            Category Sections – Swiggy-style 3D icon headers
+           ═══════════════════════════════════════════════ */}
 
-          {/* Financials */}
-          <div 
-            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
-            onClick={() => setFinancialsOpen(true)}
-          >
-            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 p-2">
-              <img 
-                src="/icons/financials-3d.jpg" 
-                alt="Financials" 
-                className="w-full h-full object-cover rounded-xl"
-              />
+        {/* ── Financials ── */}
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
+              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 p-0.5">
+                <img src="/icons/financials-3d.jpg" alt="Financials" className="w-full h-full object-cover rounded-[10px]" />
+              </div>
+              <span className="font-bold text-base text-foreground">Financials</span>
+              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
             </div>
-            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Financials</span>
-          </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 mt-1">
+            <CollectedByCard />
+            <PaymentModeCard rooms={rooms} />
+            <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+            <AllCollectedCard rooms={rooms} />
+            <SecurityDepositCard rooms={rooms} />
+            <PreviousMonthOverdueCard />
+            <OverduePaidCard rooms={rooms} />
+            <BuildingRentCard />
+            <DayGuestRevenueCard
+              onClick={() => setDayGuestSheetOpen(true)}
+              stats={dayGuestStats ?? undefined}
+              isLoading={dayGuestStatsLoading}
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
-          {/* Tenants */}
-          <div 
-            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
-            onClick={() => setTenantsOpen(true)}
-          >
-            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30 p-2">
-              <img 
-                src="/icons/tenants-3d.jpg" 
-                alt="Tenants" 
-                className="w-full h-full object-cover rounded-xl"
-              />
+        {/* ── Tenants ── */}
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
+              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30 p-0.5">
+                <img src="/icons/tenants-3d.jpg" alt="Tenants" className="w-full h-full object-cover rounded-[10px]" />
+              </div>
+              <span className="font-bold text-base text-foreground">Tenants</span>
+              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
             </div>
-            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Tenants</span>
-          </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 mt-1">
+            <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
+            <ExpectedCollectionCard />
+            <TenantPricingOverviewCard />
+            <TenantMovementCard rooms={rooms} />
+            <Card
+              className="cursor-pointer transition-colors hover:bg-accent/50"
+              onClick={() => setSettlementSheetOpen(true)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Left Tenants</span>
+                  <UserMinus className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="text-lg font-bold">Settlement Summary</div>
+                <p className="text-xs text-muted-foreground">View pro-rata calculations for departed tenants</p>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
 
-          {/* Tools & Admin */}
-          <div 
-            className="cursor-pointer group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 active:scale-95"
-            onClick={() => setToolsOpen(true)}
-          >
-            <div className="w-full aspect-square rounded-2xl overflow-hidden mb-2 shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 p-2">
-              <img 
-                src="/icons/tools-admin-3d.jpg" 
-                alt="Tools & Admin" 
-                className="w-full h-full object-cover rounded-xl"
-              />
+        {/* ── Bills & Budget ── */}
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
+              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-0.5">
+                <img src="/icons/bills-budget-3d.jpg" alt="Bills & Budget" className="w-full h-full object-cover rounded-[10px]" />
+              </div>
+              <span className="font-bold text-base text-foreground">Bills & Budget</span>
+              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
             </div>
-            <span className="font-semibold text-xs sm:text-sm text-foreground leading-tight">Tools &<br/>Admin</span>
-          </div>
-        </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 mt-1">
+            <BillsBudgetDashboard rooms={rooms} />
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* ── Tools & Admin ── */}
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center gap-3 py-2 px-1 group cursor-pointer">
+              <div className="h-12 w-12 rounded-xl overflow-hidden shadow-md shrink-0 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 p-0.5">
+                <img src="/icons/tools-admin-3d.jpg" alt="Tools & Admin" className="w-full h-full object-cover rounded-[10px]" />
+              </div>
+              <span className="font-bold text-base text-foreground">Tools & Admin</span>
+              <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 mt-1">
+            <CalculatorCard />
+            <KeyNumbersCard />
+            <PGRulesCard onEditableTemplate={(rules, language) => { setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+            <BillUnitPricesCard />
+            <Card
+              className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+              onClick={() => setVisitorFollowUpOpen(true)}
+            >
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-semibold text-sm">Visitor Follow-up</span>
+                    <span className="text-xs text-muted-foreground">Polite enquiry for prospective tenants who visited</span>
+                  </div>
+                </div>
+                <span className="text-xs text-primary font-medium shrink-0">Open →</span>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Personal Expenses */}
+        <PersonalExpensesCard totalCollected={totalCollectedForExpenses} />
+        <TodaySpendingCard />
+        <BalanceCard rooms={rooms} rentCollected={rentCollected} />
       </div>
 
       {/* Bills & Budget Sheet */}
