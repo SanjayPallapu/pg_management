@@ -62,7 +62,7 @@ interface OverduePaidReceiptData {
   paymentEntries?: PaymentEntry[];
 }
 
-export const OverduePaidCard = ({ rooms, defaultOpen = false }: OverduePaidCardProps) => {
+export const OverduePaidCard = ({ rooms, defaultOpen = false, onClose }: OverduePaidCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const isMobile = useIsMobile();
@@ -237,7 +237,7 @@ export const OverduePaidCard = ({ rooms, defaultOpen = false }: OverduePaidCardP
         </CardContent>
       </Card>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>
           <SheetHeader>
             <div className="flex items-center justify-between">

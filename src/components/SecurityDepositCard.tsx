@@ -67,6 +67,7 @@ export const SecurityDepositCard = ({
   showSummaryCard = true,
   enableExternalTriggers = false,
   defaultOpen = false,
+  onClose,
 }: SecurityDepositCardProps) => {
   const location = useLocation();
   const navigate = useNavigate();

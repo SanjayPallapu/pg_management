@@ -76,7 +76,7 @@ interface OverdueReminderData {
   pgLogoUrl?: string;
 }
 
-export const PreviousMonthOverdueCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
+export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();
@@ -498,7 +498,7 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false }: { defaultOpen?
       </Card>
 
       {/* Collected Sheet */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full px-1.5 pt-4 pb-0 [&>button]:hidden" : "w-full sm:max-w-lg"}

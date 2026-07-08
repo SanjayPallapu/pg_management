@@ -21,19 +21,21 @@ import { format as fmtDate } from 'date-fns';
 
 interface PendingTenantsCardProps {
   rooms: Room[];
+  defaultOpen?: boolean;
+  onClose?: () => void;
 }
 
 export interface PendingTenantsCardRef {
   openSheet: () => void;
 }
 
-export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms }, ref) => {
+export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, defaultOpen = false, onClose }, ref) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { currentPG } = usePG();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(defaultOpen);
 
   useImperativeHandle(ref, () => ({
     openSheet: () => setSheetOpen(true),
@@ -185,7 +187,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
         </CardContent>
       </Card>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>
           <SheetHeader>
             <div className="flex items-center gap-2">

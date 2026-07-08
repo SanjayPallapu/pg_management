@@ -633,7 +633,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Previous Month Overdue</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PreviousMonthOverdueCard defaultOpen={true} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PreviousMonthOverdueCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -646,7 +646,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Overdue Paid</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><OverduePaidCard rooms={rooms} defaultOpen={true} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><OverduePaidCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -674,7 +674,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Pending Tenants</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -687,7 +687,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Expected Collection</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><ExpectedCollectionCard defaultOpen={true} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><ExpectedCollectionCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -849,7 +849,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
-              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} />
+              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} />
               <ExpectedCollectionCard />
               <TenantPricingOverviewCard />
               <TenantMovementCard rooms={rooms} />

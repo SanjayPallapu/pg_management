@@ -14,7 +14,7 @@ import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
-export const ExpectedCollectionCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
+export const ExpectedCollectionCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
@@ -122,7 +122,7 @@ export const ExpectedCollectionCard = ({ defaultOpen = false }: { defaultOpen?: 
         </CardContent>
       </Card>
 
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen} onOpenChange={(val) => { setIsOpen(val); if (!val) onClose?.(); }}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
