@@ -449,7 +449,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key)}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white dark:bg-white relative border border-slate-200/80 dark:border-white/15">
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -484,7 +484,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white dark:bg-white relative border border-slate-200/80 dark:border-white/15">
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -515,7 +515,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => setBillsBudgetOpen(true)}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white dark:bg-white relative border border-slate-200/80 dark:border-white/15">
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -550,7 +550,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key)}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/40 relative border border-slate-200/80 dark:border-white/15">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white dark:bg-white relative border border-slate-200/80 dark:border-white/15">
                   <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
