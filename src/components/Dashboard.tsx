@@ -1038,11 +1038,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto space-y-4 pb-8 h-[calc(100%-4rem)]">
             <div className="grid grid-cols-3 gap-3">
-              {rooms.filter(room => {
-                const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t.endDate)).length;
+              {(rooms || []).filter(room => {
+                const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
                 return room.capacity - activeTenantsCount > 0;
               }).map(room => {
-                const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t.endDate)).length;
+                const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
                 const available = room.capacity - activeTenantsCount;
                 return (
                   <div 
@@ -1061,8 +1061,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 );
               })}
             </div>
-            {rooms.filter(room => {
-              const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t.endDate)).length;
+            {(rooms || []).filter(room => {
+              const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
               return room.capacity - activeTenantsCount > 0;
             }).length === 0 && (
               <div className="text-center p-8 text-muted-foreground">
