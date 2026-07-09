@@ -142,8 +142,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
   }, [currentPG?.id]);
 
   const openPendingTenants = () => {
-    setTenantsOpen(true);
-    window.setTimeout(() => pendingTenantsRef.current?.openSheet(), 0);
+    setActiveSheet("pending-tenants");
   };
 
   const { rentCollected, pendingRent } = useRentCalculations({
@@ -440,10 +439,10 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
             onClick={openPendingTenants}
             className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-primary/10 p-2.5 rounded-full">
-              <CreditCard className="w-5 h-5 text-primary" />
+            <div className="bg-pending/10 p-2.5 rounded-full">
+              <AlertTriangle className="w-5 h-5 text-pending" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
+            <span className="text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
           </div>
           
           <div 
@@ -555,19 +554,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       {/* ═══════════════════════════════════════════════
           Active Card Sheets – opened by Swiggy icon clicks
          ═══════════════════════════════════════════════ */}
-      <Sheet open={activeSheet === "collected-by"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Collected By</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard onClose={() => setActiveSheet(null)} defaultOpen={true} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {activeSheet === "collected-by" && (
+        <CollectedByCard onClose={() => setActiveSheet(null)} defaultOpen={true} />
+      )}
       <Sheet open={activeSheet === "payment-mode"} onOpenChange={(o) => !o && setActiveSheet(null)}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
@@ -651,88 +640,26 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       {activeSheet === "expected-collection" && (
         <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}
-      <Sheet open={activeSheet === "tenant-pricing"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Tenant Pricing</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantPricingOverviewCard defaultOpen={true} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={activeSheet === "tenant-movement"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Tenant Movement</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TenantMovementCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {activeSheet === "tenant-pricing" && (
+        <TenantPricingOverviewCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+      )}
+      {activeSheet === "tenant-movement" && (
+        <TenantMovementCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} />
+      )}
 
       {/* Tool Sheets */}
-      <Sheet open={activeSheet === "calculator"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Calculator</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CalculatorCard defaultOpen={true} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={activeSheet === "key-numbers"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Key Numbers</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={activeSheet === "pg-rules"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">PG Rules</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
-              <PGRulesCard defaultOpen={true} onClose={() => setActiveSheet(null)} onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={activeSheet === "bill-prices"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Bill Unit Prices</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><BillUnitPricesCard defaultOpen={true} onClose={() => setActiveSheet(null)} /></div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {activeSheet === "calculator" && (
+        <CalculatorCard defaultOpen={true} onExternalOpenChange={(open) => !open && setActiveSheet(null)} />
+      )}
+      {activeSheet === "key-numbers" && (
+        <KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+      )}
+      {activeSheet === "pg-rules" && (
+        <PGRulesCard defaultOpen={true} onClose={() => setActiveSheet(null)} onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+      )}
+      {activeSheet === "bill-prices" && (
+        <BillUnitPricesCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+      )}
 
       {/* Bills & Budget Sheet */}
       <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
@@ -787,25 +714,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
           </SheetHeader>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
             {[
-              { key: "collected-by", icon: "/icons/collected-by.jpg", label: "Collected By" },
-              { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode" },
+              { key: "collected-by", icon: "/icons/avatar-3d.png", label: "Collected By" },
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
-              { key: "all-collected", icon: "/icons/all-collected.jpg", label: "All Collected" },
-              { key: "security-deposit", icon: "/icons/security-deposit.jpg", label: "Security Deposit" },
+              { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
               { key: "overdue-overview", icon: "/icons/overdue.jpg", label: "Overdue Overview" },
-              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
-              { key: "day-guest", icon: "/icons/cash-stack-3d.jpg", label: "Day Guests" },
+              { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900 border border-border/40 shadow-sm relative p-3">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
@@ -833,11 +757,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900 border border-border/40 shadow-sm relative p-3">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
@@ -865,11 +789,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900 border border-border/40 shadow-sm relative p-3">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
@@ -893,11 +817,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
                 onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900 border border-border/40 shadow-sm relative p-3">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>

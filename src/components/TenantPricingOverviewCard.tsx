@@ -26,7 +26,7 @@ interface SharingGroup {
   tenants: TenantInfo[];
 }
 
-export const TenantPricingOverviewCard = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
+export const TenantPricingOverviewCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
@@ -139,13 +139,14 @@ export const TenantPricingOverviewCard = ({ defaultOpen = false }: { defaultOpen
         setIsOpen(open);
         if (!open) {
           setExpandedGroups(new Set());
+          onClose?.();
         }
       }}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setIsOpen(false)} aria-label="Back">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setIsOpen(false); onClose?.(); }} aria-label="Back">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div className="flex items-center gap-1.5 flex-1">
