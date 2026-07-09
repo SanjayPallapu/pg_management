@@ -407,7 +407,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
 
     // Best-effort status update (don't block tenant creation UX if this fails)
     try {
-      const optimisticCount = room.tenants.length + 1;
+      const optimisticCount = (room.tenants || []).length + 1;
       const newStatus =
         optimisticCount === room.capacity ? "Occupied" : optimisticCount === 0 ? "Vacant" : "Partially Occupied";
 
@@ -453,10 +453,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
   };
 
   const confirmRemoveTenant = async (tenantId: string) => {
-    const tenant = room.tenants.find((t) => t.id === tenantId);
+    const tenant = (room.tenants || []).find((t) => t.id === tenantId);
     await removeTenant.mutateAsync({ tenantId, tenantName: tenant?.name });
 
-    const updatedTenants = room.tenants.filter((tenant) => tenant.id !== tenantId);
+    const updatedTenants = (room.tenants || []).filter((tenant) => tenant.id !== tenantId);
     const newStatus =
       updatedTenants.length === room.capacity
         ? "Occupied"
@@ -478,26 +478,26 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
     return selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
   })();
 
-  const tenantsInSelectedMonth = room.tenants.filter((t) =>
+  const tenantsInSelectedMonth = (room.tenants || []).filter((t) =>
     isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
   );
 
   // For current month: show tenants who are active now (end_date is null or in the future)
   // For past/future months: show tenants active in that month
   const activeTenants = isSelectedCurrentMonth
-    ? room.tenants.filter((t) => isTenantActiveNow(t.startDate, t.endDate))
+    ? (room.tenants || []).filter((t) => isTenantActiveNow(t.startDate, t.endDate))
     : tenantsInSelectedMonth;
 
   const derivedStatus =
     activeTenants.length === room.capacity ? "Occupied" : activeTenants.length === 0 ? "Vacant" : "Partially Occupied";
 
-  const leftTenantsCount = room.tenants.filter((t) => hasTenantLeftNow(t.endDate)).length;
+  const leftTenantsCount = (room.tenants || []).filter((t) => hasTenantLeftNow(t.endDate)).length;
 
   const availableBeds = room.capacity - activeTenants.length;
 
   const handleCapacityChange = (increment: boolean) => {
     const newCapacity = increment ? room.capacity + 1 : room.capacity - 1;
-    if (newCapacity >= room.tenants.length && newCapacity > 0) {
+    if (newCapacity >= (room.tenants || []).length && newCapacity > 0) {
       const pricePerPerson = getPricePerPerson(newCapacity);
       const newTotalRent = newCapacity * pricePerPerson;
 
@@ -845,7 +845,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
                     size="icon"
                     className="h-6 w-6"
                     onClick={() => handleCapacityChange(false)}
-                    disabled={room.capacity <= room.tenants.length}
+                    disabled={room.capacity <= (room.tenants || []).length}
                   >
                     <ChevronDown className="h-3 w-3" />
                   </Button>

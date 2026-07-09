@@ -61,7 +61,7 @@ import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
-const TenantManagement = lazy(() => import("./TenantManagement").then(m => ({ default: m.TenantManagement })));
+const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
