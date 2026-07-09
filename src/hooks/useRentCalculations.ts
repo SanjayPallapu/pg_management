@@ -162,9 +162,9 @@ export const useRentCalculations = ({
     const rentCollected = unlockedPaidAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0) + 
                           unlockedPartialAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
     
-    // Pending rent only counts non-left tenants
+    // Pending rent only counts non-left tenants and excludes not-due tenants
     const totalPending = unlockedTenants
-      .filter(t => t.paymentCategory !== 'paid')
+      .filter(t => t.paymentCategory !== 'paid' && t.paymentCategory !== 'not-due')
       .reduce((sum, t) => {
         const targetRent = t.effectiveRent || t.monthlyRent;
         if (t.paymentCategory === 'partial') {
