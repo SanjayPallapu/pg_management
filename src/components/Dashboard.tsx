@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
@@ -61,7 +61,7 @@ import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
-import { TenantManagement } from "./TenantManagement";
+const TenantManagement = lazy(() => import("./TenantManagement").then(m => ({ default: m.TenantManagement })));
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
@@ -1038,10 +1038,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <div className="flex-1 overflow-y-auto space-y-4 pb-8 h-[calc(100%-4rem)]">
             <div className="grid grid-cols-3 gap-3">
               {(rooms || []).filter(room => {
-                const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
+                const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
                 return room.capacity - activeTenantsCount > 0;
               }).map(room => {
-                const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
+                const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
                 const available = room.capacity - activeTenantsCount;
                 return (
                   <div 
@@ -1061,7 +1061,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               })}
             </div>
             {(rooms || []).filter(room => {
-              const activeTenantsCount = (room.tenants || []).filter(t => isTenantActiveNow(t.startDate, t.endDate)).length;
+              const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
               return room.capacity - activeTenantsCount > 0;
             }).length === 0 && (
               <div className="text-center p-8 text-muted-foreground">
@@ -1073,12 +1073,14 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       </Sheet>
 
       {selectedRoomForTenant && (
-        <TenantManagement
-          room={selectedRoomForTenant}
-          isOpen={!!selectedRoomForTenant}
-          onClose={() => setSelectedRoomForTenant(null)}
-          autoFocusAddTenant={true}
-        />
+        <Suspense fallback={null}>
+          <TenantManagement
+            room={selectedRoomForTenant}
+            isOpen={!!selectedRoomForTenant}
+            onClose={() => setSelectedRoomForTenant(null)}
+            autoFocusAddTenant={true}
+          />
+        </Suspense>
       )}
     </>
   );
