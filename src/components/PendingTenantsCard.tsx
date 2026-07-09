@@ -18,6 +18,7 @@ import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill }
 import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -31,6 +32,7 @@ export interface PendingTenantsCardRef {
 }
 
 export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, defaultOpen = false, onClose, showSummaryCard = true }, ref) => {
+  const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();

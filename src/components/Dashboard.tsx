@@ -651,7 +651,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
         <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}
       {activeSheet === "tenant-pricing" && (
-        <TenantPricingOverviewCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <TenantPricingOverviewCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
       {activeSheet === "tenant-movement" && (
         <TenantMovementCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
@@ -659,16 +659,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
 
       {/* Tool Sheets */}
       {activeSheet === "calculator" && (
-        <CalculatorCard defaultOpen={true} onExternalOpenChange={(open) => !open && setActiveSheet(null)} />
+        <CalculatorCard defaultOpen={true} onExternalOpenChange={(open) => !open && setActiveSheet(null)} hideCard={true} />
       )}
       {activeSheet === "key-numbers" && (
-        <KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
       {activeSheet === "pg-rules" && (
-        <PGRulesCard defaultOpen={true} onClose={() => setActiveSheet(null)} onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} />
+        <PGRulesCard defaultOpen={true} onClose={() => setActiveSheet(null)} onEditableTemplate={(rules, language) => { setActiveSheet(null); setRulesForTemplate(rules); setRulesLanguage(language); setRulesTemplateOpen(true); }} showSummaryCard={false} />
       )}
       {activeSheet === "bill-prices" && (
-        <BillUnitPricesCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <BillUnitPricesCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
 
       {/* Bills & Budget Sheet */}

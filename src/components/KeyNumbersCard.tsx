@@ -18,7 +18,7 @@ interface KeyNumber {
   room_number: string;
 }
 
-export const KeyNumbersCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
+export const KeyNumbersCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
   const queryClient = useQueryClient();
   const { currentPG } = usePG();
   const isMobile = useIsMobile();
@@ -185,28 +185,30 @@ export const KeyNumbersCard = ({ defaultOpen = false, onClose }: { defaultOpen?:
 
   return (
     <>
-      <Card 
-        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
-        onClick={() => setIsOpen(true)}
-      >
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-              <Key className="h-4 w-4 text-primary" />
+      {showSummaryCard && (
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          onClick={() => setIsOpen(true)}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                <Key className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Room Key Numbers</span>
+                <span className="text-xs text-muted-foreground">Manage serial numbers for room keys</span>
+              </div>
             </div>
-            <div className="text-left">
-              <span className="block font-semibold text-sm">Room Key Numbers</span>
-              <span className="text-xs text-muted-foreground">Manage serial numbers for room keys</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                {keyNumbers.length} keys
+              </span>
+              <span className="text-xs text-primary font-medium">Open →</span>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-              {keyNumbers.length} keys
-            </span>
-            <span className="text-xs text-primary font-medium">Open →</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <Sheet open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) onClose?.(); }}>
         <SheetContent 

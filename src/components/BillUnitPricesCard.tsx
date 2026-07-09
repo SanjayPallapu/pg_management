@@ -42,7 +42,7 @@ const FIXED_CHARGES = [
 
 const fmt = (n: number) => `₹${Math.floor(n).toLocaleString("en-IN")}`;
 
-export const BillUnitPricesCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
+export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(defaultOpen);
@@ -127,31 +127,33 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose }: { defaultOp
   return (
     <>
       {/* Summary Card */}
-      <Card
-        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
-        onClick={() => {
-          setOpen(true);
-          setGeneratedImage(null);
-        }}
-      >
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-              <IndianRupee className="h-4 w-4 text-primary" />
+      {showSummaryCard && (
+        <Card
+          className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          onClick={() => {
+            setOpen(true);
+            setGeneratedImage(null);
+          }}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                <IndianRupee className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">Bill Unit Prices</span>
+                <span className="text-xs text-muted-foreground">View current electricity rates & share via WhatsApp</span>
+              </div>
             </div>
-            <div className="text-left">
-              <span className="block font-semibold text-sm">Bill Unit Prices</span>
-              <span className="text-xs text-muted-foreground">View current electricity rates & share via WhatsApp</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                {AP_SLABS.length} slabs
+              </span>
+              <span className="text-xs text-primary font-medium">Open →</span>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-              {AP_SLABS.length} slabs
-            </span>
-            <span className="text-xs text-primary font-medium">Open →</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Full Sheet */}
       <Sheet open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>

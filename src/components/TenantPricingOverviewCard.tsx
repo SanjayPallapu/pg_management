@@ -26,7 +26,7 @@ interface SharingGroup {
   tenants: TenantInfo[];
 }
 
-export const TenantPricingOverviewCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
+export const TenantPricingOverviewCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
@@ -115,25 +115,27 @@ export const TenantPricingOverviewCard = ({ defaultOpen = false, onClose }: { de
 
   return (
     <>
-      <Card 
-        className="cursor-pointer transition-all hover:shadow-md border bg-card hover:bg-muted/30"
-        onClick={() => setIsOpen(true)}
-      >
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-              <Users className="h-4 w-4 text-primary" />
+      {showSummaryCard && (
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md border bg-card hover:bg-muted/30"
+          onClick={() => setIsOpen(true)}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm text-foreground">Tenant Pricing Overview</h3>
+                <p className="text-xs text-muted-foreground">
+                  {totalTenants} active tenants · ₹{grandTotal.toLocaleString()}/mo
+                </p>
+              </div>
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-sm text-foreground">Tenant Pricing Overview</h3>
-              <p className="text-xs text-muted-foreground">
-                {totalTenants} active tenants · ₹{grandTotal.toLocaleString()}/mo
-              </p>
-            </div>
-          </div>
-          <span className="text-xs text-primary font-medium shrink-0">View details →</span>
-        </CardContent>
-      </Card>
+            <span className="text-xs text-primary font-medium shrink-0">View details →</span>
+          </CardContent>
+        </Card>
+      )}
 
       <Sheet open={isOpen} onOpenChange={(open) => {
         setIsOpen(open);

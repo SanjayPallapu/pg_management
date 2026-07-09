@@ -31,9 +31,10 @@ interface PGRulesCardProps {
   defaultOpen?: boolean;
   onClose?: () => void;
   onEditableTemplate?: (rules: Rule[], language: RulesLanguage) => void;
+  showSummaryCard?: boolean;
 }
 
-export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose }: PGRulesCardProps) => {
+export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose, showSummaryCard = true }: PGRulesCardProps) => {
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(defaultOpen);
@@ -161,28 +162,30 @@ export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose }
 
   return (
     <>
-      <Card
-        className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
-        onClick={() => setOpen(true)}
-      >
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
-              <BookOpen className="h-4 w-4 text-primary" />
+      {showSummaryCard && (
+        <Card
+          className="cursor-pointer transition-all hover:shadow-md border-primary/20 bg-card hover:bg-muted/30"
+          onClick={() => setOpen(true)}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 shrink-0">
+                <BookOpen className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <span className="block font-semibold text-sm">PG Rules & Regulations</span>
+                <span className="text-xs text-muted-foreground">View and manage PG rules and regulations for residents</span>
+              </div>
             </div>
-            <div className="text-left">
-              <span className="block font-semibold text-sm">PG Rules & Regulations</span>
-              <span className="text-xs text-muted-foreground">View and manage PG rules and regulations for residents</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                {rules.length} rules
+              </span>
+              <span className="text-xs text-primary font-medium">View →</span>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-              {rules.length} rules
-            </span>
-            <span className="text-xs text-primary font-medium">View →</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <Sheet open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>
         <SheetContent 
