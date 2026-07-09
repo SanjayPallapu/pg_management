@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -88,9 +88,10 @@ interface TenantManagementProps {
   room: Room;
   isOpen: boolean;
   onClose: () => void;
+  autoScrollToAdd?: boolean;
 }
 
-export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProps) => {
+export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = false }: TenantManagementProps) => {
   const isMobile = useIsMobile();
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
@@ -99,6 +100,24 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
   const { collectors } = useCollectorNames();
   const canManageTenants = isAdmin || isOwner || isStaff;
   const navigate = useNavigate();
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && autoScrollToAdd) {
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: "smooth"
+          });
+        }
+        // Focus the name input
+        const nameInput = document.getElementById("new-tenant-name");
+        nameInput?.focus();
+      }, 350);
+    }
+  }, [isOpen, autoScrollToAdd]);
 
   // Handle OS back gesture to close dialog
   useBackGesture(isOpen, onClose);
@@ -807,7 +826,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
           {/* Room Info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -1314,6 +1333,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
                         <Contact className="h-4 w-4" />
                       </Button>
                       <Input
+                        id="new-tenant-name"
                         value={newTenant.name}
                         onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
                         placeholder="Enter name"

@@ -53,6 +53,7 @@ const Index = () => {
   const { isLoading: paymentsLoading } = useTenantPayments();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [autoScrollToAdd, setAutoScrollToAdd] = useState(false);
   const [searchParams] = useSearchParams();
   const { setActiveTab: setContextTab } = useActiveTab();
   const [activeTab, setActiveTabLocal] = useState(searchParams.get('tab') || 'dashboard');
@@ -212,6 +213,7 @@ const Index = () => {
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
     setIsDialogOpen(true);
+    setAutoScrollToAdd(false);
   };
 
   // Show loading state only for new signups
@@ -324,6 +326,7 @@ const Index = () => {
                     setActiveTab("rooms");
                     setSelectedRoom(room);
                     setIsDialogOpen(true);
+                    setAutoScrollToAdd(true);
                   }}
                   onNavigateToRent={() => {
                     setActiveTab("rent-sheet");
@@ -375,7 +378,11 @@ const Index = () => {
             <TenantManagement 
               room={selectedRoom} 
               isOpen={isDialogOpen} 
-              onClose={() => setIsDialogOpen(false)} 
+              onClose={() => {
+                setIsDialogOpen(false);
+                setAutoScrollToAdd(false);
+              }} 
+              autoScrollToAdd={autoScrollToAdd}
             />
           </Suspense>
         )}
