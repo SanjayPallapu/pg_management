@@ -254,19 +254,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   const [includeSecurityDeposit, setIncludeSecurityDeposit] = useState(false);
   const FIXED_SECURITY_DEPOSIT = 2000;
 
-  const [mockPickerOpen, setMockPickerOpen] = useState(false);
   const [numberSelectOpen, setNumberSelectOpen] = useState(false);
   const [numbersToSelect, setNumbersToSelect] = useState<string[]>([]);
   const [selectedContactName, setSelectedContactName] = useState("");
-  const [searchMockQuery, setSearchMockQuery] = useState("");
-
-  const [simulatedContacts, setSimulatedContacts] = useState<any[]>([]);
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  const [newContactName, setNewContactName] = useState("");
-  const [newContactPhone, setNewContactPhone] = useState("");
 
   // Handle back gesture for contacts dialogs
-  useBackGesture(mockPickerOpen, () => setMockPickerOpen(false));
   useBackGesture(numberSelectOpen, () => setNumberSelectOpen(false));
 
   const handleContactSelected = (name: string, phones: string[]) => {
@@ -314,12 +306,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       if (contact) {
         handleContactSelected(contact.name, contact.phones);
       } else {
-        setSearchMockQuery("");
-        setSimulatedContacts(getSimulatedContacts());
-        setIsAddingContact(false);
-        setNewContactName("");
-        setNewContactPhone("");
-        setMockPickerOpen(true);
+        toast({
+          title: "Contacts not supported",
+          description: "Native contacts picker is not supported on this platform.",
+        });
       }
     } catch (err: any) {
       const errStr = String(err?.message || err?.name || '').toLowerCase();
@@ -332,26 +322,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         variant: "destructive",
       });
     }
-  };
-
-  const handleAddSimulatedContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newContactName.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for the contact.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const updated = saveSimulatedContact(newContactName.trim(), newContactPhone.trim());
-    setSimulatedContacts(updated);
-    setIsAddingContact(false);
-
-    // Auto select the newly added contact
-    const newlyAdded = updated[updated.length - 1];
-    handleContactSelected(newlyAdded.name, newlyAdded.phones);
-    setMockPickerOpen(false);
   };
 
   const handleSelectPhoneNumber = (phone: string) => {
@@ -1834,126 +1804,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         reminderData={reminderData}
       />
 
-      {/* Web Mock Contact Picker Dialog */}
-      <Dialog open={mockPickerOpen} onOpenChange={setMockPickerOpen}>
-        <DialogContent className="flex flex-col p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Contact className="h-5 w-5 text-primary" />
-              Choose from Contacts
-            </DialogTitle>
-            <DialogDescription>
-              Select a contact to auto-fill the tenant details (simulated contact list).
-            </DialogDescription>
-          </DialogHeader>
 
-          {isAddingContact ? (
-            <form onSubmit={handleAddSimulatedContact} className="space-y-4 my-4 p-4 border border-border rounded-xl bg-muted/20">
-              <h4 className="text-sm font-semibold text-foreground">Create Simulated Contact</h4>
-              <div className="space-y-2">
-                <Label htmlFor="contactName" className="text-xs">Contact Name</Label>
-                <Input
-                  id="contactName"
-                  placeholder="e.g. Rekha Devi"
-                  value={newContactName}
-                  onChange={(e) => setNewContactName(e.target.value)}
-                  className="h-10 bg-background/50 rounded-lg text-sm"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone" className="text-xs">Phone Number(s)</Label>
-                <Input
-                  id="contactPhone"
-                  placeholder="e.g. 6305967412 or 9876543210, 9123456789"
-                  value={newContactPhone}
-                  onChange={(e) => setNewContactPhone(e.target.value)}
-                  className="h-10 bg-background/50 rounded-lg text-sm"
-                />
-                <span className="text-[10px] text-muted-foreground block">
-                  Separate multiple numbers with commas to test the number chooser dialog.
-                </span>
-              </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsAddingContact(false)}
-                  className="h-9 text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="h-9 text-xs"
-                >
-                  Save Contact
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <div className="my-2 flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="Search contacts..."
-                  value={searchMockQuery}
-                  onChange={(e) => setSearchMockQuery(e.target.value)}
-                  className="w-full bg-background/50 h-10 rounded-lg text-sm"
-                />
-                <Button
-                  type="button"
-                  onClick={() => setIsAddingContact(true)}
-                  className="h-10 text-xs px-3 shrink-0 gap-1 rounded-lg"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Contact
-                </Button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[380px] space-y-2 pr-1 mt-2">
-                {simulatedContacts.filter((c) =>
-                  c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
-                ).length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-                    No contacts found matching "{searchMockQuery}"
-                  </div>
-                ) : (
-                  simulatedContacts.filter((c) =>
-                    c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
-                  ).map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        handleContactSelected(c.name, c.phones);
-                        setMockPickerOpen(false);
-                      }}
-                      className="w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-between group"
-                    >
-                      <div>
-                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">{c.name}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {c.phones.length === 0
-                            ? "No phone number"
-                            : c.phones.length === 1
-                            ? c.phones[0]
-                            : `${c.phones.length} phone numbers: ${c.phones.join(', ')}`}
-                        </div>
-                      </div>
-                      <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
-                    </button>
-                  ))
-                )}
-              </div>
-            </>
-          )}
-          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
-            <Button variant="outline" onClick={() => setMockPickerOpen(false)} className="rounded-lg h-9 text-xs">
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Multiple Phone Numbers Selection Dialog */}
       <Dialog open={numberSelectOpen} onOpenChange={setNumberSelectOpen}>
