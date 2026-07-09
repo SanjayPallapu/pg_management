@@ -62,6 +62,7 @@ import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
+import { TenantManagement } from "./TenantManagement";
 import { isTenantActiveInMonth, isTenantActiveNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
@@ -94,6 +95,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
+  
+  // Add Tenant workflow state
+  const [addTenantRoomSelectOpen, setAddTenantRoomSelectOpen] = useState(false);
+  const [selectedRoomForTenant, setSelectedRoomForTenant] = useState<Room | null>(null);
 
   // Active sheet state for Swiggy-style icon grid
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
@@ -116,6 +121,8 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       setFinancialsOpen(false);
       setTenantsOpen(false);
       setToolsOpen(false);
+      setAddTenantRoomSelectOpen(false);
+      setSelectedRoomForTenant(null);
     };
 
     handleCloseAll();
@@ -443,7 +450,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           
           <div 
-            onClick={() => navigate('/rooms')}
+            onClick={() => setAddTenantRoomSelectOpen(true)}
             className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
             <div className="bg-blue-500/10 p-2.5 rounded-full">
@@ -1022,6 +1029,49 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Add Tenant Flow Sheets */}
+      <Sheet open={addTenantRoomSelectOpen} onOpenChange={setAddTenantRoomSelectOpen}>
+        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">Select Room for Tenant</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto space-y-2 pb-8 h-[calc(100%-4rem)]">
+            {rooms.filter(r => r.capacity - r.tenants.length > 0).map(room => (
+              <div 
+                key={room.id}
+                onClick={() => {
+                  setAddTenantRoomSelectOpen(false);
+                  setTimeout(() => setSelectedRoomForTenant(room), 150);
+                }}
+                className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card hover:bg-accent/50 cursor-pointer transition-colors"
+              >
+                <div>
+                  <h4 className="font-bold">Room {room.roomNo}</h4>
+                  <p className="text-xs text-muted-foreground">{room.capacity} Sharing</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-primary">{room.capacity - room.tenants.length} bed(s)</div>
+                  <p className="text-[10px] text-muted-foreground">Available</p>
+                </div>
+              </div>
+            ))}
+            {rooms.filter(r => r.capacity - r.tenants.length > 0).length === 0 && (
+              <div className="text-center p-8 text-muted-foreground">
+                <p>No rooms with available beds.</p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {selectedRoomForTenant && (
+        <TenantManagement
+          room={selectedRoomForTenant}
+          isOpen={!!selectedRoomForTenant}
+          onClose={() => setSelectedRoomForTenant(null)}
+        />
+      )}
     </>
   );
 };
