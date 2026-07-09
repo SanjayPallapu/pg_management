@@ -434,10 +434,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-9 gap-x-2 gap-y-3">
             {[
-              { key: "collected-by", icon: "/icons/wallet-new.png", label: "Collected By" },
+              { key: "collected-by", icon: "/icons/safe-new.png", label: "Collected By" },
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
-              { key: "security-deposit", icon: "/icons/safe-new.png", label: "Security Deposit" },
-              { key: "overdue-overview", icon: "/icons/icon_overdue_1783505321401.jpg", label: "Overdue" },
+              { key: "security-deposit", icon: "/icons/wallet-new.png", label: "Security Deposit" },
+              { key: "overdue-overview", icon: "/icons/overdue-overview-new.jpg", label: "Overdue" },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
             ].map((item) => (
               <div
