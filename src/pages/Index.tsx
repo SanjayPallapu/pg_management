@@ -325,7 +325,15 @@ const Index = () => {
                     setSelectedRoom(room);
                     setIsDialogOpen(true);
                   }}
-                  onNavigateToRent={() => setActiveTab("rent-sheet")}
+                  onNavigateToRent={() => {
+                    setActiveTab("rent-sheet");
+                    setTimeout(() => {
+                      if (scrollContainerRef.current) {
+                        scrollContainerRef.current.scrollTop = 0;
+                      }
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }, 50);
+                  }}
                 />
               )}
             </TabsContent>
