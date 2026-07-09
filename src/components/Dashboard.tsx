@@ -1058,6 +1058,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               })}
             </div>
             {(rooms || []).filter(room => {
+              if (!room) return false;
               const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
               return room.capacity - activeTenantsCount > 0;
             }).length === 0 && (

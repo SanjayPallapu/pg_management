@@ -97,8 +97,8 @@ const Index = () => {
   // Handle URL redirect for Add Tenant Quick Action
   useEffect(() => {
     const addTenantRoomId = searchParams.get('addTenantRoomId');
-    if (addTenantRoomId && rooms.length > 0) {
-      const room = rooms.find(r => r.id === addTenantRoomId);
+    if (addTenantRoomId && rooms && rooms.length > 0) {
+      const room = rooms.find(r => r && r.id === addTenantRoomId);
       if (room) {
         setSelectedRoom(room);
         setIsDialogOpen(true);
