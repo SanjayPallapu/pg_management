@@ -1036,26 +1036,27 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           <SheetHeader className="mb-4">
             <SheetTitle className="text-left">Select Room for Tenant</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto space-y-2 pb-8 h-[calc(100%-4rem)]">
-            {rooms.filter(r => r.capacity - r.tenants.length > 0).map(room => (
-              <div 
-                key={room.id}
-                onClick={() => {
-                  setAddTenantRoomSelectOpen(false);
-                  setTimeout(() => setSelectedRoomForTenant(room), 150);
-                }}
-                className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card hover:bg-accent/50 cursor-pointer transition-colors"
-              >
-                <div>
-                  <h4 className="font-bold">Room {room.roomNo}</h4>
-                  <p className="text-xs text-muted-foreground">{room.capacity} Sharing</p>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-primary">{room.capacity - room.tenants.length} bed(s)</div>
-                  <p className="text-[10px] text-muted-foreground">Available</p>
-                </div>
-              </div>
-            ))}
+          <div className="flex-1 overflow-y-auto space-y-4 pb-8 h-[calc(100%-4rem)]">
+            <div className="grid grid-cols-3 gap-3">
+              {rooms.filter(r => r.capacity - r.tenants.length > 0).map(room => {
+                const available = room.capacity - room.tenants.length;
+                return (
+                  <div 
+                    key={room.id}
+                    onClick={() => {
+                      setAddTenantRoomSelectOpen(false);
+                      setTimeout(() => setSelectedRoomForTenant(room), 150);
+                    }}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
+                  >
+                    <h4 className="font-bold text-lg">{room.roomNo}</h4>
+                    <div className="flex items-center gap-1 mt-1 bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-semibold">{available} bed{available > 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             {rooms.filter(r => r.capacity - r.tenants.length > 0).length === 0 && (
               <div className="text-center p-8 text-muted-foreground">
                 <p>No rooms with available beds.</p>
@@ -1070,6 +1071,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           room={selectedRoomForTenant}
           isOpen={!!selectedRoomForTenant}
           onClose={() => setSelectedRoomForTenant(null)}
+          autoFocusAddTenant={true}
         />
       )}
     </>

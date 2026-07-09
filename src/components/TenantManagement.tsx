@@ -88,10 +88,12 @@ interface TenantManagementProps {
   room: Room;
   isOpen: boolean;
   onClose: () => void;
+  autoFocusAddTenant?: boolean;
 }
 
-export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProps) => {
+export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: TenantManagementProps) => {
   const isMobile = useIsMobile();
+  const addTenantRef = useRef<HTMLDivElement>(null);
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
@@ -343,6 +345,14 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
     const floorNames = { 1: "1st Floor", 2: "2nd Floor", 3: "3rd Floor" };
     return floorNames[floor as keyof typeof floorNames];
   };
+
+  useEffect(() => {
+    if (isOpen && autoFocusAddTenant && addTenantRef.current) {
+      setTimeout(() => {
+        addTenantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, [isOpen, autoFocusAddTenant]);
 
   const getStatusColor = (status: string) => {
     if (status === "Occupied") return "bg-occupied text-occupied-foreground";
@@ -1292,7 +1302,7 @@ export const TenantManagement = ({ room, isOpen, onClose }: TenantManagementProp
 
           {/* Add New Tenant - Admin Only */}
           {canManageTenants && availableBeds > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-3" ref={addTenantRef}>
               <h3 className="font-semibold flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Add New Tenant ({availableBeds} beds available)
