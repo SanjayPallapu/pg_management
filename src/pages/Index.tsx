@@ -65,7 +65,6 @@ const Index = () => {
     setHistorySheetOpen(false);
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
-  const [autoFocusAddTenant, setAutoFocusAddTenant] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -102,7 +101,6 @@ const Index = () => {
       const room = rooms.find(r => r.id === addTenantRoomId);
       if (room) {
         setSelectedRoom(room);
-        setAutoFocusAddTenant(true);
         setIsDialogOpen(true);
         navigate("/?tab=rooms", { replace: true });
       }
@@ -368,11 +366,7 @@ const Index = () => {
             <TenantManagement 
               room={selectedRoom} 
               isOpen={isDialogOpen} 
-              onClose={() => {
-                setIsDialogOpen(false);
-                setAutoFocusAddTenant(false);
-              }} 
-              autoFocusAddTenant={autoFocusAddTenant}
+              onClose={() => setIsDialogOpen(false)} 
             />
           </Suspense>
         )}
