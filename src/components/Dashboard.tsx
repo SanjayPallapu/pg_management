@@ -436,12 +436,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             {[
               { key: "collected-by", icon: "/icons/pending-3d.jpg", label: "Collected By" },
               { key: "payment-mode", icon: "/icons/payment-mode.jpg", label: "Payment Mode", contain: true },
-              { key: "total-collected", icon: "/icons/money-bag-3d.png", label: "Total Collected" },
+              { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
               { key: "all-collected", icon: "/icons/cash-stack-3d.jpg", label: "All Collected" },
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
-              { key: "prev-overdue", icon: "/icons/prev-overdue-3d.jpg", label: "Prev Overdue" },
-              { key: "overdue-paid", icon: "/icons/overdue-paid-3d.jpg", label: "Overdue Paid" },
-              { key: "building-rent", icon: "/icons/rent-house-3d.png", label: "Building Rent" },
+              { key: "prev-overdue", icon: "/icons/overdue-pending-update.jpg", label: "Prev Overdue" },
+              { key: "overdue-paid", icon: "/icons/overdue-paid-update.jpg", label: "Overdue Paid" },
+              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
             ].map((item) => (
               <div
@@ -469,10 +469,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "pending-tenants", icon: "/icons/pending-3d.jpg", label: "Pending" },
-              { key: "expected-collection", icon: "/icons/expected-collection-3d.jpg", label: "Expected" },
+              { key: "pending-tenants", icon: "/icons/pending-updte.jpg", label: "Pending" },
+              { key: "expected-collection", icon: "/icons/expected-updte.png", label: "Expected" },
               { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing" },
-              { key: "tenant-movement", icon: "/icons/tenant-movement-3d.png", label: "Movement" },
+              { key: "tenant-movement", icon: "/icons/movemnet-update.png", label: "Movement" },
               { key: "settlement", icon: "/icons/settlement-final.jpg", label: "Settlement" },
             ].map((item) => (
               <div
@@ -500,7 +500,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
-              { key: "bills-budget", icon: "/icons/bills-budget-overview-3d.jpg", label: "Overview" },
+              { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
             ].map((item) => (
               <div
                 key={item.key}
@@ -530,7 +530,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
-              { key: "bill-prices", icon: "/icons/bill-prices-3d.jpg", label: "Bill Prices" },
+              { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
               { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
             ].map((item) => (
               <div
