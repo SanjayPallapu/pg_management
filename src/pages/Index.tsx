@@ -87,25 +87,13 @@ const Index = () => {
     lastScrollY.current = currentScrollY;
   }, []);
 
+  // Sync active tab from URL when searchParams change (e.g. from BottomNav inside dialogs)
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
-
-  // Handle URL redirect for Add Tenant Quick Action
-  useEffect(() => {
-    const addTenantRoomId = searchParams.get('addTenantRoomId');
-    if (addTenantRoomId && rooms && rooms.length > 0) {
-      const room = rooms.find(r => r && r.id === addTenantRoomId);
-      if (room) {
-        setSelectedRoom(room);
-        setIsDialogOpen(true);
-        navigate("/?tab=rooms", { replace: true });
-      }
-    }
-  }, [searchParams, rooms, navigate]);
 
   // Handle same tab click / any tab click stack reset
   useEffect(() => {
@@ -326,7 +314,19 @@ const Index = () => {
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
 
             <TabsContent value="dashboard" className="mt-1">
-              {isLoading ? <DashboardSkeleton /> : <Dashboard rooms={rooms} onStartRentCycle={() => {}} />}
+              {isLoading ? (
+                <DashboardSkeleton />
+              ) : (
+                <Dashboard 
+                  rooms={rooms} 
+                  onStartRentCycle={() => {}} 
+                  onQuickAddTenant={(room) => {
+                    setActiveTab("rooms");
+                    setSelectedRoom(room);
+                    setIsDialogOpen(true);
+                  }}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="rooms" className="mt-1">

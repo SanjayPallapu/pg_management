@@ -67,9 +67,10 @@ import { getPricePerBed } from "@/constants/pricing";
 interface DashboardProps {
   rooms: Room[];
   onStartRentCycle: () => void;
+  onQuickAddTenant: (room: Room) => void;
 }
 
-export const Dashboard = ({ rooms }: DashboardProps) => {
+export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { payments } = useTenantPayments();
@@ -1045,7 +1046,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                     key={room.id}
                     onClick={() => {
                       setAddTenantRoomSelectOpen(false);
-                      navigate(`/?tab=rooms&addTenantRoomId=${room.id}`);
+                      onQuickAddTenant(room);
                     }}
                     className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
                   >
