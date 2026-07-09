@@ -76,7 +76,7 @@ interface OverdueReminderData {
   pgLogoUrl?: string;
 }
 
-export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
+export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments, upsertPayment } = useTenantPayments();
   const { rooms } = useRooms();

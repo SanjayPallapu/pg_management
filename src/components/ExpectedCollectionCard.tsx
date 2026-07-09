@@ -14,7 +14,7 @@ import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
-export const ExpectedCollectionCard = ({ defaultOpen = false, onClose }: { defaultOpen?: boolean; onClose?: () => void }) => {
+export const ExpectedCollectionCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
