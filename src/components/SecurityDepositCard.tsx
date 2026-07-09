@@ -103,8 +103,13 @@ export const SecurityDepositCard = ({
     setDepositCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
   }, [collectors, defaultCollectorId]);
 
+  const isInitialMount = useRef(true);
   // Close all sheets/dialogs when URL changes (bottom nav navigation)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     setSheetOpen(false);
     setDepositDialog(null);
     setEditDialog(null);
