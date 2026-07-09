@@ -38,7 +38,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DayGuestSheet } from "./DayGuestSheet";
 import { SecurityDepositCard } from "./SecurityDepositCard";
 import { PaymentModeCard } from "./PaymentModeCard";
-import { VisitorFollowUpDialog } from "./VisitorFollowUpDialog";
+import { CollectRentDialog } from "./CollectRentDialog";
 import { EmptyBedsSheet } from "./EmptyBedsSheet";
 import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
 import { TenantMovementCard } from "./TenantMovementCard";
@@ -82,7 +82,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
-  const [visitorFollowUpOpen, setVisitorFollowUpOpen] = useState(false);
+  const [collectRentOpen, setCollectRentOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
   const [rulesLanguage, setRulesLanguage] = useState<'en' | 'te'>('en');
 
@@ -113,7 +113,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       setSettlementSheetOpen(false);
       setCalculatorSheetOpen(false);
       setRulesTemplateOpen(false);
-      setVisitorFollowUpOpen(false);
+      setCollectRentOpen(false);
       setBillsBudgetGridOpen(false);
       setBillsBudgetOpen(false);
       setFinancialsOpen(false);
@@ -466,13 +466,13 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
           </div>
 
           <div 
-            onClick={() => setVisitorFollowUpOpen(true)}
+            onClick={() => setCollectRentOpen(true)}
             className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-purple-500/10 p-2.5 rounded-full">
-              <Users className="w-5 h-5 text-purple-500" />
+            <div className="bg-emerald-500/10 p-2.5 rounded-full">
+              <CreditCard className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Add<br/>Visitor</span>
+            <span className="text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
           </div>
         </div>
 
@@ -707,18 +707,14 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
         roomStats={roomStats}
         totalEmptyBeds={totalEmptyBeds}
         totalPotentialRevenue={totalPotentialAdditionalRevenue}
-        onVisitorFollowUp={() => {
-          setEmptyBedsSheetOpen(false);
-          setVisitorFollowUpOpen(true);
-        }}
       />
       <SettlementSummarySheet open={settlementSheetOpen} onOpenChange={setSettlementSheetOpen} rooms={rooms} />
       {/* Hidden calculator triggered by building icon */}
       <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
 
-      <VisitorFollowUpDialog
-        open={visitorFollowUpOpen}
-        onOpenChange={setVisitorFollowUpOpen}
+      <CollectRentDialog
+        open={collectRentOpen}
+        onOpenChange={setCollectRentOpen}
         rooms={rooms}
       />
       <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
@@ -796,12 +792,12 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
-              { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
+              { key: "collect-rent", icon: "/icons/rent-house-3d.png", label: "Collect Rent" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key), 300); }}
+                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "collect-rent" ? setCollectRentOpen(true) : setActiveSheet(item.key), 300); }}
               >
                 <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
                   <img
