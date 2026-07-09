@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -12,12 +12,15 @@ import {
   TrendingUp,
   UserMinus,
   ChevronDown,
+  MessageSquare,
+  ArrowLeft,
+  Receipt,
+  UserPlus,
+  Scale,
   Wallet,
   Users,
   Settings,
-  Scale,
-  MessageSquare,
-  ArrowLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -89,6 +92,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   const [financialsOpen, setFinancialsOpen] = useState(false);
   const [tenantsOpen, setTenantsOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
 
   // Active sheet state for Swiggy-style icon grid
@@ -96,6 +100,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Close all sheets/dialogs when URL changes or tab-click is triggered (handles same tab click reset)
   useEffect(() => {
@@ -106,6 +111,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       setCalculatorSheetOpen(false);
       setRulesTemplateOpen(false);
       setVisitorFollowUpOpen(false);
+      setBillsBudgetGridOpen(false);
       setBillsBudgetOpen(false);
       setFinancialsOpen(false);
       setTenantsOpen(false);
@@ -423,134 +429,123 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         </Card>
 
         {/* ═══════════════════════════════════════════════
-            Category Sections – Swiggy-style compact grids
+            Quick Actions
            ═══════════════════════════════════════════════ */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          <div 
+            onClick={openPendingTenants}
+            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-primary/10 p-2.5 rounded-full">
+              <CreditCard className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
+          </div>
+          
+          <div 
+            onClick={() => navigate('/rooms')}
+            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-blue-500/10 p-2.5 rounded-full">
+              <UserPlus className="w-5 h-5 text-blue-500" />
+            </div>
+            <span className="text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
+          </div>
 
+          <div 
+            onClick={() => setBillsBudgetOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-orange-500/10 p-2.5 rounded-full">
+              <Receipt className="w-5 h-5 text-orange-500" />
+            </div>
+            <span className="text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
+          </div>
+
+          <div 
+            onClick={() => setVisitorFollowUpOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-purple-500/10 p-2.5 rounded-full">
+              <Users className="w-5 h-5 text-purple-500" />
+            </div>
+            <span className="text-[10px] font-medium text-center leading-tight">Add<br/>Visitor</span>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════
+            Category List Sections
+           ═══════════════════════════════════════════════ */}
+        <div className="space-y-3">
+          {/* Bills & Budget */}
+          <div 
+            onClick={() => setBillsBudgetGridOpen(true)}
+            className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+          >
+            <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+              <Scale className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-base">Bills & Budget</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage room utility bills & budgets</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+
+          {/* Financials */}
+          <div 
+            onClick={() => setFinancialsOpen(true)}
+            className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+          >
+            <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+              <Wallet className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-base">Financials</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Payments, deposits, building rent</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+
+          {/* Tenants */}
+          <div 
+            onClick={() => setTenantsOpen(true)}
+            className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+          >
+            <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+              <Users className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base">Tenants</h3>
+                {stats.pendingRent > 0 && (
+                  <span className="bg-pending/10 text-pending text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    Pending
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">Pending, pricing and movement</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+
+          {/* Tools & Admin */}
+          <div 
+            onClick={() => setToolsOpen(true)}
+            className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+          >
+            <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl">
+              <Settings className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-base">Tools & Admin</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">App settings, calculators & rules</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+        </div>
         {/* ── Financials ── */}
-        {/* ── Financials ── */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 py-1 px-1">
-            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Financials</span>
-          </div>
-          <div className="grid grid-cols-5 sm:grid-cols-9 gap-x-2 gap-y-3">
-            {[
-              { key: "collected-by", icon: "/icons/safe-new.png", label: "Collected By" },
-              { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
-              { key: "security-deposit", icon: "/icons/wallet-new.png", label: "Security Deposit", padding: "p-3" },
-              { key: "overdue-overview", icon: "/icons/overdue-overview-new.jpg", label: "Overdue", cover: true },
-              { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
-            ].map((item) => (
-              <div
-                key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key)}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white border border-slate-200 relative">
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    className={`w-full h-full transition-transform duration-200 group-hover:scale-110 ${item.cover ? 'object-cover' : `object-contain ${item.padding || (item.contain ? 'p-2' : 'p-1.5')}`}`}
-                  />
-                </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Tenants ── */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 py-1 px-1">
-            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Tenants</span>
-          </div>
-          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
-            {[
-              { key: "pending-tenants", icon: "/icons/pending-updte.jpg", label: "Pending" },
-              { key: "expected-collection", icon: "/icons/expected-updte.png", label: "Expected" },
-              { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing" },
-              { key: "tenant-movement", icon: "/icons/movemnet-update.png", label: "Movement" },
-              { key: "settlement", icon: "/icons/settlement-final.jpg", label: "Settlement" },
-            ].map((item) => (
-              <div
-                key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key)}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white border border-slate-200 relative">
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    className="w-full h-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-110"
-                  />
-                </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Bills & Budget ── */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 py-1 px-1">
-            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Bills & Budget</span>
-          </div>
-          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
-            {[
-              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
-              { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
-            ].map((item) => (
-              <div
-                key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true)}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white border border-slate-200 relative">
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    className="w-full h-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-110"
-                  />
-                </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Tools & Admin ── */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 py-1 px-1">
-            <span className="font-bold text-sm sm:text-base text-foreground tracking-tight">Tools & Admin</span>
-          </div>
-          <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
-            {[
-              { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
-              { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
-              { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
-              { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
-              { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
-            ].map((item) => (
-              <div
-                key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key)}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white border border-slate-200 relative">
-                  {item.icon ? (
-                    <img
-                      src={item.icon}
-                      alt={item.label}
-                      className="w-full h-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-110"
-                    />
-                  ) : (
-                    <span className="text-2xl sm:text-3xl">{item.emoji}</span>
-                  )}
-                </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* (Categories replaced with List Cards) */}
       </div>
 
       {/* ═══════════════════════════════════════════════
@@ -904,6 +899,129 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         onOpenChange={setVisitorFollowUpOpen}
         rooms={rooms}
       />
+      <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
+        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">Financials</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+            {[
+              { key: "collected-by", icon: "/icons/safe-new.png", label: "Collected By" },
+              { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
+              { key: "security-deposit", icon: "/icons/wallet-new.png", label: "Security Deposit", padding: "p-3" },
+              { key: "overdue-overview", icon: "/icons/overdue-overview-new.jpg", label: "Overdue", cover: true },
+              { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className={`w-full h-full transition-transform duration-200 group-hover:scale-110 ${item.cover ? 'object-cover' : `object-contain ${item.padding || 'p-2'}`}`}
+                  />
+                </div>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={tenantsOpen} onOpenChange={setTenantsOpen}>
+        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">Tenants</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+            {[
+              { key: "pending-tenants", icon: "/icons/pending-updte.jpg", label: "Pending" },
+              { key: "expected-collection", icon: "/icons/expected-updte.png", label: "Expected" },
+              { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing" },
+              { key: "tenant-movement", icon: "/icons/movemnet-update.png", label: "Movement" },
+              { key: "settlement", icon: "/icons/settlement-final.jpg", label: "Settlement" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                  />
+                </div>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
+        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">Tools & Admin</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+            {[
+              { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
+              { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
+              { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
+              { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
+              { key: "visitor-followup", icon: "/icons/visitor-3d.png", label: "Visitor" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "visitor-followup" ? setVisitorFollowUpOpen(true) : setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                  />
+                </div>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={billsBudgetGridOpen} onOpenChange={setBillsBudgetGridOpen}>
+        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">Bills & Budget</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+            {[
+              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
+              { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
+              >
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain p-2 transition-transform duration-200 group-hover:scale-110"
+                  />
+                </div>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
