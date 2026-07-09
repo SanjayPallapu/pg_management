@@ -325,6 +325,7 @@ const Index = () => {
                     setSelectedRoom(room);
                     setIsDialogOpen(true);
                   }}
+                  onNavigateToRent={() => setActiveTab("rent-sheet")}
                 />
               )}
             </TabsContent>

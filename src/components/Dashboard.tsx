@@ -38,7 +38,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { DayGuestSheet } from "./DayGuestSheet";
 import { SecurityDepositCard } from "./SecurityDepositCard";
 import { PaymentModeCard } from "./PaymentModeCard";
-import { CollectRentDialog } from "./CollectRentDialog";
 import { EmptyBedsSheet } from "./EmptyBedsSheet";
 import { PreviousMonthOverdueCard } from "./PreviousMonthOverdueCard";
 import { TenantMovementCard } from "./TenantMovementCard";
@@ -68,9 +67,10 @@ interface DashboardProps {
   rooms: Room[];
   onStartRentCycle: () => void;
   onQuickAddTenant: (room: Room) => void;
+  onNavigateToRent: () => void;
 }
 
-export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: DashboardProps) => {
+export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigateToRent }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { payments } = useTenantPayments();
@@ -82,7 +82,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
-  const [collectRentOpen, setCollectRentOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
   const [rulesLanguage, setRulesLanguage] = useState<'en' | 'te'>('en');
 
@@ -113,7 +112,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       setSettlementSheetOpen(false);
       setCalculatorSheetOpen(false);
       setRulesTemplateOpen(false);
-      setCollectRentOpen(false);
       setBillsBudgetGridOpen(false);
       setBillsBudgetOpen(false);
       setFinancialsOpen(false);
@@ -466,7 +464,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
           </div>
 
           <div 
-            onClick={() => setCollectRentOpen(true)}
+            onClick={onNavigateToRent}
             className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
             <div className="bg-emerald-500/10 p-2.5 rounded-full">
@@ -711,12 +709,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       <SettlementSummarySheet open={settlementSheetOpen} onOpenChange={setSettlementSheetOpen} rooms={rooms} />
       {/* Hidden calculator triggered by building icon */}
       <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
-
-      <CollectRentDialog
-        open={collectRentOpen}
-        onOpenChange={setCollectRentOpen}
-        rooms={rooms}
-      />
       <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
         <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
           <SheetHeader className="mb-4">
@@ -797,7 +789,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "collect-rent" ? setCollectRentOpen(true) : setActiveSheet(item.key), 300); }}
+                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "collect-rent" ? onNavigateToRent() : setActiveSheet(item.key), 300); }}
               >
                 <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
                   <img
