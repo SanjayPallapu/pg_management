@@ -349,7 +349,15 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
   useEffect(() => {
     if (isOpen && autoFocusAddTenant && addTenantRef.current) {
       setTimeout(() => {
-        addTenantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try {
+          addTenantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+          try {
+            addTenantRef.current?.scrollIntoView();
+          } catch (err) {
+            console.error('[TenantManagement] scrollIntoView failed:', err);
+          }
+        }
       }, 300);
     }
   }, [isOpen, autoFocusAddTenant]);
@@ -479,19 +487,19 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
   })();
 
   const tenantsInSelectedMonth = (room.tenants || []).filter((t) =>
-    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
+    t && isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
   );
 
   // For current month: show tenants who are active now (end_date is null or in the future)
   // For past/future months: show tenants active in that month
   const activeTenants = isSelectedCurrentMonth
-    ? (room.tenants || []).filter((t) => isTenantActiveNow(t.startDate, t.endDate))
+    ? (room.tenants || []).filter((t) => t && isTenantActiveNow(t.startDate, t.endDate))
     : tenantsInSelectedMonth;
 
   const derivedStatus =
     activeTenants.length === room.capacity ? "Occupied" : activeTenants.length === 0 ? "Vacant" : "Partially Occupied";
 
-  const leftTenantsCount = (room.tenants || []).filter((t) => hasTenantLeftNow(t.endDate)).length;
+  const leftTenantsCount = (room.tenants || []).filter((t) => t && hasTenantLeftNow(t.endDate)).length;
 
   const availableBeds = room.capacity - activeTenants.length;
 
