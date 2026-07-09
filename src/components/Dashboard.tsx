@@ -15,7 +15,6 @@ import {
   MessageSquare,
   ArrowLeft,
   Receipt,
-  UserPlus,
   Scale,
   Wallet,
   Users,
