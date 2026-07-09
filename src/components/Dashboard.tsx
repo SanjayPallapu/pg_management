@@ -63,7 +63,7 @@ import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { TenantManagement } from "./TenantManagement";
-import { isTenantActiveInMonth, isTenantActiveNow } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
 interface DashboardProps {
@@ -1038,8 +1038,12 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto space-y-4 pb-8 h-[calc(100%-4rem)]">
             <div className="grid grid-cols-3 gap-3">
-              {rooms.filter(r => r.capacity - r.tenants.length > 0).map(room => {
-                const available = room.capacity - room.tenants.length;
+              {rooms.filter(room => {
+                const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t)).length;
+                return room.capacity - activeTenantsCount > 0;
+              }).map(room => {
+                const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t)).length;
+                const available = room.capacity - activeTenantsCount;
                 return (
                   <div 
                     key={room.id}
@@ -1057,7 +1061,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 );
               })}
             </div>
-            {rooms.filter(r => r.capacity - r.tenants.length > 0).length === 0 && (
+            {rooms.filter(room => {
+              const activeTenantsCount = room.tenants.filter(t => !hasTenantLeftNow(t)).length;
+              return room.capacity - activeTenantsCount > 0;
+            }).length === 0 && (
               <div className="text-center p-8 text-muted-foreground">
                 <p>No rooms with available beds.</p>
               </div>

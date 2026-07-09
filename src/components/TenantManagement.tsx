@@ -859,8 +859,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
           </div>
 
           {/* Current Tenants */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
+          {!autoFocusAddTenant && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold">Current Tenants ({activeTenants.length})</h3>
                 {leftTenantsCount > 0 && (
@@ -1297,8 +1298,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoFocusAddTenant }: 
                     </div>
                   );
                 })
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Add New Tenant - Admin Only */}
           {canManageTenants && availableBeds > 0 && (
