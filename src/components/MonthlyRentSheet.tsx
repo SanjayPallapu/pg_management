@@ -157,6 +157,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
   const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "partial" | "paid">("all");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [hideLeftTenants, setHideLeftTenants] = useState(true);
   const [customModeRooms, setCustomModeRooms] = useState<Record<string, boolean>>(() => {
@@ -479,7 +480,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     });
   }, [eligibleTenants, selectedMonth, selectedYear, payments]);
 
-  // Filter tenants based on search query, exclude locked tenants, and optionally hide left tenants
+  // Filter tenants based on search query, status filter, exclude locked tenants, and optionally hide left tenants
   const filteredTenants = useMemo(() => {
     let filtered = tenantsWithPayments.filter((tenant) => !tenant.isLocked);
 
@@ -495,12 +496,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       });
     }
 
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((tenant) => {
+        if (statusFilter === "paid") return tenant.payment.paymentStatus === "Paid";
+        if (statusFilter === "partial") return tenant.payment.paymentStatus === "Partial";
+        if (statusFilter === "pending") return tenant.payment.paymentStatus === "Pending";
+        return true;
+      });
+    }
+
     if (!searchQuery.trim()) return filtered;
     const query = searchQuery.toLowerCase().trim();
     return filtered.filter(
       (tenant) => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query),
     );
-  }, [tenantsWithPayments, searchQuery, hideLeftTenants]);
+  }, [tenantsWithPayments, searchQuery, hideLeftTenants, statusFilter]);
 
   // Count left tenants still in the rent sheet (not locked)
   const leftTenantsCount = useMemo(() => {
@@ -1365,95 +1376,178 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         </div>
       </div>
 
+      {/* Rent Stats Overview Panel */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 mt-2">
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20 shadow-sm relative overflow-hidden">
+          <CardContent className="p-4 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Total Collected</span>
+              <div className="bg-emerald-500/10 p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400">
+                <Wallet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h3 className="text-xl font-bold tracking-tight text-foreground">₹{stats.totalCollected.toLocaleString()}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{stats.paidCount} tenants fully paid</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-rose-500/10 to-amber-500/5 border-rose-500/20 shadow-sm relative overflow-hidden">
+          <CardContent className="p-4 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">Total Pending</span>
+              <div className="bg-rose-500/10 p-1.5 rounded-lg text-rose-600 dark:text-rose-400">
+                <CreditCard className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h3 className="text-xl font-bold tracking-tight text-foreground">₹{stats.totalPending.toLocaleString()}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{stats.pendingCount} tenants pending/partial</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-2 sm:col-span-1 bg-muted/30 border-border/50 shadow-sm">
+          <CardContent className="p-4 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Collection Rate</span>
+              <span className="text-xs font-bold text-foreground">
+                {(() => {
+                  const total = stats.totalCollected + stats.totalPending;
+                  return total > 0 ? `${Math.round((stats.totalCollected / total) * 100)}%` : "0%";
+                })()}
+              </span>
+            </div>
+            <div className="mt-3.5 space-y-2">
+              <div className="w-full bg-muted-foreground/15 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: (() => {
+                      const total = stats.totalCollected + stats.totalPending;
+                      return total > 0 ? `${(stats.totalCollected / total) * 100}%` : "0%";
+                    })(),
+                  }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                {stats.paidCount} of {stats.paidCount + stats.pendingCount} active tenants paid
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="space-y-4">
-          {/* Room quick-nav — tap a room number to jump to its tenant card */}
-          <div className="mb-3 space-y-1.5">
-            <div className="text-xs font-semibold text-muted-foreground px-0.5">Quick Room Access</div>
-            <RoomQuickNav
-              rooms={rooms}
-              payments={payments}
-              month={selectedMonth}
-              year={selectedYear}
-              onSelect={(roomNo) => {
-                setSearchQuery(roomNo);
-                setTimeout(() => {
-                  const el = document.querySelector(`[data-room-no="${roomNo}"]`);
-                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 50);
-              }}
-            />
+        {/* Widgets Grid for Previous Month Dues and AC Electricity */}
+        {(showPreviousDuesPanel || acRooms.length > 0) && !activeRoomFilter && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+            {showPreviousDuesPanel && (
+              <Card
+                className="border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+                onClick={() => setPreviousOverdueOpen(true)}
+              >
+                <div className="flex w-full items-center justify-between p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
+                      <History className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-amber-800 dark:text-amber-300">Previous Month Dues</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {previousMonthOverdue.count > 0
+                          ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
+                          : "No pending dues"}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+                </div>
+              </Card>
+            )}
+
+            {acRooms.length > 0 && (
+              <Card
+                className="border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 cursor-pointer transition-all duration-200"
+                onClick={() => setAcSheetOpen(true)}
+              >
+                <div className="flex w-full items-center justify-between p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300">
+                      <Snowflake className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-cyan-800 dark:text-cyan-300">AC Electricity Billing</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Room quick-nav — tap a room number to jump to its tenant card */}
+        <div className="mb-3 space-y-1.5">
+          <div className="text-xs font-semibold text-muted-foreground px-0.5">Quick Room Access</div>
+          <RoomQuickNav
+            rooms={rooms}
+            payments={payments}
+            month={selectedMonth}
+            year={selectedYear}
+            onSelect={(roomNo) => {
+              setSearchQuery(roomNo);
+              setTimeout(() => {
+                const el = document.querySelector(`[data-room-no="${roomNo}"]`);
+                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 50);
+            }}
+          />
+        </div>
+
+        {/* Search and Filters */}
+        <div className="space-y-3">
+          <div className="flex gap-1 bg-muted/40 p-1 rounded-2xl">
+            {(["all", "pending", "partial", "paid"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setStatusFilter(tab)}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-xl capitalize transition-all ${
+                  statusFilter === tab
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          {showPreviousDuesPanel && !activeRoomFilter && (
-            <Card
-              className="border-amber-500/25 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors mb-4"
-              onClick={() => setPreviousOverdueOpen(true)}
-            >
-              <div className="flex w-full items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10">
-                    <History className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">Previous Dues</div>
-                    <div className="text-xs text-muted-foreground">
-                      {previousMonthOverdue.count > 0
-                        ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
-                        : "No pending dues"}
-                      {previousOverdueCollections.count > 0 &&
-                        ` · ${previousOverdueCollections.count} collected · ₹${previousOverdueCollections.total.toLocaleString()}`}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </Card>
-          )}
-
-          {/* AC Electricity */}
-          {acRooms.length > 0 && !activeRoomFilter && (
-            <Card
-              className="border-cyan-500/25 bg-cyan-500/5 cursor-pointer hover:bg-cyan-500/10 transition-colors mb-4"
-              onClick={() => setAcSheetOpen(true)}
-            >
-              <div className="flex w-full items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10">
-                    <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-cyan-800 dark:text-cyan-300">AC Electricity Billing</div>
-                    <div className="text-xs text-muted-foreground">
-                      {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </Card>
-          )}
-
-          {/* Search Bar */}
-          <div className="mb-4 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground/60" />
             <Input
               placeholder="Search by tenant name or room..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-9"
+              className="pl-10 h-10 rounded-2xl bg-muted/30 focus-visible:ring-1 border-muted-foreground/20"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
+        </div>
 
           <div className="space-y-2">
-            {filteredTenants.length === 0 && (
+            {filteredTenants.filter(t => statusFilter === 'all' || (statusFilter === 'pending' ? t.paymentCategory === 'pending' || t.paymentCategory === 'overdue' || t.paymentCategory === 'advance-not-paid' : t.paymentCategory === statusFilter)).length === 0 && (
               <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <Search className="h-5 w-5 text-muted-foreground" />
