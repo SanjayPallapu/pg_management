@@ -104,9 +104,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             behavior: "smooth"
           });
         }
-        // Focus the name input
-        const nameInput = document.getElementById("new-tenant-name");
-        nameInput?.focus();
       }, 350);
     }
   }, [isOpen, autoScrollToAdd]);
