@@ -305,11 +305,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       }
       if (contact) {
         handleContactSelected(contact.name, contact.phones);
-      } else {
-        toast({
-          title: "Contacts not supported",
-          description: "Native contacts picker is not supported on this platform.",
-        });
       }
     } catch (err: any) {
       const errStr = String(err?.message || err?.name || '').toLowerCase();
