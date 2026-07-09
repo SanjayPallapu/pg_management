@@ -191,112 +191,117 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       )}
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={() => setSheetOpen(false)}
-                aria-label="Back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <SheetTitle>Select Pending Tenants</SheetTitle>
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
+        >
+          <div className="flex flex-col h-full bg-background">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => setSheetOpen(false)}
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle className="text-base text-foreground font-bold text-left">Select Pending Tenants</SheetTitle>
+              </div>
+            </SheetHeader>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
+                <TabsList className="grid w-full grid-cols-2 shrink-0">
+                  <TabsTrigger value="overdue" className="gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5 text-pending" />
+                    Overdue ({overdueCombined.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="not-yet-due" className="gap-1">
+                    <Clock className="h-3.5 w-3.5 text-blue-500" />
+                    Not Yet Due ({notYetDue.length})
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Select All Toggle */}
+                {currentTenants.length > 0 && (
+                  <div className="mt-4 flex items-center gap-2 shrink-0">
+                    <Checkbox
+                      checked={currentTenants.length > 0 && currentTenants.every(t => selectedTenants.has(t.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedTenants(new Set(currentTenants.map(t => t.id)));
+                        } else {
+                          setSelectedTenants(new Set());
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">Select All ({currentTenants.length})</span>
+                  </div>
+                )}
+
+                {/* Selected Summary */}
+                {selectedTenants.size > 0 && (
+                  <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30 shrink-0">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-semibold">{selectedTenants.size} tenant(s) selected</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-primary">₹{selectedTotal.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Total amount</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <ScrollArea className="flex-1 mt-4">
+                  <TabsContent value="overdue" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
+                    <div className="space-y-2">
+                      {overdueCombined.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
+                      ) : (
+                        overdueCombined.map(tenant => (
+                          <TenantSelectItem 
+                            key={tenant.id}
+                            tenant={tenant}
+                            isSelected={selectedTenants.has(tenant.id)}
+                            onToggle={handleToggleTenant}
+                            categoryColor="pending"
+                            onReminder={handleOpenReminder}
+                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
+                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="not-yet-due" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
+                    <div className="space-y-2">
+                      {notYetDue.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No upcoming dues</p>
+                      ) : (
+                        notYetDue.map(tenant => (
+                          <TenantSelectItem 
+                            key={tenant.id}
+                            tenant={tenant}
+                            isSelected={selectedTenants.has(tenant.id)}
+                            onToggle={handleToggleTenant}
+                            categoryColor="blue"
+                            onReminder={handleOpenReminder}
+                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
+                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
             </div>
-          </SheetHeader>
-
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="overdue" className="gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Overdue ({overdueCombined.length})
-              </TabsTrigger>
-              <TabsTrigger value="not-yet-due" className="gap-1">
-                <Clock className="h-3 w-3" />
-                Not Yet Due ({notYetDue.length})
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Select All Toggle */}
-            {currentTenants.length > 0 && (
-              <div className="mt-4 flex items-center gap-2">
-                <Checkbox
-                  checked={currentTenants.length > 0 && currentTenants.every(t => selectedTenants.has(t.id))}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedTenants(new Set(currentTenants.map(t => t.id)));
-                    } else {
-                      setSelectedTenants(new Set());
-                    }
-                  }}
-                />
-                <span className="text-sm font-medium">Select All ({currentTenants.length})</span>
-              </div>
-            )}
-
-            {/* Selected Summary */}
-            {selectedTenants.size > 0 && (
-              <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold">{selectedTenants.size} tenant(s) selected</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-primary">₹{selectedTotal.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Total amount</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <TabsContent value="overdue" className="mt-4">
-              <div>
-                <div className="space-y-2">
-                  {overdueCombined.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
-                  ) : (
-                    overdueCombined.map(tenant => (
-                      <TenantSelectItem 
-                        key={tenant.id}
-                        tenant={tenant}
-                        isSelected={selectedTenants.has(tenant.id)}
-                        onToggle={handleToggleTenant}
-                        categoryColor="pending"
-                        onReminder={handleOpenReminder}
-                        snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
-                        onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="not-yet-due" className="mt-4">
-              <div>
-                <div className="space-y-2">
-                  {notYetDue.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No upcoming dues</p>
-                  ) : (
-                    notYetDue.map(tenant => (
-                      <TenantSelectItem 
-                        key={tenant.id}
-                        tenant={tenant}
-                        isSelected={selectedTenants.has(tenant.id)}
-                        onToggle={handleToggleTenant}
-                        categoryColor="blue"
-                        onReminder={handleOpenReminder}
-                        snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
-                        onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          </div>
         </SheetContent>
       </Sheet>
 
