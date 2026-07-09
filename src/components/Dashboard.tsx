@@ -784,12 +784,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
-              { key: "collect-rent", icon: "/icons/rent-house-3d.png", label: "Collect Rent" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => { setToolsOpen(false); setTimeout(() => item.key === "collect-rent" ? onNavigateToRent() : setActiveSheet(item.key), 300); }}
+                onClick={() => { setToolsOpen(false); setTimeout(() => setActiveSheet(item.key), 300); }}
               >
                 <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
                   <img
