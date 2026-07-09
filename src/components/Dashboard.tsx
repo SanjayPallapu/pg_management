@@ -644,9 +644,13 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant }: Dashboa
       </Sheet>
 
       {/* Tenant Sheets */}
-      {activeSheet === "pending-tenants" && (
-        <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} showSummaryCard={false} />
-      )}
+      <PendingTenantsCard 
+        ref={pendingTenantsRef} 
+        rooms={rooms} 
+        open={activeSheet === "pending-tenants"} 
+        onClose={() => setActiveSheet(null)} 
+        showSummaryCard={false} 
+      />
       {activeSheet === "expected-collection" && (
         <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}

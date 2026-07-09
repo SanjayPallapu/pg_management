@@ -23,7 +23,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
   rooms: Room[];
-  defaultOpen?: boolean;
+  open?: boolean;
   onClose?: () => void;
 }
 
@@ -31,17 +31,18 @@ export interface PendingTenantsCardRef {
   openSheet: () => void;
 }
 
-export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, defaultOpen = false, onClose, showSummaryCard = true }, ref) => {
+export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, open, onClose, showSummaryCard = true }, ref) => {
   const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { currentPG } = usePG();
-  const [sheetOpen, setSheetOpen] = useState(defaultOpen);
+  const [localOpen, setLocalOpen] = useState(false);
+  const isSheetOpen = open !== undefined ? open : localOpen;
 
   useImperativeHandle(ref, () => ({
-    openSheet: () => setSheetOpen(true),
+    openSheet: () => setLocalOpen(true),
   }));
   const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due'>('overdue');
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
@@ -192,7 +193,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       </Card>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
+      <Sheet open={isSheetOpen} onOpenChange={(val) => { if (!val) { setLocalOpen(false); onClose?.(); } }}>
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
@@ -204,7 +205,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0"
-                  onClick={() => setSheetOpen(false)}
+                  onClick={() => { setLocalOpen(false); onClose?.(); }}
                   aria-label="Back"
                 >
                   <ArrowLeft className="h-5 w-5" />
