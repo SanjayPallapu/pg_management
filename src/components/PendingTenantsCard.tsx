@@ -20,6 +20,7 @@ import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
 
 interface PendingTenantsCardProps {
+  showSummaryCard?: boolean;
   rooms: Room[];
   defaultOpen?: boolean;
   onClose?: () => void;
@@ -162,7 +163,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
   return (
     <>
-      <Card 
+      {showSummaryCard && (
+        <Card 
         className="cursor-pointer transition-colors hover:bg-accent/50"
         onClick={() => setSheetOpen(true)}
       >
@@ -186,6 +188,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           <p className="text-xs text-muted-foreground mt-2 text-center">Tap to select tenants</p>
         </CardContent>
       </Card>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>

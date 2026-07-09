@@ -613,10 +613,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
         <SecurityDepositCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
       {activeSheet === "prev-overdue" && (
-        <PreviousMonthOverdueCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <PreviousMonthOverdueCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}
       {activeSheet === "overdue-paid" && (
-        <OverduePaidCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <OverduePaidCard rooms={rooms} defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}
       <Sheet open={activeSheet === "building-rent"} onOpenChange={(o) => !o && setActiveSheet(null)}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
@@ -634,10 +634,10 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
 
       {/* Tenant Sheets */}
       {activeSheet === "pending-tenants" && (
-        <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} />
+        <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} showSummaryCard={false} />
       )}
       {activeSheet === "expected-collection" && (
-        <ExpectedCollectionCard defaultOpen={true} onClose={() => setActiveSheet(null)} />
+        <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
       )}
       <Sheet open={activeSheet === "tenant-pricing"} onOpenChange={(o) => !o && setActiveSheet(null)}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
@@ -797,7 +797,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
-              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} />
+              <PendingTenantsCard ref={pendingTenantsRef} rooms={rooms} onClose={() => setActiveSheet(null)} defaultOpen={true} showSummaryCard={false} />
               <ExpectedCollectionCard />
               <TenantPricingOverviewCard />
               <TenantMovementCard rooms={rooms} />

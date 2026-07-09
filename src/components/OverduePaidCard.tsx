@@ -16,6 +16,7 @@ import { PreviousOverdueSheet } from './PreviousOverdueSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OverduePaidCardProps {
+  showSummaryCard?: boolean;
   rooms: Room[];
   defaultOpen?: boolean;
 }
@@ -62,7 +63,7 @@ interface OverduePaidReceiptData {
   paymentEntries?: PaymentEntry[];
 }
 
-export const OverduePaidCard = ({ rooms, defaultOpen = false, onClose }: OverduePaidCardProps) => {
+export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = false, onClose }: OverduePaidCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const isMobile = useIsMobile();
@@ -212,7 +213,8 @@ export const OverduePaidCard = ({ rooms, defaultOpen = false, onClose }: Overdue
 
   return (
     <>
-      <Card
+      {showSummaryCard && (
+        <Card
         className="mb-4 cursor-pointer transition-colors hover:bg-accent/50 bg-gradient-to-r from-paid/10 to-paid/5 border-paid/30"
         onClick={() => setSheetOpen(true)}
       >
@@ -236,6 +238,7 @@ export const OverduePaidCard = ({ rooms, defaultOpen = false, onClose }: Overdue
           </div>
         </CardContent>
       </Card>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>

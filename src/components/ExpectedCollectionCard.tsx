@@ -102,7 +102,8 @@ export const ExpectedCollectionCard = ({ defaultOpen = false, onClose }: { defau
 
   return (
     <>
-      <Card 
+      {showSummaryCard && (
+        <Card 
         className="cursor-pointer transition-all hover:shadow-md border bg-card hover:bg-muted/30"
         onClick={() => setIsOpen(true)}
       >
@@ -121,6 +122,7 @@ export const ExpectedCollectionCard = ({ defaultOpen = false, onClose }: { defau
           <span className="text-xs text-primary font-medium shrink-0">View details →</span>
         </CardContent>
       </Card>
+      )}
 
       <Sheet open={isOpen} onOpenChange={(val) => { setIsOpen(val); if (!val) onClose?.(); }}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
