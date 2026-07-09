@@ -437,9 +437,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
               { key: "collected-by", icon: "/icons/pending-3d.jpg", label: "Collected By" },
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
-              { key: "prev-overdue", icon: "/icons/overdue-pending-update.jpg", label: "Prev Overdue" },
-              { key: "overdue-paid", icon: "/icons/overdue-paid-update.jpg", label: "Overdue Paid" },
-              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
+              { key: "overdue-overview", icon: "/icons/icon_overdue_1783505321401.jpg", label: "Overdue" },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
             ].map((item) => (
               <div
@@ -498,12 +496,13 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-x-2 gap-y-3">
             {[
+              { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
               { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
             ].map((item) => (
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
-                onClick={() => setBillsBudgetOpen(true)}
+                onClick={() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true)}
               >
                 <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1 flex items-center justify-center bg-white border border-slate-200 relative">
                   <img
@@ -566,7 +565,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Collected By</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard onClose={() => setActiveSheet(null)} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><CollectedByCard onClose={() => setActiveSheet(null)} defaultOpen={true} /></div>
           </div>
         </SheetContent>
       </Sheet>
@@ -592,7 +591,11 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                 <SheetTitle className="text-base font-bold">Total Collected</SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3"><TotalCollectedCard rooms={rooms} rentCollected={rentCollected} /></div>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <TotalCollectedCard rooms={rooms} rentCollected={rentCollected} />
+              <PaymentModeCard rooms={rooms} />
+              <AllCollectedCard rooms={rooms} />
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -612,12 +615,22 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       {activeSheet === "security-deposit" && (
         <SecurityDepositCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
-      {activeSheet === "prev-overdue" && (
-        <PreviousMonthOverdueCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
-      )}
-      {activeSheet === "overdue-paid" && (
-        <OverduePaidCard rooms={rooms} defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
-      )}
+      <Sheet open={activeSheet === "overdue-overview"} onOpenChange={(o) => !o && setActiveSheet(null)}>
+        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
+                <SheetTitle className="text-base font-bold">Overdue Overview</SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+              <PreviousMonthOverdueCard defaultOpen={false} showSummaryCard={true} />
+              <OverduePaidCard rooms={rooms} defaultOpen={false} showSummaryCard={true} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       <Sheet open={activeSheet === "building-rent"} onOpenChange={(o) => !o && setActiveSheet(null)}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">

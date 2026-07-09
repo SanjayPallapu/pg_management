@@ -268,7 +268,6 @@ export const CollectedByCard = ({ onClose }: { onClose?: () => void }) => {
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
                     <span className="text-sm font-medium">{name}</span>
-                    {isExpanded ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-bold text-paid">₹{amount.toLocaleString()}</span>
@@ -277,7 +276,7 @@ export const CollectedByCard = ({ onClose }: { onClose?: () => void }) => {
                     </span>
                   </div>
                 </button>
-                {isExpanded && (
+                {true && (
                   <div className="ml-5 mt-1 space-y-2 border-l-2 border-blue-500/20 pl-3 pb-1">
                     {/* Category sub-totals */}
                     <div className="flex flex-wrap gap-2 text-[10px] mb-1">
