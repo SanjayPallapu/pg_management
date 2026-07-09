@@ -805,7 +805,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden">
+      <SheetContent side="bottom" className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
             <div className="flex items-center gap-3">
@@ -1445,7 +1445,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       <Sheet open={!!partialPaymentTenant} onOpenChange={(open) => !open && setPartialPaymentTenant(null)}>
         <SheetContent 
           side="bottom" 
-          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
+          className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1612,7 +1612,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       <Sheet open={!!payRemainingTenant} onOpenChange={(open) => !open && setPayRemainingTenant(null)}>
         <SheetContent 
           side="bottom" 
-          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
+          className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
