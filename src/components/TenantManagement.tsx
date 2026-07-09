@@ -690,7 +690,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden">
+      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-xl p-0"}>
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
             <div className="flex items-center gap-3">
@@ -1207,12 +1207,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium text-muted-foreground">Tenant Name</Label>
                     <div className="relative flex items-center w-full">
+                      <User className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
                       <Input
                         id="new-tenant-name"
                         value={newTenant.name}
                         onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
                         placeholder="Enter name"
-                        className="px-4 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm w-full"
+                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm w-full"
                       />
                     </div>
                   </div>
@@ -1319,8 +1320,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       {/* Enter Payment Amount Sheet */}
       <Sheet open={!!partialPaymentTenant} onOpenChange={(open) => !open && setPartialPaymentTenant(null)}>
         <SheetContent 
-          side="bottom" 
-          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1486,8 +1487,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       {/* Pay Remaining Sheet */}
       <Sheet open={!!payRemainingTenant} onOpenChange={(open) => !open && setPayRemainingTenant(null)}>
         <SheetContent 
-          side="bottom" 
-          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
