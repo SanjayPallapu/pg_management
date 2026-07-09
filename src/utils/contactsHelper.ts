@@ -94,7 +94,7 @@ export const requestContactPermission = async (): Promise<boolean> => {
  * If running in a web browser, it tries the native Web Contact Picker API if supported.
  * Returns null if the browser picker is unsupported or failed, indicating that the UI should show the mock contact picker instead.
  */
-export const pickContactFromDevice = async (): Promise<SelectedContact | null> => {
+export const pickContactFromDevice = async (): Promise<SelectedContact | null | undefined> => {
   if (!Capacitor.isNativePlatform()) {
     // Attempt to use standard Web Contact Picker API (supported in mobile Chrome/Safari)
     if ('contacts' in navigator && 'select' in navigator.contacts) {
@@ -106,8 +106,12 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null> =
           const phones = webContact.tel || [];
           return { name, phones };
         }
-      } catch (e) {
-        console.error('Web contact picker API failed, falling back to mock selector:', e);
+      } catch (e: any) {
+        console.error('Web contact picker API failed:', e);
+        const errStr = String(e?.message || e?.name || '').toLowerCase();
+        if (errStr.includes('cancel') || errStr.includes('abort')) {
+          return undefined; // User explicitly cancelled
+        }
       }
     }
     return null; // Fallback to mock selector UI
