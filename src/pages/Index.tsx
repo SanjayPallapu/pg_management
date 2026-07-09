@@ -65,6 +65,7 @@ const Index = () => {
     setHistorySheetOpen(false);
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
+  const [autoFocusAddTenant, setAutoFocusAddTenant] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -87,13 +88,26 @@ const Index = () => {
     lastScrollY.current = currentScrollY;
   }, []);
 
-  // Sync active tab from URL when searchParams change (e.g. from BottomNav inside dialogs)
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
+
+  // Handle URL redirect for Add Tenant Quick Action
+  useEffect(() => {
+    const addTenantRoomId = searchParams.get('addTenantRoomId');
+    if (addTenantRoomId && rooms.length > 0) {
+      const room = rooms.find(r => r.id === addTenantRoomId);
+      if (room) {
+        setSelectedRoom(room);
+        setAutoFocusAddTenant(true);
+        setIsDialogOpen(true);
+        navigate("/?tab=rooms", { replace: true });
+      }
+    }
+  }, [searchParams, rooms, navigate]);
 
   // Handle same tab click / any tab click stack reset
   useEffect(() => {
@@ -351,7 +365,15 @@ const Index = () => {
         {/* Tenant Management Dialog */}
         {selectedRoom && (
           <Suspense fallback={null}>
-            <TenantManagement room={selectedRoom} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+            <TenantManagement 
+              room={selectedRoom} 
+              isOpen={isDialogOpen} 
+              onClose={() => {
+                setIsDialogOpen(false);
+                setAutoFocusAddTenant(false);
+              }} 
+              autoFocusAddTenant={autoFocusAddTenant}
+            />
           </Suspense>
         )}
 

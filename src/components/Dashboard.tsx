@@ -61,7 +61,6 @@ import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
-const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
@@ -97,7 +96,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
   
   // Add Tenant workflow state
   const [addTenantRoomSelectOpen, setAddTenantRoomSelectOpen] = useState(false);
-  const [selectedRoomForTenant, setSelectedRoomForTenant] = useState<Room | null>(null);
 
   // Active sheet state for Swiggy-style icon grid
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
@@ -121,7 +119,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
       setTenantsOpen(false);
       setToolsOpen(false);
       setAddTenantRoomSelectOpen(false);
-      setSelectedRoomForTenant(null);
     };
 
     handleCloseAll();
@@ -1048,7 +1045,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                     key={room.id}
                     onClick={() => {
                       setAddTenantRoomSelectOpen(false);
-                      setTimeout(() => setSelectedRoomForTenant(room), 150);
+                      navigate(`/?tab=rooms&addTenantRoomId=${room.id}`);
                     }}
                     className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
                   >
@@ -1071,17 +1068,6 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
           </div>
         </SheetContent>
       </Sheet>
-
-      {selectedRoomForTenant && (
-        <Suspense fallback={null}>
-          <TenantManagement
-            room={selectedRoomForTenant}
-            isOpen={!!selectedRoomForTenant}
-            onClose={() => setSelectedRoomForTenant(null)}
-            autoFocusAddTenant={true}
-          />
-        </Suspense>
-      )}
     </>
   );
 };
