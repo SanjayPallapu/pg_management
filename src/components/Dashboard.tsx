@@ -436,7 +436,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
             {[
               { key: "collected-by", icon: "/icons/safe-new.png", label: "Collected By" },
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
-              { key: "security-deposit", icon: "/icons/wallet-new.png", label: "Security Deposit" },
+              { key: "security-deposit", icon: "/icons/wallet-new.png", label: "Security Deposit", padding: "p-3" },
               { key: "overdue-overview", icon: "/icons/overdue-overview-new.jpg", label: "Overdue", cover: true },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
             ].map((item) => (
@@ -449,7 +449,7 @@ export const Dashboard = ({ rooms }: DashboardProps) => {
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className={`w-full h-full transition-transform duration-200 group-hover:scale-110 ${item.cover ? 'object-cover' : item.contain ? 'object-contain p-2' : 'object-contain p-1.5'}`}
+                    className={`w-full h-full transition-transform duration-200 group-hover:scale-110 ${item.cover ? 'object-cover' : `object-contain ${item.padding || (item.contain ? 'p-2' : 'p-1.5')}`}`}
                   />
                 </div>
                 <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
