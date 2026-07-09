@@ -30,7 +30,7 @@ export interface PendingTenantsCardRef {
   openSheet: () => void;
 }
 
-export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, defaultOpen = false, onClose }, ref) => {
+export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, defaultOpen = false, onClose, showSummaryCard = true }, ref) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
