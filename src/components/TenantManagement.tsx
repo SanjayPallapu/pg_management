@@ -42,7 +42,15 @@ import {
   Loader2,
   ArrowRightLeft,
   ArrowLeft,
+  Contact,
 } from "lucide-react";
+import {
+  pickContactFromDevice,
+  sanitizePhoneNumber,
+  MOCK_CONTACTS,
+  getSimulatedContacts,
+  saveSimulatedContact,
+} from "@/utils/contactsHelper";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,6 +112,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             behavior: "smooth"
           });
         }
+        // Focus the name input
+        const nameInput = document.getElementById("new-tenant-name");
+        nameInput?.focus();
       }, 350);
     }
   }, [isOpen, autoScrollToAdd]);
@@ -242,6 +253,110 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   });
   const [includeSecurityDeposit, setIncludeSecurityDeposit] = useState(false);
   const FIXED_SECURITY_DEPOSIT = 2000;
+
+  const [mockPickerOpen, setMockPickerOpen] = useState(false);
+  const [numberSelectOpen, setNumberSelectOpen] = useState(false);
+  const [numbersToSelect, setNumbersToSelect] = useState<string[]>([]);
+  const [selectedContactName, setSelectedContactName] = useState("");
+  const [searchMockQuery, setSearchMockQuery] = useState("");
+
+  const [simulatedContacts, setSimulatedContacts] = useState<any[]>([]);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactPhone, setNewContactPhone] = useState("");
+
+  // Handle back gesture for contacts dialogs
+  useBackGesture(mockPickerOpen, () => setMockPickerOpen(false));
+  useBackGesture(numberSelectOpen, () => setNumberSelectOpen(false));
+
+  const handleContactSelected = (name: string, phones: string[]) => {
+    // Deduplicate phone numbers by their sanitized (10-digit) values
+    const seenCleaned = new Set<string>();
+    const uniquePhones: string[] = [];
+
+    (phones || []).forEach((phone) => {
+      const cleaned = sanitizePhoneNumber(phone);
+      if (cleaned && !seenCleaned.has(cleaned)) {
+        seenCleaned.add(cleaned);
+        uniquePhones.push(phone);
+      }
+    });
+
+    if (uniquePhones.length === 0) {
+      toast({
+        title: "No phone number found",
+        description: `${name} does not have any phone numbers saved.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (uniquePhones.length === 1) {
+      const cleaned = sanitizePhoneNumber(uniquePhones[0]);
+      setNewTenant((prev) => ({
+        ...prev,
+        name: name,
+        phone: cleaned,
+      }));
+    } else {
+      setSelectedContactName(name);
+      setNumbersToSelect(uniquePhones);
+      setNumberSelectOpen(true);
+    }
+  };
+
+  const handleChooseFromContacts = async () => {
+    try {
+      const contact = await pickContactFromDevice();
+      if (contact) {
+        handleContactSelected(contact.name, contact.phones);
+      } else {
+        setSearchMockQuery("");
+        setSimulatedContacts(getSimulatedContacts());
+        setIsAddingContact(false);
+        setNewContactName("");
+        setNewContactPhone("");
+        setMockPickerOpen(true);
+      }
+    } catch (err: any) {
+      toast({
+        title: "Failed to access contacts",
+        description: err?.message || "Please check your permissions and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddSimulatedContact = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContactName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the contact.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const updated = saveSimulatedContact(newContactName.trim(), newContactPhone.trim());
+    setSimulatedContacts(updated);
+    setIsAddingContact(false);
+
+    // Auto select the newly added contact
+    const newlyAdded = updated[updated.length - 1];
+    handleContactSelected(newlyAdded.name, newlyAdded.phones);
+    setMockPickerOpen(false);
+  };
+
+  const handleSelectPhoneNumber = (phone: string) => {
+    const cleaned = sanitizePhoneNumber(phone);
+    setNewTenant((prev) => ({
+      ...prev,
+      name: selectedContactName,
+      phone: cleaned,
+    }));
+    setNumberSelectOpen(false);
+
+  };
 
   const getFloorName = (floor: number) => {
     const floorNames = { 1: "1st Floor", 2: "2nd Floor", 3: "3rd Floor" };
@@ -690,7 +805,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-xl p-0"}>
+      <SheetContent side="bottom" className="h-[85vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
             <div className="flex items-center gap-3">
@@ -1206,14 +1321,23 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium text-muted-foreground">Tenant Name</Label>
-                    <div className="relative flex items-center w-full">
-                      <User className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                    <div className="relative flex items-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleChooseFromContacts}
+                        className="absolute left-1.5 h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors rounded-lg z-10"
+                        title="Choose from Contacts"
+                      >
+                        <Contact className="h-4 w-4" />
+                      </Button>
                       <Input
                         id="new-tenant-name"
                         value={newTenant.name}
                         onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
                         placeholder="Enter name"
-                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm w-full"
+                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
                       />
                     </div>
                   </div>
@@ -1320,8 +1444,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       {/* Enter Payment Amount Sheet */}
       <Sheet open={!!partialPaymentTenant} onOpenChange={(open) => !open && setPartialPaymentTenant(null)}>
         <SheetContent 
-          side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
+          side="bottom" 
+          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1487,8 +1611,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       {/* Pay Remaining Sheet */}
       <Sheet open={!!payRemainingTenant} onOpenChange={(open) => !open && setPayRemainingTenant(null)}>
         <SheetContent 
-          side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
+          side="bottom" 
+          className="h-[75vh] px-0 pt-0 pb-0 rounded-t-3xl overflow-hidden flex flex-col [&>button]:hidden"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1703,7 +1827,157 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         reminderData={reminderData}
       />
 
+      {/* Web Mock Contact Picker Dialog */}
+      <Dialog open={mockPickerOpen} onOpenChange={setMockPickerOpen}>
+        <DialogContent className="flex flex-col p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Contact className="h-5 w-5 text-primary" />
+              Choose from Contacts
+            </DialogTitle>
+            <DialogDescription>
+              Select a contact to auto-fill the tenant details (simulated contact list).
+            </DialogDescription>
+          </DialogHeader>
 
+          {isAddingContact ? (
+            <form onSubmit={handleAddSimulatedContact} className="space-y-4 my-4 p-4 border border-border rounded-xl bg-muted/20">
+              <h4 className="text-sm font-semibold text-foreground">Create Simulated Contact</h4>
+              <div className="space-y-2">
+                <Label htmlFor="contactName" className="text-xs">Contact Name</Label>
+                <Input
+                  id="contactName"
+                  placeholder="e.g. Rekha Devi"
+                  value={newContactName}
+                  onChange={(e) => setNewContactName(e.target.value)}
+                  className="h-10 bg-background/50 rounded-lg text-sm"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contactPhone" className="text-xs">Phone Number(s)</Label>
+                <Input
+                  id="contactPhone"
+                  placeholder="e.g. 6305967412 or 9876543210, 9123456789"
+                  value={newContactPhone}
+                  onChange={(e) => setNewContactPhone(e.target.value)}
+                  className="h-10 bg-background/50 rounded-lg text-sm"
+                />
+                <span className="text-[10px] text-muted-foreground block">
+                  Separate multiple numbers with commas to test the number chooser dialog.
+                </span>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsAddingContact(false)}
+                  className="h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="h-9 text-xs"
+                >
+                  Save Contact
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <div className="my-2 flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={searchMockQuery}
+                  onChange={(e) => setSearchMockQuery(e.target.value)}
+                  className="w-full bg-background/50 h-10 rounded-lg text-sm"
+                />
+                <Button
+                  type="button"
+                  onClick={() => setIsAddingContact(true)}
+                  className="h-10 text-xs px-3 shrink-0 gap-1 rounded-lg"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Contact
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[380px] space-y-2 pr-1 mt-2">
+                {simulatedContacts.filter((c) =>
+                  c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
+                ).length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
+                    No contacts found matching "{searchMockQuery}"
+                  </div>
+                ) : (
+                  simulatedContacts.filter((c) =>
+                    c.name.toLowerCase().includes(searchMockQuery.toLowerCase())
+                  ).map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        handleContactSelected(c.name, c.phones);
+                        setMockPickerOpen(false);
+                      }}
+                      className="w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">{c.name}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {c.phones.length === 0
+                            ? "No phone number"
+                            : c.phones.length === 1
+                            ? c.phones[0]
+                            : `${c.phones.length} phone numbers: ${c.phones.join(', ')}`}
+                        </div>
+                      </div>
+                      <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
+            <Button variant="outline" onClick={() => setMockPickerOpen(false)} className="rounded-lg h-9 text-xs">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Multiple Phone Numbers Selection Dialog */}
+      <Dialog open={numberSelectOpen} onOpenChange={setNumberSelectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Phone Number</DialogTitle>
+            <DialogDescription>
+              {selectedContactName} has multiple phone numbers. Please select one.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 my-4">
+            {numbersToSelect.map((phone, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectPhoneNumber(phone)}
+                className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors flex items-center justify-between text-sm"
+              >
+                <span>{phone}</span>
+                <span className="text-xs text-muted-foreground font-mono">
+                  ({sanitizePhoneNumber(phone)})
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setNumberSelectOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Welcome Dialog for new tenants */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
