@@ -732,7 +732,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                   onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
                 >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
                     <img
                       src={item.icon}
                       alt={item.label}
@@ -770,7 +770,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                   onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
                 >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
                     <img
                       src={item.icon}
                       alt={item.label}
@@ -807,7 +807,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                   onClick={() => { setToolsOpen(false); setTimeout(() => setActiveSheet(item.key), 300); }}
                 >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
                     <img
                       src={item.icon}
                       alt={item.label}
@@ -842,7 +842,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                   onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
                 >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
                     <img
                       src={item.icon}
                       alt={item.label}
