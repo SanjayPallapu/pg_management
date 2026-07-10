@@ -721,28 +721,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
               { key: "overdue-overview", icon: "/icons/overdue.jpg", label: "Overdue Overview" },
               { key: "day-guest", icon: "/icons/bed-3d.png", label: "Day Guests" },
-            ].map((item) => {
-              const isJpg = item.icon.toLowerCase().endsWith(".jpg") || item.icon.toLowerCase().endsWith(".jpeg");
-              const bgClass = isJpg
-                ? "bg-white border-slate-200/60 dark:border-slate-200/40"
-                : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/60";
-              return (
-                <div
-                  key={item.key}
-                  className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
-                  onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
-                >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
-                    <img
-                      src={item.icon}
-                      alt={item.label}
-                      className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
-                    />
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
+                onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-white border border-slate-200/60 dark:border-slate-200/40 shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                  />
                 </div>
-              );
-            })}
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>
@@ -759,28 +753,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               { key: "tenant-pricing", icon: "/icons/tenant-pricing-3d.jpg", label: "Pricing" },
               { key: "tenant-movement", icon: "/icons/movemnet-update.png", label: "Movement" },
               { key: "settlement", icon: "/icons/settlement-final.jpg", label: "Settlement" },
-            ].map((item) => {
-              const isJpg = item.icon.toLowerCase().endsWith(".jpg") || item.icon.toLowerCase().endsWith(".jpeg");
-              const bgClass = isJpg
-                ? "bg-white border-slate-200/60 dark:border-slate-200/40"
-                : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/60";
-              return (
-                <div
-                  key={item.key}
-                  className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
-                  onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
-                >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
-                    <img
-                      src={item.icon}
-                      alt={item.label}
-                      className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
-                    />
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
+                onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-white border border-slate-200/60 dark:border-slate-200/40 shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                  />
                 </div>
-              );
-            })}
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>
@@ -796,28 +784,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },
-            ].map((item) => {
-              const isJpg = item.icon.toLowerCase().endsWith(".jpg") || item.icon.toLowerCase().endsWith(".jpeg");
-              const bgClass = isJpg
-                ? "bg-white border-slate-200/60 dark:border-slate-200/40"
-                : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/60";
-              return (
-                <div
-                  key={item.key}
-                  className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
-                  onClick={() => { setToolsOpen(false); setTimeout(() => setActiveSheet(item.key), 300); }}
-                >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
-                    <img
-                      src={item.icon}
-                      alt={item.label}
-                      className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
-                    />
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
+                onClick={() => { setToolsOpen(false); setTimeout(() => setActiveSheet(item.key), 300); }}
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-white border border-slate-200/60 dark:border-slate-200/40 shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                  />
                 </div>
-              );
-            })}
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>
@@ -831,28 +813,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             {[
               { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
               { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
-            ].map((item) => {
-              const isJpg = item.icon.toLowerCase().endsWith(".jpg") || item.icon.toLowerCase().endsWith(".jpeg");
-              const bgClass = isJpg
-                ? "bg-white border-slate-200/60 dark:border-slate-200/40"
-                : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/60";
-              return (
-                <div
-                  key={item.key}
-                  className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
-                  onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
-                >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center border shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md ${bgClass}`}>
-                    <img
-                      src={item.icon}
-                      alt={item.label}
-                      className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
-                    />
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
+                onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-white border border-slate-200/60 dark:border-slate-200/40 shadow-sm relative p-2.5 transition-all duration-200 group-hover:shadow-md">
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                  />
                 </div>
-              );
-            })}
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>
