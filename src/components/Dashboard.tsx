@@ -710,11 +710,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       {/* Hidden calculator triggered by building icon */}
       <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
       <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
-        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
-          <SheetHeader className="mb-4">
+        <SheetContent side="bottom" className="h-auto max-h-[70vh] px-6 pt-6 pb-8 rounded-t-[2rem]">
+          <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Financials</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "collected-by", icon: "/icons/avatar-3d.png", label: "Collected By" },
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
@@ -724,17 +724,17 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             ].map((item) => (
               <div
                 key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                 onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative p-2.5 transition-shadow duration-200 group-hover:shadow-md">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
               </div>
             ))}
           </div>
@@ -742,11 +742,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       </Sheet>
 
       <Sheet open={tenantsOpen} onOpenChange={setTenantsOpen}>
-        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
-          <SheetHeader className="mb-4">
+        <SheetContent side="bottom" className="h-auto max-h-[70vh] px-6 pt-6 pb-8 rounded-t-[2rem]">
+          <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Tenants</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "pending-tenants", icon: "/icons/pending-updte.jpg", label: "Pending" },
               { key: "expected-collection", icon: "/icons/expected-updte.png", label: "Expected" },
@@ -756,17 +756,17 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             ].map((item) => (
               <div
                 key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                 onClick={() => { setTenantsOpen(false); setTimeout(() => item.key === "settlement" ? setSettlementSheetOpen(true) : item.key === "pending-tenants" ? openPendingTenants() : setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative p-2.5 transition-shadow duration-200 group-hover:shadow-md">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
               </div>
             ))}
           </div>
@@ -774,11 +774,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       </Sheet>
 
       <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
-        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
-          <SheetHeader className="mb-4">
+        <SheetContent side="bottom" className="h-auto max-h-[70vh] px-6 pt-6 pb-8 rounded-t-[2rem]">
+          <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Tools & Admin</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
@@ -787,45 +787,46 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             ].map((item) => (
               <div
                 key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                 onClick={() => { setToolsOpen(false); setTimeout(() => setActiveSheet(item.key), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative p-2.5 transition-shadow duration-200 group-hover:shadow-md">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
               </div>
             ))}
           </div>
         </SheetContent>
       </Sheet>
+
       <Sheet open={billsBudgetGridOpen} onOpenChange={setBillsBudgetGridOpen}>
-        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
-          <SheetHeader className="mb-4">
+        <SheetContent side="bottom" className="h-auto max-h-[70vh] px-6 pt-6 pb-8 rounded-t-[2rem]">
+          <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Bills & Budget</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-3 gap-y-5">
+          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
               { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
             ].map((item) => (
               <div
                 key={item.key}
-                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95"
+                className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
                 onClick={() => { setBillsBudgetGridOpen(false); setTimeout(() => item.key === "building-rent" ? setActiveSheet("building-rent") : setBillsBudgetOpen(true), 300); }}
               >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-1.5 flex items-center justify-center bg-slate-50 border border-slate-200/60 shadow-sm relative p-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 shadow-sm relative p-2.5 transition-shadow duration-200 group-hover:shadow-md">
                   <img
                     src={item.icon}
                     alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   />
                 </div>
-                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2">{item.label}</span>
+                <span className="text-[10px] sm:text-xs text-foreground/80 font-medium leading-tight line-clamp-2 max-w-[64px] sm:max-w-[76px]">{item.label}</span>
               </div>
             ))}
           </div>
