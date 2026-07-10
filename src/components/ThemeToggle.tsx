@@ -23,10 +23,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!prefersReducedMotion && iconRef.current) {
-      // 180-degree rotation and scale-bounce effect using GSAP
+      // Spin the icon 360 degrees so it ends up fully upright (0/360 degrees) rather than upside down (180 degrees)
       gsap.fromTo(iconRef.current, 
         { rotate: 0, scale: 0.8, opacity: 0.5 },
-        { rotate: 180, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.8)" }
+        { rotate: 360, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.5)" }
       );
     }
     
