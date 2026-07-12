@@ -26,9 +26,13 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ActiveTabProvider } from "@/contexts/ActiveTabContext";
 import { Loader2 } from "lucide-react";
 
-// Protected route component that wraps children with PGProvider
+import { RentProvider } from "./contexts/RentContext";
+import { useMonthContext } from "./contexts/MonthContext";
+
+// Protected route component that wraps children with PGProvider and RentProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, hasRole, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { selectedMonth, selectedYear } = useMonthContext();
 
   // While still loading auth state, show spinner (max 1s due to useAuth's force timeout)
   if (isLoading) {
@@ -44,7 +48,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to={hasCompleted ? "/auth" : "/onboarding"} replace />;
   }
 
-  return <PGProvider>{children}</PGProvider>;
+  return (
+    <PGProvider>
+      <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
+        {children}
+      </RentProvider>
+    </PGProvider>
+  );
 };
 
 const queryClient = new QueryClient({

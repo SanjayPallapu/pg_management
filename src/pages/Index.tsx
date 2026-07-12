@@ -66,9 +66,8 @@ const Index = () => {
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
-  // Swiggy-style header & bottom nav: hide on scroll down, show on scroll up
+  // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [bottomNavVisible, setBottomNavVisible] = useState(true);
   const lastScrollY = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -80,13 +79,10 @@ const Index = () => {
     // Swiggy-style: respond instantly to scroll direction with a tiny threshold
     if (currentScrollY < 10) {
       setHeaderVisible(true);
-      setBottomNavVisible(true);
     } else if (delta > 2) {
       setHeaderVisible(false);
-      setBottomNavVisible(false);
     } else if (delta < -2) {
       setHeaderVisible(true);
-      setBottomNavVisible(true);
     }
     lastScrollY.current = currentScrollY;
   }, []);
@@ -270,8 +266,7 @@ const Index = () => {
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 
   return (
-    <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
-      <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
@@ -402,9 +397,8 @@ const Index = () => {
       </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} rentCollected={rentCollected} pendingRent={pendingRent} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-    </RentProvider>
   );
 };
 export default Index;
