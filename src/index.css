@@ -268,11 +268,7 @@ All colors MUST be HSL.
   animation: shimmer 2s ease-in-out infinite;
 }
 
-/* Fix Radix UI dialog scroll lock / pointer events lock issues when nested sheets/dialogs close simultaneously */
-body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
-  pointer-events: auto !important;
-  overflow: auto !important;
-}
+/* Sheet is now non-modal (modal={false}) so Radix never applies body scroll/pointer locks */
 
 /* Bottom Navigation & Sheets Auto-Padding Layout Rules */
 .sheet-content[data-side="bottom"]:not(.h-full) {

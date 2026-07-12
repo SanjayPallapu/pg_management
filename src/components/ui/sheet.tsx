@@ -5,7 +5,16 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Sheet = SheetPrimitive.Root;
+/**
+ * Sheet is non-modal to prevent Radix from adding inline body scroll/pointer locks.
+ * This is the ROOT FIX for the "hanging UI" when switching tabs while a sheet is open.
+ * Radix's modal={true} uses react-remove-scroll which sets inline `overflow:hidden; pointer-events:none`
+ * on <body>. These inline styles cannot be overridden by CSS and persist during the 300ms close animation,
+ * causing the entire app to appear frozen/hung.
+ */
+const Sheet = ({ ...props }: SheetPrimitive.DialogProps) => (
+  <SheetPrimitive.Root modal={false} {...props} />
+);
 
 const SheetTrigger = SheetPrimitive.Trigger;
 
@@ -54,7 +63,7 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
+>(({ side = "right", className, children, onInteractOutside, onEscapeKeyDown, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
