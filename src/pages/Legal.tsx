@@ -57,7 +57,7 @@ const Legal = () => {
   const navigate = useNavigate();
 
   return (
-    <AppLayout title="Legal & Support" showBottomNav={false}>
+    <AppLayout title="Legal & Support">
       <main className="mx-auto max-w-3xl space-y-4 px-4 py-4">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Legal & Support</h1>
