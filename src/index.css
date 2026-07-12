@@ -275,6 +275,21 @@ body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
 }
 
 /* Bottom Navigation & Sheets Auto-Padding Layout Rules */
-[data-side="bottom"] {
-  padding-bottom: 140px !important;
+[data-side="bottom"]:not(.h-full) {
+  bottom: calc(var(--bottom-nav-offset, 110px) + 8px) !important;
+  border-radius: 2rem !important;
+  margin: 0 8px !important;
+  width: calc(100% - 16px) !important;
+  max-height: calc(100vh - var(--bottom-nav-offset, 110px) - 24px) !important;
+  transition: bottom 0.2s ease-out, max-height 0.2s ease-out !important;
+}
+
+[data-side="bottom"].h-full {
+  padding-bottom: var(--bottom-nav-offset, 110px) !important;
+}
+
+/* Ensure BottomNav and Banner ignore Radix UI body pointer locks to remain clickable */
+.bottom-nav-container,
+.status-banner-container {
+  pointer-events: auto !important;
 }

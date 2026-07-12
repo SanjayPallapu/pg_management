@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   LayoutDashboard,
   Building,
@@ -118,7 +119,17 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
   // Combine parent visibility controls (e.g. settings-based manual hides) with the scroll state
   const isVisible = visible === false ? false : internalVisible;
 
-  return (
+  // Set the global CSS variable for other components and sheets to float above the bottom nav + banner
+  useEffect(() => {
+    const bannerHeight = showBanner ? 36 : 0;
+    const totalHeight = isVisible ? (navHeight + bannerHeight) : 0;
+    document.documentElement.style.setProperty('--bottom-nav-offset', `${totalHeight}px`);
+    return () => {
+      document.documentElement.style.setProperty('--bottom-nav-offset', '0px');
+    };
+  }, [isVisible, showBanner, navHeight]);
+
+  return createPortal(
     <>
       {/* Status Banner — always sticky at bottom, Swiggy-style. Floats on top of sheets at z-[56] */}
       {showBanner && (
@@ -179,6 +190,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
         })}
       </div>
       </nav>
-    </>
+    </>,
+    document.body
   );
 };

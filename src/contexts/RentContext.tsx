@@ -2,6 +2,8 @@ import { createContext, useContext, useCallback, ReactNode } from 'react';
 import { TenantPayment } from '@/types';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRooms } from '@/hooks/useRooms';
+import { useRentCalculations } from '@/hooks/useRentCalculations';
 
 interface RentContextType {
   rentRecords: TenantPayment[];
@@ -34,12 +36,21 @@ interface RentProviderProps {
 
 export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProviderProps) => {
   const { payments, isLoading, error, upsertPayment } = useTenantPayments();
+  const { rooms = [] } = useRooms();
   const queryClient = useQueryClient();
 
   // Filter payments for the selected month/year
   const rentRecords = payments.filter(
     p => p.month === selectedMonth && p.year === selectedYear
   );
+
+  // Compute correct collected/pending totals from the active tenants list
+  const { rentCollected, pendingRent } = useRentCalculations({
+    selectedMonth,
+    selectedYear,
+    rooms,
+    payments,
+  });
 
   const togglePaid = useCallback(
     async (tenantId: string, _roomId?: string) => {
@@ -77,16 +88,12 @@ export const RentProvider = ({ children, selectedMonth, selectedYear }: RentProv
   );
 
   const getTotalCollected = useCallback((): number => {
-    return rentRecords
-      .filter(r => r.paymentStatus === 'Paid')
-      .reduce((sum, r) => sum + (r.amount || 0), 0);
-  }, [rentRecords]);
+    return rentCollected;
+  }, [rentCollected]);
 
   const getTotalPending = useCallback((): number => {
-    return rentRecords
-      .filter(r => r.paymentStatus !== 'Paid')
-      .reduce((sum, r) => sum + (r.amount || 0), 0);
-  }, [rentRecords]);
+    return pendingRent;
+  }, [pendingRent]);
 
   const value: RentContextType = {
     rentRecords,
