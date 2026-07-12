@@ -80,6 +80,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
+  const [pendingTenantsDefaultTab, setPendingTenantsDefaultTab] = useState<'overdue' | 'not-yet-due' | 'previous-month'>('overdue');
   const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
@@ -611,22 +612,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       {activeSheet === "security-deposit" && (
         <SecurityDepositCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
-      <Sheet open={activeSheet === "overdue-overview"} onOpenChange={(o) => !o && setActiveSheet(null)}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setActiveSheet(null)}><ArrowLeft className="h-5 w-5" /></Button>
-                <SheetTitle className="text-base font-bold">Overdue Overview</SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
-              <PreviousMonthOverdueCard defaultOpen={false} showSummaryCard={true} />
-              <OverduePaidCard rooms={rooms} defaultOpen={false} showSummaryCard={true} />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+
       <Sheet open={activeSheet === "building-rent"} onOpenChange={(o) => !o && setActiveSheet(null)}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
@@ -646,8 +632,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         ref={pendingTenantsRef} 
         rooms={rooms} 
         open={activeSheet === "pending-tenants"} 
-        onClose={() => setActiveSheet(null)} 
+        onClose={() => { setActiveSheet(null); setPendingTenantsDefaultTab('overdue'); }} 
         showSummaryCard={false} 
+        defaultTab={pendingTenantsDefaultTab}
       />
       {activeSheet === "expected-collection" && (
         <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
@@ -725,7 +712,19 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div
                 key={item.key}
                 className="cursor-pointer group flex flex-col items-center text-center transition-all duration-200 active:scale-95 w-full"
-                onClick={() => { setFinancialsOpen(false); setTimeout(() => item.key === "day-guest" ? setDayGuestSheetOpen(true) : setActiveSheet(item.key), 300); }}
+                onClick={() => {
+                  setFinancialsOpen(false);
+                  setTimeout(() => {
+                    if (item.key === "day-guest") {
+                      setDayGuestSheetOpen(true);
+                    } else if (item.key === "overdue-overview") {
+                      setPendingTenantsDefaultTab('previous-month');
+                      setActiveSheet('pending-tenants');
+                    } else {
+                      setActiveSheet(item.key);
+                    }
+                  }, 300);
+                }}
               >
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-2 flex items-center justify-center bg-white border border-slate-200/60 dark:border-slate-200/40 shadow-sm relative p-0.5 transition-all duration-200 group-hover:shadow-md">
                   <img

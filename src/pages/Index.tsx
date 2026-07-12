@@ -128,7 +128,6 @@ const Index = () => {
     rooms,
     payments,
   });
-  const bannerText = `₹${rentCollected.toLocaleString()} Collected • ₹${pendingRent.toLocaleString()} Pending`;
 
   const navItems = useMemo(
     () => [
@@ -403,7 +402,7 @@ const Index = () => {
       </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} bannerText={bannerText} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} rentCollected={rentCollected} pendingRent={pendingRent} />
       </div>
     </RentProvider>
   );

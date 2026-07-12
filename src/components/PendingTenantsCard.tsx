@@ -1,4 +1,4 @@
-import { useState, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { useState, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,13 +25,14 @@ interface PendingTenantsCardProps {
   rooms: Room[];
   open?: boolean;
   onClose?: () => void;
+  defaultTab?: 'overdue' | 'not-yet-due' | 'previous-month';
 }
 
 export interface PendingTenantsCardRef {
   openSheet: () => void;
 }
 
-export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, open, onClose, showSummaryCard = true }, ref) => {
+export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, open, onClose, showSummaryCard = true, defaultTab = 'overdue' }, ref) => {
   const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
@@ -53,6 +54,12 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     setReminderTenant(tenant);
     setReminderOpen(true);
   };
+
+  useEffect(() => {
+    if (isSheetOpen) {
+      setActiveTab(defaultTab);
+    }
+  }, [isSheetOpen, defaultTab]);
 
   const getAcSurchargeFor = (tenant: TenantWithPayment) => {
     const room = rooms.find((r) => r.roomNo === tenant.roomNo);
@@ -128,10 +135,64 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     return dayA - dayB;
   };
 
+  // Calculate previous month
+  const { prevMonth, prevYear } = useMemo(() => {
+    let pMonth = selectedMonth - 1;
+    let pYear = selectedYear;
+    if (pMonth === 0) {
+      pMonth = 12;
+      pYear = selectedYear - 1;
+    }
+    return { prevMonth: pMonth, prevYear: pYear };
+  }, [selectedMonth, selectedYear]);
+
   // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants), sorted by joining date
   const overdueCombined = useMemo(() => {
     return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked && !isLeftTenant(t)).sort(sortByJoiningDate);
   }, [overdueTenants, advanceNotPaidTenants]);
+
+  // Previous month pending tenants
+  const stillPendingTenants = useMemo(() => {
+    const allTenants = rooms.flatMap(room => room.tenants.map(tenant => ({
+      ...tenant,
+      roomNo: room.roomNo
+    })));
+
+    const tenantsActiveInPrevMonth = allTenants.filter(tenant => 
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && !tenant.isLocked
+    );
+
+    const prevMonthPayments = payments.filter(p => 
+      p.month === prevMonth && p.year === prevYear
+    );
+
+    const pendingList: TenantWithPayment[] = [];
+
+    tenantsActiveInPrevMonth.forEach(tenant => {
+      const payment = prevMonthPayments.find(p => p.tenantId === tenant.id);
+      const hasLeft = isLeftTenant(tenant);
+
+      if (!payment || payment.paymentStatus === 'Pending') {
+        pendingList.push({
+          ...tenant,
+          paymentStatus: 'Pending',
+          amountPaid: 0,
+          paymentEntries: [],
+          monthlyRent: tenant.monthlyRent,
+        } as TenantWithPayment);
+      } else if (payment.paymentStatus === 'Partial') {
+        pendingList.push({
+          ...tenant,
+          paymentStatus: 'Partial',
+          amountPaid: payment.amountPaid || 0,
+          paymentEntries: payment.paymentEntries || [],
+          monthlyRent: tenant.monthlyRent,
+        } as TenantWithPayment);
+      }
+    });
+
+    return pendingList.sort(sortByJoiningDate);
+  }, [rooms, payments, prevMonth, prevYear]);
 
   // Not yet due (excluding locked and left), sorted by joining date
   const notYetDue = useMemo(() => {
@@ -139,9 +200,14 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   }, [notDueTenants]);
 
   const overdueTotal = overdueCombined.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const stillPendingTotal = stillPendingTenants.reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
   const notYetDueTotal = notYetDue.reduce((sum, t) => sum + t.monthlyRent, 0);
 
-  const currentTenants = activeTab === 'overdue' ? overdueCombined : notYetDue;
+  const currentTenants = useMemo(() => {
+    if (activeTab === 'overdue') return overdueCombined;
+    if (activeTab === 'previous-month') return stillPendingTenants;
+    return notYetDue;
+  }, [activeTab, overdueCombined, stillPendingTenants, notYetDue]);
 
   const handleToggleTenant = (tenantId: string) => {
     const newSet = new Set(selectedTenants);
@@ -156,11 +222,11 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const selectedTotal = useMemo(() => {
     return currentTenants
       .filter(t => selectedTenants.has(t.id))
-      .reduce((sum, t) => sum + t.monthlyRent, 0);
+      .reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
   }, [currentTenants, selectedTenants]);
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab as 'overdue' | 'not-yet-due');
+    setActiveTab(tab as 'overdue' | 'not-yet-due' | 'previous-month');
     setSelectedTenants(new Set()); // Clear selection when switching tabs
   };
 
@@ -216,14 +282,18 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
             <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
-                <TabsList className="grid w-full grid-cols-2 shrink-0">
-                  <TabsTrigger value="overdue" className="gap-1">
-                    <AlertTriangle className="h-3.5 w-3.5 text-pending" />
+                <TabsList className="grid w-full grid-cols-3 shrink-0">
+                  <TabsTrigger value="overdue" className="gap-1 text-[11px] px-1 truncate">
+                    <AlertTriangle className="h-3.5 w-3.5 text-pending shrink-0" />
                     Overdue ({overdueCombined.length})
                   </TabsTrigger>
-                  <TabsTrigger value="not-yet-due" className="gap-1">
-                    <Clock className="h-3.5 w-3.5 text-blue-500" />
-                    Not Yet Due ({notYetDue.length})
+                  <TabsTrigger value="previous-month" className="gap-1 text-[11px] px-1 truncate">
+                    <CalendarClock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    Prev Month ({stillPendingTenants.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="not-yet-due" className="gap-1 text-[11px] px-1 truncate">
+                    <Clock className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                    Upcoming ({notYetDue.length})
                   </TabsTrigger>
                 </TabsList>
 
@@ -281,6 +351,27 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                     </div>
                   </TabsContent>
 
+                  <TabsContent value="previous-month" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
+                    <div className="space-y-2">
+                      {stillPendingTenants.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">No previous month pending dues</p>
+                      ) : (
+                        stillPendingTenants.map(tenant => (
+                          <TenantSelectItem 
+                            key={tenant.id}
+                            tenant={tenant}
+                            isSelected={selectedTenants.has(tenant.id)}
+                            onToggle={handleToggleTenant}
+                            categoryColor="amber"
+                            onReminder={handleOpenReminder}
+                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
+                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+
                   <TabsContent value="not-yet-due" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
                     <div className="space-y-2">
                       {notYetDue.length === 0 ? (
@@ -308,14 +399,14 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
         </SheetContent>
       </Sheet>
 
-      <PaymentReminderDialog
+  <PaymentReminderDialog
         open={reminderOpen}
         onOpenChange={setReminderOpen}
         reminderData={reminderTenant ? {
           tenantName: reminderTenant.name,
           tenantPhone: reminderTenant.phone || '',
           joiningDate: reminderTenant.startDate || '',
-          forMonth: `${monthNames[selectedMonth - 1]} ${selectedYear}`,
+          forMonth: activeTab === 'previous-month' ? `${monthNames[prevMonth - 1]} ${prevYear}` : `${monthNames[selectedMonth - 1]} ${selectedYear}`,
           roomNo: reminderTenant.roomNo || '',
           sharingType: '',
           amount: reminderTenant.monthlyRent,
@@ -331,12 +422,14 @@ interface TenantSelectItemProps {
   tenant: TenantWithPayment;
   isSelected: boolean;
   onToggle: (id: string) => void;
-  categoryColor: 'pending' | 'blue';
+  categoryColor: 'pending' | 'blue' | 'amber';
 }
 
 const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, snoozedUntil, onRemoveSnooze }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void; snoozedUntil?: string; onRemoveSnooze?: () => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-pending-muted border-pending/30' 
+    : categoryColor === 'amber'
+    ? 'bg-amber-500/10 border-amber-500/30'
     : 'bg-blue-500/10 border-blue-500/30';
 
   return (
@@ -416,10 +509,21 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
               </span>
             )}
+            {tenant.amountPaid > 0 && (
+              <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">
+                Paid: ₹{tenant.amountPaid.toLocaleString()}
+              </span>
+            )}
           </p>
         </div>
-        <Badge className={categoryColor === 'pending' ? 'bg-pending text-pending-foreground' : 'bg-blue-500 text-white'}>
-          ₹{tenant.monthlyRent.toLocaleString()}
+        <Badge className={
+          categoryColor === 'pending' 
+            ? 'bg-pending text-pending-foreground font-bold' 
+            : categoryColor === 'amber'
+            ? 'bg-amber-500 text-white font-bold'
+            : 'bg-blue-500 text-white font-bold'
+        }>
+          ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
         </Badge>
       </div>
     </div>

@@ -19,10 +19,11 @@ interface BottomNavProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   visible?: boolean;
-  bannerText?: string;
+  rentCollected?: number;
+  pendingRent?: number;
 }
 
-export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = true, bannerText }: BottomNavProps) => {
+export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = true, rentCollected, pendingRent }: BottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeTab: contextActiveTab, setActiveTab: setContextTab } = useActiveTab();
@@ -49,13 +50,23 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
         ? 'translate-y-0 opacity-100' 
         : 'translate-y-full opacity-0 pointer-events-none'
     }`}>
-      {bannerText && (
-        <div className="bg-gradient-to-r from-emerald-500/10 via-background to-emerald-500/10 border-t border-border/40 py-1.5 text-center text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center justify-center gap-1.5 backdrop-blur-md">
-          <span className="relative flex h-1.5 w-1.5 animate-pulse">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-          </span>
-          {bannerText.toUpperCase()}
+      {rentCollected !== undefined && pendingRent !== undefined && (
+        <div className="bg-background/95 border-t border-border/40 py-2 text-center text-[11px] font-bold tracking-wider shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center justify-center gap-3 backdrop-blur-md">
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span>COLLECTED: <span className="font-extrabold text-[12px] text-emerald-700 dark:text-emerald-300">₹{rentCollected.toLocaleString()}</span></span>
+          </div>
+          <span className="text-muted-foreground/30 font-light">|</span>
+          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+            </span>
+            <span>PENDING: <span className="font-extrabold text-[12px] text-amber-700 dark:text-amber-400">₹{pendingRent.toLocaleString()}</span></span>
+          </div>
         </div>
       )}
       <nav className="border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
