@@ -26,3 +26,12 @@ scripts/
 
 # Android build artifacts
 # android/
+android/android/
+android/caches/
+android/daemon/
+android/kotlin-profile/
+android/native/
+android/wrapper/
+android/build/
+android/app/build/
+.gradle/

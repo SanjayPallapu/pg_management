@@ -77,14 +77,14 @@ const Index = () => {
     if (!container) return;
     const currentScrollY = container.scrollTop;
     const delta = currentScrollY - lastScrollY.current;
-    // Show UI elements when scrolling up or near top
+    // Swiggy-style: respond instantly to scroll direction with a tiny threshold
     if (currentScrollY < 10) {
       setHeaderVisible(true);
       setBottomNavVisible(true);
-    } else if (delta > 5) {
+    } else if (delta > 2) {
       setHeaderVisible(false);
       setBottomNavVisible(false);
-    } else if (delta < -5) {
+    } else if (delta < -2) {
       setHeaderVisible(true);
       setBottomNavVisible(true);
     }
