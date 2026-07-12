@@ -177,7 +177,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
               key={item.value}
               type="button"
               onClick={() => handleClick(item)}
-              className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all ${
+              className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all active:scale-95 duration-100 ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground active:bg-background/80'

@@ -63,6 +63,10 @@ const Index = () => {
     setIsDialogOpen(false);
     setSelectedRoom(null);
     setHistorySheetOpen(false);
+    // Reset scroll position so the new tab starts at the top
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
@@ -101,6 +105,9 @@ const Index = () => {
       setIsDialogOpen(false);
       setSelectedRoom(null);
       setHistorySheetOpen(false);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     };
     window.addEventListener('tab-click', handleTabClick);
     return () => window.removeEventListener('tab-click', handleTabClick);

@@ -59,7 +59,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ side }), "flex flex-col p-0 gap-0", className)}
+      className={cn(sheetVariants({ side }), "flex flex-col p-0 gap-0 sheet-content", className)}
       {...props}
     >
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}

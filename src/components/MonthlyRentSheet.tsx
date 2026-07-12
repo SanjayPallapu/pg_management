@@ -224,6 +224,28 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     previousMonthPending?: number;
   } | null>(null);
 
+  // Close all open dialogs/sheets when switching tabs via bottom navigation
+  useEffect(() => {
+    const handleCloseAll = () => {
+      setWhatsappDialogOpen(false);
+      setReminderDialogOpen(false);
+      setPreviousOverdueOpen(false);
+      setHistoryOpen(false);
+      setBulkReminderOpen(false);
+      setCleanupSheetOpen(false);
+      setWelcomeDialogOpen(false);
+      setRulesDialogOpen(false);
+      setAcSheetOpen(false);
+      setQuickNavOpen(false);
+      setDeletePaymentTenant(null);
+      setPaymentAmountTenant(null);
+      setPayRemainingTenant(null);
+    };
+
+    window.addEventListener('tab-click', handleCloseAll);
+    return () => window.removeEventListener('tab-click', handleCloseAll);
+  }, []);
+
   useEffect(() => {
     if (collectors.length === 0) return;
     setCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));

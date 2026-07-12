@@ -275,7 +275,7 @@ body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
 }
 
 /* Bottom Navigation & Sheets Auto-Padding Layout Rules */
-[data-side="bottom"]:not(.h-full) {
+.sheet-content[data-side="bottom"]:not(.h-full) {
   bottom: calc(var(--bottom-nav-offset, 110px) + 8px) !important;
   border-radius: 2rem !important;
   margin: 0 8px !important;
@@ -284,7 +284,7 @@ body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
   transition: bottom 0.2s ease-out, max-height 0.2s ease-out !important;
 }
 
-[data-side="bottom"].h-full {
+.sheet-content[data-side="bottom"].h-full {
   padding-bottom: var(--bottom-nav-offset, 110px) !important;
 }
 
