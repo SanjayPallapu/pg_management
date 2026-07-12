@@ -104,6 +104,10 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const { currentPG } = usePG();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
+  const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
   // Close all open sheets/dialogs when switching tabs via bottom navigation
   useEffect(() => {
     const handleCloseAll = () => {

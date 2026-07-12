@@ -327,7 +327,7 @@ const Index = () => {
             {/* Pull to Refresh Indicator */}
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
 
-            <TabsContent value="dashboard" className="mt-1">
+            <TabsContent value="dashboard" forceMount className="mt-1 data-[state=inactive]:hidden">
               {isLoading ? (
                 <DashboardSkeleton />
               ) : (
@@ -353,19 +353,19 @@ const Index = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="rooms" className="mt-1">
+            <TabsContent value="rooms" forceMount className="mt-1 data-[state=inactive]:hidden">
               <Suspense fallback={<CardSkeleton />}>
                 {isLoading ? <CardSkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="rent-sheet" className="mt-1">
+            <TabsContent value="rent-sheet" forceMount className="mt-1 data-[state=inactive]:hidden">
               <Suspense fallback={<RentSheetSkeleton />}>
                 {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-1">
+            <TabsContent value="settings" forceMount className="mt-1 data-[state=inactive]:hidden">
               <Suspense fallback={<ListSkeleton />}>
                 <SettingsPage rooms={rooms} />
               </Suspense>
