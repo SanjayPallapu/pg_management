@@ -39,7 +39,16 @@ import {
   Globe,
   ShieldCheck,
   Loader2,
+  ArrowLeft,
+  FileBarChart,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Reports } from "./Reports";
 import { useAuth } from "@/hooks/useAuth";
 import { usePG } from "@/contexts/PGContext";
 import { useTheme } from "@/components/ThemeProvider";
@@ -91,7 +100,7 @@ const SectionHeader = ({ title }: { title: string }) => (
   </div>
 );
 
-export const SettingsPage = () => {
+export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const { user, isAdmin, isOwner, isStaff, role, signOut } = useAuth();
   const { currentPG } = usePG();
   const { theme, setTheme } = useTheme();
@@ -99,6 +108,7 @@ export const SettingsPage = () => {
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(false);
 
   // Fetch pending approval count for admin badge
   const { data: pendingApprovalCount = 0 } = useQuery({
@@ -289,6 +299,12 @@ export const SettingsPage = () => {
                 label="Manage Properties"
                 description={currentPG ? `Current: ${currentPG.name}` : "Setup your PG"}
                 onClick={() => {}}
+              />
+              <SettingItem
+                icon={<FileBarChart className="h-4 w-4 text-primary" />}
+                label="PG Health Report"
+                description="View occupancy, vacancy, collections & bed availability reports"
+                onClick={() => setReportsOpen(true)}
               />
               {isAdmin && (
                 <>
@@ -523,6 +539,28 @@ export const SettingsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Sheet open={reportsOpen} onOpenChange={setReportsOpen}>
+        <SheetContent 
+          side="right" 
+          className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setReportsOpen(false)} className="h-8 w-8 shrink-0">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle className="text-base font-bold text-left flex-1 min-w-0 truncate">
+                  Reports & Analytics
+                </SheetTitle>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+              <Reports rooms={rooms} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

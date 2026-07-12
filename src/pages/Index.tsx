@@ -15,7 +15,6 @@ import { usePG } from "@/contexts/PGContext";
 
 // Lazy load non-critical tab components
 const RoomDirectory = lazy(() => import("@/components/RoomDirectory").then(m => ({ default: m.RoomDirectory })));
-const Reports = lazy(() => import("@/components/Reports").then(m => ({ default: m.Reports })));
 const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then(m => ({ default: m.MonthlyRentSheet })));
 const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").then(m => ({ default: m.AuditHistorySheet })));
@@ -27,7 +26,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LayoutDashboard,
   Building,
-  FileBarChart,
   Receipt,
   LogOut,
   History,
@@ -67,8 +65,9 @@ const Index = () => {
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
 
-  // Swiggy-style header: hide on scroll down, show on scroll up
+  // Swiggy-style header & bottom nav: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [bottomNavVisible, setBottomNavVisible] = useState(true);
   const lastScrollY = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -77,13 +76,16 @@ const Index = () => {
     if (!container) return;
     const currentScrollY = container.scrollTop;
     const delta = currentScrollY - lastScrollY.current;
-    // Show header when scrolling up (delta < 0) or near top
+    // Show UI elements when scrolling up or near top
     if (currentScrollY < 10) {
       setHeaderVisible(true);
+      setBottomNavVisible(true);
     } else if (delta > 5) {
       setHeaderVisible(false);
+      setBottomNavVisible(false);
     } else if (delta < -5) {
       setHeaderVisible(true);
+      setBottomNavVisible(true);
     }
     lastScrollY.current = currentScrollY;
   }, []);
@@ -111,7 +113,7 @@ const Index = () => {
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 
   // Tab order for swipe navigation
-  const tabOrder = ["dashboard", "rooms", "rent-sheet", "reports", "settings"];
+  const tabOrder = ["dashboard", "rooms", "rent-sheet", "settings"];
   const { swipeHandlers } = useSwipeTabs({
     tabs: tabOrder,
     currentTab: activeTab,
@@ -123,7 +125,6 @@ const Index = () => {
       { value: "dashboard", label: "Home", icon: LayoutDashboard },
       { value: "rooms", label: "Rooms", icon: Building },
       { value: "rent-sheet", label: "Rent", icon: Receipt },
-      { value: "reports", label: "Reports", icon: FileBarChart },
       { value: "settings", label: "Settings", icon: Settings },
     ],
     [],
@@ -353,15 +354,9 @@ const Index = () => {
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="reports" className="mt-1">
-              <Suspense fallback={<ListSkeleton />}>
-                {isLoading ? <ListSkeleton /> : <Reports rooms={rooms} />}
-              </Suspense>
-            </TabsContent>
-
             <TabsContent value="settings" className="mt-1">
               <Suspense fallback={<ListSkeleton />}>
-                <SettingsPage />
+                <SettingsPage rooms={rooms} />
               </Suspense>
             </TabsContent>
           </div>
@@ -398,7 +393,7 @@ const Index = () => {
       </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} />
       </div>
     </RentProvider>
   );
