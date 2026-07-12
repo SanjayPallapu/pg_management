@@ -359,19 +359,28 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader className="p-4 pb-2">
-          <SheetTitle className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <MessageCircle className="h-5 w-5 text-cash" />
-            Bulk WhatsApp Messages
-          </SheetTitle>
-          <SheetDescription className="ml-10">
-            Send payment reminders or custom messages to multiple tenants
-          </SheetDescription>
-        </SheetHeader>
+      <SheetContent 
+        side="right" 
+        className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+      >
+        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <MessageCircle className="h-5 w-5 text-cash shrink-0" />
+                <SheetTitle className="text-base text-foreground font-bold truncate">
+                  Bulk WhatsApp Messages
+                </SheetTitle>
+              </div>
+            </div>
+            <SheetDescription className="ml-10 mt-1">
+              Send payment reminders or custom messages to multiple tenants
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 flex flex-col min-h-0 py-4 bg-background">
 
         <Tabs value={messageType} onValueChange={(v) => setMessageType(v as "reminder" | "custom")} className="flex-1">
           <TabsList className="grid w-full grid-cols-2 mx-4" style={{ width: "calc(100% - 2rem)" }}>
@@ -517,6 +526,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
               </>
             )}
           </Button>
+          </div>
+        </div>
         </div>
       </SheetContent>
     </Sheet>

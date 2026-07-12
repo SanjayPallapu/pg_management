@@ -269,27 +269,33 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent>
-          <SheetHeader className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
-            <SheetTitle className="text-left flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              Day Guest Details - {monthName}
-            </SheetTitle>
-            <div className="grid grid-cols-2 gap-6 mt-2">
-              <div className="bg-paid/10 rounded-lg p-3 text-center">
-                <p className="text-xs text-muted-foreground">Collected</p>
-                <p className="text-base font-bold text-paid">₹{totalCollected.toLocaleString()}</p>
+        <SheetContent 
+          side="right" 
+          className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background sticky top-0 z-10 shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle className="text-base text-foreground font-bold text-left flex-1 min-w-0 truncate">
+                  Day Guest Details - {monthName}
+                </SheetTitle>
               </div>
-              <div className="bg-pending/10 rounded-lg p-3 text-center">
-                <p className="text-xs text-muted-foreground">Pending</p>
-                <p className="text-base font-bold text-pending">₹{totalPending.toLocaleString()}</p>
+              <div className="grid grid-cols-2 gap-6 mt-2">
+                <div className="bg-paid/10 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Collected</p>
+                  <p className="text-base font-bold text-paid">₹{totalCollected.toLocaleString()}</p>
+                </div>
+                <div className="bg-pending/10 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-base font-bold text-pending">₹{totalPending.toLocaleString()}</p>
+                </div>
               </div>
-            </div>
-          </SheetHeader>
+            </SheetHeader>
 
-          <div>
+            <div className="flex-1 overflow-y-auto bg-background">
             <div className="p-4 space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -476,8 +482,9 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
               )}
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      </SheetContent>
+    </Sheet>
 
       {/* Edit Dialog */}
       <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

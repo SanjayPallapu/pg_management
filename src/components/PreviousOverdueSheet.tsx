@@ -460,38 +460,43 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={() => onOpenChange(false)}
-                aria-label="Back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <SheetTitle className="text-base text-destructive flex-1">
-                Previous Month Overdue
-              </SheetTitle>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setHistoryOpen(true)} 
-                className="h-8 w-8 shrink-0"
-                title="Payment History"
-              >
-                <History className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {months[prevMonth - 1]} {prevYear} • {overdueTenants.length} tenant(s) • ₹{totalOverdue.toLocaleString()}
-              {leftUnpaidTotal > 0 && (
-                <span className="text-destructive"> • Left Unpaid: ₹{leftUnpaidTotal.toLocaleString()}</span>
-              )}
-            </p>
-          </SheetHeader>
+        <SheetContent 
+          side="right" 
+          className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => onOpenChange(false)}
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <SheetTitle className="text-base text-destructive font-bold text-left flex-1 min-w-0 truncate">
+                  Previous Month Overdue
+                </SheetTitle>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setHistoryOpen(true)} 
+                  className="h-8 w-8 shrink-0"
+                  title="Payment History"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-left mt-1 truncate">
+                {months[prevMonth - 1]} {prevYear} • {overdueTenants.length} tenant(s) • ₹{totalOverdue.toLocaleString()}
+                {leftUnpaidTotal > 0 && (
+                  <span className="text-destructive"> • Left: ₹{leftUnpaidTotal.toLocaleString()}</span>
+                )}
+              </p>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
 
           <div className="space-y-3 pb-8 mt-4">
               {overdueTenants.map(tenant => {
@@ -789,8 +794,10 @@ export const PreviousOverdueSheet = ({ open, onOpenChange }: PreviousOverdueShee
                 </div>
               )}
             </div>
-        </SheetContent>
-      </Sheet>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
 
       <OverduePaymentDialog
         open={paymentDialogOpen}

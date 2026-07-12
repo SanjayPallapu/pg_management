@@ -241,22 +241,27 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
       )}
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-orange-500">
-                {months[prevMonth - 1]} Overdue Collections
-              </SheetTitle>
-              {isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)}>
-                  <ArrowLeft className="h-4 w-4" />
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setSheetOpen(false)} className="h-8 w-8 shrink-0">
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground text-left">
-              Payments received in {months[selectedMonth - 1]} for {months[prevMonth - 1]} dues
-            </p>
-          </SheetHeader>
+                <div className="flex flex-col text-left flex-1 min-w-0">
+                  <SheetTitle className="text-base text-orange-500 font-bold truncate">
+                    {months[prevMonth - 1]} Overdue Collections
+                  </SheetTitle>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Payments received in {months[selectedMonth - 1]} for {months[prevMonth - 1]} dues
+                  </p>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
           
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3 mt-4">
@@ -377,27 +382,34 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
               ))}
             </div>
           </ScrollArea>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 
       {/* Still Pending Sheet */}
       <Sheet open={stillPendingSheetOpen} onOpenChange={setStillPendingSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-pending">
-                Still Pending from {months[prevMonth - 1]}
-              </SheetTitle>
-              {isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => setStillPendingSheetOpen(false)}>
-                  <ArrowLeft className="h-4 w-4" />
+        <SheetContent 
+          side="right" 
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900" : "w-full sm:max-w-xl p-0"}
+        >
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setStillPendingSheetOpen(false)} className="h-8 w-8 shrink-0">
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground text-left">
-              {stillPendingTenants.length} tenant(s) • Total: ₹{stillPendingTotal.toLocaleString()}
-            </p>
-          </SheetHeader>
+                <div className="flex flex-col text-left flex-1 min-w-0">
+                  <SheetTitle className="text-base text-pending font-bold truncate">
+                    Still Pending from {months[prevMonth - 1]}
+                  </SheetTitle>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {stillPendingTenants.length} tenant(s) • Total: ₹{stillPendingTotal.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-150px)]" : "h-[calc(70vh-120px)]"}>
             <div className="space-y-3 pr-4 mt-4">
@@ -453,6 +465,8 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
               )}
             </div>
           </ScrollArea>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 

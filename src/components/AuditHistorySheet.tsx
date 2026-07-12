@@ -360,18 +360,23 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <SheetTitle>Activity History</SheetTitle>
-          </div>
-        </SheetHeader>
-
-        {/* Filters */}
-        <div className="space-y-3 mt-4">
+      <SheetContent 
+        side="right" 
+        className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+      >
+        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <SheetTitle className="text-base font-bold text-left flex-1 min-w-0 truncate">
+                Activity History
+              </SheetTitle>
+            </div>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+            <div className="space-y-3 mt-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -524,6 +529,8 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
               ))}
             </div>
           )}
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

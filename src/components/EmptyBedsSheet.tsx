@@ -104,20 +104,23 @@ export const EmptyBedsSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <Bed className="h-5 w-5 text-primary" />
-              Empty Beds Breakdown
-            </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </div>
-        </SheetHeader>
+      <SheetContent className="w-full sm:max-w-xl p-0">
+        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <Bed className="h-4 w-4 text-primary shrink-0" />
+                <SheetTitle className="text-base text-foreground font-bold truncate">
+                  Empty Beds Breakdown
+                </SheetTitle>
+              </div>
+            </div>
+          </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">
@@ -322,6 +325,7 @@ export const EmptyBedsSheet = ({
           </div>
 
 
+          </div>
         </div>
         </div>
       </SheetContent>
