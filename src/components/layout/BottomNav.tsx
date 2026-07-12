@@ -123,7 +123,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
       {/* Status Banner — always sticky at bottom, Swiggy-style. Floats on top of sheets at z-[56] */}
       {showBanner && (
         <div
-          className="fixed left-0 right-0 z-[56] transition-[bottom] duration-200 ease-out"
+          className="status-banner-container fixed left-0 right-0 z-[56] transition-[bottom] duration-200 ease-out"
           style={{
             bottom: isVisible ? `${navHeight}px` : '0px',
           }}
@@ -151,7 +151,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
       {/* Bottom Nav — hides on scroll down, shows on scroll up. Floats on top of sheets at z-[55] */}
       <nav
         ref={navRef}
-        className={`fixed bottom-0 left-0 right-0 z-[55] border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-transform duration-200 ease-out ${
+        className={`bottom-nav-container fixed bottom-0 left-0 right-0 z-[55] border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-transform duration-200 ease-out ${
           isVisible
             ? 'translate-y-0'
             : 'translate-y-full'

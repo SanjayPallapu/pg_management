@@ -273,3 +273,16 @@ body:not(:has([role="dialog"])):not(:has([data-state="open"])) {
   pointer-events: auto !important;
   overflow: auto !important;
 }
+
+/* Bottom Navigation & Sheets Auto-Padding Layout Rules */
+[data-side="bottom"]:not(.h-full) {
+  padding-bottom: 140px !important;
+}
+
+/* Hide bottom nav and status banner when a fullscreen sheet/dialog is active */
+body:has([data-side="bottom"].h-full) .bottom-nav-container,
+body:has([data-side="bottom"].h-full) .status-banner-container,
+body:has([role="dialog"].h-full) .bottom-nav-container,
+body:has([role="dialog"].h-full) .status-banner-container {
+  display: none !important;
+}
