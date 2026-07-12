@@ -19,9 +19,10 @@ interface BottomNavProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   visible?: boolean;
+  bannerText?: string;
 }
 
-export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = true }: BottomNavProps) => {
+export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = true, bannerText }: BottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeTab: contextActiveTab, setActiveTab: setContextTab } = useActiveTab();
@@ -43,12 +44,22 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
   };
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 ease-in-out ${
+    <div className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col transition-all duration-300 ease-in-out ${
       visible 
         ? 'translate-y-0 opacity-100' 
         : 'translate-y-full opacity-0 pointer-events-none'
     }`}>
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-0.5 rounded-2xl bg-muted/40 p-1">
+      {bannerText && (
+        <div className="bg-gradient-to-r from-emerald-500/10 via-background to-emerald-500/10 border-t border-border/40 py-1.5 text-center text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex items-center justify-center gap-1.5 backdrop-blur-md">
+          <span className="relative flex h-1.5 w-1.5 animate-pulse">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+          </span>
+          {bannerText.toUpperCase()}
+        </div>
+      )}
+      <nav className="border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-0.5 rounded-2xl bg-muted/40 p-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.value;
@@ -69,6 +80,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
           );
         })}
       </div>
-    </nav>
+      </nav>
+    </div>
   );
 };

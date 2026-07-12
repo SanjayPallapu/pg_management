@@ -23,6 +23,7 @@ import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { Room } from "@/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
   LayoutDashboard,
   Building,
@@ -120,6 +121,15 @@ const Index = () => {
     onTabChange: setActiveTab,
   });
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { payments = [] } = useTenantPayments();
+  const { rentCollected, pendingRent } = useRentCalculations({
+    selectedMonth,
+    selectedYear,
+    rooms,
+    payments,
+  });
+  const bannerText = `₹${rentCollected.toLocaleString()} Collected • ₹${pendingRent.toLocaleString()} Pending`;
+
   const navItems = useMemo(
     () => [
       { value: "dashboard", label: "Home", icon: LayoutDashboard },
@@ -393,7 +403,7 @@ const Index = () => {
       </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} visible={bottomNavVisible} bannerText={bannerText} />
       </div>
     </RentProvider>
   );
