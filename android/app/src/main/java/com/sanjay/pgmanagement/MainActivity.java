@@ -1,5 +1,4 @@
 package com.sanjay.pgmanagement;
-
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
@@ -15,3 +14,4 @@ public class MainActivity extends BridgeActivity {
         window.setStatusBarColor(0xFF0E6CE7);
     }
 }
+

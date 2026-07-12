@@ -21,7 +21,8 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Using a color background to fix the build error caused by incorrectly named splash.png -->
+        <item name="android:background">#0e6ce7</item>
         <item name="windowSplashScreenBackground">#0e6ce7</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>

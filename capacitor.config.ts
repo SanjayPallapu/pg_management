@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sanjay.pgmanagement',
-  appName: 'PG Manager',
+  appId: 'com.pgmanager.app',
+  appName: 'PG Nexa',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

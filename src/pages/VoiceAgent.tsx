@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { BottomNav } from "@/components/layout/BottomNav";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Phase = "idle" | "listening" | "thinking" | "speaking";
@@ -267,7 +266,7 @@ export default function VoiceAgent() {
     : "shadow-violet-500/40";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 flex flex-col pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
       {/* Header */}
       <header className="flex items-center gap-3 p-4 border-b border-border/50">
         <Button variant="ghost" size="icon" onClick={() => { stopAll(); navigate(-1); }}>
@@ -422,8 +421,6 @@ export default function VoiceAgent() {
             : autoListen ? (lang === "te-IN" ? "🟢 ఎల్లప్పుడూ వినడం" : "🟢 Always listening — just speak") : (lang === "te-IN" ? "🎤 మాట్లాడటానికి తాకండి" : "🎤 Tap the orb to speak")}
         </p>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

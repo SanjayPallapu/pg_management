@@ -5,8 +5,6 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import { BottomNav } from "@/components/layout/BottomNav";
-
 const Sheet = SheetPrimitive.Root;
 
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -67,10 +65,14 @@ const SheetContent = React.forwardRef<
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
 
+      {/* Modern drag handle pill for bottom-drawer style sheets */}
+      {side === "bottom" && (
+        <div className="w-12 h-1 bg-muted-foreground/20 rounded-full mx-auto my-3 shrink-0" />
+      )}
+
       <div className="flex-1 flex flex-col min-h-0 w-full overflow-y-auto px-1.5 pb-4">
         {children}
       </div>
-      <BottomNav />
     </SheetPrimitive.Content>
   </SheetPortal>
 ));

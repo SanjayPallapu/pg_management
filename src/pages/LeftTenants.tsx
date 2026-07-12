@@ -145,6 +145,7 @@ const LeftTenants = () => {
   return (
     <AppLayout
       title="Left Tenants"
+      showBottomNav={false}
       headerActions={
         leftTenants.length > 0 ? (
           <Button variant="outline" size="sm" onClick={handleExportExcel}>

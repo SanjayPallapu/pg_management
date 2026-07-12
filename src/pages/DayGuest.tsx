@@ -161,7 +161,7 @@ const DayGuestPage = () => {
   };
 
   return (
-    <AppLayout title={`Day Guest — Room ${roomNo}`}>
+    <AppLayout title={`Day Guest — Room ${roomNo}`} showBottomNav={false}>
       <div className="p-4 space-y-6 max-w-2xl mx-auto">
         {/* Add Day Guest Form */}
         <Card>
