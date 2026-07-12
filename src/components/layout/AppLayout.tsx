@@ -55,7 +55,7 @@ export const AppLayout = ({
       )}
 
       {/* Page content - scrollable */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${showBottomNav ? 'pb-24' : ''}`}>
         {children}
       </div>
 

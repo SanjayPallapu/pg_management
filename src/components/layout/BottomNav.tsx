@@ -43,10 +43,10 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
   };
 
   return (
-    <nav className={`shrink-0 bg-background/95 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 ease-in-out overflow-hidden ${
+    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t border-border/70 bg-background/95 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 ease-in-out ${
       visible 
-        ? 'max-h-[120px] opacity-100 border-t border-border/70 px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] translate-y-0' 
-        : 'max-h-0 opacity-0 border-t-0 p-0 translate-y-4 pointer-events-none'
+        ? 'translate-y-0 opacity-100' 
+        : 'translate-y-full opacity-0 pointer-events-none'
     }`}>
       <div className="mx-auto grid max-w-md grid-cols-4 gap-0.5 rounded-2xl bg-muted/40 p-1">
         {NAV_ITEMS.map((item) => {
