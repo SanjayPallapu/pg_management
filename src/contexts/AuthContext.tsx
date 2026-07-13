@@ -27,18 +27,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
-  const [isLoading, setIsLoading] = useState(() => {
-    // If there is no cached token, we know the user is not authenticated, so load instantly (no spinner)
-    const hasToken = Object.keys(localStorage).some(
-      key => key.startsWith('sb-') && key.endsWith('-auth-token')
-    );
-    return hasToken;
-  });
+  const [isLoading, setIsLoading] = useState(true);
   const [isNewSignup, setIsNewSignup] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    let initialCheckDone = false;
 
     // DEV MOCK AUTO-LOGIN BYPASS
     if (import.meta.env.DEV) {
@@ -64,18 +57,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return () => {};
     }
 
-    const forceLoadingTimer = setTimeout(() => {
-      if (isMounted) {
-        setIsLoading(prev => {
-          if (prev) {
-            console.warn('[Auth] Force-ending loading state after 1.5s deadline');
-            return false;
-          }
-          return prev;
-        });
-      }
-    }, 1500);
-
     const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
       try {
         const { data, error } = await supabase
@@ -85,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
         if (error) {
           console.error('[Auth] Error fetching user role:', error.message);
-          // Retry once after a short delay (proxy/timing issues)
           await new Promise(r => setTimeout(r, 500));
           const retry = await supabase
             .from('user_roles')
@@ -96,19 +76,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('[Auth] Retry also failed:', retry.error.message);
             return null;
           }
-          console.log('[Auth] Retry succeeded, role:', retry.data?.role);
           return retry.data?.role as AppRole | null;
         }
-        console.log('[Auth] User role fetched:', data?.role);
         return data?.role as AppRole | null;
       } catch (e) {
         console.error('[Auth] Exception fetching role:', e);
         return null;
       }
-    };
-
-    const checkIsNewSignup = (): boolean => {
-      return sessionStorage.getItem('isNewSignup') === 'true';
     };
 
     const ensureOAuthProfile = async (authUser: User) => {
@@ -136,117 +110,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) console.error('[Auth] Error ensuring Google profile:', error.message);
     };
 
-    // Synchronous storage check
-    const hasCachedSession = Object.keys(localStorage).some(
-      key => key.startsWith('sb-') && key.endsWith('-auth-token')
-    );
+    const checkIsNewSignup = (): boolean => {
+      return sessionStorage.getItem('isNewSignup') === 'true';
+    };
 
+    // Get initial session and resolve loading state
+    supabase.auth.getSession().then(({ data: { session: initSession } }) => {
+      if (!isMounted) return;
+      console.log('[Auth] Initial getSession:', !!initSession);
+      if (initSession) {
+        setSession(initSession);
+        setUser(initSession.user);
+        fetchUserRole(initSession.user.id).then(r => {
+          if (isMounted) {
+            setRole(r);
+            setIsNewSignup(checkIsNewSignup());
+          }
+        });
+        ensureOAuthProfile(initSession.user);
+      } else {
+        setSession(null);
+        setUser(null);
+        setRole(null);
+        setIsNewSignup(false);
+      }
+      setIsLoading(false);
+    }).catch(err => {
+      console.error('[Auth] Initial getSession error:', err);
+      if (isMounted) {
+        setSession(null);
+        setUser(null);
+        setRole(null);
+        setIsLoading(false);
+      }
+    });
+
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!isMounted) return;
-        
         console.log('[Auth] onAuthStateChange event:', event, 'session:', !!newSession);
         
-        try {
-          if (newSession) {
-            setSession(newSession);
-            setUser(newSession.user);
-            setIsLoading(false);
-            initialCheckDone = true;
-            
-            // Run background sync operations without blocking UI
-            (async () => {
-              try {
-                await ensureOAuthProfile(newSession.user);
-              } catch (e) {
-                console.error('[Auth] Error ensuring profile:', e);
-              }
-              try {
-                const r = await fetchUserRole(newSession.user.id);
-                if (isMounted) {
-                  setRole(r);
-                  setIsNewSignup(checkIsNewSignup());
-                }
-              } catch (e) {
-                console.error('[Auth] Error fetching user role:', e);
-              }
-            })();
-          } else {
-            if (isMounted) {
-              // Only clear session and set isLoading to false if the check is complete
-              // (meaning event is INITIAL_SESSION and we have no cached session, or getSession completed, or user explicitly signed out)
-              if (event === 'SIGNED_OUT') {
-                setSession(null);
-                setUser(null);
-                setRole(null);
-                setIsNewSignup(false);
-                setIsLoading(false);
-                initialCheckDone = true;
-              } else if (event === 'INITIAL_SESSION') {
-                if (!hasCachedSession) {
-                  setSession(null);
-                  setUser(null);
-                  setRole(null);
-                  setIsNewSignup(false);
-                  setIsLoading(false);
-                  initialCheckDone = true;
-                }
-              }
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+
+        if (newSession) {
+          setIsLoading(false);
+          // Sync profiles and roles asynchronously
+          (async () => {
+            try {
+              await ensureOAuthProfile(newSession.user);
+            } catch (e) {
+              console.error('[Auth] OAuth Profile error:', e);
             }
-          }
-        } catch (e) {
-          console.error('[Auth] Error in onAuthStateChange:', e);
-          if (isMounted) {
-            setIsLoading(false);
-            initialCheckDone = true;
-          }
+            try {
+              const r = await fetchUserRole(newSession.user.id);
+              if (isMounted) {
+                setRole(r);
+                setIsNewSignup(checkIsNewSignup());
+              }
+            } catch (e) {
+              console.error('[Auth] Fetch Role error:', e);
+            }
+          })();
+        } else {
+          setRole(null);
+          setIsNewSignup(false);
+          setIsLoading(false);
         }
       }
     );
 
-    // Fallback getSession check (handles cases where onAuthStateChange does not fire immediately)
-    if (hasCachedSession) {
-      supabase.auth.getSession().then(({ data: { session: initSession } }) => {
-        if (!isMounted || initialCheckDone) return;
-        
-        console.log('[Auth] getSession fallback check:', !!initSession);
-        if (initSession) {
-          setSession(initSession);
-          setUser(initSession.user);
-          setIsLoading(false);
-          initialCheckDone = true;
-          
-          fetchUserRole(initSession.user.id).then(r => {
-            if (isMounted) {
-              setRole(r);
-              setIsNewSignup(checkIsNewSignup());
-            }
-          });
-          ensureOAuthProfile(initSession.user);
-        } else {
-          setSession(null);
-          setUser(null);
-          setRole(null);
-          setIsNewSignup(false);
-          setIsLoading(false);
-          initialCheckDone = true;
-        }
-      }).catch(err => {
-        console.error('[Auth] getSession error on initialization:', err);
-        if (isMounted && !initialCheckDone) {
-          setSession(null);
-          setUser(null);
-          setRole(null);
-          setIsNewSignup(false);
-          setIsLoading(false);
-          initialCheckDone = true;
-        }
-      });
-    }
-
     return () => {
       isMounted = false;
-      clearTimeout(forceLoadingTimer);
       subscription.unsubscribe();
     };
   }, []);
