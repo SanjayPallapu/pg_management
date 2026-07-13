@@ -373,18 +373,12 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className={cn(
-                  "relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer",
-                  banner.bgColor || "bg-white"
-                )}
+                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer"
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className={cn(
-                    "w-full h-full object-contain",
-                    banner.bgColor || "bg-white"
-                  )}
+                  className="w-full h-full object-cover"
                 />
                 
                 {/* Floating dynamic glassmorphism badge */}
