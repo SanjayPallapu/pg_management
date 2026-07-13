@@ -14,12 +14,37 @@ import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
-export const ExpectedCollectionCard = ({ defaultOpen = false, onClose, showSummaryCard = true }: { defaultOpen?: boolean; onClose?: () => void; showSummaryCard?: boolean }) => {
+export const ExpectedCollectionCard = ({ 
+  defaultOpen = false, 
+  open,
+  onOpenChange,
+  onClose, 
+  showSummaryCard = true 
+}: { 
+  defaultOpen?: boolean; 
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onClose?: () => void; 
+  showSummaryCard?: boolean;
+}) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const { rooms } = useRooms();
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  const [localOpen, setLocalOpen] = useState(defaultOpen);
+  const isOpen = open !== undefined ? open : localOpen;
+  
+  const setIsOpen = (val: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(val);
+    } else {
+      setLocalOpen(val);
+    }
+    if (!val) {
+      onClose?.();
+    }
+  };
   const [collectionFromDay, setCollectionFromDay] = useState<number>(new Date().getDate());
   const [collectionToDay, setCollectionToDay] = useState<number>(31);
   const [selectedDueDay, setSelectedDueDay] = useState<number | null>(null);

@@ -723,9 +723,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         showSummaryCard={false} 
         defaultTab={pendingTenantsDefaultTab}
       />
-      {activeSheet === "expected-collection" && (
-        <ExpectedCollectionCard defaultOpen={true} showSummaryCard={false} onClose={() => setActiveSheet(null)} />
-      )}
+      <ExpectedCollectionCard 
+        open={activeSheet === "expected-collection"} 
+        onClose={() => setActiveSheet(null)} 
+        showSummaryCard={false} 
+      />
       {activeSheet === "tenant-pricing" && (
         <TenantPricingOverviewCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
