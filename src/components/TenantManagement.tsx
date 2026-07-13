@@ -1147,6 +1147,25 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                           Security Deposit
                                         </DropdownMenuItem>
                                       )}
+                                      {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            // Dispatch custom event to open security deposit receipt dialog directly
+                                            const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                              detail: { 
+                                                tenantId: tenant.id
+                                              } 
+                                            });
+                                            setTimeout(() => {
+                                              window.dispatchEvent(event);
+                                            }, 100);
+                                          }}
+                                          className="gap-2"
+                                        >
+                                          <Receipt className="h-4 w-4" />
+                                          Security Deposit Receipt
+                                        </DropdownMenuItem>
+                                      )}
                                       <DropdownMenuItem
                                         onClick={() => {
                                           setWelcomeData({

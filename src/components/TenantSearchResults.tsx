@@ -3,7 +3,7 @@ import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { isTenantActiveInMonth, isTenantActiveNow, parseDateOnly } from '@/utils/dateOnly';
-import { Phone, MessageCircle, Receipt, Bell } from 'lucide-react';
+import { Phone, MessageCircle, Receipt, Bell, Wallet } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -48,6 +48,10 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
       paymentStatus: string;
       amountPaid: number;
       paymentEntries: PaymentEntry[];
+      securityDepositAmount?: number | null;
+      securityDepositDate?: string | null;
+      securityDepositMode?: string | null;
+      securityDepositCollectedBy?: string | null;
     }> = [];
 
     rooms.forEach(room => {
@@ -76,7 +80,11 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
             startDate: tenant.startDate,
             paymentStatus: payment?.paymentStatus || 'Pending',
             amountPaid: payment?.amountPaid || 0,
-            paymentEntries: (payment?.paymentEntries || []) as PaymentEntry[]
+            paymentEntries: (payment?.paymentEntries || []) as PaymentEntry[],
+            securityDepositAmount: tenant.securityDepositAmount,
+            securityDepositDate: tenant.securityDepositDate,
+            securityDepositMode: tenant.securityDepositMode,
+            securityDepositCollectedBy: tenant.securityDepositCollectedBy
           });
         }
       });
@@ -224,6 +232,47 @@ export const TenantSearchResults = ({ rooms, searchQuery, onNavigateToRoom }: Te
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Chat with Tenant
                           </DropdownMenuItem>
+                          {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const room = rooms.find(r => r.roomNo === tenant.roomNo);
+                                const event = new CustomEvent('openSecurityDeposit', { 
+                                  detail: { 
+                                    tenantId: tenant.id,
+                                    tenantName: tenant.name,
+                                    tenantPhone: tenant.phone,
+                                    roomNo: tenant.roomNo,
+                                    roomCapacity: room?.capacity
+                                  } 
+                                });
+                                setTimeout(() => {
+                                  window.dispatchEvent(event);
+                                }, 100);
+                              }}
+                              className="gap-2"
+                            >
+                              <Wallet className="h-4 w-4 mr-2" />
+                              Security Deposit
+                            </DropdownMenuItem>
+                          )}
+                          {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                  detail: { 
+                                    tenantId: tenant.id
+                                  } 
+                                });
+                                setTimeout(() => {
+                                  window.dispatchEvent(event);
+                                }, 100);
+                              }}
+                              className="gap-2"
+                            >
+                              <Receipt className="h-4 w-4 mr-2" />
+                              Security Deposit Receipt
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>

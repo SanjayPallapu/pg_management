@@ -1742,6 +1742,23 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                 Security Deposit
                               </DropdownMenuItem>
                             )}
+                            {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const event = new CustomEvent("openSecurityDepositReceipt", {
+                                    detail: {
+                                      tenantId: tenant.id
+                                    },
+                                  });
+                                  setTimeout(() => window.dispatchEvent(event), 100);
+                                }}
+                                className="gap-2"
+                              >
+                                <Receipt className="h-4 w-4" />
+                                Security Deposit Receipt
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();

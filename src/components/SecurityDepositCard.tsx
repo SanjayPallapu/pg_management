@@ -189,6 +189,7 @@ export const SecurityDepositCard = ({
   // Listen for custom event from RoomCard/MonthlyRentSheet
   useEffect(() => {
     if (!enableExternalTriggers) return;
+    
     const handleOpenSecurityDeposit = (event: CustomEvent<{ 
       tenantId: string;
       tenantName?: string;
@@ -221,11 +222,53 @@ export const SecurityDepositCard = ({
        }, 150);
     };
 
+    const handleOpenSecurityDepositReceipt = (event: CustomEvent<{
+      tenantId: string;
+    }>) => {
+      const detail = event.detail;
+      if (!detail?.tenantId) return;
+
+      setTimeout(() => {
+        const tenant = allTenantsRef.current.find(t => t.id === detail.tenantId);
+        if (tenant && tenant.securityDepositAmount && tenant.securityDepositAmount > 0) {
+          const room = rooms.find(r => r.roomNo === tenant.roomNo);
+          setReceiptData({
+            data: {
+              tenant: {
+                name: tenant.name,
+                joiningDate: tenant.startDate,
+              },
+              room: {
+                roomNo: tenant.roomNo,
+                sharingType: room ? `${room.capacity} Sharing` : 'N/A',
+              },
+              deposit: {
+                amount: tenant.securityDepositAmount || 0,
+                date: tenant.securityDepositDate || new Date().toISOString(),
+                mode: (tenant.securityDepositMode as 'upi' | 'cash') || 'cash',
+                collectedBy: tenant.securityDepositCollectedBy
+                  ? getCollectorDisplayName(tenant.securityDepositCollectedBy)
+                  : undefined,
+              },
+              pgName: currentPG?.name,
+              pgLogoUrl: currentPG?.logoUrl,
+            },
+            phone: tenant.phone,
+          });
+          setReceiptDialogOpen(true);
+        } else {
+          toast.error("No security deposit found for this tenant.");
+        }
+      }, 150);
+    };
+
      window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+     window.addEventListener('openSecurityDepositReceipt', handleOpenSecurityDepositReceipt as EventListener);
      return () => {
        window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
+       window.removeEventListener('openSecurityDepositReceipt', handleOpenSecurityDepositReceipt as EventListener);
      };
-    }, [enableExternalTriggers]);
+    }, [enableExternalTriggers, rooms, currentPG, getCollectorDisplayName]);
 
   const depositedTenants = allTenants.filter(t => t.securityDepositAmount && t.securityDepositAmount > 0);
   const notDepositedTenants = allTenants.filter(t => !t.securityDepositAmount || t.securityDepositAmount === 0);
