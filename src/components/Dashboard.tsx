@@ -66,7 +66,6 @@ import { getPricePerBed } from "@/constants/pricing";
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
 import bannerNeverMissRent from "@/assets/banner-never-miss-rent.png";
-import bannerPaymentReminders from "@/assets/banner-payment-reminders.png";
 import bannerGrowYourPg from "@/assets/banner-grow-your-pg.png";
 
 interface DashboardProps {
@@ -323,13 +322,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       action: onNavigateToRent,
       badge: "Reminders",
       badgeColor: "bg-indigo-600 dark:bg-indigo-500",
-    },
-    {
-      id: "payment-reminders",
-      image: bannerPaymentReminders,
-      action: onNavigateToRent,
-      badge: "Gentle Alert",
-      badgeColor: "bg-violet-600 dark:bg-violet-500",
     },
     {
       id: "grow-your-pg",
