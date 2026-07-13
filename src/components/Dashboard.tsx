@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { gsap } from "gsap";
+import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Building,
@@ -311,6 +312,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       action: () => onNavigateToTab?.("settings"),
       badge: "Scale Up",
       badgeColor: "bg-amber-600 dark:bg-amber-500",
+      bgColor: "bg-[#1a094a]",
     },
     {
       id: "fill-every-bed",
@@ -371,12 +373,18 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer"
+                className={cn(
+                  "relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer",
+                  banner.bgColor || "bg-white"
+                )}
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-contain bg-white"
+                  className={cn(
+                    "w-full h-full object-contain",
+                    banner.bgColor || "bg-white"
+                  )}
                 />
                 
                 {/* Floating dynamic glassmorphism badge */}
