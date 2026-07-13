@@ -63,14 +63,21 @@ import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { getPricePerBed } from "@/constants/pricing";
 
+import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
+import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
+import bannerNeverMissRent from "@/assets/banner-never-miss-rent.png";
+import bannerPaymentReminders from "@/assets/banner-payment-reminders.png";
+import bannerGrowYourPg from "@/assets/banner-grow-your-pg.png";
+
 interface DashboardProps {
   rooms: Room[];
   onStartRentCycle: () => void;
   onQuickAddTenant: (room: Room) => void;
   onNavigateToRent: () => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
-export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigateToRent }: DashboardProps) => {
+export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigateToRent, onNavigateToTab }: DashboardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { payments } = useTenantPayments();
@@ -277,6 +284,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   // Use shared hook for total collected
   const { totalCollected: totalCollectedForExpenses } = useTotalCollected(rooms);
 
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const slideWidth = container.offsetWidth;
+    const index = Math.round(container.scrollLeft / slideWidth);
+    setActiveSlide(index);
+  };
+
   const stats: DashboardStats = {
     totalRooms: rooms.length,
     occupiedCount: fullyOccupiedRooms,
@@ -285,56 +302,100 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     pendingRent,
   };
 
+  const banners = [
+    {
+      id: "fill-every-bed",
+      image: bannerFillEveryBed,
+      action: () => setEmptyBedsSheetOpen(true),
+      badge: `${totalEmptyBeds} Empty Bed${totalEmptyBeds === 1 ? "" : "s"}`,
+      badgeColor: "bg-blue-600 dark:bg-blue-500",
+    },
+    {
+      id: "rent-on-time",
+      image: bannerRentOnTime,
+      action: () => openPendingTenants(),
+      badge: `₹${stats.pendingRent.toLocaleString()} Pending`,
+      badgeColor: "bg-rose-600 dark:bg-rose-500",
+    },
+    {
+      id: "never-miss-rent",
+      image: bannerNeverMissRent,
+      action: onNavigateToRent,
+      badge: "Reminders",
+      badgeColor: "bg-indigo-600 dark:bg-indigo-500",
+    },
+    {
+      id: "payment-reminders",
+      image: bannerPaymentReminders,
+      action: onNavigateToRent,
+      badge: "Gentle Alert",
+      badgeColor: "bg-violet-600 dark:bg-violet-500",
+    },
+    {
+      id: "grow-your-pg",
+      image: bannerGrowYourPg,
+      action: () => onNavigateToTab?.("settings"),
+      badge: "Scale Up",
+      badgeColor: "bg-amber-600 dark:bg-amber-500",
+    }
+  ];
+
   return (
     <>
       <div ref={dashboardRef} className="space-y-3">
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.005]">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Today overview</p>
-                <h2 className="mt-1 text-2xl font-bold leading-tight">₹{stats.pendingRent.toLocaleString()} pending</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  ₹{stats.rentCollected.toLocaleString()} collected · {totalEmptyBeds} empty bed{totalEmptyBeds === 1 ? "" : "s"}
-                </p>
+        {/* Banner Carousel */}
+        <div className="w-full relative">
+          <div 
+            ref={carouselRef}
+            onScroll={handleScroll}
+            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-3 pb-1"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {banners.map((banner) => (
+              <div 
+                key={banner.id}
+                onClick={banner.action}
+                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer"
+              >
+                <img 
+                  src={banner.image} 
+                  alt={banner.id}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Floating dynamic glassmorphism badge */}
+                <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 ${banner.badgeColor} text-white font-bold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md bg-opacity-95 flex items-center justify-center`}>
+                  {banner.badge}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={openPendingTenants}
-                className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm active:scale-95"
-              >
-                Collect
-              </button>
-            </div>
+            ))}
+          </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2">
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-1.5 mt-2">
+            {banners.map((_, idx) => (
               <button
+                key={idx}
                 type="button"
-                onClick={openPendingTenants}
-                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
-              >
-                <p className="text-[11px] text-muted-foreground">Pending</p>
-                <p className="mt-1 text-base font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setEmptyBedsSheetOpen(true)}
-                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
-              >
-                <p className="text-[11px] text-muted-foreground">Occupancy</p>
-                <p className="mt-1 text-base font-bold">{Math.round(occupancyPercent)}%</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDayGuestSheetOpen(true)}
-                className="rounded-lg border border-border/70 bg-background/60 p-3 text-left"
-              >
-                <p className="text-[11px] text-muted-foreground">Day guests</p>
-                <p className="mt-1 text-base font-bold">₹{(dayGuestStats?.collected || 0).toLocaleString()}</p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+                onClick={() => {
+                  const container = carouselRef.current;
+                  if (container) {
+                    const slideWidth = container.offsetWidth;
+                    container.scrollTo({
+                      left: idx * (slideWidth + 12), // include gap-3 (12px)
+                      behavior: 'smooth'
+                    });
+                    setActiveSlide(idx);
+                  }
+                }}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  activeSlide === idx ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/30"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Split KPI Cards */}
         <div className="grid gap-2 md:grid-cols-2">
