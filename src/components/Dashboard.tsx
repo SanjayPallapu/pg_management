@@ -376,7 +376,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-white"
                 />
                 
                 {/* Floating dynamic glassmorphism badge */}
@@ -510,45 +510,55 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         {/* ═══════════════════════════════════════════════
             Quick Actions
            ═══════════════════════════════════════════════ */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-4">
           <div 
             onClick={openPendingTenants}
-            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-pending/10 p-2.5 rounded-full">
+            <div className="bg-pending/10 p-2 rounded-full">
               <AlertTriangle className="w-5 h-5 text-pending" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
+          </div>
+
+          <div 
+            onClick={() => setActiveSheet("expected-collection")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-amber-500/10 p-2 rounded-full">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
           </div>
           
           <div 
             onClick={() => setAddTenantRoomSelectOpen(true)}
-            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-blue-500/10 p-2.5 rounded-full">
+            <div className="bg-blue-500/10 p-2 rounded-full">
               <UserPlus className="w-5 h-5 text-blue-500" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
           </div>
 
           <div 
             onClick={() => setBillsBudgetOpen(true)}
-            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-orange-500/10 p-2.5 rounded-full">
+            <div className="bg-orange-500/10 p-2 rounded-full">
               <Receipt className="w-5 h-5 text-orange-500" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
           </div>
 
           <div 
             onClick={onNavigateToRent}
-            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-emerald-500/10 p-2.5 rounded-full">
+            <div className="bg-emerald-500/10 p-2 rounded-full">
               <CreditCard className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
           </div>
         </div>
 
