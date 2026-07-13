@@ -306,11 +306,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const banners = [
     {
-      id: "everything-one-place",
-      image: bannerEverythingOnePlace,
-      action: () => setTenantsOpen(true),
-      badge: "PG Manager",
-      badgeColor: "bg-purple-600 dark:bg-purple-500",
+      id: "grow-your-pg",
+      image: bannerGrowYourPg,
+      action: () => onNavigateToTab?.("settings"),
+      badge: "Scale Up",
+      badgeColor: "bg-amber-600 dark:bg-amber-500",
     },
     {
       id: "fill-every-bed",
@@ -320,18 +320,18 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       badgeColor: "bg-blue-600 dark:bg-blue-500",
     },
     {
-      id: "rent-on-time",
-      image: bannerRentOnTime,
-      action: () => openPendingTenants(),
-      badge: `₹${stats.pendingRent.toLocaleString()} Pending`,
-      badgeColor: "bg-rose-600 dark:bg-rose-500",
-    },
-    {
       id: "receipts-instantly",
       image: bannerReceiptsInstantly,
       action: () => setActiveSheet("all-collected"),
       badge: "Payment History",
       badgeColor: "bg-teal-600 dark:bg-teal-500",
+    },
+    {
+      id: "rent-on-time",
+      image: bannerRentOnTime,
+      action: () => openPendingTenants(),
+      badge: `₹${stats.pendingRent.toLocaleString()} Pending`,
+      badgeColor: "bg-rose-600 dark:bg-rose-500",
     },
     {
       id: "never-miss-rent",
@@ -348,11 +348,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       badgeColor: "bg-emerald-600 dark:bg-emerald-500",
     },
     {
-      id: "grow-your-pg",
-      image: bannerGrowYourPg,
-      action: () => onNavigateToTab?.("settings"),
-      badge: "Scale Up",
-      badgeColor: "bg-amber-600 dark:bg-amber-500",
+      id: "everything-one-place",
+      image: bannerEverythingOnePlace,
+      action: () => setTenantsOpen(true),
+      badge: "PG Manager",
+      badgeColor: "bg-purple-600 dark:bg-purple-500",
     }
   ];
 
