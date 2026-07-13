@@ -67,6 +67,9 @@ import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
 import bannerNeverMissRent from "@/assets/banner-never-miss-rent.png";
 import bannerGrowYourPg from "@/assets/banner-grow-your-pg.png";
+import bannerBillsBudget from "@/assets/banner-bills-budget.png";
+import bannerEverythingOnePlace from "@/assets/banner-everything-one-place.png";
+import bannerReceiptsInstantly from "@/assets/banner-receipts-instantly.png";
 
 interface DashboardProps {
   rooms: Room[];
@@ -303,6 +306,13 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const banners = [
     {
+      id: "everything-one-place",
+      image: bannerEverythingOnePlace,
+      action: () => setTenantsOpen(true),
+      badge: "PG Manager",
+      badgeColor: "bg-purple-600 dark:bg-purple-500",
+    },
+    {
       id: "fill-every-bed",
       image: bannerFillEveryBed,
       action: () => setEmptyBedsSheetOpen(true),
@@ -317,11 +327,25 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       badgeColor: "bg-rose-600 dark:bg-rose-500",
     },
     {
+      id: "receipts-instantly",
+      image: bannerReceiptsInstantly,
+      action: () => setActiveSheet("all-collected"),
+      badge: "Payment History",
+      badgeColor: "bg-teal-600 dark:bg-teal-500",
+    },
+    {
       id: "never-miss-rent",
       image: bannerNeverMissRent,
       action: onNavigateToRent,
       badge: "Reminders",
       badgeColor: "bg-indigo-600 dark:bg-indigo-500",
+    },
+    {
+      id: "bills-budget",
+      image: bannerBillsBudget,
+      action: () => setBillsBudgetOpen(true),
+      badge: "Utility Bills",
+      badgeColor: "bg-emerald-600 dark:bg-emerald-500",
     },
     {
       id: "grow-your-pg",
