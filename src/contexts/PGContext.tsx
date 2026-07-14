@@ -114,7 +114,7 @@ export const PGProvider = ({ children }: PGProviderProps) => {
 
       if (data) {
         const features = getFeatureMap(data.features);
-        const billingCycle = features.billing_cycle as 'trial' | 'monthly' | 'quarterly' | 'yearly' | undefined;
+        const billingCycle = features.billing_cycle as 'trial' | 'monthly' | 'pro' | 'quarterly' | 'yearly' | 'lifetime' | undefined;
 
         setSubscription({
           id: data.id,

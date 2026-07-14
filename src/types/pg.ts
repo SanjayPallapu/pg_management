@@ -83,7 +83,7 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Start with a full-featured 1 month free trial.',
   },
   monthly: {
-    name: 'Monthly',
+    name: 'Monthly Basic',
     price: 999,
     periodLabel: '/month',
     billingCycle: 'monthly',
@@ -96,8 +96,22 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Unlimited PGs, unlimited tenants, billed every month.',
   },
+  pro: {
+    name: 'Pro Plan',
+    price: 1999,
+    periodLabel: '/month',
+    billingCycle: 'pro',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+  },
   quarterly: {
-    name: 'Quarterly',
+    name: 'Quarterly Save',
     price: 2699,
     periodLabel: '/3 months',
     billingCycle: 'quarterly',
@@ -108,10 +122,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Save more with one payment every 3 months.',
+    description: 'Save 10% with a single payment every 3 months.',
   },
   yearly: {
-    name: 'Yearly',
+    name: 'Yearly Value',
     price: 9999,
     periodLabel: '/year',
     billingCycle: 'yearly',
@@ -124,11 +138,25 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Best value for serious multi-PG operators.',
   },
+  lifetime: {
+    name: 'Lifetime Unlimited',
+    price: 29999,
+    periodLabel: 'one-time',
+    billingCycle: 'lifetime',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Pay once, use forever. Free updates and all premium features included.',
+  },
 } as const;
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
 
-export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'quarterly', 'yearly'];
+export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'pro', 'quarterly', 'yearly', 'lifetime'];
 
 export const SUBSCRIPTION_PLAN_META = {
   maxPgs: -1,

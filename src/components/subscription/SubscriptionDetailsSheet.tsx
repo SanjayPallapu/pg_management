@@ -109,10 +109,16 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               </div>
               
               <div className="text-3xl font-bold capitalize mb-2">
-                {displaySubscription.billingCycle === 'trial' ? 'Free Trial' : `${displaySubscription.plan} Plan`}
+                {displaySubscription.billingCycle === 'trial' 
+                  ? 'Free Trial' 
+                  : displaySubscription.billingCycle === 'lifetime'
+                    ? 'Lifetime Unlimited'
+                    : displaySubscription.billingCycle === 'pro'
+                      ? 'Pro Plan'
+                      : `${displaySubscription.plan} Plan`}
               </div>
               
-              {isProUser && displaySubscription.expiresAt && (() => {
+              {isProUser && displaySubscription.expiresAt && displaySubscription.billingCycle !== 'lifetime' && (() => {
                 const expiresAt = new Date(displaySubscription.expiresAt);
                 const now = new Date();
                 const daysLeft = differenceInDays(expiresAt, now);
@@ -142,6 +148,18 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   </div>
                 );
               })()}
+
+              {isProUser && displaySubscription.billingCycle === 'lifetime' && (
+                <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-sm">
+                  <div className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-300">
+                    <Sparkles className="h-4 w-4 text-emerald-500" />
+                    Lifetime Membership Active
+                  </div>
+                  <p className="mt-1 text-muted-foreground">
+                    Enjoy unlimited access to all features forever. No future billing or subscription renewals.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

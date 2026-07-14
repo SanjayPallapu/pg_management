@@ -21,7 +21,7 @@ import {
   Users,
   Settings,
   ChevronRight,
-  Snowflake,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -560,10 +560,10 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             }}
             className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-cyan-500/10 p-2 rounded-full">
-              <Snowflake className="w-5 h-5 text-cyan-500" />
+            <div className="bg-amber-500/10 p-2 rounded-full">
+              <Zap className="w-5 h-5 text-amber-500" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC Electricity<br/>Bill</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC<br/>Bill</span>
           </div>
         </div>
 

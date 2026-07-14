@@ -66,6 +66,8 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{plan.name}</h3>
                         {planKey === 'yearly' && <Badge className="bg-primary/10 text-primary border-0">Best Value</Badge>}
+                        {planKey === 'pro' && <Badge className="bg-cyan-500/10 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400 border-0">Highly Recommended</Badge>}
+                        {planKey === 'lifetime' && <Badge className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border-0">Most Popular</Badge>}
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
                     </div>

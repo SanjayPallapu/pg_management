@@ -1417,54 +1417,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             />
           </div>
 
-          {showPreviousDuesPanel && !activeRoomFilter && (
-            <Card
-              className="border-amber-500/25 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors mb-4"
-              onClick={() => setPreviousOverdueOpen(true)}
-            >
-              <div className="flex w-full items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10">
-                    <History className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">Previous Dues</div>
-                    <div className="text-xs text-muted-foreground">
-                      {previousMonthOverdue.count > 0
-                        ? `${previousMonthOverdue.count} pending · ₹${previousMonthOverdue.total.toLocaleString()}`
-                        : "No pending dues"}
-                      {previousOverdueCollections.count > 0 &&
-                        ` · ${previousOverdueCollections.count} collected · ₹${previousOverdueCollections.total.toLocaleString()}`}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </Card>
-          )}
-
-          {/* AC Electricity */}
-          {acRooms.length > 0 && !activeRoomFilter && (
-            <Card
-              className="border-cyan-500/25 bg-cyan-500/5 cursor-pointer hover:bg-cyan-500/10 transition-colors mb-4"
-              onClick={() => setAcSheetOpen(true)}
-            >
-              <div className="flex w-full items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cyan-500/10">
-                    <Snowflake className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-cyan-800 dark:text-cyan-300">AC Electricity Billing</div>
-                    <div className="text-xs text-muted-foreground">
-                      {acRooms.length} AC room{acRooms.length === 1 ? "" : "s"} · {MONTHS[acMonth - 1]?.label} {acYear}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </Card>
-          )}
 
           {/* Search Bar */}
           <div className="mb-4 relative">
@@ -1927,6 +1879,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         variant={tenant.payment.paymentStatus === "Paid" ? "default" : "outline"}
                         size="sm"
                         className="text-xs h-7 px-3"
+                        disabled={tenant.payment.paymentStatus === "Paid"}
                         onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                       >
                         {tenant.payment.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
