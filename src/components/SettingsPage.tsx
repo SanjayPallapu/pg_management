@@ -55,6 +55,11 @@ import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
+import { NotificationPreferencesSheet } from "./settings/NotificationPreferencesSheet";
+import { ManagePropertiesSheet } from "./settings/ManagePropertiesSheet";
+import { StaffManagementSheet } from "./settings/StaffManagementSheet";
+import { ChangePasswordDialog } from "./settings/ChangePasswordDialog";
+import { LoginActivityDialog } from "./settings/LoginActivityDialog";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ThreeDScene } from "@/components/ThreeDScene";
@@ -109,6 +114,11 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [loginActivityOpen, setLoginActivityOpen] = useState(false);
 
   // Close all open sheets/dialogs when switching tabs via bottom navigation
   useEffect(() => {
@@ -118,6 +128,11 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       setShowHelp(false);
       setReportsOpen(false);
       setDeleteConfirmOpen(false);
+      setNotificationsOpen(false);
+      setPropertiesOpen(false);
+      setStaffOpen(false);
+      setChangePasswordOpen(false);
+      setLoginActivityOpen(false);
     };
     window.addEventListener('tab-click', handleCloseAll);
     return () => window.removeEventListener('tab-click', handleCloseAll);
@@ -296,7 +311,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 icon={<Bell className="h-4 w-4 text-primary" />}
                 label="Notifications"
                 description="Manage push notification preferences"
-                onClick={() => {}}
+                onClick={() => setNotificationsOpen(true)}
               />
             </CardContent>
           </Card>
@@ -311,7 +326,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 icon={<Building className="h-4 w-4 text-primary" />}
                 label="Manage Properties"
                 description={currentPG ? `Current: ${currentPG.name}` : "Setup your PG"}
-                onClick={() => {}}
+                onClick={() => setPropertiesOpen(true)}
               />
 
               <SettingItem
@@ -326,7 +341,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                     icon={<Users className="h-4 w-4 text-primary" />}
                     label="Staff Management"
                     description="Add or manage staff access"
-                    onClick={() => {}}
+                    onClick={() => setStaffOpen(true)}
                   />
                   <SettingItem
                     icon={<Bell className="h-4 w-4 text-primary" />}
@@ -355,13 +370,13 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 icon={<Lock className="h-4 w-4 text-primary" />}
                 label="Change Password"
                 description="Update your account password"
-                onClick={() => {}}
+                onClick={() => setChangePasswordOpen(true)}
               />
               <SettingItem
                 icon={<ShieldCheck className="h-4 w-4 text-primary" />}
                 label="Login Activity"
                 description="View recent sign-in sessions"
-                onClick={() => {}}
+                onClick={() => setLoginActivityOpen(true)}
               />
             </CardContent>
           </Card>
@@ -467,6 +482,11 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       {isAdmin && (
         <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
       )}
+      <NotificationPreferencesSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+      <ManagePropertiesSheet open={propertiesOpen} onOpenChange={setPropertiesOpen} />
+      <StaffManagementSheet open={staffOpen} onOpenChange={setStaffOpen} />
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
+      <LoginActivityDialog open={loginActivityOpen} onOpenChange={setLoginActivityOpen} />
 
       {/* 2-Step Verification Account Deletion Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
