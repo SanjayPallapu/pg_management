@@ -146,11 +146,29 @@ export const StaffManagementSheet = ({ open, onOpenChange }: StaffManagementShee
     }
   };
 
-  const handleRemoveStaff = (id: string, name: string) => {
-    const updated = staff.filter(s => s.id !== id);
-    setStaff(updated);
-    localStorage.setItem("staff_members", JSON.stringify(updated));
-    toast.success(`Removed access for ${name}`);
+  const handleRemoveStaff = async (id: string, name: string) => {
+    const confirmRemove = window.confirm(`Are you sure you want to remove access for ${name}?`);
+    if (!confirmRemove) return;
+
+    try {
+      const updated = staff.filter(s => s.id !== id);
+      setStaff(updated);
+      localStorage.setItem("staff_members", JSON.stringify(updated));
+
+      // Attempt to remove from Supabase user_roles if they are a real user (not starting with 'staff-')
+      if (!id.startsWith("staff-")) {
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", id);
+        if (error) throw error;
+      }
+
+      toast.success(`Removed access for ${name}`);
+    } catch (err: any) {
+      console.error("Failed to remove staff from database:", err);
+      toast.error("Removed locally, but database update failed.");
+    }
   };
 
   return (

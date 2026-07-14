@@ -63,6 +63,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
       setNameInput("");
       setAddressInput("");
       setIsAdding(false);
+      onOpenChange(false); // Close sheet immediately on successful creation
     } catch (err: any) {
       console.error("Failed to add property:", err);
       toast.error(err.message || "Failed to add property");
@@ -99,6 +100,46 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     } catch (err: any) {
       console.error("Failed to update property:", err);
       toast.error(err.message || "Failed to update property");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteProperty = async (pgId: string, pgName: string) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${pgName}"? All rooms, tenants, and logs for this property will be permanently deleted.`
+    );
+    if (!confirmDelete) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("pgs")
+        .delete()
+        .eq("id", pgId);
+
+      if (error) throw error;
+
+      toast.success(`Property "${pgName}" deleted successfully`);
+      
+      // If we are deleting the active property, switch to another one first
+      if (currentPG?.id === pgId) {
+        const nextPg = pgs.find((p) => p.id !== pgId);
+        if (nextPg) {
+          selectPG(nextPg.id);
+        } else {
+          // If no other property left, just select null
+          // Supabase hook or refresh will handle it
+        }
+      }
+      
+      await refreshPGs();
+      setIsEditing(null);
+      setNameInput("");
+      setAddressInput("");
+    } catch (err: any) {
+      console.error("Failed to delete property:", err);
+      toast.error(err.message || "Failed to delete property");
     } finally {
       setIsSubmitting(false);
     }
@@ -180,35 +221,49 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     disabled={isSubmitting}
                   />
                 </div>
-                <div className="pt-2 flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsAdding(false);
-                      setIsEditing(null);
-                      setNameInput("");
-                      setAddressInput("");
-                    }}
-                    className="flex-1 rounded-xl"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 rounded-xl"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Property"
-                    )}
-                  </Button>
+                <div className="pt-2 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsAdding(false);
+                        setIsEditing(null);
+                        setNameInput("");
+                        setAddressInput("");
+                      }}
+                      className="flex-1 rounded-xl"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="flex-1 rounded-xl"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Property"
+                      )}
+                    </Button>
+                  </div>
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => handleDeleteProperty(isEditing, nameInput)}
+                      className="w-full rounded-xl gap-2 mt-1"
+                      disabled={isSubmitting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Property
+                    </Button>
+                  )}
                 </div>
               </form>
             ) : (
@@ -225,6 +280,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                         if (!isActive) {
                           selectPG(pg.id);
                           toast.success(`Switched to property: ${pg.name}`);
+                          onOpenChange(false); // Close immediately for smooth workflow
                         }
                       }}
                     >
