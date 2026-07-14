@@ -68,10 +68,14 @@ export const useTotalCollected = (roomsOverride?: Room[]): TotalCollectedResult 
         const payment = payments.find(
           p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
         );
-        if (payment?.paymentEntries) {
-          (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
-            thisMonthRent += entry.amount;
-          });
+        if (payment) {
+          if (payment.paymentEntries && payment.paymentEntries.length > 0) {
+            (payment.paymentEntries as PaymentEntry[]).forEach((entry: PaymentEntry) => {
+              thisMonthRent += entry.amount;
+            });
+          } else {
+            thisMonthRent += payment.amountPaid || 0;
+          }
         }
       });
     });
@@ -88,13 +92,24 @@ export const useTotalCollected = (roomsOverride?: Room[]): TotalCollectedResult 
       if (tenant.isLocked) return;
       const payment = payments.find(p => p.tenantId === tenant.id && p.month === prevMonth && p.year === prevYear);
       if (!payment) return;
-      const entries = (payment.paymentEntries || []) as PaymentEntry[];
-      entries.forEach(entry => {
-        const d = new Date(entry.date);
-        if (d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear) {
-          overdueCollected += entry.amount;
+      
+      if (payment.paymentEntries && payment.paymentEntries.length > 0) {
+        const entries = (payment.paymentEntries || []) as PaymentEntry[];
+        entries.forEach(entry => {
+          const d = new Date(entry.date);
+          if (d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear) {
+            overdueCollected += entry.amount;
+          }
+        });
+      } else {
+        // Fallback for missing entries: if paid in the current month
+        if (payment.paymentDate) {
+          const d = new Date(payment.paymentDate);
+          if (d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear) {
+            overdueCollected += payment.amountPaid || 0;
+          }
         }
-      });
+      }
     });
 
     // Extra amounts from notes

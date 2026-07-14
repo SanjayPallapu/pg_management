@@ -66,12 +66,22 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4
   });
   
+  // Custom Min and Max Sharing Capacity setup
+  const [minSharingInput, setMinSharingInput] = useState(1);
+  const [maxSharingInput, setMaxSharingInput] = useState(4);
+  
   // Enabled sharing types in this PG
   const [enabledSharings, setEnabledSharings] = useState<Record<number, boolean>>({
     1: true,
     2: true,
     3: false,
     4: false,
+    5: false,
+    6: false,
+    7: false,
+    8: false,
+    9: false,
+    10: false,
   });
 
   // Price per sharing type (Rent per bed in ₹)
@@ -80,6 +90,12 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     2: 5000,
     3: 4000,
     4: 3000,
+    5: 2500,
+    6: 2000,
+    7: 1800,
+    8: 1500,
+    9: 1200,
+    10: 1000,
   });
 
   // Generated building blueprint (Step 3) - User can customize capacities and rents room-by-room
@@ -89,14 +105,30 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   const [electricityRateInput, setElectricityRateInput] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const sharingTypesList = useMemo(() => {
+    const list = [];
+    for (let i = minSharingInput; i <= maxSharingInput; i++) {
+      list.push(i);
+    }
+    return list;
+  }, [minSharingInput, maxSharingInput]);
+
   const resetForm = () => {
     setNameInput("");
     setAddressInput("");
     setPgTypeInput("unisex");
     setFloorsInput(3);
     setRoomsPerFloor({ 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4 });
-    setEnabledSharings({ 1: true, 2: true, 3: false, 4: false });
-    setSharingPrices({ 1: 8000, 2: 5000, 3: 4000, 4: 3000 });
+    setMinSharingInput(1);
+    setMaxSharingInput(4);
+    setEnabledSharings({ 
+      1: true, 2: true, 3: false, 4: false, 5: false, 
+      6: false, 7: false, 8: false, 9: false, 10: false 
+    });
+    setSharingPrices({ 
+      1: 8000, 2: 5000, 3: 4000, 4: 3000, 5: 2500, 
+      6: 2000, 7: 1800, 8: 1500, 9: 1200, 10: 1000 
+    });
     setBlueprint([]);
     setElectricityRateInput(10);
     setWizardStep(1);
@@ -107,7 +139,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   // Generate initial blueprint when moving from step 2 to step 3
   const handleGenerateBlueprint = () => {
     const list: RoomBlueprint[] = [];
-    const baseSharing = Object.keys(enabledSharings)
+    const baseSharing = sharingTypesList
       .map(Number)
       .find(k => enabledSharings[k]) || 2; // Fallback to first active sharing
 
@@ -501,11 +533,46 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                       </div>
                     </div>
 
+                    {/* Min & Max Sharing Range Setup */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="minSharing" className="text-xs font-semibold">Min Bed Sharing</Label>
+                        <Input 
+                          id="minSharing"
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={minSharingInput}
+                          onChange={(e) => {
+                            const val = Math.min(10, Math.max(1, parseInt(e.target.value) || 1));
+                            setMinSharingInput(val);
+                            if (val > maxSharingInput) setMaxSharingInput(val);
+                          }}
+                          className="h-9 text-xs rounded-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="maxSharing" className="text-xs font-semibold">Max Bed Sharing</Label>
+                        <Input 
+                          id="maxSharing"
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={maxSharingInput}
+                          onChange={(e) => {
+                            const val = Math.min(10, Math.max(minSharingInput, parseInt(e.target.value) || minSharingInput));
+                            setMaxSharingInput(val);
+                          }}
+                          className="h-9 text-xs rounded-lg"
+                        />
+                      </div>
+                    </div>
+
                     {/* Supported Sharing Options and Pricing */}
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold">Sharing Configurations</Label>
                       <div className="space-y-1.5">
-                        {[1, 2, 3, 4].map((sharingType) => {
+                        {sharingTypesList.map((sharingType) => {
                           const isEnabled = enabledSharings[sharingType];
                           return (
                             <div key={sharingType} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border bg-muted/5">
@@ -527,7 +594,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                   <span className="text-xs text-muted-foreground">₹</span>
                                   <Input
                                     type="number"
-                                    value={sharingPrices[sharingType]}
+                                    value={sharingPrices[sharingType] || 0}
                                     onChange={(e) => setSharingPrices(prev => ({
                                       ...prev,
                                       [sharingType]: Math.max(0, parseInt(e.target.value) || 0)
@@ -599,8 +666,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                         onChange={(e) => handleUpdateRoomCapacity(room.roomNo, parseInt(e.target.value))}
                                         className="w-full text-[10px] h-6 border rounded bg-transparent px-1 py-0"
                                       >
-                                        {Object.keys(enabledSharings)
-                                          .map(Number)
+                                        {sharingTypesList
                                           .filter(k => enabledSharings[k])
                                           .map(sharingType => (
                                             <option key={sharingType} value={sharingType}>
