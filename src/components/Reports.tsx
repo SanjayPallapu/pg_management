@@ -60,17 +60,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
   const { entries: expenses = [], grandTotal: totalExpenses } = useExpenseEntries(selectedMonth, selectedYear);
 
   const getActiveTenantsInMonth = (room: Room) => 
-    room.tenants.filter(t => {
-      if (!isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)) return false;
-      if (t.endDate) {
-        const endDate = new Date(t.endDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        endDate.setHours(0, 0, 0, 0);
-        if (endDate <= today) return false;
-      }
-      return true;
-    });
+    room.tenants.filter(t => isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth));
 
   const vacantRooms = rooms.filter(room => getActiveTenantsInMonth(room).length === 0);
   const partiallyOccupiedRooms = rooms.filter(room => {

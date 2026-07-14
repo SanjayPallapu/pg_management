@@ -46,14 +46,10 @@ export const useTenantPayments = () => {
       if (tenantIds.length === 0) return [];
 
       // Step 3: Fetch tenant payments for those active tenants
-      const currentDate = new Date();
-      const cutoffYear = currentDate.getFullYear() - 1;
-
       const { data, error } = await supabase
         .from('tenant_payments')
         .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, ac_payment_status')
         .in('tenant_id', tenantIds)
-        .gte('year', cutoffYear)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
