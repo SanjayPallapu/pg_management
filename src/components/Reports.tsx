@@ -18,22 +18,20 @@ import {
   TrendingUp, 
   ArrowRight,
   Printer,
-  Sparkles
+  Sparkles,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Percent
 } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
+import { useExpenseEntries } from '@/hooks/useExpenseEntries';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { toast } from 'sonner';
 
 interface ReportsProps {
   rooms: Room[];
-}
-
-interface RoomWithAvailableBeds {
-  room: Room;
-  availableBeds: number;
-  sharingType: number;
 }
 
 export const Reports = ({ rooms }: ReportsProps) => {
@@ -57,6 +55,9 @@ export const Reports = ({ rooms }: ReportsProps) => {
     rooms,
     payments
   });
+
+  // Query expenses for the selected month/year
+  const { entries: expenses = [], grandTotal: totalExpenses } = useExpenseEntries(selectedMonth, selectedYear);
 
   const getActiveTenantsInMonth = (room: Room) => 
     room.tenants.filter(t => {
@@ -86,6 +87,11 @@ export const Reports = ({ rooms }: ReportsProps) => {
   // Collection percentages
   const totalExpectedRevenue = rentCollected + pendingRent;
   const collectionRate = totalExpectedRevenue > 0 ? (rentCollected / totalExpectedRevenue) * 100 : 0;
+
+  // Financial P&L
+  const actualNetIncome = rentCollected - totalExpenses;
+  const projectedNetIncome = totalExpectedRevenue - totalExpenses;
+  const expenseRatio = rentCollected > 0 ? (totalExpenses / rentCollected) * 100 : 0;
 
   // Sorting and filtering pending tenants
   const sortedPendingTenants = useMemo(() => {
@@ -195,120 +201,166 @@ export const Reports = ({ rooms }: ReportsProps) => {
       {/* Content Sheets */}
       {activeTab === 'overview' && (
         <div className="space-y-4">
-          {/* Main Visual Gauges Grid */}
+          
+          {/* Executive P&L Income Statement Card */}
+          <Card className="border border-primary/10 overflow-hidden relative bg-gradient-to-br from-background via-background to-primary/5">
+            <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between border-b bg-muted/20">
+              <div>
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Financial Statement (P&L)</CardTitle>
+                <p className="text-[10px] text-muted-foreground">Summarized profit & loss comparison for {activeMonthName}.</p>
+              </div>
+              <TrendingUp className="h-4 w-4 text-primary shrink-0" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-3 gap-3 divide-x">
+                <div className="space-y-1 text-left">
+                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                    <ArrowUpCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    Revenue
+                  </span>
+                  <p className="text-base font-extrabold text-foreground">₹{rentCollected.toLocaleString()}</p>
+                  <p className="text-[9px] text-muted-foreground">₹{totalExpectedRevenue.toLocaleString()} projected</p>
+                </div>
+                <div className="space-y-1 text-left pl-3">
+                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                    <ArrowDownCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                    Expenses
+                  </span>
+                  <p className="text-base font-extrabold text-foreground">₹{totalExpenses.toLocaleString()}</p>
+                  <p className="text-[9px] text-muted-foreground">{expenses.length} bills recorded</p>
+                </div>
+                <div className="space-y-1 text-left pl-3">
+                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                    <TrendingUp className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    Net Income
+                  </span>
+                  <p className={`text-base font-black ${actualNetIncome >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    ₹{actualNetIncome.toLocaleString()}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">₹{projectedNetIncome.toLocaleString()} projected</p>
+                </div>
+              </div>
+
+              {/* Progress bars indicators */}
+              <div className="space-y-2 pt-2 border-t text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1 text-[11px]">
+                    <span className="text-muted-foreground">Expense-to-Revenue Ratio</span>
+                    <span className="font-semibold text-muted-foreground">{expenseRatio.toFixed(0)}%</span>
+                  </div>
+                  <Progress value={Math.min(100, expenseRatio)} className="h-1.5 bg-muted" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gauges Grid */}
           <div className="grid gap-4 sm:grid-cols-2">
-            {/* Rent Collection Progress Gauge */}
+            {/* Collection Gauge */}
             <Card className="overflow-hidden border border-border/80">
               <CardContent className="p-5 flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center h-28 w-28">
-                  {/* SVG circular track */}
+                <div className="relative flex items-center justify-center h-24 w-24">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle 
-                      cx="56" cy="56" r="48" 
+                      cx="48" cy="48" r="40" 
                       className="text-muted/50 stroke-current" 
-                      strokeWidth="8" fill="none"
+                      strokeWidth="6" fill="none"
                     />
                     <circle 
-                      cx="56" cy="56" r="48" 
+                      cx="48" cy="48" r="40" 
                       className="text-emerald-500 stroke-current transition-all duration-700 ease-out" 
-                      strokeWidth="8" fill="none"
-                      strokeDasharray="301.6"
-                      strokeDashoffset={301.6 - (301.6 * collectionRate) / 100}
+                      strokeWidth="6" fill="none"
+                      strokeDasharray="251.2"
+                      strokeDashoffset={251.2 - (251.2 * collectionRate) / 100}
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className="text-xl font-bold text-emerald-500">{collectionRate.toFixed(0)}%</span>
-                    <span className="text-[9px] font-semibold text-muted-foreground uppercase">Collected</span>
+                    <span className="text-lg font-bold text-emerald-500">{collectionRate.toFixed(0)}%</span>
+                    <span className="text-[8px] font-semibold text-muted-foreground uppercase">Collected</span>
                   </div>
                 </div>
-                <h4 className="font-bold text-sm mt-3">Rent Collections Progress</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <h4 className="font-bold text-xs mt-3">Rent Collections Status</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   ₹{rentCollected.toLocaleString()} of ₹{totalExpectedRevenue.toLocaleString()} received
                 </p>
-                <div className="w-full grid grid-cols-2 gap-2 mt-4 pt-4 border-t text-left">
-                  <div>
-                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Collected</span>
-                    <p className="text-sm font-bold text-emerald-500">₹{rentCollected.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Pending</span>
-                    <p className="text-sm font-bold text-amber-500">₹{pendingRent.toLocaleString()}</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
-            {/* Occupancy Status Gauge */}
+            {/* Occupancy Gauge */}
             <Card className="overflow-hidden border border-border/80">
               <CardContent className="p-5 flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center h-28 w-28">
+                <div className="relative flex items-center justify-center h-24 w-24">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle 
-                      cx="56" cy="56" r="48" 
+                      cx="48" cy="48" r="40" 
                       className="text-muted/50 stroke-current" 
-                      strokeWidth="8" fill="none"
+                      strokeWidth="6" fill="none"
                     />
                     <circle 
-                      cx="56" cy="56" r="48" 
+                      cx="48" cy="48" r="40" 
                       className="text-indigo-500 stroke-current transition-all duration-700 ease-out" 
-                      strokeWidth="8" fill="none"
-                      strokeDasharray="301.6"
-                      strokeDashoffset={301.6 - (301.6 * occupancyRate) / 100}
+                      strokeWidth="6" fill="none"
+                      strokeDasharray="251.2"
+                      strokeDashoffset={251.2 - (251.2 * occupancyRate) / 100}
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className="text-xl font-bold text-indigo-500">{occupancyRate.toFixed(0)}%</span>
-                    <span className="text-[9px] font-semibold text-muted-foreground uppercase">Occupied</span>
+                    <span className="text-lg font-bold text-indigo-500">{occupancyRate.toFixed(0)}%</span>
+                    <span className="text-[8px] font-semibold text-muted-foreground uppercase">Occupied</span>
                   </div>
                 </div>
-                <h4 className="font-bold text-sm mt-3">Active Bed Occupancy</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {occupiedBeds} beds filled out of {totalBeds} total capacity
+                <h4 className="font-bold text-xs mt-3">Bed Occupancy Status</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {occupiedBeds} beds occupied out of {totalBeds} total
                 </p>
-                <div className="w-full grid grid-cols-2 gap-2 mt-4 pt-4 border-t text-left">
-                  <div>
-                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Vacant Rooms</span>
-                    <p className="text-sm font-bold text-rose-500">{vacantRooms.length}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Vacant Beds</span>
-                    <p className="text-sm font-bold text-indigo-500">{totalAvailableBeds}</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Insights Highlights Grid */}
+          {/* Quick Metrics Grid */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Card className="bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-500/10">
-              <CardContent className="p-4 space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-emerald-600 dark:text-emerald-400">Total Collected</span>
-                <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">₹{rentCollected.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">{paidTenants.length + partialTenants.length} Paid payments</p>
+            <Card>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Vacant Rooms</span>
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                </div>
+                <p className="text-base font-extrabold mt-1 text-rose-500">{vacantRooms.length}</p>
+                <p className="text-[9px] text-muted-foreground">needs filling</p>
               </CardContent>
             </Card>
-            <Card className="bg-amber-50/50 dark:bg-amber-950/10 border-amber-500/10">
-              <CardContent className="p-4 space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-amber-600 dark:text-amber-400">Total Outstanding</span>
-                <p className="text-lg font-black text-amber-600 dark:text-amber-400">₹{pendingRent.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">{sortedPendingTenants.length} Pending tenants</p>
+            <Card>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Vacant Beds</span>
+                  <BedDouble className="h-3.5 w-3.5 text-indigo-500" />
+                </div>
+                <p className="text-base font-extrabold mt-1 text-indigo-500">{totalAvailableBeds}</p>
+                <p className="text-[9px] text-muted-foreground">across all rooms</p>
               </CardContent>
             </Card>
-            <Card className="bg-indigo-50/50 dark:bg-indigo-950/10 border-indigo-500/10">
-              <CardContent className="p-4 space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-indigo-600 dark:text-indigo-400">Occupied Rooms</span>
-                <p className="text-lg font-black text-indigo-600 dark:text-indigo-400">{rooms.length - vacantRooms.length}</p>
-                <p className="text-[10px] text-muted-foreground">{partiallyOccupiedRooms.length} Partially filled</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-purple-50/50 dark:bg-purple-950/10 border-purple-500/10">
-              <CardContent className="p-4 space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-purple-600 dark:text-purple-400">Average Collection</span>
-                <p className="text-lg font-black text-purple-600 dark:text-purple-400">
-                  ₹{eligibleTenants.length > 0 ? Math.round(rentCollected / eligibleTenants.length).toLocaleString() : 0}
+            <Card>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Overdue Dues</span>
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                </div>
+                <p className="text-base font-extrabold mt-1 text-rose-500">
+                  ₹{overdueTenants.reduce((s,t)=> s+t.monthlyRent, 0).toLocaleString()}
                 </p>
-                <p className="text-[10px] text-muted-foreground">Per registered tenant</p>
+                <p className="text-[9px] text-muted-foreground">{overdueTenants.length} tenants late</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Advance Due</span>
+                  <IndianRupee className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+                <p className="text-base font-extrabold mt-1 text-amber-500">
+                  ₹{advanceNotPaidTenants.reduce((s,t)=> s+t.monthlyRent, 0).toLocaleString()}
+                </p>
+                <p className="text-[9px] text-muted-foreground">{advanceNotPaidTenants.length} new check-ins</p>
               </CardContent>
             </Card>
           </div>
