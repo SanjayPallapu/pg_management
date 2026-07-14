@@ -9,7 +9,7 @@ import { Phone, MessageCircle, Receipt, MessageSquare, CheckCircle, ArrowLeft } 
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
-import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
 import { format } from 'date-fns';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PreviousOverdueSheet } from './PreviousOverdueSheet';
@@ -130,6 +130,11 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
         
         // Check if tenant was active in previous month
         if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth)) {
+          return;
+        }
+
+        // Exclude left tenants
+        if (hasTenantLeftNow(tenant.endDate)) {
           return;
         }
 

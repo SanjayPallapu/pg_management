@@ -21,6 +21,7 @@ import {
   Users,
   Settings,
   ChevronRight,
+  Snowflake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -554,13 +555,15 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </div>
 
           <div 
-            onClick={onNavigateToRent}
+            onClick={() => {
+              navigate('/?tab=rent-sheet&openAc=true');
+            }}
             className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
           >
-            <div className="bg-emerald-500/10 p-2 rounded-full">
-              <CreditCard className="w-5 h-5 text-emerald-500" />
+            <div className="bg-cyan-500/10 p-2 rounded-full">
+              <Snowflake className="w-5 h-5 text-cyan-500" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Collect<br/>Rent</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC Electricity<br/>Bill</span>
           </div>
         </div>
 
@@ -925,44 +928,57 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
       {/* Add Tenant Flow Sheets */}
       <Sheet open={addTenantRoomSelectOpen} onOpenChange={setAddTenantRoomSelectOpen}>
-        <SheetContent side="bottom" className="h-[75vh] px-4 pt-6 pb-0 rounded-t-3xl">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="text-left">Select Room for Tenant</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto space-y-4 pb-8 h-[calc(100%-4rem)]">
-            <div className="grid grid-cols-3 gap-3">
+        <SheetContent side="bottom" className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300">
+          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAddTenantRoomSelectOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div>
+                  <SheetTitle className="text-left font-bold text-base">Select Room for Tenant</SheetTitle>
+                </div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+              <div className="grid grid-cols-3 gap-3">
+                {(rooms || []).filter(room => {
+                  const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
+                  return room.capacity - activeTenantsCount > 0;
+                }).map(room => {
+                  const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
+                  const available = room.capacity - activeTenantsCount;
+                  return (
+                    <div 
+                      key={room.id}
+                      onClick={() => {
+                        setAddTenantRoomSelectOpen(false);
+                        onQuickAddTenant(room);
+                      }}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
+                    >
+                      <h4 className="font-bold text-lg">{room.roomNo}</h4>
+                      <div className="flex items-center gap-1 mt-1 bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold">{available} bed{available > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
               {(rooms || []).filter(room => {
+                if (!room) return false;
                 const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
                 return room.capacity - activeTenantsCount > 0;
-              }).map(room => {
-                const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
-                const available = room.capacity - activeTenantsCount;
-                return (
-                  <div 
-                    key={room.id}
-                    onClick={() => {
-                      setAddTenantRoomSelectOpen(false);
-                      onQuickAddTenant(room);
-                    }}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
-                  >
-                    <h4 className="font-bold text-lg">{room.roomNo}</h4>
-                    <div className="flex items-center gap-1 mt-1 bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">
-                      <span className="text-xs font-semibold">{available} bed{available > 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                );
-              })}
+              }).length === 0 && (
+                <div className="text-center p-8 text-muted-foreground">
+                  <p>No rooms with available beds.</p>
+                </div>
+              )}
             </div>
-            {(rooms || []).filter(room => {
-              if (!room) return false;
-              const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
-              return room.capacity - activeTenantsCount > 0;
-            }).length === 0 && (
-              <div className="text-center p-8 text-muted-foreground">
-                <p>No rooms with available beds.</p>
-              </div>
-            )}
           </div>
         </SheetContent>
       </Sheet>

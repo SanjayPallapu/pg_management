@@ -327,7 +327,7 @@ const Index = () => {
             {/* Pull to Refresh Indicator */}
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
 
-            <TabsContent value="dashboard" forceMount className="mt-1 data-[state=inactive]:hidden">
+            <TabsContent value="dashboard" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               {isLoading ? (
                 <DashboardSkeleton />
               ) : (
@@ -354,19 +354,19 @@ const Index = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="rooms" forceMount className="mt-1 data-[state=inactive]:hidden">
+            <TabsContent value="rooms" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               <Suspense fallback={<CardSkeleton />}>
                 {isLoading ? <CardSkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="rent-sheet" forceMount className="mt-1 data-[state=inactive]:hidden">
+            <TabsContent value="rent-sheet" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               <Suspense fallback={<RentSheetSkeleton />}>
                 {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
               </Suspense>
             </TabsContent>
 
-            <TabsContent value="settings" forceMount className="mt-1 data-[state=inactive]:hidden">
+            <TabsContent value="settings" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               <Suspense fallback={<ListSkeleton />}>
                 <SettingsPage rooms={rooms} />
               </Suspense>

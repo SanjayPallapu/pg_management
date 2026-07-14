@@ -289,3 +289,8 @@ All colors MUST be HSL.
 .status-banner-container {
   pointer-events: auto !important;
 }
+
+/* Premium transition timing function */
+.ease-premium {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}

@@ -159,7 +159,9 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     })));
 
     const tenantsActiveInPrevMonth = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && !tenant.isLocked
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && 
+      !tenant.isLocked &&
+      !isLeftTenant(tenant)
     );
 
     const prevMonthPayments = payments.filter(p => 

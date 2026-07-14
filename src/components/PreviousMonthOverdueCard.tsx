@@ -159,7 +159,9 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
     })));
 
     const tenantsActiveInPrevMonth = allTenants.filter(tenant => 
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && !tenant.isLocked
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, prevYear, prevMonth) && 
+      !tenant.isLocked &&
+      !hasTenantLeftNow(tenant.endDate)
     );
 
     const prevMonthPayments = payments.filter(p => 

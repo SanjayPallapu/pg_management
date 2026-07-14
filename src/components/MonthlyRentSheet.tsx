@@ -83,6 +83,7 @@ import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
+import { useSearchParams } from "react-router-dom";
 import { RoomQuickNav } from "./RoomQuickNav";
 import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import { CalendarClock, X as XIcon } from "lucide-react";
@@ -107,6 +108,16 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
   const { data: allReadings = [] } = useAllElectricityReadings();
   const [acSheetOpen, setAcSheetOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("openAc") === "true") {
+      setAcSheetOpen(true);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("openAc");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   
   useEffect(() => {
     setAcMonth(selectedMonth);
