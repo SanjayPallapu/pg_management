@@ -1,12 +1,30 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Room } from '@/types';
-import { AlertTriangle, BedDouble, CheckCircle, IndianRupee, MapPin, Users } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  BedDouble, 
+  CheckCircle, 
+  IndianRupee, 
+  MapPin, 
+  Users, 
+  MessageSquare, 
+  Search, 
+  Layers, 
+  TrendingUp, 
+  ArrowRight,
+  Printer,
+  Sparkles
+} from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
+import { toast } from 'sonner';
 
 interface ReportsProps {
   rooms: Room[];
@@ -21,6 +39,9 @@ interface RoomWithAvailableBeds {
 export const Reports = ({ rooms }: ReportsProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'occupancy'>('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const {
     rentCollected,
     pendingRent,
@@ -37,11 +58,9 @@ export const Reports = ({ rooms }: ReportsProps) => {
     payments
   });
 
-  // Filter tenants active in selected month for accurate counts (excluding left tenants)
   const getActiveTenantsInMonth = (room: Room) => 
     room.tenants.filter(t => {
       if (!isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)) return false;
-      // Exclude tenants who have already left (end_date is set and in the past or today)
       if (t.endDate) {
         const endDate = new Date(t.endDate);
         const today = new Date();
@@ -51,372 +70,422 @@ export const Reports = ({ rooms }: ReportsProps) => {
       }
       return true;
     });
-  
+
   const vacantRooms = rooms.filter(room => getActiveTenantsInMonth(room).length === 0);
   const partiallyOccupiedRooms = rooms.filter(room => {
     const activeCount = getActiveTenantsInMonth(room).length;
     return activeCount > 0 && activeCount < room.capacity;
   });
 
-  // Group available beds by sharing type
-  const bedsByShareType = useMemo(() => {
-    const roomsWithBeds: RoomWithAvailableBeds[] = [];
-    
-    rooms.forEach(room => {
-      const activeCount = getActiveTenantsInMonth(room).length;
-      const availableBeds = room.capacity - activeCount;
-      if (availableBeds > 0) {
-        roomsWithBeds.push({
-          room,
-          availableBeds,
-          sharingType: room.capacity
-        });
-      }
-    });
+  // Available beds calculations
+  const totalBeds = rooms.reduce((sum, room) => sum + room.capacity, 0);
+  const occupiedBeds = rooms.reduce((sum, room) => sum + getActiveTenantsInMonth(room).length, 0);
+  const totalAvailableBeds = totalBeds - occupiedBeds;
+  const occupancyRate = totalBeds > 0 ? (occupiedBeds / totalBeds) * 100 : 0;
 
-    // Group by sharing type
-    const grouped: Record<number, RoomWithAvailableBeds[]> = {};
-    roomsWithBeds.forEach(item => {
-      if (!grouped[item.sharingType]) {
-        grouped[item.sharingType] = [];
-      }
-      grouped[item.sharingType].push(item);
-    });
+  // Collection percentages
+  const totalExpectedRevenue = rentCollected + pendingRent;
+  const collectionRate = totalExpectedRevenue > 0 ? (rentCollected / totalExpectedRevenue) * 100 : 0;
 
-    // Sort each group by room number
-    Object.keys(grouped).forEach(key => {
-      grouped[Number(key)].sort((a, b) => a.room.roomNo.localeCompare(b.room.roomNo));
-    });
-
-    return grouped;
-  }, [rooms, selectedMonth, selectedYear]);
-
-  const totalAvailableBeds = rooms.reduce((sum, room) => sum + (room.capacity - getActiveTenantsInMonth(room).length), 0);
-
-  // Pending tenants = all non-paid (overdue + advance-not-paid + not-due + partial)
-  // Sort: Due tenants (overdue + advance-not-paid + partial) by due date, then not-yet-due by due date
+  // Sorting and filtering pending tenants
   const sortedPendingTenants = useMemo(() => {
     const pending = eligibleTenants.filter(t => t.paymentCategory !== 'paid' && !t.isLocked);
-    
-    // Sort function: get day of month from start date
     const getDueDay = (t: TenantWithPayment) => new Date(t.startDate).getDate();
     
-    // Separate into due (overdue, advance-not-paid, partial) and not-yet-due
-    const dueTenants = pending.filter(t => 
-      t.paymentCategory === 'overdue' || 
-      t.paymentCategory === 'advance-not-paid' || 
-      t.paymentCategory === 'partial'
-    ).sort((a, b) => getDueDay(a) - getDueDay(b));
-    
-    const notYetDueTenants = pending.filter(t => t.paymentCategory === 'not-due')
-      .sort((a, b) => getDueDay(a) - getDueDay(b));
-    
-    return [...dueTenants, ...notYetDueTenants];
+    return pending.sort((a, b) => getDueDay(a) - getDueDay(b));
   }, [eligibleTenants]);
-  
-  // Exclude locked tenants from financial totals
-  const unlockedOverdueTenants = overdueTenants.filter(t => !t.isLocked);
-  const unlockedAdvanceNotPaidTenants = advanceNotPaidTenants.filter(t => !t.isLocked);
-  const unlockedNotDueTenants = notDueTenants.filter(t => !t.isLocked);
-  const unlockedPartialTenants = partialTenants.filter(t => !t.isLocked);
-  
-  const totalOverdueRent = unlockedOverdueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalAdvanceNotPaidRent = unlockedAdvanceNotPaidTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalNotYetDueRent = unlockedNotDueTenants.reduce((sum, t) => sum + t.monthlyRent, 0);
-  const totalPartialPaid = unlockedPartialTenants.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
-  const totalPartialRemaining = unlockedPartialTenants.reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
-  
-  const getFloorName = (floor: number) => {
-    const floorNames: Record<number, string> = { 1: '1st Floor', 2: '2nd Floor', 3: '3rd Floor' };
-    return floorNames[floor] || `Floor ${floor}`;
+
+  // Filter pending by search input
+  const filteredPendingTenants = useMemo(() => {
+    return sortedPendingTenants.filter(t => 
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      t.roomNo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [sortedPendingTenants, searchTerm]);
+
+  // Group rooms by floors
+  const roomsByFloor = useMemo(() => {
+    const grouped: Record<number, Room[]> = {};
+    rooms.forEach(room => {
+      if (!grouped[room.floor]) {
+        grouped[room.floor] = [];
+      }
+      grouped[room.floor].push(room);
+    });
+    return grouped;
+  }, [rooms]);
+
+  const handleSendReminder = (tenantName: string, phone: string, amount: number, roomNo: string) => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (!cleanPhone) {
+      toast.error("Valid contact number not found for tenant");
+      return;
+    }
+    const message = `Hello ${tenantName}, this is a gentle reminder that your rent of ₹${amount.toLocaleString()} for Room ${roomNo} is pending. Please make the payment as soon as possible. Thank you!`;
+    const encodedText = encodeURIComponent(message);
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedText}`, "_blank");
+    toast.success(`Opening WhatsApp reminder chat for ${tenantName}`);
   };
-  
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return <div className="space-y-4">
-      <div className="rounded-xl border bg-card p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Reports</p>
-        <h2 className="mt-1 text-xl font-bold tracking-tight">{monthNames[selectedMonth - 1]} {selectedYear} health check</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Collections, vacant beds and dues in one place.</p>
+  const activeMonthName = monthNames[selectedMonth - 1];
+
+  return (
+    <div className="space-y-4 text-left">
+      {/* Visual Header */}
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-primary/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <Badge className="bg-primary/10 text-primary border-primary/20 mb-1 hover:bg-primary/20">
+            <Sparkles className="h-3 w-3 mr-1" /> Analytics Dashboard
+          </Badge>
+          <h2 className="text-xl font-bold tracking-tight">{activeMonthName} {selectedYear} Health Check</h2>
+          <p className="text-xs text-muted-foreground">
+            Complete financial, occupancy, and room health breakdown.
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handlePrintReport}
+          className="rounded-xl shrink-0 h-9 gap-1.5"
+        >
+          <Printer className="h-4 w-4" />
+          Print / Export
+        </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Collected</span>
-              <CheckCircle className="h-4 w-4 text-paid" />
-            </div>
-            <p className="mt-2 text-xl font-bold text-paid">₹{rentCollected.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{paidTenants.length + partialTenants.length} tenant payments</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Pending</span>
-              <IndianRupee className="h-4 w-4 text-pending" />
-            </div>
-            <p className="mt-2 text-xl font-bold text-pending">₹{pendingRent.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{sortedPendingTenants.length} tenants</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Vacant rooms</span>
-              <AlertTriangle className="h-4 w-4 text-vacant" />
-            </div>
-            <p className="mt-2 text-xl font-bold">{vacantRooms.length}</p>
-            <p className="text-xs text-muted-foreground">need tenant filling</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Open beds</span>
-              <BedDouble className="h-4 w-4 text-warning" />
-            </div>
-            <p className="mt-2 text-xl font-bold">{totalAvailableBeds}</p>
-            <p className="text-xs text-muted-foreground">across all rooms</p>
-          </CardContent>
-        </Card>
+      {/* Pill Navigation Tabs */}
+      <div className="flex bg-muted p-1 rounded-xl gap-1">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+            activeTab === 'overview' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('collections')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+            activeTab === 'collections' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Collections & Dues ({sortedPendingTenants.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('occupancy')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+            activeTab === 'occupancy' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Rooms & Beds
+        </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Vacant Rooms Report */}
-        <Card>
-          <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="h-5 w-5 text-vacant" />
-              Vacant Rooms ({vacantRooms.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-4">
-            {vacantRooms.length === 0 ? <p className="text-muted-foreground">All rooms have at least one tenant.</p> : <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1 scrollbar-hide">
-                {vacantRooms.map(room => <div key={room.roomNo} className="flex items-center justify-between p-3 bg-vacant-muted rounded-lg">
-                    <div>
-                      <div className="font-semibold">Room {room.roomNo}</div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {getFloorName(room.floor)} • {room.capacity} bed capacity
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">₹{room.rentAmount.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">Expected rent</div>
-                    </div>
-                  </div>)}
-              </div>}
-          </CardContent>
-        </Card>
-
-        {/* Available Beds Report - Grouped by Sharing Type */}
-        <Card>
-          <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-5 w-5 text-warning" />
-              Available Beds ({totalAvailableBeds})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-4">
-            <div className="max-h-[420px] space-y-4 overflow-y-auto pr-1 scrollbar-hide">
-              {Object.keys(bedsByShareType)
-                .map(Number)
-                .sort((a, b) => b - a) // Sort by sharing type descending (5S, 4S, 3S...)
-                .map(shareType => {
-                  const roomsInType = bedsByShareType[shareType];
-                  const totalBedsInType = roomsInType.reduce((sum, r) => sum + r.availableBeds, 0);
-                  
-                  return (
-                    <div key={shareType} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs font-medium">
-                          {shareType} Sharing
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {totalBedsInType} bed{totalBedsInType !== 1 ? 's' : ''} in {roomsInType.length} room{roomsInType.length !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {roomsInType.map(({ room, availableBeds }) => {
-                          const isFullyVacant = availableBeds === room.capacity;
-                          return (
-                            <div 
-                              key={room.roomNo} 
-                              className={`flex items-center justify-between p-2.5 rounded-lg ${
-                                isFullyVacant ? 'bg-vacant-muted' : 'bg-warning-muted'
-                              }`}
-                            >
-                              <div>
-                                <div className="font-medium text-sm">Room {room.roomNo}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {isFullyVacant 
-                                    ? `Fully vacant` 
-                                    : `${room.capacity - availableBeds}/${room.capacity} occupied`
-                                  }
-                                </div>
-                              </div>
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${isFullyVacant ? 'border-vacant text-vacant' : 'border-warning text-warning'}`}
-                              >
-                                {availableBeds} bed{availableBeds !== 1 ? 's' : ''}
-                              </Badge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              {totalAvailableBeds === 0 && (
-                <p className="text-muted-foreground text-center py-4">All beds are occupied!</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Rent Report - Sorted by due date */}
-        <Card>
-          <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="h-5 w-5 text-pending" />
-              Pending Rent ({sortedPendingTenants.length} tenants)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-4">
-            {sortedPendingTenants.length === 0 ? (
-              <p className="text-muted-foreground">All tenants have paid rent for {monthNames[selectedMonth - 1]}!</p>
-            ) : (
-              <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1 scrollbar-hide">
-                {sortedPendingTenants.map(tenant => {
-                  const isPartial = tenant.paymentCategory === 'partial';
-                  const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
-                  const dueDay = new Date(tenant.startDate).getDate();
-                  
-                  const bgClass = tenant.paymentCategory === 'overdue' 
-                    ? 'bg-overdue-muted border-l-4 border-overdue' 
-                    : tenant.paymentCategory === 'partial' 
-                    ? 'bg-partial-muted border-l-4 border-partial' 
-                    : tenant.paymentCategory === 'advance-not-paid' 
-                    ? 'bg-advance-not-paid-muted border-l-4 border-advance-not-paid' 
-                    : 'bg-blue-500/10 border-l-4 border-blue-500';
-                  
-                  const statusLabel = tenant.paymentCategory === 'overdue' 
-                    ? 'Overdue' 
-                    : tenant.paymentCategory === 'partial' 
-                    ? 'Partial' 
-                    : tenant.paymentCategory === 'advance-not-paid' 
-                    ? 'Advance Due' 
-                    : 'Not Yet Due';
-                  
-                  const textColorClass = tenant.paymentCategory === 'not-due' ? 'text-blue-600 dark:text-blue-400' : '';
-                  
-                  return (
-                    <div key={tenant.id} className={`flex items-center justify-between p-3 rounded-lg ${bgClass}`}>
-                      <div>
-                        <div className="font-semibold">
-                          {tenant.name}
-                          <span className="text-xs text-muted-foreground ml-1">
-                            Due: {dueDay}{dueDay === 1 ? 'st' : dueDay === 2 ? 'nd' : dueDay === 3 ? 'rd' : 'th'}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">Room {tenant.roomNo}</div>
-                        {isPartial && (
-                          <div className="text-xs mt-1">
-                            <span className="text-paid">Paid: ₹{(tenant.amountPaid || 0).toLocaleString()}</span>
-                            <span className="mx-1">•</span>
-                            <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-medium ${textColorClass || 'text-pending'}`}>₹{remaining.toLocaleString()}</div>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${
-                            tenant.paymentCategory === 'overdue' ? 'bg-overdue text-overdue-foreground' 
-                            : tenant.paymentCategory === 'partial' ? 'bg-partial text-partial-foreground' 
-                            : tenant.paymentCategory === 'advance-not-paid' ? 'bg-advance-not-paid text-advance-not-paid-foreground' 
-                            : 'bg-blue-500 text-white'
-                          }`}
-                        >
-                          {statusLabel}
-                        </Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {/* Summary section */}
-                <div className="mt-4 space-y-2">
-                  {unlockedPartialTenants.length > 0 && (
-                    <div className="p-3 rounded-lg bg-partial-muted">
-                      <div className="font-medium text-partial">Partial Payments: ₹{totalPartialRemaining.toLocaleString()} remaining</div>
-                      <div className="text-xs text-muted-foreground">({unlockedPartialTenants.length} tenants, ₹{totalPartialPaid.toLocaleString()} collected)</div>
-                    </div>
-                  )}
-
-                  {unlockedAdvanceNotPaidTenants.length > 0 && (
-                    <div className="p-3 rounded-lg bg-advance-not-paid-muted border-l-4 border-advance-not-paid">
-                      <div className="font-medium text-advance-not-paid">Advance Due: ₹{totalAdvanceNotPaidRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({unlockedAdvanceNotPaidTenants.length} tenants - due date passed)</div>
-                    </div>
-                  )}
-
-                  {unlockedNotDueTenants.length > 0 && (
-                    <div className="p-3 rounded-lg bg-blue-500/10 border-l-4 border-blue-500">
-                      <div className="font-medium text-blue-600 dark:text-blue-400">Not Yet Due: ₹{totalNotYetDueRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({unlockedNotDueTenants.length} tenants - due date upcoming)</div>
-                    </div>
-                  )}
-
-                  {unlockedOverdueTenants.length > 0 && (
-                    <div className="p-3 rounded-lg bg-overdue-muted">
-                      <div className="font-medium text-overdue">Overdue: ₹{totalOverdueRent.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">({unlockedOverdueTenants.length} tenants)</div>
-                    </div>
-                  )}
+      {/* Content Sheets */}
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
+          {/* Main Visual Gauges Grid */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Rent Collection Progress Gauge */}
+            <Card className="overflow-hidden border border-border/80">
+              <CardContent className="p-5 flex flex-col items-center text-center">
+                <div className="relative flex items-center justify-center h-28 w-28">
+                  {/* SVG circular track */}
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle 
+                      cx="56" cy="56" r="48" 
+                      className="text-muted/50 stroke-current" 
+                      strokeWidth="8" fill="none"
+                    />
+                    <circle 
+                      cx="56" cy="56" r="48" 
+                      className="text-emerald-500 stroke-current transition-all duration-700 ease-out" 
+                      strokeWidth="8" fill="none"
+                      strokeDasharray="301.6"
+                      strokeDashoffset={301.6 - (301.6 * collectionRate) / 100}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center">
+                    <span className="text-xl font-bold text-emerald-500">{collectionRate.toFixed(0)}%</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground uppercase">Collected</span>
+                  </div>
                 </div>
+                <h4 className="font-bold text-sm mt-3">Rent Collections Progress</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  ₹{rentCollected.toLocaleString()} of ₹{totalExpectedRevenue.toLocaleString()} received
+                </p>
+                <div className="w-full grid grid-cols-2 gap-2 mt-4 pt-4 border-t text-left">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Collected</span>
+                    <p className="text-sm font-bold text-emerald-500">₹{rentCollected.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Pending</span>
+                    <p className="text-sm font-bold text-amber-500">₹{pendingRent.toLocaleString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Occupancy Status Gauge */}
+            <Card className="overflow-hidden border border-border/80">
+              <CardContent className="p-5 flex flex-col items-center text-center">
+                <div className="relative flex items-center justify-center h-28 w-28">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle 
+                      cx="56" cy="56" r="48" 
+                      className="text-muted/50 stroke-current" 
+                      strokeWidth="8" fill="none"
+                    />
+                    <circle 
+                      cx="56" cy="56" r="48" 
+                      className="text-indigo-500 stroke-current transition-all duration-700 ease-out" 
+                      strokeWidth="8" fill="none"
+                      strokeDasharray="301.6"
+                      strokeDashoffset={301.6 - (301.6 * occupancyRate) / 100}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center">
+                    <span className="text-xl font-bold text-indigo-500">{occupancyRate.toFixed(0)}%</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground uppercase">Occupied</span>
+                  </div>
+                </div>
+                <h4 className="font-bold text-sm mt-3">Active Bed Occupancy</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {occupiedBeds} beds filled out of {totalBeds} total capacity
+                </p>
+                <div className="w-full grid grid-cols-2 gap-2 mt-4 pt-4 border-t text-left">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Vacant Rooms</span>
+                    <p className="text-sm font-bold text-rose-500">{vacantRooms.length}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">Vacant Beds</span>
+                    <p className="text-sm font-bold text-indigo-500">{totalAvailableBeds}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Insights Highlights Grid */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Card className="bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-500/10">
+              <CardContent className="p-4 space-y-1">
+                <span className="text-[10px] uppercase font-semibold text-emerald-600 dark:text-emerald-400">Total Collected</span>
+                <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">₹{rentCollected.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">{paidTenants.length + partialTenants.length} Paid payments</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-amber-50/50 dark:bg-amber-950/10 border-amber-500/10">
+              <CardContent className="p-4 space-y-1">
+                <span className="text-[10px] uppercase font-semibold text-amber-600 dark:text-amber-400">Total Outstanding</span>
+                <p className="text-lg font-black text-amber-600 dark:text-amber-400">₹{pendingRent.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">{sortedPendingTenants.length} Pending tenants</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-indigo-50/50 dark:bg-indigo-950/10 border-indigo-500/10">
+              <CardContent className="p-4 space-y-1">
+                <span className="text-[10px] uppercase font-semibold text-indigo-600 dark:text-indigo-400">Occupied Rooms</span>
+                <p className="text-lg font-black text-indigo-600 dark:text-indigo-400">{rooms.length - vacantRooms.length}</p>
+                <p className="text-[10px] text-muted-foreground">{partiallyOccupiedRooms.length} Partially filled</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-purple-50/50 dark:bg-purple-950/10 border-purple-500/10">
+              <CardContent className="p-4 space-y-1">
+                <span className="text-[10px] uppercase font-semibold text-purple-600 dark:text-purple-400">Average Collection</span>
+                <p className="text-lg font-black text-purple-600 dark:text-purple-400">
+                  ₹{eligibleTenants.length > 0 ? Math.round(rentCollected / eligibleTenants.length).toLocaleString() : 0}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Per registered tenant</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'collections' && (
+        <Card className="border border-border/80">
+          <CardHeader className="pb-3 pt-4 px-4 flex flex-col xs:flex-row xs:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-bold">Pending Dues & Reminders</CardTitle>
+              <p className="text-xs text-muted-foreground">List of tenants with outstanding payments for this rent cycle.</p>
+            </div>
+            <div className="relative w-full xs:w-48">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search tenant or room..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 h-8 rounded-lg text-xs"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredPendingTenants.length === 0 ? (
+              <div className="text-center py-10 px-4">
+                <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-sm">All clear!</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {searchTerm ? "No pending tenants match your filter." : "All tenants have paid rent for this month."}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-t">
+                  <thead>
+                    <tr className="bg-muted/40 border-b">
+                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase">Tenant / Room</th>
+                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase">Status</th>
+                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase text-right">Pending Amount</th>
+                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase text-center">Remind</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {filteredPendingTenants.map((tenant) => {
+                      const isPartial = tenant.paymentCategory === 'partial';
+                      const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
+                      const dueDay = new Date(tenant.startDate).getDate();
+                      
+                      const statusBadgeColor = 
+                        tenant.paymentCategory === 'overdue' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                        : tenant.paymentCategory === 'partial' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                        : tenant.paymentCategory === 'advance-not-paid' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                        : 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+
+                      return (
+                        <tr key={tenant.id} className="hover:bg-muted/20 transition-colors">
+                          <td className="p-3">
+                            <div className="font-semibold text-foreground">{tenant.name}</div>
+                            <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                              <span className="bg-muted px-1 py-0.2 rounded font-mono">Room {tenant.roomNo}</span>
+                              <span>•</span>
+                              <span>Due day: {dueDay}</span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <Badge variant="outline" className={`text-[10px] font-semibold border ${statusBadgeColor}`}>
+                              {tenant.paymentCategory === 'overdue' ? 'Overdue' 
+                               : tenant.paymentCategory === 'partial' ? 'Partially Paid' 
+                               : tenant.paymentCategory === 'advance-not-paid' ? 'Advance Due' 
+                               : 'Not Yet Due'}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="font-bold text-foreground">₹{remaining.toLocaleString()}</div>
+                            {isPartial && (
+                              <div className="text-[9px] text-muted-foreground mt-0.5">
+                                Paid: ₹{(tenant.amountPaid || 0).toLocaleString()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg"
+                              onClick={() => handleSendReminder(tenant.name, tenant.phone, remaining, tenant.roomNo)}
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
         </Card>
+      )}
 
-        {/* Monthly Collection Summary */}
-        <Card>
-          <CardHeader className="pb-3 px-3 pt-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle className="h-5 w-5 text-paid" />
-              {monthNames[selectedMonth - 1]} {selectedYear} Collection
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 bg-paid-muted rounded-lg">
-                <div className="text-2xl font-bold text-paid">₹{rentCollected.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Rent Collected ({paidTenants.length + partialTenants.length} tenants)</div>
-              </div>
-              
-              <div className="p-3 bg-pending-muted rounded-lg">
-                <div className="text-2xl font-bold text-pending">₹{pendingRent.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Pending Rent ({sortedPendingTenants.length} tenants)</div>
-              </div>
-            </div>
+      {activeTab === 'occupancy' && (
+        <div className="space-y-4">
+          {/* Floor lists */}
+          {Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b).map((floor) => {
+            const floorRooms = roomsByFloor[floor];
+            const floorBeds = floorRooms.reduce((sum, r) => sum + r.capacity, 0);
+            const floorOccupied = floorRooms.reduce((sum, r) => sum + getActiveTenantsInMonth(r).length, 0);
+            const floorAvailable = floorBeds - floorOccupied;
 
-            <div className="mt-4">
-              <div className="text-sm font-medium mb-2">Collection Progress</div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-paid h-2 rounded-full transition-all duration-500" style={{
-                width: `${rentCollected + pendingRent > 0 ? rentCollected / (rentCollected + pendingRent) * 100 : 0}%`
-              }}></div>
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {rentCollected + pendingRent > 0 ? `${(rentCollected / (rentCollected + pendingRent) * 100).toFixed(1)}% collected` : '0% collected'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>;
+            return (
+              <Card key={floor} className="border border-border/80 overflow-hidden">
+                <CardHeader className="bg-muted/40 p-4 border-b">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left">
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-primary shrink-0" />
+                      <CardTitle className="text-sm font-bold">Floor {floor}</CardTitle>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-3">
+                      <span>Occupied: <strong>{floorOccupied}</strong> / {floorBeds} Beds</span>
+                      <span className="h-3 w-[1px] bg-border" />
+                      <span className="text-emerald-500">Available: <strong>{floorAvailable}</strong> Beds</span>
+                    </div>
+                  </div>
+                  <Progress 
+                    value={floorBeds > 0 ? (floorOccupied / floorBeds) * 100 : 0} 
+                    className="h-1.5 mt-2 bg-muted-foreground/10" 
+                  />
+                </CardHeader>
+                <CardContent className="p-3">
+                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    {floorRooms.sort((a,b) => a.roomNo.localeCompare(b.roomNo)).map((room) => {
+                      const roomOccupied = getActiveTenantsInMonth(room).length;
+                      const roomAvailable = room.capacity - roomOccupied;
+                      const isVacant = roomOccupied === 0;
+                      const isFull = roomOccupied >= room.capacity;
+
+                      return (
+                        <div 
+                          key={room.roomNo} 
+                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                            isVacant 
+                              ? 'bg-rose-500/5 border-rose-500/10' 
+                              : isFull 
+                                ? 'bg-emerald-500/5 border-emerald-500/10' 
+                                : 'bg-amber-500/5 border-amber-500/10'
+                          }`}
+                        >
+                          <div className="text-left space-y-0.5">
+                            <span className="text-xs font-bold text-foreground">Room {room.roomNo}</span>
+                            <p className="text-[10px] text-muted-foreground">
+                              {room.capacity} Sharing • {room.isAc ? "A/C" : "Non-A/C"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                              isVacant 
+                                ? "bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                : isFull
+                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                  : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                            }`}>
+                              {isVacant ? "Vacant" : isFull ? "Full" : `${roomOccupied}/${room.capacity} Bed`}
+                            </span>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">{roomAvailable} Available</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 };
