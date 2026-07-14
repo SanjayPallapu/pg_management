@@ -57,7 +57,7 @@ import { useNavigate } from "react-router-dom";
 import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
 import { NotificationPreferencesSheet } from "./settings/NotificationPreferencesSheet";
 import { ManagePropertiesSheet } from "./settings/ManagePropertiesSheet";
-import { StaffManagementSheet } from "./settings/StaffManagementSheet";
+
 import { ChangePasswordDialog } from "./settings/ChangePasswordDialog";
 import { LoginActivityDialog } from "./settings/LoginActivityDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -106,7 +106,7 @@ const SectionHeader = ({ title }: { title: string }) => (
 );
 
 export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
-  const { user, isAdmin, isOwner, isStaff, role, signOut } = useAuth();
+  const { user, isAdmin, isOwner, role, signOut } = useAuth();
   const { currentPG } = usePG();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -116,7 +116,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const [reportsOpen, setReportsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
-  const [staffOpen, setStaffOpen] = useState(false);
+
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [loginActivityOpen, setLoginActivityOpen] = useState(false);
 
@@ -130,7 +130,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       setDeleteConfirmOpen(false);
       setNotificationsOpen(false);
       setPropertiesOpen(false);
-      setStaffOpen(false);
+
       setChangePasswordOpen(false);
       setLoginActivityOpen(false);
     };
@@ -227,7 +227,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const getRoleBadge = () => {
     if (isAdmin) return { label: "Admin", color: "bg-primary/15 text-primary" };
     if (isOwner) return { label: "Owner", color: "bg-success/15 text-success" };
-    if (isStaff) return { label: "Staff", color: "bg-pending/15 text-pending" };
+
     return { label: "User", color: "bg-muted text-muted-foreground" };
   };
 
@@ -271,7 +271,8 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                   <User className="h-7 w-7 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-base font-bold">{user?.email || "User"}</h2>
+                  <h2 className="truncate text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
+                  {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
                   <div className="mt-1 flex items-center gap-2">
                     <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${roleBadge.color}`}>
                       <Shield className="h-3 w-3" />
@@ -335,22 +336,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 description="Occupancy, vacancy, collections & bed availability"
                 onClick={() => setReportsOpen(true)}
               />
-              {isAdmin && (
-                <>
-                  <SettingItem
-                    icon={<Users className="h-4 w-4 text-primary" />}
-                    label="Staff Management"
-                    description="Add or manage staff access"
-                    onClick={() => setStaffOpen(true)}
-                  />
-                  <SettingItem
-                    icon={<Bell className="h-4 w-4 text-primary" />}
-                    label={pendingApprovalCount > 0 ? `Payment Approvals (${pendingApprovalCount} pending)` : "Payment Approvals"}
-                    description="Review and approve pro plan proof of payments"
-                    onClick={() => setAdminApprovalOpen(true)}
-                  />
-                </>
-              )}
+
               <SettingItem
                 icon={<CreditCard className="h-4 w-4 text-primary" />}
                 label="Subscription"
@@ -484,7 +470,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       )}
       <NotificationPreferencesSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <ManagePropertiesSheet open={propertiesOpen} onOpenChange={setPropertiesOpen} />
-      <StaffManagementSheet open={staffOpen} onOpenChange={setStaffOpen} />
+
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
       <LoginActivityDialog open={loginActivityOpen} onOpenChange={setLoginActivityOpen} />
 
@@ -507,7 +493,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
               <ul className="list-disc pl-4 space-y-0.5 mt-1">
                 <li>All properties (PGs) registered under this account</li>
                 <li>All rooms, tenants, payment history, and utility bills data</li>
-                <li>Your user profile, settings, and staff/owner permissions</li>
+                <li>Your user profile, settings, and permissions</li>
               </ul>
             </div>
 

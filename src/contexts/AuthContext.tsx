@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/proxyClient';
 
-export type AppRole = 'admin' | 'owner' | 'staff';
+export type AppRole = 'admin' | 'owner';
 
 interface AuthContextType {
   user: User | null;
@@ -14,7 +14,6 @@ interface AuthContextType {
   hasRole: boolean;
   isAdmin: boolean;
   isOwner: boolean;
-  isStaff: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string) => Promise<AuthResponse>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       setSession(mockSession as any);
       setUser(mockUser as any);
-      setRole('admin');
+      setRole('owner');
       setIsLoading(false);
       return () => {};
     }
@@ -76,9 +75,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('[Auth] Retry also failed:', retry.error.message);
             return null;
           }
-          return retry.data?.role as AppRole | null;
+          const rawRetry = retry.data?.role as string | null;
+          return (rawRetry === 'staff' ? 'owner' : rawRetry) as AppRole | null;
         }
-        return data?.role as AppRole | null;
+        const rawRole = data?.role as string | null;
+        return (rawRole === 'staff' ? 'owner' : rawRole) as AppRole | null;
       } catch (e) {
         console.error('[Auth] Exception fetching role:', e);
         return null;
@@ -246,8 +247,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: !!session,
     hasRole: !!role,
     isAdmin: role === 'admin',
-    isOwner: role === 'owner',
-    isStaff: role === 'staff',
+    isOwner: role === 'owner' || role === 'admin',
     signIn,
     signUp,
     signInWithGoogle,
@@ -271,7 +271,6 @@ export const useAuth = (): AuthContextType => {
       hasRole: false,
       isAdmin: false,
       isOwner: false,
-      isStaff: false,
       signIn: async () => ({ error: new Error('Auth not ready') }),
       signUp: async () => ({ data: null, error: new Error('Auth not ready') }),
       signInWithGoogle: async () => ({ error: new Error('Auth not ready') }),

@@ -167,13 +167,8 @@ export const PGProvider = ({ children }: PGProviderProps) => {
 
   const isProUser = subscription?.status === 'active' && subscription?.plan === 'pro';
   
-  // User needs setup if:
-  // 1. No PGs created yet, AND subscription is active
-  // 2. OR subscription is not active (needs payment approval)
-  // Admin users bypass subscription requirements entirely
-  // IMPORTANT: Don't show setup while data is still loading to prevent flash
-  const needsSubscription = isAdmin ? false : (!subscription || subscription.status === 'expired');
-  const needsSetup = !isLoading && !authLoading && (pgs.length === 0 || needsSubscription);
+  // User needs setup if no PGs created yet
+  const needsSetup = !isLoading && !authLoading && pgs.length === 0;
 
   const value: PGContextType = {
     pgs,

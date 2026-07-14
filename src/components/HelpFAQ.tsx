@@ -44,11 +44,7 @@ const FAQ_DATA: FAQItem[] = [
     question: "Can I manage multiple PG properties?",
     answer: "Yes! Tap the PG icon in the top-left corner to switch between PGs or add a new one. Each PG has its own rooms, tenants, and financial data completely separated.",
   },
-  {
-    category: "Getting Started",
-    question: "How do I add staff members?",
-    answer: "Go to Settings → Staff Management. You can add staff by their email. Staff can collect rent and manage tenants but cannot access billing or delete data.",
-  },
+
   // Rooms & Tenants
   {
     category: "Rooms & Tenants",
@@ -119,11 +115,7 @@ const FAQ_DATA: FAQItem[] = [
     question: "Is my data safe?",
     answer: "Yes! All data is stored securely on Supabase with row-level security. Each owner can only see their own PG data. We use HTTPS encryption for all data in transit.",
   },
-  {
-    category: "Security",
-    question: "Can my staff see financial reports?",
-    answer: "Staff members have limited access. They can record payments and manage tenants but cannot view subscription details, export data, or access admin settings.",
-  },
+
 ];
 
 const CATEGORIES = [

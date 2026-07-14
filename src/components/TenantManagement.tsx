@@ -96,9 +96,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { isAdmin, isOwner, isStaff } = useAuth();
+  const { isOwner } = useAuth();
   const { collectors } = useCollectorNames();
-  const canManageTenants = isAdmin || isOwner || isStaff;
+  const canManageTenants = isOwner;
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement>(null);

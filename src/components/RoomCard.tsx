@@ -68,11 +68,11 @@ interface RoomCardProps {
 export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: RoomCardProps) => {
   const { payments, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { isAdmin, isOwner, isStaff } = useAuth();
+  const { isOwner } = useAuth();
   const { currentPG } = usePG();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
-  const canManageTenants = isAdmin || isOwner || isStaff;
+  const canManageTenants = isOwner;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);

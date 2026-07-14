@@ -97,7 +97,7 @@ export const NotificationPreferencesSheet = ({ open, onOpenChange }: Notificatio
                       App Push Notifications
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Get alert notifications when rent is collected or staff actions occur
+                      Get alert notifications when rent is collected or important activity occurs
                     </p>
                   </div>
                 </div>

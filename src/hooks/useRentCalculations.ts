@@ -81,7 +81,11 @@ export const useRentCalculations = ({
           const tenantDueDay = joinDate.getDate();
           
           // Calculate pro-rata rent for mid-month leavers
-          const amountPaid = payment?.amountPaid || 0;
+          // Prefer amountPaid from DB; fallback to summing paymentEntries if amountPaid is 0/missing
+          let amountPaid = payment?.amountPaid || 0;
+          if (amountPaid === 0 && payment?.paymentEntries?.length) {
+            amountPaid = payment.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+          }
           const { effectiveRent, daysStayed, isProRata } = calculateProRataRent(
             tenant.monthlyRent,
             tenant.startDate,
