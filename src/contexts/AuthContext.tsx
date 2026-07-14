@@ -75,11 +75,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('[Auth] Retry also failed:', retry.error.message);
             return null;
           }
-          const rawRetry = retry.data?.role as string | null;
-          return (rawRetry === 'staff' ? 'owner' : rawRetry) as AppRole | null;
+          return retry.data?.role as AppRole | null;
         }
-        const rawRole = data?.role as string | null;
-        return (rawRole === 'staff' ? 'owner' : rawRole) as AppRole | null;
+        return data?.role as AppRole | null;
       } catch (e) {
         console.error('[Auth] Exception fetching role:', e);
         return null;

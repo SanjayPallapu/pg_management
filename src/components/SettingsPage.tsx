@@ -65,7 +65,7 @@ import { motion } from "framer-motion";
 import { ThreeDScene } from "@/components/ThreeDScene";
 
 const APP_VERSION = "1.0.0";
-const SUPPORT_EMAIL = "support@pgmanagement.app";
+const SUPPORT_EMAIL = "support@pgmanager.in";
 
 interface SettingItemProps {
   icon: React.ReactNode;

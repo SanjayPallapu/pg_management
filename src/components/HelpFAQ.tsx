@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-const SUPPORT_EMAIL = "support@pgmanagement.app";
+const SUPPORT_EMAIL = "support@pgmanager.in";
 
 interface FAQItem {
   question: string;
@@ -101,13 +101,18 @@ const FAQ_DATA: FAQItem[] = [
   // Billing & Subscription
   {
     category: "Billing & Subscription",
-    question: "Is the app free to use?",
+    question: "Is there a free trial?",
+    answer: "Yes, you can register and manage up to 5 rooms completely free of charge. To unlock unlimited rooms and premium features, you can upgrade to our Pro plan.",
+  },
+  {
+    category: "Billing & Subscription",
+    question: "What are the subscription plans?",
     answer: "The basic plan with essential features is available for all users. Premium features like bulk reminders, advanced reports, and multi-PG support require a subscription starting at ₹499/month.",
   },
   {
     category: "Billing & Subscription",
     question: "How do I cancel my subscription?",
-    answer: "Email support@pgmanagement.app from your registered email with the subject 'Cancel subscription'. We'll process it before your next billing cycle.",
+    answer: "Email support@pgmanager.in from your registered email with the subject 'Cancel subscription'. We'll process it before your next billing cycle.",
   },
   // Security
   {
