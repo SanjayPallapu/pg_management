@@ -376,8 +376,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
             )}
           </SheetHeader>
 
-          {/* Denser Content Area */}
-          <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 bg-background">
+          <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-3 bg-background">
             {isAdding ? (
               <div className="space-y-3.5 text-left">
                 

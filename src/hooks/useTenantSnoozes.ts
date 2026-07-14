@@ -24,13 +24,43 @@ export const useTenantSnoozes = () => {
     queryKey: ["tenant_snoozes", currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return [];
+      
+      // Step 1: Fetch rooms in this PG
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('pg_id', currentPG.id);
+
+      if (roomsError) {
+        console.error('[Snoozes] Failed to fetch rooms', roomsError);
+        throw roomsError;
+      }
+
+      const roomIds = (roomsData || []).map(r => r.id);
+      if (roomIds.length === 0) return [];
+
+      // Step 2: Fetch tenants in those rooms
+      const { data: tenantsData, error: tenantsError } = await supabase
+        .from('tenants')
+        .select('id')
+        .in('room_id', roomIds);
+
+      if (tenantsError) {
+        console.error('[Snoozes] Failed to fetch tenants', tenantsError);
+        throw tenantsError;
+      }
+
+      const tenantIds = (tenantsData || []).map(t => t.id);
+      if (tenantIds.length === 0) return [];
+
       const today = todayStr();
       const { data, error } = await supabase
         .from("tenant_snoozes")
-        .select("*, tenants!inner(id, room_id, rooms!inner(pg_id))")
-        .eq("tenants.rooms.pg_id", currentPG.id)
+        .select("*")
+        .in("tenant_id", tenantIds)
         .gte("snoozed_until", today)
         .order("snoozed_until", { ascending: true });
+
       if (error) throw error;
       return (data || []).map((s: any) => ({
         id: s.id,

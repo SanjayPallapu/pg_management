@@ -579,7 +579,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <SheetHeader className="px-3 pt-3 pb-2 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={() => setReportsOpen(false)} className="h-8 w-8 shrink-0">
                   <ArrowLeft className="h-5 w-5" />
@@ -589,7 +589,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 </SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+            <div className="flex-1 overflow-y-auto px-2.5 py-3 bg-background">
               <Reports rooms={rooms} />
             </div>
           </div>

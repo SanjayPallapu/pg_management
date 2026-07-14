@@ -17,14 +17,42 @@ export const useTenantPayments = () => {
         return [];
       }
 
-      // Optimized: single query using inner join instead of 3 sequential queries
+      // Step 1: Fetch rooms in this PG
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('pg_id', currentPG.id);
+
+      if (roomsError) {
+        console.error('[Payments] Failed to fetch rooms', roomsError);
+        throw roomsError;
+      }
+
+      const roomIds = (roomsData || []).map(r => r.id);
+      if (roomIds.length === 0) return [];
+
+      // Step 2: Fetch tenants in those rooms
+      const { data: tenantsData, error: tenantsError } = await supabase
+        .from('tenants')
+        .select('id')
+        .in('room_id', roomIds);
+
+      if (tenantsError) {
+        console.error('[Payments] Failed to fetch tenants', tenantsError);
+        throw tenantsError;
+      }
+
+      const tenantIds = (tenantsData || []).map(t => t.id);
+      if (tenantIds.length === 0) return [];
+
+      // Step 3: Fetch tenant payments for those active tenants
       const currentDate = new Date();
       const cutoffYear = currentDate.getFullYear() - 1;
 
       const { data, error } = await supabase
         .from('tenant_payments')
-        .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, ac_payment_status, tenants!inner(room_id, rooms!inner(pg_id))')
-        .eq('tenants.rooms.pg_id', currentPG.id)
+        .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, ac_payment_status')
+        .in('tenant_id', tenantIds)
         .gte('year', cutoffYear)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
