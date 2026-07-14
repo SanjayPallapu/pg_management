@@ -450,7 +450,6 @@ export type Database = {
           id: string
           month: number
           room_id: string
-          source: string
           unit_price: number
           units: number
           updated_at: string
@@ -461,7 +460,6 @@ export type Database = {
           id?: string
           month: number
           room_id: string
-          source?: string
           unit_price?: number
           units?: number
           updated_at?: string
@@ -472,7 +470,6 @@ export type Database = {
           id?: string
           month?: number
           room_id?: string
-          source?: string
           unit_price?: number
           units?: number
           updated_at?: string
@@ -784,7 +781,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "owner" | "staff"
+      app_role: "admin" | "staff"
       subscription_status: "free" | "pending" | "active" | "expired"
     }
     CompositeTypes: {
@@ -913,7 +910,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "owner", "staff"],
+      app_role: ["admin", "staff"],
       subscription_status: ["free", "pending", "active", "expired"],
     },
   },
