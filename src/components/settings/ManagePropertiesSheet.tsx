@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ArrowLeft, 
@@ -22,7 +21,10 @@ import {
   Home,
   Sparkles,
   Info,
-  DollarSign
+  DollarSign,
+  User,
+  Users,
+  Compass
 } from "lucide-react";
 import { usePG } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,7 +63,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   const [floorsInput, setFloorsInput] = useState(3);
   // Custom rooms count per floor (keyed by floor number)
   const [roomsPerFloor, setRoomsPerFloor] = useState<Record<number, number>>({
-    1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5, 9: 5, 10: 5
+    1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4
   });
   
   // Enabled sharing types in this PG
@@ -74,10 +76,10 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
   // Price per sharing type (Rent per bed in ₹)
   const [sharingPrices, setSharingPrices] = useState<Record<number, number>>({
-    1: 10000,
-    2: 7000,
-    3: 5500,
-    4: 4500,
+    1: 8000,
+    2: 5000,
+    3: 4000,
+    4: 3000,
   });
 
   // Generated building blueprint (Step 3) - User can customize capacities and rents room-by-room
@@ -92,9 +94,9 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     setAddressInput("");
     setPgTypeInput("unisex");
     setFloorsInput(3);
-    setRoomsPerFloor({ 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5, 9: 5, 10: 5 });
+    setRoomsPerFloor({ 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4 });
     setEnabledSharings({ 1: true, 2: true, 3: false, 4: false });
-    setSharingPrices({ 1: 10000, 2: 7000, 3: 5500, 4: 4500 });
+    setSharingPrices({ 1: 8000, 2: 5000, 3: 4000, 4: 3000 });
     setBlueprint([]);
     setElectricityRateInput(10);
     setWizardStep(1);
@@ -110,10 +112,10 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
       .find(k => enabledSharings[k]) || 2; // Fallback to first active sharing
 
     for (let f = 1; f <= floorsInput; f++) {
-      const roomCount = roomsPerFloor[f] || 5;
+      const roomCount = roomsPerFloor[f] || 4;
       for (let r = 1; r <= roomCount; r++) {
         const roomNo = `${f}${r.toString().padStart(2, "0")}`;
-        const price = sharingPrices[baseSharing] || 6000;
+        const price = sharingPrices[baseSharing] || 5000;
         list.push({
           roomNo,
           floor: f,
@@ -127,11 +129,10 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     setWizardStep(3);
   };
 
-  // Toggle/Update a room capacity in blueprint (updates capacity and calculates rent dynamically)
   const handleUpdateRoomCapacity = (roomNo: string, newCapacity: number) => {
     setBlueprint(prev => prev.map(room => {
       if (room.roomNo === roomNo) {
-        const unitPrice = sharingPrices[newCapacity] || 5000;
+        const unitPrice = sharingPrices[newCapacity] || 4000;
         return {
           ...room,
           capacity: newCapacity,
@@ -154,9 +155,8 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   const handleUpdateRoomAC = (roomNo: string, isAc: boolean) => {
     setBlueprint(prev => prev.map(room => {
       if (room.roomNo === roomNo) {
-        // Optional premium surcharge for A/C rooms (e.g. +1000 per bed)
         const premium = isAc ? 1000 * room.capacity : 0;
-        const baseRate = sharingPrices[room.capacity] || 5000;
+        const baseRate = sharingPrices[room.capacity] || 4000;
         return { 
           ...room, 
           isAc,
@@ -175,7 +175,6 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
     setIsSubmitting(true);
     try {
-      // 1. Create the new PG record
       const { data: newPg, error: pgError } = await supabase
         .from("pgs")
         .insert({
@@ -190,7 +189,6 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
       if (pgError) throw pgError;
 
-      // 2. Insert rooms from blueprint in bulk
       const roomsToAdd = blueprint.map(room => ({
         pg_id: newPg.id,
         room_no: room.roomNo,
@@ -300,7 +298,6 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     setIsAdding(false);
   };
 
-  // Group blueprint rooms by floor for Step 3 rendering
   const blueprintByFloor = useMemo(() => {
     const grouped: Record<number, RoomBlueprint[]> = {};
     blueprint.forEach(room => {
@@ -317,41 +314,44 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     }}>
       <SheetContent 
         side="right" 
-        className="w-full max-w-full sm:max-w-2xl p-0 [&>button]:hidden bg-background"
+        className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-background"
       >
-        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => {
-                  if (isAdding) {
-                    if (wizardStep > 1) {
-                      setWizardStep((prev) => (prev - 1) as any);
-                    } else {
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900">
+          {/* Compact Premium Header */}
+          <SheetHeader className="px-4 py-3 border-b bg-background shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => {
+                    if (isAdding) {
+                      if (wizardStep > 1) {
+                        setWizardStep((prev) => (prev - 1) as any);
+                      } else {
+                        resetForm();
+                      }
+                    } else if (isEditing) {
                       resetForm();
+                    } else {
+                      onOpenChange(false);
                     }
-                  } else if (isEditing) {
-                    resetForm();
-                  } else {
-                    onOpenChange(false);
-                  }
-                }} 
-                className="h-8 w-8 shrink-0"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Building className="h-4 w-4 text-primary shrink-0" />
-                <SheetTitle className="text-base font-bold text-left truncate">
-                  {isAdding 
-                    ? `Add PG (Step ${wizardStep} of 4)` 
-                    : isEditing 
-                      ? "Edit Property Settings" 
-                      : "Manage Properties"
-                  }
-                </SheetTitle>
+                  }} 
+                  className="h-7 w-7 rounded-lg shrink-0"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div className="text-left">
+                  <SheetTitle className="text-sm font-bold flex items-center gap-1.5 leading-none">
+                    <Building className="h-3.5 w-3.5 text-primary shrink-0" />
+                    {isAdding 
+                      ? `Add PG (${wizardStep}/4)` 
+                      : isEditing 
+                        ? "Edit PG Details" 
+                        : "My Properties"
+                    }
+                  </SheetTitle>
+                </div>
               </div>
               {!isAdding && !isEditing && (
                 <Button 
@@ -359,88 +359,92 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                   size="sm" 
                   className="h-8 gap-1 rounded-lg text-xs"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-3 w-3" />
                   Add PG
                 </Button>
               )}
             </div>
 
-            {/* Steps Visual Tracker */}
+            {/* Compact Step Progress Bar */}
             {isAdding && (
-              <div className="flex items-center justify-between px-2 pt-2 pb-1 border-t">
-                {[1, 2, 3, 4].map((step) => (
-                  <div key={step} className="flex items-center gap-1.5 flex-1">
-                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      wizardStep === step
-                        ? "bg-primary text-primary-foreground scale-110 shadow-sm"
-                        : wizardStep > step
-                          ? "bg-primary/20 text-primary animate-pulse"
-                          : "bg-muted text-muted-foreground"
-                    }`}>
-                      {step}
-                    </div>
-                    <span className={`text-[10px] font-semibold hidden sm:inline ${
-                      wizardStep === step ? "text-foreground" : "text-muted-foreground"
-                    }`}>
-                      {step === 1 ? "Details" : step === 2 ? "Pricing" : step === 3 ? "Blueprint" : "Save"}
-                    </span>
-                    {step < 4 && <div className="h-0.5 flex-1 bg-border mx-1" />}
-                  </div>
-                ))}
+              <div className="w-full bg-muted h-1 rounded-full mt-2.5 overflow-hidden">
+                <div 
+                  className="bg-primary h-full transition-all duration-300"
+                  style={{ width: `${(wizardStep / 4) * 100}%` }}
+                />
               </div>
             )}
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+          {/* Denser Content Area */}
+          <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 bg-background">
             {isAdding ? (
-              <div className="space-y-4 text-left">
+              <div className="space-y-3.5 text-left">
                 
                 {/* STEP 1: GENERAL PROFILE DETAILS */}
                 {wizardStep === 1 && (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border bg-muted/20 p-3 flex gap-3 items-center">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                        <Home className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground">PG Profile</h4>
-                        <p className="text-[10px] text-muted-foreground">Setup base name, address and co-living category.</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="propertyName">PG / Building Name</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="propertyName" className="text-xs font-semibold">PG Name</Label>
                       <Input 
                         id="propertyName"
-                        placeholder="e.g. Serene Residency HSR"
+                        placeholder="e.g. Royal Orchid Unisex PG"
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
                         required
+                        className="h-9 text-xs rounded-lg"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="propertyAddress">Address</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="propertyAddress" className="text-xs font-semibold">Address / Area</Label>
                       <Input 
                         id="propertyAddress"
-                        placeholder="e.g. #42, Sector 1, HSR Layout"
+                        placeholder="e.g. Sector 2, HSR Layout"
                         value={addressInput}
                         onChange={(e) => setAddressInput(e.target.value)}
+                        className="h-9 text-xs rounded-lg"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="pgCategory">PG Category</Label>
-                      <Select value={pgTypeInput} onValueChange={(val: any) => setPgTypeInput(val)}>
-                        <SelectTrigger id="pgCategory">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unisex">Unisex / Co-living</SelectItem>
-                          <SelectItem value="boys">Boys Hostel Only</SelectItem>
-                          <SelectItem value="girls">Girls Hostel Only</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Highly visual gender type selection check-cards */}
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold">PG Category</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div 
+                          onClick={() => setPgTypeInput("unisex")}
+                          className={`cursor-pointer border rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-[0.98] ${
+                            pgTypeInput === "unisex" 
+                              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20" 
+                              : "border-border hover:bg-muted/40 text-muted-foreground"
+                          }`}
+                        >
+                          <Compass className="h-4 w-4" />
+                          <span className="text-[10px] font-bold">Co-Living</span>
+                        </div>
+                        <div 
+                          onClick={() => setPgTypeInput("boys")}
+                          className={`cursor-pointer border rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-[0.98] ${
+                            pgTypeInput === "boys" 
+                              ? "border-blue-500 bg-blue-500/5 text-blue-500 ring-1 ring-blue-500/20" 
+                              : "border-border hover:bg-muted/40 text-muted-foreground"
+                          }`}
+                        >
+                          <User className="h-4 w-4" />
+                          <span className="text-[10px] font-bold">Boys Only</span>
+                        </div>
+                        <div 
+                          onClick={() => setPgTypeInput("girls")}
+                          className={`cursor-pointer border rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 transition-all active:scale-[0.98] ${
+                            pgTypeInput === "girls" 
+                              ? "border-pink-500 bg-pink-500/5 text-pink-500 ring-1 ring-pink-500/20" 
+                              : "border-border hover:bg-muted/40 text-muted-foreground"
+                          }`}
+                        >
+                          <Users className="h-4 w-4" />
+                          <span className="text-[10px] font-bold">Girls Only</span>
+                        </div>
+                      </div>
                     </div>
 
                     <Button 
@@ -451,29 +455,19 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                         }
                         setWizardStep(2);
                       }}
-                      className="w-full rounded-xl h-10 mt-2 gap-2"
+                      className="w-full rounded-xl h-9 mt-2 text-xs font-semibold gap-1"
                     >
-                      Next: Configuration
-                      <ArrowRight className="h-4 w-4" />
+                      Configure Structure
+                      <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 )}
 
                 {/* STEP 2: STRUCTURE & PRICES SETUP */}
                 {wizardStep === 2 && (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border bg-muted/20 p-3 flex gap-3 items-center">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                        <Layers className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground">Custom Structure & Rent Pricing</h4>
-                        <p className="text-[10px] text-muted-foreground">Specify custom rooms per floor and rent per sharing capacity.</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="floorsCount">Number of Floors</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="floorsCount" className="text-xs font-semibold">Total Floors</Label>
                       <Input 
                         id="floorsCount"
                         type="number"
@@ -481,40 +475,41 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                         max={10}
                         value={floorsInput}
                         onChange={(e) => setFloorsInput(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="h-9 text-xs rounded-lg"
                       />
                     </div>
 
                     {/* Rooms per Floor Customization */}
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label className="text-xs font-semibold">Rooms count on each floor</Label>
-                      <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 border p-3 rounded-xl bg-muted/10 max-h-[140px] overflow-y-auto">
+                      <div className="grid grid-cols-3 gap-1.5 border p-2 rounded-xl bg-muted/10 max-h-[110px] overflow-y-auto">
                         {Array.from({ length: floorsInput }, (_, idx) => idx + 1).map((floorNum) => (
-                          <div key={floorNum} className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground font-medium shrink-0 w-8">FL {floorNum}:</span>
+                          <div key={floorNum} className="flex items-center gap-1">
+                            <span className="text-[10px] text-muted-foreground font-semibold shrink-0">FL {floorNum}:</span>
                             <Input
                               type="number"
                               min={1}
                               max={20}
-                              value={roomsPerFloor[floorNum] || 5}
+                              value={roomsPerFloor[floorNum] || 4}
                               onChange={(e) => setRoomsPerFloor(prev => ({
                                 ...prev,
                                 [floorNum]: Math.max(1, parseInt(e.target.value) || 1)
                               }))}
-                              className="h-8 py-1 px-2 text-xs text-center"
+                              className="h-7 w-full py-0.5 px-1.5 text-xs text-center rounded-md"
                             />
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Enabled Sharing Options and Pricing */}
-                    <div className="space-y-2.5">
-                      <Label className="text-xs font-semibold">Supported Sharing Prices (Rent/Bed)</Label>
-                      <div className="space-y-2">
+                    {/* Supported Sharing Options and Pricing */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Sharing Configurations</Label>
+                      <div className="space-y-1.5">
                         {[1, 2, 3, 4].map((sharingType) => {
                           const isEnabled = enabledSharings[sharingType];
                           return (
-                            <div key={sharingType} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/10">
+                            <div key={sharingType} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border bg-muted/5">
                               <div className="flex items-center gap-2">
                                 <Checkbox 
                                   id={`sharing-${sharingType}`}
@@ -525,11 +520,11 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                   }))}
                                 />
                                 <Label htmlFor={`sharing-${sharingType}`} className="text-xs font-medium cursor-pointer">
-                                  {sharingType === 1 ? "Single / Private" : `${sharingType} Sharing`}
+                                  {sharingType === 1 ? "1 Sharing (Private)" : `${sharingType} Sharing`}
                                 </Label>
                               </div>
                               {isEnabled && (
-                                <div className="flex items-center gap-1.5 w-32 shrink-0">
+                                <div className="flex items-center gap-1 w-28 shrink-0">
                                   <span className="text-xs text-muted-foreground">₹</span>
                                   <Input
                                     type="number"
@@ -538,7 +533,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                       ...prev,
                                       [sharingType]: Math.max(0, parseInt(e.target.value) || 0)
                                     }))}
-                                    className="h-8 py-0.5 px-2 text-xs"
+                                    className="h-8 py-0.5 px-2 text-xs rounded-lg"
                                   />
                                 </div>
                               )}
@@ -549,16 +544,16 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     </div>
 
                     <div className="pt-2 flex gap-2">
-                      <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1 rounded-xl">
+                      <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1 rounded-xl h-9 text-xs">
                         Back
                       </Button>
                       <Button 
                         onClick={handleGenerateBlueprint} 
-                        className="flex-1 rounded-xl gap-2"
+                        className="flex-1 rounded-xl gap-1 h-9 text-xs"
                         disabled={!Object.values(enabledSharings).some(Boolean)}
                       >
-                        Preview Blueprint
-                        <ArrowRight className="h-4 w-4" />
+                        Preview blueprint
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -566,27 +561,24 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
                 {/* STEP 3: BLUEPRINT & PREVIEW WORKFLOW */}
                 {wizardStep === 3 && (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border bg-muted/20 p-3 flex gap-3 items-center">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                        <Layers className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground">Room Blueprint Editor & Preview</h4>
-                        <p className="text-[10px] text-muted-foreground">Tweak individual rooms, capacities, rent prices, and AC status.</p>
-                      </div>
+                  <div className="space-y-3">
+                    <div className="bg-primary/5 border border-primary/10 p-2.5 rounded-xl text-left">
+                      <h4 className="font-semibold text-xs text-primary flex items-center gap-1">
+                        <Layers className="h-3.5 w-3.5 text-primary" /> Interactive Floor Plan
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Tweak capacities and rents directly on individual room cells.</p>
                     </div>
 
                     {/* Floors Map list */}
-                    <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                    <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
                       {Object.keys(blueprintByFloor).map(Number).sort((a,b)=>a-b).map((floorNum) => {
                         const floorRooms = blueprintByFloor[floorNum];
                         return (
-                          <div key={floorNum} className="space-y-1.5 border p-3 rounded-xl bg-muted/5 text-left">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Floor {floorNum} Blueprint</span>
-                            <div className="grid gap-2 sm:grid-cols-2">
+                          <div key={floorNum} className="space-y-1.5 border border-border/60 p-2.5 rounded-xl bg-muted/5 text-left">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Floor {floorNum} Blueprint</span>
+                            <div className="grid gap-2 grid-cols-2">
                               {floorRooms.map((room) => (
-                                <div key={room.roomNo} className="p-2.5 rounded-lg border bg-background flex flex-col gap-2">
+                                <div key={room.roomNo} className="p-2 rounded-lg border bg-background flex flex-col gap-1.5">
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold">Room {room.roomNo}</span>
                                     <div className="flex items-center gap-1">
@@ -599,21 +591,21 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                     </div>
                                   </div>
 
-                                  <div className="grid grid-cols-2 gap-1.5">
+                                  <div className="grid grid-cols-2 gap-1">
                                     {/* Capacity Selector */}
-                                    <div className="space-y-1">
-                                      <span className="text-[9px] text-muted-foreground">Sharing</span>
+                                    <div className="space-y-0.5">
+                                      <span className="text-[8px] text-muted-foreground uppercase">Beds</span>
                                       <select 
                                         value={room.capacity}
                                         onChange={(e) => handleUpdateRoomCapacity(room.roomNo, parseInt(e.target.value))}
-                                        className="w-full text-[10px] h-7 border rounded bg-transparent p-0.5"
+                                        className="w-full text-[10px] h-6 border rounded bg-transparent px-1 py-0"
                                       >
                                         {Object.keys(enabledSharings)
                                           .map(Number)
                                           .filter(k => enabledSharings[k])
                                           .map(sharingType => (
                                             <option key={sharingType} value={sharingType}>
-                                              {sharingType} Sharing
+                                              {sharingType} Bed
                                             </option>
                                           ))
                                         }
@@ -621,13 +613,13 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                     </div>
 
                                     {/* Custom Rent Input */}
-                                    <div className="space-y-1">
-                                      <span className="text-[9px] text-muted-foreground">Rent (₹/Room)</span>
+                                    <div className="space-y-0.5">
+                                      <span className="text-[8px] text-muted-foreground uppercase">Rent</span>
                                       <Input 
                                         type="number"
                                         value={room.rentAmount}
                                         onChange={(e) => handleUpdateRoomRent(room.roomNo, Math.max(0, parseInt(e.target.value) || 0))}
-                                        className="h-7 text-[10px] px-1 py-0.5"
+                                        className="h-6 text-[10px] px-1 py-0 rounded"
                                       />
                                     </div>
                                   </div>
@@ -640,15 +632,15 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     </div>
 
                     <div className="pt-2 flex gap-2">
-                      <Button variant="outline" onClick={() => setWizardStep(2)} className="flex-1 rounded-xl">
+                      <Button variant="outline" onClick={() => setWizardStep(2)} className="flex-1 rounded-xl h-9 text-xs">
                         Back
                       </Button>
                       <Button 
                         onClick={() => setWizardStep(4)} 
-                        className="flex-1 rounded-xl gap-2"
+                        className="flex-1 rounded-xl gap-1 h-9 text-xs"
                       >
                         Next: Utilities
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -656,44 +648,35 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
                 {/* STEP 4: UTILITIES & SAVE */}
                 {wizardStep === 4 && (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border bg-muted/20 p-3 flex gap-3 items-center">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                        <Zap className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground">Electricity Billing Settings</h4>
-                        <p className="text-[10px] text-muted-foreground">Define base power charge per unit to finalize setup.</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="electricityRateInput">Electricity Rate (₹ per unit)</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="electricityRateInput" className="text-xs font-semibold">Electricity Rate (₹ per unit)</Label>
                       <Input 
                         id="electricityRateInput"
                         type="number"
                         value={electricityRateInput}
                         onChange={(e) => setElectricityRateInput(Math.max(0, parseInt(e.target.value) || 0))}
+                        className="h-9 text-xs rounded-lg"
                       />
                     </div>
 
                     <div className="pt-2 flex gap-2">
-                      <Button variant="outline" onClick={() => setWizardStep(3)} className="flex-1 rounded-xl" disabled={isSubmitting}>
+                      <Button variant="outline" onClick={() => setWizardStep(3)} className="flex-1 rounded-xl h-9 text-xs" disabled={isSubmitting}>
                         Back
                       </Button>
                       <Button 
                         onClick={handleAddProperty} 
-                        className="flex-1 rounded-xl gap-2"
+                        className="flex-1 rounded-xl gap-1 h-9 text-xs"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? (
                           <>
-                            <Loader2 className="animate-spin h-4 w-4" />
-                            Finalizing Setup...
+                            <Loader2 className="animate-spin h-3.5 w-3.5" />
+                            Creating PG...
                           </>
                         ) : (
                           <>
-                            <Check className="h-4 w-4" />
+                            <Check className="h-3.5 w-3.5" />
                             Create Property
                           </>
                         )}
@@ -704,9 +687,9 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
 
               </div>
             ) : isEditing ? (
-              <form onSubmit={handleEditProperty} className="space-y-4 text-left">
-                <div className="space-y-2">
-                  <Label htmlFor="editPropertyName">Property / Building Name</Label>
+              <form onSubmit={handleEditProperty} className="space-y-3 text-left">
+                <div className="space-y-1">
+                  <Label htmlFor="editPropertyName" className="text-xs font-semibold">PG Name</Label>
                   <Input 
                     id="editPropertyName"
                     placeholder="e.g. Royal Orchid PG"
@@ -714,26 +697,29 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     onChange={(e) => setNameInput(e.target.value)}
                     required
                     disabled={isSubmitting}
+                    className="h-9 text-xs rounded-lg"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editPropertyAddress">Address</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="editPropertyAddress" className="text-xs font-semibold">Address / Area</Label>
                   <Input 
                     id="editPropertyAddress"
-                    placeholder="e.g. 5th Cross, Sector 4, HSR Layout"
+                    placeholder="e.g. Sector 4, HSR Layout"
                     value={addressInput}
                     onChange={(e) => setAddressInput(e.target.value)}
                     disabled={isSubmitting}
+                    className="h-9 text-xs rounded-lg"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editElectricityRate">Electricity Unit Rate (₹ / Unit)</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="editElectricityRate" className="text-xs font-semibold">Electricity Unit Rate (₹ / Unit)</Label>
                   <Input 
                     id="editElectricityRate"
                     type="number"
                     value={electricityRateInput}
                     onChange={(e) => setElectricityRateInput(Math.max(0, parseInt(e.target.value) || 0))}
                     disabled={isSubmitting}
+                    className="h-9 text-xs rounded-lg"
                   />
                 </div>
                 <div className="pt-2 flex flex-col gap-2">
@@ -742,23 +728,23 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                       type="button" 
                       variant="outline" 
                       onClick={resetForm}
-                      className="flex-1 rounded-xl"
+                      className="flex-1 rounded-xl h-9 text-xs"
                       disabled={isSubmitting}
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
-                      className="flex-1 rounded-xl"
+                      className="flex-1 rounded-xl h-9 text-xs"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                          <Loader2 className="animate-spin h-3.5 w-3.5 mr-1" />
                           Saving...
                         </>
                       ) : (
-                        "Save Property"
+                        "Save Details"
                       )}
                     </Button>
                   </div>
@@ -766,16 +752,16 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     type="button"
                     variant="destructive"
                     onClick={() => handleDeleteProperty(isEditing, nameInput)}
-                    className="w-full rounded-xl gap-2 mt-1"
+                    className="w-full rounded-xl gap-1.5 h-9 text-xs font-medium"
                     disabled={isSubmitting}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete Property
+                    Delete PG Property
                   </Button>
                 </div>
               </form>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {pgs.map((pg) => {
                   const isActive = currentPG?.id === pg.id;
                   return (
@@ -792,25 +778,25 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                         }
                       }}
                     >
-                      <CardContent className="p-4 flex items-center justify-between gap-3">
-                        <div className="flex items-start gap-3 min-w-0">
+                      <CardContent className="p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div className={`p-2 rounded-lg shrink-0 ${
                             isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                           }`}>
-                            <Building className="h-5 w-5" />
+                            <Building className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 text-left">
-                            <p className="font-semibold text-sm truncate flex items-center gap-1.5">
+                            <p className="font-bold text-xs truncate flex items-center gap-1.5">
                               {pg.name}
                               {isActive && (
-                                <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded-full font-bold">
                                   Active
                                 </span>
                               )}
                             </p>
                             {pg.address && (
-                              <p className="text-xs text-muted-foreground mt-1 truncate flex items-center gap-1">
-                                <MapPin className="h-3 w-3 shrink-0" />
+                              <p className="text-[10px] text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                                <MapPin className="h-2.5 w-2.5 shrink-0" />
                                 {pg.address}
                               </p>
                             )}
@@ -820,10 +806,10 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
                             onClick={() => startEdit(pg.id, pg.name, pg.address, pg.electricityUnitPrice)}
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </CardContent>

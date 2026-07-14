@@ -141,34 +141,34 @@ export const Reports = ({ rooms }: ReportsProps) => {
   const activeMonthName = monthNames[selectedMonth - 1];
 
   return (
-    <div className="space-y-4 text-left">
-      {/* Visual Header */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-primary/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <Badge className="bg-primary/10 text-primary border-primary/20 mb-1 hover:bg-primary/20">
-            <Sparkles className="h-3 w-3 mr-1" /> Analytics Dashboard
+    <div className="space-y-3.5 text-left">
+      {/* Visual Header - More compact padding */}
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-primary/10 p-3.5 flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-[9px] px-1.5 py-0">
+            <Sparkles className="h-2.5 w-2.5 mr-1" /> Analytics Dashboard
           </Badge>
-          <h2 className="text-xl font-bold tracking-tight">{activeMonthName} {selectedYear} Health Check</h2>
-          <p className="text-xs text-muted-foreground">
-            Complete financial, occupancy, and room health breakdown.
+          <h2 className="text-sm font-bold tracking-tight">{activeMonthName} {selectedYear} Health Check</h2>
+          <p className="text-[10px] text-muted-foreground">
+            Month-to-date collections and occupancy breakdown.
           </p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handlePrintReport}
-          className="rounded-xl shrink-0 h-9 gap-1.5"
+          className="rounded-xl shrink-0 h-8 text-[11px] gap-1 px-2.5"
         >
-          <Printer className="h-4 w-4" />
-          Print / Export
+          <Printer className="h-3.5 w-3.5" />
+          Export
         </Button>
       </div>
 
-      {/* Pill Navigation Tabs */}
-      <div className="flex bg-muted p-1 rounded-xl gap-1">
+      {/* Pill Navigation Tabs - Segmented Control (iOS style, compact) */}
+      <div className="flex bg-muted/80 p-0.5 rounded-lg gap-0.5 max-w-full">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${
             activeTab === 'overview' 
               ? 'bg-background text-foreground shadow-sm' 
               : 'text-muted-foreground hover:text-foreground'
@@ -178,17 +178,17 @@ export const Reports = ({ rooms }: ReportsProps) => {
         </button>
         <button
           onClick={() => setActiveTab('collections')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${
             activeTab === 'collections' 
               ? 'bg-background text-foreground shadow-sm' 
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Collections & Dues ({sortedPendingTenants.length})
+          Collections ({sortedPendingTenants.length})
         </button>
         <button
           onClick={() => setActiveTab('occupancy')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${
             activeTab === 'occupancy' 
               ? 'bg-background text-foreground shadow-sm' 
               : 'text-muted-foreground hover:text-foreground'
@@ -200,168 +200,127 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
       {/* Content Sheets */}
       {activeTab === 'overview' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           
-          {/* Executive P&L Income Statement Card */}
+          {/* Executive P&L Income Statement Card - Compact Padding */}
           <Card className="border border-primary/10 overflow-hidden relative bg-gradient-to-br from-background via-background to-primary/5">
-            <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between border-b bg-muted/20">
-              <div>
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Financial Statement (P&L)</CardTitle>
-                <p className="text-[10px] text-muted-foreground">Summarized profit & loss comparison for {activeMonthName}.</p>
+            <CardHeader className="py-2.5 px-3 flex flex-row items-center justify-between border-b bg-muted/20">
+              <div className="text-left">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Financial Statement (P&L)</CardTitle>
               </div>
-              <TrendingUp className="h-4 w-4 text-primary shrink-0" />
+              <TrendingUp className="h-3.5 w-3.5 text-primary shrink-0" />
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              <div className="grid grid-cols-3 gap-3 divide-x">
-                <div className="space-y-1 text-left">
-                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                    <ArrowUpCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <CardContent className="p-3 space-y-3">
+              <div className="grid grid-cols-3 gap-1 divide-x">
+                <div className="space-y-0.5 text-left">
+                  <span className="text-[9px] text-muted-foreground font-semibold flex items-center gap-1">
+                    <ArrowUpCircle className="h-3 w-3 text-emerald-500 shrink-0" />
                     Revenue
                   </span>
-                  <p className="text-base font-extrabold text-foreground">₹{rentCollected.toLocaleString()}</p>
-                  <p className="text-[9px] text-muted-foreground">₹{totalExpectedRevenue.toLocaleString()} projected</p>
+                  <p className="text-sm font-extrabold text-foreground">₹{rentCollected.toLocaleString()}</p>
+                  <p className="text-[8px] text-muted-foreground">₹{totalExpectedRevenue.toLocaleString()} proj.</p>
                 </div>
-                <div className="space-y-1 text-left pl-3">
-                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                    <ArrowDownCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                <div className="space-y-0.5 text-left pl-2">
+                  <span className="text-[9px] text-muted-foreground font-semibold flex items-center gap-1">
+                    <ArrowDownCircle className="h-3 w-3 text-rose-500 shrink-0" />
                     Expenses
                   </span>
-                  <p className="text-base font-extrabold text-foreground">₹{totalExpenses.toLocaleString()}</p>
-                  <p className="text-[9px] text-muted-foreground">{expenses.length} bills recorded</p>
+                  <p className="text-sm font-extrabold text-foreground">₹{totalExpenses.toLocaleString()}</p>
+                  <p className="text-[8px] text-muted-foreground">{expenses.length} bills</p>
                 </div>
-                <div className="space-y-1 text-left pl-3">
-                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                    <TrendingUp className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                <div className="space-y-0.5 text-left pl-2">
+                  <span className="text-[9px] text-muted-foreground font-semibold flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3 text-indigo-500 shrink-0" />
                     Net Income
                   </span>
-                  <p className={`text-base font-black ${actualNetIncome >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                  <p className={`text-sm font-black ${actualNetIncome >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                     ₹{actualNetIncome.toLocaleString()}
                   </p>
-                  <p className="text-[9px] text-muted-foreground">₹{projectedNetIncome.toLocaleString()} projected</p>
+                  <p className="text-[8px] text-muted-foreground">₹{projectedNetIncome.toLocaleString()} proj.</p>
                 </div>
               </div>
 
               {/* Progress bars indicators */}
-              <div className="space-y-2 pt-2 border-t text-xs">
-                <div>
-                  <div className="flex items-center justify-between mb-1 text-[11px]">
-                    <span className="text-muted-foreground">Expense-to-Revenue Ratio</span>
-                    <span className="font-semibold text-muted-foreground">{expenseRatio.toFixed(0)}%</span>
-                  </div>
-                  <Progress value={Math.min(100, expenseRatio)} className="h-1.5 bg-muted" />
+              <div className="space-y-1.5 pt-2 border-t text-[10px]">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-muted-foreground">Expense-to-Revenue Ratio</span>
+                  <span className="font-semibold text-muted-foreground">{expenseRatio.toFixed(0)}%</span>
                 </div>
+                <Progress value={Math.min(100, expenseRatio)} className="h-1 bg-muted" />
               </div>
             </CardContent>
           </Card>
 
-          {/* Gauges Grid */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Collection Gauge */}
-            <Card className="overflow-hidden border border-border/80">
-              <CardContent className="p-5 flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center h-24 w-24">
+          {/* Gauges Grid - Compact design */}
+          <div className="grid gap-3 grid-cols-2">
+            <Card className="border border-border/80">
+              <CardContent className="p-3.5 flex flex-col items-center text-center">
+                <div className="relative flex items-center justify-center h-20 w-20">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle 
-                      cx="48" cy="48" r="40" 
-                      className="text-muted/50 stroke-current" 
-                      strokeWidth="6" fill="none"
+                      cx="40" cy="40" r="34" 
+                      className="text-muted/40 stroke-current" 
+                      strokeWidth="5" fill="none"
                     />
                     <circle 
-                      cx="48" cy="48" r="40" 
+                      cx="40" cy="40" r="34" 
                       className="text-emerald-500 stroke-current transition-all duration-700 ease-out" 
-                      strokeWidth="6" fill="none"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 - (251.2 * collectionRate) / 100}
+                      strokeWidth="5" fill="none"
+                      strokeDasharray="213.6"
+                      strokeDashoffset={213.6 - (213.6 * collectionRate) / 100}
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className="text-lg font-bold text-emerald-500">{collectionRate.toFixed(0)}%</span>
+                    <span className="text-sm font-bold text-emerald-500">{collectionRate.toFixed(0)}%</span>
                     <span className="text-[8px] font-semibold text-muted-foreground uppercase">Collected</span>
                   </div>
                 </div>
-                <h4 className="font-bold text-xs mt-3">Rent Collections Status</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  ₹{rentCollected.toLocaleString()} of ₹{totalExpectedRevenue.toLocaleString()} received
-                </p>
+                <h4 className="font-bold text-[10px] mt-2">Rent Collection</h4>
               </CardContent>
             </Card>
 
-            {/* Occupancy Gauge */}
-            <Card className="overflow-hidden border border-border/80">
-              <CardContent className="p-5 flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center h-24 w-24">
+            <Card className="border border-border/80">
+              <CardContent className="p-3.5 flex flex-col items-center text-center">
+                <div className="relative flex items-center justify-center h-20 w-20">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle 
-                      cx="48" cy="48" r="40" 
-                      className="text-muted/50 stroke-current" 
-                      strokeWidth="6" fill="none"
+                      cx="40" cy="40" r="34" 
+                      className="text-muted/40 stroke-current" 
+                      strokeWidth="5" fill="none"
                     />
                     <circle 
-                      cx="48" cy="48" r="40" 
+                      cx="40" cy="40" r="34" 
                       className="text-indigo-500 stroke-current transition-all duration-700 ease-out" 
-                      strokeWidth="6" fill="none"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 - (251.2 * occupancyRate) / 100}
+                      strokeWidth="5" fill="none"
+                      strokeDasharray="213.6"
+                      strokeDashoffset={213.6 - (213.6 * occupancyRate) / 100}
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className="text-lg font-bold text-indigo-500">{occupancyRate.toFixed(0)}%</span>
+                    <span className="text-sm font-bold text-indigo-500">{occupancyRate.toFixed(0)}%</span>
                     <span className="text-[8px] font-semibold text-muted-foreground uppercase">Occupied</span>
                   </div>
                 </div>
-                <h4 className="font-bold text-xs mt-3">Bed Occupancy Status</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {occupiedBeds} beds occupied out of {totalBeds} total
-                </p>
+                <h4 className="font-bold text-[10px] mt-2">Beds Filled</h4>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Vacant Rooms</span>
-                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
-                </div>
-                <p className="text-base font-extrabold mt-1 text-rose-500">{vacantRooms.length}</p>
-                <p className="text-[9px] text-muted-foreground">needs filling</p>
-              </CardContent>
+          {/* Quick Metrics Grid - Denser padding */}
+          <div className="grid grid-cols-2 gap-2">
+            <Card className="p-2.5 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Vacant Rooms</span>
+                <p className="text-sm font-black text-rose-500 mt-0.5">{vacantRooms.length} Rooms</p>
+              </div>
+              <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
             </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Vacant Beds</span>
-                  <BedDouble className="h-3.5 w-3.5 text-indigo-500" />
-                </div>
-                <p className="text-base font-extrabold mt-1 text-indigo-500">{totalAvailableBeds}</p>
-                <p className="text-[9px] text-muted-foreground">across all rooms</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Overdue Dues</span>
-                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
-                </div>
-                <p className="text-base font-extrabold mt-1 text-rose-500">
-                  ₹{overdueTenants.reduce((s,t)=> s+t.monthlyRent, 0).toLocaleString()}
-                </p>
-                <p className="text-[9px] text-muted-foreground">{overdueTenants.length} tenants late</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Advance Due</span>
-                  <IndianRupee className="h-3.5 w-3.5 text-amber-500" />
-                </div>
-                <p className="text-base font-extrabold mt-1 text-amber-500">
-                  ₹{advanceNotPaidTenants.reduce((s,t)=> s+t.monthlyRent, 0).toLocaleString()}
-                </p>
-                <p className="text-[9px] text-muted-foreground">{advanceNotPaidTenants.length} new check-ins</p>
-              </CardContent>
+            <Card className="p-2.5 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Vacant Beds</span>
+                <p className="text-sm font-black text-indigo-500 mt-0.5">{totalAvailableBeds} Beds</p>
+              </div>
+              <BedDouble className="h-4 w-4 text-indigo-500 shrink-0" />
             </Card>
           </div>
         </div>
@@ -369,94 +328,77 @@ export const Reports = ({ rooms }: ReportsProps) => {
 
       {activeTab === 'collections' && (
         <Card className="border border-border/80">
-          <CardHeader className="pb-3 pt-4 px-4 flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-base font-bold">Pending Dues & Reminders</CardTitle>
-              <p className="text-xs text-muted-foreground">List of tenants with outstanding payments for this rent cycle.</p>
+          <CardHeader className="py-2.5 px-3 flex items-center justify-between gap-3 border-b">
+            <div className="text-left">
+              <CardTitle className="text-xs font-bold">Outstanding Rent List</CardTitle>
             </div>
-            <div className="relative w-full xs:w-48">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <div className="relative w-44">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
-                placeholder="Search tenant or room..."
+                placeholder="Search room..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 rounded-lg text-xs"
+                className="pl-6 h-7 rounded-lg text-[10px] py-1"
               />
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {filteredPendingTenants.length === 0 ? (
-              <div className="text-center py-10 px-4">
-                <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                <h4 className="font-semibold text-sm">All clear!</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {searchTerm ? "No pending tenants match your filter." : "All tenants have paid rent for this month."}
+              <div className="text-center py-6 px-4">
+                <CheckCircle className="h-6 w-6 text-emerald-500 mx-auto mb-1" />
+                <h4 className="font-semibold text-xs">All clear!</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  No pending rent payments found.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-t">
-                  <thead>
-                    <tr className="bg-muted/40 border-b">
-                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase">Tenant / Room</th>
-                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase">Status</th>
-                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase text-right">Pending Amount</th>
-                      <th className="p-3 font-semibold text-[10px] text-muted-foreground uppercase text-center">Remind</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {filteredPendingTenants.map((tenant) => {
-                      const isPartial = tenant.paymentCategory === 'partial';
-                      const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
-                      const dueDay = new Date(tenant.startDate).getDate();
-                      
-                      const statusBadgeColor = 
-                        tenant.paymentCategory === 'overdue' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-                        : tenant.paymentCategory === 'partial' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                        : tenant.paymentCategory === 'advance-not-paid' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20'
-                        : 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+              <div className="divide-y max-h-[380px] overflow-y-auto">
+                {filteredPendingTenants.map((tenant) => {
+                  const isPartial = tenant.paymentCategory === 'partial';
+                  const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
+                  const dueDay = new Date(tenant.startDate).getDate();
+                  
+                  const statusColor = 
+                    tenant.paymentCategory === 'overdue' ? 'text-rose-500 border-rose-500/20 bg-rose-500/5'
+                    : tenant.paymentCategory === 'partial' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5'
+                    : 'text-blue-500 border-blue-500/20 bg-blue-500/5';
 
-                      return (
-                        <tr key={tenant.id} className="hover:bg-muted/20 transition-colors">
-                          <td className="p-3">
-                            <div className="font-semibold text-foreground">{tenant.name}</div>
-                            <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                              <span className="bg-muted px-1 py-0.2 rounded font-mono">Room {tenant.roomNo}</span>
-                              <span>•</span>
-                              <span>Due day: {dueDay}</span>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <Badge variant="outline" className={`text-[10px] font-semibold border ${statusBadgeColor}`}>
-                              {tenant.paymentCategory === 'overdue' ? 'Overdue' 
-                               : tenant.paymentCategory === 'partial' ? 'Partially Paid' 
-                               : tenant.paymentCategory === 'advance-not-paid' ? 'Advance Due' 
-                               : 'Not Yet Due'}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-right">
-                            <div className="font-bold text-foreground">₹{remaining.toLocaleString()}</div>
-                            {isPartial && (
-                              <div className="text-[9px] text-muted-foreground mt-0.5">
-                                Paid: ₹{(tenant.amountPaid || 0).toLocaleString()}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3 text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg"
-                              onClick={() => handleSendReminder(tenant.name, tenant.phone, remaining, tenant.roomNo)}
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                  return (
+                    <div key={tenant.id} className="flex items-center justify-between p-2.5 hover:bg-muted/10 transition-colors">
+                      <div className="text-left space-y-0.5">
+                        <div className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                          {tenant.name}
+                          <Badge variant="outline" className={`text-[8px] font-bold px-1.5 py-0 rounded ${statusColor}`}>
+                            {tenant.paymentCategory === 'overdue' ? 'Overdue' 
+                             : tenant.paymentCategory === 'partial' ? 'Partial' 
+                             : 'Upcoming'}
+                          </Badge>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <span className="font-semibold text-foreground">Room {tenant.roomNo}</span>
+                          <span>•</span>
+                          <span>Due Day: {dueDay}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <span className="font-black text-xs text-foreground">₹{remaining.toLocaleString()}</span>
+                          {isPartial && (
+                            <span className="block text-[8px] text-muted-foreground">Paid ₹{tenant.amountPaid}</span>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 text-emerald-500 hover:bg-emerald-50 border-emerald-500/10 rounded-lg shrink-0"
+                          onClick={() => handleSendReminder(tenant.name, tenant.phone, remaining, tenant.roomNo)}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -464,8 +406,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
       )}
 
       {activeTab === 'occupancy' && (
-        <div className="space-y-4">
-          {/* Floor lists */}
+        <div className="space-y-2.5">
           {Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b).map((floor) => {
             const floorRooms = roomsByFloor[floor];
             const floorBeds = floorRooms.reduce((sum, r) => sum + r.capacity, 0);
@@ -473,36 +414,31 @@ export const Reports = ({ rooms }: ReportsProps) => {
             const floorAvailable = floorBeds - floorOccupied;
 
             return (
-              <Card key={floor} className="border border-border/80 overflow-hidden">
-                <CardHeader className="bg-muted/40 p-4 border-b">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-primary shrink-0" />
-                      <CardTitle className="text-sm font-bold">Floor {floor}</CardTitle>
+              <Card key={floor} className="border border-border/80 overflow-hidden text-left">
+                <CardHeader className="bg-muted/30 p-2.5 border-b">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Layers className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <CardTitle className="text-xs font-bold">Floor {floor}</CardTitle>
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-3">
-                      <span>Occupied: <strong>{floorOccupied}</strong> / {floorBeds} Beds</span>
-                      <span className="h-3 w-[1px] bg-border" />
-                      <span className="text-emerald-500">Available: <strong>{floorAvailable}</strong> Beds</span>
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                      <span>{floorOccupied}/{floorBeds} Filled</span>
+                      <span className="h-2.5 w-[1px] bg-border" />
+                      <span className="text-emerald-500 font-semibold">{floorAvailable} Empty</span>
                     </div>
                   </div>
-                  <Progress 
-                    value={floorBeds > 0 ? (floorOccupied / floorBeds) * 100 : 0} 
-                    className="h-1.5 mt-2 bg-muted-foreground/10" 
-                  />
                 </CardHeader>
-                <CardContent className="p-3">
-                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                <CardContent className="p-2">
+                  <div className="grid gap-1.5 grid-cols-2 sm:grid-cols-3">
                     {floorRooms.sort((a,b) => a.roomNo.localeCompare(b.roomNo)).map((room) => {
                       const roomOccupied = getActiveTenantsInMonth(room).length;
-                      const roomAvailable = room.capacity - roomOccupied;
                       const isVacant = roomOccupied === 0;
                       const isFull = roomOccupied >= room.capacity;
 
                       return (
                         <div 
                           key={room.roomNo} 
-                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                          className={`p-2 rounded-lg border flex items-center justify-between gap-1 transition-all ${
                             isVacant 
                               ? 'bg-rose-500/5 border-rose-500/10' 
                               : isFull 
@@ -510,24 +446,19 @@ export const Reports = ({ rooms }: ReportsProps) => {
                                 : 'bg-amber-500/5 border-amber-500/10'
                           }`}
                         >
-                          <div className="text-left space-y-0.5">
-                            <span className="text-xs font-bold text-foreground">Room {room.roomNo}</span>
-                            <p className="text-[10px] text-muted-foreground">
-                              {room.capacity} Sharing • {room.isAc ? "A/C" : "Non-A/C"}
-                            </p>
+                          <div className="space-y-0.5 truncate text-left">
+                            <span className="text-[11px] font-bold text-foreground">Room {room.roomNo}</span>
+                            <p className="text-[8px] text-muted-foreground truncate">{room.capacity} Sharing</p>
                           </div>
-                          <div className="text-right">
-                            <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
-                              isVacant 
-                                ? "bg-rose-500/10 text-rose-700 dark:text-rose-300"
-                                : isFull
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                  : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                            }`}>
-                              {isVacant ? "Vacant" : isFull ? "Full" : `${roomOccupied}/${room.capacity} Bed`}
-                            </span>
-                            <p className="text-[9px] text-muted-foreground mt-0.5">{roomAvailable} Available</p>
-                          </div>
+                          <span className={`inline-flex rounded px-1 py-0.2 text-[8px] font-extrabold shrink-0 ${
+                            isVacant 
+                              ? "bg-rose-500/10 text-rose-600"
+                              : isFull
+                                ? "bg-emerald-500/10 text-emerald-600"
+                                : "bg-amber-500/10 text-amber-600"
+                          }`}>
+                            {isVacant ? "Empty" : isFull ? "Full" : `${roomOccupied}/${room.capacity}`}
+                          </span>
                         </div>
                       );
                     })}
