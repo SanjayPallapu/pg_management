@@ -224,7 +224,9 @@ export const useCollectorNames = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, syncFromServer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Only re-run when user ID changes — NOT on syncFromServer to avoid re-subscribing to an already-subscribed channel
+
 
   const saveCollectors = useCallback((updated: CollectorConfig[]) => {
     const normalized = normalizeCollectors(updated, defaultCollectors);
