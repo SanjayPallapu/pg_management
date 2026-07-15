@@ -1374,7 +1374,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           (p) => p.tenantId === tenant.id && p.month === monthNum && p.year === selectedYear,
         );
 
-        const amountPaid = payment?.amountPaid || 0;
+        let amountPaid = payment?.amountPaid || 0;
+        if (amountPaid === 0 && payment?.paymentEntries?.length) {
+          amountPaid = payment.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+        }
         const totalRent = payment?.amount || tenant.monthlyRent;
         const balanceDue = Math.max(0, totalRent - amountPaid);
         const statusLabel = payment?.paymentStatus || "Pending";
@@ -1418,12 +1421,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         }, 0),
         "Amount Paid (₹)": activeTenants.reduce((s, t) => {
           const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
-          return s + (p?.amountPaid || 0);
+          let paid = p?.amountPaid || 0;
+          if (paid === 0 && p?.paymentEntries?.length) {
+            paid = p.paymentEntries.reduce((ps: number, e: any) => ps + (e.amount || 0), 0);
+          }
+          return s + paid;
         }, 0),
         "Balance Due (₹)": activeTenants.reduce((s, t) => {
           const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
           const total = p?.amount || t.monthlyRent;
-          const paid = p?.amountPaid || 0;
+          let paid = p?.amountPaid || 0;
+          if (paid === 0 && p?.paymentEntries?.length) {
+            paid = p.paymentEntries.reduce((ps: number, e: any) => ps + (e.amount || 0), 0);
+          }
           return s + Math.max(0, total - paid);
         }, 0),
         "Payment Status": "",
@@ -1488,13 +1498,18 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               ? format(new Date(payment.paymentDate), "dd-MMM")
               : '';
 
+            let amountPaid = payment.amountPaid || 0;
+            if (amountPaid === 0 && payment.paymentEntries?.length) {
+              amountPaid = payment.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+            }
+
             if (payment.paymentStatus === "Paid") {
-              row[month.label] = `Paid ₹${payment.amountPaid.toLocaleString()}${mode ? ` (${mode})` : ''}${dateStr ? ` · ${dateStr}` : ''}`;
-              yearTotalPaid += payment.amountPaid;
+              row[month.label] = `Paid ₹${amountPaid.toLocaleString()}${mode ? ` (${mode})` : ''}${dateStr ? ` · ${dateStr}` : ''}`;
+              yearTotalPaid += amountPaid;
             } else if (payment.paymentStatus === "Partial") {
-              const remaining = Math.max(0, payment.amount - payment.amountPaid);
-              row[month.label] = `Partial ₹${payment.amountPaid.toLocaleString()} / ₹${payment.amount.toLocaleString()}${mode ? ` (${mode})` : ''}`;
-              yearTotalPaid += payment.amountPaid;
+              const remaining = Math.max(0, payment.amount - amountPaid);
+              row[month.label] = `Partial ₹${amountPaid.toLocaleString()} / ₹${payment.amount.toLocaleString()}${mode ? ` (${mode})` : ''}`;
+              yearTotalPaid += amountPaid;
               yearTotalPending += remaining;
             } else {
               row[month.label] = `Pending ₹${payment.amount.toLocaleString()}`;
@@ -1530,7 +1545,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         summaryRow[month.label] = monthPaid > 0 ? `₹${monthPaid.toLocaleString()}` : "₹0";
       });
       summaryRow["Total Paid (Year) ₹"] = allTenants.reduce((s, tenant) => {
-        return s + payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear).reduce((ps, p) => ps + (p.amountPaid || 0), 0);
+        return s + payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear).reduce((ps, p) => {
+          let paid = p.amountPaid || 0;
+          if (paid === 0 && p.paymentEntries?.length) {
+            paid = p.paymentEntries.reduce((pss: number, e: any) => pss + (e.amount || 0), 0);
+          }
+          return ps + paid;
+        }, 0);
       }, 0);
       summaryRow["Total Pending (Year) ₹"] = "";
       excelData.push(summaryRow);
@@ -2544,176 +2565,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         rules={rulesForTemplate} 
         language={rulesLanguage} 
       />
-      {/* Download Options Dialog */}
-      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Download Rent Sheet</DialogTitle>
-            <DialogDescription>
-              Select the data format you want to download.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-3">
-            <div className="space-y-2">
-              <Label>Download Type</Label>
-              <div className="grid grid-cols-3 gap-1 bg-muted p-1 rounded-xl">
-                <Button
-                  type="button"
-                  variant={downloadType === "month" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "month" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("month")}
-                >
-                  Month
-                </Button>
-                <Button
-                  type="button"
-                  variant={downloadType === "year" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "year" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("year")}
-                >
-                  Year
-                </Button>
-                <Button
-                  type="button"
-                  variant={downloadType === "history" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-1 rounded-lg truncate", downloadType === "history" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("history")}
-                >
-                  History
-                </Button>
-              </div>
-            </div>
-
-            {downloadType === "month" && (
-              <div className="space-y-2">
-                <Label htmlFor="downloadMonth">Select Month</Label>
-                <Select
-                  value={String(downloadMonth)}
-                  onValueChange={(val) => setDownloadMonth(parseInt(val))}
-                >
-                  <SelectTrigger id="downloadMonth" className="rounded-xl h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((m) => (
-                      <SelectItem key={m.value} value={String(m.value)}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDownloadDialogOpen(false)}
-              className="flex-1 rounded-xl h-10"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setDownloadDialogOpen(false);
-                exportToExcel(downloadType, downloadMonth);
-              }}
-              className="flex-1 rounded-xl h-10"
-            >
-              Download
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* Download Options Dialog */}
-      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Download Rent Sheet</DialogTitle>
-            <DialogDescription>
-              Select the data format you want to download.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-3">
-            <div className="space-y-2">
-              <Label>Download Type</Label>
-              <div className="grid grid-cols-3 gap-1 bg-muted p-1 rounded-xl">
-                <Button
-                  type="button"
-                  variant={downloadType === "month" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "month" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("month")}
-                >
-                  Month
-                </Button>
-                <Button
-                  type="button"
-                  variant={downloadType === "year" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "year" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("year")}
-                >
-                  Year
-                </Button>
-                <Button
-                  type="button"
-                  variant={downloadType === "history" ? "default" : "ghost"}
-                  className={cn("h-9 text-xs font-semibold px-1 rounded-lg truncate", downloadType === "history" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
-                  onClick={() => setDownloadType("history")}
-                >
-                  History
-                </Button>
-              </div>
-            </div>
-
-            {downloadType === "month" && (
-              <div className="space-y-2">
-                <Label htmlFor="downloadMonth">Select Month</Label>
-                <Select
-                  value={String(downloadMonth)}
-                  onValueChange={(val) => setDownloadMonth(parseInt(val))}
-                >
-                  <SelectTrigger id="downloadMonth" className="rounded-xl h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((m) => (
-                      <SelectItem key={m.value} value={String(m.value)}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDownloadDialogOpen(false)}
-              className="flex-1 rounded-xl h-10"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setDownloadDialogOpen(false);
-                exportToExcel(downloadType, downloadMonth);
-              }}
-              className="flex-1 rounded-xl h-10"
-            >
-              Download
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       {/* Download Options Dialog */}
       <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
