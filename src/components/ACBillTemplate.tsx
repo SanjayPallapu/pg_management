@@ -156,15 +156,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
           </div>
         )}
       </div>
-        )}
-        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
-          <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M15 11h.01"/></svg>
-            Room
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{data.roomNo}</div>
-        </div>
-      </div>
+
 
       {/* Reading breakdown */}
       <div style={{ margin: "0 20px 10px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
