@@ -8,13 +8,15 @@ interface AppErrorBoundaryProps {
 
 interface AppErrorBoundaryState {
   hasError: boolean;
+  errorMessage: string;
+  errorStack: string;
 }
 
 export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
-  state: AppErrorBoundaryState = { hasError: false };
+  state: AppErrorBoundaryState = { hasError: false, errorMessage: '', errorStack: '' };
 
-  static getDerivedStateFromError(): AppErrorBoundaryState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): AppErrorBoundaryState {
+    return { hasError: true, errorMessage: error?.message || String(error), errorStack: error?.stack || '' };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -43,6 +45,15 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
           <p className="mt-2 text-sm text-muted-foreground">
             Your data is safe. Reload the app and continue from the latest saved state.
           </p>
+          {this.state.errorMessage && (
+            <div className="mt-3 w-full rounded-lg bg-destructive/10 p-3 text-left">
+              <p className="text-xs font-bold text-destructive mb-1">Error:</p>
+              <p className="text-xs text-destructive break-words">{this.state.errorMessage}</p>
+              {this.state.errorStack && (
+                <pre className="mt-2 text-[9px] text-muted-foreground overflow-auto max-h-32 whitespace-pre-wrap">{this.state.errorStack.split('\n').slice(0, 6).join('\n')}</pre>
+              )}
+            </div>
+          )}
           <div className="mt-5 flex w-full flex-col gap-2">
             <Button onClick={this.handleReload} className="gap-2">
               <RefreshCw className="h-4 w-4" />
