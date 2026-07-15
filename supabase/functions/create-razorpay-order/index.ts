@@ -6,9 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "monthly" | "quarterly" | "yearly";
+type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly";
 
 const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly"; interval: number; totalCount: number; label: string }> = {
+  pro: { amount: 199900, period: "monthly", interval: 1, totalCount: 120, label: "Pro" },
+  promax: { amount: 399900, period: "monthly", interval: 1, totalCount: 120, label: "Pro Max" },
   monthly: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Monthly" },
   quarterly: { amount: 269900, period: "monthly", interval: 3, totalCount: 40, label: "Quarterly" },
   yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Yearly" },

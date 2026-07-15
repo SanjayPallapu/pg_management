@@ -6,9 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "monthly" | "quarterly" | "yearly";
+type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly";
 
-const PAID_PLANS = new Set<PlanKey>(["monthly", "quarterly", "yearly"]);
+const PAID_PLANS = new Set<PlanKey>(["pro", "promax", "monthly", "quarterly", "yearly"]);
 const TRIAL_DAYS = 30;
 
 const getPlanDurationDays = (plan: PlanKey) => {
