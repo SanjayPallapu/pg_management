@@ -31,6 +31,7 @@ import {
   Send,
   Snowflake,
   ArrowLeft,
+  FileText,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
