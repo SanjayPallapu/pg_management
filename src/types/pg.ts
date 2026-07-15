@@ -17,7 +17,7 @@ export interface Subscription {
   userId: string;
   plan: 'free' | 'pro';
   status: 'free' | 'pending' | 'active' | 'expired';
-  billingCycle?: 'trial' | 'monthly' | 'quarterly' | 'yearly';
+  billingCycle?: 'trial' | 'monthly' | 'pro' | 'promax' | 'quarterly' | 'yearly' | 'lifetime';
   maxPgs: number;
   maxTenantsPerPg: number;
   features: SubscriptionFeatures;
@@ -110,6 +110,20 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Advanced statistics, premium WhatsApp templates, priority support.',
   },
+  promax: {
+    name: 'Pro Max Plan',
+    price: 3999,
+    periodLabel: '/month',
+    billingCycle: 'promax',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+  },
   quarterly: {
     name: 'Quarterly Save',
     price: 2699,
@@ -156,7 +170,7 @@ export const SUBSCRIPTION_PLANS = {
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
 
-export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'pro', 'quarterly', 'yearly', 'lifetime'];
+export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'pro', 'promax', 'quarterly', 'yearly', 'lifetime'];
 
 export const SUBSCRIPTION_PLAN_META = {
   maxPgs: -1,

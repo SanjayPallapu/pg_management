@@ -44,7 +44,10 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
         const paid = p?.amountPaid || 0;
         if (paid >= t.monthlyRent && t.monthlyRent > 0) return "paid";
         if (paid > 0) return "partial";
-        if (!isCurrent || (isCurrent && todayDate >= new Date(t.startDate).getDate())) return "overdue";
+        
+        const isPast = year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1);
+        if (isPast || (isCurrent && todayDate >= new Date(t.startDate).getDate())) return "overdue";
+        
         return "not-due";
       });
       // worst-of (overdue > partial > not-due > paid) so urgent rooms stand out

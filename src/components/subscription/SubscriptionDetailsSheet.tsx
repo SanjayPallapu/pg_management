@@ -113,9 +113,11 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   ? 'Free Trial' 
                   : displaySubscription.billingCycle === 'lifetime'
                     ? 'Lifetime Unlimited'
-                    : displaySubscription.billingCycle === 'pro'
-                      ? 'Pro Plan'
-                      : `${displaySubscription.plan} Plan`}
+                    : displaySubscription.billingCycle === 'promax'
+                      ? 'Pro Max Plan'
+                      : displaySubscription.billingCycle === 'pro'
+                        ? 'Pro Plan'
+                        : `${displaySubscription.plan} Plan`}
               </div>
               
               {isProUser && displaySubscription.expiresAt && displaySubscription.billingCycle !== 'lifetime' && (() => {
@@ -263,7 +265,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           <Separator />
 
           {/* Subscribe/Upgrade Button */}
-          {!isProUser && (
+          {displaySubscription.billingCycle !== 'lifetime' && (
             <Button 
               onClick={() => {
                 onOpenChange(false);
@@ -272,7 +274,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
               <Crown className="h-4 w-4" />
-              Subscribe to Pro
+              {!isProUser ? 'Subscribe to Pro' : 'Upgrade Plan'}
             </Button>
           )}
           
