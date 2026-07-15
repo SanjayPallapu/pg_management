@@ -180,7 +180,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
-  const [downloadType, setDownloadType] = useState<"year" | "month">("month");
+  const [downloadType, setDownloadType] = useState<"year" | "month" | "history">("month");
   const [downloadMonth, setDownloadMonth] = useState(selectedMonth);
   const [pgRulesOpen, setPgRulesOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
@@ -1293,7 +1293,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
     setDeletePaymentTenant(null);
   };
-  const exportToExcel = async (type: "year" | "month" = "year", monthNum: number = selectedMonth) => {
+  const exportToExcel = async (type: "year" | "month" | "history" = "year", monthNum: number = selectedMonth) => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     const allTenants = rooms.flatMap((room) =>
@@ -1308,6 +1308,58 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     let statusCols: number[] = [];
     let currencyCols: number[] = [];
     let fileName = "";
+
+    if (type === "history") {
+      const historyRows: any[] = [];
+      rooms.forEach((room) => {
+        room.tenants.forEach((tenant) => {
+          const tenantPayments = payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear);
+          tenantPayments.forEach((payment) => {
+            const entries = payment.paymentEntries || [];
+            entries.forEach((entry) => {
+              historyRows.push({
+                "Date": entry.date ? format(new Date(entry.date), "dd-MMM-yyyy") : "",
+                "Tenant Name": tenant.name,
+                "Room No": room.roomNo,
+                "Payment Month": `${months[payment.month - 1].label} ${payment.year}`,
+                "Amount Paid (₹)": entry.amount || 0,
+                "Payment Mode": (entry.mode || "upi").toUpperCase(),
+                "Payment Type": (entry.type || "full").toUpperCase(),
+              });
+            });
+          });
+        });
+      });
+
+      // Sort by date descending
+      historyRows.sort((a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime());
+
+      // Add Totals row
+      if (historyRows.length > 0) {
+        historyRows.push({
+          "Date": "─── TOTAL ───",
+          "Tenant Name": "",
+          "Room No": "",
+          "Payment Month": "",
+          "Amount Paid (₹)": historyRows.reduce((s, r) => s + r["Amount Paid (₹)"], 0),
+          "Payment Mode": "",
+          "Payment Type": "",
+        });
+      }
+
+      colWidths = [
+        { wch: 15 }, // Date
+        { wch: 22 }, // Tenant Name
+        { wch: 10 }, // Room No
+        { wch: 18 }, // Payment Month
+        { wch: 18 }, // Amount Paid
+        { wch: 15 }, // Payment Mode
+        { wch: 15 }, // Payment Type
+      ];
+      currencyCols = [4];
+      fileName = `Payment_History_${selectedYear}.xlsx`;
+      excelData = historyRows;
+    } else
 
     if (type === "month") {
       const activeTenants = allTenants.filter(t => 
@@ -2505,22 +2557,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="space-y-4 py-3">
             <div className="space-y-2">
               <Label>Download Type</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-1 bg-muted p-1 rounded-xl">
                 <Button
                   type="button"
-                  variant={downloadType === "month" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "month" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "month" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("month")}
                 >
-                  Single Month
+                  Month
                 </Button>
                 <Button
                   type="button"
-                  variant={downloadType === "year" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "year" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "year" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("year")}
                 >
-                  Full Year ({selectedYear})
+                  Year
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "history" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-1 rounded-lg truncate", downloadType === "history" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
+                  onClick={() => setDownloadType("history")}
+                >
+                  History
                 </Button>
               </div>
             </div>
@@ -2582,22 +2642,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="space-y-4 py-3">
             <div className="space-y-2">
               <Label>Download Type</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-1 bg-muted p-1 rounded-xl">
                 <Button
                   type="button"
-                  variant={downloadType === "month" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "month" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "month" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("month")}
                 >
-                  Single Month
+                  Month
                 </Button>
                 <Button
                   type="button"
-                  variant={downloadType === "year" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "year" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "year" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("year")}
                 >
-                  Full Year ({selectedYear})
+                  Year
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "history" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-1 rounded-lg truncate", downloadType === "history" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
+                  onClick={() => setDownloadType("history")}
+                >
+                  History
                 </Button>
               </div>
             </div>
@@ -2659,22 +2727,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <div className="space-y-4 py-3">
             <div className="space-y-2">
               <Label>Download Type</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-1 bg-muted p-1 rounded-xl">
                 <Button
                   type="button"
-                  variant={downloadType === "month" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "month" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "month" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("month")}
                 >
-                  Single Month
+                  Month
                 </Button>
                 <Button
                   type="button"
-                  variant={downloadType === "year" ? "default" : "outline"}
-                  className="flex-1 rounded-xl h-10"
+                  variant={downloadType === "year" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-2 rounded-lg", downloadType === "year" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
                   onClick={() => setDownloadType("year")}
                 >
-                  Full Year ({selectedYear})
+                  Year
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "history" ? "default" : "ghost"}
+                  className={cn("h-9 text-xs font-semibold px-1 rounded-lg truncate", downloadType === "history" ? "bg-background text-foreground shadow-sm hover:bg-background" : "text-muted-foreground hover:bg-transparent")}
+                  onClick={() => setDownloadType("history")}
+                >
+                  History
                 </Button>
               </div>
             </div>

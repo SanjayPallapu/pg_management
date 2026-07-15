@@ -374,9 +374,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
                 </SheetTitle>
               </div>
             </div>
-            <SheetDescription className="ml-10 mt-1">
-              Send payment reminders or custom messages to multiple tenants
-            </SheetDescription>
+<SheetDescription className="hidden" />
           </SheetHeader>
           <div className="flex-1 flex flex-col min-h-0 py-4 bg-background">
 

@@ -392,11 +392,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   return (
     <Card id={`room-card-${room.roomNo}`} className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-semibold text-primary">
-            ₹{totalCollected.toLocaleString()} / ₹{expectedRent.toLocaleString()}
-          </div>
-        </div>
+
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <CardTitle className="text-lg font-semibold">Room {room.roomNo}</CardTitle>
@@ -407,7 +403,10 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-primary mr-1">
+              ₹{totalCollected.toLocaleString()} / ₹{expectedRent.toLocaleString()}
+            </span>
             {room.isAc && (
               <Badge className="bg-sky-500/15 text-sky-600 border border-sky-500/30 gap-1 px-1.5 py-0.5">
                 <Snowflake className="h-3 w-3" />

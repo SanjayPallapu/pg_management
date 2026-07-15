@@ -793,7 +793,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   Room {room.roomNo}
                   <Badge className={getStatusColor(derivedStatus)}>{derivedStatus}</Badge>
                 </SheetTitle>
-                <span className="text-xs text-muted-foreground block mt-1">Manage tenants, room capacity, rent amounts, and payment status</span>
+                
               </div>
             </div>
           </SheetHeader>
