@@ -1517,11 +1517,25 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   };
   return (
     <div className="space-y-4 px-0 pb-20">
-      {/* Header Row */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-foreground">Rent Sheet</h2>
-        </div>
+      {/* Room quick-nav — tap a room number to jump to its tenant card */}
+      <div className="mt-1 mb-2">
+        <RoomQuickNav
+          rooms={rooms}
+          payments={payments}
+          month={selectedMonth}
+          year={selectedYear}
+          onSelect={(roomNo) => {
+            setSearchQuery(roomNo);
+            setTimeout(() => {
+              const el = document.querySelector(`[data-room-no="${roomNo}"]`);
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 50);
+          }}
+        />
+      </div>
+
+      {/* Header/Action Row */}
+      <div className="flex items-center justify-end">
         <div className="flex gap-1.5 items-center">
           {/* Edit Mode Toggle */}
           <div className="flex items-center gap-1.5 mr-1 bg-muted/50 dark:bg-slate-900 px-2 py-1 rounded-lg border border-border">
@@ -1557,22 +1571,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       </div>
 
       <div className="space-y-4">
-          {/* Room quick-nav — tap a room number to jump to its tenant card */}
-          <div className="mb-3 space-y-1.5">
-            <RoomQuickNav
-              rooms={rooms}
-              payments={payments}
-              month={selectedMonth}
-              year={selectedYear}
-              onSelect={(roomNo) => {
-                setSearchQuery(roomNo);
-                setTimeout(() => {
-                  const el = document.querySelector(`[data-room-no="${roomNo}"]`);
-                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 50);
-              }}
-            />
-          </div>
 
 
           {/* Search Bar */}
