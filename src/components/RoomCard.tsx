@@ -732,22 +732,21 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         )}
 
         {/* Total Possible / Add Tenant Boxed Row */}
-        <div className="flex items-center justify-between p-3.5 bg-muted/40 rounded-xl border border-border/40 mt-1">
+        <div className="flex items-center justify-between p-4 bg-muted/40 rounded-2xl border border-border/40 mt-3.5">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/5 shrink-0">
               <CreditCard className="h-5 w-5" />
             </div>
-            <div className="text-left">
-              <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Total Possible</span>
-              <span className="block text-base font-extrabold text-foreground mt-0.5">₹{room.rentAmount.toLocaleString()}</span>
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider leading-none mb-1">Total Possible</span>
+              <span className="text-lg font-black text-foreground leading-none">₹{room.rentAmount.toLocaleString()}</span>
             </div>
           </div>
           {canManageTenants && isSelectedCurrentMonth && occupiedCount < room.capacity && (
             <Button
               variant="default"
-              size="sm"
               onClick={() => onViewDetails(room)}
-              className="h-9 px-3 rounded-lg flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+              className="h-10 px-4 rounded-xl flex items-center gap-2 bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Tenant</span>
