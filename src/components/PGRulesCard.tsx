@@ -40,6 +40,10 @@ export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose, 
   const [open, setOpen] = useState(defaultOpen);
 
   useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
+
+  useEffect(() => {
     const handleClose = () => {
       setOpen(false);
       onClose?.();

@@ -1,3 +1,4 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PGRulesCard } from './PGRulesCard';
 import { RulesTemplate } from './RulesTemplate';
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -107,6 +108,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const isMobile = useIsMobile();
   const [acMonth, setAcMonth] = useState(selectedMonth);
+  
+  useEffect(() => {
+    setDownloadMonth(selectedMonth);
+  }, [selectedMonth]);
   const [acYear, setAcYear] = useState(selectedYear);
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
   const { data: allReadings = [] } = useAllElectricityReadings();
@@ -174,6 +179,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  const [downloadType, setDownloadType] = useState<"year" | "month">("month");
+  const [downloadMonth, setDownloadMonth] = useState(selectedMonth);
   const [pgRulesOpen, setPgRulesOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<any[]>([]);
@@ -1285,7 +1293,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
     setDeletePaymentTenant(null);
   };
-  const exportToExcel = async () => {
+  const exportToExcel = async (type: "year" | "month" = "year", monthNum: number = selectedMonth) => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     const allTenants = rooms.flatMap((room) =>
@@ -1295,114 +1303,210 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       })),
     );
 
-    const excelData = allTenants.map((tenant) => {
-      // Compute status across all months
-      const isActiveNow = !tenant.endDate;
-      const endLabel = tenant.endDate ? format(parseDateOnly(tenant.endDate), "dd-MMM-yyyy") : "Active";
+    let excelData: any[] = [];
+    let colWidths: any[] = [];
+    let statusCols: number[] = [];
+    let currencyCols: number[] = [];
+    let fileName = "";
 
-      const row: Record<string, string | number> = {
-        "Tenant Name": tenant.name,
-        "Room No": tenant.roomNo,
-        "Status": isActiveNow ? "Active" : "Checked Out",
-        "Join Date": tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
-        "End Date": endLabel,
-        "Phone": tenant.phone,
-        "Monthly Rent (₹)": tenant.monthlyRent,
-        "Security Deposit (₹)": tenant.securityDepositAmount || 0,
-        "Deposit Mode": tenant.securityDepositMode || "",
-      };
+    if (type === "month") {
+      excelData = allTenants.map((tenant) => {
+        const isActiveNow = !tenant.endDate;
+        const endLabel = tenant.endDate ? format(parseDateOnly(tenant.endDate), "dd-MMM-yyyy") : "Active";
 
-      let yearTotalPaid = 0;
-      let yearTotalPending = 0;
-
-      months.forEach((month) => {
         const payment = payments.find(
-          (p) => p.tenantId === tenant.id && p.month === month.value && p.year === selectedYear,
+          (p) => p.tenantId === tenant.id && p.month === monthNum && p.year === selectedYear,
         );
 
-        if (payment) {
-          const mode = payment.paymentEntries?.length
-            ? payment.paymentEntries.map(e => e.mode?.toUpperCase()).filter(Boolean).join('+')
-            : '';
-          const dateStr = payment.paymentDate
-            ? format(new Date(payment.paymentDate), "dd-MMM")
-            : '';
+        const amountPaid = payment?.amountPaid || 0;
+        const totalRent = payment?.amount || tenant.monthlyRent;
+        const balanceDue = Math.max(0, totalRent - amountPaid);
+        const statusLabel = payment?.paymentStatus || "Pending";
 
-          if (payment.paymentStatus === "Paid") {
-            row[month.label] = `Paid ₹${payment.amountPaid.toLocaleString()}${mode ? ` (${mode})` : ''}${dateStr ? ` · ${dateStr}` : ''}`;
-            yearTotalPaid += payment.amountPaid;
-          } else if (payment.paymentStatus === "Partial") {
-            const remaining = Math.max(0, payment.amount - payment.amountPaid);
-            row[month.label] = `Partial ₹${payment.amountPaid.toLocaleString()} / ₹${payment.amount.toLocaleString()}${mode ? ` (${mode})` : ''}`;
-            yearTotalPaid += payment.amountPaid;
-            yearTotalPending += remaining;
-          } else {
-            row[month.label] = `Pending ₹${payment.amount.toLocaleString()}`;
-            yearTotalPending += payment.amount;
-          }
-        } else {
-          row[month.label] = "-";
-        }
+        const mode = payment?.paymentEntries?.length
+          ? payment.paymentEntries.map(e => e.mode?.toUpperCase()).filter(Boolean).join('+')
+          : '';
+        const dateStr = payment?.paymentDate
+          ? format(new Date(payment.paymentDate), "dd-MMM")
+          : '';
+
+        return {
+          "Tenant Name": tenant.name,
+          "Room No": tenant.roomNo,
+          "Status": isActiveNow ? "Active" : "Checked Out",
+          "Join Date": tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
+          "End Date": endLabel,
+          "Phone": tenant.phone,
+          "Rent Amount (₹)": totalRent,
+          "Amount Paid (₹)": amountPaid,
+          "Balance Due (₹)": balanceDue,
+          "Payment Status": statusLabel,
+          "Payment Mode": mode,
+          "Payment Date": dateStr,
+          "Security Deposit (₹)": tenant.securityDepositAmount || 0,
+          "Deposit Mode": tenant.securityDepositMode || "",
+        };
       });
 
-      row["Total Paid (Year) ₹"] = yearTotalPaid;
-      row["Total Pending (Year) ₹"] = yearTotalPending;
+      // Totals row for month
+      const summaryRow: Record<string, string | number> = {
+        "Tenant Name": "─── TOTALS ───",
+        "Room No": "",
+        "Status": "",
+        "Join Date": "",
+        "End Date": "",
+        "Phone": "",
+        "Rent Amount (₹)": allTenants.reduce((s, t) => {
+          const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
+          return s + (p?.amount || t.monthlyRent);
+        }, 0),
+        "Amount Paid (₹)": allTenants.reduce((s, t) => {
+          const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
+          return s + (p?.amountPaid || 0);
+        }, 0),
+        "Balance Due (₹)": allTenants.reduce((s, t) => {
+          const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
+          const total = p?.amount || t.monthlyRent;
+          const paid = p?.amountPaid || 0;
+          return s + Math.max(0, total - paid);
+        }, 0),
+        "Payment Status": "",
+        "Payment Mode": "",
+        "Payment Date": "",
+        "Security Deposit (₹)": "",
+        "Deposit Mode": "",
+      };
+      excelData.push(summaryRow);
 
-      return row;
-    });
+      colWidths = [
+        { wch: 22 }, // Tenant Name
+        { wch: 10 }, // Room No
+        { wch: 12 }, // Status
+        { wch: 15 }, // Join Date
+        { wch: 15 }, // End Date
+        { wch: 14 }, // Phone
+        { wch: 18 }, // Rent Amount
+        { wch: 18 }, // Amount Paid
+        { wch: 18 }, // Balance Due
+        { wch: 15 }, // Payment Status
+        { wch: 15 }, // Payment Mode
+        { wch: 15 }, // Payment Date
+        { wch: 18 }, // Security Deposit
+        { wch: 14 }, // Deposit Mode
+      ];
+      statusCols = [9]; // Payment Status
+      currencyCols = [6, 7, 8, 12];
+      fileName = `Rent_Ledger_${months[monthNum - 1].label}_${selectedYear}.xlsx`;
 
-    // Summary totals row
-    const summaryRow: Record<string, string | number> = {
-      "Tenant Name": "─── TOTALS ───",
-      "Room No": "",
-      "Status": "",
-      "Join Date": "",
-      "End Date": "",
-      "Phone": "",
-      "Monthly Rent (₹)": allTenants.reduce((s, t) => s + t.monthlyRent, 0),
-      "Security Deposit (₹)": "",
-      "Deposit Mode": "",
-    };
-    months.forEach((month) => {
-      const monthPaid = allTenants.reduce((s, tenant) => {
-        const p = payments.find(pp => pp.tenantId === tenant.id && pp.month === month.value && pp.year === selectedYear);
-        return s + (p?.amountPaid || 0);
+    } else {
+      // Loop across all 12 months (existing code)
+      excelData = allTenants.map((tenant) => {
+        const isActiveNow = !tenant.endDate;
+        const endLabel = tenant.endDate ? format(parseDateOnly(tenant.endDate), "dd-MMM-yyyy") : "Active";
+
+        const row: Record<string, string | number> = {
+          "Tenant Name": tenant.name,
+          "Room No": tenant.roomNo,
+          "Status": isActiveNow ? "Active" : "Checked Out",
+          "Join Date": tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
+          "End Date": endLabel,
+          "Phone": tenant.phone,
+          "Monthly Rent (₹)": tenant.monthlyRent,
+          "Security Deposit (₹)": tenant.securityDepositAmount || 0,
+          "Deposit Mode": tenant.securityDepositMode || "",
+        };
+
+        let yearTotalPaid = 0;
+        let yearTotalPending = 0;
+
+        months.forEach((month) => {
+          const payment = payments.find(
+            (p) => p.tenantId === tenant.id && p.month === month.value && p.year === selectedYear,
+          );
+
+          if (payment) {
+            const mode = payment.paymentEntries?.length
+              ? payment.paymentEntries.map(e => e.mode?.toUpperCase()).filter(Boolean).join('+')
+              : '';
+            const dateStr = payment.paymentDate
+              ? format(new Date(payment.paymentDate), "dd-MMM")
+              : '';
+
+            if (payment.paymentStatus === "Paid") {
+              row[month.label] = `Paid ₹${payment.amountPaid.toLocaleString()}${mode ? ` (${mode})` : ''}${dateStr ? ` · ${dateStr}` : ''}`;
+              yearTotalPaid += payment.amountPaid;
+            } else if (payment.paymentStatus === "Partial") {
+              const remaining = Math.max(0, payment.amount - payment.amountPaid);
+              row[month.label] = `Partial ₹${payment.amountPaid.toLocaleString()} / ₹${payment.amount.toLocaleString()}${mode ? ` (${mode})` : ''}`;
+              yearTotalPaid += payment.amountPaid;
+              yearTotalPending += remaining;
+            } else {
+              row[month.label] = `Pending ₹${payment.amount.toLocaleString()}`;
+              yearTotalPending += payment.amount;
+            }
+          } else {
+            row[month.label] = "-";
+          }
+        });
+
+        row["Total Paid (Year) ₹"] = yearTotalPaid;
+        row["Total Pending (Year) ₹"] = yearTotalPending;
+
+        return row;
+      });
+
+      const summaryRow: Record<string, string | number> = {
+        "Tenant Name": "─── TOTALS ───",
+        "Room No": "",
+        "Status": "",
+        "Join Date": "",
+        "End Date": "",
+        "Phone": "",
+        "Monthly Rent (₹)": allTenants.reduce((s, t) => s + t.monthlyRent, 0),
+        "Security Deposit (₹)": "",
+        "Deposit Mode": "",
+      };
+      months.forEach((month) => {
+        const monthPaid = allTenants.reduce((s, tenant) => {
+          const p = payments.find(pp => pp.tenantId === tenant.id && pp.month === month.value && pp.year === selectedYear);
+          return s + (p?.amountPaid || 0);
+        }, 0);
+        summaryRow[month.label] = monthPaid > 0 ? `₹${monthPaid.toLocaleString()}` : "₹0";
+      });
+      summaryRow["Total Paid (Year) ₹"] = allTenants.reduce((s, tenant) => {
+        return s + payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear).reduce((ps, p) => ps + (p.amountPaid || 0), 0);
       }, 0);
-      summaryRow[month.label] = monthPaid > 0 ? `₹${monthPaid.toLocaleString()}` : "₹0";
-    });
-    summaryRow["Total Paid (Year) ₹"] = allTenants.reduce((s, tenant) => {
-      return s + payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear).reduce((ps, p) => ps + (p.amountPaid || 0), 0);
-    }, 0);
-    summaryRow["Total Pending (Year) ₹"] = "";
-    excelData.push(summaryRow);
+      summaryRow["Total Pending (Year) ₹"] = "";
+      excelData.push(summaryRow);
 
-    const baseColWidths = [
-      { wch: 22 }, // Tenant Name
-      { wch: 10 }, // Room No
-      { wch: 12 }, // Status
-      { wch: 15 }, // Join Date
-      { wch: 15 }, // End Date
-      { wch: 14 }, // Phone
-      { wch: 18 }, // Monthly Rent
-      { wch: 18 }, // Security Deposit
-      { wch: 14 }, // Deposit Mode
-    ];
-    const statusCols: number[] = [];
-    const colWidths = [...baseColWidths];
-    months.forEach((_, i) => {
-      colWidths.push({ wch: 30 });
-      statusCols.push(9 + i);
-    });
-    colWidths.push({ wch: 20 }, { wch: 20 }); // year totals
+      colWidths = [
+        { wch: 22 }, // Tenant Name
+        { wch: 10 }, // Room No
+        { wch: 12 }, // Status
+        { wch: 15 }, // Join Date
+        { wch: 15 }, // End Date
+        { wch: 14 }, // Phone
+        { wch: 18 }, // Monthly Rent
+        { wch: 18 }, // Security Deposit
+        { wch: 14 }, // Deposit Mode
+      ];
+      months.forEach((_, i) => {
+        colWidths.push({ wch: 30 });
+        statusCols.push(9 + i);
+      });
+      colWidths.push({ wch: 20 }, { wch: 20 }); // year totals
+      currencyCols = [6, 7];
+      fileName = `Rent_Ledger_${selectedYear}.xlsx`;
+    }
 
-    const wb = applyStyledExport(excelData, `Rent ${selectedYear}`, colWidths, {
+    const wb = applyStyledExport(excelData, type === "month" ? months[monthNum - 1].label : `Rent ${selectedYear}`, colWidths, {
       statusColumns: statusCols,
-      currencyColumns: [6, 7],
-      fileName: `Rent_Ledger_${selectedYear}.xlsx`,
+      currencyColumns: currencyCols,
+      fileName,
     });
 
     try {
-      await saveAndShareExcel(wb, `Rent_Ledger_${selectedYear}.xlsx`);
+      await saveAndShareExcel(wb, fileName);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -1446,7 +1550,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <Button onClick={() => setPgRulesOpen(true)} variant="outline" size="icon" title="PG Rules & Regulations" className="h-8 w-8 shrink-0">
             <FileText className="h-4 w-4" />
           </Button>
-          <Button onClick={exportToExcel} variant="outline" size="icon" title="Export Excel" className="h-8 w-8 shrink-0">
+          <Button onClick={() => setDownloadDialogOpen(true)} variant="outline" size="icon" title="Export Excel" className="h-8 w-8 shrink-0">
             <Download className="h-4 w-4" />
           </Button>
         </div>
@@ -2394,6 +2498,237 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         rules={rulesForTemplate} 
         language={rulesLanguage} 
       />
+      {/* Download Options Dialog */}
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Download Rent Sheet</DialogTitle>
+            <DialogDescription>
+              Select the data format you want to download.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label>Download Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={downloadType === "month" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("month")}
+                >
+                  Single Month
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "year" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("year")}
+                >
+                  Full Year ({selectedYear})
+                </Button>
+              </div>
+            </div>
+
+            {downloadType === "month" && (
+              <div className="space-y-2">
+                <Label htmlFor="downloadMonth">Select Month</Label>
+                <Select
+                  value={String(downloadMonth)}
+                  onValueChange={(val) => setDownloadMonth(parseInt(val))}
+                >
+                  <SelectTrigger id="downloadMonth" className="rounded-xl h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m) => (
+                      <SelectItem key={m.value} value={String(m.value)}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDownloadDialogOpen(false)}
+              className="flex-1 rounded-xl h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setDownloadDialogOpen(false);
+                exportToExcel(downloadType, downloadMonth);
+              }}
+              className="flex-1 rounded-xl h-10"
+            >
+              Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Download Options Dialog */}
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Download Rent Sheet</DialogTitle>
+            <DialogDescription>
+              Select the data format you want to download.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label>Download Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={downloadType === "month" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("month")}
+                >
+                  Single Month
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "year" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("year")}
+                >
+                  Full Year ({selectedYear})
+                </Button>
+              </div>
+            </div>
+
+            {downloadType === "month" && (
+              <div className="space-y-2">
+                <Label htmlFor="downloadMonth">Select Month</Label>
+                <Select
+                  value={String(downloadMonth)}
+                  onValueChange={(val) => setDownloadMonth(parseInt(val))}
+                >
+                  <SelectTrigger id="downloadMonth" className="rounded-xl h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m) => (
+                      <SelectItem key={m.value} value={String(m.value)}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDownloadDialogOpen(false)}
+              className="flex-1 rounded-xl h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setDownloadDialogOpen(false);
+                exportToExcel(downloadType, downloadMonth);
+              }}
+              className="flex-1 rounded-xl h-10"
+            >
+              Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Download Options Dialog */}
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Download Rent Sheet</DialogTitle>
+            <DialogDescription>
+              Select the data format you want to download.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label>Download Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={downloadType === "month" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("month")}
+                >
+                  Single Month
+                </Button>
+                <Button
+                  type="button"
+                  variant={downloadType === "year" ? "default" : "outline"}
+                  className="flex-1 rounded-xl h-10"
+                  onClick={() => setDownloadType("year")}
+                >
+                  Full Year ({selectedYear})
+                </Button>
+              </div>
+            </div>
+
+            {downloadType === "month" && (
+              <div className="space-y-2">
+                <Label htmlFor="downloadMonth">Select Month</Label>
+                <Select
+                  value={String(downloadMonth)}
+                  onValueChange={(val) => setDownloadMonth(parseInt(val))}
+                >
+                  <SelectTrigger id="downloadMonth" className="rounded-xl h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m) => (
+                      <SelectItem key={m.value} value={String(m.value)}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDownloadDialogOpen(false)}
+              className="flex-1 rounded-xl h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setDownloadDialogOpen(false);
+                exportToExcel(downloadType, downloadMonth);
+              }}
+              className="flex-1 rounded-xl h-10"
+            >
+              Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {acPaymentRecord && (
         <AlertDialog open={acPaymentRecord !== null} onOpenChange={(open) => !open && setAcPaymentRecord(null)}>
