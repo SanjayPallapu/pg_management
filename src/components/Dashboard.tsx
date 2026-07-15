@@ -293,8 +293,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const slideWidth = container.offsetWidth;
-    const index = Math.round(container.scrollLeft / slideWidth);
+    const slideElement = container.children[0] as HTMLElement;
+    const slideWidth = slideElement ? slideElement.offsetWidth : container.offsetWidth;
+    // Add gap to slide width for accurate index calculation (gap-3 is 12px)
+    const totalSlideWidth = slideWidth + 12;
+    const index = Math.round(container.scrollLeft / totalSlideWidth);
     setActiveSlide(index);
   };
 
@@ -361,29 +364,29 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   return (
     <>
-      <div ref={dashboardRef} className="space-y-3">
+      <div ref={dashboardRef} className="space-y-4 md:space-y-6 max-w-[1200px] mx-auto">
         {/* Banner Carousel */}
-        <div className="w-full relative">
+        <div className="w-full relative group">
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
-            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-3 pb-1"
+            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-3 pb-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {banners.map((banner) => (
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[2/1] border border-border/40 shadow-sm active:scale-[0.99] transition-transform duration-100 cursor-pointer bg-white"
+                className="relative w-[92%] sm:w-[75%] md:w-[calc(50%-6px)] lg:w-[calc(33.333%-8px)] shrink-0 snap-center md:snap-start rounded-2xl overflow-hidden aspect-[2/1] md:aspect-[16/9] border border-border/40 shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-white"
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-contain bg-white"
+                  className="w-full h-full object-contain bg-white transition-transform duration-500 hover:scale-[1.02]"
                 />
                 
                 {/* Floating dynamic glassmorphism badge */}
-                <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 ${banner.badgeColor} text-white font-bold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md bg-opacity-95 flex items-center justify-center`}>
+                <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 ${banner.badgeColor} text-white font-bold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md bg-opacity-95 flex items-center justify-center transition-transform hover:scale-105`}>
                   {banner.badge}
                 </div>
               </div>
@@ -391,7 +394,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-1.5 mt-2">
+          <div className="flex justify-center gap-1.5 mt-1">
             {banners.map((_, idx) => (
               <button
                 key={idx}
@@ -399,7 +402,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 onClick={() => {
                   const container = carouselRef.current;
                   if (container) {
-                    const slideWidth = container.offsetWidth;
+                    const slideElement = container.children[0] as HTMLElement;
+                    const slideWidth = slideElement ? slideElement.offsetWidth : container.offsetWidth;
                     container.scrollTo({
                       left: idx * (slideWidth + 12), // include gap-3 (12px)
                       behavior: 'smooth'
@@ -407,8 +411,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                     setActiveSlide(idx);
                   }
                 }}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  activeSlide === idx ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/30"
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeSlide === idx ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
