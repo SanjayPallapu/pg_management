@@ -1069,23 +1069,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     if (!tenant) return;
 
     if (currentStatus === "Paid") {
-      if (confirm(`Are you sure you want to mark ${tenantName} as unpaid for this month?`)) {
-        toast.info("Reverting payment status...");
-        await recordPayment.mutateAsync({
-          tenantId,
-          month: selectedMonth,
-          year: selectedYear,
-          paymentStatus: "Pending",
-          amount: tenant.monthlyRent,
-          amountPaid: 0,
-          paymentDate: null,
-          paymentEntries: [],
-          notes: "Payment reversed",
-          tenantName: tenant.name,
-          roomNo: tenant.roomNo
-        });
-        toast.success("Payment status reverted successfully");
-      }
+      setDeletePaymentTenant({
+        id: tenant.id,
+        name: tenant.name,
+        monthlyRent: tenant.monthlyRent,
+        paymentEntries: tenant.payment?.paymentEntries || []
+      });
       return;
     }
 

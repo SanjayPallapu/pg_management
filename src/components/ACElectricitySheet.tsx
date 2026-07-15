@@ -63,6 +63,25 @@ export const ACElectricitySheet = ({
   years,
 }: ACElectricitySheetProps) => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'ac-bill' | 'pendings' | 'share-bills' | 'reports'>('ac-bill');
+
+  const pendingTenantsList = useMemo(() => {
+    const list: any[] = [];
+    acRooms.forEach(item => {
+      (item.tenantShares || []).forEach((share: any) => {
+        if (share.acPaymentStatus !== 'Paid' && share.share > 0) {
+          list.push({
+            id: share.id || share.name,
+            name: share.name,
+            roomNo: item.room.roomNo,
+            pending: share.share + (share.overdueAcTotal || 0),
+            roomItem: item
+          });
+        }
+      });
+    });
+    return list;
+  }, [acRooms]);
 
   const expectedTotal = acRooms.reduce((sum, item) => {
     return sum + (item.tenantShares || []).reduce((tSum: number, share: any) => tSum + (share.share || 0), 0);
@@ -174,7 +193,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background dark:bg-slate-900 text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900 text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -194,7 +213,7 @@ export const ACElectricitySheet = ({
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
-            <SheetHeader className="px-5 pt-5 pb-3 border-b border-border dark:border-slate-900 shrink-0">
+            <SheetHeader className="px-5 pt-5 pb-2 border-b border-border dark:border-slate-900 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={() => onOpenChange(false)} aria-label="Back">
@@ -217,96 +236,275 @@ export const ACElectricitySheet = ({
                   </select>
                 </div>
               </div>
+
+              {/* Segmented Tab Switcher */}
+              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-border dark:border-slate-800/80 w-full mt-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ac-bill')}
+                  className={cn(
+                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
+                    activeTab === 'ac-bill' 
+                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  AC Bill
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('pendings')}
+                  className={cn(
+                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
+                    activeTab === 'pendings' 
+                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Pendings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('share-bills')}
+                  className={cn(
+                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
+                    activeTab === 'share-bills' 
+                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Share
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reports')}
+                  className={cn(
+                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
+                    activeTab === 'reports' 
+                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Reports
+                </button>
+              </div>
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-              {/* Overview Card */}
-              <div className="relative rounded-2xl overflow-hidden bg-card border border-border dark:border-slate-800/80 p-5 shadow-lg">
-                <div className="absolute right-0 top-0 w-32 h-full hidden pointer-events-none" />
-                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400 mb-3">Month Overview</h4>
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border rounded-xl p-3 text-center">
-                    <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Expected</span>
-                    <span className="block text-sm font-black text-cyan-300 mt-1">₹{expectedTotal.toLocaleString()}</span>
-                  </div>
-                  <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border rounded-xl p-3 text-center">
-                    <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Collected</span>
-                    <span className="block text-sm font-black text-emerald-400 mt-1">₹{collectedTotal.toLocaleString()}</span>
-                  </div>
-                  <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border rounded-xl p-3 text-center">
-                    <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Pending</span>
-                    <span className="block text-sm font-black text-orange-400 mt-1">₹{pendingTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-[10px] text-muted-foreground dark:text-slate-400">
-                    <span>Collection Progress</span>
-                    <span className="font-bold text-emerald-400">{overallPct}% Collected</span>
-                  </div>
-                  <Progress value={overallPct} className="h-1.5 bg-muted dark:bg-slate-950 border border-border dark:border-slate-800" />
-                </div>
-              </div>
-
-              {/* Quick Action Buttons */}
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { icon: <Zap className="h-4 w-4" />, label: "Reading", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20", onClick: () => { if (acRooms.length > 0) setSelectedRoomId(acRooms[0].room.id); else toast.info("No AC rooms configured."); } },
-                  { icon: <Bell className="h-4 w-4" />, label: "Reminders", color: "text-orange-400 bg-orange-500/10 border-orange-500/20", onClick: handleBulkReminders },
-                  { icon: <Send className="h-4 w-4" />, label: "Share Bills", color: "text-blue-400 bg-blue-500/10 border-blue-500/20", onClick: handleShareAll },
-                  { icon: <FileSpreadsheet className="h-4 w-4" />, label: "Report", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", onClick: handleExport },
-                ].map((action) => (
-                  <button key={action.label} onClick={action.onClick} className="flex flex-col items-center justify-center p-3 bg-muted/40 dark:bg-muted/40 border border-border dark:border-slate-900 rounded-xl hover:bg-muted/60 dark:bg-slate-900/60 transition-colors gap-1.5">
-                    <div className={cn("h-8 w-8 rounded-full border flex items-center justify-center", action.color)}>{action.icon}</div>
-                    <span className="text-[9px] font-semibold text-foreground dark:text-slate-300">{action.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Room Cards */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Rooms Summary</h3>
-                  <Badge variant="outline" className="text-[9px] border-border dark:border-slate-800 text-muted-foreground dark:text-slate-400 px-2 py-0">{acRooms.length} Rooms</Badge>
-                </div>
-                <div className="space-y-2.5">
-                  {acRooms.length === 0 ? (
-                    <div className="text-center text-muted-foreground dark:text-slate-500 py-12 text-xs border border-dashed border-border dark:border-slate-900 rounded-2xl">No AC Rooms configured.</div>
-                  ) : acRooms.map((item) => {
-                    const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
-                    const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
-                    const roomPending = Math.max(0, roomExpected - roomCollected);
-                    const roomPct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
-
-                    return (
-                      <div key={item.room.id} onClick={() => setSelectedRoomId(item.room.id)} className="group p-4 bg-muted dark:bg-muted/40 dark:bg-muted/40 hover:bg-muted/30 dark:bg-slate-900/30 border border-border dark:border-slate-900 hover:border-border dark:border-slate-800 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-4 shadow-sm">
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="relative h-10 w-10 shrink-0">
-                            <svg className="w-10 h-10 -rotate-90 transform" viewBox="0 0 36 36">
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#1e293b" strokeWidth="3.2" />
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke={roomPct === 100 ? "#10b981" : "#06b6d4"} strokeWidth="3.2" strokeDasharray={`${roomPct} 100`} strokeLinecap="round" className="transition-all duration-500 ease-out" />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-foreground dark:text-white">{roomPct}%</div>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-sm text-foreground dark:text-white">Room {item.room.roomNo}</span>
-                              <Badge className={cn("text-[9px] font-bold py-0.5 border-0 px-2 rounded-full", roomPending > 0 ? "bg-orange-500/10 text-orange-400" : "bg-emerald-500/10 text-emerald-400")}>
-                                {roomPending > 0 ? `₹${roomPending.toLocaleString()} Pending` : 'All Paid'}
-                              </Badge>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</span>
-                            <span className="text-[9px] text-muted-foreground dark:text-slate-500 block mt-1">{item.units || 0} Units · ₹{item.unitPrice}/Unit · Bill: ₹{(item.total || 0).toLocaleString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground dark:text-slate-500 group-hover:text-foreground dark:text-slate-300 transition-colors shrink-0">
-                          <span className="text-[10px] font-semibold hidden sm:inline">Details</span>
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
+              {activeTab === 'ac-bill' && (
+                <>
+                  {/* Overview Card */}
+                  <div className="relative rounded-2xl overflow-hidden bg-card border border-border dark:border-slate-800/80 p-5 shadow-lg">
+                    <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400 mb-3">Month Overview</h4>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
+                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Expected</span>
+                        <span className="block text-sm font-black text-cyan-500 dark:text-cyan-400 mt-1">₹{expectedTotal.toLocaleString()}</span>
                       </div>
-                    );
-                  })}
+                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
+                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Collected</span>
+                        <span className="block text-sm font-black text-emerald-500 dark:text-emerald-400 mt-1">₹{collectedTotal.toLocaleString()}</span>
+                      </div>
+                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
+                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Pending</span>
+                        <span className="block text-sm font-black text-orange-500 dark:text-orange-400 mt-1">₹{pendingTotal.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-[10px] text-muted-foreground dark:text-slate-400">
+                        <span>Collection Progress</span>
+                        <span className="font-bold text-emerald-400">{overallPct}% Collected</span>
+                      </div>
+                      <Progress value={overallPct} className="h-1.5 bg-muted dark:bg-slate-950 border border-border dark:border-slate-800" />
+                    </div>
+                  </div>
+
+                  {/* Rates Template Card */}
+                  <div className="p-4 bg-cyan-500/5 dark:bg-cyan-500/5 border border-cyan-500/20 dark:border-cyan-500/10 rounded-2xl space-y-2">
+                    <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 text-xs font-bold">
+                      <Zap className="h-3.5 w-3.5" />
+                      AC ELECTRICITY PRICING & RATES
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-xs mt-1">
+                      <div>
+                        <span className="text-muted-foreground block text-[9px] uppercase font-bold">Flat Rate</span>
+                        <span className="font-extrabold text-foreground dark:text-white">₹12 / Unit</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[9px] uppercase font-bold">Govt. Commercial Slabs</span>
+                        <span className="font-extrabold text-foreground dark:text-white">₹5.4 to ₹9.95 / Unit</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Room Cards */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Rooms Summary</h3>
+                      <Badge variant="outline" className="text-[9px] border-border dark:border-slate-800 text-muted-foreground dark:text-slate-400 px-2 py-0">{acRooms.length} Rooms</Badge>
+                    </div>
+                    <div className="space-y-2.5">
+                      {acRooms.length === 0 ? (
+                        <div className="text-center text-muted-foreground dark:text-slate-500 py-12 text-xs border border-dashed border-border dark:border-slate-900 rounded-2xl">No AC Rooms configured.</div>
+                      ) : acRooms.map((item) => {
+                        const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
+                        const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
+                        const roomPending = Math.max(0, roomExpected - roomCollected);
+                        const roomPct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
+
+                        return (
+                          <div key={item.room.id} onClick={() => setSelectedRoomId(item.room.id)} className="group p-4 bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-4 shadow-sm">
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <div className="relative h-10 w-10 shrink-0">
+                                <svg className="w-10 h-10 -rotate-90 transform" viewBox="0 0 36 36">
+                                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#1e293b" strokeWidth="3.2" />
+                                  <circle cx="18" cy="18" r="15.915" fill="none" stroke={roomPct === 100 ? "#10b981" : "#06b6d4"} strokeWidth="3.2" strokeDasharray={`${roomPct} 100`} strokeLinecap="round" className="transition-all duration-500 ease-out" />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-foreground dark:text-white">{roomPct}%</div>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-extrabold text-sm text-foreground dark:text-white">Room {item.room.roomNo}</span>
+                                  <Badge className={cn("text-[9px] font-bold py-0.5 border-0 px-2 rounded-full", roomPending > 0 ? "bg-orange-500/10 text-orange-400" : "bg-emerald-500/10 text-emerald-400")}>
+                                    {roomPending > 0 ? `₹${roomPending.toLocaleString()} Pending` : 'All Paid'}
+                                  </Badge>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</span>
+                                <span className="text-[9px] text-muted-foreground dark:text-slate-500 block mt-1">{item.units || 0} Units · ₹{item.unitPrice}/Unit · Bill: ₹{(item.total || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground dark:text-slate-500 group-hover:text-foreground dark:text-slate-300 transition-colors shrink-0">
+                              <span className="text-[10px] font-semibold hidden sm:inline">Details</span>
+                              <ChevronRight className="h-4 w-4" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'pendings' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Pending AC Bills</h3>
+                    <Button size="xs" variant="outline" className="h-7 border-orange-500/30 text-orange-500 hover:bg-orange-500/10" onClick={handleBulkReminders}>
+                      <Bell className="h-3 w-3 mr-1" /> Remind All
+                    </Button>
+                  </div>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
+                          <th className="p-3">Room</th>
+                          <th className="p-3">Tenant</th>
+                          <th className="p-3 text-right">Pending</th>
+                          <th className="p-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {pendingTenantsList.map(tenant => (
+                          <tr key={tenant.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-extrabold">{tenant.roomNo}</td>
+                            <td className="p-3 font-medium">{tenant.name}</td>
+                            <td className="p-3 text-right text-orange-400 font-extrabold">₹{tenant.pending.toLocaleString()}</td>
+                            <td className="p-3 text-center">
+                              <Button size="xs" variant="outline" className="h-7 px-2.5 text-[10px] font-bold border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10" onClick={() => onShare(tenant.roomItem, tenant.roomItem.units, tenant.roomItem.unitPrice, tenant.roomItem.startReading, tenant.roomItem.endReading, tenant.roomItem.splitType, tenant.roomItem.splitCount, tenant.name)}>
+                                Remind
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {pendingTenantsList.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="p-8 text-center text-muted-foreground text-xs">No pending AC bills! 🎉</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {activeTab === 'share-bills' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Share AC Bills</h3>
+                    <Button size="xs" variant="outline" className="h-7 border-blue-500/30 text-blue-500 hover:bg-blue-500/10" onClick={handleShareAll}>
+                      <Send className="h-3 w-3 mr-1" /> Share All
+                    </Button>
+                  </div>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
+                          <th className="p-3">Room</th>
+                          <th className="p-3">Total Bill</th>
+                          <th className="p-3">Strategy</th>
+                          <th className="p-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {acRooms.map(item => (
+                          <tr key={item.room.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-extrabold">{item.room.roomNo}</td>
+                            <td className="p-3 font-medium">₹{(item.total || 0).toLocaleString()}</td>
+                            <td className="p-3 text-muted-foreground text-[10px] font-semibold">{item.splitType === 'custom' ? 'Custom' : item.splitType === 'capacity' ? 'Capacity' : 'Proportional'}</td>
+                            <td className="p-3 text-center">
+                              <Button size="xs" variant="outline" className="h-7 px-2.5 text-[10px] font-bold border-blue-500/30 text-blue-500 hover:bg-blue-500/10" onClick={() => onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount)}>
+                                Share
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'reports' && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] font-extrabold text-muted-foreground dark:text-slate-400 uppercase tracking-wider">AC Bill Report</span>
+                    <Button size="xs" variant="outline" className="h-7 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 animate-pulse" onClick={handleExport}>
+                      <FileSpreadsheet className="h-3 w-3 mr-1" /> Excel Export
+                    </Button>
+                  </div>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse min-w-[500px]">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
+                          <th className="p-3">Room</th>
+                          <th className="p-3">Units</th>
+                          <th className="p-3">Total Bill</th>
+                          <th className="p-3">Expected</th>
+                          <th className="p-3">Collected</th>
+                          <th className="p-3">Pending</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {acRooms.map(item => {
+                          const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
+                          const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
+                          const roomPending = Math.max(0, roomExpected - roomCollected);
+                          return (
+                            <tr key={item.room.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                              <td className="p-3 font-extrabold">{item.room.roomNo}</td>
+                              <td className="p-3">{item.units || 0}</td>
+                              <td className="p-3 font-medium">₹{(item.total || 0).toLocaleString()}</td>
+                              <td className="p-3">₹{roomExpected.toLocaleString()}</td>
+                              <td className="p-3 text-emerald-400 font-bold">₹{roomCollected.toLocaleString()}</td>
+                              <td className="p-3 text-orange-400 font-bold">₹{roomPending.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-border dark:border-slate-900 bg-muted dark:bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-between shrink-0 text-xs">
@@ -325,7 +523,6 @@ export const ACElectricitySheet = ({
     </Sheet>
   );
 };
-
 interface DetailProps {
   item: any;
   onBack: () => void;
