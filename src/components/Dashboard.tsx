@@ -387,11 +387,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   alt={banner.id}
                   className="w-full h-full object-contain bg-transparent transition-transform duration-500 hover:scale-[1.02]"
                 />
-                
-                {/* Floating dynamic glassmorphism badge */}
-                <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 ${banner.badgeColor} text-white font-bold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md bg-opacity-95 flex items-center justify-center transition-transform hover:scale-105`}>
-                  {banner.badge}
-                </div>
               </div>
             ))}
           </div>
