@@ -104,7 +104,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
         className="w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 [&>button]:hidden bg-[#070814] text-white border-l border-slate-900 flex flex-col h-full overflow-hidden"
       >
         {/* Header section (Fixed at top) */}
-        <div className="relative px-8 sm:px-10 pt-6 pb-4 flex items-center justify-between overflow-hidden shrink-0 border-b border-slate-900/40 bg-[#070814]/80 backdrop-blur-md z-10">
+        <div className="relative px-2 sm:px-4 pt-6 pb-4 flex items-center justify-between overflow-hidden shrink-0 border-b border-slate-900/40 bg-[#070814]/80 backdrop-blur-md z-10">
           {/* Soft glowing ambient background */}
           <div className="absolute right-0 top-0 w-48 h-48 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
           
@@ -132,7 +132,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
         </div>
 
         {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto px-8 sm:px-10 py-6 space-y-6 pb-40">
+        <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-6 space-y-6 pb-40">
           
           {/* CURRENT ACTIVE PLAN CARD */}
           <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1b1c3a] via-[#101124] to-[#0b0c16] border border-primary/25 p-5 shadow-lg">
