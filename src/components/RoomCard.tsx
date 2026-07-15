@@ -732,7 +732,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         )}
 
         {/* Total Possible / Add Tenant Boxed Row */}
-        <div className="flex items-center justify-center gap-6 p-3 bg-muted/40 rounded-2xl border border-border/40 mt-3.5">
+        <div className="flex items-center justify-between p-3 bg-muted/40 rounded-2xl border border-border/40 mt-3.5 px-4">
           <div className="flex items-center gap-1.5 shrink-0">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <span className="text-base font-extrabold text-foreground">₹{room.rentAmount.toLocaleString()}</span>
