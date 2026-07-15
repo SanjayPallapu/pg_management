@@ -12,7 +12,6 @@ const STORAGE_KEY_PREFIX = 'collector-names';
 
 const DEFAULT_COLLECTORS: CollectorConfig[] = [
   { id: 'Me', displayName: 'Owner' },
-  { id: 'Staff', displayName: 'Staff' },
 ];
 
 const DEFAULT_COLLECTOR_NAME_BY_ID = new Map(

@@ -21,6 +21,7 @@ import {
   Settings,
   Snowflake,
   Zap,
+  Key,
   CalendarClock,
   X as XIcon,
 } from "lucide-react";
@@ -399,7 +400,15 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Room {room.roomNo}</CardTitle>
+          <div className="flex flex-col">
+            <CardTitle className="text-lg font-semibold">Room {room.roomNo}</CardTitle>
+            {room.keyNo && (
+              <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                <Key className="h-3 w-3" />
+                Key: {room.keyNo}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             {room.isAc && (
               <Badge className="bg-sky-500/15 text-sky-600 border border-sky-500/30 gap-1 px-1.5 py-0.5">

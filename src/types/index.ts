@@ -8,6 +8,7 @@ export interface Room {
   notes?: string;
   floor: number;
   isAc?: boolean;
+  keyNo?: string;
 }
 
 export interface Tenant {

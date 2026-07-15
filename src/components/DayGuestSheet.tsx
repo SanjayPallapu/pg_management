@@ -778,23 +778,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm">Collected By</Label>
-                <div className="flex gap-2 mt-1">
-                  {collectors.map((c) => (
-                    <Button
-                      key={c.id}
-                      type="button"
-                      variant={paymentCollectedBy === c.displayName ? 'default' : 'outline'}
-                      size="sm"
-                      className={cn("flex-1", paymentCollectedBy === c.displayName && "bg-foreground text-background")}
-                      onClick={() => setPaymentCollectedBy(c.displayName)}
-                    >
-                      {c.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
             </div>
           )}
 

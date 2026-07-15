@@ -82,6 +82,7 @@ export const useRooms = () => {
         floor: room.floor as 1 | 2 | 3,
         notes: room.notes || undefined,
         isAc: (room as any).is_ac || false,
+        keyNo: (room as any).key_no || undefined,
         tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
           name: tenant.name,

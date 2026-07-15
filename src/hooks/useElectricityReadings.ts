@@ -215,64 +215,89 @@ export const calculateAPCommercialBill = (units: number): APCalculationResult =>
   let remaining = units;
   let energyCharges = 0;
 
-  // Slab 1: 0-50 units @ ₹5.40
+  let slabs = [5.40, 7.65, 9.05, 9.60, 10.15];
+  let fixed = [30, 40, 45];
+  
+  if (typeof window !== "undefined") {
+    const pgId = localStorage.getItem("currentPgId") || "default";
+    try {
+      const storedSlabs = localStorage.getItem(`electricity-slabs-${pgId}`);
+      if (storedSlabs) {
+        const parsed = JSON.parse(storedSlabs);
+        if (parsed.length === 5) {
+          slabs = parsed.map((s: any) => s.rate);
+        }
+      }
+      const storedFixed = localStorage.getItem(`fixed-charges-${pgId}`);
+      if (storedFixed) {
+        const parsed = JSON.parse(storedFixed);
+        if (parsed.length === 3) {
+          fixed = parsed.map((fc: any) => fc.charge);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load custom pricing", e);
+    }
+  }
+
+  // Slab 1: 0-50 units @ slabs[0]
   const s1Units = Math.min(remaining, 50);
   if (s1Units > 0) {
-    const amt = s1Units * 5.40;
+    const amt = s1Units * slabs[0];
     energyCharges += amt;
-    breakdown.push({ slab: "0-50 units", units: s1Units, rate: 5.40, amount: amt });
+    breakdown.push({ slab: "0-50 units", units: s1Units, rate: slabs[0], amount: amt });
     remaining -= s1Units;
   } else {
-    breakdown.push({ slab: "0-50 units", units: 0, rate: 5.40, amount: 0 });
+    breakdown.push({ slab: "0-50 units", units: 0, rate: slabs[0], amount: 0 });
   }
 
-  // Slab 2: 51-100 units @ ₹7.65
+  // Slab 2: 51-100 units @ slabs[1]
   const s2Units = Math.min(remaining, 50);
   if (s2Units > 0) {
-    const amt = s2Units * 7.65;
+    const amt = s2Units * slabs[1];
     energyCharges += amt;
-    breakdown.push({ slab: "51-100 units", units: s2Units, rate: 7.65, amount: amt });
+    breakdown.push({ slab: "51-100 units", units: s2Units, rate: slabs[1], amount: amt });
     remaining -= s2Units;
   } else {
-    breakdown.push({ slab: "51-100 units", units: 0, rate: 7.65, amount: 0 });
+    breakdown.push({ slab: "51-100 units", units: 0, rate: slabs[1], amount: 0 });
   }
 
-  // Slab 3: 101-300 units @ ₹9.05
+  // Slab 3: 101-300 units @ slabs[2]
   const s3Units = Math.min(remaining, 200);
   if (s3Units > 0) {
-    const amt = s3Units * 9.05;
+    const amt = s3Units * slabs[2];
     energyCharges += amt;
-    breakdown.push({ slab: "101-300 units", units: s3Units, rate: 9.05, amount: amt });
+    breakdown.push({ slab: "101-300 units", units: s3Units, rate: slabs[2], amount: amt });
     remaining -= s3Units;
   } else {
-    breakdown.push({ slab: "101-300 units", units: 0, rate: 9.05, amount: 0 });
+    breakdown.push({ slab: "101-300 units", units: 0, rate: slabs[2], amount: 0 });
   }
 
-  // Slab 4: 301-500 units @ ₹9.60
+  // Slab 4: 301-500 units @ slabs[3]
   const s4Units = Math.min(remaining, 200);
   if (s4Units > 0) {
-    const amt = s4Units * 9.60;
+    const amt = s4Units * slabs[3];
     energyCharges += amt;
-    breakdown.push({ slab: "301-500 units", units: s4Units, rate: 9.60, amount: amt });
+    breakdown.push({ slab: "301-500 units", units: s4Units, rate: slabs[3], amount: amt });
     remaining -= s4Units;
   } else {
-    breakdown.push({ slab: "301-500 units", units: 0, rate: 9.60, amount: 0 });
+    breakdown.push({ slab: "301-500 units", units: 0, rate: slabs[3], amount: 0 });
   }
 
-  // Slab 5: Above 500 units @ ₹10.15
+  // Slab 5: Above 500 units @ slabs[4]
   if (remaining > 0) {
-    const amt = remaining * 10.15;
+    const amt = remaining * slabs[4];
     energyCharges += amt;
-    breakdown.push({ slab: "Above 500 units", units: remaining, rate: 10.15, amount: amt });
+    breakdown.push({ slab: "Above 500 units", units: remaining, rate: slabs[4], amount: amt });
   } else {
-    breakdown.push({ slab: "Above 500 units", units: 0, rate: 10.15, amount: 0 });
+    breakdown.push({ slab: "Above 500 units", units: 0, rate: slabs[4], amount: 0 });
   }
 
   let fixedCharges = 0;
   if (units > 0) {
-    if (units <= 50) fixedCharges = 30;
-    else if (units <= 100) fixedCharges = 40;
-    else fixedCharges = 45;
+    if (units <= 50) fixedCharges = fixed[0];
+    else if (units <= 100) fixedCharges = fixed[1];
+    else fixedCharges = fixed[2];
   }
 
   const totalBill = energyCharges + fixedCharges;

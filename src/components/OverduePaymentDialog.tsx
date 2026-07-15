@@ -351,23 +351,7 @@ export const OverduePaymentDialog = ({
                 </div>
               </div>
  
-              {/* Collected By */}
-              <div className="space-y-2">
-                <Label>Collected By</Label>
-                <div className="flex gap-2">
-                  {collectors.map((c) => (
-                    <Button
-                      key={c.id}
-                      type="button"
-                      variant={collectedBy === c.displayName ? 'default' : 'outline'}
-                      onClick={() => setCollectedBy(c.displayName)}
-                      className="flex-1 h-10 rounded-xl"
-                    >
-                      {c.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
             </div>
  
             <AlertDialogFooter className="gap-[10px]">

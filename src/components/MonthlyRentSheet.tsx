@@ -1,3 +1,5 @@
+import { PGRulesCard } from './PGRulesCard';
+import { RulesTemplate } from './RulesTemplate';
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -171,6 +173,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
+  const [pgRulesOpen, setPgRulesOpen] = useState(false);
+  const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
+  const [rulesForTemplate, setRulesForTemplate] = useState<any[]>([]);
+  const [rulesLanguage, setRulesLanguage] = useState<"en" | "te">("en");
   const [customModeRooms, setCustomModeRooms] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     rooms.forEach((r) => {
@@ -1436,6 +1442,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History" className="h-8 w-8 shrink-0">
             <History className="h-4 w-4" />
           </Button>
+          <Button onClick={() => setPgRulesOpen(true)} variant="outline" size="icon" title="PG Rules & Regulations" className="h-8 w-8 shrink-0">
+            <FileText className="h-4 w-4" />
+          </Button>
           <Button onClick={exportToExcel} variant="outline" size="icon" title="Export Excel" className="h-8 w-8 shrink-0">
             <Download className="h-4 w-4" />
           </Button>
@@ -1808,20 +1817,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     <div className="text-xs text-muted-foreground">
                       Room {tenant.roomNo}
                     </div>
-                    {/* Collected By badges - right of room number */}
-                    {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 && (() => {
-                      const uniqueCollectors = [...new Set(tenant.payment.paymentEntries.map(e => e.collectedBy).filter(Boolean))];
-                      if (uniqueCollectors.length === 0) return null;
-                      return (
-                        <div className="flex flex-wrap gap-1">
-                          {uniqueCollectors.map((collector, idx) => (
-                            <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                              {getCollectorDisplayName(collector)}
-                            </span>
-                          ))}
-                        </div>
-                      );
-                    })()}
+
                   </div>
                   {/* Pro-rata visual indicator for mid-month leavers */}
                   {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
@@ -2099,22 +2095,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 )}
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={collectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>
@@ -2287,22 +2268,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 </div>
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={remainingCollectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setRemainingCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>
@@ -2410,6 +2376,23 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Welcome Dialog */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
       <RulesShareDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} shareData={rulesShareData} />
+      <PGRulesCard 
+        defaultOpen={pgRulesOpen} 
+        onClose={() => setPgRulesOpen(false)} 
+        showSummaryCard={false} 
+        onEditableTemplate={(rules, language) => {
+          setPgRulesOpen(false);
+          setRulesForTemplate(rules);
+          setRulesLanguage(language as any);
+          setRulesTemplateOpen(true);
+        }}
+      />
+      <RulesTemplate 
+        open={rulesTemplateOpen} 
+        onOpenChange={setRulesTemplateOpen} 
+        rules={rulesForTemplate} 
+        language={rulesLanguage} 
+      />
       
       {acPaymentRecord && (
         <AlertDialog open={acPaymentRecord !== null} onOpenChange={(open) => !open && setAcPaymentRecord(null)}>

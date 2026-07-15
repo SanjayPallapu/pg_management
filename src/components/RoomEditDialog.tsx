@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trash2, Snowflake, ArrowLeft } from "lucide-react";
+import { Loader2, Trash2, Snowflake, ArrowLeft, Key } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/proxyClient";
@@ -39,6 +39,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
   const [rentAmount, setRentAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [isAc, setIsAc] = useState(false);
+  const [keyNo, setKeyNo] = useState("");
 
   // Reset form when room changes
   useEffect(() => {
@@ -47,6 +48,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
       setRentAmount(room.rentAmount.toString());
       setNotes(room.notes || "");
       setIsAc(room.isAc ?? false);
+      setKeyNo(room.keyNo || "");
     }
   }, [room]);
   const handleSave = async () => {
@@ -60,6 +62,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
           rent_amount: parseInt(rentAmount),
           notes: notes || null,
           is_ac: isAc,
+          key_no: keyNo || null,
         })
         .eq("id", room.id);
       if (error) throw error;
@@ -182,6 +185,20 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any special notes about this room..."
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="keyNo">Key Number (Optional)</Label>
+              <div className="relative">
+                <Key className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="keyNo"
+                  value={keyNo}
+                  onChange={(e) => setKeyNo(e.target.value)}
+                  placeholder="e.g. 209-A"
+                  className="pl-9"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">

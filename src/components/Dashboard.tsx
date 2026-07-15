@@ -796,7 +796,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </SheetHeader>
           <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
-              { key: "collected-by", icon: "/icons/avatar-3d.png", label: "Collected By" },
+              
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
               { key: "security-deposit", icon: "/icons/safe-box-3d.png", label: "Security Deposit" },
               { key: "overdue-overview", icon: "/icons/overdue.jpg", label: "Overdue Overview" },

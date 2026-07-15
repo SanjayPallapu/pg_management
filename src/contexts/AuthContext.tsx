@@ -36,9 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (import.meta.env.DEV) {
       const mockUser = {
         id: "92f3d1db-3e91-4b72-9712-ac756da63006",
-        email: "sanjaypallapuu@gmail.com",
+        email: "owner@pgmanagement.com",
         app_metadata: {},
-        user_metadata: { full_name: "Sanjay Pallapu" },
+        user_metadata: { full_name: "PG Owner" },
         aud: "authenticated",
         created_at: new Date().toISOString(),
       };

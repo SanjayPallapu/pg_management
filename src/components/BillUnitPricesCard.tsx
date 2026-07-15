@@ -46,6 +46,30 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(defaultOpen);
+  const [slabs, setSlabs] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`electricity-slabs-${currentPG?.id || "default"}`);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return AP_SLABS;
+  });
+
+  const [fixedCharges, setFixedCharges] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`fixed-charges-${currentPG?.id || "default"}`);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return FIXED_CHARGES;
+  });
+
+  useEffect(() => {
+    try {
+      const storedSlabs = localStorage.getItem(`electricity-slabs-${currentPG?.id || "default"}`);
+      setSlabs(storedSlabs ? JSON.parse(storedSlabs) : AP_SLABS);
+      const storedFixed = localStorage.getItem(`fixed-charges-${currentPG?.id || "default"}`);
+      setFixedCharges(storedFixed ? JSON.parse(storedFixed) : FIXED_CHARGES);
+    } catch (e) {}
+  }, [currentPG?.id]);
 
   useEffect(() => {
     const handleClose = () => {
@@ -63,8 +87,8 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
   const pricesData: BillPricesData = {
     pgName: currentPG?.name || "PG Management",
     pgLogoUrl: currentPG?.logoUrl || "/icon-512.png",
-    electricitySlabs: AP_SLABS,
-    fixedCharges: FIXED_CHARGES,
+    electricitySlabs: slabs,
+    fixedCharges: fixedCharges,
     effectiveDate: new Date().toLocaleDateString("en-IN", {
       month: "long",
       year: "numeric",
@@ -208,14 +232,28 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
                       </tr>
                     </thead>
                     <tbody>
-                      {AP_SLABS.map((slab, i) => (
+                      {slabs.map((slab, i) => (
                         <tr
                           key={slab.slab}
-                          className={i < AP_SLABS.length - 1 ? "border-b" : ""}
+                          className={i < slabs.length - 1 ? "border-b" : ""}
                         >
                           <td className="px-4 py-2.5">{slab.slab}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">
-                            ₹{slab.rate.toFixed(2)}
+                          <td className="px-4 py-1 text-right font-semibold">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="text-muted-foreground text-xs">₹</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={slab.rate}
+                                onChange={(e) => {
+                                  const newVal = parseFloat(e.target.value) || 0;
+                                  const updated = slabs.map((s, idx) => idx === i ? { ...s, rate: newVal } : s);
+                                  setSlabs(updated);
+                                  localStorage.setItem(`electricity-slabs-${currentPG?.id || "default"}`, JSON.stringify(updated));
+                                }}
+                                className="h-8 w-20 px-2 text-right text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                              />
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -233,14 +271,27 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
                 <div className="border rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
                     <tbody>
-                      {FIXED_CHARGES.map((fc, i) => (
+                      {fixedCharges.map((fc, i) => (
                         <tr
                           key={fc.range}
-                          className={i < FIXED_CHARGES.length - 1 ? "border-b" : ""}
+                          className={i < fixedCharges.length - 1 ? "border-b" : ""}
                         >
                           <td className="px-4 py-2.5">{fc.range}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">
-                            ₹{fc.charge}
+                          <td className="px-4 py-1 text-right font-semibold">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="text-muted-foreground text-xs">₹</span>
+                              <input
+                                type="number"
+                                value={fc.charge}
+                                onChange={(e) => {
+                                  const newVal = parseInt(e.target.value) || 0;
+                                  const updated = fixedCharges.map((f, idx) => idx === i ? { ...f, charge: newVal } : f);
+                                  setFixedCharges(updated);
+                                  localStorage.setItem(`fixed-charges-${currentPG?.id || "default"}`, JSON.stringify(updated));
+                                }}
+                                className="h-8 w-20 px-2 text-right text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                              />
+                            </div>
                           </td>
                         </tr>
                       ))}
