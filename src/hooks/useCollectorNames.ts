@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -201,31 +201,49 @@ export const useCollectorNames = () => {
     };
   }, [defaultCollectors, STORAGE_KEY]);
 
-  useEffect(() => {
-    if (!user) return;
-    syncFromServer();
+  // Use a ref so realtime callback always calls latest syncFromServer without
+  // needing it as a dep (which would cause re-subscription loops)
+  const syncFromServerRef = useRef(syncFromServer);
+  useEffect(() => { syncFromServerRef.current = syncFromServer; }, [syncFromServer]);
 
-    const channel = supabase
-      .channel(`collector-names-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'collector_names',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          syncFromServer();
-        }
-      )
-      .subscribe();
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Sync once on mount
+    syncFromServerRef.current();
+
+    const channelName = `collector-names-${user.id}`;
+
+    // Remove any pre-existing channel with this name to avoid
+    // "cannot add postgres_changes after subscribe()" Supabase error
+    const existing = supabase.getChannels().find(ch => ch.topic === `realtime:${channelName}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'collector_names',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => { syncFromServerRef.current(); }
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn('[Collectors] Realtime subscribe failed (non-fatal):', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Only re-run when user ID changes — NOT on syncFromServer to avoid re-subscribing to an already-subscribed channel
+  }, [user?.id]); // Only user ID — syncFromServer handled via ref to avoid re-subscription
 
 
   const saveCollectors = useCallback((updated: CollectorConfig[]) => {
