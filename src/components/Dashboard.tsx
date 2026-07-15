@@ -567,8 +567,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         </div>
 
         {/* ═══════════════════════════════════════════════
-            Category List Sections
-           ═══════════════════════════════════════════════ */}
+            Category List Sections (Commented Out)
+           ═══════════════════════════════════════════════
         <div className="space-y-3">
           {/* Bills & Budget */}
           <div 
@@ -637,6 +637,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
           </div>
         </div>
+        */}
+      </div>
         {/* ── Financials ── */}
         {/* (Categories replaced with List Cards) */}
       </div>
