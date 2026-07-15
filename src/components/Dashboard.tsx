@@ -293,11 +293,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const slideElement = container.children[0] as HTMLElement;
-    const slideWidth = slideElement ? slideElement.offsetWidth : container.offsetWidth;
-    // Add gap to slide width for accurate index calculation (gap-3 is 12px)
-    const totalSlideWidth = slideWidth + 12;
-    const index = Math.round(container.scrollLeft / totalSlideWidth);
+    const slideWidth = container.offsetWidth;
+    const index = Math.round(container.scrollLeft / slideWidth);
     setActiveSlide(index);
   };
 
@@ -370,14 +367,14 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
-            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-3 pb-2"
+            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {banners.map((banner) => (
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className="relative w-[92%] sm:w-[75%] md:w-[calc(50%-6px)] lg:w-[calc(33.333%-8px)] shrink-0 snap-center md:snap-start rounded-2xl overflow-hidden aspect-[2/1] md:aspect-[16/9] border border-border/40 shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-white"
+                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] border border-border/40 shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-white"
               >
                 <img 
                   src={banner.image} 
@@ -402,10 +399,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 onClick={() => {
                   const container = carouselRef.current;
                   if (container) {
-                    const slideElement = container.children[0] as HTMLElement;
-                    const slideWidth = slideElement ? slideElement.offsetWidth : container.offsetWidth;
+                    const slideWidth = container.offsetWidth;
                     container.scrollTo({
-                      left: idx * (slideWidth + 12), // include gap-3 (12px)
+                      left: idx * slideWidth,
                       behavior: 'smooth'
                     });
                     setActiveSlide(idx);
