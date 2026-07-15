@@ -800,22 +800,19 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
           {/* Room Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              {getFloorName(room.floor)}
-            </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm bg-muted/40 p-3.5 rounded-xl border border-border/40">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span>
+              <span className="text-muted-foreground">Occupancy:</span>
+              <span className="font-semibold text-foreground">
                 {activeTenants.length}/{room.capacity} occupied
               </span>
               {isAdmin && (
-                <div className="flex gap-1 ml-2">
+                <div className="flex gap-1 ml-1">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-5 w-5"
                     onClick={() => handleCapacityChange(true)}
                     disabled={room.capacity >= 20}
                   >
@@ -824,7 +821,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-5 w-5"
                     onClick={() => handleCapacityChange(false)}
                     disabled={room.capacity <= (room.tenants || []).length}
                   >
@@ -835,7 +832,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
-              Total: ₹{room.rentAmount.toLocaleString()}
+              <span className="text-muted-foreground">Total Rent:</span>
+              <span className="font-semibold text-foreground">
+                ₹{room.rentAmount.toLocaleString()}
+              </span>
             </div>
           </div>
 
