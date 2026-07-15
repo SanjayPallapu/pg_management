@@ -20,6 +20,7 @@ import {
   PartyPopper,
   Settings,
   Snowflake,
+  Zap,
   CalendarClock,
   X as XIcon,
 } from "lucide-react";
@@ -287,6 +288,30 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
             </Badge>
           )}
         </div>
+
+        {/* AC Electricity Pricing Sheet Template */}
+        {room.isAc && isExpanded && (
+          <div className="rounded-xl border border-border bg-slate-50 dark:bg-slate-900/50 p-3 mb-2 shadow-sm text-xs mt-3">
+            <div className="flex items-center gap-1.5 font-bold text-amber-500 mb-2 border-b border-border pb-1">
+              <Zap className="h-4 w-4" />
+              AC Pricing & Rates
+            </div>
+            {acByRoom.has(room.id) ? (
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                <div><span className="text-muted-foreground font-medium">Prev Reading:</span> {acByRoom.get(room.id)?.start_reading || 'N/A'}</div>
+                <div><span className="text-muted-foreground font-medium">Curr Reading:</span> {acByRoom.get(room.id)?.end_reading || 'N/A'}</div>
+                <div><span className="text-muted-foreground font-medium">Units Used:</span> {acByRoom.get(room.id)?.units || 0}</div>
+                <div><span className="text-muted-foreground font-medium">Price/Unit:</span> ₹{acByRoom.get(room.id)?.unit_price || 0}</div>
+                <div className="col-span-2 pt-1 mt-1 border-t border-border flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium">Total Bill:</span>
+                  <span className="font-bold text-sm text-primary">₹{Math.round((acByRoom.get(room.id)?.units || 0) * (acByRoom.get(room.id)?.unit_price || 0)).toLocaleString()}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground text-center py-2">No reading recorded for this month.</div>
+            )}
+          </div>
+        )}
 
         {/* Tenant List */}
         {tenantsForDisplay.length > 0 && (

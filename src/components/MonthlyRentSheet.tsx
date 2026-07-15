@@ -1064,14 +1064,35 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     }
     return 0; // Fully paid
   };
-  const handlePaymentToggle = (tenantId: string, tenantName: string, currentStatus: "Paid" | "Pending" | "Partial") => {
+  const handlePaymentToggle = async (tenantId: string, tenantName: string, currentStatus: "Paid" | "Pending" | "Partial") => {
     const tenant = tenantsWithPayments.find((t) => t.id === tenantId);
-    if (tenant) {
-      setPaymentAmountTenant(tenantId);
-      const remainingRent = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
-      setPaymentAmount(remainingRent > 0 ? remainingRent : tenant.monthlyRent);
-      setPaymentDate(new Date());
+    if (!tenant) return;
+
+    if (currentStatus === "Paid") {
+      if (confirm(`Are you sure you want to mark ${tenantName} as unpaid for this month?`)) {
+        toast.info("Reverting payment status...");
+        await recordPayment.mutateAsync({
+          tenantId,
+          month: selectedMonth,
+          year: selectedYear,
+          paymentStatus: "Pending",
+          amount: tenant.monthlyRent,
+          amountPaid: 0,
+          paymentDate: null,
+          paymentEntries: [],
+          notes: "Payment reversed",
+          tenantName: tenant.name,
+          roomNo: tenant.roomNo
+        });
+        toast.success("Payment status reverted successfully");
+      }
+      return;
     }
+
+    setPaymentAmountTenant(tenantId);
+    const remainingRent = tenant.monthlyRent - (tenant.payment.amountPaid || 0);
+    setPaymentAmount(remainingRent > 0 ? remainingRent : tenant.monthlyRent);
+    setPaymentDate(new Date());
   };
   const handlePayRemaining = (tenantId: string) => {
     const tenant = tenantsWithPayments.find((t) => t.id === tenantId);
@@ -1437,12 +1458,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         </div>
         <div className="flex gap-1.5 items-center">
           {/* Edit Mode Toggle */}
-          <div className="flex items-center gap-1.5 mr-1">
+          <div className="flex items-center gap-1.5 mr-1 bg-muted/50 dark:bg-slate-900 px-2 py-1 rounded-lg border border-border">
+            <label htmlFor="edit-mode" className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none">
+              Edit Mode
+            </label>
             <Switch
               id="edit-mode"
               checked={editModeEnabled}
               onCheckedChange={setEditModeEnabled}
-              className="data-[state=checked]:bg-destructive"
+              className="data-[state=checked]:bg-destructive scale-75 origin-right"
             />
           </div>
           <Button
@@ -1944,10 +1968,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         variant={tenant.payment.paymentStatus === "Paid" ? "default" : "outline"}
                         size="sm"
                         className="text-xs h-7 px-3"
-                        disabled={tenant.payment.paymentStatus === "Paid"}
+                        disabled={false}
                         onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                       >
-                        {tenant.payment.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
+                        {tenant.payment.paymentStatus === "Paid" ? "Undo Paid" : "Mark Paid"}
                       </Button>
                     )}
                   </div>

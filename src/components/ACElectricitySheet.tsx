@@ -136,6 +136,24 @@ export const ACElectricitySheet = ({
     }
   };
 
+  const handleShareAll = () => {
+    let count = 0;
+    acRooms.forEach(item => {
+      (item.tenantShares || []).forEach((share: any) => {
+        if (share.share > 0) count++;
+      });
+    });
+    if (count === 0) { toast.info("No tenants with AC bills!"); return; }
+    toast.info(`Sharing bills with ${count} tenants...`);
+    acRooms.forEach(item => {
+      (item.tenantShares || []).forEach((share: any) => {
+        if (share.share > 0) {
+          onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount, share.name);
+        }
+      });
+    });
+  };
+
   const handleBulkReminders = () => {
     let pendingCount = 0;
     acRooms.forEach(item => {
@@ -234,7 +252,7 @@ export const ACElectricitySheet = ({
                 {[
                   { icon: <Zap className="h-4 w-4" />, label: "Reading", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20", onClick: () => { if (acRooms.length > 0) setSelectedRoomId(acRooms[0].room.id); else toast.info("No AC rooms configured."); } },
                   { icon: <Bell className="h-4 w-4" />, label: "Reminders", color: "text-orange-400 bg-orange-500/10 border-orange-500/20", onClick: handleBulkReminders },
-                  { icon: <Send className="h-4 w-4" />, label: "Share Bills", color: "text-blue-400 bg-blue-500/10 border-blue-500/20", onClick: handleBulkReminders },
+                  { icon: <Send className="h-4 w-4" />, label: "Share Bills", color: "text-blue-400 bg-blue-500/10 border-blue-500/20", onClick: handleShareAll },
                   { icon: <FileSpreadsheet className="h-4 w-4" />, label: "Report", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", onClick: handleExport },
                 ].map((action) => (
                   <button key={action.label} onClick={action.onClick} className="flex flex-col items-center justify-center p-3 bg-muted/40 dark:bg-muted/40 border border-border dark:border-slate-900 rounded-xl hover:bg-muted/60 dark:bg-slate-900/60 transition-colors gap-1.5">

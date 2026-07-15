@@ -127,16 +127,35 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         </div>
       </div>
 
-      {/* Tenant + Room meta strip */}
-      <div style={{ margin: "4px 20px 8px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {data.tenantName && (
-          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
-            <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Tenant
+            {/* Tenant + Room meta strip */}
+      <div style={{ margin: "4px 20px 8px", display: "flex", gap: 8 }}>
+        {data.tenantName ? (
+          <>
+            <div style={{ flex: 1, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Tenant
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{data.tenantName}</div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{data.tenantName}</div>
+            <div style={{ flex: 1, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M15 11h.01"/></svg>
+                Room
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{data.roomNo}</div>
+            </div>
+          </>
+        ) : (
+          <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 16px" }}>
+            <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M15 11h.01"/></svg>
+              Room
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>{data.roomNo}</div>
           </div>
+        )}
+      </div>
         )}
         <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
           <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>

@@ -22,6 +22,10 @@ import {
   Settings,
   ChevronRight,
   Zap,
+  IndianRupee,
+  Tag,
+  ArrowRightLeft,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -510,10 +514,40 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </CardContent>
         </Card>
 
-        {/* ═══════════════════════════════════════════════
+                {/* ═══════════════════════════════════════════════
             Quick Actions
            ═══════════════════════════════════════════════ */}
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-4">
+          <div 
+            onClick={() => setAddTenantRoomSelectOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-blue-500/10 p-2 rounded-full">
+              <UserPlus className="w-5 h-5 text-blue-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
+          </div>
+
+          <div 
+            onClick={() => setActiveSheet("expected-collection")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-amber-500/10 p-2 rounded-full">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
+          </div>
+          
+          <div 
+            onClick={() => setActiveSheet("total-collected")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-emerald-500/10 p-2 rounded-full">
+              <Wallet className="w-5 h-5 text-emerald-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Total<br/>Collected</span>
+          </div>
+
           <div 
             onClick={openPendingTenants}
             className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
@@ -521,6 +555,71 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <div className="bg-pending/10 p-2 rounded-full">
               <AlertTriangle className="w-5 h-5 text-pending" />
             </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
+          </div>
+
+          <div 
+            onClick={() => setActiveSheet("security-deposit")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-indigo-500/10 p-2 rounded-full">
+              <ShieldCheck className="w-5 h-5 text-indigo-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Security<br/>Deposit</span>
+          </div>
+
+          <div 
+            onClick={() => setActiveSheet("tenant-pricing")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-cyan-500/10 p-2 rounded-full">
+              <Tag className="w-5 h-5 text-cyan-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Room<br/>Pricing</span>
+          </div>
+
+          <div 
+            onClick={() => {
+              navigate('/?tab=rent-sheet&openAc=true');
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-yellow-500/10 p-2 rounded-full">
+              <Zap className="w-5 h-5 text-yellow-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC<br/>Bill</span>
+          </div>
+
+          <div 
+            onClick={() => setActiveSheet("tenant-movement")}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-teal-500/10 p-2 rounded-full">
+              <ArrowRightLeft className="w-5 h-5 text-teal-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">In / Out<br/>Tenants</span>
+          </div>
+
+          <div 
+            onClick={() => setBillsBudgetOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-orange-500/10 p-2 rounded-full">
+              <Receipt className="w-5 h-5 text-orange-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
+          </div>
+
+          <div 
+            onClick={() => setCalculatorSheetOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all"
+          >
+            <div className="bg-slate-500/10 p-2 rounded-full">
+              <Calculator className="w-5 h-5 text-slate-500" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">PG<br/>Calc</span>
+          </div>
+        </div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
           </div>
 
