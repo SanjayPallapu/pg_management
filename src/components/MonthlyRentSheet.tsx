@@ -421,9 +421,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         roomNo: room.roomNo,
       })),
     );
-    // Filter tenants who are active in the selected month (joined before end of month AND not left before month started)
+    // Filter tenants who are active in the selected month AND have not left yet
     return allTenants.filter((tenant) =>
-      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth),
+      isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth) &&
+      !hasTenantLeftNow(tenant.endDate)
     );
   }, [rooms, selectedMonth, selectedYear]);
   const tenantsWithPayments = useMemo(() => {
@@ -454,12 +455,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       );
 
       const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
-      const hasLeft = hasTenantLeftNow(tenant.endDate);
 
       let paymentCategory: "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
-      if (hasLeft) {
-        paymentCategory = "paid";
-      } else if (payment?.paymentStatus === "Paid" || (amountPaid >= targetRent && targetRent > 0)) {
+      if (payment?.paymentStatus === "Paid" || (amountPaid >= targetRent && targetRent > 0)) {
         paymentCategory = "paid";
       } else if (payment?.paymentStatus === "Partial" || (amountPaid > 0 && amountPaid < targetRent)) {
         paymentCategory = "partial";
@@ -474,30 +472,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           paymentCategory = "advance-not-paid";
         }
       }
-
-      const displayPayment = hasLeft ? {
-        id: payment?.id || `temp-${tenant.id}`,
-        tenantId: tenant.id,
-        month: selectedMonth,
-        year: selectedYear,
-        paymentStatus: "Paid" as const,
-        amount: targetRent,
-        paymentDate: payment?.paymentDate || tenant.endDate,
-        amountPaid: payment?.amountPaid || targetRent,
-        paymentEntries: payment?.paymentEntries || [],
-        createdAt: payment?.createdAt || new Date().toISOString(),
-        updatedAt: payment?.updatedAt || new Date().toISOString(),
-      } : (payment || {
-        paymentStatus: "Pending" as const,
-        amount: tenant.monthlyRent,
-        paymentDate: undefined,
-        amountPaid: 0,
-        paymentEntries: [],
-      });
-
       return {
         ...tenant,
-        payment: displayPayment,
+        payment: payment || {
+          paymentStatus: "Pending" as const,
+          amount: tenant.monthlyRent,
+          paymentDate: undefined,
+          amountPaid: 0,
+          paymentEntries: [],
+        },
         paymentCategory,
         dueDay: tenantDueDay,
         effectiveRent,

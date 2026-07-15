@@ -35,14 +35,14 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
 
     return sorted.map((room) => {
       const active = room.tenants.filter(
-        (t) => !t.isLocked && isTenantActiveInMonth(t.startDate, t.endDate, year, month),
+        (t) => !t.isLocked && isTenantActiveInMonth(t.startDate, t.endDate, year, month) && !hasTenantLeftNow(t.endDate),
       );
 
       if (active.length === 0) return { roomNo: room.roomNo, status: "vacant" as Status };
 
       const statuses = active.map<Status>((t) => {
         const p = payments.find((pp) => pp.tenantId === t.id && pp.month === month && pp.year === year);
-        if (hasTenantLeftNow(t.endDate) || p?.paymentStatus === "Paid") return "paid";
+        if (p?.paymentStatus === "Paid") return "paid";
         
         let paid = p?.amountPaid || 0;
         if (paid === 0 && p?.paymentEntries?.length) {
