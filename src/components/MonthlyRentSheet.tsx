@@ -1479,7 +1479,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <div className="space-y-4">
           {/* Room quick-nav — tap a room number to jump to its tenant card */}
           <div className="mb-3 space-y-1.5">
-            <div className="text-xs font-semibold text-muted-foreground px-0.5">Quick Room Access</div>
             <RoomQuickNav
               rooms={rooms}
               payments={payments}
