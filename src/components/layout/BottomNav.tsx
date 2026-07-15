@@ -56,7 +56,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
 
   const finalCollected = rentCollected !== undefined ? rentCollected : contextCollected;
   const finalPending = pendingRent !== undefined ? pendingRent : contextPending;
-  const showBanner = finalCollected !== undefined && finalPending !== undefined;
+  const showBanner = false;
 
   // Measure nav height so the status banner knows where to position itself
   useEffect(() => {
