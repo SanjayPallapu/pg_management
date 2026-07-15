@@ -26,9 +26,7 @@ import {
   Tag,
   ArrowRightLeft,
   ShieldCheck,
-,
-  DoorOpen,
-  Calculator} from "lucide-react";
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -569,8 +567,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <div className="bg-slate-500/10 p-2 rounded-full"><Calculator className="w-5 h-5 text-slate-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">PG<br/>Calc</span>
           </div>
-        </div>
-
         </div>
 
         {/* ═══════════════════════════════════════════════

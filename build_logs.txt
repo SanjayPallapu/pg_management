@@ -1,0 +1,27 @@
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1651 modules transformed.
+✗ Build failed in 7m 48s
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+/Users/sanjaypallapu/Documents/pg_management/src/components/Dashboard.tsx:29:0: ERROR: Expected identifier but found ","
+file: /Users/sanjaypallapu/Documents/pg_management/src/components/Dashboard.tsx:29:0
+
+Expected identifier but found ","
+27 |    ArrowRightLeft,
+28 |    ShieldCheck,
+29 |  ,
+   |  ^
+30 |    DoorOpen,
+31 |    Calculator} from "lucide-react";
+
+    at failureErrorWithLog (/Users/sanjaypallapu/Documents/pg_management/node_modules/vite/node_modules/esbuild/lib/main.js:1748:15)
+    at /Users/sanjaypallapu/Documents/pg_management/node_modules/vite/node_modules/esbuild/lib/main.js:1017:50
+    at responseCallbacks.<computed> (/Users/sanjaypallapu/Documents/pg_management/node_modules/vite/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/Users/sanjaypallapu/Documents/pg_management/node_modules/vite/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/Users/sanjaypallapu/Documents/pg_management/node_modules/vite/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
