@@ -369,7 +369,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     <>
       <div ref={dashboardRef} className="space-y-4 md:space-y-6 max-w-[1200px] mx-auto">
         {/* Banner Carousel */}
-        <div className="w-full relative group">
+        <div className="w-full max-w-[850px] mx-auto relative group">
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
@@ -380,12 +380,12 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-transparent"
+                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] md:h-[260px] md:aspect-auto shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center"
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-contain bg-transparent transition-transform duration-500 hover:scale-[1.02]"
+                  className="w-full h-full object-cover md:object-contain transition-transform duration-500 hover:scale-[1.02]"
                 />
               </div>
             ))}
