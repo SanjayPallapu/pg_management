@@ -732,16 +732,16 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         )}
 
         {/* Total Possible / Add Tenant Boxed Row */}
-        <div className="flex flex-col items-center justify-center p-3.5 bg-muted/40 rounded-2xl border border-border/40 mt-3.5 gap-2.5">
-          <div className="flex items-center gap-1.5 justify-center">
+        <div className="flex items-center justify-center gap-6 p-3 bg-muted/40 rounded-2xl border border-border/40 mt-3.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <span className="text-lg font-black text-foreground">₹{room.rentAmount.toLocaleString()}</span>
+            <span className="text-base font-extrabold text-foreground">₹{room.rentAmount.toLocaleString()}</span>
           </div>
           {canManageTenants && isSelectedCurrentMonth && occupiedCount < room.capacity && (
             <Button
               variant="default"
               onClick={() => onViewDetails(room)}
-              className="w-full h-10 px-4 rounded-xl flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="h-9 px-4 rounded-xl flex items-center gap-1.5 bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Tenant</span>
