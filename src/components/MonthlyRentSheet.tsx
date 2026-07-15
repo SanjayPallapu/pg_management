@@ -1292,58 +1292,123 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setDeletePaymentTenant(null);
   };
   const exportToExcel = async () => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
     const allTenants = rooms.flatMap((room) =>
       room.tenants.map((tenant) => ({
         ...tenant,
         roomNo: room.roomNo,
       })),
     );
+
     const excelData = allTenants.map((tenant) => {
+      // Compute status across all months
+      const isActiveNow = !tenant.endDate;
+      const endLabel = tenant.endDate ? format(parseDateOnly(tenant.endDate), "dd-MMM-yyyy") : "Active";
+
       const row: Record<string, string | number> = {
-        Name: tenant.name,
+        "Tenant Name": tenant.name,
         "Room No": tenant.roomNo,
+        "Status": isActiveNow ? "Active" : "Checked Out",
         "Join Date": tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
-        Phone: tenant.phone,
-        "Monthly Rent": tenant.monthlyRent,
+        "End Date": endLabel,
+        "Phone": tenant.phone,
+        "Monthly Rent (₹)": tenant.monthlyRent,
+        "Security Deposit (₹)": tenant.securityDepositAmount || 0,
+        "Deposit Mode": tenant.securityDepositMode || "",
       };
+
+      let yearTotalPaid = 0;
+      let yearTotalPending = 0;
+
       months.forEach((month) => {
         const payment = payments.find(
           (p) => p.tenantId === tenant.id && p.month === month.value && p.year === selectedYear,
         );
+
         if (payment) {
-          if (payment.paymentStatus === "Partial") {
-            row[month.label] = `Partial ₹${payment.amountPaid}`;
-          } else if (payment.paymentDate) {
-            row[month.label] = format(new Date(payment.paymentDate), "dd-MMM");
+          const mode = payment.paymentEntries?.length
+            ? payment.paymentEntries.map(e => e.mode?.toUpperCase()).filter(Boolean).join('+')
+            : '';
+          const dateStr = payment.paymentDate
+            ? format(new Date(payment.paymentDate), "dd-MMM")
+            : '';
+
+          if (payment.paymentStatus === "Paid") {
+            row[month.label] = `Paid ₹${payment.amountPaid.toLocaleString()}${mode ? ` (${mode})` : ''}${dateStr ? ` · ${dateStr}` : ''}`;
+            yearTotalPaid += payment.amountPaid;
+          } else if (payment.paymentStatus === "Partial") {
+            const remaining = Math.max(0, payment.amount - payment.amountPaid);
+            row[month.label] = `Partial ₹${payment.amountPaid.toLocaleString()} / ₹${payment.amount.toLocaleString()}${mode ? ` (${mode})` : ''}`;
+            yearTotalPaid += payment.amountPaid;
+            yearTotalPending += remaining;
           } else {
-            row[month.label] = payment.paymentStatus;
+            row[month.label] = `Pending ₹${payment.amount.toLocaleString()}`;
+            yearTotalPending += payment.amount;
           }
         } else {
           row[month.label] = "-";
         }
       });
+
+      row["Total Paid (Year) ₹"] = yearTotalPaid;
+      row["Total Pending (Year) ₹"] = yearTotalPending;
+
       return row;
     });
-    const colWidths = [
-      { wch: 20 },
-      { wch: 10 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 12 },
+
+    // Summary totals row
+    const summaryRow: Record<string, string | number> = {
+      "Tenant Name": "─── TOTALS ───",
+      "Room No": "",
+      "Status": "",
+      "Join Date": "",
+      "End Date": "",
+      "Phone": "",
+      "Monthly Rent (₹)": allTenants.reduce((s, t) => s + t.monthlyRent, 0),
+      "Security Deposit (₹)": "",
+      "Deposit Mode": "",
+    };
+    months.forEach((month) => {
+      const monthPaid = allTenants.reduce((s, tenant) => {
+        const p = payments.find(pp => pp.tenantId === tenant.id && pp.month === month.value && pp.year === selectedYear);
+        return s + (p?.amountPaid || 0);
+      }, 0);
+      summaryRow[month.label] = monthPaid > 0 ? `₹${monthPaid.toLocaleString()}` : "₹0";
+    });
+    summaryRow["Total Paid (Year) ₹"] = allTenants.reduce((s, tenant) => {
+      return s + payments.filter(p => p.tenantId === tenant.id && p.year === selectedYear).reduce((ps, p) => ps + (p.amountPaid || 0), 0);
+    }, 0);
+    summaryRow["Total Pending (Year) ₹"] = "";
+    excelData.push(summaryRow);
+
+    const baseColWidths = [
+      { wch: 22 }, // Tenant Name
+      { wch: 10 }, // Room No
+      { wch: 12 }, // Status
+      { wch: 15 }, // Join Date
+      { wch: 15 }, // End Date
+      { wch: 14 }, // Phone
+      { wch: 18 }, // Monthly Rent
+      { wch: 18 }, // Security Deposit
+      { wch: 14 }, // Deposit Mode
     ];
     const statusCols: number[] = [];
+    const colWidths = [...baseColWidths];
     months.forEach((_, i) => {
-      colWidths.push({ wch: 12 });
-      statusCols.push(5 + i);
+      colWidths.push({ wch: 30 });
+      statusCols.push(9 + i);
     });
+    colWidths.push({ wch: 20 }, { wch: 20 }); // year totals
+
     const wb = applyStyledExport(excelData, `Rent ${selectedYear}`, colWidths, {
       statusColumns: statusCols,
-      currencyColumns: [4],
-      fileName: `Rent_Sheet_${selectedYear}.xlsx`,
+      currencyColumns: [6, 7],
+      fileName: `Rent_Ledger_${selectedYear}.xlsx`,
     });
-    try {
-      await saveAndShareExcel(wb, `Rent_Sheet_${selectedYear}.xlsx`);
 
+    try {
+      await saveAndShareExcel(wb, `Rent_Ledger_${selectedYear}.xlsx`);
     } catch (error) {
       toast({
         variant: "destructive",

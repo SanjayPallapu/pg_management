@@ -72,6 +72,29 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
     return 'monthly';
   }, [billingCycle]);
 
+  const proPlanKey = useMemo((): SubscriptionPlanKey => {
+    if (billingCycle === 'quarterly') return 'pro_quarterly';
+    if (billingCycle === 'yearly') return 'pro_yearly';
+    return 'pro';
+  }, [billingCycle]);
+
+  const proMaxPlanKey = useMemo((): SubscriptionPlanKey => {
+    if (billingCycle === 'quarterly') return 'promax_quarterly';
+    if (billingCycle === 'yearly') return 'promax_yearly';
+    return 'promax';
+  }, [billingCycle]);
+
+  // Keep selected plan key in sync when billing cycle changes
+  useEffect(() => {
+    if (selectedPlanKey === 'monthly' || selectedPlanKey === 'quarterly' || selectedPlanKey === 'yearly') {
+      setSelectedPlanKey(basicPlanKey);
+    } else if (selectedPlanKey === 'pro' || selectedPlanKey === 'pro_quarterly' || selectedPlanKey === 'pro_yearly') {
+      setSelectedPlanKey(proPlanKey);
+    } else if (selectedPlanKey === 'promax' || selectedPlanKey === 'promax_quarterly' || selectedPlanKey === 'promax_yearly') {
+      setSelectedPlanKey(proMaxPlanKey);
+    }
+  }, [billingCycle, basicPlanKey, proPlanKey, proMaxPlanKey]);
+
   // Get current active selection info
   const selectedPlanInfo = SUBSCRIPTION_PLANS[selectedPlanKey];
 
@@ -321,9 +344,9 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
             {/* PRO PLAN CARD (Neon Glowing Glow) */}
             <div 
-              onClick={() => handleSelectPlan('pro')}
+              onClick={() => handleSelectPlan(proPlanKey)}
               className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-slate-900/30 flex flex-col justify-between ${
-                selectedPlanKey === 'pro'
+                selectedPlanKey === proPlanKey
                   ? 'border-primary/80 bg-primary/10 shadow-[0_0_20px_rgba(124,133,232,0.15)] ring-1 ring-primary/40' 
                   : 'border-slate-900 hover:border-slate-800'
               }`}
@@ -346,8 +369,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 </div>
                 
                 <div className="my-3">
-                  <span className="text-xl font-extrabold text-white">₹{SUBSCRIPTION_PLANS.pro.price.toLocaleString()}</span>
-                  <span className="text-xs text-slate-400 ml-1">{SUBSCRIPTION_PLANS.pro.periodLabel}</span>
+                  <span className="text-xl font-extrabold text-white">₹{SUBSCRIPTION_PLANS[proPlanKey].price.toLocaleString()}</span>
+                  <span className="text-xs text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proPlanKey].periodLabel}</span>
                 </div>
 
                 <ul className="space-y-2 text-xs border-t border-slate-900 pt-3 text-slate-300">
@@ -360,23 +383,23 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
               <div className="mt-5">
                 <Button 
-                  variant={selectedPlanKey === 'pro' ? 'default' : 'outline'}
+                  variant={selectedPlanKey === proPlanKey ? 'default' : 'outline'}
                   className={`w-full text-xs font-semibold h-9 rounded-xl ${
-                    selectedPlanKey === 'pro' 
+                    selectedPlanKey === proPlanKey 
                       ? 'bg-primary hover:bg-[#6A73D5] text-white shadow-[0_0_10px_rgba(124,133,232,0.3)]' 
                       : 'border-slate-800 hover:bg-slate-900 text-slate-300'
                   }`}
                 >
-                  {activePlanKey === 'pro' ? 'Current Plan' : 'Choose Pro'}
+                  {activePlanKey === proPlanKey ? 'Current Plan' : 'Choose Pro'}
                 </Button>
               </div>
             </div>
 
             {/* PRO MAX PLAN CARD */}
             <div 
-              onClick={() => handleSelectPlan('promax')}
+              onClick={() => handleSelectPlan(proMaxPlanKey)}
               className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-slate-900/30 flex flex-col justify-between ${
-                selectedPlanKey === 'promax'
+                selectedPlanKey === proMaxPlanKey
                   ? 'border-orange-500/50 bg-orange-500/5 shadow-md shadow-orange-500/5 ring-1 ring-orange-500/20' 
                   : 'border-slate-900 hover:border-slate-800'
               }`}
@@ -393,8 +416,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 </div>
                 
                 <div className="my-3">
-                  <span className="text-xl font-extrabold text-white">₹{SUBSCRIPTION_PLANS.promax.price.toLocaleString()}</span>
-                  <span className="text-xs text-slate-400 ml-1">{SUBSCRIPTION_PLANS.promax.periodLabel}</span>
+                  <span className="text-xl font-extrabold text-white">₹{SUBSCRIPTION_PLANS[proMaxPlanKey].price.toLocaleString()}</span>
+                  <span className="text-xs text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proMaxPlanKey].periodLabel}</span>
                 </div>
 
                 <ul className="space-y-2 text-xs border-t border-slate-900 pt-3 text-slate-300">
@@ -407,14 +430,14 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
               <div className="mt-5">
                 <Button 
-                  variant={selectedPlanKey === 'promax' ? 'default' : 'outline'}
+                  variant={selectedPlanKey === proMaxPlanKey ? 'default' : 'outline'}
                   className={`w-full text-xs font-semibold h-9 rounded-xl ${
-                    selectedPlanKey === 'promax' 
+                    selectedPlanKey === proMaxPlanKey 
                       ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                       : 'border-slate-800 hover:bg-slate-900 text-slate-300'
                   }`}
                 >
-                  {activePlanKey === 'promax' ? 'Current Plan' : 'Choose Pro Max'}
+                  {activePlanKey === proMaxPlanKey ? 'Current Plan' : 'Choose Pro Max'}
                 </Button>
               </div>
             </div>
@@ -460,7 +483,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   </Badge>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-relaxed mt-1 max-w-sm">
-                  Pay once. Run your PGs forever. All premium features, future updates, and unlimited management.
+                  Pay once. Run your PGs forever.
                 </p>
               </div>
             </div>

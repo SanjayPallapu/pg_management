@@ -41,7 +41,10 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
 
       const statuses = active.map<Status>((t) => {
         const p = payments.find((pp) => pp.tenantId === t.id && pp.month === month && pp.year === year);
-        const paid = p?.amountPaid || 0;
+        let paid = p?.amountPaid || 0;
+        if (paid === 0 && p?.paymentEntries?.length) {
+          paid = p.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+        }
         if (paid >= t.monthlyRent && t.monthlyRent > 0) return "paid";
         if (paid > 0) return "partial";
         

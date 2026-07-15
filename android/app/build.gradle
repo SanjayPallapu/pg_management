@@ -4,7 +4,6 @@ android {
     namespace "com.sanjay.pgmanagement"
     compileSdk rootProject.ext.compileSdkVersion
     
-    // Performance: Skip calculating build IDs for faster linking
     buildFeatures {
         buildConfig = true
     }
@@ -19,16 +18,13 @@ android {
     }
 
     aaptOptions {
-        // CRITICAL: Disable all image optimization to prevent AAPT2 from hanging
         cruncherEnabled = false
-        // Skip compressing these extensions to speed up the linking phase
         noCompress 'png', 'jpg', 'jpeg', 'webp', 'xml'
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
 
     sourceSets {
         main {
-            // Strictly exclude problematic files
             res.exclude '**/splash.png'
             res.exclude '**/config 2.xml'
             res.exclude '**/config 3.xml'
@@ -38,10 +34,35 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            // CRITICAL: Disable resource shrinking; it's the main cause of Linking timeouts
             shrinkResources false 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// Robust task to delete files with illegal names
+// Fixed for Gradle Configuration Cache compatibility
+tasks.register('forceDeleteBadFiles') {
+    // Resolve parameters at configuration time to avoid capturing the 'project' object in the closure
+    def xmlDir = project.layout.projectDirectory.dir('src/main/res/xml').asFile
+    
+    doLast {
+        if (xmlDir.exists()) {
+            xmlDir.listFiles()?.each { f ->
+                if (f.name.contains(' ')) {
+                    // Use System.out.println to avoid referencing the Gradle script object
+                    System.out.println("Deleting invalid file: ${f.name}")
+                    f.delete()
+                }
+            }
+        }
+    }
+}
+
+// Auto-run deletion before resource merging
+tasks.configureEach { task ->
+    if (task.name.contains("merge") && task.name.contains("Resources")) {
+        task.dependsOn 'forceDeleteBadFiles'
     }
 }
 
@@ -67,7 +88,7 @@ apply from: 'capacitor.build.gradle'
 
 try {
     def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
+    if (servicesJSON.exists()) {
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {

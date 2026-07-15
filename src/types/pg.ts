@@ -110,11 +110,67 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Advanced statistics, premium WhatsApp templates, priority support.',
   },
+  pro_quarterly: {
+    name: 'Pro Plan',
+    price: 5399,
+    periodLabel: '/3 months',
+    billingCycle: 'pro_quarterly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+  },
+  pro_yearly: {
+    name: 'Pro Plan',
+    price: 19999,
+    periodLabel: '/year',
+    billingCycle: 'pro_yearly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+  },
   promax: {
     name: 'Pro Max Plan',
     price: 3999,
     periodLabel: '/month',
     billingCycle: 'promax',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+  },
+  promax_quarterly: {
+    name: 'Pro Max Plan',
+    price: 9999,
+    periodLabel: '/3 months',
+    billingCycle: 'promax_quarterly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+  },
+  promax_yearly: {
+    name: 'Pro Max Plan',
+    price: 39999,
+    periodLabel: '/year',
+    billingCycle: 'promax_yearly',
     maxPgs: -1,
     maxTenantsPerPg: -1,
     features: {
@@ -170,7 +226,10 @@ export const SUBSCRIPTION_PLANS = {
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
 
-export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = ['trial', 'monthly', 'pro', 'promax', 'quarterly', 'yearly', 'lifetime'];
+export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = [
+  'trial', 'monthly', 'pro', 'promax', 'quarterly', 'yearly', 'lifetime',
+  'pro_quarterly', 'pro_yearly', 'promax_quarterly', 'promax_yearly'
+];
 
 export const SUBSCRIPTION_PLAN_META = {
   maxPgs: -1,

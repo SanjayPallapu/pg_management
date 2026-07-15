@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly";
+type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly" | "pro_quarterly" | "pro_yearly" | "promax_quarterly" | "promax_yearly" | "lifetime";
 
 const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly"; interval: number; totalCount: number; label: string }> = {
   pro: { amount: 199900, period: "monthly", interval: 1, totalCount: 120, label: "Pro" },
@@ -14,6 +14,11 @@ const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly
   monthly: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Monthly" },
   quarterly: { amount: 269900, period: "monthly", interval: 3, totalCount: 40, label: "Quarterly" },
   yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Yearly" },
+  pro_quarterly: { amount: 539900, period: "monthly", interval: 3, totalCount: 40, label: "Pro Quarterly" },
+  pro_yearly: { amount: 1999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Yearly" },
+  promax_quarterly: { amount: 999900, period: "monthly", interval: 3, totalCount: 40, label: "Pro Max Quarterly" },
+  promax_yearly: { amount: 3999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Max Yearly" },
+  lifetime: { amount: 2999900, period: "yearly", interval: 100, totalCount: 1, label: "Lifetime" }, // Dummy config for edge function order notes, lifetime is single invoice
 };
 
 const TRIAL_DAYS = 30;

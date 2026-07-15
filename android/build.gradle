@@ -25,16 +25,23 @@ subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             android {
-                // Force Java 17 compatibility (instead of 21) to fix toolchain errors
+                // Force Java 17 compatibility
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
-
+                
                 // Disable resource crunching to prevent AAPT2 timeouts
                 aaptOptions {
                     cruncherEnabled = false
                 }
+            }
+        }
+        
+        // Force Toolchain to Java 17 to bypass Java 21 requirement errors
+        if (project.plugins.hasPlugin('java') || project.plugins.hasPlugin('java-library')) {
+            project.extensions.getByType(JavaPluginExtension).toolchain {
+                languageVersion = JavaLanguageVersion.of(17)
             }
         }
     }

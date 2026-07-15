@@ -20,14 +20,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-razorpay-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly";
+type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly" | "pro_quarterly" | "pro_yearly" | "promax_quarterly" | "promax_yearly" | "lifetime";
 
 const TRIAL_DAYS = 30;
-const PAID_PLANS = new Set<PlanKey>(["pro", "promax", "monthly", "quarterly", "yearly"]);
+const PAID_PLANS = new Set<PlanKey>(["pro", "promax", "monthly", "quarterly", "yearly", "pro_quarterly", "pro_yearly", "promax_quarterly", "promax_yearly", "lifetime"]);
 
 const getPlanDurationDays = (plan: PlanKey) => {
-  if (plan === "yearly") return 365;
-  if (plan === "quarterly") return 90;
+  if (plan === "yearly" || plan === "pro_yearly" || plan === "promax_yearly") return 365;
+  if (plan === "quarterly" || plan === "pro_quarterly" || plan === "promax_quarterly") return 90;
   return 30;
 };
 
