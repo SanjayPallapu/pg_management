@@ -1,3 +1,4 @@
+import { BillUnitPricesCard } from './BillUnitPricesCard';
 import { useState, useEffect, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ export const ACElectricitySheet = ({
   years,
 }: ACElectricitySheetProps) => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [pricesCardOpen, setPricesCardOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ac-bill' | 'pendings' | 'share-bills' | 'reports'>('ac-bill');
 
   const pendingTenantsList = useMemo(() => {
@@ -320,7 +322,10 @@ export const ACElectricitySheet = ({
                   </div>
 
                   {/* Rates Template Card */}
-                  <div className="p-4 bg-cyan-500/5 dark:bg-cyan-500/5 border border-cyan-500/20 dark:border-cyan-500/10 rounded-2xl space-y-2">
+                  <div 
+                    onClick={() => setPricesCardOpen(true)} 
+                    className="p-4 bg-cyan-500/5 dark:bg-cyan-500/5 border border-cyan-500/20 dark:border-cyan-500/10 rounded-2xl space-y-2 cursor-pointer hover:bg-cyan-500/10 dark:hover:bg-cyan-500/10 transition-colors"
+                  >
                     <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 text-xs font-bold">
                       <Zap className="h-3.5 w-3.5" />
                       AC ELECTRICITY PRICING & RATES
@@ -519,6 +524,11 @@ export const ACElectricitySheet = ({
             </div>
           </div>
         )}
+        <BillUnitPricesCard 
+        showSummaryCard={false} 
+        defaultOpen={pricesCardOpen} 
+        onClose={() => setPricesCardOpen(false)} 
+      />
       </SheetContent>
     </Sheet>
   );

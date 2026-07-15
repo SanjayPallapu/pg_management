@@ -467,9 +467,6 @@ export const SecurityDepositCard = ({
                   <Wallet className="h-5 w-5" />
                   Security Deposits
                 </SheetTitle>
-                <SheetDescription>
-                  Track security deposits from tenants (optional formality)
-                </SheetDescription>
               </div>
             </div>
           </SheetHeader>

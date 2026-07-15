@@ -36,7 +36,7 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePG } from "@/contexts/PGContext";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DayGuest } from "@/hooks/useDayGuests";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
@@ -66,13 +66,156 @@ interface RoomCardProps {
   onEditRoom?: (room: Room) => void;
   dayGuests?: DayGuest[];
 }
+
+interface ACRoomPricingEditorProps {
+  roomId: string;
+  reading: any;
+  setReading: any;
+}
+
+const ACRoomPricingEditor = ({ roomId, reading, setReading }: ACRoomPricingEditorProps) => {
+  const [startReadingDraft, setStartReadingDraft] = useState(
+    reading?.start_reading !== null && reading?.start_reading !== undefined ? String(reading.start_reading) : ""
+  );
+  const [endReadingDraft, setEndReadingDraft] = useState(
+    reading?.end_reading !== null && reading?.end_reading !== undefined ? String(reading.end_reading) : ""
+  );
+  const [unitsDraft, setUnitsDraft] = useState(String(reading?.units ?? 0));
+  const [priceDraft, setPriceDraft] = useState(String(reading?.unit_price ?? 12));
+
+  useEffect(() => {
+    setStartReadingDraft(
+      reading?.start_reading !== null && reading?.start_reading !== undefined ? String(reading.start_reading) : ""
+    );
+  }, [reading?.start_reading]);
+
+  useEffect(() => {
+    setEndReadingDraft(
+      reading?.end_reading !== null && reading?.end_reading !== undefined ? String(reading.end_reading) : ""
+    );
+  }, [reading?.end_reading]);
+
+  useEffect(() => {
+    setUnitsDraft(String(reading?.units ?? 0));
+  }, [reading?.units]);
+
+  useEffect(() => {
+    setPriceDraft(String(reading?.unit_price ?? 12));
+  }, [reading?.unit_price]);
+
+  const triggerSave = (u: number, p: number, s: number | null, e: number | null) => {
+    setReading.mutate({
+      roomId,
+      units: u,
+      unitPrice: p,
+      startReading: s,
+      endReading: e,
+      splitType: reading?.split_type || "active_tenants",
+      splitCount: reading?.split_count || null
+    });
+  };
+
+  const handleStartBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    let u = parseInt(unitsDraft) || 0;
+    if (s !== null && e !== null) {
+      u = Math.max(0, e - s);
+      setUnitsDraft(String(u));
+    }
+    triggerSave(u, parseInt(priceDraft) || 12, s, e);
+  };
+
+  const handleEndBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    let u = parseInt(unitsDraft) || 0;
+    if (s !== null && e !== null) {
+      u = Math.max(0, e - s);
+      setUnitsDraft(String(u));
+    }
+    triggerSave(u, parseInt(priceDraft) || 12, s, e);
+  };
+
+  const handleUnitsBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    triggerSave(parseInt(unitsDraft) || 0, parseInt(priceDraft) || 12, s, e);
+  };
+
+  const handlePriceBlur = () => {
+    const s = startReadingDraft === "" ? null : parseInt(startReadingDraft);
+    const e = endReadingDraft === "" ? null : parseInt(endReadingDraft);
+    triggerSave(parseInt(unitsDraft) || 0, parseInt(priceDraft) || 12, s, e);
+  };
+
+  const draftUnits = parseInt(unitsDraft) || 0;
+  const draftPrice = parseInt(priceDraft) || 0;
+  const totalBill = draftUnits * draftPrice;
+
+  return (
+    <div className="space-y-3 mt-2">
+      <div className="grid grid-cols-2 gap-2.5 text-xs">
+        <div>
+          <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-0.5">Prev Reading</label>
+          <input
+            type="number"
+            value={startReadingDraft}
+            onChange={(e) => setStartReadingDraft(e.target.value)}
+            onBlur={handleStartBlur}
+            placeholder="Start"
+            className="h-8 w-full text-xs px-2.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-0.5">Curr Reading</label>
+          <input
+            type="number"
+            value={endReadingDraft}
+            onChange={(e) => setEndReadingDraft(e.target.value)}
+            onBlur={handleEndBlur}
+            placeholder="End"
+            className="h-8 w-full text-xs px-2.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-0.5">Units Used</label>
+          <input
+            type="number"
+            value={unitsDraft}
+            onChange={(e) => setUnitsDraft(e.target.value)}
+            onBlur={handleUnitsBlur}
+            placeholder="0"
+            className="h-8 w-full text-xs px-2.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-0.5">Price / Unit</label>
+          <input
+            type="number"
+            value={priceDraft}
+            onChange={(e) => setPriceDraft(e.target.value)}
+            onBlur={handlePriceBlur}
+            placeholder="12"
+            className="h-8 w-full text-xs px-2.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+      <div className="pt-2.5 border-t border-border flex justify-between items-center text-xs">
+        <span className="text-muted-foreground font-bold uppercase text-[9px]">Calculated Bill:</span>
+        <span className="font-extrabold text-sm text-amber-500">₹{totalBill.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+};
+
 export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: RoomCardProps) => {
   const { payments, markWhatsappSent } = useTenantPayments();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isOwner } = useAuth();
   const { currentPG } = usePG();
   const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
-  const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
+  const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
   const canManageTenants = isOwner;
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -289,27 +432,18 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
           )}
         </div>
 
-        {/* AC Electricity Pricing Sheet Template */}
+        {/* AC Electricity Pricing Sheet Template - Editable */}
         {room.isAc && isExpanded && (
-          <div className="rounded-xl border border-border bg-slate-50 dark:bg-slate-900/50 p-3 mb-2 shadow-sm text-xs mt-3">
+          <div className="rounded-xl border border-border bg-slate-50 dark:bg-slate-900/50 p-3.5 mb-2 shadow-sm text-xs mt-3">
             <div className="flex items-center gap-1.5 font-bold text-amber-500 mb-2 border-b border-border pb-1">
               <Zap className="h-4 w-4" />
-              AC Pricing & Rates
+              AC Pricing & Rates (Editable)
             </div>
-            {acByRoom.has(room.id) ? (
-              <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-                <div><span className="text-muted-foreground font-medium">Prev Reading:</span> {acByRoom.get(room.id)?.start_reading || 'N/A'}</div>
-                <div><span className="text-muted-foreground font-medium">Curr Reading:</span> {acByRoom.get(room.id)?.end_reading || 'N/A'}</div>
-                <div><span className="text-muted-foreground font-medium">Units Used:</span> {acByRoom.get(room.id)?.units || 0}</div>
-                <div><span className="text-muted-foreground font-medium">Price/Unit:</span> ₹{acByRoom.get(room.id)?.unit_price || 0}</div>
-                <div className="col-span-2 pt-1 mt-1 border-t border-border flex justify-between items-center">
-                  <span className="text-muted-foreground font-medium">Total Bill:</span>
-                  <span className="font-bold text-sm text-primary">₹{Math.round((acByRoom.get(room.id)?.units || 0) * (acByRoom.get(room.id)?.unit_price || 0)).toLocaleString()}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-muted-foreground text-center py-2">No reading recorded for this month.</div>
-            )}
+            <ACRoomPricingEditor
+              roomId={room.id}
+              reading={acByRoom.get(room.id)}
+              setReading={setReading}
+            />
           </div>
         )}
 

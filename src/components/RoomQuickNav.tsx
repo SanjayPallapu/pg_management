@@ -10,6 +10,7 @@ interface Props {
   month: number;
   year: number;
   onSelect: (roomNo: string) => void;
+  hideLeftTenants?: boolean;
 }
 
 type Status = "paid" | "partial" | "overdue" | "not-due" | "vacant";
@@ -22,7 +23,7 @@ const colorFor: Record<Status, string> = {
   vacant: "bg-muted text-muted-foreground border-border",
 };
 
-export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) => {
+export const RoomQuickNav = ({ rooms, payments, month, year, onSelect, hideLeftTenants = true }: Props) => {
   const items = useMemo(() => {
     const today = new Date();
     const isCurrent = today.getMonth() + 1 === month && today.getFullYear() === year;
@@ -34,9 +35,21 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
     });
 
     return sorted.map((room) => {
-      const active = room.tenants.filter(
+      let active = room.tenants.filter(
         (t) => !t.isLocked && isTenantActiveInMonth(t.startDate, t.endDate, year, month),
       );
+
+      if (hideLeftTenants) {
+        const todayZero = new Date();
+        todayZero.setHours(0, 0, 0, 0);
+        active = active.filter((t) => {
+          if (!t.endDate) return true;
+          const endDate = new Date(t.endDate);
+          endDate.setHours(0, 0, 0, 0);
+          return endDate > todayZero;
+        });
+      }
+
       if (active.length === 0) return { roomNo: room.roomNo, status: "vacant" as Status };
 
       const statuses = active.map<Status>((t) => {

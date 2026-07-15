@@ -1475,6 +1475,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               payments={payments}
               month={selectedMonth}
               year={selectedYear}
+              hideLeftTenants={hideLeftTenants}
               onSelect={(roomNo) => {
                 setSearchQuery(roomNo);
                 setTimeout(() => {
