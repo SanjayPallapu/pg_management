@@ -404,9 +404,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary mr-1">
-              ₹{totalCollected.toLocaleString()} / ₹{expectedRent.toLocaleString()}
-            </span>
+
             {room.isAc && (
               <Badge className="bg-sky-500/15 text-sky-600 border border-sky-500/30 gap-1 px-1.5 py-0.5">
                 <Snowflake className="h-3 w-3" />
@@ -733,113 +731,35 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
           </div>
         )}
 
-        {/* Rent Info */}
-        <div className="flex items-center gap-2 text-sm">
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">₹{room.rentAmount.toLocaleString()}</span>
-        </div>
-
-        {/* Day Guests Info - Show if guests present */}
-        {currentGuests.length > 0 && (
-          <div className="border border-dashed border-primary/50 rounded-lg p-3 bg-primary/5 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Day Guests</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <Badge variant="outline" className="bg-background border-0 rounded-sm">
-                  {occupiedCount} Present
-                </Badge>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 rounded-sm">
-                  {currentGuests.length} Guest{currentGuests.length > 1 ? "s" : ""}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={
-                    guestsPaidCount === currentGuests.length
-                      ? "bg-paid text-paid-foreground"
-                      : "bg-pending text-pending-foreground"
-                  }
-                >
-                  {guestsPaidCount}/{currentGuests.length} paid
-                </Badge>
-              </div>
+        {/* Total Possible / Add Tenant Boxed Row */}
+        <div className="flex items-center justify-between p-3.5 bg-muted/40 rounded-xl border border-border/40 mt-1">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <CreditCard className="h-5 w-5" />
             </div>
-            {/* Guest List with WhatsApp */}
-            <div className="space-y-1.5 pt-1">
-              {currentGuests.map((guest) => {
-                const openGuestWhatsApp = () => {
-                  if (!guest.mobile_number) return;
-                  const phone = guest.mobile_number.replace(/\D/g, "");
-                  const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                  window.open(`https://wa.me/${formattedPhone}`, "_blank");
-                };
-                return (
-                  <div key={guest.id} className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <User className="h-3 w-3 text-muted-foreground" />
-                      <span className="truncate">{guest.guest_name}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {guest.mobile_number && (
-                        <button
-                          onClick={openGuestWhatsApp}
-                          className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                          title={`Chat with ${guest.guest_name}`}
-                        >
-                          <Phone className="h-3 w-3" />
-                        </button>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={
-                          guest.payment_status === "Paid"
-                            ? "bg-paid text-paid-foreground"
-                            : "bg-pending text-pending-foreground"
-                        }
-                      >
-                        {guest.payment_status}
-                      </Badge>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="text-left">
+              <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Total Possible</span>
+              <span className="block text-base font-extrabold text-foreground mt-0.5">₹{room.rentAmount.toLocaleString()}</span>
             </div>
           </div>
-        )}
+          {canManageTenants && isSelectedCurrentMonth && occupiedCount < room.capacity && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onViewDetails(room)}
+              className="h-9 px-3 rounded-lg flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Add Tenant</span>
+            </Button>
+          )}
+        </div>
 
         {/* Notes */}
         {room.notes && (
-          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2 text-sm text-muted-foreground mt-2">
             <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <span className="text-xs">{room.notes}</span>
-          </div>
-        )}
-
-        {/* Action buttons for current month */}
-        {canManageTenants && isSelectedCurrentMonth && occupiedCount < room.capacity && (
-          <div className="pt-2 border-t border-border/50 space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => onViewDetails(room)}
-                className="h-10 flex items-center justify-center gap-2"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Add Tenant</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`)}
-                className="h-10 flex items-center justify-center gap-2 border-dashed"
-              >
-                <UserCheck className="h-4 w-4" />
-                <span>Day Guest</span>
-              </Button>
-            </div>
           </div>
         )}
 
