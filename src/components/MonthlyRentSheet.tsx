@@ -1,3 +1,4 @@
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PGRulesCard } from './PGRulesCard';
 import { RulesTemplate } from './RulesTemplate';
