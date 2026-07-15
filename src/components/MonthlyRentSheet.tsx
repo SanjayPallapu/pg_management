@@ -171,7 +171,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeEnabled, setEditModeEnabled] = useState(false);
-  const [hideLeftTenants, setHideLeftTenants] = useState(true);
   const [customModeRooms, setCustomModeRooms] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     rooms.forEach((r) => {
@@ -518,39 +517,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const filteredTenants = useMemo(() => {
     let filtered = tenantsWithPayments.filter((tenant) => !tenant.isLocked);
 
-    // Hide left tenants if toggle is on
-    if (hideLeftTenants) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((tenant) => {
-        if (!tenant.endDate) return true;
-        const endDate = new Date(tenant.endDate);
-        endDate.setHours(0, 0, 0, 0);
-        return endDate > today;
-      });
-    }
-
     if (!searchQuery.trim()) return filtered;
     const query = searchQuery.toLowerCase().trim();
     return filtered.filter(
       (tenant) => tenant.name.toLowerCase().includes(query) || tenant.roomNo.toLowerCase().includes(query),
     );
-  }, [tenantsWithPayments, searchQuery, hideLeftTenants]);
+  }, [tenantsWithPayments, searchQuery]);
 
-  // Count left tenants still in the rent sheet (not locked)
-  const leftTenantsCount = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return tenantsWithPayments.filter((tenant) => {
-      if (tenant.isLocked) return false;
-      if (!tenant.endDate) return false;
-      const endDate = new Date(tenant.endDate);
-      endDate.setHours(0, 0, 0, 0);
 
-      // Tenant has left if endDate is today or in the past
-      return endDate <= today;
-    }).length;
-  }, [tenantsWithPayments]);
   const previousMonthOverdue = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -1475,7 +1449,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               payments={payments}
               month={selectedMonth}
               year={selectedYear}
-              hideLeftTenants={hideLeftTenants}
               onSelect={(roomNo) => {
                 setSearchQuery(roomNo);
                 setTimeout(() => {
