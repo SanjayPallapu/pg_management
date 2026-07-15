@@ -109,10 +109,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { data: allReadings = [] } = useAllElectricityReadings();
   const [acSheetOpen, setAcSheetOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const openedFromDashboardRef = useRef(false);
 
   useEffect(() => {
     if (searchParams.get("openAc") === "true") {
       setAcSheetOpen(true);
+      openedFromDashboardRef.current = true;
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("openAc");
       setSearchParams(newParams, { replace: true });
@@ -2387,7 +2389,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* AC Electricity Sheet */}
       <ACElectricitySheet
         open={acSheetOpen}
-        onOpenChange={setAcSheetOpen}
+        onOpenChange={(open) => {
+          setAcSheetOpen(open);
+          if (!open && openedFromDashboardRef.current) {
+            openedFromDashboardRef.current = false;
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set("tab", "dashboard");
+            setSearchParams(newParams);
+          }
+        }}
         acRooms={acRooms}
         acMonth={acMonth}
         acYear={acYear}
