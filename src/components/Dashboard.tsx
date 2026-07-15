@@ -68,7 +68,7 @@ import { getPricePerBed } from "@/constants/pricing";
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
 import bannerNeverMissRent from "@/assets/banner-never-miss-rent.png";
-import bannerGrowYourPg from "@/assets/banner-grow-your-pg.png";
+import bannerGrowYourPg from "@/assets/banner-grow-your-pg.jpg";
 import bannerBillsBudget from "@/assets/banner-bills-budget.png";
 import bannerEverythingOnePlace from "@/assets/banner-everything-one-place.png";
 import bannerReceiptsInstantly from "@/assets/banner-receipts-instantly.png";
@@ -294,7 +294,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     const slideWidth = container.offsetWidth;
-    const index = Math.round(container.scrollLeft / slideWidth);
+    const index = Math.round(container.scrollLeft / (slideWidth + 8));
     setActiveSlide(index);
   };
 
@@ -367,7 +367,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
-            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2"
+            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-2 pb-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {banners.map((banner) => (
@@ -401,7 +401,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   if (container) {
                     const slideWidth = container.offsetWidth;
                     container.scrollTo({
-                      left: idx * slideWidth,
+                      left: idx * (slideWidth + 8),
                       behavior: 'smooth'
                     });
                     setActiveSlide(idx);
