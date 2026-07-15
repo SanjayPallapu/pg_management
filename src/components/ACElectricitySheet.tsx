@@ -174,7 +174,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background dark:bg-[#070814] text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background dark:bg-slate-900 text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -209,11 +209,11 @@ export const ACElectricitySheet = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <select value={acMonth} onChange={(e) => setAcMonth(parseInt(e.target.value))} className="h-7 rounded-lg bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
-                    {months.map((m) => (<option key={m.value} value={m.value} className="bg-background dark:bg-[#070814] text-foreground dark:text-white">{m.label}</option>))}
+                  <select value={acMonth} onChange={(e) => setAcMonth(parseInt(e.target.value))} className="h-7 rounded-lg bg-white dark:bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
+                    {months.map((m) => (<option key={m.value} value={m.value} className="bg-background dark:bg-slate-900 text-foreground dark:text-white">{m.label}</option>))}
                   </select>
-                  <select value={acYear} onChange={(e) => setAcYear(parseInt(e.target.value))} className="h-7 rounded-lg bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
-                    {years.map((y) => (<option key={y} value={y} className="bg-background dark:bg-[#070814] text-foreground dark:text-white">{y}</option>))}
+                  <select value={acYear} onChange={(e) => setAcYear(parseInt(e.target.value))} className="h-7 rounded-lg bg-white dark:bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
+                    {years.map((y) => (<option key={y} value={y} className="bg-background dark:bg-slate-900 text-foreground dark:text-white">{y}</option>))}
                   </select>
                 </div>
               </div>
@@ -469,7 +469,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
           <div className="grid grid-cols-2 gap-3 items-end">
             <div>
               <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Strategy</Label>
-              <select value={selectedSplitType} onChange={(e) => handleSplitTypeChange(e.target.value)} className="h-9 rounded-lg border border-border dark:border-slate-900 bg-muted dark:bg-slate-950 px-2 text-xs font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground dark:text-white w-full cursor-pointer">
+              <select value={selectedSplitType} onChange={(e) => handleSplitTypeChange(e.target.value)} className="h-9 rounded-lg border border-border dark:border-slate-900 bg-white dark:bg-slate-950 px-2 text-xs font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground dark:text-white w-full cursor-pointer">
                 <option value="active_tenants">Split by Active Tenants</option>
                 <option value="capacity">Split by Capacity ({room.capacity} sharing)</option>
                 <option value="custom">Split Equally (Custom Count)</option>
@@ -489,7 +489,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-xl bg-slate-900/50 border border-border dark:border-slate-900 px-3 py-2 text-[11px] text-muted-foreground dark:text-slate-400">
+          <div className="flex items-center justify-between rounded-xl bg-slate-100/60 dark:bg-slate-900/50 border border-border dark:border-slate-900 px-3 py-2 text-[11px] text-muted-foreground dark:text-slate-400">
             <span>{selectedSplitType === "custom" ? `Custom split by ${draftSplitCount} persons` : selectedSplitType === "capacity" ? `Split by ${room.capacity} slots` : `Proportional by active tenants`}</span>
             <span className="font-extrabold text-cyan-400">{shareLabel}</span>
           </div>
@@ -508,7 +508,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
               return (
                 <div key={tenant.name} className="p-3.5 bg-muted dark:bg-muted/40 dark:bg-muted/40 border border-border dark:border-slate-900 hover:border-border dark:border-slate-800/80 rounded-2xl flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn("h-9 w-9 rounded-full border flex items-center justify-center text-xs font-bold shrink-0", isPaid ? "bg-emerald-950/50 border-emerald-800/60 text-emerald-400" : "bg-slate-900 border-border dark:border-slate-800 text-foreground dark:text-slate-300")}>{initials}</div>
+                    <div className={cn("h-9 w-9 rounded-full border flex items-center justify-center text-xs font-bold shrink-0", isPaid ? "bg-emerald-950/50 border-emerald-800/60 text-emerald-400" : "bg-slate-100 dark:bg-slate-900 border-border dark:border-slate-800 text-foreground dark:text-slate-300")}>{initials}</div>
                     <div className="min-w-0">
                       <span className="font-extrabold text-xs text-foreground dark:text-white truncate block">{tenant.name}</span>
                       <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{tenant.daysStayed} days stayed</span>
@@ -527,7 +527,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                     <Button
                       size="xs"
                       className={cn("h-7 px-3 text-[10px] font-bold rounded-lg border-0",
-                        isPaid ? "bg-slate-900 hover:bg-muted dark:hover:bg-muted dark:bg-slate-800 text-emerald-400" : "bg-cyan-500 hover:bg-cyan-600 text-slate-950"
+                        isPaid ? "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-emerald-400" : "bg-cyan-500 hover:bg-cyan-600 text-slate-950"
                       )}
                       onClick={() => { if (tenant.id && onTogglePaymentStatus) onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending'); }}
                     >

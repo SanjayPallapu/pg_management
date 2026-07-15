@@ -41,12 +41,14 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
 
       const statuses = active.map<Status>((t) => {
         const p = payments.find((pp) => pp.tenantId === t.id && pp.month === month && pp.year === year);
+        if (p?.paymentStatus === "Paid") return "paid";
+        
         let paid = p?.amountPaid || 0;
         if (paid === 0 && p?.paymentEntries?.length) {
           paid = p.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
         }
         if (paid >= t.monthlyRent && t.monthlyRent > 0) return "paid";
-        if (paid > 0) return "partial";
+        if (p?.paymentStatus === "Partial" || paid > 0) return "partial";
         
         const isPast = year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1);
         if (isPast || (isCurrent && todayDate >= new Date(t.startDate).getDate())) return "overdue";

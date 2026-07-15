@@ -124,10 +124,10 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className="w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 [&>button]:hidden bg-background dark:bg-[#070814] text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden"
+        className="w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 [&>button]:hidden bg-background dark:bg-slate-900 text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden"
       >
         {/* Header section (Fixed at top) */}
-        <div className="relative px-2 sm:px-4 pt-6 pb-4 flex items-center justify-between overflow-hidden shrink-0 border-b border-border dark:border-slate-900/40 bg-background dark:bg-background/80 dark:bg-[#070814]/80 backdrop-blur-md z-10">
+        <div className="relative px-2 sm:px-4 pt-6 pb-4 flex items-center justify-between overflow-hidden shrink-0 border-b border-border dark:border-slate-900/40 bg-background dark:bg-background/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
           {/* Soft glowing ambient background */}
           <div className="absolute right-0 top-0 w-48 h-48 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
           
@@ -158,7 +158,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
         <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-6 space-y-6 pb-40">
           
           {/* CURRENT ACTIVE PLAN CARD */}
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-muted dark:from-[#1b1c3a] via-background dark:via-[#101124] to-background dark:to-[#0b0c16] border border-primary/25 p-5 shadow-lg">
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-muted dark:from-slate-800 via-background dark:via-slate-900 to-background dark:to-slate-950 border border-primary/25 p-5 shadow-lg">
             {/* Decorative glows */}
             <div className="absolute -left-12 -top-12 w-24 h-24 bg-primary/20 rounded-full blur-[40px]" />
             
@@ -497,7 +497,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
         </div>
 
         {/* STICKY BOTTOM CHECKOUT DRAWER (Anchored inside SheetContent absolute) */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 bg-background dark:bg-[#0a0b16] border-t border-border dark:border-slate-900/80 backdrop-blur-md flex items-center justify-between gap-4 z-20 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+        <div className="absolute bottom-0 left-0 right-0 p-5 bg-background dark:bg-slate-900 border-t border-border dark:border-slate-900/80 backdrop-blur-md flex items-center justify-between gap-4 z-20 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex items-center gap-2">
               {selectedPlanKey === 'lifetime' ? (

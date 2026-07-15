@@ -451,7 +451,7 @@ export const SecurityDepositCard = ({
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
         <SheetContent>
-          <SheetHeader>
+          <SheetHeader className="px-1.5">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -474,7 +474,7 @@ export const SecurityDepositCard = ({
             </div>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6">
+          <div className="mt-6 space-y-6 px-1.5">
             {/* Summary */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-lg bg-paid-muted">
