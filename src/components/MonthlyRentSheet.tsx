@@ -1968,10 +1968,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         variant={tenant.payment.paymentStatus === "Paid" ? "default" : "outline"}
                         size="sm"
                         className="text-xs h-7 px-3"
-                        disabled={false}
+                        disabled={tenant.payment.paymentStatus === "Paid" && !editModeEnabled}
                         onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                       >
-                        {tenant.payment.paymentStatus === "Paid" ? "Undo Paid" : "Mark Paid"}
+                        {tenant.payment.paymentStatus === "Paid"
+                          ? (editModeEnabled ? "Undo Paid" : "Paid")
+                          : "Mark Paid"}
                       </Button>
                     )}
                   </div>

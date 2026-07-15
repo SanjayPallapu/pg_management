@@ -555,7 +555,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC<br/>Bill</span>
           </div>
 
-          <div onClick={() => setActiveSheet("in-out")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={() => setActiveSheet("tenant-movement")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-purple-500/10 p-2 rounded-full"><DoorOpen className="w-5 h-5 text-purple-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">In/Out</span>
           </div>
@@ -565,9 +565,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
           </div>
 
-          <div onClick={() => setPGCalcOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={() => setCalculatorSheetOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-slate-500/10 p-2 rounded-full"><Calculator className="w-5 h-5 text-slate-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">PG<br/>Calc</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Calc</span>
           </div>
         </div>
 
