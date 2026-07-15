@@ -13,7 +13,6 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { PaymentReminderDialog } from '@/components/PaymentReminderDialog';
-import { useTenantSnoozes } from '@/hooks/useTenantSnoozes';
 import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from '@/hooks/useElectricityReadings';
 import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
@@ -36,7 +35,6 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
-  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { currentPG } = usePG();
   const [localOpen, setLocalOpen] = useState(false);
@@ -345,8 +343,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="pending"
                             onReminder={handleOpenReminder}
-                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
-                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+
                           />
                         ))
                       )}
@@ -366,8 +363,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="amber"
                             onReminder={handleOpenReminder}
-                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
-                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+
                           />
                         ))
                       )}
@@ -387,8 +383,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="blue"
                             onReminder={handleOpenReminder}
-                            snoozedUntil={isSnoozed(tenant.id) ? getSnoozedUntil(tenant.id) : undefined}
-                            onRemoveSnooze={() => removeSnooze.mutate(tenant.id)}
+
                           />
                         ))
                       )}
@@ -427,7 +422,7 @@ interface TenantSelectItemProps {
   categoryColor: 'pending' | 'blue' | 'amber';
 }
 
-const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, snoozedUntil, onRemoveSnooze }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void; snoozedUntil?: string; onRemoveSnooze?: () => void }) => {
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-pending-muted border-pending/30' 
     : categoryColor === 'amber'
@@ -448,18 +443,6 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold truncate">{tenant.name}</span>
-            {snoozedUntil && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onRemoveSnooze?.(); }}
-                className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25"
-                title="Tap to remove snooze"
-              >
-                <CalendarClock className="h-2.5 w-2.5" />
-                Promised by {fmtDate(parseDateOnly(snoozedUntil), 'dd MMM')}
-                <XIcon className="h-2.5 w-2.5 opacity-70" />
-              </button>
-            )}
             {tenant.phone && tenant.phone !== '••••••••••' && (
               <>
                 <a

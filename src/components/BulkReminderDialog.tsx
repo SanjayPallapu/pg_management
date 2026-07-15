@@ -21,7 +21,6 @@ import { CalendarClock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format as fmtDate, addDays } from "date-fns";
-import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import {
   useElectricityReadings,
   useAllElectricityReadings,
@@ -57,7 +56,7 @@ interface TenantWithPayment {
 export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDialogProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
-  const { isSnoozed, snoozeTenants } = useTenantSnoozes();
+
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { data: allReadings = [] } = useAllElectricityReadings();
 
@@ -156,8 +155,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
   const [isSending, setIsSending] = useState(false);
   const [includeAmount, setIncludeAmount] = useState(true);
   const [includeMonth, setIncludeMonth] = useState(true);
-  const [snoozeOpen, setSnoozeOpen] = useState(false);
-  const [snoozeDate, setSnoozeDate] = useState<Date>(addDays(new Date(), 3));
+
 
   // Get all pending tenants (excluding left tenants)
   const pendingTenants = useMemo(() => {
@@ -203,8 +201,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
     );
 
     // Filter to only pending and partial
-    return allTenants.filter((t) => t.paymentStatus !== "Paid" && !isSnoozed(t.id));
-  }, [rooms, payments, selectedMonth, selectedYear, isSnoozed, getAcShareForTenant, getOverdueAcBills]);
+    return allTenants.filter((t) => t.paymentStatus !== "Paid");
+  }, [rooms, payments, selectedMonth, selectedYear, getAcShareForTenant, getOverdueAcBills]);
 
   // Get all tenants for custom message (excluding left tenants)
   const allTenants = useMemo(() => {
@@ -484,31 +482,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
 
         {/* Fixed bottom action button */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t flex gap-2">
-          {messageType === "reminder" && (
-            <Popover open={snoozeOpen} onOpenChange={setSnoozeOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" disabled={selectedTenants.size === 0}>
-                  <CalendarClock className="h-4 w-4 mr-1" /> Snooze
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2" align="start">
-                <div className="flex gap-1 mb-2">
-                  <Button size="sm" variant="outline" className="text-xs flex-1"
-                    onClick={() => setSnoozeDate(addDays(new Date(), 3))}>+3d</Button>
-                  <Button size="sm" variant="outline" className="text-xs flex-1"
-                    onClick={() => setSnoozeDate(addDays(new Date(), 7))}>+7d</Button>
-                  <Button size="sm" variant="outline" className="text-xs flex-1"
-                    onClick={() => setSnoozeDate(addDays(new Date(), 14))}>+14d</Button>
-                </div>
-                <Calendar mode="single" selected={snoozeDate}
-                  onSelect={(d) => d && setSnoozeDate(d)}
-                  className="pointer-events-auto" />
-                <Button size="sm" className="w-full mt-2" onClick={handleSnooze}>
-                  Snooze {selectedTenants.size} until {fmtDate(snoozeDate, "dd MMM")}
-                </Button>
-              </PopoverContent>
-            </Popover>
-          )}
+
           <Button
             onClick={sendReminders}
             disabled={selectedTenants.size === 0 || isSending}

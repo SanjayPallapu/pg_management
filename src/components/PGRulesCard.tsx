@@ -203,7 +203,7 @@ export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose, 
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => setOpen(false)}
+                    onClick={() => { setOpen(false); onClose?.(); }}
                     className="h-8 w-8 shrink-0"
                   >
                     <ArrowLeft className="h-5 w-5" />

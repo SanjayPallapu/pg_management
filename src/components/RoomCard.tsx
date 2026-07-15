@@ -43,7 +43,6 @@ import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { format, differenceInDays } from "date-fns";
-import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
@@ -215,7 +214,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isOwner } = useAuth();
   const { currentPG } = usePG();
-  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
   const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
   const canManageTenants = isOwner;
   const [isExpanded, setIsExpanded] = useState(false);
@@ -592,18 +590,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                             <Sparkles className="h-2.5 w-2.5 mr-0.5" />
                             NEW
                           </Badge>
-                        )}
-                        {isSnoozed(tenant.id) && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); removeSnooze.mutate(tenant.id); }}
-                            className="inline-flex items-center gap-1 h-4 px-1.5 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25"
-                            title="Tap to remove snooze"
-                          >
-                            <CalendarClock className="h-2.5 w-2.5" />
-                            Promised by {format(parseDateOnly(getSnoozedUntil(tenant.id)!), "dd MMM")}
-                            <XIcon className="h-2.5 w-2.5 opacity-70" />
-                          </button>
                         )}
                       </div>
                       {leftThisMonth && tenant.endDate && (

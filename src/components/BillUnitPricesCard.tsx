@@ -46,6 +46,10 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
   const isMobile = useIsMobile();
   const { currentPG } = usePG();
   const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
   const [slabs, setSlabs] = useState(() => {
     try {
       const stored = localStorage.getItem(`electricity-slabs-${currentPG?.id || "default"}`);

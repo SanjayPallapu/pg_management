@@ -90,7 +90,6 @@ import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
 import { useSearchParams } from "react-router-dom";
 import { RoomQuickNav } from "./RoomQuickNav";
-import { useTenantSnoozes } from "@/hooks/useTenantSnoozes";
 import { CalendarClock, X as XIcon } from "lucide-react";
 import { generateReceiptImage, dataURLtoBlob } from "@/utils/generateReceiptImage";
 interface MonthlyRentSheetProps {
@@ -106,7 +105,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const { collectors, getCollectorDisplayName } = useCollectorNames();
-  const { isSnoozed, getSnoozedUntil, removeSnooze } = useTenantSnoozes();
+
   const isMobile = useIsMobile();
   const [acMonth, setAcMonth] = useState(selectedMonth);
   
@@ -1311,7 +1310,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     let fileName = "";
 
     if (type === "month") {
-      excelData = allTenants.map((tenant) => {
+      const activeTenants = allTenants.filter(t => 
+        isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, monthNum)
+      );
+      
+      excelData = activeTenants.map((tenant) => {
         const isActiveNow = !tenant.endDate;
         const endLabel = tenant.endDate ? format(parseDateOnly(tenant.endDate), "dd-MMM-yyyy") : "Active";
 
@@ -1357,15 +1360,15 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         "Join Date": "",
         "End Date": "",
         "Phone": "",
-        "Rent Amount (₹)": allTenants.reduce((s, t) => {
+        "Rent Amount (₹)": activeTenants.reduce((s, t) => {
           const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
           return s + (p?.amount || t.monthlyRent);
         }, 0),
-        "Amount Paid (₹)": allTenants.reduce((s, t) => {
+        "Amount Paid (₹)": activeTenants.reduce((s, t) => {
           const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
           return s + (p?.amountPaid || 0);
         }, 0),
-        "Balance Due (₹)": allTenants.reduce((s, t) => {
+        "Balance Due (₹)": activeTenants.reduce((s, t) => {
           const p = payments.find(pp => pp.tenantId === t.id && pp.month === monthNum && pp.year === selectedYear);
           const total = p?.amount || t.monthlyRent;
           const paid = p?.amountPaid || 0;
@@ -1536,20 +1539,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       </div>
 
       {/* Header/Action Row */}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between w-full">
+        {/* Edit Mode Toggle on the leftmost side */}
+        <div className="flex items-center gap-1.5 bg-muted/50 dark:bg-slate-900 px-2 py-1 rounded-lg border border-border">
+          <label htmlFor="edit-mode" className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none">
+            Edit Mode
+          </label>
+          <Switch
+            id="edit-mode"
+            checked={editModeEnabled}
+            onCheckedChange={setEditModeEnabled}
+            className="data-[state=checked]:bg-destructive scale-75 origin-right"
+          />
+        </div>
+        
+        {/* Action buttons on the right side */}
         <div className="flex gap-1.5 items-center">
-          {/* Edit Mode Toggle */}
-          <div className="flex items-center gap-1.5 mr-1 bg-muted/50 dark:bg-slate-900 px-2 py-1 rounded-lg border border-border">
-            <label htmlFor="edit-mode" className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none">
-              Edit Mode
-            </label>
-            <Switch
-              id="edit-mode"
-              checked={editModeEnabled}
-              onCheckedChange={setEditModeEnabled}
-              className="data-[state=checked]:bg-destructive scale-75 origin-right"
-            />
-          </div>
           <Button
             onClick={() => setBulkReminderOpen(true)}
             variant="outline"
@@ -1775,17 +1780,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <div className="font-semibold text-sm">
                         {tenant.name}
                       </div>
-                      {isSnoozed(tenant.id) && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeSnooze.mutate(tenant.id); }}
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-medium border border-amber-500/30"
-                          title="Click to remove snooze"
-                        >
-                          <CalendarClock className="h-3 w-3" />
-                          Promised by {format(new Date(getSnoozedUntil(tenant.id)!), "dd MMM")}
-                          <XIcon className="h-2.5 w-2.5 opacity-60" />
-                        </button>
-                      )}
+
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== "••••••••••" && (
                         <a
