@@ -1444,17 +1444,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-bold text-foreground">Rent Sheet</h2>
-          {leftTenantsCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCleanupSheetOpen(true)}
-              className="h-7 px-2 text-xs text-destructive border-destructive/50 hover:bg-destructive/10"
-              title="Left Tenants Cleanup"
-            >
-              {leftTenantsCount} left
-            </Button>
-          )}
         </div>
         <div className="flex gap-1.5 items-center">
           {/* Edit Mode Toggle */}
