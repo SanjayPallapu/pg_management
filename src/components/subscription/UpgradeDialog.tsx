@@ -49,53 +49,100 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
           </div>
         )}
 
-        <div className="space-y-4">
-          {paidPlans.map((planKey) => {
-            const plan = SUBSCRIPTION_PLANS[planKey];
-            const isSelected = selectedPlan === planKey;
+        <div className="flex flex-col gap-4 max-h-[85vh]">
+          {isTrialActive && (
+            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-3 text-xs">
+              <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+                <Clock className="h-3.5 w-3.5" />
+                Free Trial Active
+              </div>
+              <p className="mt-1 text-muted-foreground leading-relaxed">
+                Your app is fully active. Select a billing cycle below to configure your auto-renewal before the trial ends.
+              </p>
+            </div>
+          )}
 
-            return (
-              <Card
-                key={planKey}
-                className={`cursor-pointer transition-all ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
-                onClick={() => setSelectedPlan(planKey)}
-              >
-                <CardContent className="pt-4">
-                  <div className="mb-3 flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{plan.name}</h3>
-                        {planKey === 'yearly' && <Badge className="bg-primary/10 text-primary border-0">Best Value</Badge>}
-                        {planKey === 'pro' && <Badge className="bg-cyan-500/10 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400 border-0">Highly Recommended</Badge>}
-                        {planKey === 'lifetime' && <Badge className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border-0">Most Popular</Badge>}
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+          {/* Scrollable Plan Selection Container */}
+          <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 scrollbar-thin">
+            {paidPlans.map((planKey) => {
+              const plan = SUBSCRIPTION_PLANS[planKey];
+              const isSelected = selectedPlan === planKey;
+
+              return (
+                <div
+                  key={planKey}
+                  onClick={() => setSelectedPlan(planKey)}
+                  className={`relative flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
+                    isSelected 
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm ring-1 ring-primary/30' 
+                      : 'border-border/60 hover:border-primary/40 bg-card/50'
+                  }`}
+                >
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-foreground">{plan.name}</span>
+                      {planKey === 'yearly' && (
+                        <Badge className="bg-primary/20 text-primary border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                          Best Value
+                        </Badge>
+                      )}
+                      {planKey === 'pro' && (
+                        <Badge className="bg-cyan-500/10 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400 border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                          Recommended
+                        </Badge>
+                      )}
+                      {planKey === 'lifetime' && (
+                        <Badge className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                          Lifetime
+                        </Badge>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">₹{plan.price}</div>
-                      <div className="text-sm text-muted-foreground">{plan.periodLabel}</div>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{plan.description}</p>
                   </div>
+                  
+                  <div className="text-right shrink-0">
+                    <div className="text-base font-extrabold text-foreground">₹{plan.price.toLocaleString()}</div>
+                    <div className="text-[10px] text-muted-foreground font-medium">{plan.periodLabel}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PG owners and PGs</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited rooms and tenants</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Automatic recurring billing via Razorpay</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Reminders, AC billing, reports, receipts</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {/* Unified Core Features (Show once for clean layout) */}
+          <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3.5 border border-border/30">
+            <h4 className="text-xs font-semibold text-foreground mb-2.5 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Everything included in {SUBSCRIPTION_PLANS[selectedPlan].name}:
+            </h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="truncate">Unlimited PGs & Owners</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="truncate">Unlimited Rooms/Beds</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="truncate">Auto WhatsApp Reminders</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="truncate">AC Bill & Budget Tools</span>
+              </div>
+            </div>
+          </div>
 
           {isNative ? (
-            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-4 text-sm text-muted-foreground mt-2">
+            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-3.5 text-xs text-muted-foreground">
               <p className="font-semibold text-foreground mb-1 text-amber-700 dark:text-amber-400">Manage Billing on Web</p>
-              To comply with mobile app store guidelines, plan upgrades cannot be purchased directly inside the mobile application. Please sign in via a web browser at <span className="font-semibold text-foreground">pgmanager.app</span> to manage your billing or upgrade your subscription.
+              To comply with mobile app store guidelines, upgrades cannot be purchased inside the app. Please sign in via a web browser at <span className="font-semibold text-foreground select-all">pgmanager.app</span> to upgrade.
             </div>
           ) : (
             <Button
-              className="w-full gap-2 py-6 text-base"
+              className="w-full gap-2 py-6 text-sm font-semibold rounded-xl bg-gradient-to-r from-primary to-[#9FA6FF] hover:from-[#6A73D5] hover:to-[#8E95EE] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
               onClick={() => {
                 initiatePayment({
                   plan: selectedPlan,
@@ -110,7 +157,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
               {razorpayLoading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
               ) : (
-                <><Zap className="h-5 w-5" /> Continue with Razorpay - ₹{currentPlan.price}</>
+                <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} - ₹{currentPlan.price.toLocaleString()}</>
               )}
             </Button>
           )}

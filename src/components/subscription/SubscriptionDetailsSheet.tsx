@@ -26,9 +26,10 @@ import { UpgradeDialog } from './UpgradeDialog';
 interface SubscriptionDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpgradeClick?: () => void;
 }
 
-export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDetailsSheetProps) => {
+export const SubscriptionDetailsSheet = ({ open, onOpenChange, onUpgradeClick }: SubscriptionDetailsSheetProps) => {
   const { subscription, pgs, isProUser } = usePG();
   const [showUpgrade, setShowUpgrade] = useState(false);
 
@@ -269,7 +270,11 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
             <Button 
               onClick={() => {
                 onOpenChange(false);
-                setShowUpgrade(true);
+                if (onUpgradeClick) {
+                  onUpgradeClick();
+                } else {
+                  setShowUpgrade(true);
+                }
               }} 
               className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
@@ -278,7 +283,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
             </Button>
           )}
           
-          <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
+          {!onUpgradeClick && <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />}
 
         </div>
       </SheetContent>

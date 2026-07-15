@@ -54,7 +54,7 @@ import { usePG } from "@/contexts/PGContext";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { SubscriptionDetailsSheet, AdminPaymentApproval } from "@/components/subscription";
+import { SubscriptionDetailsSheet, AdminPaymentApproval, UpgradeDialog } from "@/components/subscription";
 import { NotificationPreferencesSheet } from "./settings/NotificationPreferencesSheet";
 import { ManagePropertiesSheet } from "./settings/ManagePropertiesSheet";
 
@@ -111,6 +111,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [adminApprovalOpen, setAdminApprovalOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
@@ -124,6 +125,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   useEffect(() => {
     const handleCloseAll = () => {
       setSubscriptionSheetOpen(false);
+      setUpgradeOpen(false);
       setAdminApprovalOpen(false);
       setShowHelp(false);
       setReportsOpen(false);
@@ -464,7 +466,12 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
         </motion.div>
       </motion.div>
 
-      <SubscriptionDetailsSheet open={subscriptionSheetOpen} onOpenChange={setSubscriptionSheetOpen} />
+      <SubscriptionDetailsSheet 
+        open={subscriptionSheetOpen} 
+        onOpenChange={setSubscriptionSheetOpen} 
+        onUpgradeClick={() => setUpgradeOpen(true)}
+      />
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
       {isAdmin && (
         <AdminPaymentApproval open={adminApprovalOpen} onOpenChange={setAdminApprovalOpen} />
       )}
