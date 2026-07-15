@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Crown, Loader2, Zap } from 'lucide-react';
+import { Check, Clock, Crown, Loader2, Zap, Sparkles } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
 import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey } from '@/types/pg';
