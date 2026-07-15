@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Room, TenantPayment } from "@/types";
 import { cn } from "@/lib/utils";
-import { isTenantActiveInMonth } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, hasTenantLeftNow } from "@/utils/dateOnly";
 
 interface Props {
   rooms: Room[];
@@ -42,7 +42,7 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
 
       const statuses = active.map<Status>((t) => {
         const p = payments.find((pp) => pp.tenantId === t.id && pp.month === month && pp.year === year);
-        if (p?.paymentStatus === "Paid") return "paid";
+        if (hasTenantLeftNow(t.endDate) || p?.paymentStatus === "Paid") return "paid";
         
         let paid = p?.amountPaid || 0;
         if (paid === 0 && p?.paymentEntries?.length) {

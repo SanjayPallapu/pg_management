@@ -77,7 +77,7 @@ import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
 import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
-import { isTenantActiveInMonth, parseDateOnly } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, parseDateOnly, hasTenantLeftNow } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
@@ -454,9 +454,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       );
 
       const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+      const hasLeft = hasTenantLeftNow(tenant.endDate);
 
       let paymentCategory: "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
-      if (payment?.paymentStatus === "Paid" || (amountPaid >= targetRent && targetRent > 0)) {
+      if (hasLeft) {
+        paymentCategory = "paid";
+      } else if (payment?.paymentStatus === "Paid" || (amountPaid >= targetRent && targetRent > 0)) {
         paymentCategory = "paid";
       } else if (payment?.paymentStatus === "Partial" || (amountPaid > 0 && amountPaid < targetRent)) {
         paymentCategory = "partial";
@@ -471,15 +474,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           paymentCategory = "advance-not-paid";
         }
       }
+
+      const displayPayment = hasLeft ? {
+        id: payment?.id || `temp-${tenant.id}`,
+        tenantId: tenant.id,
+        month: selectedMonth,
+        year: selectedYear,
+        paymentStatus: "Paid" as const,
+        amount: targetRent,
+        paymentDate: payment?.paymentDate || tenant.endDate,
+        amountPaid: payment?.amountPaid || targetRent,
+        paymentEntries: payment?.paymentEntries || [],
+        createdAt: payment?.createdAt || new Date().toISOString(),
+        updatedAt: payment?.updatedAt || new Date().toISOString(),
+      } : (payment || {
+        paymentStatus: "Pending" as const,
+        amount: tenant.monthlyRent,
+        paymentDate: undefined,
+        amountPaid: 0,
+        paymentEntries: [],
+      });
+
       return {
         ...tenant,
-        payment: payment || {
-          paymentStatus: "Pending" as const,
-          amount: tenant.monthlyRent,
-          paymentDate: undefined,
-          amountPaid: 0,
-          paymentEntries: [],
-        },
+        payment: displayPayment,
         paymentCategory,
         dueDay: tenantDueDay,
         effectiveRent,
