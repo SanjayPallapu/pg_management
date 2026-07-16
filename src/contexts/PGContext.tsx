@@ -59,6 +59,7 @@ export const PGProvider = ({ children }: PGProviderProps) => {
         .from('pgs')
         .select('*')
         .eq('owner_id', user.id)
+        .not('is_archived', 'eq', true)
         .order('created_at', { ascending: true });
 
       if (fetchError) throw fetchError;

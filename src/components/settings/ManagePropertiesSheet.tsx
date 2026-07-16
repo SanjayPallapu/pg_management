@@ -329,6 +329,35 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
     }
   };
 
+  const handleArchiveProperty = async (pgId: string, pgName: string) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("pgs")
+        .update({ is_archived: true })
+        .eq("id", pgId);
+
+      if (error) throw error;
+
+      toast.success(`Property "${pgName}" archived successfully. Data is retained.`);
+      
+      if (currentPG?.id === pgId) {
+        const nextPg = pgs.find((p) => p.id !== pgId && !(p as any).is_archived);
+        if (nextPg) {
+          selectPG(nextPg.id);
+        }
+      }
+      
+      await refreshPGs();
+      resetForm();
+    } catch (err: any) {
+      console.error("Failed to archive property:", err);
+      toast.error(err.message || "Failed to archive property");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const startEdit = (pgId: string, currentName: string, currentAddress?: string, electricityPrice?: number) => {
     setIsEditing(pgId);
     setNameInput(currentName);
@@ -905,24 +934,47 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              Delete Property?
+              Manage Property Deletion
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs leading-relaxed text-left">
-              Are you sure you want to delete <span className="font-bold text-foreground">"{pgToDelete?.name}"</span>? 
-              This will permanently delete all rooms, active/left tenants, payments, AC readings, and utility expense logs for this property. This action cannot be undone.
+            <AlertDialogDescription className="text-xs leading-relaxed text-left space-y-2">
+              <p>
+                How would you like to handle the removal of <span className="font-bold text-foreground">"{pgToDelete?.name}"</span>?
+              </p>
+              <p className="border-l-2 border-emerald-500 pl-2 bg-emerald-500/5 py-1 text-[11px]">
+                <strong>Option A: Archive (Recommended to Retain Data)</strong><br />
+                This will hide the property from all dashboard menus but safely preserve all rooms, tenant histories, and payment logs in the database.
+              </p>
+              <p className="border-l-2 border-rose-500 pl-2 bg-rose-500/5 py-1 text-[11px]">
+                <strong>Option B: Delete Permanently (Destroy Data)</strong><br />
+                This will permanently wipe this property along with all its rooms, tenants, payments, and utilities logs. This action is irreversible.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
-            <AlertDialogCancel className="rounded-xl h-10 text-xs">Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-1.5 mt-3 w-full">
+            <AlertDialogCancel className="rounded-xl h-10 text-xs sm:flex-1">Cancel</AlertDialogCancel>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (pgToDelete) {
+                  handleArchiveProperty(pgToDelete.id, pgToDelete.name);
+                  setDeleteConfirmOpen(false);
+                }
+              }}
+              className="rounded-xl h-10 text-xs sm:flex-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 font-bold"
+            >
+              Archive & Retain
+            </Button>
+
             <AlertDialogAction
               onClick={() => {
                 if (pgToDelete) {
                   handleDeleteProperty(pgToDelete.id, pgToDelete.name);
                 }
               }}
-              className="rounded-xl h-10 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              className="rounded-xl h-10 text-xs sm:flex-1 bg-destructive hover:bg-destructive/90 text-white font-bold"
             >
-              Delete Permanently
+              Wipe & Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -24,6 +24,7 @@ import {
   Percent
 } from 'lucide-react';
 import { useMonthContext } from '@/contexts/MonthContext';
+import { usePG } from '@/contexts/PGContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { useExpenseEntries } from '@/hooks/useExpenseEntries';
@@ -37,6 +38,7 @@ interface ReportsProps {
 
 export const Reports = ({ rooms }: ReportsProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
+  const { currentPG } = usePG();
   const { payments } = useTenantPayments();
   const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'occupancy'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
@@ -661,6 +663,266 @@ export const Reports = ({ rooms }: ReportsProps) => {
           })}
         </div>
       )}
+      {/* Hidden Print-Only Dedicated Report Template */}
+      <div id="print-report-container" className="hidden print:block bg-white text-black p-8 font-sans space-y-6 w-full text-left">
+        {/* Style block for print media settings */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #print-report-container, #print-report-container * {
+              visibility: visible;
+            }
+            #print-report-container {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              background: white !important;
+              color: black !important;
+            }
+            /* Custom page breaks */
+            .page-break {
+              page-break-before: always;
+            }
+            /* Hide print dialog overlays in background if any */
+            [role="dialog"], .dialog, .fixed, footer, header, nav, aside {
+              display: none !important;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          }
+        `}} />
+
+        {/* Business Report Header */}
+        <div className="border-b-2 border-slate-900 pb-4 flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">PG Manager Report</h1>
+            <p className="text-sm font-semibold text-slate-600">
+              Executive Performance & Monthly Health Summary
+            </p>
+            <div className="text-xs text-slate-500 flex gap-4">
+              <span><strong>Month:</strong> {activeMonthName} {selectedYear}</span>
+              <span>•</span>
+              <span><strong>PG Name:</strong> {currentPG?.name || "All Properties"}</span>
+              {currentPG?.address && (
+                <>
+                  <span>•</span>
+                  <span><strong>Address:</strong> {currentPG.address}</span>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="text-right space-y-1 text-xs text-slate-500">
+            <span><strong>Date Generated:</strong> {new Date().toLocaleDateString()}</span>
+            <br />
+            <span><strong>Status:</strong> Active</span>
+          </div>
+        </div>
+
+        {/* Two-Column Chart Layout */}
+        <div className="grid grid-cols-2 gap-8 py-4">
+          {/* Rent Collection SVG Pie Chart */}
+          <div className="border rounded-2xl p-5 bg-slate-50/50 flex flex-col items-center justify-center text-center">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-4">Rent Collection Rate</h3>
+            <div className="relative h-32 w-32 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle 
+                  cx="64" cy="64" r="54" 
+                  className="text-slate-200 stroke-current" 
+                  strokeWidth="8" fill="none"
+                />
+                <circle 
+                  cx="64" cy="64" r="54" 
+                  className="text-emerald-600 stroke-current" 
+                  strokeWidth="8" fill="none"
+                  strokeDasharray="339.3"
+                  strokeDashoffset={339.3 - (339.3 * collectionRate) / 100}
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-slate-800">{collectionRate.toFixed(1)}%</span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase">Collected</span>
+              </div>
+            </div>
+            <div className="mt-4 text-xs space-y-1 text-slate-600">
+              <p>Collected: <strong>₹{rentCollected.toLocaleString()}</strong></p>
+              <p>Expected: <strong>₹{totalExpectedRevenue.toLocaleString()}</strong></p>
+            </div>
+          </div>
+
+          {/* Occupancy Beds Horizontal Bar Chart */}
+          <div className="border rounded-2xl p-5 bg-slate-50/50 flex flex-col justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-4 text-center">Beds Occupancy Status</h3>
+            <div className="space-y-4">
+              <div className="relative h-28 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle 
+                    cx="64" cy="64" r="54" 
+                    className="text-slate-200 stroke-current" 
+                    strokeWidth="8" fill="none"
+                  />
+                  <circle 
+                    cx="64" cy="64" r="54" 
+                    className="text-indigo-600 stroke-current" 
+                    strokeWidth="8" fill="none"
+                    strokeDasharray="339.3"
+                    strokeDashoffset={339.3 - (339.3 * occupancyRate) / 100}
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-xl font-black text-slate-800">{occupancyRate.toFixed(1)}%</span>
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Occupied</span>
+                </div>
+              </div>
+              <div className="text-xs text-center space-y-1 text-slate-600">
+                <p>Occupied: <strong>{occupiedBeds} Beds</strong></p>
+                <p>Available: <strong>{totalAvailableBeds} Beds</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Executive summary table */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">1. Financial & Operational KPI Summary</h3>
+          <table className="w-full text-xs text-left border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800 uppercase text-[10px]">
+                <th className="p-2 border-r border-slate-300">KPI Metric Name</th>
+                <th className="p-2 border-r border-slate-300 text-right">Value / Status</th>
+                <th className="p-2 text-right">Target / Projected</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-300">
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Rent Collection Rate</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-emerald-600">{collectionRate.toFixed(1)}%</td>
+                <td className="p-2 text-right text-slate-500">100.0%</td>
+              </tr>
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Beds Occupancy Rate</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-indigo-600">{occupancyRate.toFixed(1)}%</td>
+                <td className="p-2 text-right text-slate-500">90.0%</td>
+              </tr>
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Actual Cash Collected</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-emerald-600">₹{rentCollected.toLocaleString()}</td>
+                <td className="p-2 text-right text-slate-500">₹{totalExpectedRevenue.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Pending Rent Outstanding</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-rose-600">₹{pendingRent.toLocaleString()}</td>
+                <td className="p-2 text-right text-slate-500">₹0</td>
+              </tr>
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Total Utility Expenses</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-rose-500">₹{totalExpenses.toLocaleString()}</td>
+                <td className="p-2 text-right text-slate-500">Budgeted</td>
+              </tr>
+              <tr>
+                <td className="p-2 border-r border-slate-300 font-medium">Net Profit Margin</td>
+                <td className="p-2 border-r border-slate-300 text-right font-bold text-slate-800">
+                  {totalExpectedRevenue > 0 ? ((actualNetIncome / totalExpectedRevenue) * 100).toFixed(1) : 0}%
+                </td>
+                <td className="p-2 text-right text-slate-500">Positive</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* AI Health Analysis insights */}
+        <div className="border border-slate-300 bg-slate-50/50 p-4 rounded-xl space-y-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Monthly Analysis & Insights</h4>
+          <ul className="list-disc pl-4 space-y-1 text-xs text-slate-700">
+            <li>Collected <strong>₹{rentCollected.toLocaleString()}</strong> out of <strong>₹{totalExpectedRevenue.toLocaleString()}</strong> expected ({collectionRate.toFixed(1)}%). There is an outstanding balance of <strong>₹{pendingRent.toLocaleString()}</strong> across <strong>{sortedPendingTenants.length} tenants</strong>.</li>
+            <li>Currently running at <strong>{occupancyRate.toFixed(1)}% bed occupancy</strong> with <strong>{occupiedBeds} occupied beds</strong> and <strong>{totalAvailableBeds} vacant beds</strong>. Completely vacant rooms count: <strong>{vacantRooms.length}</strong>.</li>
+            <li>Operating expenses of <strong>₹{totalExpenses.toLocaleString()}</strong> yield an actual cash buffer net income of <strong>₹{actualNetIncome.toLocaleString()}</strong>.</li>
+          </ul>
+        </div>
+
+        {/* Page Break for Outstanding list */}
+        <div className="page-break" />
+
+        {/* 2. Outstanding Balance Details Table */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">2. Outstanding Rents & Balance Sheet</h3>
+          <table className="w-full text-[11px] text-left border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800 uppercase text-[9px]">
+                <th className="p-2 border-r border-slate-300">Room</th>
+                <th className="p-2 border-r border-slate-300">Tenant Name</th>
+                <th className="p-2 border-r border-slate-300">Contact Number</th>
+                <th className="p-2 border-r border-slate-300 text-right">Rent Due (₹)</th>
+                <th className="p-2 border-r border-slate-300 text-right">Amount Paid (₹)</th>
+                <th className="p-2 text-right">Pending Balance (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-300">
+              {eligibleTenants.filter(t => t.paymentCategory !== 'paid' && !t.isLocked).map((tenant) => {
+                const isPartial = tenant.paymentCategory === 'partial';
+                const remaining = isPartial ? tenant.monthlyRent - (tenant.amountPaid || 0) : tenant.monthlyRent;
+                return (
+                  <tr key={tenant.id} className="hover:bg-slate-50">
+                    <td className="p-2 border-r border-slate-300 font-semibold">Room {tenant.roomNo}</td>
+                    <td className="p-2 border-r border-slate-300">{tenant.name}</td>
+                    <td className="p-2 border-r border-slate-300">{tenant.phone || "N/A"}</td>
+                    <td className="p-2 border-r border-slate-300 text-right">₹{tenant.monthlyRent.toLocaleString()}</td>
+                    <td className="p-2 border-r border-slate-300 text-right text-emerald-600">₹{(tenant.amountPaid || 0).toLocaleString()}</td>
+                    <td className="p-2 text-right font-bold text-rose-600">₹{remaining.toLocaleString()}</td>
+                  </tr>
+                );
+              })}
+              {sortedPendingTenants.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-4 text-center text-slate-500">No outstanding rents found for this month! 🎉</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 3. Room Occupancy breakdown */}
+        <div className="space-y-2 pt-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">3. Room & Bed Allocation Breakdown</h3>
+          <table className="w-full text-[11px] text-left border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800 uppercase text-[9px]">
+                <th className="p-2 border-r border-slate-300">Floor</th>
+                <th className="p-2 border-r border-slate-300">Room No</th>
+                <th className="p-2 border-r border-slate-300">Room Sharing Type</th>
+                <th className="p-2 border-r border-slate-300 text-center">Occupied Beds</th>
+                <th className="p-2 border-r border-slate-300 text-center">Available Beds</th>
+                <th className="p-2 text-center">Occupancy Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-300">
+              {rooms.sort((a,b) => a.roomNo.localeCompare(b.roomNo)).map((room) => {
+                const roomOccupied = getActiveTenantsInMonth(room).length;
+                const isVacant = roomOccupied === 0;
+                const isFull = roomOccupied >= room.capacity;
+                return (
+                  <tr key={room.id} className="hover:bg-slate-50">
+                    <td className="p-2 border-r border-slate-300">Floor {room.floor}</td>
+                    <td className="p-2 border-r border-slate-300 font-semibold">Room {room.roomNo}</td>
+                    <td className="p-2 border-r border-slate-300">{room.capacity} Sharing</td>
+                    <td className="p-2 border-r border-slate-300 text-center font-medium">{roomOccupied}</td>
+                    <td className="p-2 border-r border-slate-300 text-center text-emerald-600 font-bold">{room.capacity - roomOccupied}</td>
+                    <td className="p-2 text-center">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isVacant ? "bg-rose-500/10 text-rose-700" : isFull ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}`}>
+                        {isVacant ? "Empty" : isFull ? "Full" : "Partial"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
