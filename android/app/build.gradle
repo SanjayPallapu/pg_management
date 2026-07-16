@@ -28,6 +28,19 @@ android {
             res.exclude '**/splash.png'
             res.exclude '**/config 2.xml'
             res.exclude '**/config 3.xml'
+            res.exclude '**/config*.xml'
+        }
+    }
+
+    signingConfigs {
+        release {
+            def keystoreFile = file('release.keystore')
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: (project.findProperty('RELEASE_STORE_PASSWORD') ?: '')
+                keyAlias System.getenv("KEY_ALIAS") ?: (project.findProperty('RELEASE_KEY_ALIAS') ?: '')
+                keyPassword System.getenv("KEY_PASSWORD") ?: (project.findProperty('RELEASE_KEY_PASSWORD') ?: '')
+            }
         }
     }
 
@@ -36,6 +49,11 @@ android {
             minifyEnabled false
             shrinkResources false 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            
+            def keystoreFile = file('release.keystore')
+            if (keystoreFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
@@ -43,10 +61,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    // Force Kotlin tasks in this module to JVM 17
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
-// Robust task to delete files with illegal names
-// Fixed for Gradle Configuration Cache compatibility
+// Robust task to delete files with illegal names (e.g. config 3.xml)
 tasks.register('forceDeleteBadFiles') {
     def xmlDir = project.layout.projectDirectory.dir('src/main/res/xml').asFile
     doLast {
@@ -61,9 +83,8 @@ tasks.register('forceDeleteBadFiles') {
     }
 }
 
-// Ensure deletion happens at the very beginning of the build process
 tasks.configureEach { task ->
-    if (task.name == 'preBuild') {
+    if (task.name == 'preBuild' || (task.name.contains("Resources") && (task.name.contains("merge") || task.name.contains("package")))) {
         task.dependsOn 'forceDeleteBadFiles'
     }
 }
@@ -88,10 +109,26 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// REINFORCEMENT BLOCK: Force JVM 17 for both Java and Kotlin at the end of the file.
+// This prevents capacitor.build.gradle or other scripts from overriding the target to 21.
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    // Only apply if the Kotlin plugin is actually applied to the project
+    if (project.plugins.hasPlugin('kotlin-android') || project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.exists()) {
-        apply plugin: 'com.google.gms.google-services'
+        apply plugin: 'com.google.gms:google-services'
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
