@@ -63,8 +63,10 @@ android {
     }
 
     // Force Kotlin tasks in this module to JVM 17
-    kotlinOptions {
-        jvmTarget = '17'
+    if (project.plugins.hasPlugin('kotlin-android') || project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
     }
 }
 
