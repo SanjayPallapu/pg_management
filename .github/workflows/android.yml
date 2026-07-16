@@ -67,3 +67,13 @@ jobs:
           name: PG-Manager-AAB
           path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      - name: Upload to Google Play
+        if: ${{ secrets.ANDROID_PLAY_SERVICES_KEY != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_PLAY_SERVICES_KEY }}
+          packageName: com.sanjay.pgmanagement
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
