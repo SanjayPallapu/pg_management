@@ -394,9 +394,6 @@ export const ACElectricitySheet = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Pending AC Bills</h3>
-                    <Button size="xs" variant="outline" className="h-7 border-orange-500/30 text-orange-500 hover:bg-orange-500/10" onClick={handleBulkReminders}>
-                      <Bell className="h-3 w-3 mr-1" /> Remind All
-                    </Button>
                   </div>
                   <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
                     <table className="w-full text-left text-xs border-collapse">
@@ -436,9 +433,6 @@ export const ACElectricitySheet = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Share AC Bills</h3>
-                    <Button size="xs" variant="outline" className="h-7 border-blue-500/30 text-blue-500 hover:bg-blue-500/10" onClick={handleShareAll}>
-                      <Send className="h-3 w-3 mr-1" /> Share All
-                    </Button>
                   </div>
                   <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
                     <table className="w-full text-left text-xs border-collapse">

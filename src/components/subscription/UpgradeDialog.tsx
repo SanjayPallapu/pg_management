@@ -68,14 +68,27 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
               const plan = SUBSCRIPTION_PLANS[planKey];
               const isSelected = selectedPlan === planKey;
 
+              const getSelectedClasses = () => {
+                if (planKey.startsWith('pro') && !planKey.startsWith('promax')) {
+                  return 'border-cyan-500 dark:border-cyan-400 bg-cyan-500/5 dark:bg-cyan-500/10 shadow-sm ring-1 ring-cyan-500/30';
+                }
+                if (planKey.startsWith('promax')) {
+                  return 'border-amber-500 dark:border-amber-400 bg-amber-500/5 dark:bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30';
+                }
+                if (planKey === 'lifetime') {
+                  return 'border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30';
+                }
+                return 'border-indigo-500 dark:border-indigo-400 bg-indigo-500/5 dark:bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/30';
+              };
+
               return (
                 <div
                   key={planKey}
                   onClick={() => setSelectedPlan(planKey)}
                   className={`relative flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
                     isSelected 
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm ring-1 ring-primary/30' 
-                      : 'border-border/60 hover:border-primary/40 bg-card/50'
+                      ? getSelectedClasses() 
+                      : 'border-border dark:border-slate-800 hover:border-primary/40 bg-card/50'
                   }`}
                 >
                   <div className="flex-1 min-w-0 pr-4">

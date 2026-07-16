@@ -29,6 +29,7 @@ import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculati
 import { useExpenseEntries } from '@/hooks/useExpenseEntries';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { toast } from 'sonner';
+import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from "@/utils/excelStyles";
 
 interface ReportsProps {
   rooms: Room[];
@@ -123,6 +124,102 @@ export const Reports = ({ rooms }: ReportsProps) => {
     toast.success(`Opening WhatsApp reminder chat for ${tenantName}`);
   };
 
+  const exportToExcel = async () => {
+    // 1. Executive Summary Table
+    const summaryRows = [
+      { Metric: "Month & Year", Value: `${activeMonthName} ${selectedYear}` },
+      { Metric: "Total Revenue Collected", Value: `₹${rentCollected.toLocaleString()}` },
+      { Metric: "Projected Revenue", Value: `₹${totalExpectedRevenue.toLocaleString()}` },
+      { Metric: "Pending Collections", Value: `₹${pendingRent.toLocaleString()}` },
+      { Metric: "Collection Rate", Value: `${collectionRate.toFixed(1)}%` },
+      { Metric: "Total Operating Expenses", Value: `₹${totalExpenses.toLocaleString()}` },
+      { Metric: "Net Income (Actual)", Value: `₹${actualNetIncome.toLocaleString()}` },
+      { Metric: "Projected Net Income", Value: `₹${projectedNetIncome.toLocaleString()}` },
+      { Metric: "Expense-to-Revenue Ratio", Value: `${expenseRatio.toFixed(1)}%` },
+      { Metric: "Total Beds Capacity", Value: totalBeds },
+      { Metric: "Occupied Beds", Value: occupiedBeds },
+      { Metric: "Vacant Beds Available", Value: totalAvailableBeds },
+      { Metric: "Beds Occupancy Rate", Value: `${occupancyRate.toFixed(1)}%` },
+      { Metric: "Completely Vacant Rooms", Value: vacantRooms.length },
+    ];
+
+    // 2. Outstanding Rents Table
+    const outstandingRows = sortedPendingTenants.map((t) => {
+      const isPartial = t.paymentCategory === 'partial';
+      const remaining = isPartial ? t.monthlyRent - (t.amountPaid || 0) : t.monthlyRent;
+      const dueDay = new Date(t.startDate).getDate();
+      return {
+        "Room No": `Room ${t.roomNo}`,
+        "Tenant Name": t.name,
+        "Phone": t.phone || "N/A",
+        "Due Day": dueDay,
+        "Total Rent (₹)": t.monthlyRent,
+        "Paid (₹)": t.amountPaid || 0,
+        "Pending (₹)": remaining,
+        "Status": t.paymentCategory === 'overdue' ? 'Overdue' : t.paymentCategory === 'partial' ? 'Partial' : 'Upcoming'
+      };
+    });
+
+    // 3. Room & Floor Occupancy Table
+    const occupancyRows: any[] = [];
+    Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b).forEach((floor) => {
+      const floorRooms = roomsByFloor[floor];
+      floorRooms.sort((a,b) => a.roomNo.localeCompare(b.roomNo)).forEach((room) => {
+        const roomOccupied = getActiveTenantsInMonth(room).length;
+        const isVacant = roomOccupied === 0;
+        const isFull = roomOccupied >= room.capacity;
+        occupancyRows.push({
+          "Floor": `Floor ${floor}`,
+          "Room No": `Room ${room.roomNo}`,
+          "Sharing Type": `${room.capacity} Sharing`,
+          "Occupants": roomOccupied,
+          "Beds Available": room.capacity - roomOccupied,
+          "Status": isVacant ? "Empty" : isFull ? "Full" : `${roomOccupied}/${room.capacity} Occupied`
+        });
+      });
+    });
+
+    // Generate Excel File with sheets!
+    const wb = styledXLSX.utils.book_new();
+
+    // Summary Sheet
+    const wsSummary = styledXLSX.utils.json_to_sheet(summaryRows);
+    styledXLSX.utils.book_append_sheet(wb, wsSummary, "Executive Summary");
+
+    // Outstanding Sheet
+    const wsOutstanding = styledXLSX.utils.json_to_sheet(outstandingRows.length > 0 ? outstandingRows : [{ "Status": "No outstanding rents" }]);
+    styledXLSX.utils.book_append_sheet(wb, wsOutstanding, "Outstanding Rent");
+
+    // Occupancy Sheet
+    const wsOccupancy = styledXLSX.utils.json_to_sheet(occupancyRows);
+    styledXLSX.utils.book_append_sheet(wb, wsOccupancy, "Occupancy & Rooms");
+
+    // Columns styling widths
+    const colWidths = [
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 }
+    ];
+
+    const finalWb = applyStyledExport(summaryRows, "Overview Report", colWidths, {
+      title: `${activeMonthName} ${selectedYear} Executive Report`,
+      subtitle: `Generated on ${new Date().toLocaleDateString()}`
+    });
+
+    // Re-append the other sheets to finalWb
+    styledXLSX.utils.book_append_sheet(finalWb, wsOutstanding, "Outstanding Rent");
+    styledXLSX.utils.book_append_sheet(finalWb, wsOccupancy, "Occupancy & Rooms");
+
+    const fileName = `PG_Manager_Report_${activeMonthName}_${selectedYear}.xlsx`;
+    await saveAndShareExcel(finalWb, fileName);
+    toast.success("Excel report downloaded successfully!");
+  };
+
   const handlePrintReport = () => {
     window.print();
   };
@@ -143,15 +240,26 @@ export const Reports = ({ rooms }: ReportsProps) => {
             Month-to-date collections and occupancy breakdown.
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handlePrintReport}
-          className="rounded-xl shrink-0 h-8 text-[11px] gap-1 px-2.5"
-        >
-          <Printer className="h-3.5 w-3.5" />
-          Export
-        </Button>
+        <div className="flex gap-1.5 shrink-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToExcel}
+            className="rounded-xl h-8 text-[11px] gap-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 dark:hover:bg-emerald-950/40 border-emerald-500/20 font-bold"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrintReport}
+            className="rounded-xl h-8 text-[11px] gap-1 px-2.5 font-bold"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Print
+          </Button>
+        </div>
       </div>
 
       {/* Pill Navigation Tabs - Segmented Control (iOS style, compact) */}
@@ -313,6 +421,100 @@ export const Reports = ({ rooms }: ReportsProps) => {
               <BedDouble className="h-4 w-4 text-indigo-500 shrink-0" />
             </Card>
           </div>
+
+          {/* Executive KPI Summary Table */}
+          <Card className="border border-border/80 overflow-hidden">
+            <CardHeader className="py-2.5 px-3 border-b bg-muted/20">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Executive Performance Table</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
+                    <th className="p-2.5">Key Performance Indicator</th>
+                    <th className="p-2.5 text-right">Value / Status</th>
+                    <th className="p-2.5 text-right">Target / Proj.</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr>
+                    <td className="p-2.5 font-medium">Rent Collection Rate</td>
+                    <td className={`p-2.5 text-right font-bold ${collectionRate >= 90 ? 'text-emerald-500' : collectionRate >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {collectionRate.toFixed(1)}%
+                    </td>
+                    <td className="p-2.5 text-right text-muted-foreground">100.0%</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-medium">Beds Occupancy Rate</td>
+                    <td className={`p-2.5 text-right font-bold ${occupancyRate >= 80 ? 'text-emerald-500' : occupancyRate >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {occupancyRate.toFixed(1)}%
+                    </td>
+                    <td className="p-2.5 text-right text-muted-foreground">90.0%</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-medium">Actual Cash Collected</td>
+                    <td className="p-2.5 text-right font-bold text-emerald-500">₹{rentCollected.toLocaleString()}</td>
+                    <td className="p-2.5 text-right text-muted-foreground">₹{totalExpectedRevenue.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-medium">Pending Collections</td>
+                    <td className={`p-2.5 text-right font-bold ${pendingRent > 0 ? 'text-rose-400' : 'text-emerald-500'}`}>₹{pendingRent.toLocaleString()}</td>
+                    <td className="p-2.5 text-right text-muted-foreground">₹0</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-medium">Total Utility Expenses</td>
+                    <td className="p-2.5 text-right font-semibold text-rose-500">₹{totalExpenses.toLocaleString()}</td>
+                    <td className="p-2.5 text-right text-muted-foreground">Budgeted</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-medium">Net Income Margin</td>
+                    <td className={`p-2.5 text-right font-extrabold ${actualNetIncome >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {totalExpectedRevenue > 0 ? ((actualNetIncome / totalExpectedRevenue) * 100).toFixed(1) : 0}%
+                    </td>
+                    <td className="p-2.5 text-right text-muted-foreground">Positive</td>
+                  </tr>
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+
+          {/* AI-Powered Analysis Summary Box */}
+          <Card className="border border-indigo-500/10 bg-indigo-500/5 dark:bg-indigo-950/10 relative overflow-hidden">
+            <CardHeader className="py-2.5 px-3 border-b border-indigo-500/10">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                Monthly Health Analysis & Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 text-[11px] leading-relaxed text-foreground/90 space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                <p>
+                  <strong>Rent Collections Status:</strong> Collected <span className="font-semibold text-emerald-500">₹{rentCollected.toLocaleString()}</span> out of <span className="font-semibold">₹{totalExpectedRevenue.toLocaleString()}</span> expected. There is still <span className="font-bold text-rose-500">₹{pendingRent.toLocaleString()}</span> outstanding from <span className="font-semibold">{sortedPendingTenants.length} tenants</span>.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                <p>
+                  <strong>Occupancy Health:</strong> Currently operating at <span className="font-semibold text-indigo-500">{occupancyRate.toFixed(0)}% occupancy</span>, with <span className="font-semibold">{occupiedBeds} out of {totalBeds} beds occupied</span>. {totalAvailableBeds} beds across {vacantRooms.length} vacant rooms remain available for new bookings.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                <p>
+                  <strong>Cash Flow Analysis:</strong> Operating expenses of <span className="font-semibold text-rose-500">₹{totalExpenses.toLocaleString()}</span> result in actual net income of <span className="font-extrabold text-emerald-500">₹{actualNetIncome.toLocaleString()}</span>. This leaves a cash buffer of {totalExpenses > 0 ? ((actualNetIncome / totalExpenses) * 100).toFixed(0) : 0}% relative to expenses.
+                </p>
+              </div>
+              {collectionRate < 85 && (
+                <div className="rounded-lg bg-rose-500/5 dark:bg-rose-950/10 border border-rose-500/10 p-2 text-[10px] text-rose-600 dark:text-rose-400 mt-2 flex items-start gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Recommendation:</span> High rent balance remains outstanding. Switch to the <strong>Collections</strong> tab to ping pending tenants directly via WhatsApp.
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 

@@ -26,6 +26,16 @@ import {
   Users,
   Compass
 } from "lucide-react";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { usePG } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
@@ -50,6 +60,8 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pgToDelete, setPgToDelete] = useState<{ id: string; name: string } | null>(null);
   
   // Wizard Steps state: 1 (Details), 2 (Structure & Pricing), 3 (Blueprint Preview), 4 (Defaults & Save)
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
@@ -289,11 +301,6 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   };
 
   const handleDeleteProperty = async (pgId: string, pgName: string) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${pgName}"? All rooms, tenants, and logs for this property will be permanently deleted.`
-    );
-    if (!confirmDelete) return;
-
     setIsSubmitting(true);
     try {
       const { error } = await supabase
@@ -816,7 +823,12 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                   <Button
                     type="button"
                     variant="destructive"
-                    onClick={() => handleDeleteProperty(isEditing, nameInput)}
+                    onClick={() => {
+                      if (isEditing) {
+                        setPgToDelete({ id: isEditing, name: nameInput });
+                        setDeleteConfirmOpen(true);
+                      }
+                    }}
                     className="w-full rounded-xl gap-1.5 h-9 text-xs font-medium"
                     disabled={isSubmitting}
                   >
@@ -886,6 +898,35 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
           </div>
         </div>
       </SheetContent>
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Property?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs leading-relaxed text-left">
+              Are you sure you want to delete <span className="font-bold text-foreground">"{pgToDelete?.name}"</span>? 
+              This will permanently delete all rooms, active/left tenants, payments, AC readings, and utility expense logs for this property. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
+            <AlertDialogCancel className="rounded-xl h-10 text-xs">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pgToDelete) {
+                  handleDeleteProperty(pgToDelete.id, pgToDelete.name);
+                }
+              }}
+              className="rounded-xl h-10 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 };

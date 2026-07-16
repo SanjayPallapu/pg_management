@@ -300,14 +300,14 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               onClick={() => handleSelectPlan(basicPlanKey)}
               className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
                 selectedPlanKey === basicPlanKey || selectedPlanKey === 'monthly' || selectedPlanKey === 'quarterly' || selectedPlanKey === 'yearly'
-                  ? 'border-blue-500/50 bg-blue-500/5 shadow-md shadow-blue-500/5 ring-1 ring-blue-500/20' 
-                  : 'border-border dark:border-slate-900 hover:border-border dark:border-slate-800'
+                  ? 'border-indigo-500/50 bg-indigo-500/5 shadow-md shadow-indigo-500/5 ring-1 ring-indigo-500/20' 
+                  : 'border-border dark:border-slate-800 hover:border-indigo-500/40'
               }`}
             >
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-blue-500/10 p-2 rounded-xl">
-                    <Send className="h-4 w-4 text-blue-400 rotate-[-15deg]" />
+                  <div className="bg-indigo-500/10 p-2 rounded-xl">
+                    <Send className="h-4 w-4 text-indigo-400 rotate-[-15deg]" />
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-foreground dark:text-white">Basic</h4>
@@ -320,11 +320,11 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[basicPlanKey].periodLabel}</span>
                 </div>
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-900 pt-3 text-foreground dark:text-slate-300">
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-blue-400 shrink-0" /> Unlimited PGs</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-blue-400 shrink-0" /> Unlimited tenants</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-blue-400 shrink-0" /> Rent reminders</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-blue-400 shrink-0" /> Reports & receipts</li>
+                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited PGs</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited tenants</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Rent reminders</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Reports & receipts</li>
                 </ul>
               </div>
 
@@ -333,7 +333,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   variant={selectedPlanKey === basicPlanKey ? 'default' : 'outline'}
                   className={`w-full text-xs font-semibold h-9 rounded-xl ${
                     selectedPlanKey === basicPlanKey 
-                      ? 'bg-blue-500 hover:bg-blue-600 text-foreground dark:text-white' 
+                      ? 'bg-indigo-500 hover:bg-indigo-600 text-white' 
                       : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
                   }`}
                 >
@@ -347,20 +347,20 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               onClick={() => handleSelectPlan(proPlanKey)}
               className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
                 selectedPlanKey === proPlanKey
-                  ? 'border-primary/80 bg-primary/10 shadow-[0_0_20px_rgba(124,133,232,0.15)] ring-1 ring-primary/40' 
-                  : 'border-border dark:border-slate-900 hover:border-border dark:border-slate-800'
+                  ? 'border-cyan-500 bg-cyan-500/5 dark:bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/40' 
+                  : 'border-border dark:border-slate-800 hover:border-cyan-500/40'
               }`}
             >
               {/* Popular Ribbon/Badge */}
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-foreground dark:text-white text-[9px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-[9px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                 <Crown className="h-2.5 w-2.5 fill-white" />
                 Most Popular
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-2 pt-1">
-                  <div className="bg-primary/20 p-2 rounded-xl">
-                    <Crown className="h-4 w-4 text-primary" />
+                  <div className="bg-cyan-500/20 p-2 rounded-xl">
+                    <Crown className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro</h4>
@@ -373,11 +373,11 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proPlanKey].periodLabel}</span>
                 </div>
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-900 pt-3 text-foreground dark:text-slate-300">
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" /> Everything in Basic</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" /> Advanced statistics</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" /> Premium WhatsApp templates</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary shrink-0" /> Priority support</li>
+                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Everything in Basic</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Advanced statistics</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Premium WhatsApp templates</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Priority support</li>
                 </ul>
               </div>
 
@@ -386,7 +386,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   variant={selectedPlanKey === proPlanKey ? 'default' : 'outline'}
                   className={`w-full text-xs font-semibold h-9 rounded-xl ${
                     selectedPlanKey === proPlanKey 
-                      ? 'bg-primary hover:bg-[#6A73D5] text-foreground dark:text-white shadow-[0_0_10px_rgba(124,133,232,0.3)]' 
+                      ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
                       : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
                   }`}
                 >
@@ -401,7 +401,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
                 selectedPlanKey === proMaxPlanKey
                   ? 'border-orange-500/50 bg-orange-500/5 shadow-md shadow-orange-500/5 ring-1 ring-orange-500/20' 
-                  : 'border-border dark:border-slate-900 hover:border-border dark:border-slate-800'
+                  : 'border-border dark:border-slate-800 hover:border-orange-500/40'
               }`}
             >
               <div>
@@ -420,7 +420,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proMaxPlanKey].periodLabel}</span>
                 </div>
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-900 pt-3 text-foreground dark:text-slate-300">
+                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
                   <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Everything in Pro</li>
                   <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Dedicated manager</li>
                   <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Custom API access</li>
@@ -433,7 +433,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   variant={selectedPlanKey === proMaxPlanKey ? 'default' : 'outline'}
                   className={`w-full text-xs font-semibold h-9 rounded-xl ${
                     selectedPlanKey === proMaxPlanKey 
-                      ? 'bg-orange-500 hover:bg-orange-600 text-foreground dark:text-white' 
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                       : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
                   }`}
                 >

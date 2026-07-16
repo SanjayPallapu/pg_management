@@ -196,7 +196,7 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); onClose?.(); }}
                 className="h-9 w-9 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4" />
