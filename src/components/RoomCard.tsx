@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Room } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRent } from "@/contexts/RentContext";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePG } from "@/contexts/PGContext";
@@ -211,6 +212,7 @@ const ACRoomPricingEditor = ({ roomId, reading, setReading }: ACRoomPricingEdito
 
 export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: RoomCardProps) => {
   const { payments, markWhatsappSent } = useTenantPayments();
+  const { rentRecords } = useRent();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isOwner } = useAuth();
   const { currentPG } = usePG();
@@ -353,7 +355,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
 
   // Get payment for selected month
   const getSelectedMonthPayment = (tenantId: string) => {
-    return payments.find((p) => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
+    return rentRecords.find((p) => p.tenantId === tenantId);
   };
 
   // Tenants active in selected month (history view) - show tenants whose end_date hasn't passed yet

@@ -61,6 +61,7 @@ import { differenceInDays } from "date-fns";
 import { useRooms } from "@/hooks/useRooms";
 import { toast } from "@/hooks/use-toast";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRent } from "@/contexts/RentContext";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -95,6 +96,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   const isMobile = useIsMobile();
   const { updateRoom, addTenant, updateTenant, removeTenant } = useRooms();
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
+  const { rentRecords } = useRent();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isAdmin, isOwner } = useAuth();
   const { collectors } = useCollectorNames();
@@ -192,7 +194,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   // Get payment status for a tenant for the SELECTED month
   const getSelectedMonthPayment = (tenantId: string) => {
-    return payments.find((p) => p.tenantId === tenantId && p.month === selectedMonth && p.year === selectedYear);
+    return rentRecords.find((p) => p.tenantId === tenantId);
   };
 
   // Check payment status for the selected month

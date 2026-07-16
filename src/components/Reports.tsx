@@ -26,6 +26,7 @@ import {
 import { useMonthContext } from '@/contexts/MonthContext';
 import { usePG } from '@/contexts/PGContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { useRent } from '@/contexts/RentContext';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
 import { useExpenseEntries } from '@/hooks/useExpenseEntries';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
@@ -39,7 +40,7 @@ interface ReportsProps {
 export const Reports = ({ rooms }: ReportsProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
-  const { payments } = useTenantPayments();
+  const { rentRecords } = useRent();
   const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'occupancy'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -56,7 +57,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
     selectedMonth,
     selectedYear,
     rooms,
-    payments
+    payments: rentRecords
   });
 
   // Query expenses for the selected month/year

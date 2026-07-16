@@ -38,6 +38,7 @@ import { useTotalCollected } from "@/hooks/useTotalCollected";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRent } from "@/contexts/RentContext";
 import { useRealtimePayments } from "@/hooks/useRealtimePayments";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import { useQuery } from "@tanstack/react-query";
@@ -161,12 +162,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     setActiveSheet("pending-tenants");
   };
 
-  const { rentCollected, pendingRent } = useRentCalculations({
-    selectedMonth,
-    selectedYear,
-    rooms,
-    payments,
-  });
+  const { getTotalCollected, getTotalPending } = useRent();
+  const rentCollected = getTotalCollected();
+  const pendingRent = getTotalPending();
 
   // Fetch day guest stats for selected month - filtered by current PG
   const { data: dayGuestStats, isLoading: dayGuestStatsLoading } = useQuery({

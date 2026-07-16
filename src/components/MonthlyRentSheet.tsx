@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Room, PaymentEntry } from "@/types";
 import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useRent } from "@/contexts/RentContext";
 import {
   useElectricityReadings,
   useAllElectricityReadings,
@@ -291,6 +292,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
   const { payments, upsertPayment, markWhatsappSent } = useTenantPayments();
+  const { rentRecords } = useRent();
 
   const getOverdueAcBills = (
     tenantId: string, 
@@ -444,8 +446,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   }, [rooms, selectedMonth, selectedYear]);
   const tenantsWithPayments = useMemo(() => {
     const tenantsData = eligibleTenants.map((tenant) => {
-      const payment = payments.find(
-        (p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear,
+      const payment = rentRecords.find(
+        (p) => p.tenantId === tenant.id,
       );
       const joinDate = new Date(tenant.startDate);
       const currentDate = new Date();
@@ -527,7 +529,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       }
       return 0;
     });
-  }, [eligibleTenants, selectedMonth, selectedYear, payments]);
+  }, [eligibleTenants, selectedMonth, selectedYear, payments, rentRecords]);
 
   // Filter tenants based on search query, exclude locked tenants, and optionally hide left tenants
   const filteredTenants = useMemo(() => {
@@ -1790,7 +1792,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   );
                   const tenantShare = tenantShares.find((shareItem) => shareItem.name === tenant.name);
 
-                  const currentPayment = payments.find((p) => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear);
+                  const currentPayment = rentRecords.find((p) => p.tenantId === tenant.id);
                   const isCurrentPaid = currentPayment?.acPaymentStatus === "Paid";
                   const currentShare = isCurrentPaid ? 0 : (tenantShare?.share || 0);
 
