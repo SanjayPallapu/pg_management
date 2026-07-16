@@ -73,3 +73,6 @@ To connect a domain, navigate to Project > Settings > Domains and click Connect 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
 
 dark mode and light mode toggle logo - 91 line index.tsx u can addd if needed
+
+
+Testing GitHub Actions build
