@@ -38,20 +38,22 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 }
 
 // Robust task to delete files with illegal names
 // Fixed for Gradle Configuration Cache compatibility
 tasks.register('forceDeleteBadFiles') {
-    // Resolve parameters at configuration time to avoid capturing the 'project' object in the closure
     def xmlDir = project.layout.projectDirectory.dir('src/main/res/xml').asFile
-    
     doLast {
         if (xmlDir.exists()) {
             xmlDir.listFiles()?.each { f ->
                 if (f.name.contains(' ')) {
-                    // Use System.out.println to avoid referencing the Gradle script object
-                    System.out.println("Deleting invalid file: ${f.name}")
+                    System.out.println("DELETING INVALID RESOURCE FILE: ${f.name}")
                     f.delete()
                 }
             }
@@ -59,9 +61,9 @@ tasks.register('forceDeleteBadFiles') {
     }
 }
 
-// Auto-run deletion before resource merging
+// Ensure deletion happens at the very beginning of the build process
 tasks.configureEach { task ->
-    if (task.name.contains("merge") && task.name.contains("Resources")) {
+    if (task.name == 'preBuild') {
         task.dependsOn 'forceDeleteBadFiles'
     }
 }

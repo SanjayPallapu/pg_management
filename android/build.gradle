@@ -8,6 +8,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.7.2'
         classpath 'com.google.gms:google-services:4.4.2'
+        // Add Kotlin plugin to the buildscript classpath to ensure we can configure its tasks
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25"
     }
 }
 
@@ -20,25 +22,33 @@ allprojects {
     }
 }
 
-// Global performance and compatibility optimization for all sub-projects
+// Force Java 17 and Kotlin JVM target 17 across all modules
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             android {
-                // Force Java 17 compatibility
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
                 
-                // Disable resource crunching to prevent AAPT2 timeouts
-                aaptOptions {
-                    cruncherEnabled = false
+                // If it's a Kotlin project, force the JVM target
+                if (project.plugins.hasPlugin('kotlin-android')) {
+                    kotlinOptions {
+                        jvmTarget = "17"
+                    }
                 }
             }
         }
         
-        // Force Toolchain to Java 17 to bypass Java 21 requirement errors
+        // Alternative way to force Kotlin JVM target for all compile tasks
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+
+        // Force Toolchain to Java 17 to bypass Java 21 requirement errors from some plugins
         if (project.plugins.hasPlugin('java') || project.plugins.hasPlugin('java-library')) {
             project.extensions.getByType(JavaPluginExtension).toolchain {
                 languageVersion = JavaLanguageVersion.of(17)
