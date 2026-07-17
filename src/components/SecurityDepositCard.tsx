@@ -352,7 +352,7 @@ export const SecurityDepositCard = ({
         securityDepositAmount: depositAmount,
         securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
         securityDepositMode: depositMode,
-        securityDepositCollectedBy: depositCollectedBy,
+        securityDepositCollectedBy: null,
       }, depositDialog.name);
       setDepositDialog(null);
       setDepositAmount(5000);
@@ -594,13 +594,7 @@ export const SecurityDepositCard = ({
                             }`}>
                               {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
                             </span>
-                          )}
-                          {tenant.securityDepositCollectedBy && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                              {getCollectorDisplayName(tenant.securityDepositCollectedBy)}
-                            </span>
-                          )}
-                        </div>
+                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
                           {tenant.phone && tenant.phone !== '••••••••••' && (
@@ -777,22 +771,7 @@ export const SecurityDepositCard = ({
                 </Button>
               </div>
             </div>
-            <div>
-              <Label>Collected By</Label>
-              <div className="flex gap-2 mt-2">
-                {collectors.map((collector) => (
-                  <Button
-                    key={collector.id}
-                    type="button"
-                    variant={depositCollectedBy === collector.id ? 'default' : 'outline'}
-                    className="flex-1"
-                    onClick={() => setDepositCollectedBy(collector.id)}
-                  >
-                    {collector.displayName}
-                  </Button>
-                ))}
-              </div>
-            </div>
+
             <div>
               <Label>Deposit Date</Label>
               <Popover>
