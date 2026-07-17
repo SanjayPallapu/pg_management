@@ -726,116 +726,7 @@ export const PaymentReconciliation = ({
                 </div>
               </div>}
 
-            {/* Expected Collection Schedule by Due Date */}
-            {collectionScheduleData.length > 0 && <div className="space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <h3 className="font-semibold text-sm">Expected Collection by Due Date</h3>
-                    <p className="text-xs text-muted-foreground">Amount pending grouped by tenant joining day</p>
-                  </div>
-                </div>
-                
-                {/* Date Range Filter */}
-                <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/30 rounded-lg">
-                  <span className="text-xs font-medium text-muted-foreground">Filter:</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Day</span>
-                    <Select 
-                      value={collectionFromDay.toString()} 
-                      onValueChange={(v) => setCollectionFromDay(parseInt(v))}
-                    >
-                      <SelectTrigger className="w-16 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                          <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <span className="text-xs text-muted-foreground">to</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Day</span>
-                    <Select 
-                      value={collectionToDay.toString()} 
-                      onValueChange={(v) => setCollectionToDay(parseInt(v))}
-                    >
-                      <SelectTrigger className="w-16 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                          <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-xs px-2"
-                    onClick={() => { setCollectionFromDay(1); setCollectionToDay(31); }}
-                  >
-                    Reset
-                  </Button>
-                </div>
-
-                {/* Filtered Total Summary */}
-                <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-muted-foreground">
-                        Expected from Day {collectionFromDay} to Day {collectionToDay}
-                      </div>
-                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        ₹{filteredExpectedTotal.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Tenants</div>
-                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        {filteredTenantCount}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="h-48 bg-muted/30 rounded-lg p-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={filteredCollectionScheduleData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={d => `${d}`} />
-                      <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} width={40} />
-                      <Tooltip 
-                        formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Expected']}
-                        labelFormatter={(day) => `Due on ${day}th`}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', color: '#000000' }}
-                        labelStyle={{ color: '#000000' }}
-                      />
-                      <Bar dataKey="expected" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {filteredCollectionScheduleData.map(item => (
-                    <button 
-                      key={item.day} 
-                      className="p-2 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer"
-                      onClick={() => {
-                        setSelectedDueDay(item.day);
-                        setDueDaySheetOpen(true);
-                      }}
-                    >
-                      <div className="text-xs text-muted-foreground">Day {item.day}</div>
-                      <div className="text-sm font-bold text-purple-600 dark:text-purple-400">₹{item.expected.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">{item.tenants} tenant(s)</div>
-                    </button>
-                  ))}
-                </div>
-              </div>}
-
-            <div className="space-y-3">
+             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Payment Mode Breakdown</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 border rounded-lg">
@@ -975,7 +866,7 @@ export const PaymentReconciliation = ({
   );
 
   if (standalone) {
-    return <div className="flex flex-col h-full bg-background overflow-y-auto px-4 pb-12">{renderContent()}</div>;
+    return <div className="flex flex-col h-full bg-background overflow-y-auto px-1.5 pb-12">{renderContent()}</div>;
   }
 
   return (

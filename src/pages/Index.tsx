@@ -24,6 +24,20 @@ import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { Room } from "@/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
   Home,
@@ -34,6 +48,10 @@ import {
   Bell,
   Settings,
   Wallet,
+  MoreVertical,
+  User,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
@@ -48,6 +66,8 @@ import { useActiveTab } from "@/contexts/ActiveTabContext";
 import { RentProvider } from '@/contexts/RentContext';
 
 const Index = () => {
+  const { theme, setTheme } = useTheme();
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { rooms, isLoading, error: roomsError } = useRooms();
   const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
@@ -282,29 +302,81 @@ const Index = () => {
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-1 sm:px-4">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-3 py-2 sm:px-4">
+          {/* Left: Hostel logo / Switcher */}
+          <div className="flex items-center gap-2">
             <PGSwitcher />
-            <MonthYearPicker />
             <div className="min-w-0 hidden sm:block">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-sm font-bold leading-tight sm:text-base">
-                  {currentPG?.name || "PG Management"}
-                </h1>
-                <NetworkStatusIndicator />
-              </div>
-              <p className="truncate text-xs text-muted-foreground">{activeNavItem.label} · {selectedMonth}/{selectedYear}</p>
+              <h1 className="truncate text-xs font-bold leading-tight text-muted-foreground uppercase tracking-wider">
+                {currentPG?.name || "PG Management"}
+              </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setHistorySheetOpen(true)} title="Activity">
-              <History className="h-4 w-4" />
-            </Button>
-            <ThemeToggle className="h-9 w-9" />
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleSignOut} title="Sign out">
-              <LogOut className="h-4 w-4" />
-            </Button>
+          {/* Center: Month Selector */}
+          <div className="flex justify-center flex-1 max-w-xs mx-auto">
+            <MonthYearPicker />
+          </div>
+
+          {/* Right: More menu ⋮ */}
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted/50">
+                  <MoreVertical className="h-5 w-5 text-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mt-1 p-1 bg-background border border-border shadow-lg rounded-xl">
+                <DropdownMenuItem 
+                  onClick={() => setProfileDialogOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                >
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4 text-muted-foreground" />
+                      <span>Light Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4 text-muted-foreground" />
+                      <span>Dark Mode</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => setHistorySheetOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                >
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  <span>Activity History</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => setActiveTab('settings')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                >
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:text-destructive rounded-lg hover:bg-destructive/10 cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -408,6 +480,49 @@ const Index = () => {
         <Suspense fallback={null}>
           <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
         </Suspense>
+
+        {/* Profile Dialog */}
+        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+          <DialogContent className="max-w-sm rounded-2xl p-6 bg-background border border-border">
+            <DialogHeader className="space-y-3">
+              <div className="flex justify-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <User className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <DialogTitle className="text-center text-lg font-bold">User Profile</DialogTitle>
+              <DialogDescription className="text-center text-xs text-muted-foreground">
+                Your account details and system role
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-4 space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-semibold">{user?.email || "guest@pgmanager.com"}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Role</span>
+                <span className="font-semibold uppercase tracking-wider text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                  {isAdmin ? "Admin (Owner)" : "Staff (Collector)"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Active PG</span>
+                <span className="font-semibold">{currentPG?.name || "None"}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <Button 
+                onClick={() => setProfileDialogOpen(false)} 
+                className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
 
 
