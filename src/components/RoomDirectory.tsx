@@ -192,12 +192,12 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             <span>Floors</span>
           </Button>
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-1 sm:gap-2 w-full">
           <Button
             size="sm"
             variant={acFilter === 'all' ? 'default' : 'outline'}
             onClick={() => setAcFilter('all')}
-            className="h-8 text-xs"
+            className="h-7 sm:h-8 text-[10px] sm:text-xs px-1.5 sm:px-3"
           >
             All ({rooms.length})
           </Button>
@@ -205,15 +205,16 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             size="sm"
             variant={acFilter === 'ac' ? 'default' : 'outline'}
             onClick={() => setAcFilter('ac')}
-            className="h-8 text-xs gap-1"
+            className="h-7 sm:h-8 text-[10px] sm:text-xs gap-0.5 sm:gap-1 px-1.5 sm:px-3"
           >
-            <Snowflake className="h-3 w-3" /> AC ({rooms.filter(r => r.isAc).length})
+            <Snowflake className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+            AC ({rooms.filter(r => r.isAc).length})
           </Button>
           <Button
             size="sm"
             variant={acFilter === 'normal' ? 'default' : 'outline'}
             onClick={() => setAcFilter('normal')}
-            className="h-8 text-xs"
+            className="h-7 sm:h-8 text-[10px] sm:text-xs px-1.5 sm:px-3"
           >
             Normal ({rooms.filter(r => !r.isAc).length})
           </Button>
@@ -221,10 +222,12 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             size="sm"
             variant={isQuickNavOpen ? "default" : "outline"}
             onClick={() => setIsQuickNavOpen(!isQuickNavOpen)}
-            className={`h-8 text-xs gap-1 border-primary/30 ml-auto transition-all ${isQuickNavOpen ? "" : "text-primary bg-primary/5 hover:bg-primary/10"}`}
+            className={`h-7 sm:h-8 text-[10px] sm:text-xs gap-0.5 sm:gap-1 border-primary/30 ml-auto transition-all px-1.5 sm:px-3 ${
+              isQuickNavOpen ? "" : "text-primary bg-primary/5 hover:bg-primary/10"
+            }`}
           >
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isQuickNavOpen ? "rotate-180" : ""}`} />
-            {isQuickNavOpen ? "Collapse" : "Expand"}
+            <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-300 ${isQuickNavOpen ? "rotate-180" : ""}`} />
+            <span>{isQuickNavOpen ? "Collapse" : "Expand"}</span>
           </Button>
         </div>
 
