@@ -803,21 +803,26 @@ export const PaymentReconciliation = ({
                         <CollapsibleContent>
                           <div className="px-4 pb-3.5 pt-1 space-y-3 border-t border-border/40 bg-muted/10">
                             {/* Summary breakdown row */}
-                            <div className="grid grid-cols-3 gap-2 pt-2 text-xs">
-                              <div className="bg-background p-2 rounded-lg border border-border/30">
-                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Monthly Rent</span>
-                                <div className="font-bold text-foreground mt-0.5">₹{detail.monthlyRent.toLocaleString()}</div>
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 text-xs border-b border-border/30">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Monthly Rent:</span>
+                                <span className="font-bold text-foreground">₹{detail.monthlyRent.toLocaleString()}</span>
                               </div>
-                              <div className="bg-background p-2 rounded-lg border border-border/30">
-                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Total Paid</span>
-                                <div className="font-bold text-foreground mt-0.5">₹{detail.amountPaid.toLocaleString()}</div>
-                              </div>
-                              <div className="bg-background p-2 rounded-lg border border-border/30">
-                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Entries Total</span>
-                                <div className={`font-bold mt-0.5 ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : 'text-foreground'}`}>
-                                  ₹{detail.entriesTotal.toLocaleString()}
+                              
+                              {detail.monthlyRent > detail.amountPaid && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Balance Due:</span>
+                                  <span className="font-extrabold text-amber-600 dark:text-amber-400">
+                                    ₹{(detail.monthlyRent - detail.amountPaid).toLocaleString()}
+                                  </span>
                                 </div>
-                              </div>
+                              )}
+
+                              {detail.entriesTotal !== detail.amountPaid && (
+                                <div className="flex items-center gap-1.5 bg-destructive/10 text-destructive px-2 py-0.5 rounded text-[10px] font-bold">
+                                  <span>Ledger Mismatch (₹{detail.entriesTotal.toLocaleString()} vs ₹{detail.amountPaid.toLocaleString()})</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* Ledger transaction entries list */}
