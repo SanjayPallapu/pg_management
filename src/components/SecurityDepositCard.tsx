@@ -882,22 +882,7 @@ export const SecurityDepositCard = ({
                 </Button>
               </div>
             </div>
-            <div>
-              <Label>Collected By</Label>
-              <div className="flex gap-2 mt-2">
-                {collectors.map((collector) => (
-                  <Button
-                    key={collector.id}
-                    type="button"
-                    variant={depositCollectedBy === collector.id ? 'default' : 'outline'}
-                    className="flex-1"
-                    onClick={() => setDepositCollectedBy(collector.id)}
-                  >
-                    {collector.displayName}
-                  </Button>
-                ))}
-              </div>
-            </div>
+
             <div>
               <Label>Deposit Date</Label>
               <Popover>
