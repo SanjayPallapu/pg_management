@@ -276,29 +276,17 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           <div key={floor} className="space-y-2">
             <div className={`relative rounded-xl bg-gradient-to-r ${colorClass} border overflow-hidden`}>
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
-              <div className="p-4 pl-5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">{name}</h3>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === r.capacity).length} fully occupied,{' '}
-                    {roomsOnFloor.filter(r => {
-                      const c = occupiedCountForMonth(r);
-                      return c > 0 && c < r.capacity;
-                    }).length} partially occupied,{' '}
-                    {roomsOnFloor.filter(r => occupiedCountForMonth(r) === 0).length} vacant
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
-                    className="bg-background/60 backdrop-blur-sm flex items-center gap-1"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Add Room
-                  </Button>
-                </div>
+              <div className="p-3.5 pl-5 flex flex-col items-start gap-2">
+                <h3 className="font-semibold text-base sm:text-lg text-foreground">{name}</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
+                  className="bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-sm text-foreground text-xs font-semibold rounded-xl h-8 px-3.5 flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5 text-primary" />
+                  Add Room
+                </Button>
               </div>
             </div>
             
