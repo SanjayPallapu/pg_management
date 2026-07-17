@@ -396,7 +396,11 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
         </SheetContent>
       </Sheet>
 
-  <PaymentReminderDialog
+  {(() => {
+    const reminderRoom = reminderTenant ? rooms.find(r => r.roomNo === reminderTenant.roomNo) : null;
+    const reminderSharingType = reminderRoom ? `${reminderRoom.capacity} Sharing` : 'N/A';
+    return (
+      <PaymentReminderDialog
         open={reminderOpen}
         onOpenChange={setReminderOpen}
         reminderData={reminderTenant ? {
@@ -405,12 +409,14 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           joiningDate: reminderTenant.startDate || '',
           forMonth: activeTab === 'previous-month' ? `${monthNames[prevMonth - 1]} ${prevYear}` : `${monthNames[selectedMonth - 1]} ${selectedYear}`,
           roomNo: reminderTenant.roomNo || '',
-          sharingType: '',
+          sharingType: reminderSharingType,
           amount: reminderTenant.monthlyRent,
           amountPaid: reminderTenant.amountPaid || 0,
           balance: reminderTenant.monthlyRent - (reminderTenant.amountPaid || 0),
         } : null}
       />
+    );
+  })()}
     </>
   );
 });

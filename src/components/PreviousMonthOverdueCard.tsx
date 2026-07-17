@@ -378,13 +378,15 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
   };
   
   const handleOpenReminder = (tenant: StillPendingTenant) => {
+    const room = rooms.find(r => r.roomNo === tenant.roomNo);
+    const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
     setReminderData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
       joiningDate: tenant.startDate,
       forMonth: `${months[prevMonth - 1]} ${prevYear}`,
       roomNo: tenant.roomNo,
-      sharingType: '', // Not needed for reminder
+      sharingType: sharingType,
       amount: tenant.monthlyRent,
       amountPaid: tenant.amountPaid > 0 ? tenant.amountPaid : undefined,
       balance: tenant.remaining,
@@ -401,6 +403,8 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
   const handleOpenReceipt = (tenant: StillPendingTenant) => {
     if (tenant.paymentEntries.length === 0) return;
     const lastEntry = tenant.paymentEntries[tenant.paymentEntries.length - 1];
+    const room = rooms.find(r => r.roomNo === tenant.roomNo);
+    const sharingType = room ? `${room.capacity} Sharing` : 'N/A';
     setReceiptData({
       tenantName: tenant.name,
       tenantPhone: tenant.phone,
@@ -409,7 +413,7 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
       joiningDate: tenant.startDate,
       forMonth: `${months[prevMonth - 1]} ${prevYear}`,
       roomNo: tenant.roomNo,
-      sharingType: '',
+      sharingType: sharingType,
       amount: tenant.monthlyRent,
       amountPaid: tenant.amountPaid,
       isFullPayment: false,
