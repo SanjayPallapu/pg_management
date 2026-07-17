@@ -165,10 +165,10 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     <div className="space-y-3">
       <div>
         <div 
-          className="relative mb-3 w-full aspect-[1024/481] bg-cover bg-center bg-no-repeat"
+          className="relative mb-3 w-full aspect-[938/325] rounded-2xl border border-border/50 overflow-hidden bg-cover bg-center bg-no-repeat shadow-sm"
           style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
         >
-          <div className="absolute left-[4.5%] bottom-[5%] z-10">
+          <div className="absolute left-4 bottom-4 z-10">
             <Button
               variant="outline"
               size="sm"
