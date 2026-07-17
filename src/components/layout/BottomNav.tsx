@@ -3,18 +3,18 @@ import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Home,
-  Bed,
-  Receipt,
   Settings,
   Wallet,
 } from 'lucide-react';
 import { useActiveTab } from '@/contexts/ActiveTabContext';
 import { useRent } from '@/contexts/RentContext';
+import { BedDouble } from '../icons/BedDouble';
+import { ReceiptIndianRupee } from '../icons/ReceiptIndianRupee';
 
 const NAV_ITEMS = [
   { value: 'dashboard', label: 'Home', icon: Home, path: '/' },
-  { value: 'rooms', label: 'Rooms', icon: Bed, path: '/?tab=rooms' },
-  { value: 'rent-sheet', label: 'Rent', icon: Receipt, path: '/?tab=rent-sheet' },
+  { value: 'rooms', label: 'Rooms', icon: BedDouble, path: '/?tab=rooms' },
+  { value: 'rent-sheet', label: 'Rent', icon: ReceiptIndianRupee, path: '/?tab=rent-sheet' },
   { value: 'reconciliation', label: 'Payments', icon: Wallet, path: '/?tab=reconciliation' },
   { value: 'settings', label: 'Settings', icon: Settings, path: '/?tab=settings' },
 ];

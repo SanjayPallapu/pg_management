@@ -27,8 +27,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
   Home,
-  Bed,
-  Receipt,
   LogOut,
   History,
   CreditCard,
@@ -37,6 +35,8 @@ import {
   Settings,
   Wallet,
 } from "lucide-react";
+import { BedDouble } from "@/components/icons/BedDouble";
+import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
@@ -137,8 +137,8 @@ const Index = () => {
   const navItems = useMemo(
     () => [
       { value: "dashboard", label: "Home", icon: Home },
-      { value: "rooms", label: "Rooms", icon: Bed },
-      { value: "rent-sheet", label: "Rent", icon: Receipt },
+      { value: "rooms", label: "Rooms", icon: BedDouble },
+      { value: "rent-sheet", label: "Rent", icon: ReceiptIndianRupee },
       { value: "reconciliation", label: "Payments", icon: Wallet },
       { value: "settings", label: "Settings", icon: Settings },
     ],
