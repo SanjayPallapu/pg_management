@@ -118,6 +118,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   // Active sheet state for Swiggy-style icon grid
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  // Key to force remount TenantMovementCard each time it's opened
+  const [movementKey, setMovementKey] = useState(0);
 
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -548,7 +550,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC<br/>Bill</span>
           </div>
 
-          <div onClick={() => setActiveSheet("tenant-movement")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={() => { setMovementKey(k => k + 1); setActiveSheet("tenant-movement"); }} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-purple-500/10 p-2 rounded-full"><DoorOpen className="w-5 h-5 text-purple-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">In/Out</span>
           </div>
@@ -664,7 +666,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         <TenantPricingOverviewCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
       {activeSheet === "tenant-movement" && (
-        <TenantMovementCard rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
+        <TenantMovementCard key={movementKey} rooms={rooms} defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
 
       {/* Tool Sheets */}

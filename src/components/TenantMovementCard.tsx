@@ -114,7 +114,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
           <div className="flex flex-col h-full bg-background">
             <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setSheetOpen(false)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setSheetOpen(false); onClose?.(); }}>
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <SheetTitle className="text-base text-foreground font-bold text-left">
