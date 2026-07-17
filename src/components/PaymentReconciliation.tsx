@@ -535,13 +535,9 @@ export const PaymentReconciliation = ({
         <div>
           <div className="space-y-6">
             {/* Date Range Filter */}
-            <div className="flex items-center gap-2 bg-background p-1 flex-wrap">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-sm font-medium mr-1">
-                <Calendar className="h-4 w-4" />
-                <span>Date Range</span>
-              </div>
+            <div className="flex items-center gap-2 bg-background p-1 w-full justify-between sm:justify-start">
               <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
-                <SelectTrigger className="w-[140px] h-9 rounded-xl bg-background border border-input">
+                <SelectTrigger className="w-[130px] h-9 rounded-xl bg-background border border-input text-xs sm:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -561,7 +557,7 @@ export const PaymentReconciliation = ({
                 </span>
               </Button>
 
-              <Button onClick={handleExportExcel} className="ml-auto h-9 rounded-xl bg-[#6b5ce7] hover:bg-[#5849d4] text-white font-medium flex items-center gap-1.5 px-3.5">
+              <Button onClick={handleExportExcel} className="h-9 rounded-xl bg-[#6b5ce7] hover:bg-[#5849d4] text-white font-medium flex items-center gap-1.5 px-3 ml-auto text-xs sm:text-sm">
                 <Download className="h-4 w-4" />
                 <span>Export</span>
               </Button>
@@ -609,77 +605,6 @@ export const PaymentReconciliation = ({
               </div>
             )}
 
-            {/* Summary Overview */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-base text-foreground">Summary Overview</h3>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {/* Card 1: Rent Collected */}
-                <div className="bg-background border border-border/80 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground font-medium">Rent Collected</div>
-                    <div className="text-xl sm:text-2xl font-extrabold text-[#10b981]">
-                      ₹{reconciliationData.rentCollected.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {reconciliationData.paidCount} paid • {reconciliationData.partialCount} partial
-                    </div>
-                  </div>
-                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-[#10b981]">
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                </div>
-
-                {/* Card 2: Payment Entries Total */}
-                <div className="bg-background border border-border/80 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground font-medium">Payment Entries Total</div>
-                    <div className="text-xl sm:text-2xl font-extrabold text-foreground">
-                      ₹{reconciliationData.paymentModeTotal.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {reconciliationData.upiCount} UPI • {reconciliationData.cashCount} Cash
-                    </div>
-                  </div>
-                  <div className="h-10 w-10 rounded-xl bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-[#6b5ce7]">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Banner: Match status */}
-              <div className={`p-3.5 rounded-2xl flex items-center gap-3 border shadow-sm ${
-                reconciliationData.isMatching 
-                  ? 'bg-emerald-50/40 border-emerald-100 dark:bg-emerald-950/10 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
-                  : 'bg-destructive/5 border-destructive/10 text-destructive'
-              }`}>
-                {reconciliationData.isMatching ? (
-                  <>
-                    <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-[#10b981]">
-                      <Check className="h-4.5 w-4.5 font-bold" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-[#059669]">All payments match!</div>
-                      <div className="text-xs text-muted-foreground/90">Collected amount and entries are balanced.</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="h-7 w-7 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
-                      <AlertTriangle className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm">Payments Mismatch</div>
-                      <div className="text-xs text-muted-foreground/95">
-                        Difference: ₹{Math.abs(reconciliationData.difference).toLocaleString()} 
-                        {reconciliationData.difference > 0 ? ' (Rent > Entries)' : ' (Entries > Rent)'}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
             {/* Payment Distribution */}
             {reconciliationData.paymentModeTotal > 0 && (
               <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm flex items-center justify-between">
@@ -697,7 +622,7 @@ export const PaymentReconciliation = ({
                               : '0%'}
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()} ({reconciliationData.upiCount} UPI)</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
@@ -711,7 +636,7 @@ export const PaymentReconciliation = ({
                               : '0%'}
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()} ({reconciliationData.cashCount} Cash)</div>
                       </div>
                     </div>
                   </div>
