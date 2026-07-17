@@ -23,8 +23,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { TenantsByDueDaySheet } from './TenantsByDueDaySheet';
 
 interface PaymentReconciliationProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  standalone?: boolean;
 }
 
 const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)'];
@@ -33,8 +34,9 @@ const TREND_COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)', 'hsl(262, 83%,
 type DateRangeOption = 'current' | 'last3' | 'last6' | 'custom';
 
 export const PaymentReconciliation = ({
-  open,
-  onOpenChange
+  open = false,
+  onOpenChange,
+  standalone = false
 }: PaymentReconciliationProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
@@ -52,7 +54,7 @@ export const PaymentReconciliation = ({
   const [dueDaySheetOpen, setDueDaySheetOpen] = useState(false);
 
   // Handle OS back gesture to close sheet
-  useBackGesture(open, () => onOpenChange(false));
+  useBackGesture(!standalone && open, () => onOpenChange?.(false));
 
   const { rentCollected, paidTenants, partialTenants } = useRentCalculations({
     selectedMonth,
@@ -514,24 +516,23 @@ export const PaymentReconciliation = ({
       toast.error(error instanceof Error ? error.message : 'Failed to export Excel file');
     }
   };
-  return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="right" 
-        className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300" : "w-full sm:max-w-lg p-0"}
-      >
+  const renderContent = () => (
+    <>
+      {!standalone && (
         <SheetHeader className="pb-2 px-4 pt-4 border-b bg-background">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">
               Payment Reconciliation
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange?.(false)} className="h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>
+      )}
 
-        <div className="px-4 pb-4 mt-2">
-          <div>
+      <div className={standalone ? "" : "px-4 pb-4 mt-2"}>
+        <div>
           <div className="space-y-6">
             {/* Date Range Filter */}
             <div className="flex items-center gap-3 flex-wrap">
@@ -970,6 +971,23 @@ export const PaymentReconciliation = ({
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
         />
+    </>
+  );
+
+  if (standalone) {
+    return <div className="flex flex-col h-full bg-background overflow-y-auto px-4 pb-12">{renderContent()}</div>;
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent 
+        side="right" 
+        className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300 bg-background" : "w-full sm:max-w-lg p-0 bg-background"}
+      >
+        <div className="flex flex-col h-full overflow-y-auto pb-4">
+          {renderContent()}
+        </div>
       </SheetContent>
-    </Sheet>;
+    </Sheet>
+  );
 };

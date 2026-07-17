@@ -19,6 +19,7 @@ const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then
 const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").then(m => ({ default: m.AuditHistorySheet })));
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
+const PaymentReconciliation = lazy(() => import("@/components/PaymentReconciliation").then(m => ({ default: m.PaymentReconciliation })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { Room } from "@/types";
@@ -34,6 +35,7 @@ import {
   Loader2,
   Bell,
   Settings,
+  Wallet,
 } from "lucide-react";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,7 +119,7 @@ const Index = () => {
   const { isRefreshing, pullDistance, pullToRefreshHandlers, progress } = usePullToRefresh();
 
   // Tab order for swipe navigation
-  const tabOrder = ["dashboard", "rooms", "rent-sheet", "settings"];
+  const tabOrder = ["dashboard", "rooms", "rent-sheet", "reconciliation", "settings"];
   const { swipeHandlers } = useSwipeTabs({
     tabs: tabOrder,
     currentTab: activeTab,
@@ -137,6 +139,7 @@ const Index = () => {
       { value: "dashboard", label: "Home", icon: LayoutDashboard },
       { value: "rooms", label: "Rooms", icon: Building },
       { value: "rent-sheet", label: "Rent", icon: Receipt },
+      { value: "reconciliation", label: "Payments", icon: Wallet },
       { value: "settings", label: "Settings", icon: Settings },
     ],
     [],
@@ -364,6 +367,12 @@ const Index = () => {
             <TabsContent value="rent-sheet" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               <Suspense fallback={<RentSheetSkeleton />}>
                 {isLoading ? <RentSheetSkeleton /> : <MonthlyRentSheet rooms={rooms} />}
+              </Suspense>
+            </TabsContent>
+
+            <TabsContent value="reconciliation" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
+              <Suspense fallback={<RentSheetSkeleton />}>
+                <PaymentReconciliation standalone />
               </Suspense>
             </TabsContent>
 

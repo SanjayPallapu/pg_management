@@ -6,6 +6,7 @@ import {
   Building,
   Receipt,
   Settings,
+  Wallet,
 } from 'lucide-react';
 import { useActiveTab } from '@/contexts/ActiveTabContext';
 import { useRent } from '@/contexts/RentContext';
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { value: 'dashboard', label: 'Home', icon: LayoutDashboard, path: '/' },
   { value: 'rooms', label: 'Rooms', icon: Building, path: '/?tab=rooms' },
   { value: 'rent-sheet', label: 'Rent', icon: Receipt, path: '/?tab=rent-sheet' },
+  { value: 'reconciliation', label: 'Payments', icon: Wallet, path: '/?tab=reconciliation' },
   { value: 'settings', label: 'Settings', icon: Settings, path: '/?tab=settings' },
 ];
 
@@ -168,7 +170,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
             : 'translate-y-full'
         }`}
       >
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-0.5 rounded-2xl bg-muted/40 p-1">
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5 rounded-2xl bg-muted/40 p-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.value;
