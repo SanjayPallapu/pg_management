@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp, X, Search } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, Download, ChevronDown, ChevronRight, Calendar, TrendingUp, X, Search, Check, FileText, Wallet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -535,14 +535,14 @@ export const PaymentReconciliation = ({
         <div>
           <div className="space-y-6">
             {/* Date Range Filter */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Date Range:</span>
+            <div className="flex items-center gap-2 bg-background p-1 flex-wrap">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-sm font-medium mr-1">
+                <Calendar className="h-4 w-4" />
+                <span>Date Range</span>
               </div>
               <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
-                <SelectTrigger className="w-[160px] h-8">
-                  <SelectValue placeholder="Select range" />
+                <SelectTrigger className="w-[140px] h-9 rounded-xl bg-background border border-input">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="current">Current Month</SelectItem>
@@ -550,18 +550,21 @@ export const PaymentReconciliation = ({
                   <SelectItem value="last6">Last 6 Months</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-sm">
+              
+              <Button variant="outline" className="h-9 rounded-xl border-purple-200 bg-purple-50/30 text-purple-700 hover:bg-purple-50/60 font-medium text-xs sm:text-sm flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-purple-500" />
+                <span>
                   {dateRange === 'current' 
                     ? `${months[selectedMonth - 1]} ${selectedYear}`
                     : `${monthsShort[monthsToShow[0].month - 1]} ${monthsToShow[0].year} - ${monthsShort[monthsToShow[monthsToShow.length - 1].month - 1]} ${monthsToShow[monthsToShow.length - 1].year}`
                   }
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExportExcel} className="h-8">
-                  <Download className="h-4 w-4 mr-1" />
-                  Export
-                </Button>
-              </div>
+                </span>
+              </Button>
+
+              <Button onClick={handleExportExcel} className="ml-auto h-9 rounded-xl bg-[#6b5ce7] hover:bg-[#5849d4] text-white font-medium flex items-center gap-1.5 px-3.5">
+                <Download className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
             </div>
 
             {/* Month Trend Comparison - Only show for multi-month view */}
@@ -606,107 +609,190 @@ export const PaymentReconciliation = ({
               </div>
             )}
 
-            {/* Summary Comparison */}
+            {/* Summary Overview */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Summary Comparison</h3>
+              <h3 className="font-bold text-base text-foreground">Summary Overview</h3>
               
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-xs text-muted-foreground">Rent Collected</div>
-                  <div className="text-lg font-bold text-paid">₹{reconciliationData.rentCollected.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {reconciliationData.paidCount} paid + {reconciliationData.partialCount} partial
+                {/* Card 1: Rent Collected */}
+                <div className="bg-background border border-border/80 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground font-medium">Rent Collected</div>
+                    <div className="text-xl sm:text-2xl font-extrabold text-[#10b981]">
+                      ₹{reconciliationData.rentCollected.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {reconciliationData.paidCount} paid • {reconciliationData.partialCount} partial
+                    </div>
+                  </div>
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-[#10b981]">
+                    <Wallet className="h-5 w-5" />
                   </div>
                 </div>
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-xs text-muted-foreground">Payment Entries Total</div>
-                  <div className="text-lg font-bold">₹{reconciliationData.paymentModeTotal.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {reconciliationData.upiCount} UPI + {reconciliationData.cashCount} Cash
+
+                {/* Card 2: Payment Entries Total */}
+                <div className="bg-background border border-border/80 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground font-medium">Payment Entries Total</div>
+                    <div className="text-xl sm:text-2xl font-extrabold text-foreground">
+                      ₹{reconciliationData.paymentModeTotal.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {reconciliationData.upiCount} UPI • {reconciliationData.cashCount} Cash
+                    </div>
+                  </div>
+                  <div className="h-10 w-10 rounded-xl bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-[#6b5ce7]">
+                    <FileText className="h-5 w-5" />
                   </div>
                 </div>
               </div>
 
-              {/* Match Status */}
-              <div className={`p-3 rounded-lg flex items-center gap-2 ${reconciliationData.isMatching ? 'bg-paid/10 text-paid' : 'bg-destructive/10 text-destructive'}`}>
-                {reconciliationData.isMatching ? <>
-                    <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">All payments match!</span>
-                  </> : <>
-                    <AlertTriangle className="h-5 w-5" />
-                    <span className="font-medium">
-                      Difference: ₹{Math.abs(reconciliationData.difference).toLocaleString()}
-                      {reconciliationData.difference > 0 ? ' (Rent > Entries)' : ' (Entries > Rent)'}
-                    </span>
-                  </>}
+              {/* Banner: Match status */}
+              <div className={`p-3.5 rounded-2xl flex items-center gap-3 border shadow-sm ${
+                reconciliationData.isMatching 
+                  ? 'bg-emerald-50/40 border-emerald-100 dark:bg-emerald-950/10 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
+                  : 'bg-destructive/5 border-destructive/10 text-destructive'
+              }`}>
+                {reconciliationData.isMatching ? (
+                  <>
+                    <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-[#10b981]">
+                      <Check className="h-4.5 w-4.5 font-bold" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-[#059669]">All payments match!</div>
+                      <div className="text-xs text-muted-foreground/90">Collected amount and entries are balanced.</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-7 w-7 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <AlertTriangle className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm">Payments Mismatch</div>
+                      <div className="text-xs text-muted-foreground/95">
+                        Difference: ₹{Math.abs(reconciliationData.difference).toLocaleString()} 
+                        {reconciliationData.difference > 0 ? ' (Rent > Entries)' : ' (Entries > Rent)'}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-
-              {/* Explanation */}
-              {!reconciliationData.isMatching && <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded">
-                  <strong>Why mismatch?</strong> Rent Collected uses <code>monthlyRent</code> for fully paid tenants, 
-                  while Payment Entries sums actual amounts. Overpayments or corrections can cause differences.
-                </div>}
             </div>
 
-            {/* Payment Distribution Charts */}
-            {reconciliationData.paymentModeTotal > 0 && <div className="space-y-3">
-                <h3 className="font-semibold text-sm">Payment Distribution</h3>
-                
-                {/* Pie Chart */}
-                <div className="h-48 bg-muted/30 rounded-lg p-2">
+            {/* Payment Distribution */}
+            {reconciliationData.paymentModeTotal > 0 && (
+              <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm text-foreground">Payment Distribution</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 rounded-full bg-blue-500 mt-1" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">UPI Payments</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {reconciliationData.paymentModeTotal > 0 
+                              ? `${Math.round((reconciliationData.upiTotal / reconciliationData.paymentModeTotal) * 100)}%` 
+                              : '0%'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 rounded-full bg-[#10b981] mt-1" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">Cash Payments</span>
+                          <span className="text-sm font-bold text-[#10b981]">
+                            {reconciliationData.paymentModeTotal > 0 
+                              ? `${Math.round((reconciliationData.cashTotal / reconciliationData.paymentModeTotal) * 100)}%` 
+                              : '0%'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative h-36 w-36">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieChartData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value" label={({
-                    name,
-                    percent
-                  }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                        {pieChartData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                      <Pie 
+                        data={pieChartData} 
+                        cx="50%" 
+                        cy="50%" 
+                        innerRadius={38} 
+                        outerRadius={54} 
+                        paddingAngle={3} 
+                        dataKey="value"
+                      >
+                        {pieChartData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : '#10b981'} />
+                        ))}
                       </Pie>
-                      <Tooltip formatter={(value: number, name: string, props: any) => {
-                        const color = name === 'UPI' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
-                        return [<span style={{ color }}>{`₹${value.toLocaleString()} (${props.payload.count} txns)`}</span>, <span style={{ color }}>{name}</span>];
-                      }} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151' }} />
-                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span className="text-sm font-extrabold text-foreground">₹{reconciliationData.paymentModeTotal.toLocaleString()}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</span>
+                  </div>
                 </div>
-              </div>}
+              </div>
+            )}
 
             {/* Daily Payment Timeline */}
-            {reconciliationData.paymentModeTotal > 0 && <div className="space-y-3">
-                <h3 className="font-semibold text-sm">Daily Payment Timeline</h3>
-                <div className="h-40 bg-muted/30 rounded-lg p-2">
+            {reconciliationData.paymentModeTotal > 0 && (
+              <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-foreground">Daily Payment Timeline</h3>
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-blue-500" />
+                      <span className="text-muted-foreground">UPI</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+                      <span className="text-muted-foreground">Cash</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="h-44 bg-transparent p-0">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dailyTimelineData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" tick={{
-                    fontSize: 10
-                  }} tickFormatter={day => day} interval="preserveStartEnd" />
-                      <YAxis tick={{
-                    fontSize: 10
-                  }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={35} />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (!active || !payload) return null;
-                        return (
-                          <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '8px 12px', borderRadius: '6px' }}>
-                            <p style={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}>Day {label}</p>
-                            {payload.map((entry: any) => (
-                              <p key={entry.name} style={{ color: entry.name === 'upi' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)', margin: '2px 0' }}>
-                                {entry.name === 'upi' ? 'UPI' : 'Cash'} : ₹{entry.value.toLocaleString()}
-                              </p>
-                            ))}
-                          </div>
-                        );
-                      }} />
-                      <Area type="monotone" dataKey="upi" stackId="1" stroke="hsl(217, 91%, 60%)" fill="hsl(217, 91%, 60%)" fillOpacity={0.6} name="upi" />
-                      <Area type="monotone" dataKey="cash" stackId="1" stroke="hsl(142, 71%, 45%)" fill="hsl(142, 71%, 45%)" fillOpacity={0.6} name="cash" />
-                      <Legend formatter={value => value === 'upi' ? 'UPI' : 'Cash'} wrapperStyle={{
-                    fontSize: 10
-                  }} />
-                    </AreaChart>
+                    <BarChart data={dailyTimelineData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                      <XAxis dataKey="day" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 9 }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={28} tickLine={false} axisLine={false} />
+                      <Tooltip 
+                        cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload || !payload.length) return null;
+                          const totalVal = payload.reduce((sum, entry) => sum + (entry.value as number), 0);
+                          return (
+                            <div className="bg-background border border-border px-2.5 py-1.5 rounded-xl shadow-md text-xs">
+                              <p className="font-bold text-muted-foreground mb-1">{label} Jul</p>
+                              {payload.map((entry: any) => (
+                                <p key={entry.name} className="font-semibold" style={{ color: entry.name === 'upi' ? '#3b82f6' : '#10b981' }}>
+                                  {entry.name === 'upi' ? 'UPI' : 'Cash'}: ₹{entry.value.toLocaleString()}
+                                </p>
+                              ))}
+                              <div className="border-t border-border mt-1 pt-1 font-bold text-foreground">
+                                Total: ₹{totalVal.toLocaleString()}
+                              </div>
+                            </div>
+                          );
+                        }} 
+                      />
+                      <Bar dataKey="upi" stackId="a" fill="#3b82f6" name="upi" />
+                      <Bar dataKey="cash" stackId="a" fill="#10b981" radius={[3, 3, 0, 0]} name="cash" />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </div>}
+              </div>
+            )}
 
 
 
