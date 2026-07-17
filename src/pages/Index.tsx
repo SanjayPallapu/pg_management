@@ -48,7 +48,7 @@ import {
   Bell,
   Settings,
   Wallet,
-  MoreVertical,
+  Menu,
   User,
   Moon,
   Sun,
@@ -302,28 +302,28 @@ const Index = () => {
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-3 py-2 sm:px-4">
-          {/* Left: Hostel logo / Switcher */}
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-3 py-1 sm:px-4">
+          {/* Left: Hostel logo / Switcher, Month Picker, and PG details */}
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <PGSwitcher />
+            <MonthYearPicker />
             <div className="min-w-0 hidden sm:block">
-              <h1 className="truncate text-xs font-bold leading-tight text-muted-foreground uppercase tracking-wider">
-                {currentPG?.name || "PG Management"}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="truncate text-sm font-bold leading-tight sm:text-base">
+                  {currentPG?.name || "PG Management"}
+                </h1>
+                <NetworkStatusIndicator />
+              </div>
+              <p className="truncate text-xs text-muted-foreground">{activeNavItem.label} · {selectedMonth}/{selectedYear}</p>
             </div>
           </div>
 
-          {/* Center: Month Selector */}
-          <div className="flex justify-center flex-1 max-w-xs mx-auto">
-            <MonthYearPicker />
-          </div>
-
-          {/* Right: More menu ⋮ */}
+          {/* Right: Hamburger menu button with uploaded icon type */}
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted/50">
-                  <MoreVertical className="h-5 w-5 text-foreground" />
+                  <Menu className="h-5 w-5 text-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 mt-1 p-1 bg-background border border-border shadow-lg rounded-xl">

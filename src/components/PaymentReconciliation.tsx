@@ -670,24 +670,6 @@ export const PaymentReconciliation = ({
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-
-                {/* Bar Chart */}
-                <div className="h-32 bg-muted/30 rounded-lg p-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barChartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
-                      <YAxis type="category" dataKey="name" width={40} />
-                      <Tooltip formatter={(value: number, name: string, props: any) => {
-                        const color = props.payload.name === 'UPI' ? 'hsl(217, 91%, 60%)' : 'hsl(142, 71%, 45%)';
-                        return [<span style={{ color }}>{`₹${value.toLocaleString()}`}</span>, <span style={{ color }}>{props.payload.name}</span>];
-                      }} contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }} labelStyle={{ color: '#374151' }} />
-                      <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
-                        {barChartData.map((_, index) => <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
               </div>}
 
             {/* Daily Payment Timeline */}
@@ -726,21 +708,7 @@ export const PaymentReconciliation = ({
                 </div>
               </div>}
 
-             <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Payment Mode Breakdown</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 border rounded-lg">
-                  <div className="text-xs text-muted-foreground">UPI Payments</div>
-                  <div className="text-lg font-bold">₹{reconciliationData.upiTotal.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{reconciliationData.upiCount} transactions</div>
-                </div>
-                <div className="p-3 border rounded-lg">
-                  <div className="text-xs text-muted-foreground">Cash Payments</div>
-                  <div className="text-lg font-bold">₹{reconciliationData.cashTotal.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{reconciliationData.cashCount} transactions</div>
-                </div>
-              </div>
-            </div>
+
 
             {/* Individual Payment Details */}
             <div className="space-y-3">
