@@ -96,7 +96,9 @@ export const useRooms = () => {
           securityDepositDate: tenant.security_deposit_date,
           securityDepositMode: tenant.security_deposit_mode,
           securityDepositCollectedBy:
-            (tenant as any).security_deposit_collected_by || depositCollectedByCache[tenant.id] || null,
+            (tenant as any).security_deposit_collected_by !== undefined
+              ? (tenant as any).security_deposit_collected_by
+              : (depositCollectedByCache[tenant.id] || null),
           isLocked: (tenant as any).is_locked || false,
         })),
       })) as Room[];
