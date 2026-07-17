@@ -8,7 +8,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.7.2'
         classpath 'com.google.gms:google-services:4.4.2'
-        // Add Kotlin plugin to the buildscript classpath to ensure we can configure its tasks
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25"
     }
 }
@@ -22,37 +21,48 @@ allprojects {
     }
 }
 
-// Force Java 17 and Kotlin JVM target 17 across all modules
+// Global performance and compatibility optimization for all sub-projects
 subprojects {
+    // Apply JVM Toolchain to ensure both Java and Kotlin use JDK 17
+    // This resolves "Inconsistent JVM-target" by forcing a single version globally.
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
-            android {
+            project.android {
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
                 
-                // If it's a Kotlin project, force the JVM target
-                if (project.plugins.hasPlugin('kotlin-android')) {
+                // Force Kotlin inside the android block
+                if (project.plugins.hasPlugin('kotlin-android') || project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
                     kotlinOptions {
-                        jvmTarget = "17"
+                        jvmTarget = '17'
                     }
                 }
             }
         }
-        
-        // Alternative way to force Kotlin JVM target for all compile tasks
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+
+        // Force Toolchain 17 for all modules that support it
+        if (project.plugins.hasPlugin('java') || project.plugins.hasPlugin('java-library') ||
+            project.plugins.hasPlugin('kotlin') || project.plugins.hasPlugin('kotlin-android') || 
+            project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+            
+            project.extensions.findByType(org.gradle.api.plugins.JavaPluginExtension)?.toolchain {
+                languageVersion = JavaLanguageVersion.of(17)
+            }
+        }
+
+        // Catch-all: Explicitly set jvmTarget for any Kotlin compilation task
+        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
             kotlinOptions {
                 jvmTarget = "17"
             }
         }
-
-        // Force Toolchain to Java 17 to bypass Java 21 requirement errors from some plugins
-        if (project.plugins.hasPlugin('java') || project.plugins.hasPlugin('java-library')) {
-            project.extensions.getByType(JavaPluginExtension).toolchain {
-                languageVersion = JavaLanguageVersion.of(17)
-            }
+        
+        // Catch-all: Explicitly set compatibility for any Java compilation task
+        project.tasks.withType(JavaCompile).configureEach {
+            sourceCompatibility = '17'
+            targetCompatibility = '17'
         }
     }
 }

@@ -197,7 +197,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             <span>Floors</span>
           </Button>
         </div>
-        <div className="mt-2 flex items-center gap-1 sm:gap-2 w-full">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
           <Button
             size="sm"
             variant={acFilter === 'all' ? 'default' : 'outline'}

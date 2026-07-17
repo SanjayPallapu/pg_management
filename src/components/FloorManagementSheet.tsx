@@ -112,7 +112,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
       if (error) throw error;
       
       await refreshPGs();
-      await queryClient.refetchQueries({ queryKey: ['rooms'] });
+      await queryClient.invalidateQueries({ queryKey: ['rooms'] });
       onFloorNamesUpdated?.();
       
     } catch (err) {
@@ -148,7 +148,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
         if (error) throw error;
         
         await refreshPGs();
-        await queryClient.refetchQueries({ queryKey: ['rooms'] });
+        await queryClient.invalidateQueries({ queryKey: ['rooms'] });
         onFloorNamesUpdated?.();
       }
     } catch (err) {
@@ -165,7 +165,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
       const { error } = await supabase.from("rooms").delete().eq("id", roomId);
       if (error) throw error;
       toast.success("Room deleted successfully");
-      await queryClient.refetchQueries({ queryKey: ["rooms"] });
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
     } catch (err) {
       console.error("Error deleting room:", err);
       toast.error("Failed to delete room");
@@ -180,7 +180,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
         .eq("id", roomId);
       if (error) throw error;
       toast.success("Room renamed successfully");
-      await queryClient.refetchQueries({ queryKey: ["rooms"] });
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
       setEditingRoomId(null);
     } catch (err) {
       console.error("Error renaming room:", err);
@@ -198,8 +198,8 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="px-1.5 sm:px-6 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
-          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-1.5">
+        <SheetContent className="px-4 sm:px-6 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
+          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-2 sm:px-0">
             <Button
               variant="ghost"
               size="icon"
@@ -208,13 +208,13 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <SheetTitle className="flex items-center gap-1.5 text-base font-semibold">
-              Manage Floors
-              <Settings2 className="h-4 w-4 text-primary ml-0.5" />
+            <SheetTitle className="flex items-center justify-between text-base font-semibold flex-1">
+              <span>Manage Floors</span>
+              <Settings2 className="h-4 w-4 text-primary" />
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-1.5">
+          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-2 sm:px-0 pb-6">
             {allFloors.map(floor => {
               const stats = getFloorStats(floor);
               const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
@@ -277,7 +277,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                           onClick={() => setAddRoomsFloor(floor)}
                           className="h-6 px-1.5 text-[10px] text-primary hover:bg-primary/5 gap-0.5"
                         >
-                          <Plus className="h-3 w-3" /> Add Room
+                          <Settings2 className="h-3 w-3 text-primary" /> Add Room
                         </Button>
                       </div>
 
@@ -374,7 +374,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                           setEditingName(displayName);
                         }}
                       >
-                        <Edit2 className="h-3 w-3" />
+                        <Settings2 className="h-4 w-4" />
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
