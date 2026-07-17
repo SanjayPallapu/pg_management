@@ -274,9 +274,12 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
         return (
           <div key={floor} className="space-y-2">
-            <div className={`relative rounded-xl bg-gradient-to-r ${colorClass} border overflow-hidden`}>
+            <div 
+              className="relative rounded-xl border border-border/40 overflow-hidden bg-cover bg-center bg-no-repeat shadow-sm"
+              style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
+            >
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
-              <div className="p-3.5 pl-5 flex flex-col items-start gap-2">
+              <div className="p-3.5 pl-5 flex flex-col items-start gap-2 bg-background/5 backdrop-blur-[2px]">
                 <h3 className="font-semibold text-base sm:text-lg text-foreground">{name}</h3>
                 <Button
                   variant="outline"
