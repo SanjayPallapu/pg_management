@@ -165,17 +165,17 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     <div className="space-y-3">
       <div>
         <div 
-          className="relative mb-3 bg-contain bg-right bg-no-repeat bg-[#ECE9FC] dark:bg-[#1E1B4B] min-h-[145px] flex items-center justify-start rounded-2xl border border-border/50 overflow-hidden p-5 shadow-sm"
+          className="relative mb-3 w-full aspect-[1024/481] rounded-2xl border border-border/50 overflow-hidden bg-cover bg-center bg-no-repeat shadow-sm"
           style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
         >
-          <div className="relative z-10 flex items-center">
+          <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 z-10">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setFloorManagementOpen(true)}
-              className="flex items-center gap-1.5 bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-md text-foreground text-xs sm:text-sm font-semibold rounded-xl h-9 px-4.5"
+              className="flex items-center gap-1.5 bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-md text-foreground text-xs sm:text-sm font-semibold rounded-xl h-8 sm:h-9 px-3.5 sm:px-4.5"
             >
-              <Settings2 className="h-4 w-4 text-primary" />
+              <Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               Manage Floors
             </Button>
           </div>
