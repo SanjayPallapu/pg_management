@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Trash2, Edit2, Plus, Building2, ArrowLeft, Check, X } from 'lucide-react';
+import { Loader2, Trash2, Edit2, Plus, Settings2, ArrowLeft, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { usePG } from '@/contexts/PGContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -62,6 +62,10 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
   // Floor edit state
   const [editingFloor, setEditingFloor] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+
+  // Room edit state
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  const [editingRoomNo, setEditingRoomNo] = useState<string>('');
 
   type DeleteFlow = {
     floor: number;
@@ -146,7 +150,6 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
         await refreshPGs();
         await queryClient.refetchQueries({ queryKey: ['rooms'] });
         onFloorNamesUpdated?.();
-        
       }
     } catch (err) {
       console.error('Error deleting floor:', err);
@@ -154,6 +157,34 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
     } finally {
       setDeletingFloor(null);
       setDeleteFlow(null);
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+      if (error) throw error;
+      toast.success("Room deleted successfully");
+      await queryClient.refetchQueries({ queryKey: ["rooms"] });
+    } catch (err) {
+      console.error("Error deleting room:", err);
+      toast.error("Failed to delete room");
+    }
+  };
+
+  const handleRenameRoom = async (roomId: string, roomNo: string) => {
+    try {
+      const { error } = await supabase
+        .from("rooms")
+        .update({ room_no: roomNo.trim() })
+        .eq("id", roomId);
+      if (error) throw error;
+      toast.success("Room renamed successfully");
+      await queryClient.refetchQueries({ queryKey: ["rooms"] });
+      setEditingRoomId(null);
+    } catch (err) {
+      console.error("Error renaming room:", err);
+      toast.error("Failed to rename room");
     }
   };
 
@@ -178,8 +209,8 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <SheetTitle className="flex items-center gap-1.5 text-base font-semibold">
-              <Building2 className="h-4 w-4 text-primary" />
               Manage Floors
+              <Settings2 className="h-4 w-4 text-primary ml-0.5" />
             </SheetTitle>
           </SheetHeader>
 
@@ -199,7 +230,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                 return (
                   <div
                     key={floor}
-                    className="flex flex-col gap-2 p-3.5 border rounded-xl bg-card border-primary/20 shadow-sm transition-all duration-300"
+                    className="flex flex-col gap-3 p-3.5 border rounded-xl bg-card border-primary/20 shadow-sm transition-all duration-300"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <Input
@@ -234,6 +265,93 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
+                    </div>
+
+                    {/* Rooms management */}
+                    <div className="pt-2 border-t border-border/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Rooms on floor</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setAddRoomsFloor(floor)}
+                          className="h-6 px-1.5 text-[10px] text-primary hover:bg-primary/5 gap-0.5"
+                        >
+                          <Plus className="h-3 w-3" /> Add Room
+                        </Button>
+                      </div>
+
+                      {roomsOnFloor.length > 0 ? (
+                        <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-1">
+                          {roomsOnFloor.map(room => {
+                            const isEditingRoom = editingRoomId === room.id;
+                            if (isEditingRoom) {
+                              return (
+                                <div key={room.id} className="flex items-center justify-between gap-1.5 p-1 px-2 rounded-lg border border-primary/20 bg-muted/20">
+                                  <Input
+                                    value={editingRoomNo}
+                                    onChange={(e) => setEditingRoomNo(e.target.value)}
+                                    className="h-7 text-xs font-semibold px-1.5 w-24"
+                                    placeholder="Room No"
+                                    autoFocus
+                                  />
+                                  <div className="flex items-center gap-0.5">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 w-7 p-0 text-emerald-500 hover:text-emerald-600 rounded-md"
+                                      onClick={() => handleRenameRoom(room.id, editingRoomNo)}
+                                    >
+                                      <Check className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground rounded-md"
+                                      onClick={() => setEditingRoomId(null)}
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={room.id} className="flex items-center justify-between p-1 px-2 rounded-lg border border-border bg-muted/10 text-xs">
+                                <span className="font-semibold text-foreground">Room {room.roomNo}</span>
+                                <div className="flex items-center gap-0.5">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary rounded-md"
+                                    onClick={() => {
+                                      setEditingRoomId(room.id);
+                                      setEditingRoomNo(room.roomNo);
+                                    }}
+                                  >
+                                    <Edit2 className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive rounded-md"
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to delete Room ${room.roomNo}?`)) {
+                                        handleDeleteRoom(room.id);
+                                      }
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic">No rooms created yet.</p>
+                      )}
                     </div>
                   </div>
                 );

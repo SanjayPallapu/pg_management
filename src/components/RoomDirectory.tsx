@@ -283,14 +283,14 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             >
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
               <div className="relative z-10 p-3.5 pl-5 flex flex-col items-start gap-2">
-                <h3 className="font-semibold text-base sm:text-lg text-foreground">{name}</h3>
+                <h3 className="font-semibold text-base sm:text-lg text-black">{name}</h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); openAddRoomsDialog(floor); }}
                   className="bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-sm text-foreground text-xs font-semibold rounded-xl h-8 px-3.5 flex items-center gap-1.5"
                 >
-                  <Plus className="h-3.5 w-3.5 text-primary" />
+                  <Settings2 className="h-3.5 w-3.5 text-primary" />
                   Add Room
                 </Button>
               </div>
@@ -313,7 +313,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                 <div className="text-center py-8 border-2 border-dashed border-muted-foreground/30 rounded-lg">
                   <p className="text-muted-foreground mb-3">No rooms on this floor yet</p>
                   <Button variant="outline" onClick={() => openAddRoomsDialog(floor)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Settings2 className="h-4 w-4 mr-2 text-primary" />
                     Add Rooms ({floor}01 - {floor}09)
                   </Button>
                 </div>
