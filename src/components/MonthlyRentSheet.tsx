@@ -83,7 +83,7 @@ import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
 import { ACBillTemplate, type ACBillData } from "./ACBillTemplate";
-import { isTenantActiveInMonth, parseDateOnly, hasTenantLeftNow } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, parseDateOnly, hasTenantLeftNow, getISTTodayOnly } from "@/utils/dateOnly";
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
@@ -449,11 +449,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       const payment = rentRecords.find(
         (p) => p.tenantId === tenant.id,
       );
-      const joinDate = new Date(tenant.startDate);
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentYear = currentDate.getFullYear();
-      const today = new Date();
+      const joinDate = parseDateOnly(tenant.startDate);
+      const today = getISTTodayOnly();
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
       const todayDate = today.getDate();
       const isPastMonth = selectedYear < currentYear || (selectedYear === currentYear && selectedMonth < currentMonth);
       const isFutureMonth =

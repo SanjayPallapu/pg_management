@@ -72,9 +72,9 @@ All colors MUST be HSL.
     --not-due-foreground: 210 40% 98%;
     --not-due-muted: 217 91% 95%;
     
-    --advance-not-paid: 280 68% 50%;
+    --advance-not-paid: 0 84% 60%;
     --advance-not-paid-foreground: 355 7% 97%;
-    --advance-not-paid-muted: 280 68% 95%;
+    --advance-not-paid-muted: 0 84% 95%;
 
     --partial: 30 90% 55%;
     --partial-foreground: 0 0% 100%;
@@ -169,9 +169,9 @@ All colors MUST be HSL.
     --not-due-foreground: 217 91% 95%;
     --not-due-muted: 217 40% 20%;
     
-    --advance-not-paid: 280 60% 45%;
-    --advance-not-paid-foreground: 280 68% 95%;
-    --advance-not-paid-muted: 280 40% 18%;
+    --advance-not-paid: 0 70% 45%;
+    --advance-not-paid-foreground: 0 93% 94%;
+    --advance-not-paid-muted: 0 40% 18%;
 
     --partial: 30 80% 50%;
     --partial-foreground: 0 0% 100%;

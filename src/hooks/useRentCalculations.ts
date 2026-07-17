@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Room, Tenant, TenantPayment } from '@/types';
-import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, parseDateOnly, getISTTodayOnly } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
 
 export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
@@ -43,9 +43,9 @@ export const useRentCalculations = ({
   payments,
 }: UseRentCalculationsProps): RentCalculationsResult => {
   return useMemo(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
+    const todayIST = getISTTodayOnly();
+    const currentMonth = todayIST.getMonth() + 1;
+    const currentYear = todayIST.getFullYear();
 
     // Get all tenants active in the selected month (including left tenants for collection totals)
     const allActiveTenants: TenantWithPayment[] = rooms.flatMap(room =>
@@ -59,10 +59,10 @@ export const useRentCalculations = ({
             p => p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
           );
 
-          const joinDate = new Date(tenant.startDate);
+          const joinDate = parseDateOnly(tenant.startDate);
           const hasLeftNow = hasTenantLeftNow(tenant.endDate);
 
-          const today = new Date();
+          const today = getISTTodayOnly();
           const todayDate = today.getDate();
           
           // Month comparison
