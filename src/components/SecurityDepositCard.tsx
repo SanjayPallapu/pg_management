@@ -867,18 +867,16 @@ export const SecurityDepositCard = ({
                 <Button
                   type="button"
                   variant={depositMode === 'upi' ? 'default' : 'outline'}
-                  className="flex-1 text-muted-foreground cursor-not-allowed"
+                  className="flex-1"
                   onClick={() => setDepositMode('upi')}
-                  disabled
                 >
                   UPI/Online
                 </Button>
                 <Button
                   type="button"
                   variant={depositMode === 'cash' ? 'default' : 'outline'}
-                  className="flex-1 text-muted-foreground cursor-not-allowed"
+                  className="flex-1"
                   onClick={() => setDepositMode('cash')}
-                  disabled
                 >
                   Cash
                 </Button>
@@ -892,10 +890,9 @@ export const SecurityDepositCard = ({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal mt-2 opacity-60 cursor-not-allowed",
+                      "w-full justify-start text-left font-normal mt-2",
                       !depositDate && "text-muted-foreground"
                     )}
-                    disabled
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {depositDate ? format(depositDate, "PPP") : <span>Pick a date</span>}
