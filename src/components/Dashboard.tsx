@@ -331,7 +331,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     {
       id: "receipts-instantly",
       image: bannerReceiptsInstantly,
-      action: () => setActiveSheet("all-collected"),
+      action: () => onNavigateToRent?.(),
       badge: "Payment History",
       badgeColor: "bg-teal-600 dark:bg-teal-500",
     },
@@ -359,7 +359,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     {
       id: "everything-one-place",
       image: bannerEverythingOnePlace,
-      action: () => setTenantsOpen(true),
+      action: undefined,
       badge: "PG Manager",
       badgeColor: "bg-purple-600 dark:bg-purple-500",
     }
@@ -380,7 +380,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className="relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] md:h-[260px] md:aspect-auto shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center"
+                className={`relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] md:h-[260px] md:aspect-auto shadow-sm hover:shadow-md transition-all duration-200 bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center ${banner.action ? 'cursor-pointer active:scale-[0.99]' : ''}`}
               >
                 <img 
                   src={banner.image} 
