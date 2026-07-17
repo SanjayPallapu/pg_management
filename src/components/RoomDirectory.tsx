@@ -165,30 +165,32 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     <div className="space-y-3">
       <div>
         <div 
-          className="relative mb-3 rounded-2xl border border-border/50 overflow-hidden bg-cover bg-right bg-no-repeat min-h-[145px] flex items-center shadow-sm"
+          className="relative mb-3 bg-cover bg-right bg-no-repeat min-h-[145px] flex items-center justify-center shadow-sm w-[calc(100%+24px)] mx-[-12px] sm:w-full sm:mx-0 rounded-none sm:rounded-2xl border-x-0 sm:border border-border/50 overflow-hidden"
           style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
         >
-          {/* A soft dark/light overlay gradient to guarantee readable text contrast on both dark and light modes */}
-          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-transparent w-full md:w-2/3" />
+          {/* A soft dark overlay to ensure buttons pop and stand out clearly */}
+          <div className="absolute inset-0 bg-black/15 dark:bg-black/35" />
           
-          <div className="relative z-10 p-5 w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-1">
-              <h2 className="font-extrabold tracking-tight text-xl text-foreground">Room Directory</h2>
-              <p className="text-sm font-medium text-muted-foreground max-w-sm">
-                Overview of all rooms organized by floor
-              </p>
-            </div>
-            <div className="shrink-0 flex">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFloorManagementOpen(true)}
-                className="flex items-center gap-1.5 bg-background/80 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-sm text-foreground text-xs font-semibold rounded-xl h-9 px-4"
-              >
-                <Settings2 className="h-4 w-4 text-primary" />
-                Manage Floors
-              </Button>
-            </div>
+          <div className="relative z-10 p-5 flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFloorManagementOpen(true)}
+              className="flex items-center gap-1.5 bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-md text-foreground text-xs sm:text-sm font-semibold rounded-xl h-9 px-4.5"
+            >
+              <Settings2 className="h-4 w-4 text-primary" />
+              Manage Floors
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openAddRoomsDialog(1)}
+              className="flex items-center gap-1.5 bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-md text-foreground text-xs sm:text-sm font-semibold rounded-xl h-9 px-4.5"
+            >
+              <Plus className="h-4 w-4 text-primary" />
+              Add Floors
+            </Button>
           </div>
         </div>
         <div className="relative">
