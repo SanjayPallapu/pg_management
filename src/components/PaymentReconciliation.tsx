@@ -722,10 +722,10 @@ export const PaymentReconciliation = ({
 
             {/* Individual Payment Details */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-4">
                   <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
                       Expand All
                     </Button>
@@ -734,7 +734,7 @@ export const PaymentReconciliation = ({
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
                     <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
                     <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
@@ -757,7 +757,11 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className="border border-border/60 bg-card rounded-xl overflow-hidden shadow-sm transition-all hover:shadow">
+                      <div className={`border border-border/60 bg-card rounded-xl overflow-hidden shadow-sm transition-all hover:shadow border-l-4 ${
+                        detail.status === 'Paid' 
+                          ? 'border-l-emerald-500 dark:border-l-emerald-600' 
+                          : 'border-l-amber-500 dark:border-l-amber-600'
+                      }`}>
                         <CollapsibleTrigger asChild>
                           <div className="p-2.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
                             <div className="flex items-center gap-3 min-w-0">
