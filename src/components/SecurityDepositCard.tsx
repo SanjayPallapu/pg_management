@@ -372,8 +372,15 @@ export const SecurityDepositCard = ({
         securityDepositAmount: depositAmount,
         securityDepositDate: format(depositDate, 'yyyy-MM-dd'),
         securityDepositMode: depositMode,
-        securityDepositCollectedBy: depositCollectedBy,
+        securityDepositCollectedBy: null,
       }, editDialog.name);
+      
+      const cache = readDepositCollectedByCache();
+      if (cache[editDialog.id]) {
+        delete cache[editDialog.id];
+        writeDepositCollectedByCache(cache);
+      }
+
       setEditDialog(null);
       setDepositAmount(5000);
       setDepositDate(new Date());
