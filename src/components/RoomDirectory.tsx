@@ -165,7 +165,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     <div className="space-y-3">
       <div>
         <div 
-          className="relative mb-3 bg-cover bg-right bg-no-repeat min-h-[145px] flex items-center justify-start rounded-2xl border border-border/50 overflow-hidden p-5 shadow-sm"
+          className="relative mb-3 bg-contain bg-right bg-no-repeat bg-[#ECE9FC] dark:bg-[#1E1B4B] min-h-[145px] flex items-center justify-start rounded-2xl border border-border/50 overflow-hidden p-5 shadow-sm"
           style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
         >
           <div className="relative z-10 flex items-center">
