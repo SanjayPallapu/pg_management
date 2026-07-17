@@ -594,7 +594,8 @@ export const SecurityDepositCard = ({
                             }`}>
                               {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
                             </span>
-                         </div>
+                          )}
+                        </div>
 
                         <div className="flex items-center gap-1 shrink-0">
                           {tenant.phone && tenant.phone !== '••••••••••' && (
