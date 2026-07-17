@@ -217,6 +217,31 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
+  const [editingValues, setEditingValues] = useState<{
+    name: string;
+    phone: string;
+    startDate: string;
+    endDate?: string;
+    monthlyRent: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (editingTenantId) {
+      const tenant = (room.tenants || []).find((t) => t.id === editingTenantId);
+      if (tenant) {
+        setEditingValues({
+          name: tenant.name,
+          phone: tenant.phone || "",
+          startDate: tenant.startDate,
+          endDate: tenant.endDate,
+          monthlyRent: tenant.monthlyRent,
+        });
+      }
+    } else {
+      setEditingValues(null);
+    }
+  }, [editingTenantId, room.tenants]);
+
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [confirmAction, setConfirmAction] = useState<{ type: "paid" | "delete"; tenantId: string } | null>(null);
@@ -926,16 +951,28 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                           {isEditing ? (
                             <div className="space-y-2">
                               <Input
-                                value={tenant.name}
-                                onChange={(e) => handleUpdateTenant(tenant.id, { name: e.target.value })}
+                                value={editingValues?.name ?? tenant.name}
+                                onChange={(e) => {
+                                  setEditingValues(prev => prev ? { ...prev, name: e.target.value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { name: editingValues.name });
+                                  }
+                                }}
                                 placeholder="Name"
                                 className="font-medium"
                               />
                               <Input
-                                value={tenant.phone}
+                                value={editingValues?.phone ?? tenant.phone}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                                  handleUpdateTenant(tenant.id, { phone: value });
+                                  setEditingValues(prev => prev ? { ...prev, phone: value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { phone: editingValues.phone });
+                                  }
                                 }}
                                 placeholder="Phone"
                                 maxLength={10}
@@ -944,18 +981,30 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 <Label className="text-xs text-muted-foreground">Joining Date</Label>
                                 <Input
                                   type="date"
-                                  value={tenant.startDate}
-                                  onChange={(e) => handleUpdateTenant(tenant.id, { startDate: e.target.value })}
+                                  value={editingValues?.startDate ?? tenant.startDate}
+                                  onChange={(e) => {
+                                    setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                  }}
+                                  onBlur={async () => {
+                                    if (editingValues) {
+                                      await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                    }
+                                  }}
                                 />
                               </div>
                               <div>
                                 <Label className="text-xs text-muted-foreground">Leave Date (if left)</Label>
                                 <Input
                                   type="date"
-                                  value={tenant.endDate || ""}
-                                  onChange={(e) =>
-                                    handleUpdateTenant(tenant.id, { endDate: e.target.value || undefined })
-                                  }
+                                  value={editingValues?.endDate ?? tenant.endDate ?? ""}
+                                  onChange={(e) => {
+                                    setEditingValues(prev => prev ? { ...prev, endDate: e.target.value || undefined } : null);
+                                  }}
+                                  onBlur={async () => {
+                                    if (editingValues) {
+                                      await handleUpdateTenant(tenant.id, { endDate: editingValues.endDate });
+                                    }
+                                  }}
                                   placeholder="Leave date"
                                 />
                               </div>
@@ -1238,7 +1287,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
+                                onClick={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, editingValues);
+                                  }
                                   setEditingTenantId(null);
                                   setIsEditMode(false);
                                 }}
@@ -1284,14 +1336,17 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                           <Label>Monthly Rent</Label>
                           <Input
                             type="number"
-                            value={tenant.monthlyRent}
+                            value={editingValues?.monthlyRent ?? tenant.monthlyRent}
                             readOnly={isTenantPaidForMonth(tenant.id)}
                             className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
                             onChange={(e) => {
                               const val = Math.max(0, parseInt(e.target.value) || 0);
-                              handleUpdateTenant(tenant.id, {
-                                monthlyRent: val,
-                              });
+                              setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
+                            }}
+                            onBlur={async () => {
+                              if (editingValues) {
+                                await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
+                              }
                             }}
                           />
                         </div>
