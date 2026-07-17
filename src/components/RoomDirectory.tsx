@@ -164,38 +164,33 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   return (
     <div className="space-y-3">
       <div>
-        <div 
-          className="relative mb-3 w-full aspect-[938/325] rounded-2xl border border-border/50 overflow-hidden bg-cover bg-center bg-no-repeat shadow-sm"
-          style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
-        >
-          <div className="absolute left-4 bottom-4 z-10">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFloorManagementOpen(true)}
-              className="flex items-center gap-1.5 bg-background/85 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-md text-foreground text-xs sm:text-sm font-semibold rounded-xl h-8 sm:h-9 px-3.5 sm:px-4.5"
-            >
-              <Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-              Manage Floors
-            </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or room no..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or room no..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-9"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFloorManagementOpen(true)}
+            className="flex items-center gap-1.5 bg-background hover:bg-muted/50 border-border text-foreground text-xs sm:text-sm font-semibold rounded-xl h-9 px-3.5 shrink-0"
+          >
+            <Settings2 className="h-4 w-4 text-primary" />
+            <span>Floors</span>
+          </Button>
         </div>
         <div className="mt-2 flex items-center gap-2">
           <Button
