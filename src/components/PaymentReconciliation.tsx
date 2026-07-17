@@ -722,33 +722,35 @@ export const PaymentReconciliation = ({
 
             {/* Individual Payment Details */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3">
+                {/* Top row: Title and Search */}
+                <div className="flex items-center justify-between w-full gap-3">
                   <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
-                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
-                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
-                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
-                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
-                      Expand All
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={collapseAll}>
-                      Collapse All
-                    </Button>
-                  </div>
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Search tenant"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-7 w-28 pl-6 text-xs"
+                      className="h-7 w-32 pl-6 text-xs"
                     />
+                  </div>
+                </div>
+                {/* Bottom row: Filter and Expand/Collapse */}
+                <div className="flex items-center justify-between w-full gap-3">
+                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
+                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
+                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
+                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
+                  </ToggleGroup>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
+                      Expand All
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={collapseAll}>
+                      Collapse All
+                    </Button>
                   </div>
                 </div>
               </div>
