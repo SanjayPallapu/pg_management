@@ -449,16 +449,16 @@ export const SecurityDepositCard = ({
         </Card>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) onClose?.(); }}>
-        <SheetContent className="p-0 flex flex-col h-full w-full max-w-md sm:max-w-lg">
+      <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) { onClose?.(); setShowEditActions(false); } }}>
+        <SheetContent>
           {/* Sticky Header */}
-          <SheetHeader className="px-3 pt-4 pb-3 border-b bg-background shrink-0">
+          <SheetHeader className="px-3 pt-2 pb-3 border-b bg-background sticky top-0 z-10 -mx-1.5 -mt-1">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 shrink-0"
-                onClick={() => { setSheetOpen(false); onClose?.(); }}
+                onClick={() => { setSheetOpen(false); onClose?.(); setShowEditActions(false); }}
                 aria-label="Back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -472,9 +472,7 @@ export const SecurityDepositCard = ({
             </div>
           </SheetHeader>
 
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto">
-          <div className="mt-4 space-y-6 px-3 pb-6">
+          <div className="mt-4 space-y-6 px-1.5 pb-6">
             {/* Summary */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-lg bg-paid-muted">
@@ -720,7 +718,6 @@ export const SecurityDepositCard = ({
               </div>
             )}
           </div>
-          </div> {/* end scrollable body */}
         </SheetContent>
       </Sheet>
 
