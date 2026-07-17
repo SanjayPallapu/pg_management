@@ -757,9 +757,9 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className="bg-background/50 border border-border/50 rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md">
+                      <div className="border border-border/60 bg-card rounded-2xl overflow-hidden shadow-sm transition-all hover:shadow">
                         <CollapsibleTrigger asChild>
-                          <div className="p-3.5 cursor-pointer hover:bg-muted/30 transition-colors flex items-center justify-between">
+                          <div className="p-3.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                                 R{detail.roomNo}
@@ -787,7 +787,6 @@ export const PaymentReconciliation = ({
                             <div className="flex items-center gap-2.5 shrink-0">
                               <div className="text-right">
                                 <div className="font-extrabold text-sm text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
-                                <div className="text-[10px] text-muted-foreground">Paid</div>
                               </div>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 detail.status === 'Paid' 
@@ -801,9 +800,9 @@ export const PaymentReconciliation = ({
                         </CollapsibleTrigger>
                         
                         <CollapsibleContent>
-                          <div className="px-4 pb-3.5 pt-1 space-y-3 border-t border-border/40 bg-muted/10">
+                          <div className="px-4 pb-4 pt-3 space-y-4 bg-background dark:bg-background/40">
                             {/* Summary breakdown row */}
-                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 text-xs border-b border-border/30">
+                            <div className="flex flex-wrap items-center justify-between gap-3 pb-1 text-xs border-b border-border/20">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Monthly Rent:</span>
                                 <span className="font-bold text-foreground">₹{detail.monthlyRent.toLocaleString()}</span>
@@ -830,7 +829,7 @@ export const PaymentReconciliation = ({
                               <div className="space-y-1.5 pt-1">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Log</span>
                                 {detail.entries.map((entry, idx) => (
-                                  <div key={idx} className="flex items-center justify-between bg-background p-2 rounded-lg border border-border/30 text-xs shadow-sm">
+                                  <div key={idx} className="flex items-center justify-between bg-background dark:bg-card p-2 rounded-lg border border-border/20 text-xs shadow-sm">
                                     <div className="flex items-center gap-2">
                                       <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
                                         entry.mode === 'upi' 
