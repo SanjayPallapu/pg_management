@@ -26,8 +26,8 @@ import { Room } from "@/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
-  LayoutDashboard,
-  Building,
+  Home,
+  Bed,
   Receipt,
   LogOut,
   History,
@@ -136,8 +136,8 @@ const Index = () => {
 
   const navItems = useMemo(
     () => [
-      { value: "dashboard", label: "Home", icon: LayoutDashboard },
-      { value: "rooms", label: "Rooms", icon: Building },
+      { value: "dashboard", label: "Home", icon: Home },
+      { value: "rooms", label: "Rooms", icon: Bed },
       { value: "rent-sheet", label: "Rent", icon: Receipt },
       { value: "reconciliation", label: "Payments", icon: Wallet },
       { value: "settings", label: "Settings", icon: Settings },
