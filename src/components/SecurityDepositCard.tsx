@@ -450,7 +450,13 @@ export const SecurityDepositCard = ({
       )}
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) { onClose?.(); setShowEditActions(false); } }}>
-        <SheetContent>
+        <SheetContent
+          onInteractOutside={(e) => {
+            if (depositDialog || editDialog || removeDialog || receiptDialogOpen) {
+              e.preventDefault();
+            }
+          }}
+        >
           {/* Sticky Header */}
           <SheetHeader className="px-3 pt-2 pb-3 border-b bg-background sticky top-0 z-10 -mx-1.5 -mt-1">
             <div className="flex items-center gap-2">

@@ -69,6 +69,8 @@ const SheetContent = React.forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), "flex flex-col p-0 gap-0 sheet-content", className)}
+      onInteractOutside={onInteractOutside}
+      onEscapeKeyDown={onEscapeKeyDown}
       {...props}
     >
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
