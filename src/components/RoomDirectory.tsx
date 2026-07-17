@@ -18,6 +18,7 @@ import { AddRoomsDialog } from './AddRoomsDialog';
 import { RoomEditDialog } from './RoomEditDialog';
 import { FloorManagementSheet } from './FloorManagementSheet';
 import { useDayGuests } from '@/hooks/useDayGuests';
+import roomDirectoryBanner from '@/assets/room-directory-banner.png';
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -163,20 +164,32 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   return (
     <div className="space-y-3">
       <div>
-        <div className="flex items-center justify-between mb-2 rounded-xl p-3 bg-gradient-to-r from-primary/15 via-primary/8 to-accent/10 border border-primary/20">
-          <div>
-            <h2 className="font-bold tracking-tight text-lg">Room Directory</h2>
-            <p className="text-muted-foreground">Overview of all rooms organized by floor</p>
+        <div 
+          className="relative mb-3 rounded-2xl border border-border/50 overflow-hidden bg-cover bg-right bg-no-repeat min-h-[145px] flex items-center shadow-sm"
+          style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
+        >
+          {/* A soft dark/light overlay gradient to guarantee readable text contrast on both dark and light modes */}
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-transparent w-full md:w-2/3" />
+          
+          <div className="relative z-10 p-5 w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-1">
+              <h2 className="font-extrabold tracking-tight text-xl text-foreground">Room Directory</h2>
+              <p className="text-sm font-medium text-muted-foreground max-w-sm">
+                Overview of all rooms organized by floor
+              </p>
+            </div>
+            <div className="shrink-0 flex">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFloorManagementOpen(true)}
+                className="flex items-center gap-1.5 bg-background/80 hover:bg-background/95 backdrop-blur-md border-border/80 shadow-sm text-foreground text-xs font-semibold rounded-xl h-9 px-4"
+              >
+                <Settings2 className="h-4 w-4 text-primary" />
+                Manage Floors
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setFloorManagementOpen(true)}
-            className="flex items-center gap-1 bg-background/70 backdrop-blur-sm"
-          >
-            <Settings2 className="h-4 w-4" />
-            Manage Floors
-          </Button>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
