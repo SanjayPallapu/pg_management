@@ -547,7 +547,7 @@ export const PaymentReconciliation = ({
                 </SelectContent>
               </Select>
               
-              <Button variant="outline" className="h-9 rounded-xl border-purple-200 bg-purple-50/30 text-purple-700 hover:bg-purple-50/60 font-medium text-xs sm:text-sm px-3">
+              <Button variant="outline" className="h-9 rounded-xl border border-input bg-muted/30 dark:bg-muted/15 text-foreground hover:bg-muted/50 font-semibold text-xs sm:text-sm px-3.5">
                 <span>
                   {dateRange === 'current' 
                     ? `${months[selectedMonth - 1]} ${selectedYear}`
@@ -621,7 +621,7 @@ export const PaymentReconciliation = ({
                               : '0%'}
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()} ({reconciliationData.upiCount} UPI)</div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()}</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
@@ -635,7 +635,7 @@ export const PaymentReconciliation = ({
                               : '0%'}
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()} ({reconciliationData.cashCount} Cash)</div>
+                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
@@ -757,63 +757,95 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-background/50 border border-border/50 rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md">
                         <CollapsibleTrigger asChild>
-                          <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {expandedTenants.has(detailKey) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium text-sm">{detail.tenantName}</span>
-                                <span className="text-xs text-muted-foreground">Room {detail.roomNo}</span>
-                                {dateRange !== 'current' && 'month' in detail && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    {monthsShort[(detail as any).month - 1]} {(detail as any).year}
-                                  </Badge>
-                                )}
+                          <div className="p-3.5 cursor-pointer hover:bg-muted/30 transition-colors flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                                R{detail.roomNo}
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm">₹{detail.amountPaid.toLocaleString()}</span>
-                                <Badge className={detail.status === 'Paid' ? 'bg-paid text-paid-foreground' : 'bg-partial text-partial-foreground'}>
-                                  {detail.status}
-                                </Badge>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-sm text-foreground truncate">{detail.tenantName}</span>
+                                  {dateRange !== 'current' && 'month' in detail && (
+                                    <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
+                                      {monthsShort[(detail as any).month - 1]}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                                  {expandedTenants.has(detailKey) ? (
+                                    <ChevronDown className="h-3 w-3 shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="h-3 w-3 shrink-0" />
+                                  )}
+                                  <span>View break-up</span>
+                                </div>
                               </div>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <div className="text-right">
+                                <div className="font-extrabold text-sm text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
+                                <div className="text-[10px] text-muted-foreground">Paid</div>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                detail.status === 'Paid' 
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              }`}>
+                                {detail.status}
+                              </span>
                             </div>
                           </div>
                         </CollapsibleTrigger>
                         
                         <CollapsibleContent>
-                          <div className="px-3 pb-3 space-y-2 border-t bg-muted/20">
-                            <div className="grid grid-cols-3 gap-2 text-xs pt-2">
-                              <div>
-                                <span className="text-muted-foreground">Monthly Rent:</span>
-                                <div className="font-medium">₹{detail.monthlyRent.toLocaleString()}</div>
+                          <div className="px-4 pb-3.5 pt-1 space-y-3 border-t border-border/40 bg-muted/10">
+                            {/* Summary breakdown row */}
+                            <div className="grid grid-cols-3 gap-2 pt-2 text-xs">
+                              <div className="bg-background p-2 rounded-lg border border-border/30">
+                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Monthly Rent</span>
+                                <div className="font-bold text-foreground mt-0.5">₹{detail.monthlyRent.toLocaleString()}</div>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Amount Paid:</span>
-                                <div className="font-medium">₹{detail.amountPaid.toLocaleString()}</div>
+                              <div className="bg-background p-2 rounded-lg border border-border/30">
+                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Total Paid</span>
+                                <div className="font-bold text-foreground mt-0.5">₹{detail.amountPaid.toLocaleString()}</div>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Entries Total:</span>
-                                <div className={`font-medium ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : ''}`}>
+                              <div className="bg-background p-2 rounded-lg border border-border/30">
+                                <span className="text-muted-foreground text-[10px] uppercase font-medium tracking-wider">Entries Total</span>
+                                <div className={`font-bold mt-0.5 ${detail.entriesTotal !== detail.amountPaid ? 'text-destructive' : 'text-foreground'}`}>
                                   ₹{detail.entriesTotal.toLocaleString()}
                                 </div>
                               </div>
                             </div>
 
-                            {detail.entries.length > 0 && <div className="pt-2 border-t space-y-1">
-                                {detail.entries.map((entry, idx) => <div key={idx} className="flex items-center justify-between text-xs">
-                                    <span className="text-muted-foreground">
-                                      {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} on {format(new Date(entry.date), 'dd MMM')}
-                                    </span>
+                            {/* Ledger transaction entries list */}
+                            {detail.entries.length > 0 && (
+                              <div className="space-y-1.5 pt-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Log</span>
+                                {detail.entries.map((entry, idx) => (
+                                  <div key={idx} className="flex items-center justify-between bg-background p-2 rounded-lg border border-border/30 text-xs shadow-sm">
                                     <div className="flex items-center gap-2">
-                                      <span className={`px-1.5 py-0.5 rounded ${entry.mode === 'upi' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-                                        {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                      <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
+                                        entry.mode === 'upi' 
+                                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
+                                          : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                      }`}>
+                                        {entry.mode}
                                       </span>
-                                      <span className="font-medium">₹{entry.amount.toLocaleString()}</span>
+                                      <span className="text-muted-foreground text-[11px]">
+                                        {entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Full'} payment
+                                      </span>
                                     </div>
-                                  </div>)}
-                              </div>}
+                                    <div className="text-right">
+                                      <span className="font-bold text-foreground text-xs">₹{entry.amount.toLocaleString()}</span>
+                                      <span className="text-[10px] text-muted-foreground block text-[9px]">{format(new Date(entry.date), 'dd MMM yyyy')}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </CollapsibleContent>
                       </div>
