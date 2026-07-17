@@ -547,8 +547,7 @@ export const PaymentReconciliation = ({
                 </SelectContent>
               </Select>
               
-              <Button variant="outline" className="h-9 rounded-xl border-purple-200 bg-purple-50/30 text-purple-700 hover:bg-purple-50/60 font-medium text-xs sm:text-sm flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-purple-500" />
+              <Button variant="outline" className="h-9 rounded-xl border-purple-200 bg-purple-50/30 text-purple-700 hover:bg-purple-50/60 font-medium text-xs sm:text-sm px-3">
                 <span>
                   {dateRange === 'current' 
                     ? `${months[selectedMonth - 1]} ${selectedYear}`
