@@ -16,7 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getPricePerBed } from '@/constants/pricing';
 import { AddRoomsDialog } from './AddRoomsDialog';
 import { RoomEditDialog } from './RoomEditDialog';
-import { FloorManagementSheet } from './FloorManagementSheet';
+import { FloorManagementSheet, getSavedFloorName } from './FloorManagementSheet';
 import { useDayGuests } from '@/hooks/useDayGuests';
 import roomDirectoryBanner from '@/assets/room-directory-banner.png';
 
@@ -40,6 +40,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [acFilter, setAcFilter] = useState<'all' | 'ac' | 'normal'>('all');
   const [isQuickNavOpen, setIsQuickNavOpen] = useState(false);
+  const [floorNamesVersion, setFloorNamesVersion] = useState(0);
   const quickNavContainerRef = useRef<HTMLDivElement>(null);
   
   // Handle GSAP height slide open/close for Quick Access Grid
@@ -148,13 +149,17 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         .filter(r => r.floor === floor)
         .filter(r => acFilter === 'all' ? true : acFilter === 'ac' ? r.isAc : !r.isAc)
         .sort((a, b) => a.roomNo.localeCompare(b.roomNo));
+        
+      const defaultName = floor === 0 ? 'Ground Floor' : getFloorName(floor);
+      const displayName = currentPG ? getSavedFloorName(currentPG.id, floor, defaultName) : defaultName;
+      
       return {
         floor,
         rooms: roomsOnFloor,
-        name: floor === 0 ? 'Ground Floor' : getFloorName(floor),
+        name: displayName,
       };
     });
-  }, [rooms, currentPG?.floors, acFilter]);
+  }, [rooms, currentPG?.floors, currentPG?.id, acFilter, floorNamesVersion]);
 
   const openAddRoomsDialog = useCallback((floor: number) => {
     setSelectedFloorForRooms(floor);
@@ -335,6 +340,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         open={floorManagementOpen}
         onOpenChange={setFloorManagementOpen}
         rooms={rooms}
+        onFloorNamesUpdated={() => setFloorNamesVersion(v => v + 1)}
       />
     </div>
   );

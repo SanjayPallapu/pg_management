@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Trash2, Edit2, Plus, Building2 } from 'lucide-react';
+import { Loader2, Trash2, Edit2, Plus, Building2, ArrowLeft, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { usePG } from '@/contexts/PGContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,14 +25,43 @@ interface FloorManagementSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rooms: Room[];
+  onFloorNamesUpdated?: () => void;
 }
 
-export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagementSheetProps) => {
+export const getSavedFloorName = (pgId: string, floor: number, defaultName: string): string => {
+  try {
+    const saved = localStorage.getItem(`pg_floor_names_${pgId}`);
+    if (saved) {
+      const names = JSON.parse(saved);
+      if (names[floor]) return names[floor];
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return defaultName;
+};
+
+export const saveFloorName = (pgId: string, floor: number, name: string) => {
+  try {
+    const saved = localStorage.getItem(`pg_floor_names_${pgId}`) || '{}';
+    const names = JSON.parse(saved);
+    names[floor] = name;
+    localStorage.setItem(`pg_floor_names_${pgId}`, JSON.stringify(names));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUpdated }: FloorManagementSheetProps) => {
   const { currentPG, refreshPGs } = usePG();
   const queryClient = useQueryClient();
   const [isAddingFloor, setIsAddingFloor] = useState(false);
   const [deletingFloor, setDeletingFloor] = useState<number | null>(null);
   const [addRoomsFloor, setAddRoomsFloor] = useState<number | null>(null);
+  
+  // Floor edit state
+  const [editingFloor, setEditingFloor] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
 
   type DeleteFlow = {
     floor: number;
@@ -43,16 +72,16 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
   const [deleteFlow, setDeleteFlow] = useState<DeleteFlow | null>(null);
 
   // Get floor data from rooms
-   const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
-   const hasGroundFloor = floorsFromRooms.includes(0);
+  const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
+  const hasGroundFloor = floorsFromRooms.includes(0);
   const pgFloors = currentPG?.floors || 3;
   
   // Use the higher of actual floors or PG setting
   const maxFloor = Math.max(...floorsFromRooms, pgFloors);
-   // Include floor 0 (Ground) if it exists in rooms, then 1 to maxFloor
-   const allFloors = hasGroundFloor 
-     ? [0, ...Array.from({ length: maxFloor }, (_, i) => i + 1)]
-     : Array.from({ length: maxFloor }, (_, i) => i + 1);
+  // Include floor 0 (Ground) if it exists in rooms, then 1 to maxFloor
+  const allFloors = hasGroundFloor 
+    ? [0, ...Array.from({ length: maxFloor }, (_, i) => i + 1)]
+    : Array.from({ length: maxFloor }, (_, i) => i + 1);
 
   const getFloorStats = (floor: number) => {
     const roomsOnFloor = rooms.filter(r => r.floor === floor);
@@ -69,7 +98,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
     setIsAddingFloor(true);
     
     try {
-       const newFloorCount = maxFloor + 1;
+      const newFloorCount = maxFloor + 1;
       
       const { error } = await supabase
         .from('pgs')
@@ -78,9 +107,9 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
       
       if (error) throw error;
       
-      // Refresh PGs and immediately refetch to update UI
       await refreshPGs();
       await queryClient.refetchQueries({ queryKey: ['rooms'] });
+      onFloorNamesUpdated?.();
       
     } catch (err) {
       console.error('Error adding floor:', err);
@@ -90,11 +119,10 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
     }
   };
  
-   const handleAddGroundFloor = async () => {
-     if (!currentPG || hasGroundFloor) return;
-     // Open the Add Rooms dialog scoped to floor 0
-     setAddRoomsFloor(0);
-   };
+  const handleAddGroundFloor = async () => {
+    if (!currentPG || hasGroundFloor) return;
+    setAddRoomsFloor(0);
+  };
 
   const handleDeleteFloor = async (floor: number) => {
     if (!currentPG) return;
@@ -107,7 +135,6 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
 
     setDeletingFloor(floor);
     try {
-      // If this is the top floor, reduce floor count
       if (floor === maxFloor) {
         const { error } = await supabase
           .from('pgs')
@@ -118,8 +145,8 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
         
         await refreshPGs();
         await queryClient.refetchQueries({ queryKey: ['rooms'] });
+        onFloorNamesUpdated?.();
         
-      } else {
       }
     } catch (err) {
       console.error('Error deleting floor:', err);
@@ -130,25 +157,33 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
     }
   };
 
-   const getFloorLabel = (n: number) => {
-     if (n === 0) return 'Ground Floor';
+  const getFloorLabel = (n: number) => {
+    if (n === 0) return 'Ground Floor';
     const suffixes = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
-     return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + ' Floor';
+    return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + ' Floor';
   };
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+        <SheetContent className="px-1.5 sm:px-6 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
+          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <SheetTitle className="flex items-center gap-1.5 text-base font-semibold">
+              <Building2 className="h-4 w-4 text-primary" />
               Manage Floors
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4 overflow-y-auto">
+          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-1.5">
             {allFloors.map(floor => {
               const stats = getFloorStats(floor);
               const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
@@ -156,17 +191,78 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                 ? `${roomsOnFloor[0].roomNo} - ${roomsOnFloor[roomsOnFloor.length - 1].roomNo}`
                 : 'No rooms';
               
+              const defaultLabel = getFloorLabel(floor);
+              const displayName = currentPG ? getSavedFloorName(currentPG.id, floor, defaultLabel) : defaultLabel;
+              const isEditing = editingFloor === floor;
+              
+              if (isEditing) {
+                return (
+                  <div
+                    key={floor}
+                    className="flex flex-col gap-2 p-3.5 border rounded-xl bg-card border-primary/20 shadow-sm transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <Input
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        className="h-8 text-xs font-semibold px-2 flex-1"
+                        placeholder="Enter floor name..."
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                          onClick={() => {
+                            if (currentPG) {
+                              saveFloorName(currentPG.id, floor, editingName.trim() || defaultLabel);
+                              setEditingFloor(null);
+                              onFloorNamesUpdated?.();
+                              toast.success('Floor renamed successfully');
+                            }
+                          }}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
+                          onClick={() => setEditingFloor(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={floor}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                  className="flex items-center justify-between p-3.5 border rounded-xl bg-card border-border/40 shadow-sm hover:border-primary/20 transition-all duration-300"
                 >
                   <div>
-                     <h4 className="font-semibold">{getFloorLabel(floor)}</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-semibold text-sm sm:text-base text-foreground">{displayName}</h4>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary rounded-md"
+                        onClick={() => {
+                          setEditingFloor(floor);
+                          setEditingName(displayName);
+                        }}
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {stats.rooms} rooms • {stats.tenants} tenants
                     </p>
-                    <p className="text-xs text-muted-foreground">{roomRange}</p>
+                    <p className="text-[10px] text-muted-foreground/80 mt-0.5">{roomRange}</p>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -176,6 +272,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
                         size="sm"
                         onClick={() => setDeleteFlow({ floor, step: 1, typed: '', checked: false })}
                         disabled={deletingFloor === floor}
+                        className="h-8 w-8 p-0 rounded-lg"
                       >
                         {deletingFloor === floor ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -189,23 +286,23 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
               );
             })}
 
-             {/* Add Ground Floor button - only show if no ground floor exists */}
-             {!hasGroundFloor && (
-               <Button
-                 variant="outline"
-                 onClick={handleAddGroundFloor}
-                 className="w-full border-dashed mb-2"
-               >
-                 <Plus className="h-4 w-4 mr-2" />
-                 Add Ground Floor (Floor 0)
-               </Button>
-             )}
+            {/* Add Ground Floor button - only show if no ground floor exists */}
+            {!hasGroundFloor && (
+              <Button
+                variant="outline"
+                onClick={handleAddGroundFloor}
+                className="w-full border-dashed mb-2 h-9 text-xs sm:text-sm rounded-xl"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Ground Floor (Floor 0)
+              </Button>
+            )}
  
             <Button
               variant="outline"
               onClick={handleAddFloor}
               disabled={isAddingFloor}
-              className="w-full border-dashed"
+              className="w-full border-dashed h-9 text-xs sm:text-sm rounded-xl"
             >
               {isAddingFloor ? (
                 <>
@@ -215,7 +312,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms }: FloorManagem
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                   Add {getFloorLabel(maxFloor + 1)}
+                  Add {getFloorLabel(maxFloor + 1)}
                 </>
               )}
             </Button>
