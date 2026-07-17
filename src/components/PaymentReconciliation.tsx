@@ -533,7 +533,7 @@ export const PaymentReconciliation = ({
 
       <div className={standalone ? "" : "px-4 pb-4 mt-2"}>
         <div>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Date Range Filter */}
             <div className="flex items-center gap-2 bg-background p-1 w-full justify-between sm:justify-start">
               <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
@@ -606,7 +606,7 @@ export const PaymentReconciliation = ({
 
             {/* Payment Distribution */}
             {reconciliationData.paymentModeTotal > 0 && (
-              <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div className="bg-background border border-border/80 rounded-2xl p-3 shadow-sm flex items-center justify-between">
                 <div className="space-y-4">
                   <h3 className="font-bold text-sm text-foreground">Payment Distribution</h3>
                   <div className="space-y-3">
@@ -669,7 +669,7 @@ export const PaymentReconciliation = ({
 
             {/* Daily Payment Timeline */}
             {reconciliationData.paymentModeTotal > 0 && (
-              <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm space-y-3">
+              <div className="bg-background border border-border/80 rounded-2xl p-3 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-sm text-foreground">Daily Payment Timeline</h3>
                   <div className="flex items-center gap-3 text-xs">
@@ -721,7 +721,7 @@ export const PaymentReconciliation = ({
 
 
             {/* Individual Payment Details */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
@@ -752,14 +752,14 @@ export const PaymentReconciliation = ({
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {filteredPaymentDetails.map((detail, detailIdx) => {
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className="border border-border/60 bg-card rounded-2xl overflow-hidden shadow-sm transition-all hover:shadow">
+                      <div className="border border-border/60 bg-card rounded-xl overflow-hidden shadow-sm transition-all hover:shadow">
                         <CollapsibleTrigger asChild>
-                          <div className="p-3.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
+                          <div className="p-2.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                                 R{detail.roomNo}
@@ -800,7 +800,7 @@ export const PaymentReconciliation = ({
                         </CollapsibleTrigger>
                         
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 pt-3 space-y-4 bg-background dark:bg-background/40">
+                          <div className="px-3 pb-3 pt-2.5 space-y-3 bg-background dark:bg-background/40">
                             {/* Summary breakdown row */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pb-1 text-xs border-b border-border/20">
                               <div className="flex items-center gap-1.5">
