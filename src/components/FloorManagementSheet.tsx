@@ -198,8 +198,8 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="px-4 sm:px-6 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
-          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-2 sm:px-0">
+        <SheetContent className="px-1.5 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
+          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-1.5">
             <Button
               variant="ghost"
               size="icon"
@@ -214,7 +214,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-2 sm:px-0 pb-6">
+          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-1.5 pb-6">
             {allFloors.map(floor => {
               const stats = getFloorStats(floor);
               const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));

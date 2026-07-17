@@ -725,6 +725,13 @@ export const PaymentReconciliation = ({
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-4">
                   <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
+                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
+                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
+                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
+                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
                     <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
                       Expand All
@@ -733,13 +740,6 @@ export const PaymentReconciliation = ({
                       Collapse All
                     </Button>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
-                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
-                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
-                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
-                  </ToggleGroup>
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                     <Input
