@@ -279,7 +279,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
               style={{ backgroundImage: `url(${roomDirectoryBanner})` }}
             >
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
-              <div className="p-3.5 pl-5 flex flex-col items-start gap-2 bg-background/5 backdrop-blur-[2px]">
+              <div className="relative z-10 p-3.5 pl-5 flex flex-col items-start gap-2">
                 <h3 className="font-semibold text-base sm:text-lg text-foreground">{name}</h3>
                 <Button
                   variant="outline"
