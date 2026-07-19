@@ -512,91 +512,162 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             exit={{ opacity: 0 }}
             className="min-h-screen bg-gradient-to-br from-purple-50 via-slate-50 to-blue-50 flex flex-col items-center justify-center px-6 py-12"
           >
-            <div className="space-y-8 max-w-lg w-full">
+            <div className="space-y-12 max-w-5xl w-full">
+              {/* Header */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="text-center space-y-3"
               >
-                <h2 className="text-4xl font-bold text-slate-900">Choose Your Plan</h2>
-                <p className="text-slate-600">
-                  Pick the perfect plan for your PG business
+                <h2 className="text-5xl font-bold">
+                  <span className="text-slate-900">Choose Your </span>
+                  <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Plan</span>
+                </h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                  Start with a 30-day free trial. No credit card required. Upgrade or cancel anytime.
                 </p>
               </motion.div>
 
-              {/* Plans */}
+              {/* Plans Cards */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="space-y-3"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-6"
               >
                 {paidPlans.map((planKey, idx) => {
                   const plan = SUBSCRIPTION_PLANS[planKey];
                   const isSelected = selectedPlan === planKey;
+                  const isPopular = idx === 1; // Middle card is popular
 
                   return (
-                    <motion.button
+                    <motion.div
                       key={planKey}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + idx * 0.1 }}
                       onClick={() => setSelectedPlan(planKey)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${
+                      className={`relative rounded-3xl p-8 cursor-pointer transition-all duration-300 ${
                         isSelected
-                          ? 'border-purple-600 bg-purple-50'
-                          : 'border-slate-200 bg-white hover:border-purple-300'
+                          ? 'ring-2 ring-purple-600 shadow-2xl scale-105'
+                          : 'hover:shadow-lg'
+                      } ${
+                        isPopular
+                          ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-xl'
+                          : 'bg-white text-slate-900 border border-slate-200 hover:border-purple-300'
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-bold text-slate-900 capitalize">{plan.name}</h3>
-                          <p className="text-sm text-slate-600 mt-1">{plan.description}</p>
+                      {/* Popular Badge */}
+                      {isPopular && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                          <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 px-4 py-1 rounded-full text-sm font-bold">
+                            Most Popular
+                          </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          isSelected
-                            ? 'border-purple-600 bg-purple-600'
-                            : 'border-slate-300'
-                        }`}>
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                      )}
+
+                      {/* Plan Name & Icon */}
+                      <div className="space-y-4 mb-6">
+                        <div className="flex items-center gap-3">
+                          {idx === 0 && <Zap className={`w-6 h-6 ${isPopular ? 'text-amber-300' : 'text-orange-500'}`} />}
+                          {idx === 1 && <Crown className={`w-6 h-6 ${isPopular ? 'text-amber-300' : 'text-purple-600'}`} />}
+                          {idx === 2 && <TrendingUp className={`w-6 h-6 ${isPopular ? 'text-amber-300' : 'text-blue-600'}`} />}
+                          <h3 className={`text-2xl font-bold capitalize`}>
+                            {plan.name}
+                          </h3>
                         </div>
+                        <p className={`text-sm ${isPopular ? 'text-purple-100' : 'text-slate-600'}`}>
+                          {plan.description}
+                        </p>
                       </div>
-                    </motion.button>
+
+                      {/* Price */}
+                      <div className="space-y-1 mb-8 pb-8 border-b border-opacity-20" style={{ borderColor: isPopular ? 'rgba(255,255,255,0.2)' : undefined }}>
+                        <div className="flex items-baseline gap-1">
+                          <span className={`text-4xl font-bold`}>
+                            {plan.price === 0 ? 'Free' : `₹${plan.price}`}
+                          </span>
+                          {plan.price > 0 && (
+                            <span className={`text-sm font-medium ${isPopular ? 'text-purple-100' : 'text-slate-600'}`}>
+                              /{plan.billingCycle}
+                            </span>
+                          )}
+                        </div>
+                        {plan.price === 0 && (
+                          <p className={`text-sm font-medium ${isPopular ? 'text-purple-100' : 'text-slate-600'}`}>
+                            30 days free trial
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Features */}
+                      <div className="space-y-3 mb-8">
+                        {[
+                          `Up to ${idx === 0 ? '1' : idx === 1 ? '3' : '∞'} PG${idx === 0 ? '' : 's'}`,
+                          `${idx === 0 ? 'Basic' : idx === 1 ? 'Advanced' : 'Full'} room management`,
+                          `${idx === 0 ? 'Email' : 'WhatsApp'} reminders`,
+                          idx !== 0 && 'Priority support',
+                          idx === 2 && 'Custom reports',
+                        ].filter(Boolean).map((feature, featureIdx) => (
+                          <div key={featureIdx} className="flex items-center gap-3">
+                            <CheckCircle className={`w-5 h-5 flex-shrink-0 ${
+                              isPopular ? 'text-amber-300' : 'text-purple-500'
+                            }`} />
+                            <span className={`text-sm ${isPopular ? 'text-purple-50' : 'text-slate-700'}`}>
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA Button */}
+                      <button
+                        onClick={() => setSelectedPlan(planKey)}
+                        className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
+                          isSelected || isPopular
+                            ? isPopular
+                              ? 'bg-white text-purple-600 hover:bg-slate-50'
+                              : 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                        }`}
+                      >
+                        {isSelected && isPopular ? 'Selected ✓' : isSelected ? 'Selected ✓' : 'Choose Plan'}
+                      </button>
+                    </motion.div>
                   );
                 })}
               </motion.div>
 
-              {/* CTA */}
+              {/* CTA Buttons */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex gap-3"
+                transition={{ delay: 0.5 }}
+                className="flex flex-col gap-3 max-w-xl mx-auto w-full"
               >
-                <Button
-                  onClick={() => setStep('benefits')}
-                  variant="ghost"
-                  className="flex-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-full"
-                >
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </Button>
-                <Button
+                <button
                   onClick={() => handleStartPayment(selectedPlan)}
                   disabled={isCheckingStatus || razorpayLoading}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full"
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all disabled:opacity-50"
                 >
                   {isCheckingStatus || razorpayLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
                       Processing...
                     </>
                   ) : (
                     <>
-                      Get Started <ChevronRight className="w-4 h-4" />
+                      Get Started with {SUBSCRIPTION_PLANS[selectedPlan].name} <ChevronRight className="w-4 h-4 inline ml-2" />
                     </>
                   )}
-                </Button>
+                </button>
+                <button
+                  onClick={() => setStep('benefits')}
+                  className="w-full text-slate-600 hover:text-slate-900 font-semibold py-3 px-6 rounded-2xl hover:bg-slate-200 transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4 inline mr-2" /> Back
+                </button>
               </motion.div>
             </div>
           </motion.div>
