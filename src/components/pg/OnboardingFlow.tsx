@@ -268,7 +268,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 >
                   {/* Premium Feature Card */}
                   <Card className="overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl">
-                    <CardContent className="p-8 space-y-6">
+                    <CardContent className="p-8 space-y-6" style={{ backgroundColor: 'rgba(255, 0, 0, 0)' }}>
                       {/* Icon + Title */}
                       <div className="space-y-4">
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
