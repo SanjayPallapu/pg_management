@@ -24,6 +24,10 @@ import {
   Users,
   ReceiptText,
   TrendingUp,
+  Home,
+  LayoutList,
+  CheckCircle,
+  Clock as ClockIcon,
 } from 'lucide-react';
 import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
@@ -36,7 +40,7 @@ interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-type Step = 'welcome' | 'features' | 'benefits' | 'plans' | 'payment' | 'setup';
+type Step = 'welcome' | 'features' | 'benefits' | 'plans' | 'payment' | 'setup' | 'success';
 
 const FEATURES = [
   {
@@ -72,9 +76,41 @@ const FEATURES = [
 ];
 
 const PREMIUM_FEATURES = [
-  { icon: Building2, title: 'Manage Rooms & Tenants', description: 'Easy room and tenant management with real-time updates' },
-  { icon: ReceiptText, title: 'Track Rent & Digital Receipts', description: 'Automated rent tracking and instant digital receipts' },
-  { icon: TrendingUp, title: 'Run Your PG Smarter', description: 'Real-time occupancy, payment reminders, and analytics' },
+  {
+    icon: Building2,
+    title: 'Manage Rooms',
+    description: 'Easy room and tenant management with real-time updates',
+    color: 'from-purple-500 to-purple-600',
+    textColor: 'text-purple-600',
+  },
+  {
+    icon: ReceiptText,
+    title: 'Track Rent',
+    description: 'Automated rent tracking and instant digital receipts',
+    color: 'from-orange-500 to-orange-600',
+    textColor: 'text-orange-600',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Smart Analytics',
+    description: 'Real-time occupancy, payment reminders, and analytics',
+    color: 'from-blue-500 to-blue-600',
+    textColor: 'text-blue-600',
+  },
+  {
+    icon: Users,
+    title: 'Tenant Mgmt',
+    description: 'Manage tenants, verify identity, track check-ins',
+    color: 'from-green-500 to-green-600',
+    textColor: 'text-green-600',
+  },
+  {
+    icon: CreditCard,
+    title: 'Collect Rent',
+    description: 'Online and offline payment collection tracking',
+    color: 'from-pink-500 to-pink-600',
+    textColor: 'text-pink-600',
+  },
 ];
 
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
@@ -99,55 +135,26 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     }
   }, [shouldSkipToSetup, step]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out failed:', error);
-    }
-  };
-
-  const goToNextFeature = () => {
-    setDirection(1);
-    if (currentFeature < PREMIUM_FEATURES.length - 1) {
-      setCurrentFeature(currentFeature + 1);
-    } else {
-      setStep('plans');
-    }
-  };
-
-  const goToPrevFeature = () => {
-    setDirection(-1);
-    if (currentFeature > 0) {
-      setCurrentFeature(currentFeature - 1);
-    } else {
-      setStep('welcome');
-    }
-  };
-
-  const handlePaymentSuccess = async () => {
+  const handleStartPayment = async (planKey: SubscriptionPlanKey) => {
     try {
       setIsCheckingStatus(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      await refreshSubscription();
+      await initiatePayment(planKey);
     } catch (error) {
-      console.error('Payment success check failed:', error);
+      console.error('Payment error:', error);
+      toast.error('Payment failed. Please try again.');
     } finally {
       setIsCheckingStatus(false);
     }
   };
 
-  const handlePaymentInitiate = async () => {
-    try {
-      const plan = currentPlan.planKey;
-      const result = await initiatePayment(plan);
-      if (result && result.success) {
-        await handlePaymentSuccess();
-      }
-    } catch (error) {
-      toast.error('Payment initiation failed. Please try again.');
-      console.error('Payment error:', error);
-    }
+  const nextFeature = () => {
+    setDirection(1);
+    setCurrentFeature((prev) => (prev + 1) % PREMIUM_FEATURES.length);
+  };
+
+  const prevFeature = () => {
+    setDirection(-1);
+    setCurrentFeature((prev) => (prev - 1 + PREMIUM_FEATURES.length) % PREMIUM_FEATURES.length);
   };
 
   const renderStep = () => {
@@ -158,75 +165,107 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center space-y-8"
+            className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
           >
-            {/* Floating 3D Building Icon */}
-            <motion.div
-              animate={{ y: [-20, 20, -20] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              className="mt-12"
-            >
-              <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 flex items-center justify-center shadow-2xl shadow-blue-500/50">
-                <Building2 className="w-16 h-16 text-white" />
+            {/* Status Bar */}
+            <div className="absolute top-0 left-0 right-0 h-8 flex items-center justify-between px-4 text-xs font-medium text-slate-700">
+              <span>9:41</span>
+              <div className="flex gap-1">
+                <span>📶</span>
+                <span>📡</span>
+                <span>🔋</span>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4 max-w-lg"
+            {/* Skip Button */}
+            <button
+              onClick={() => setStep('setup')}
+              className="absolute top-14 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-slate-600 text-sm font-medium hover:bg-white transition-all"
             >
-              <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-200 via-cyan-200 to-blue-300 bg-clip-text text-transparent leading-tight">
-                Welcome to PG Manager
-              </h1>
-              <p className="text-lg text-slate-300 leading-relaxed">
-                Multi-owner PG management with 1 month free trial and auto-renewing subscriptions.
-              </p>
-            </motion.div>
+              Skip <ChevronRight className="w-4 h-4" />
+            </button>
 
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-col gap-3 pt-6 w-full max-w-md"
-            >
-              <Button
-                size="lg"
-                onClick={() => {
-                  setCurrentFeature(0);
-                  setStep('features');
-                }}
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all flex items-center justify-center gap-2"
-              >
-                Explore Features <ChevronRight className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setStep('plans')}
-                className="w-full h-12 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl border border-white/10"
-              >
-                View Pricing
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full gap-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl"
-              >
-                <LogOut className="h-4 w-4" /> Sign Out
-              </Button>
-            </motion.div>
+            {/* Progress Dots */}
+            <div className="absolute top-14 right-6 flex gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+            </div>
 
-            {/* Progress indicator */}
-            <div className="flex gap-2 mt-12">
-              {['welcome', 'features', 'plans'].map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 rounded-full transition-all ${s === 'welcome' ? 'w-6 bg-blue-500' : 'w-1.5 bg-white/20'}`}
-                />
-              ))}
+            {/* Main Content */}
+            <div className="space-y-6 max-w-lg text-center mt-12">
+              <motion.h1
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-5xl font-bold text-slate-900"
+              >
+                Manage Your PG
+                <span className="block text-purple-600">Effortlessly</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg text-slate-600"
+              >
+                Manage rooms, tenants, rent, receipts and reports from one beautiful dashboard.
+              </motion.p>
+
+              {/* Stats Grid */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="grid grid-cols-2 gap-3 my-12"
+              >
+                <div className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl p-4 border border-purple-200">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-10 h-10 rounded-xl flex items-center justify-center mb-2">
+                    <Home className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">23</div>
+                  <div className="text-xs text-slate-600">Rooms</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl p-4 border border-orange-200">
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 w-10 h-10 rounded-xl flex items-center justify-center mb-2">
+                    <CreditCard className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">₹82K</div>
+                  <div className="text-xs text-slate-600">Monthly Rent</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl p-4 border border-blue-200">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-10 h-10 rounded-xl flex items-center justify-center mb-2">
+                    <ReceiptText className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">12</div>
+                  <div className="text-xs text-slate-600">Receipts</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-100 to-green-50 rounded-2xl p-4 border border-green-200">
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 w-10 h-10 rounded-xl flex items-center justify-center mb-2">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">42</div>
+                  <div className="text-xs text-slate-600">Tenants</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-col gap-3"
+              >
+                <Button
+                  onClick={() => setStep('features')}
+                  className="w-full h-14 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold rounded-full text-lg shadow-lg shadow-purple-500/30 transition-all"
+                >
+                  Next <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         );
@@ -237,106 +276,230 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center min-h-screen px-6 py-12 space-y-8"
+            className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
           >
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center space-y-3 max-w-2xl"
-            >
-              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
-                <Sparkles className="h-4 w-4 text-blue-400" />
-                <span className="text-sm font-semibold text-blue-300">CORE FEATURES</span>
-              </div>
-              <h2 className="text-5xl font-bold text-white">Everything You Need</h2>
-              <p className="text-slate-300 text-lg">
-                Powerful tools to manage every aspect of your PG efficiently
-              </p>
-            </motion.div>
+            {/* Status Bar */}
+            <div className="absolute top-0 left-0 right-0 h-8 flex items-center justify-between px-4 text-xs font-medium text-slate-700">
+              <span>9:41</span>
+              <div className="flex gap-1">📶 📡 🔋</div>
+            </div>
 
-            {/* Feature Carousel */}
-            <div className="w-full max-w-2xl">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentFeature}
-                  initial={{ opacity: 0, x: direction > 0 ? 50 : -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: direction > 0 ? -50 : 50 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  {/* Premium Feature Card */}
-                  <Card className="overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl">
-                    <CardContent className="p-8 space-y-6" style={{ backgroundColor: 'rgba(255, 0, 0, 0)' }}>
-                      {/* Icon + Title */}
-                      <div className="space-y-4">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                          {(() => {
-                            const Icon = PREMIUM_FEATURES[currentFeature].icon;
-                            return <Icon className="h-8 w-8 text-white" />;
-                          })()}
+            {/* Skip Button */}
+            <button
+              onClick={() => setStep('setup')}
+              className="absolute top-14 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-slate-600 text-sm font-medium hover:bg-white transition-all"
+            >
+              Skip <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Progress Dots */}
+            <div className="absolute top-14 right-6 flex gap-2">
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+            </div>
+
+            <div className="space-y-8 max-w-lg w-full mt-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-center space-y-3"
+              >
+                <h2 className="text-5xl font-bold text-slate-900">
+                  Everything In<span className="block text-purple-600">One Place</span>
+                </h2>
+                <p className="text-slate-600 text-base">
+                  Track occupancy, manage tenants and know every room status instantly.
+                </p>
+              </motion.div>
+
+              {/* Feature Carousel */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="space-y-4"
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentFeature}
+                    initial={{ opacity: 0, x: direction > 0 ? 50 : -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: direction > 0 ? -50 : 50 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-8 border border-slate-200 space-y-6">
+                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${PREMIUM_FEATURES[currentFeature].color} flex items-center justify-center`}>
+                        {(() => {
+                          const Icon = PREMIUM_FEATURES[currentFeature].icon;
+                          return <Icon className="w-8 h-8 text-white" />;
+                        })()}
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-bold text-slate-900">
+                          {PREMIUM_FEATURES[currentFeature].title}
+                        </h3>
+                        <p className="text-slate-600 text-sm leading-relaxed">
+                          {PREMIUM_FEATURES[currentFeature].description}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-slate-700 text-sm">
+                          <Check className="w-4 h-4 text-green-500" />
+                          Real-time updates
                         </div>
-                        <div className="text-left">
-                          <h3 className="text-3xl font-bold text-white mb-2">
-                            {PREMIUM_FEATURES[currentFeature].title}
-                          </h3>
-                          <p className="text-slate-300 text-base leading-relaxed">
-                            {PREMIUM_FEATURES[currentFeature].description}
-                          </p>
+                        <div className="flex items-center gap-2 text-slate-700 text-sm">
+                          <Check className="w-4 h-4 text-green-500" />
+                          Instant notifications
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-700 text-sm">
+                          <Check className="w-4 h-4 text-green-500" />
+                          Smart analytics
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
 
-                  {/* Pagination Dots */}
-                  <div className="flex items-center justify-center gap-2">
-                    {PREMIUM_FEATURES.map((_, idx) => (
-                      <motion.button
-                        key={idx}
-                        onClick={() => {
-                          setDirection(idx > currentFeature ? 1 : -1);
-                          setCurrentFeature(idx);
-                        }}
-                        className={`rounded-full transition-all ${
-                          idx === currentFeature
-                            ? 'w-8 h-2.5 bg-gradient-to-r from-blue-500 to-blue-400'
-                            : 'w-2.5 h-2.5 bg-white/20 hover:bg-white/40'
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                {/* Pagination */}
+                <div className="flex justify-center gap-2">
+                  {PREMIUM_FEATURES.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setDirection(idx > currentFeature ? 1 : -1);
+                        setCurrentFeature(idx);
+                      }}
+                      className={`h-2 rounded-full transition-all ${
+                        idx === currentFeature
+                          ? 'w-8 bg-purple-600'
+                          : 'w-2 bg-slate-300 hover:bg-slate-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Navigation */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex gap-3 pt-4"
+              >
+                <Button
+                  onClick={() => setStep('welcome')}
+                  variant="ghost"
+                  className="flex-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-full"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button
+                  onClick={() => setStep('benefits')}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+        );
+
+      case 'benefits':
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+          >
+            {/* Status Bar */}
+            <div className="absolute top-0 left-0 right-0 h-8 flex items-center justify-between px-4 text-xs font-medium text-slate-700">
+              <span>9:41</span>
+              <div className="flex gap-1">📶 📡 🔋</div>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="w-full max-w-2xl flex gap-3 justify-between pt-4">
-              <Button
-                onClick={goToPrevFeature}
-                variant="ghost"
-                className="gap-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg"
-              >
-                <ChevronLeft className="h-4 w-4" /> Back
-              </Button>
+            {/* Skip Button */}
+            <button
+              onClick={() => setStep('setup')}
+              className="absolute top-14 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-slate-600 text-sm font-medium hover:bg-white transition-all"
+            >
+              Skip <ChevronRight className="w-4 h-4" />
+            </button>
 
-              <Button
-                onClick={goToNextFeature}
-                className="gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-lg shadow-lg shadow-blue-500/20"
-              >
-                {currentFeature === PREMIUM_FEATURES.length - 1 ? 'View Pricing' : 'Next'} <ChevronRight className="h-4 w-4" />
-              </Button>
+            {/* Progress Dots */}
+            <div className="absolute top-14 right-6 flex gap-2">
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
             </div>
 
-            {/* Progress indicator */}
-            <div className="flex gap-2 mt-8">
-              {['welcome', 'features', 'plans'].map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 rounded-full transition-all ${s === 'features' ? 'w-6 bg-blue-500' : 'w-1.5 bg-white/20'}`}
-                />
-              ))}
+            <div className="space-y-8 max-w-lg w-full mt-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-center space-y-3"
+              >
+                <h2 className="text-5xl font-bold text-slate-900">
+                  Run Your PG<span className="block text-purple-600">Smarter</span>
+                </h2>
+                <p className="text-slate-600 text-base">
+                  Get real-time insights, payment reminders and smart reports to grow your business.
+                </p>
+              </motion.div>
+
+              {/* Benefits Grid */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-2 gap-4"
+              >
+                {PREMIUM_FEATURES.map((feature, idx) => {
+                  const Icon = feature.icon;
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 + idx * 0.1 }}
+                      className="bg-white rounded-2xl p-4 border border-slate-200 hover:shadow-lg transition-all"
+                    >
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="font-semibold text-slate-900 text-sm mb-1">{feature.title}</h3>
+                      <p className="text-xs text-slate-600">{feature.description}</p>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Navigation */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex gap-3 pt-4"
+              >
+                <Button
+                  onClick={() => setStep('features')}
+                  variant="ghost"
+                  className="flex-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-full"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button
+                  onClick={() => setStep('plans')}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full"
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         );
@@ -344,148 +507,111 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       case 'plans':
         return (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6 max-w-3xl mx-auto py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen bg-gradient-to-br from-purple-50 via-slate-50 to-blue-50 flex flex-col items-center justify-center px-6 py-12"
           >
-            <div className="text-center mb-8">
-              <Badge variant="secondary" className="mb-4">
-                <Crown className="h-3 w-3 mr-1" /> Pricing
-              </Badge>
-              <h2 className="text-3xl font-bold text-white">Start free, then choose your billing cycle</h2>
-              <p className="text-slate-400 mt-2">Every owner gets 1 month free trial. Paid plans auto-renew through Razorpay.</p>
-            </div>
-
-            <Card className="border-primary ring-2 ring-primary/20 bg-primary/5">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold">{SUBSCRIPTION_PLANS.trial.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{SUBSCRIPTION_PLANS.trial.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">Free</div>
-                    <div className="text-sm text-muted-foreground">{SUBSCRIPTION_PLANS.trial.periodLabel}</div>
-                  </div>
-                </div>
-                <ul className="space-y-2 mt-4 text-sm">
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PGs, rooms, and tenants during trial</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> All reminder, AC bill, analytics, and receipt features unlocked</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Upgrade anytime to keep auto-renewal active</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              {paidPlans.map((planKey) => {
-                const plan = SUBSCRIPTION_PLANS[planKey];
-                const isSelected = selectedPlan === planKey;
-                return (
-                  <Card
-                    key={planKey}
-                    className={`relative cursor-pointer transition-all ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
-                    onClick={() => setSelectedPlan(planKey)}
-                  >
-                    {planKey === 'yearly' && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                          Best Value
-                        </Badge>
-                      </div>
-                    )}
-                    <CardContent className="pt-6">
-                      <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                      <div className="text-3xl font-bold mb-4">
-                        ₹{plan.price} <span className="text-sm font-normal text-muted-foreground">{plan.periodLabel}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                      <ul className="space-y-2 text-sm">
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PG owners</li>
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Auto-renewing billing</li>
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Full Pro feature access</li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setStep('features')} className="flex-1">
-                <ChevronLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-              <Button
-                size="lg"
-                onClick={() => setStep('payment')}
-                disabled={!currentPlan}
-                className="flex-1 gap-2"
+            <div className="space-y-8 max-w-lg w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-center space-y-3"
               >
-                Continue <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        );
+                <h2 className="text-4xl font-bold text-slate-900">Choose Your Plan</h2>
+                <p className="text-slate-600">
+                  Pick the perfect plan for your PG business
+                </p>
+              </motion.div>
 
-      case 'payment':
-        return (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6 max-w-2xl mx-auto py-12"
-          >
-            <div className="text-center mb-8">
-              <Badge className="mb-4">
-                <CreditCard className="h-3 w-3 mr-1" /> Payment
-              </Badge>
-              <h2 className="text-2xl font-bold text-white">Complete Your Purchase</h2>
-              <p className="text-gray-400 mt-2">Secure payment through Razorpay</p>
-            </div>
-
-            <Card className="border-white/[0.08] bg-white/[0.03]">
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex justify-between items-center pb-4 border-b border-white/[0.08]">
-                  <span className="text-gray-400">Plan:</span>
-                  <span className="font-semibold text-white">{currentPlan?.name}</span>
-                </div>
-                <div className="flex justify-between items-center pb-4 border-b border-white/[0.08]">
-                  <span className="text-gray-400">Billing Cycle:</span>
-                  <span className="font-semibold text-white">{currentPlan?.periodLabel}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Amount:</span>
-                  <span className="text-2xl font-bold text-white">₹{currentPlan?.price}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setStep('plans')} className="flex-1">
-                <ChevronLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-              <Button
-                size="lg"
-                onClick={handlePaymentInitiate}
-                disabled={razorpayLoading || isCheckingStatus}
-                className="flex-1 gap-2"
+              {/* Plans */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="space-y-3"
               >
-                {razorpayLoading || isCheckingStatus ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Processing...
-                  </>
-                ) : (
-                  <>
-                    Pay Now <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
+                {paidPlans.map((planKey, idx) => {
+                  const plan = SUBSCRIPTION_PLANS[planKey];
+                  const isSelected = selectedPlan === planKey;
+
+                  return (
+                    <motion.button
+                      key={planKey}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + idx * 0.1 }}
+                      onClick={() => setSelectedPlan(planKey)}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-purple-600 bg-purple-50'
+                          : 'border-slate-200 bg-white hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-bold text-slate-900 capitalize">{plan.name}</h3>
+                          <p className="text-sm text-slate-600 mt-1">{plan.description}</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected
+                            ? 'border-purple-600 bg-purple-600'
+                            : 'border-slate-300'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+
+              {/* CTA */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex gap-3"
+              >
+                <Button
+                  onClick={() => setStep('benefits')}
+                  variant="ghost"
+                  className="flex-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-full"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button
+                  onClick={() => handleStartPayment(selectedPlan)}
+                  disabled={isCheckingStatus || razorpayLoading}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full"
+                >
+                  {isCheckingStatus || razorpayLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Get Started <ChevronRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         );
 
       case 'setup':
-        return <PGSetupWizard onComplete={onComplete} />;
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <PGSetupWizard onComplete={onComplete} isAddingNew={true} />
+          </motion.div>
+        );
 
       default:
         return null;
@@ -493,18 +619,16 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
-      {/* Animated background gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-600/20 to-transparent opacity-40 blur-[120px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-cyan-600/20 to-transparent opacity-30 blur-[120px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-slate-600/10 to-transparent opacity-20 blur-[100px] pointer-events-none" />
-
-      {/* Content */}
-      <div className="relative z-10 w-full">
-        <AnimatePresence mode="wait">
-          {renderStep()}
-        </AnimatePresence>
+    <div className="relative min-h-screen bg-gradient-to-br from-purple-50 via-slate-50 to-blue-50 overflow-hidden">
+      {/* Animated background shapes */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-40 h-40 bg-purple-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-blue-200/20 rounded-full blur-3xl" />
       </div>
+
+      <AnimatePresence mode="wait">
+        {renderStep()}
+      </AnimatePresence>
     </div>
   );
 };
