@@ -50,8 +50,8 @@
 .pgh-counter strong { text-align: center; }
 
 .pgh-setup-header { display: grid; gap: .8rem; }
-.pgh-setup-header__row { display: grid; grid-template-columns: 2.7rem 1fr auto; align-items: center; gap: .65rem; }
-.pgh-setup-header__row button { width: 2.7rem; height: 2.7rem; border: 0; border-radius: .85rem; background: white; display: grid; place-items: center; color: #0a1230; box-shadow: 0 5px 15px rgba(16, 24, 40, .07); }
+.pgh-setup-header__row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .65rem; }
+.pgh-setup-header__row button { min-width: 4.8rem; height: 2.7rem; border: 0; border-radius: .85rem; background: white; padding: 0 .72rem; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; color: #0a1230; font-size: .82rem; font-weight: 800; box-shadow: 0 5px 15px rgba(16, 24, 40, .07); }
 .pgh-setup-header__row strong { font-size: 1.08rem; }
 .pgh-setup-header__row span { color: #667085; font-size: .85rem; font-weight: 700; }
 .pgh-progress { height: .4rem; overflow: hidden; border-radius: 999px; background: #e5e8f1; }

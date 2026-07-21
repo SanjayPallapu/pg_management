@@ -33,6 +33,7 @@ import { PGSetupDraftProvider } from "@/features/pg-hub/PGSetupDraftContext";
 
 import { RentProvider } from "./contexts/RentContext";
 import { useMonthContext } from "./contexts/MonthContext";
+import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 
 // Protected route component that wraps children with PGProvider and RentProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -48,9 +49,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  if (shouldShowOnboardingAfterLogout()) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (!isAuthenticated) {
-    const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
-    return <Navigate to={hasCompleted ? "/auth" : "/onboarding"} replace />;
+    return <Navigate to={hasCompletedOnboarding() ? "/auth" : "/onboarding"} replace />;
   }
 
   return (

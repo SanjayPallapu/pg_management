@@ -8,6 +8,7 @@ import {
   getPhoneOtpTestSession,
   hasPhoneOtpTestChallenge,
 } from '@/lib/phoneOtpTestMode';
+import { restartOnboardingAfterLogout } from '@/lib/onboardingState';
 
 export type AppRole = 'admin' | 'owner';
 
@@ -325,7 +326,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
-    localStorage.removeItem("hasCompletedOnboarding");
+    restartOnboardingAfterLogout();
     sessionStorage.removeItem('isNewSignup');
     if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true') {
       sessionStorage.setItem(DEV_MOCK_SIGNED_OUT_KEY, 'true');
@@ -343,7 +344,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (wasPhoneTestSession) {
       return { error: null };
     }
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     return { error };
   }, []);
 

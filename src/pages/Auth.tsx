@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -238,8 +239,7 @@ const Auth = () => {
       if (isAuthenticated) {
         navigate("/", { replace: true });
       } else {
-        const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
-        if (!hasCompleted) {
+        if (shouldShowOnboardingAfterLogout() || !hasCompletedOnboarding()) {
           navigate("/onboarding", { replace: true });
         }
       }

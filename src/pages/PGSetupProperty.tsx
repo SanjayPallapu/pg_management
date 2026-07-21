@@ -9,11 +9,13 @@ import { PGHubFormField } from "@/features/pg-hub/PGHubFormField";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
+import { useAuth } from "@/hooks/useAuth";
 
 type Errors = Partial<Record<"name" | "city" | "address" | "floors", string>>;
 
 export default function PGSetupProperty() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const { property, updateProperty, setPropertyImage, setFloorCount } = usePGSetupDraft();
   const [errors, setErrors] = useState<Errors>({});
 
@@ -37,10 +39,15 @@ export default function PGSetupProperty() {
     if (Object.keys(next).length === 0) navigate("/setup/capacity");
   };
 
+  const backToOnboarding = async () => {
+    await signOut();
+    window.location.replace("/onboarding");
+  };
+
   return (
     <PGHubShell variant="light" className="pgh-setup-shell">
       <div className="pgh-page pgh-setup-page">
-        <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={() => navigate(-1)} />
+        <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
         <motion.section className="pgh-setup-hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <img src={journeyBuilding} alt="PG property" />
           <div aria-hidden="true" />

@@ -7,6 +7,11 @@ import onboardingScreen1 from "@/assets/pg-hub/onboarding-screen-1.png";
 import onboardingScreen2 from "@/assets/pg-hub/onboarding-screen-2.png";
 import onboardingScreen3 from "@/assets/pg-hub/onboarding-screen-3.png";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
+import {
+  completeOnboarding,
+  hasCompletedOnboarding,
+  shouldShowOnboardingAfterLogout,
+} from "@/lib/onboardingState";
 
 const slides = [
   {
@@ -46,17 +51,18 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (isLoading) return;
+    if (shouldShowOnboardingAfterLogout()) return;
     if (isAuthenticated) {
       navigate("/", { replace: true });
       return;
     }
-    if (localStorage.getItem("hasCompletedOnboarding") === "true") {
+    if (hasCompletedOnboarding()) {
       navigate("/auth", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
   const finish = () => {
-    localStorage.setItem("hasCompletedOnboarding", "true");
+    completeOnboarding();
     navigate("/auth", { replace: true });
   };
 
