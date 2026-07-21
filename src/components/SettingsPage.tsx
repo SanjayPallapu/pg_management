@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { Room } from "@/types";
 import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

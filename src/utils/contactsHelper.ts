@@ -98,7 +98,7 @@ export const requestContactPermission = async (): Promise<boolean> => {
 export const pickContactFromDevice = async (): Promise<SelectedContact | null | undefined> => {
   if (!Capacitor.isNativePlatform()) {
     // Attempt to use standard Web Contact Picker API (supported in mobile Chrome/Safari)
-    if ('contacts' in navigator && 'select' in navigator.contacts) {
+    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
       try {
         const contacts: any = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
         if (contacts && contacts.length > 0) {
