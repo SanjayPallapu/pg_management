@@ -186,7 +186,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       }
       
       await signOut();
-      window.location.href = "/onboarding";
+      window.location.replace("/onboarding");
     } catch (err: any) {
       console.error("Account deletion failed:", err);
       toast.error(err?.message || "Failed to delete account. Please contact support.");
@@ -202,7 +202,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = "/onboarding";
+    window.location.replace("/onboarding");
   };
 
   const handleShareApp = async () => {

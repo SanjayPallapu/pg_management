@@ -204,7 +204,7 @@ const Index = () => {
   const handleSignOut = async () => {
     await signOut();
     // Full page reload to clear all cached state
-    window.location.href = "/onboarding";
+    window.location.replace("/onboarding");
   };
 
   useEffect(() => {

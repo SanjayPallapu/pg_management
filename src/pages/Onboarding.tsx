@@ -1,39 +1,40 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import journeyProperty from "@/assets/pg-hub/hub-building-hero.png";
-import journeyFeatures from "@/assets/pg-hub/hub-feature-hub.png";
-import journeyRent from "@/assets/pg-hub/hub-rent-phone.png";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
-import { PGHubButton } from "@/features/pg-hub/PGHubButton";
+import onboardingScreen1 from "@/assets/pg-hub/onboarding-screen-1.png";
+import onboardingScreen2 from "@/assets/pg-hub/onboarding-screen-2.png";
+import onboardingScreen3 from "@/assets/pg-hub/onboarding-screen-3.png";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 
 const slides = [
   {
-    id: "property",
-    eyebrow: "Grow your PG",
+    id: "grow",
     titleTop: "Grow",
     titleBottom: "Your PG",
-    body: "Fill rooms faster. Manage less manually. Track occupancy, tenants, rent and payments in one simple app.",
-    image: journeyProperty,
+    subheading: "Fill rooms faster. Manage less manually.",
+    body: "Track occupancy, tenants, rent, and payments in one simple app.",
+    accent: "#8B5CF6",
+    image: onboardingScreen1,
   },
   {
-    id: "features",
-    eyebrow: "One connected workspace",
+    id: "everything",
     titleTop: "Everything in",
     titleBottom: "One Place",
-    body: "Rooms, tenants, rent, reports — all connected. Run your PG with one dashboard for occupancy, collections, receipts and reminders.",
-    image: journeyFeatures,
+    subheading: "Rooms, tenants, payments, and reports—all connected.",
+    body: "Manage your entire PG from one dashboard with real-time updates and reminders.",
+    accent: "#9A67FF",
+    image: onboardingScreen3,
   },
   {
     id: "rent",
-    eyebrow: "Never miss a payment",
     titleTop: "Never Miss",
     titleBottom: "Rent Again",
-    body: "Automatic reminders, instant receipts and clear collection tracking — every tenant, every month.",
-    image: journeyRent,
+    subheading: "Automate reminders and collect rent on time.",
+    body: "Track payments, send reminders, and generate receipts without chasing tenants.",
+    accent: "#A855F7",
+    image: onboardingScreen2,
   },
 ] as const;
 
@@ -83,11 +84,11 @@ export default function Onboarding() {
 
   return (
     <PGHubShell variant="dark" className="pgh-onboarding">
-      <div className="pgh-onboarding__page pgh-journey">
-        <AnimatePresence mode="wait" custom={direction}>
+      <div className="pgh-onboarding__page">
+        <AnimatePresence custom={direction}>
           <motion.section
             key={slide.id}
-            className={`pgh-onboarding__slide pgh-journey__slide pgh-journey__slide--${slide.id}`}
+            className={`pgh-onboarding__slide pgh-onboarding__slide--${slide.id}`}
             custom={direction}
             initial={{ opacity: 0, x: direction > 0 ? 55 : -55 }}
             animate={{ opacity: 1, x: 0 }}
@@ -98,44 +99,45 @@ export default function Onboarding() {
             dragElastic={0.2}
             onDragEnd={onDragEnd}
           >
+            <motion.img
+              className="pgh-onboarding__background"
+              src={slide.image}
+              alt=""
+              aria-hidden="true"
+              initial={{ scale: 1.02 }}
+              animate={{ scale: [1.02, 1.045, 1.02], y: [0, -3, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="pgh-onboarding__shade" aria-hidden="true" />
             <motion.div
-              className="pgh-journey__visual"
-              initial={{ scale: 1.035 }}
-              animate={{ scale: [1.035, 1.065, 1.035], y: [0, -4, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <img className="pgh-journey__backdrop" src={slide.image} alt="" aria-hidden="true" />
-              <img className="pgh-journey__image" src={slide.image} alt="" />
-            </motion.div>
-            <div className="pgh-journey__shade" aria-hidden="true" />
-            <header className="pgh-journey__header">
-              <PGHubBrand dark compact />
-              <button type="button" className="pgh-onboarding__skip" onClick={finish}>Skip</button>
-            </header>
-            <motion.div
-              className="pgh-onboarding__copy pgh-journey__copy"
+              className="pgh-onboarding__copy"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: .12, duration: .48 }}
             >
-              <span className="pgh-journey__eyebrow">{slide.eyebrow}</span>
-              <h1>{slide.titleTop}<em>{slide.titleBottom}</em></h1>
+              <h1>{slide.titleTop}<em style={{ color: slide.accent }}>{slide.titleBottom}</em></h1>
+              <strong>{slide.subheading}</strong>
               <p>{slide.body}</p>
             </motion.div>
           </motion.section>
         </AnimatePresence>
 
         <footer className="pgh-onboarding__footer">
-          <div className="pgh-journey__progress-row">
-            <div className="pgh-dots" aria-label={`Slide ${active + 1} of ${slides.length}`}>
-              {slides.map((item, index) => (
-                <button key={item.id} type="button" className={index === active ? "is-active" : ""} onClick={() => goTo(index)} aria-label={`Go to slide ${index + 1}`} />
-              ))}
-            </div>
-            <span>0{active + 1} / 0{slides.length}</span>
+          <div className="pgh-dots" aria-label={`Slide ${active + 1} of ${slides.length}`}>
+            {slides.map((item, index) => (
+              <button key={item.id} type="button" className={index === active ? "is-active" : ""} onClick={() => goTo(index)} aria-label={`Go to slide ${index + 1}`} />
+            ))}
           </div>
-          <PGHubButton onClick={next} showArrow>{active === slides.length - 1 ? "Get Started" : "Next"}</PGHubButton>
-          <button type="button" className="pgh-onboarding__back" onClick={() => active > 0 ? goTo(active - 1) : finish()}>{active > 0 ? "Back" : "I already have an account"}</button>
+          <div className={`pgh-onboarding__nav ${active === 0 ? "is-first" : ""}`}>
+            {active > 0 && (
+              <button type="button" className="pgh-onboarding__nav-button pgh-onboarding__nav-button--back" onClick={() => goTo(active - 1)}>
+                <ArrowLeft size={20} /> Back
+              </button>
+            )}
+            <button type="button" className="pgh-onboarding__nav-button pgh-onboarding__nav-button--next" onClick={next}>
+              Next <ArrowRight size={20} />
+            </button>
+          </div>
         </footer>
       </div>
     </PGHubShell>

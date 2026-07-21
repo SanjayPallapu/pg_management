@@ -359,7 +359,7 @@ const Auth = () => {
 
   const handlePendingSignOut = async () => {
     await signOut();
-    window.location.href = "/onboarding";
+    window.location.replace("/onboarding");
   };
 
   if (isAuthenticated && !hasRole) {

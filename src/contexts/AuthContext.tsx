@@ -30,6 +30,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const DEV_MOCK_SIGNED_OUT_KEY = 'pgHubDevMockSignedOut';
 
 const createPhoneTestAuth = (phone: string) => {
   const mockUser = {
@@ -62,7 +63,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     // DEV MOCK AUTO-LOGIN BYPASS
-    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true') {
+    if (
+      import.meta.env.DEV &&
+      import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true' &&
+      sessionStorage.getItem(DEV_MOCK_SIGNED_OUT_KEY) !== 'true'
+    ) {
       const mockUser = {
         id: "92f3d1db-3e91-4b72-9712-ac756da63006",
         email: "owner@pgmanagement.com",
@@ -321,13 +326,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = useCallback(async () => {
     localStorage.removeItem("hasCompletedOnboarding");
+    sessionStorage.removeItem('isNewSignup');
+    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true') {
+      sessionStorage.setItem(DEV_MOCK_SIGNED_OUT_KEY, 'true');
+    }
     const wasPhoneTestSession = Boolean(getPhoneOtpTestSession());
     clearPhoneOtpTestMode();
+
+    // Clear the in-memory session immediately so the onboarding route cannot
+    // redirect back to the dashboard while Supabase finishes signing out.
+    setSession(null);
+    setUser(null);
+    setRole(null);
+    setIsNewSignup(false);
+
     if (wasPhoneTestSession) {
-      setSession(null);
-      setUser(null);
-      setRole(null);
-      setIsNewSignup(false);
       return { error: null };
     }
     const { error } = await supabase.auth.signOut();
