@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { BedDouble, Building2, CheckCircle2, DoorOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import journeyComplete from "@/assets/pg-hub/journey-complete.png";
+import journeyComplete from "@/assets/pg-hub/hub-building-check.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubConfetti } from "@/features/pg-hub/PGHubConfetti";
