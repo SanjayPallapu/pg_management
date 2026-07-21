@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">PG Nexa</string>
-    <string name="title_activity_main">PG Nexa</string>
+    <string name="app_name">PG HUB</string>
+    <string name="title_activity_main">PG HUB</string>
     <string name="package_name">com.pgmanager.app</string>
     <string name="custom_url_scheme">com.pgmanager.app</string>
 </resources>

@@ -268,7 +268,7 @@ const PublishGuide = () => {
           >
             <Badge variant="secondary" className="mb-4">A → Z launch checklist</Badge>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-foreground">
-              Ship PG Manager to the Play Store
+              Ship PG HUB to the Play Store
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground">
               Everything required to take this web app to a multi-user, production-grade Android release —

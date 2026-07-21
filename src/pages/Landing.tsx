@@ -69,7 +69,7 @@ const testimonials = [
 },
 {
   name: "Priya M.",
-  role: "PG Manager, Bangalore",
+  role: "PG HUB Manager, Bangalore",
   text: "Managing 3 PGs was a nightmare before. Now everything is in one place. Highly recommend!",
   rating: 5
 },
@@ -99,8 +99,8 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-px">
-            <img alt="PG Manager" className="h-10 w-9 object-contain" src="/lovable-uploads/aa11d170-5873-4bec-9949-1ea24e506066.png" />
-            <span className="text-lg font-bold text-foreground border-0 rounded-md ml-[2px]">  PG Manager</span>
+            <img alt="PG HUB" className="h-10 w-9 object-contain" src="/lovable-uploads/aa11d170-5873-4bec-9949-1ea24e506066.png" />
+            <span className="text-lg font-bold text-foreground border-0 rounded-md ml-[2px]">  PG HUB</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground transition-colors">Features</button>
@@ -371,7 +371,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Ready to Simplify Your PG Management?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join 500+ PG owners who are saving time and growing revenue with PG Manager.
+            Join 500+ PG owners who are saving time and growing revenue with PG HUB.
           </p>
           <Button size="lg" className="text-lg px-10 py-6" onClick={() => navigate("/auth")}>
             Get Started <ArrowRight className="h-5 w-5 ml-2" />
@@ -383,10 +383,10 @@ const Landing = () => {
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img alt="PG Manager" className="h-8 w-8 object-contain" src="/lovable-uploads/ef76527d-9557-4cc0-8aa4-953e197b4945.png" />
-            <span className="text-sm font-medium text-foreground">PG Manager</span>
+            <img alt="PG HUB" className="h-8 w-8 object-contain" src="/lovable-uploads/ef76527d-9557-4cc0-8aa4-953e197b4945.png" />
+            <span className="text-sm font-medium text-foreground">PG HUB</span>
           </div>
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} PG Manager. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} PG HUB. All rights reserved.</p>
         </div>
       </footer>
     </div>);

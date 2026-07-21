@@ -136,12 +136,12 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               {welcomeLottieData ? (
                 <Lottie animationData={welcomeLottieData} loop className="h-full w-full object-contain" />
               ) : (
-                <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG Manager" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
+                <img src="/lovable-uploads/4750b6dd-66dc-43e5-9618-00293cb0be71.jpg" alt="PG HUB" className="h-28 w-28 rounded-2xl object-cover shadow-lg" />
               )}
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold mb-2 text-white">Welcome to PG Manager</h1>
+              <h1 className="text-3xl font-bold mb-2 text-white">Welcome to PG HUB</h1>
               <p className="text-gray-400">
                 Multi-owner PG management with 1 month free trial and auto-renewing subscriptions.
               </p>

@@ -25,7 +25,7 @@ const TRIAL_DAYS = 30;
 
 async function createOrFetchPlan(credentials: string, plan: PlanKey) {
   const cfg = PLAN_CONFIG[plan];
-  const planName = `PG Manager ${cfg.label}`;
+  const planName = `PG HUB ${cfg.label}`;
 
   const fetchPlansRes = await fetch("https://api.razorpay.com/v1/plans?count=100", {
     headers: { Authorization: `Basic ${credentials}` },
@@ -55,7 +55,7 @@ async function createOrFetchPlan(credentials: string, plan: PlanKey) {
         name: planName,
         amount: cfg.amount,
         currency: "INR",
-        description: `PG Manager ${cfg.label} auto-renewing subscription`,
+        description: `PG HUB ${cfg.label} auto-renewing subscription`,
       },
       notes: {
         plan_key: plan,
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         subscription_id: subscriptionJson.id,
         key_id: RAZORPAY_KEY_ID,
-        description: `PG Manager ${cfg.label} subscription`,
+        description: `PG HUB ${cfg.label} subscription`,
       }),
       {
         status: 200,

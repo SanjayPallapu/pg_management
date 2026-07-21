@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "Do I need any technical knowledge?",
-    a: "Not at all. PG Manager is designed for PG owners — just sign up, add your rooms, and you're ready to go.",
+    a: "Not at all. PG HUB is designed for PG owners — just sign up, add your rooms, and you're ready to go.",
   },
 ];
 

@@ -1,175 +1,130 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ArrowRight } from "lucide-react";
-import onboarding1 from "@/assets/onboarding/onboarding1.png";
-import onboarding2 from "@/assets/onboarding/onboarding2.png";
+import onboardingGrow from "@/assets/pg-hub/onboarding-grow.png";
+import onboardingHub from "@/assets/pg-hub/onboarding-hub.png";
+import onboardingRent from "@/assets/pg-hub/onboarding-rent.png";
+import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
+import { PGHubButton } from "@/features/pg-hub/PGHubButton";
+import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 
-const ONBOARDING_DATA = [
-  { image: onboarding1, title: "Screen 1" },
-  { image: onboarding2, title: "Screen 2" }
-];
+const slides = [
+  {
+    id: "grow",
+    titleTop: "Grow",
+    titleBottom: "Your PG",
+    strong: "Fill rooms faster. Manage less manually.",
+    body: "Track occupancy, tenants, rent, and payments in one simple app.",
+    image: onboardingGrow,
+  },
+  {
+    id: "hub",
+    titleTop: "Everything in",
+    titleBottom: "One Place",
+    strong: "Rooms, tenants, rent, reports — all connected.",
+    body: "Run your PG with one dashboard for occupancy, collections, receipts, and reminders.",
+    image: onboardingHub,
+  },
+  {
+    id: "rent",
+    titleTop: "Never Miss",
+    titleBottom: "Rent Again",
+    strong: "Automate reminders and collect on time.",
+    body: "Send reminders, track payments, and record every receipt without chasing tenants.",
+    image: onboardingRent,
+  },
+] as const;
 
-const Onboarding = () => {
+export default function Onboarding() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [direction, setDirection] = useState(0); // -1 for left, 1 for right
+  const [active, setActive] = useState(0);
+  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     if (isLoading) return;
     if (isAuthenticated) {
       navigate("/", { replace: true });
-    } else {
-      const hasCompleted = localStorage.getItem("hasCompletedOnboarding") === "true";
-      if (hasCompleted) {
-        navigate("/auth", { replace: true });
-      }
+      return;
+    }
+    if (localStorage.getItem("hasCompletedOnboarding") === "true") {
+      navigate("/auth", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  const nextSlide = () => {
-    if (currentSlide < ONBOARDING_DATA.length - 1) {
-      setDirection(1);
-      setCurrentSlide(prev => prev + 1);
-    } else {
-      completeOnboarding();
-    }
-  };
-
-  const prevSlide = () => {
-    if (currentSlide > 0) {
-      setDirection(-1);
-      setCurrentSlide(prev => prev - 1);
-    }
-  };
-
-  const completeOnboarding = () => {
+  const finish = () => {
     localStorage.setItem("hasCompletedOnboarding", "true");
     navigate("/auth", { replace: true });
   };
 
-  // Drag handlers for touch/swipe gestures
-  const handleDragEnd = (event: any, info: any) => {
-    const swipeThreshold = 55;
-    if (info.offset.x < -swipeThreshold) {
-      nextSlide();
-    } else if (info.offset.x > swipeThreshold) {
-      prevSlide();
-    }
+  const goTo = (next: number) => {
+    if (next < 0 || next >= slides.length) return;
+    setDirection(next > active ? 1 : -1);
+    setActive(next);
   };
 
-  const slideVariants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? "100%" : "-100%",
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        x: { type: "spring", stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 }
-      }
-    },
-    exit: (dir: number) => ({
-      x: dir < 0 ? "100%" : "-100%",
-      opacity: 0,
-      transition: {
-        x: { type: "spring", stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 }
-      }
-    })
+  const next = () => {
+    if (active === slides.length - 1) finish();
+    else goTo(active + 1);
+  };
+
+  const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -55) next();
+    if (info.offset.x > 55) goTo(active - 1);
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070913]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    );
+    return <div className="min-h-screen grid place-items-center bg-[#08052f]"><Loader2 className="h-8 w-8 animate-spin text-blue-400" /></div>;
   }
 
-  const slide = ONBOARDING_DATA[currentSlide];
+  const slide = slides[active];
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#070913] text-white overflow-hidden select-none">
-      {/* Header with Skip button */}
-      <div className="absolute top-6 right-6 z-30">
-        <button 
-          onClick={completeOnboarding}
-          className="text-sm font-semibold text-gray-400 hover:text-white transition-colors py-2 px-3 rounded-lg bg-black/40 backdrop-blur-md border border-white/5 active:scale-95 duration-100 shadow-lg shadow-black/40"
-        >
-          Skip
-        </button>
-      </div>
-
-      {/* Slides Container - takes all remaining height */}
-      <div className="flex-1 relative w-full overflow-hidden">
+    <PGHubShell variant="dark" className="pgh-onboarding">
+      <div className="pgh-onboarding__page">
+        <button type="button" className="pgh-onboarding__skip" onClick={finish}>Skip</button>
         <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={currentSlide}
+          <motion.section
+            key={slide.id}
+            className="pgh-onboarding__slide"
             custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
+            initial={{ opacity: 0, x: direction > 0 ? 70 : -70 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: direction > 0 ? -70 : 70 }}
+            transition={{ type: "spring", stiffness: 230, damping: 25 }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.4}
-            onDragEnd={handleDragEnd}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing flex items-center justify-center"
+            dragElastic={0.25}
+            onDragEnd={onDragEnd}
           >
-            {/* Image scales to fit exactly inside this area, preserving high quality */}
-            <img 
-              src={slide.image} 
-              className="w-full h-full object-contain max-h-full"
-              style={{ pointerEvents: 'none', objectPosition: 'center center' }}
-              alt={slide.title}
-            />
-          </motion.div>
+            <div className="pgh-onboarding__copy">
+              <PGHubBrand dark />
+              <h1>{slide.titleTop}<em>{slide.titleBottom}</em></h1>
+              <strong>{slide.strong}</strong>
+              <p>{slide.body}</p>
+            </div>
+            <motion.div
+              className={`pgh-onboarding__art pgh-onboarding__art--${slide.id}`}
+              animate={{ y: [-5, 7, -5], rotate: slide.id === "rent" ? [-.6, .6, -.6] : [-.2, .2, -.2] }}
+              transition={{ duration: slide.id === "hub" ? 5.2 : 3.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <img src={slide.image} alt="" />
+            </motion.div>
+          </motion.section>
         </AnimatePresence>
-      </div>
 
-      {/* Bottom Controls Bar - Dedicated row to prevent overlapping image content */}
-      <div className="h-20 w-full flex-shrink-0 flex items-center justify-between px-6 bg-black/50 border-t border-white/5 backdrop-blur-lg shadow-2xl">
-        <div className="max-w-lg mx-auto w-full flex items-center justify-between">
-          {/* Pagination Dots */}
-          <div className="flex gap-2">
-            {ONBOARDING_DATA.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setDirection(idx > currentSlide ? 1 : -1);
-                  setCurrentSlide(idx);
-                }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  currentSlide === idx ? "w-6 bg-blue-500" : "w-2 bg-white/20 hover:bg-white/40"
-                }`}
-              />
+        <footer className="pgh-onboarding__footer">
+          <div className="pgh-dots" aria-label={`Slide ${active + 1} of ${slides.length}`}>
+            {slides.map((item, index) => (
+              <button key={item.id} type="button" className={index === active ? "is-active" : ""} onClick={() => goTo(index)} aria-label={`Go to slide ${index + 1}`} />
             ))}
           </div>
-
-          {/* Action Button */}
-          <Button
-            onClick={nextSlide}
-            className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#4f8eff] to-[#3a76e8] hover:from-[#609aff] hover:to-[#4a84fa] text-white font-semibold shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center gap-1.5"
-          >
-            {currentSlide === ONBOARDING_DATA.length - 1 ? (
-              "Get Started"
-            ) : (
-              <>
-                Next
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
+          <PGHubButton onClick={next} showArrow>{active === slides.length - 1 ? "Get Started" : "Next"}</PGHubButton>
+          {active > 0 && <button type="button" className="pgh-onboarding__back" onClick={() => goTo(active - 1)}>Back</button>}
+        </footer>
       </div>
-    </div>
+    </PGHubShell>
   );
-};
-
-export default Onboarding;
+}

@@ -66,7 +66,7 @@ serve(async (req) => {
           price_data: {
             currency: "inr",
             product_data: {
-              name: `PG Manager - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
+              name: `PG HUB - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
               description: `Monthly subscription - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
             },
             unit_amount: amount * 100,

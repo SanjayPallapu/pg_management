@@ -120,7 +120,7 @@ export const useRazorpay = () => {
         const options = {
           key: data.key_id,
           subscription_id: data.subscription_id,
-          name: "PG Manager",
+          name: "PG HUB",
           description: data.description,
           handler: async function (response: RazorpayCheckoutResponse) {
             try {

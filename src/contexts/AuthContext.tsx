@@ -17,6 +17,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string) => Promise<AuthResponse>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  requestPhoneOtp: (phone: string) => Promise<{ error: AuthError | null }>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<AuthResponse>;
   signOut: () => Promise<{ error: AuthError | null }>;
 }
 
@@ -33,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     // DEV MOCK AUTO-LOGIN BYPASS
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true') {
       const mockUser = {
         id: "92f3d1db-3e91-4b72-9712-ac756da63006",
         email: "owner@pgmanagement.com",
@@ -49,8 +51,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         refresh_token: "mock-refresh-token",
         user: mockUser,
       };
-      setSession(mockSession as any);
-      setUser(mockUser as any);
+      setSession(mockSession as Session);
+      setUser(mockUser as User);
       setRole('owner');
       setIsLoading(false);
       return () => {};
@@ -191,7 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
     const redirectUrl = `${window.location.origin}/`;
     // Set flag BEFORE signUp so onAuthStateChange handler picks it up
     sessionStorage.setItem('isNewSignup', 'true');
@@ -207,7 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Also update state directly in case onAuthStateChange already fired
       setIsNewSignup(true);
     }
-    return { data, error };
+    return { data, error } as AuthResponse;
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
@@ -230,6 +232,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   }, []);
 
+  const requestPhoneOtp = useCallback(async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: { shouldCreateUser: true },
+    });
+    return { error };
+  }, []);
+
+  const verifyPhoneOtp = useCallback(async (phone: string, token: string) => {
+    const response = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+
+    if (!response.error && response.data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            user_id: response.data.user.id,
+            phone,
+            is_new_signup: true,
+          },
+          { onConflict: 'user_id' },
+        );
+
+      if (profileError) {
+        console.error('[Auth] Failed to save phone profile:', profileError.message);
+      }
+    }
+
+    return response;
+  }, []);
+
   const signOut = useCallback(async () => {
     localStorage.removeItem("hasCompletedOnboarding");
     const { error } = await supabase.auth.signOut();
@@ -249,6 +282,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signIn,
     signUp,
     signInWithGoogle,
+    requestPhoneOtp,
+    verifyPhoneOtp,
     signOut,
   };
 
@@ -259,6 +294,7 @@ export const useAuth = (): AuthContextType => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     // Return a safe default during initial render before provider mounts
+    const notReady = () => new Error('Auth not ready') as AuthError;
     return {
       user: null,
       session: null,
@@ -269,10 +305,12 @@ export const useAuth = (): AuthContextType => {
       hasRole: false,
       isAdmin: false,
       isOwner: false,
-      signIn: async () => ({ error: new Error('Auth not ready') }),
-      signUp: async () => ({ data: null, error: new Error('Auth not ready') }),
-      signInWithGoogle: async () => ({ error: new Error('Auth not ready') }),
-      signOut: async () => ({ error: new Error('Auth not ready') }),
+      signIn: async () => ({ error: notReady() }),
+      signUp: async () => ({ data: { user: null, session: null }, error: notReady() }),
+      signInWithGoogle: async () => ({ error: notReady() }),
+      requestPhoneOtp: async () => ({ error: notReady() }),
+      verifyPhoneOtp: async () => ({ data: { user: null, session: null }, error: notReady() }),
+      signOut: async () => ({ error: notReady() }),
     };
   }
   return ctx;

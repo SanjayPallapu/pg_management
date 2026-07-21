@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { PGBrandingData } from '@/types/pg';
 import { getPricePerBed } from '@/constants/pricing';
 import { toast } from 'sonner';
+import type { PGFloorDraft } from '@/features/pg-hub/PGSetupDraftContext';
 
 export const usePGSetup = () => {
   const { user } = useAuth();
@@ -157,6 +158,85 @@ export const usePGSetup = () => {
     },
   });
 
+  const createPGFromFloorPlan = useMutation({
+    mutationFn: async ({
+      name,
+      address,
+      imageFile,
+      floors,
+      startingRoom,
+    }: {
+      name: string;
+      address?: string;
+      imageFile: File | null;
+      floors: PGFloorDraft[];
+      startingRoom: string;
+    }) => {
+      if (!user) throw new Error('You must be signed in to create a PG.');
+      if (!floors.length) throw new Error('Add at least one floor.');
+
+      const logoUrl = imageFile ? await uploadLogo(imageFile, name) : null;
+      const { data: pg, error: pgError } = await supabase
+        .from('pgs')
+        .insert({
+          owner_id: user.id,
+          name,
+          address: address || null,
+          logo_url: logoUrl,
+          floors: floors.length,
+        })
+        .select()
+        .single();
+
+      if (pgError) throw pgError;
+
+      const startingDigits = startingRoom.replace(/\D/g, '');
+      const startIndex = Math.max(1, parseInt(startingDigits.slice(-2), 10) || 1);
+      const rooms = floors.flatMap((floor) =>
+        Array.from({ length: floor.rooms }, (_, roomIndex) => {
+          const roomSequence = startIndex + roomIndex;
+          const roomNo = `${floor.floorNumber}${roomSequence.toString().padStart(2, '0')}`;
+          const capacity = Math.max(1, floor.bedsPerRoom);
+          return {
+            pg_id: pg.id,
+            room_no: roomNo,
+            floor: floor.floorNumber,
+            capacity,
+            rent_amount: getPricePerBed(capacity) * capacity,
+            status: 'Vacant',
+            is_ac: floor.isAc,
+          };
+        }),
+      );
+
+      if (rooms.length) {
+        const { error: roomsError } = await supabase.from('rooms').insert(rooms);
+        if (roomsError) {
+          const { error: rollbackError } = await supabase.from('pgs').delete().eq('id', pg.id);
+          if (rollbackError) console.error('[PG Setup] Failed to roll back partial PG:', rollbackError.message);
+          throw roomsError;
+        }
+      }
+
+      try {
+        const floorNames = Object.fromEntries(floors.map((floor) => [floor.floorNumber, floor.name]));
+        localStorage.setItem(`pg_floor_names_${pg.id}`, JSON.stringify(floorNames));
+        localStorage.setItem('currentPgId', pg.id);
+      } catch (error) {
+        console.warn('[PG Setup] Could not save local floor labels:', error);
+      }
+
+      return pg;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pgs'] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+    onError: (error) => {
+      console.error('Error creating PG from floor plan:', error);
+    },
+  });
+
   const generateAILogo = async (
     pgName: string,
     style: string,
@@ -180,7 +260,7 @@ export const usePGSetup = () => {
     }
   };
 
-  const uploadLogo = async (file: File, pgName: string): Promise<string | null> => {
+  async function uploadLogo(file: File, pgName: string): Promise<string | null> {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${pgName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.${fileExt}`;
@@ -202,10 +282,11 @@ export const usePGSetup = () => {
       toast.error('Failed to upload logo');
       return null;
     }
-  };
+  }
 
   return {
     createPG,
+    createPGFromFloorPlan,
     generateAILogo,
     uploadLogo,
     isGeneratingLogo,

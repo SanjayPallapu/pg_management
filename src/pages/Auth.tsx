@@ -398,7 +398,7 @@ const Auth = () => {
             {mode === "signin" ? (
               <div className="flex flex-col items-center justify-center pt-2">
                 <h2 ref={logoTextRef} className="text-4xl font-extrabold tracking-tight text-white bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent flex justify-center gap-[1px] select-none perspective-[1000px]">
-                  {"PG Manager".split("").map((char, index) => (
+                  {"PG HUB".split("").map((char, index) => (
                     <span 
                       key={index} 
                       className="char inline-block origin-bottom will-change-transform"

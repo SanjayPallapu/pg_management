@@ -1,6 +1,6 @@
 {
-  "name": "PG Manager — PG & Hostel Management",
-  "short_name": "PG Manager",
+  "name": "PG HUB — PG & Hostel Management",
+  "short_name": "PG HUB",
   "description": "All-in-one PG management app for owners. Track rooms, tenants, collect rent via UPI, send WhatsApp reminders, generate receipts, manage bills & reports.",
   "start_url": "/",
   "scope": "/",
@@ -32,7 +32,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "PG Manager Dashboard"
+      "label": "PG HUB Dashboard"
     }
   ],
   "shortcuts": [

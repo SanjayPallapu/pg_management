@@ -21,10 +21,10 @@ const ComparisonSection = () => (
     <div className="container mx-auto px-4">
       <div className="text-center mb-16">
         <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-          Why Switch to PG Manager?
+          Why Switch to PG HUB?
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          See the difference between managing manually and using PG Manager.
+          See the difference between managing manually and using PG HUB.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ const ComparisonSection = () => (
               Paper / Excel
             </div>
             <div className="p-4 text-sm font-semibold text-center text-primary">
-              PG Manager
+              PG HUB
             </div>
           </div>
           {rows.map((row, i) => (

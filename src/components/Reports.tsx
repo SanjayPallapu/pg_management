@@ -701,7 +701,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
         {/* Business Report Header */}
         <div className="border-b-2 border-slate-900 pb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">PG Manager Report</h1>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">PG HUB Report</h1>
             <p className="text-sm font-semibold text-slate-600">
               Executive Performance & Monthly Health Summary
             </p>

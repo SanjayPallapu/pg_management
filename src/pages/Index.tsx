@@ -45,6 +45,7 @@ import {
   History,
   CreditCard,
   Loader2,
+  Building,
   Bell,
   Settings,
   Wallet,
@@ -59,7 +60,7 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
@@ -69,7 +70,7 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { rooms, isLoading, error: roomsError } = useRooms();
-  const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG } = usePG();
+  const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG, canCreatePG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
   const { isLoading: paymentsLoading } = useTenantPayments();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -290,6 +291,7 @@ const Index = () => {
 
   // Show onboarding flow for any user who has no PGs (new signup or returning user)
   if (needsSetup) {
+    if (canCreatePG) return <Navigate to="/setup/property" replace />;
     return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
   }
 

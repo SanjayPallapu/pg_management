@@ -1,13 +1,17 @@
- import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PhoneLogin from "./pages/PhoneLogin";
+import OTPVerification from "./pages/OTPVerification";
+import PGSetupProperty from "./pages/PGSetupProperty";
+import PGSetupCapacity from "./pages/PGSetupCapacity";
+import SetupComplete from "./pages/SetupComplete";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
@@ -25,6 +29,7 @@ import { PGProvider } from "@/contexts/PGContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ActiveTabProvider } from "@/contexts/ActiveTabContext";
 import { Loader2 } from "lucide-react";
+import { PGSetupDraftProvider } from "@/features/pg-hub/PGSetupDraftContext";
 
 import { RentProvider } from "./contexts/RentContext";
 import { useMonthContext } from "./contexts/MonthContext";
@@ -79,7 +84,7 @@ const AppContent = () => {
         if (Capacitor.isNativePlatform()) {
           const { StatusBar, Style } = await import("@capacitor/status-bar");
           await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setBackgroundColor({ color: "#0e6ce7" });
+          await StatusBar.setBackgroundColor({ color: "#1769ff" });
           await StatusBar.setStyle({ style: Style.Dark });
         }
       } catch (e) {
@@ -92,9 +97,12 @@ const AppContent = () => {
   return (
     <MonthProvider>
     <ActiveTabProvider>
+      <PGSetupDraftProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth" element={<PhoneLogin />} />
+          <Route path="/auth/otp" element={<OTPVerification />} />
+          <Route path="/auth/email" element={<Auth />} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/onboarding" element={
@@ -124,6 +132,21 @@ const AppContent = () => {
               <Index />
             </ProtectedRoute>
           } />
+          <Route path="/setup/property" element={
+            <ProtectedRoute>
+              <PGSetupProperty />
+            </ProtectedRoute>
+          } />
+          <Route path="/setup/capacity" element={
+            <ProtectedRoute>
+              <PGSetupCapacity />
+            </ProtectedRoute>
+          } />
+          <Route path="/setup/complete" element={
+            <ProtectedRoute>
+              <SetupComplete />
+            </ProtectedRoute>
+          } />
           <Route path="/day-guest/:roomId" element={
             <ProtectedRoute>
               <DayGuest />
@@ -144,6 +167,7 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </PGSetupDraftProvider>
     </ActiveTabProvider>
     </MonthProvider>
   );

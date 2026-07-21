@@ -104,7 +104,7 @@ const Showcase = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
-          <span className="text-sm font-semibold tracking-wide text-foreground">PG Manager</span>
+          <span className="text-sm font-semibold tracking-wide text-foreground">PG HUB</span>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button size="sm" onClick={() => navigate("/auth")}>
@@ -199,7 +199,7 @@ const Showcase = () => {
               <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-24 h-5 bg-foreground/20 rounded-b-2xl z-10" />
               <img
                 src={dashboard}
-                alt="PG Manager dashboard"
+                alt="PG HUB dashboard"
                 className="w-full h-auto block"
                 loading="eager"
               />
@@ -431,7 +431,7 @@ const Showcase = () => {
 
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} PG Manager. Built for Indian PG owners.
+          © {new Date().getFullYear()} PG HUB. Built for Indian PG owners.
         </div>
       </footer>
     </div>

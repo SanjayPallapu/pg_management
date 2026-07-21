@@ -206,8 +206,8 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
   const handleShareApp = async () => {
     const shareData = {
-      title: "PG Manager",
-      text: "Manage your PG/Hostel easily with PG Manager - Track tenants, collect rent, send reminders!",
+      title: "PG HUB",
+      text: "Manage your PG/Hostel easily with PG HUB - Track tenants, collect rent, send reminders!",
       url: "https://pgmanager.app",
     };
     try {
@@ -454,7 +454,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           <div className="flex flex-col items-center gap-1 py-6 text-center">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Smartphone className="h-4 w-4" />
-              <span className="text-xs font-medium">PG Manager</span>
+              <span className="text-xs font-medium">PG HUB</span>
             </div>
             <p className="text-[11px] text-muted-foreground/70">
               Version {APP_VERSION} · Made with ❤️ in India

@@ -360,7 +360,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       id: "everything-one-place",
       image: bannerEverythingOnePlace,
       action: undefined,
-      badge: "PG Manager",
+      badge: "PG HUB",
       badgeColor: "bg-purple-600 dark:bg-purple-500",
     }
   ];

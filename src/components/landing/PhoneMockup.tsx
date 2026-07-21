@@ -17,7 +17,7 @@ const PhoneMockup = () => (
         <div className="rounded-[2rem] overflow-hidden">
           <img
             src={dashboardScreenshot}
-            alt="PG Manager Dashboard showing rent collection, occupancy stats and payment tracking"
+            alt="PG HUB dashboard showing rent collection, occupancy stats and payment tracking"
             className="w-full h-auto object-cover"
             loading="lazy"
           />
