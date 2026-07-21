@@ -3,9 +3,9 @@ import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import journeyProperty from "@/assets/pg-hub/journey-property.png";
-import journeyRent from "@/assets/pg-hub/journey-rent.png";
-import journeyFeatures from "@/assets/pg-hub/journey-features.png";
+import journeyProperty from "@/assets/pg-hub/hub-building-hero.png";
+import journeyFeatures from "@/assets/pg-hub/hub-feature-hub.png";
+import journeyRent from "@/assets/pg-hub/hub-rent-phone.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
@@ -13,27 +13,27 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 const slides = [
   {
     id: "property",
-    eyebrow: "Your property, always in control",
-    titleTop: "Run your PG.",
-    titleBottom: "The smarter way.",
-    body: "Rooms, tenants and daily operations — beautifully organized in one place.",
+    eyebrow: "Grow your PG",
+    titleTop: "Grow",
+    titleBottom: "Your PG",
+    body: "Fill rooms faster. Manage less manually. Track occupancy, tenants, rent and payments in one simple app.",
     image: journeyProperty,
-  },
-  {
-    id: "rent",
-    eyebrow: "No more rent chasing",
-    titleTop: "Rent on time.",
-    titleBottom: "Every time.",
-    body: "Send reminders, record payments and share receipts without the monthly follow-up chaos.",
-    image: journeyRent,
   },
   {
     id: "features",
     eyebrow: "One connected workspace",
-    titleTop: "Everything your PG",
-    titleBottom: "needs to grow.",
-    body: "Rooms, payments, reports, receipts and reminders — working together from day one.",
+    titleTop: "Everything in",
+    titleBottom: "One Place",
+    body: "Rooms, tenants, rent, reports — all connected. Run your PG with one dashboard for occupancy, collections, receipts and reminders.",
     image: journeyFeatures,
+  },
+  {
+    id: "rent",
+    eyebrow: "Never miss a payment",
+    titleTop: "Never Miss",
+    titleBottom: "Rent Again",
+    body: "Automatic reminders, instant receipts and clear collection tracking — every tenant, every month.",
+    image: journeyRent,
   },
 ] as const;
 
@@ -134,7 +134,7 @@ export default function Onboarding() {
             </div>
             <span>0{active + 1} / 0{slides.length}</span>
           </div>
-          <PGHubButton onClick={next} showArrow>{active === slides.length - 1 ? "Start managing" : "Continue"}</PGHubButton>
+          <PGHubButton onClick={next} showArrow>{active === slides.length - 1 ? "Get Started" : "Next"}</PGHubButton>
           <button type="button" className="pgh-onboarding__back" onClick={() => active > 0 ? goTo(active - 1) : finish()}>{active > 0 ? "Back" : "I already have an account"}</button>
         </footer>
       </div>
