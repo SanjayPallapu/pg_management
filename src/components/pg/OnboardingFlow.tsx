@@ -101,7 +101,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.reload();
+    window.location.href = "/onboarding";
   };
 
   const handleCheckStatus = async () => {

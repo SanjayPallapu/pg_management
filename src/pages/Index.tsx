@@ -204,7 +204,7 @@ const Index = () => {
   const handleSignOut = async () => {
     await signOut();
     // Full page reload to clear all cached state
-    window.location.href = "/auth";
+    window.location.href = "/onboarding";
   };
 
   useEffect(() => {
@@ -218,8 +218,8 @@ const Index = () => {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      console.warn('[Index] User not authenticated, redirecting to auth');
-      navigate('/auth');
+      console.warn('[Index] User not authenticated, redirecting to onboarding');
+      navigate('/onboarding');
     }
   }, [authLoading, isAuthenticated, navigate]);
 
