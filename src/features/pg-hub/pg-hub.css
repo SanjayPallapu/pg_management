@@ -75,8 +75,8 @@
 .pgh-section-title { margin: 0; font-size: 1.25rem; font-weight: 900; color: #0a1230; }
 
 .pgh-onboarding__page { position: relative; width: min(100%, 34rem); height: 100dvh; min-height: 38rem; margin: 0 auto; overflow: hidden; background: #050426; }
-.pgh-onboarding__slide { position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; }
-.pgh-onboarding__background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; user-select: none; pointer-events: none; }
+.pgh-onboarding__slide { position: absolute; inset: 0; overflow: hidden; }
+.pgh-onboarding__background { position: absolute; inset: .45rem; width: calc(100% - .9rem); height: calc(100% - .9rem); border-radius: 1rem; object-fit: contain; object-position: center; user-select: none; pointer-events: none; }
 .pgh-onboarding__shade { position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgba(2,3,35,.66) 0%, rgba(4,4,42,.26) 27%, transparent 48%, rgba(3,3,31,.04) 68%, rgba(3,3,31,.88) 100%); pointer-events: none; }
 .pgh-onboarding__copy { position: absolute; z-index: 3; top: max(2.8rem, calc(env(safe-area-inset-top) + 1.5rem)); left: 1.5rem; right: 1.5rem; text-shadow: 0 4px 24px rgba(0,0,0,.48); }
 .pgh-onboarding__copy h1 { max-width: 21rem; margin: 0 0 .85rem; color: #fff; font-size: clamp(2.65rem, 13vw, 3.55rem); line-height: .94; letter-spacing: -.055em; font-weight: 950; }
@@ -89,12 +89,11 @@
 .pgh-onboarding__slide--everything .pgh-onboarding__copy > p { margin-top: .45rem; font-size: .88rem; line-height: 1.4; }
 .pgh-onboarding__footer { position: absolute; z-index: 6; left: 0; right: 0; bottom: 0; display: grid; gap: 1rem; padding: 3.5rem 1.35rem max(1.25rem, calc(env(safe-area-inset-bottom) + .75rem)); background: linear-gradient(180deg, transparent, rgba(3,3,31,.86) 40%, rgba(3,3,31,.98) 100%); }
 .pgh-dots { display: flex; justify-content: center; gap: .45rem; }
-.pgh-dots button { width: .52rem; height: .52rem; border: 0; border-radius: 99px; background: rgba(196,199,216,.38); padding: 0; transition: width .25s, background .25s, box-shadow .25s; }
+.pgh-dots button { width: .52rem; height: .52rem; border: 0; border-radius: 99px; background: rgba(196,199,216,.38); padding: 0; }
 .pgh-dots button.is-active { width: 1.8rem; background: #9a67ff; box-shadow: 0 0 16px rgba(124,58,237,.75); }
 .pgh-onboarding__nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .pgh-onboarding__nav.is-first { justify-content: flex-end; }
-.pgh-onboarding__nav-button { min-width: 7.25rem; min-height: 3.25rem; border-radius: 1rem; padding: 0 1.15rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .98rem; font-weight: 850; transition: transform .18s, background .18s, box-shadow .18s; }
-.pgh-onboarding__nav-button:active { transform: scale(.97); }
+.pgh-onboarding__nav-button { min-width: 7.25rem; min-height: 3.25rem; border-radius: 1rem; padding: 0 1.15rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .98rem; font-weight: 850; }
 .pgh-onboarding__nav-button--back { border: 1px solid rgba(255,255,255,.28); background: rgba(11,10,72,.52); backdrop-filter: blur(14px); }
 .pgh-onboarding__nav-button--next { border: 1px solid rgba(255,255,255,.18); background: #1769ff; box-shadow: 0 12px 30px rgba(23,105,255,.38); }
 

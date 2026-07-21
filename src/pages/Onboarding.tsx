@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,7 +46,6 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
   const [active, setActive] = useState(0);
-  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     if (isLoading) return;
@@ -68,18 +66,12 @@ export default function Onboarding() {
 
   const goTo = (next: number) => {
     if (next < 0 || next >= slides.length) return;
-    setDirection(next > active ? 1 : -1);
     setActive(next);
   };
 
   const next = () => {
     if (active === slides.length - 1) finish();
     else goTo(active + 1);
-  };
-
-  const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -55) next();
-    if (info.offset.x > 55) goTo(active - 1);
   };
 
   if (isLoading) {
@@ -89,44 +81,17 @@ export default function Onboarding() {
   const slide = slides[active];
 
   return (
-    <PGHubShell variant="dark" className="pgh-onboarding">
+    <PGHubShell variant="dark" className="pgh-onboarding" disableMotion>
       <div className="pgh-onboarding__page">
-        <AnimatePresence custom={direction}>
-          <motion.section
-            key={slide.id}
-            className={`pgh-onboarding__slide pgh-onboarding__slide--${slide.id}`}
-            custom={direction}
-            initial={{ opacity: 0, x: direction > 0 ? 55 : -55 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: direction > 0 ? -55 : 55 }}
-            transition={{ duration: .38, ease: [0.22, 1, 0.36, 1] }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={onDragEnd}
-          >
-            <motion.img
-              className="pgh-onboarding__background"
-              src={slide.image}
-              alt=""
-              aria-hidden="true"
-              initial={{ scale: 1.02 }}
-              animate={{ scale: [1.02, 1.045, 1.02], y: [0, -3, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <div className="pgh-onboarding__shade" aria-hidden="true" />
-            <motion.div
-              className="pgh-onboarding__copy"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: .12, duration: .48 }}
-            >
-              <h1>{slide.titleTop}<em style={{ color: slide.accent }}>{slide.titleBottom}</em></h1>
-              <strong>{slide.subheading}</strong>
-              <p>{slide.body}</p>
-            </motion.div>
-          </motion.section>
-        </AnimatePresence>
+        <section key={slide.id} className={`pgh-onboarding__slide pgh-onboarding__slide--${slide.id}`}>
+          <img className="pgh-onboarding__background" src={slide.image} alt="" aria-hidden="true" />
+          <div className="pgh-onboarding__shade" aria-hidden="true" />
+          <div className="pgh-onboarding__copy">
+            <h1>{slide.titleTop}<em style={{ color: slide.accent }}>{slide.titleBottom}</em></h1>
+            <strong>{slide.subheading}</strong>
+            <p>{slide.body}</p>
+          </div>
+        </section>
 
         <footer className="pgh-onboarding__footer">
           <div className="pgh-dots" aria-label={`Slide ${active + 1} of ${slides.length}`}>

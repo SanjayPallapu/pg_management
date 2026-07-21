@@ -6,12 +6,21 @@ type PGHubShellProps = {
   children: ReactNode;
   variant?: "dark" | "light";
   className?: string;
+  disableMotion?: boolean;
 };
 
-export function PGHubShell({ children, variant = "light", className = "" }: PGHubShellProps) {
+export function PGHubShell({ children, variant = "light", className = "", disableMotion = false }: PGHubShellProps) {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
+  if (disableMotion) {
+    return (
+      <main className={`pgh-shell pgh-shell--${variant} ${className}`}>
+        <div className="pgh-safe-area">{children}</div>
+      </main>
+    );
+  }
 
   return (
     <main className={`pgh-shell pgh-shell--${variant} ${className}`}>
