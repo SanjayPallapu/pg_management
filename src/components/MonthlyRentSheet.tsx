@@ -822,10 +822,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setTimeout(async () => {
       const el = document.getElementById("rent-ac-bill-template-host");
       if (!el) return;
+      let dataUrl = '';
+      let fileName = '';
       try {
-        const dataUrl = await generateReceiptImage(el);
+        dataUrl = await generateReceiptImage(el);
         const blob = dataURLtoBlob(dataUrl);
-        const fileName = targetTenantName ? `ac-bill-${item.room.roomNo}-${targetTenantName.replace(/\s+/g, '-')}.png` : `ac-bill-${item.room.roomNo}.png`;
+        fileName = targetTenantName ? `ac-bill-${item.room.roomNo}-${targetTenantName.replace(/\s+/g, '-')}.png` : `ac-bill-${item.room.roomNo}.png`;
         const file = new File([blob], fileName, { type: "image/png" });
 
         const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
@@ -948,7 +950,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           roomItem.splitCount ?? undefined
         );
         
-        const tenantShare = tenantShares.find(s => s.id === tenantId || s.name === tenant.name);
+        const tenantShare = tenantShares.find(s => s.name === tenant.name);
         share = tenantShare?.share ?? 0;
         
         const overdue = getOverdueAcBills(tenantId, roomItem.room, acMonth, acYear);
@@ -1007,13 +1009,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         // We find the room item to share
         const roomItem = acRooms.find(r => r.room.roomNo === roomNo);
         if (roomItem) {
-          const reading = allReadings.find(r => r.roomId === roomItem.room.id && r.month === acMonth && r.year === acYear);
+          const reading = allReadings.find((r: any) => r.room_id === roomItem.room.id && r.month === acMonth && r.year === acYear) as any;
           const units = reading?.units ?? 0;
-          const unitPrice = reading?.unitPrice ?? currentPG?.electricityUnitPrice ?? 12;
-          const startReading = reading?.startReading ?? null;
-          const endReading = reading?.endReading ?? null;
-          const splitType = reading?.splitType ?? "active_tenants";
-          const splitCount = reading?.splitCount ?? null;
+          const unitPrice = reading?.unit_price ?? currentPG?.electricityUnitPrice ?? 12;
+          const startReading = reading?.start_reading ?? null;
+          const endReading = reading?.end_reading ?? null;
+          const splitType = reading?.split_type ?? "active_tenants";
+          const splitCount = reading?.split_count ?? null;
 
           handleShareAC(
             roomItem,

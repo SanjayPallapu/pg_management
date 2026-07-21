@@ -172,7 +172,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
     setIsDeleting(true);
     try {
-      const { error } = await supabase.rpc('delete_user_account');
+      const { error } = await (supabase as any).rpc('delete_user_account');
       if (error) {
         console.warn("RPC account deletion failed, attempting client-side data wipe fallback:", error.message);
         

@@ -168,7 +168,7 @@ export const useDayGuests = (roomId?: string) => {
         updatePayload.payment_entries = payment_entries as unknown as Json;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('day_guests')
         .update(updatePayload)
         .eq('id', id)

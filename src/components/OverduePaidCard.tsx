@@ -19,6 +19,7 @@ interface OverduePaidCardProps {
   showSummaryCard?: boolean;
   rooms: Room[];
   defaultOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface TenantWithPayment {

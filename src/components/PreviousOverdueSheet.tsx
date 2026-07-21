@@ -29,7 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PaymentEntry } from '@/types';
+import { PaymentEntry, Room } from '@/types';
 interface PreviousOverdueSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

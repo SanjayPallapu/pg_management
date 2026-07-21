@@ -371,7 +371,7 @@ export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose, 
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => handleEditRule(rule)}>
                                 <Settings className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => triggerDeleteRule(rule.id)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setRuleToDelete(rule.id); setShowDeleteDialog(true); }}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>

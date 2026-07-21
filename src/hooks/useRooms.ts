@@ -286,7 +286,7 @@ export const useRooms = () => {
         changes.room_id = { old: null, new: (updates as any).roomId };
       }
 
-      const { error } = await supabase.from("tenants").update(updateData).eq("id", tenantId);
+      const { error } = await (supabase as any).from("tenants").update(updateData).eq("id", tenantId);
 
       if (error) throw error;
 

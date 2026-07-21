@@ -332,7 +332,7 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   const handleArchiveProperty = async (pgId: string, pgName: string) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("pgs")
         .update({ is_archived: true })
         .eq("id", pgId);

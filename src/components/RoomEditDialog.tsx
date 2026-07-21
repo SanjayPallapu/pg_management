@@ -55,7 +55,7 @@ export const RoomEditDialog = ({ open, onOpenChange, room }: RoomEditDialogProps
     if (!room) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("rooms")
         .update({
           capacity: parseInt(capacity),
