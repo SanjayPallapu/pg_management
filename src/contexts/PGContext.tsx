@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/proxyClient';
 import { PG, Subscription } from '@/types/pg';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
+import {
+  getPhoneOtpTestSession,
+  getPhoneOtpTestWorkspace,
+} from '@/lib/phoneOtpTestMode';
 
 interface PGContextType {
   pgs: PG[];
@@ -53,6 +57,17 @@ export const PGProvider = ({ children }: PGProviderProps) => {
       return;
     }
 
+    if (getPhoneOtpTestSession()) {
+      const workspace = getPhoneOtpTestWorkspace();
+      const testPGs = workspace ? [workspace.pg] : [];
+      setPgs(testPGs);
+      setCurrentPG(workspace?.pg ?? null);
+      setError(null);
+      setIsLoading(false);
+      if (workspace) localStorage.setItem(CURRENT_PG_KEY, workspace.pg.id);
+      return;
+    }
+
     try {
       setError(null);
       const { data, error: fetchError } = await supabase
@@ -100,6 +115,11 @@ export const PGProvider = ({ children }: PGProviderProps) => {
 
   const fetchSubscription = useCallback(async () => {
     if (!user) {
+      setSubscription(null);
+      return;
+    }
+
+    if (getPhoneOtpTestSession()) {
       setSubscription(null);
       return;
     }

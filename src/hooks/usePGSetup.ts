@@ -6,6 +6,12 @@ import { PGBrandingData } from '@/types/pg';
 import { getPricePerBed } from '@/constants/pricing';
 import { toast } from 'sonner';
 import type { PGFloorDraft } from '@/features/pg-hub/PGSetupDraftContext';
+import type { Room } from '@/types';
+import type { PG } from '@/types/pg';
+import {
+  getPhoneOtpTestSession,
+  savePhoneOtpTestWorkspace,
+} from '@/lib/phoneOtpTestMode';
 
 export const usePGSetup = () => {
   const { user } = useAuth();
@@ -175,6 +181,57 @@ export const usePGSetup = () => {
       if (!user) throw new Error('You must be signed in to create a PG.');
       if (!floors.length) throw new Error('Add at least one floor.');
 
+      const startingDigits = startingRoom.replace(/\D/g, '');
+      const startIndex = Math.max(1, parseInt(startingDigits.slice(-2), 10) || 1);
+      const makeRoomDrafts = (pgId: string) => floors.flatMap((floor) =>
+        Array.from({ length: floor.rooms }, (_, roomIndex) => {
+          const roomSequence = startIndex + roomIndex;
+          const roomNo = `${floor.floorNumber}${roomSequence.toString().padStart(2, '0')}`;
+          const capacity = Math.max(1, floor.bedsPerRoom);
+          return {
+            id: `${pgId}-room-${floor.floorNumber}-${roomSequence}`,
+            pg_id: pgId,
+            room_no: roomNo,
+            floor: floor.floorNumber,
+            capacity,
+            rent_amount: getPricePerBed(capacity) * capacity,
+            status: 'Vacant' as const,
+            is_ac: floor.isAc,
+          };
+        }),
+      );
+
+      if (getPhoneOtpTestSession()) {
+        const now = new Date().toISOString();
+        const pgId = `pgh-test-${Date.now()}`;
+        const testPG: PG = {
+          id: pgId,
+          ownerId: user.id,
+          name,
+          address,
+          floors: floors.length,
+          electricityUnitPrice: 12,
+          createdAt: now,
+          updatedAt: now,
+        };
+        const testRooms: Room[] = makeRoomDrafts(pgId).map((room) => ({
+          id: room.id,
+          roomNo: room.room_no,
+          floor: room.floor,
+          capacity: room.capacity,
+          rentAmount: room.rent_amount,
+          status: room.status,
+          isAc: room.is_ac,
+          tenants: [],
+        }));
+
+        savePhoneOtpTestWorkspace({ pg: testPG, rooms: testRooms });
+        localStorage.setItem('currentPgId', pgId);
+        localStorage.setItem(`pg_floor_names_${pgId}`, JSON.stringify(Object.fromEntries(floors.map((floor) => [floor.floorNumber, floor.name]))));
+        await new Promise((resolve) => window.setTimeout(resolve, 550));
+        return { id: pgId, name };
+      }
+
       const logoUrl = imageFile ? await uploadLogo(imageFile, name) : null;
       const { data: pg, error: pgError } = await supabase
         .from('pgs')
@@ -190,24 +247,7 @@ export const usePGSetup = () => {
 
       if (pgError) throw pgError;
 
-      const startingDigits = startingRoom.replace(/\D/g, '');
-      const startIndex = Math.max(1, parseInt(startingDigits.slice(-2), 10) || 1);
-      const rooms = floors.flatMap((floor) =>
-        Array.from({ length: floor.rooms }, (_, roomIndex) => {
-          const roomSequence = startIndex + roomIndex;
-          const roomNo = `${floor.floorNumber}${roomSequence.toString().padStart(2, '0')}`;
-          const capacity = Math.max(1, floor.bedsPerRoom);
-          return {
-            pg_id: pg.id,
-            room_no: roomNo,
-            floor: floor.floorNumber,
-            capacity,
-            rent_amount: getPricePerBed(capacity) * capacity,
-            status: 'Vacant',
-            is_ac: floor.isAc,
-          };
-        }),
-      );
+      const rooms = makeRoomDrafts(pg.id).map(({ id: _id, ...room }) => room);
 
       if (rooms.length) {
         const { error: roomsError } = await supabase.from('rooms').insert(rooms);

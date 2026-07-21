@@ -10,6 +10,7 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft, type PGFloorDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { usePGSetup } from "@/hooks/usePGSetup";
 import { usePG } from "@/contexts/PGContext";
+import journeyBuilding from "@/assets/pg-hub/journey-building.png";
 
 function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: Partial<PGFloorDraft>) => void }) {
   const [editing, setEditing] = useState(false);
@@ -61,10 +62,14 @@ export default function PGSetupCapacity() {
   };
 
   return (
-    <PGHubShell variant="light">
-      <div className="pgh-page pgh-page--wide">
+    <PGHubShell variant="light" className="pgh-setup-shell">
+      <div className="pgh-page pgh-page--wide pgh-setup-page pgh-capacity-page">
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
-        <section className="pgh-setup-title"><h1>Rooms & Capacity</h1><p>Set up rooms, beds, and the default room type for each floor.</p></section>
+        <motion.section className="pgh-capacity-hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <img src={journeyBuilding} alt="PG room setup" />
+          <div><span>Almost ready</span><h1>Shape your<br /><em>property</em></h1><p>Fine-tune rooms and beds before we build your dashboard.</p></div>
+        </motion.section>
+        <section className="pgh-setup-title"><h2>Rooms & capacity</h2><p>Set the room plan for each floor.</p></section>
 
         <section className="pgh-card pgh-capacity-card">
           <h2 className="pgh-section-title"><Building2 size={21} /> Overall Capacity</h2>

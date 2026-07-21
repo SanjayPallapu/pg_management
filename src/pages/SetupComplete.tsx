@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { BedDouble, Building2, CheckCircle2, DoorOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import readyBuilding from "@/assets/pg-hub/ready-building.png";
+import journeyComplete from "@/assets/pg-hub/journey-complete.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubConfetti } from "@/features/pg-hub/PGHubConfetti";
@@ -26,27 +26,31 @@ export default function SetupComplete() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-ready">
+    <PGHubShell variant="dark" className="pgh-ready pgh-ready--journey">
       <PGHubConfetti />
-      <div className="pgh-page">
-        <header className="pgh-ready__header"><PGHubBrand compact /><span><CheckCircle2 size={18} /> Setup Complete</span></header>
-        <motion.div className="pgh-ready__art" initial={{ opacity: 0, scale: .85 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", damping: 14 }}>
-          <motion.img src={readyBuilding} alt="Completed PG property" animate={{ y: [-4, 5, -4] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} />
-          <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: .35 }}><CheckCircle2 size={54} /></motion.i>
+      <div className="pgh-ready__journey">
+        <motion.div className="pgh-ready__backdrop" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .75 }}>
+          <img src={journeyComplete} alt="Completed PG property" />
+          <span aria-hidden="true" />
         </motion.div>
-        <motion.section className="pgh-ready__copy" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .18 }}>
-          <h1>Your PG <em>is ready</em></h1>
-          <p>{creationResult.pgName} has been created successfully.<br />Start by adding tenants, assigning rooms, and collecting rent.</p>
+        <header className="pgh-ready__header"><PGHubBrand dark compact /><span><CheckCircle2 size={18} /> Setup complete</span></header>
+        <motion.section className="pgh-ready__sheet" initial={{ opacity: 0, y: 70 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 22, delay: .2 }}>
+          <div className="pgh-ready__grab" aria-hidden="true" />
+          <div className="pgh-ready__copy">
+            <span>Welcome home</span>
+            <h1>Your PG <em>is ready</em></h1>
+            <p><strong>{creationResult.pgName}</strong> is set up and waiting for its first tenant.</p>
+          </div>
+          <div className="pgh-ready__stats">
+            <PGHubStat icon={Building2} value={creationResult.floors} label="Floors" color="#1769FF" delay={260} />
+            <PGHubStat icon={DoorOpen} value={creationResult.rooms} label="Rooms" color="#7B4DFF" delay={340} />
+            <PGHubStat icon={BedDouble} value={creationResult.beds} label="Beds" color="#22A447" delay={420} />
+          </div>
+          <div className="pgh-ready__buttons">
+            <PGHubButton onClick={() => finish("/")}>Enter dashboard</PGHubButton>
+            <PGHubButton variant="outline" onClick={() => finish("/?tab=rooms")}>Add your first tenant</PGHubButton>
+          </div>
         </motion.section>
-        <div className="pgh-ready__stats">
-          <PGHubStat icon={Building2} value={creationResult.floors} label="Floors" color="#1769FF" delay={260} />
-          <PGHubStat icon={DoorOpen} value={creationResult.rooms} label="Rooms" color="#7B4DFF" delay={340} />
-          <PGHubStat icon={BedDouble} value={creationResult.beds} label="Beds" color="#22A447" delay={420} />
-        </div>
-        <div className="pgh-ready__buttons">
-          <PGHubButton onClick={() => finish("/")}>Go to Dashboard</PGHubButton>
-          <PGHubButton variant="outline" onClick={() => finish("/?tab=rooms")}>Add Tenants</PGHubButton>
-        </div>
       </div>
     </PGHubShell>
   );

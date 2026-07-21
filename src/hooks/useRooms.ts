@@ -5,6 +5,10 @@ import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
+import {
+  getPhoneOtpTestSession,
+  getPhoneOtpTestWorkspace,
+} from "@/lib/phoneOtpTestMode";
 
 export const useRooms = () => {
   const queryClient = useQueryClient();
@@ -29,9 +33,14 @@ export const useRooms = () => {
       // Don't fetch if no PG is selected
       if (!currentPG?.id) {
         return [];
-        }
+      }
 
-        // Fetch rooms filtered by current PG
+      if (getPhoneOtpTestSession()) {
+        const workspace = getPhoneOtpTestWorkspace();
+        return workspace?.pg.id === currentPG.id ? workspace.rooms : [];
+      }
+
+      // Fetch rooms filtered by current PG
       const { data: roomsData, error: roomsError } = await supabase
         .from("rooms")
         .select("*")

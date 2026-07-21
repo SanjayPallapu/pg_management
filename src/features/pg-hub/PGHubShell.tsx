@@ -15,7 +15,12 @@ export function PGHubShell({ children, variant = "light", className = "" }: PGHu
 
   return (
     <main className={`pgh-shell pgh-shell--${variant} ${className}`}>
-      <div className="pgh-safe-area">
+      <motion.div
+        className="pgh-safe-area"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .38, ease: [0.22, 1, 0.36, 1] }}
+      >
         {variant === "dark" && (
           <div className="pgh-orbs" aria-hidden="true">
             <motion.span
@@ -31,7 +36,7 @@ export function PGHubShell({ children, variant = "light", className = "" }: PGHu
           </div>
         )}
         {children}
-      </div>
+      </motion.div>
     </main>
   );
 }

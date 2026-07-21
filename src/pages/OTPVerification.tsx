@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock3, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import otpSecurity from "@/assets/pg-hub/otp-security.png";
+import journeySecurity from "@/assets/pg-hub/journey-security.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
@@ -99,16 +99,16 @@ export default function OTPVerification() {
         <header className="pgh-otp__header">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
           <PGHubBrand compact />
-          <span />
+          <span className="pgh-otp__step">2 of 2</span>
         </header>
-        <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-          <p className="pgh-otp__kicker">Verify Phone</p>
-          <h1 className="pgh-title">Enter <em>OTP</em></h1>
-          <p className="pgh-subtitle">We sent a 6-digit code to<br /><strong>+91 {formatted}</strong></p>
+        <motion.section className="pgh-otp__copy" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+          <p className="pgh-otp__kicker">One last step</p>
+          <h1 className="pgh-title">Check your <em>phone</em></h1>
+          <p className="pgh-subtitle">Enter the 6-digit code sent to <strong>+91 {formatted}</strong></p>
           {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
         </motion.section>
-        <motion.div className="pgh-otp__art" initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .12 }}>
-          <img src={otpSecurity} alt="Secure phone verification" />
+        <motion.div className="pgh-otp__art pgh-otp__security" initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1, y: [0, -4, 0] }} transition={{ opacity: { delay: .12 }, scale: { delay: .12 }, y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" } }}>
+          <img src={journeySecurity} alt="Secure phone verification" />
         </motion.div>
         <button type="button" className="pgh-otp__boxes" onClick={() => inputRef.current?.focus()} aria-label="Enter OTP">
           {Array.from({ length: 6 }, (_, index) => <motion.span key={index} animate={{ scale: otp[index] ? [1, 1.1, 1] : 1 }} className={index === otp.length ? "is-active" : ""}>{otp[index] || ""}</motion.span>)}
@@ -117,7 +117,7 @@ export default function OTPVerification() {
         <div className="pgh-otp__actions">
           <div><Clock3 size={18} /><span>{seconds > 0 ? <>Resend code in <strong>00:{String(seconds).padStart(2, "0")}</strong></> : "Didn't receive the code?"}</span></div>
           <button type="button" className="pgh-link-button" onClick={resend} disabled={seconds > 0}>{seconds > 0 ? "Change number" : "Resend code"}</button>
-          <PGHubButton onClick={verify} disabled={otp.length !== 6} loading={submitting}>Verify & Continue</PGHubButton>
+          <PGHubButton onClick={verify} disabled={otp.length !== 6} loading={submitting}>Continue to setup</PGHubButton>
           <p className="pgh-otp__note"><i><ShieldCheck size={18} /></i>Your number is used only for login and account security.</p>
         </div>
       </div>

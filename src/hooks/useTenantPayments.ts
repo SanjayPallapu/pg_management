@@ -4,6 +4,7 @@ import { TenantPayment, PaymentEntry } from '@/types';
 import { useAuditLog } from './useAuditLog';
 import { usePG } from '@/contexts/PGContext';
 import { toast } from 'sonner';
+import { getPhoneOtpTestSession } from '@/lib/phoneOtpTestMode';
 
 export const useTenantPayments = () => {
   const { logAudit } = useAuditLog();
@@ -16,6 +17,8 @@ export const useTenantPayments = () => {
       if (!currentPG?.id) {
         return [];
       }
+
+      if (getPhoneOtpTestSession()) return [];
 
       // Step 1: Fetch rooms in this PG
       const { data: roomsData, error: roomsError } = await supabase

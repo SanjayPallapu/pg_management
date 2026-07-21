@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import authBuilding from "@/assets/pg-hub/auth-building.png";
+import journeySecurity from "@/assets/pg-hub/journey-security.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
@@ -52,17 +52,20 @@ export default function PhoneLogin() {
     <PGHubShell variant="light" className="pgh-login">
       <div className="pgh-login__page">
         <section className="pgh-login__hero">
-          <PGHubBrand />
+          <div className="pgh-login__visual" aria-hidden="true">
+            <img src={journeySecurity} alt="" />
+          </div>
+          <div className="pgh-login__veil" aria-hidden="true" />
+          <PGHubBrand dark />
           <motion.div className="pgh-login__copy" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="pgh-title">Welcome to<br /><em>PG HUB</em></h1>
-            <p className="pgh-subtitle">Sign in with your phone number to manage rooms, tenants, and rent.</p>
-          </motion.div>
-          <motion.div className="pgh-login__art" animate={{ y: [-4, 7, -4] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}>
-            <img src={authBuilding} alt="PG HUB property" />
+            <span className="pgh-login__eyebrow"><ShieldCheck size={15} /> Secure owner access</span>
+            <h1 className="pgh-title">Welcome back<br /><em>to PG HUB</em></h1>
+            <p className="pgh-subtitle">Your entire property, one secure sign-in away.</p>
           </motion.div>
         </section>
 
         <motion.section className="pgh-login__card" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 20, delay: .12 }}>
+          <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong><small>We’ll send a 6-digit verification code.</small></div>
           <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
           <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
             <span className="pgh-phone-field__country">+91 <ChevronDown size={18} /></span>
