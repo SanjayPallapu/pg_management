@@ -1,11 +1,9 @@
 import { useEffect } from "react";
-import { motion } from "framer-motion";
 import { BedDouble, Building2, CheckCircle2, DoorOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import journeyComplete from "@/assets/pg-hub/hub-building-check.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
-import { PGHubConfetti } from "@/features/pg-hub/PGHubConfetti";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { PGHubStat } from "@/features/pg-hub/PGHubStats";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
@@ -27,14 +25,13 @@ export default function SetupComplete() {
 
   return (
     <PGHubShell variant="dark" className="pgh-ready pgh-ready--journey">
-      <PGHubConfetti />
       <div className="pgh-ready__journey">
-        <motion.div className="pgh-ready__backdrop" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .75 }}>
+        <div className="pgh-ready__backdrop">
           <img src={journeyComplete} alt="Completed PG property" />
           <span aria-hidden="true" />
-        </motion.div>
+        </div>
         <header className="pgh-ready__header"><PGHubBrand dark compact /><span><CheckCircle2 size={18} /> Setup complete</span></header>
-        <motion.section className="pgh-ready__sheet" initial={{ opacity: 0, y: 70 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 22, delay: .2 }}>
+        <section className="pgh-ready__sheet">
           <div className="pgh-ready__grab" aria-hidden="true" />
           <div className="pgh-ready__copy">
             <span>Welcome home</span>
@@ -50,7 +47,7 @@ export default function SetupComplete() {
             <PGHubButton onClick={() => finish("/")}>Enter dashboard</PGHubButton>
             <PGHubButton variant="outline" onClick={() => finish("/?tab=rooms")}>Add your first tenant</PGHubButton>
           </div>
-        </motion.section>
+        </section>
       </div>
     </PGHubShell>
   );

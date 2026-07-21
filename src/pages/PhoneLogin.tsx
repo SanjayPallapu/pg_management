@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -57,14 +56,13 @@ export default function PhoneLogin() {
           </div>
           <div className="pgh-login__veil" aria-hidden="true" />
           <PGHubBrand dark />
-          <motion.div className="pgh-login__copy" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="pgh-login__copy">
             <span className="pgh-login__eyebrow"><ShieldCheck size={15} /> Secure owner access</span>
             <h1 className="pgh-title">Welcome to<br /><em>PG HUB</em></h1>
-            <p className="pgh-subtitle">Sign in with your mobile number to manage your PG.</p>
-          </motion.div>
+          </div>
         </section>
 
-        <motion.section className="pgh-login__card" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 20, delay: .12 }}>
+        <section className="pgh-login__card">
           <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong><small>We’ll send a 6-digit verification code.</small></div>
           <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
           <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
@@ -74,8 +72,8 @@ export default function PhoneLogin() {
           </div>
           <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
           <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
-          <p id="phone-help" className="pgh-login__alternative">Prefer another method? <button type="button" onClick={() => navigate("/auth/email")}>Use email or Google</button></p>
-        </motion.section>
+          <p id="phone-help" className="pgh-login__alternative">Prefer another method? <button type="button" onClick={() => navigate("/auth/email")}>Continue with email or Google</button></p>
+        </section>
       </div>
     </PGHubShell>
   );

@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent } from "react";
-import { motion } from "framer-motion";
 import { Building2, Layers3, Map, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -48,18 +47,18 @@ export default function PGSetupProperty() {
     <PGHubShell variant="light" className="pgh-setup-shell">
       <div className="pgh-page pgh-setup-page">
         <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
-        <motion.section className="pgh-setup-hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <section className="pgh-setup-hero">
           <img src={journeyBuilding} alt="PG property" />
           <div aria-hidden="true" />
           <span>Build your workspace</span>
           <h1>Tell us about<br /><em>your PG</em></h1>
           <p>We’ll prepare rooms and capacity around your property.</p>
-        </motion.section>
+        </section>
         <section className="pgh-setup-surface">
           <section className="pgh-setup-title"><h2>Property details</h2><p>You can edit all of this later.</p></section>
-          <motion.div className="pgh-setup-form" initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: .06 } } }}>
-            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+          <div className="pgh-setup-form">
+            <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
+            <div>
               <label className="pgh-field">
                 <span className="pgh-field__label">PG Type <em>*</em></span>
                 <span className="pgh-field__wrap">
@@ -76,13 +75,13 @@ export default function PGSetupProperty() {
                   </select>
                 </span>
               </label>
-            </motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="City / Area" required icon={MapPin} placeholder="Enter city or area" value={property.city} onChange={(event) => updateProperty({ city: event.currentTarget.value })} error={errors.city} /></motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="Address" required multiline icon={Map} placeholder="Enter full address" value={property.address} onChange={(event) => updateProperty({ address: event.currentTarget.value })} error={errors.address} /></motion.div>
-            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></motion.div>
-          </motion.div>
+            </div>
+            <div><PGHubFormField label="City / Area" required icon={MapPin} placeholder="Enter city or area" value={property.city} onChange={(event) => updateProperty({ city: event.currentTarget.value })} error={errors.city} /></div>
+            <div><PGHubFormField label="Address" required multiline icon={Map} placeholder="Enter full address" value={property.address} onChange={(event) => updateProperty({ address: event.currentTarget.value })} error={errors.address} /></div>
+            <div><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></div>
+          </div>
 
-          <motion.section className="pgh-photo" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .25 }}>
+          <section className="pgh-photo">
             <label>Property Logo / Photo <small>(Optional)</small></label>
             <label className="pgh-photo__picker">
               <img src={property.imagePreview || journeyBuilding} alt="Property preview" />
@@ -90,7 +89,7 @@ export default function PGSetupProperty() {
               <input type="file" accept="image/png,image/jpeg,image/webp" onChange={chooseImage} />
             </label>
             <small>JPG, PNG, or WebP up to 5 MB. Recommended ratio 4:3.</small>
-          </motion.section>
+          </section>
           <PGHubButton onClick={validate} showArrow>Continue to rooms</PGHubButton>
         </section>
       </div>

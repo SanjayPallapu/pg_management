@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import EmailAuth from "./pages/EmailAuth";
 import PhoneLogin from "./pages/PhoneLogin";
 import OTPVerification from "./pages/OTPVerification";
 import PGSetupProperty from "./pages/PGSetupProperty";
@@ -106,7 +106,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/auth" element={<PhoneLogin />} />
           <Route path="/auth/otp" element={<OTPVerification />} />
-          <Route path="/auth/email" element={<Auth />} />
+          <Route path="/auth/email" element={<EmailAuth />} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/onboarding" element={

@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { motion } from "framer-motion";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
@@ -21,7 +20,7 @@ export function PGHubButton({
   ...props
 }: PGHubButtonProps) {
   return (
-    <motion.div className="pgh-button-motion" whileTap={{ scale: disabled || loading ? 1 : 0.975 }}>
+    <div className="pgh-button-motion">
       <button
         {...props}
         type={props.type ?? "button"}
@@ -32,10 +31,9 @@ export function PGHubButton({
           onClick?.(event);
         }}
       >
-        <span className="pgh-button__shimmer" aria-hidden="true" />
         {loading ? <Loader2 className="pgh-spin" size={20} /> : children}
         {!loading && showArrow && <ArrowRight size={20} />}
       </button>
-    </motion.div>
+    </div>
   );
 }

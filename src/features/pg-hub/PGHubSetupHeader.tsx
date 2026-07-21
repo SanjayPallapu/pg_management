@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 
 export function PGHubSetupHeader({
   step,
@@ -11,13 +11,13 @@ export function PGHubSetupHeader({
   onBack: () => void;
 }) {
   return (
-    <motion.header className="pgh-setup-header" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
+    <header className="pgh-setup-header">
       <div className="pgh-setup-header__row">
         <button type="button" onClick={onBack} aria-label="Go back"><ArrowLeft size={20} /><span>Back</span></button>
-        <strong>Create PG</strong>
+        <div className="pgh-setup-header__brand"><PGHubBrand compact /><small>Create PG</small></div>
         <span>{step}</span>
       </div>
-      <div className="pgh-progress"><motion.span initial={{ width: 0 }} animate={{ width: `${progress * 100}%` }} transition={{ duration: 0.6 }} /></div>
-    </motion.header>
+      <div className="pgh-progress"><span style={{ width: `${progress * 100}%` }} /></div>
+    </header>
   );
 }

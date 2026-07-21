@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { BedDouble, Building2, CirclePlus, DoorOpen, Edit3, Info, Layers3, Snowflake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,7 +14,7 @@ import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: Partial<PGFloorDraft>) => void }) {
   const [editing, setEditing] = useState(false);
   return (
-    <motion.article className="pgh-floor-row" layout>
+    <article className="pgh-floor-row">
       <i><Layers3 size={22} /></i>
       <div className="pgh-floor-row__info">
         <strong>{floor.name}</strong>
@@ -28,7 +27,7 @@ function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: 
         )}
       </div>
       <button type="button" onClick={() => setEditing((value) => !value)}><Edit3 size={16} />{editing ? "Done" : "Edit"}</button>
-    </motion.article>
+    </article>
   );
 }
 
@@ -65,10 +64,10 @@ export default function PGSetupCapacity() {
     <PGHubShell variant="light" className="pgh-setup-shell">
       <div className="pgh-page pgh-page--wide pgh-setup-page pgh-capacity-page">
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
-        <motion.section className="pgh-capacity-hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <section className="pgh-capacity-hero">
           <img src={journeyBuilding} alt="PG room setup" />
           <div><span>Almost ready</span><h1>Shape your<br /><em>property</em></h1><p>Fine-tune rooms and beds before we build your dashboard.</p></div>
-        </motion.section>
+        </section>
         <section className="pgh-setup-title"><h2>Rooms & capacity</h2><p>Set the room plan for each floor.</p></section>
 
         <section className="pgh-card pgh-capacity-card">
