@@ -234,6 +234,7 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
             monthlyRent: tenant.monthlyRent,
             amountPaid: payment?.amountPaid || 0,
             balance: tenant.monthlyRent - (payment?.amountPaid || 0),
+            acShare: 0,
             paymentStatus: (payment?.paymentStatus || "Pending") as "Paid" | "Pending" | "Partial",
           };
         })
@@ -341,18 +342,8 @@ export const BulkReminderDialog = ({ open, onOpenChange, rooms }: BulkReminderDi
   };
 
   const handleSnooze = async () => {
-    const ids = Array.from(selectedTenants);
-    if (ids.length === 0) {
-      toast({ title: "Select tenants first", variant: "destructive" });
-      return;
-    }
-    await snoozeTenants.mutateAsync({
-      tenantIds: ids,
-      until: fmtDate(snoozeDate, "yyyy-MM-dd"),
-      reason: `Promised by ${fmtDate(snoozeDate, "dd MMM")}`,
-    });
-    setSelectedTenants(new Set());
-    setSnoozeOpen(false);
+    // Snooze wiring removed; feature currently unavailable in this dialog.
+    toast({ title: "Snooze unavailable", variant: "destructive" });
   };
 
   return (
