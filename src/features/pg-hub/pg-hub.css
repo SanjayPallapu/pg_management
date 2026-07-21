@@ -14,13 +14,6 @@
 .pgh-orb--one { top: -8rem; right: -8rem; background: #7b4dff; }
 .pgh-orb--two { bottom: -10rem; left: -9rem; background: #1769ff; }
 
-.pgh-brand { display: inline-flex; align-items: center; gap: .65rem; color: #0a1230; }
-.pgh-brand img { width: 2.65rem; height: 2.65rem; border-radius: .8rem; object-fit: cover; box-shadow: 0 7px 22px rgba(23, 105, 255, .2); }
-.pgh-brand span { font-size: 1.05rem; font-weight: 900; letter-spacing: .04em; }
-.pgh-brand .pgh-brand__text--light { color: white; }
-.pgh-brand--compact img { width: 2.25rem; height: 2.25rem; }
-.pgh-brand--compact span { font-size: .95rem; }
-
 .pgh-button-motion { width: 100%; }
 .pgh-button { position: relative; isolation: isolate; min-height: 3.45rem; width: 100%; border: 0; border-radius: 1.05rem; padding: 0 1.3rem; display: inline-flex; align-items: center; justify-content: center; gap: .6rem; overflow: hidden; font-size: 1rem; font-weight: 850; }
 .pgh-button--primary { color: white; background: linear-gradient(135deg, #1769ff, #38bdf8); box-shadow: 0 12px 28px rgba(23, 105, 255, .25); }
@@ -50,9 +43,7 @@
 .pgh-setup-header { display: grid; gap: .8rem; }
 .pgh-setup-header__row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .65rem; }
 .pgh-setup-header__row button { min-width: 4.8rem; height: 2.7rem; border: 0; border-radius: .85rem; background: white; padding: 0 .72rem; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; color: #0a1230; font-size: .82rem; font-weight: 800; box-shadow: 0 5px 15px rgba(16, 24, 40, .07); }
-.pgh-setup-header__brand { min-width: 0; display: flex; align-items: center; justify-content: center; gap: .55rem; }
-.pgh-setup-header__brand .pgh-brand { gap: .4rem; }
-.pgh-setup-header__brand small { color: #667085; font-size: .68rem; font-weight: 800; white-space: nowrap; }
+.pgh-setup-header__title { color: #17345f; font-size: .9rem; font-weight: 900; text-align: center; }
 .pgh-setup-header__row span { color: #667085; font-size: .85rem; font-weight: 700; }
 .pgh-progress { height: .4rem; overflow: hidden; border-radius: 999px; background: #e5e8f1; }
 .pgh-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7b4dff, #1769ff); }
@@ -71,7 +62,6 @@
 .pgh-section-title { margin: 0; font-size: 1.25rem; font-weight: 900; color: #0a1230; }
 
 .pgh-onboarding__page { position: relative; width: min(100%, 34rem); height: 100dvh; min-height: 38rem; margin: 0 auto; overflow: hidden; background: #050426; }
-.pgh-onboarding__brand { position: absolute; z-index: 8; top: max(.85rem, env(safe-area-inset-top)); left: 1.5rem; padding: .35rem .65rem .35rem .35rem; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: rgba(7,6,48,.72); backdrop-filter: blur(12px); }
 .pgh-onboarding__slide { position: absolute; inset: 0; overflow: hidden; }
 .pgh-onboarding__background { position: absolute; inset: .45rem; width: calc(100% - .9rem); height: calc(100% - .9rem); border-radius: 1rem; object-fit: contain; object-position: center; user-select: none; pointer-events: none; }
 .pgh-onboarding__shade { position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgba(2,3,35,.66) 0%, rgba(4,4,42,.26) 27%, transparent 48%, rgba(3,3,31,.04) 68%, rgba(3,3,31,.88) 100%); pointer-events: none; }
@@ -113,7 +103,7 @@
 .pgh-login__alternative { margin: 0; text-align: center; color: #667085; font-size: .9rem; }
 .pgh-login__alternative button, .pgh-link-button { border: 0; background: transparent; color: #1769ff; font-weight: 850; }
 
-.pgh-otp__header { display: grid; grid-template-columns: 2.7rem 1fr 2.7rem; align-items: center; justify-items: center; margin-bottom: 1.5rem; }
+.pgh-otp__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
 .pgh-otp__header > button { width: 2.7rem; height: 2.7rem; border: 0; border-radius: .85rem; background: white; display: grid; place-items: center; justify-self: start; }
 .pgh-otp__kicker { margin: 0 0 .15rem; color: #7b4dff; font-size: 1.1rem; font-weight: 850; }
 .pgh-otp .pgh-subtitle strong { color: #1769ff; }
@@ -184,7 +174,7 @@
 .pgh-overview small { color: #667085; }
 .pgh-capacity-note { display: flex; align-items: center; gap: .45rem; margin: 1rem .15rem; color: #667085; font-size: .8rem; }
 
-.pgh-ready__header { display: flex; align-items: center; justify-content: space-between; }
+.pgh-ready__header { display: flex; align-items: center; justify-content: flex-end; }
 .pgh-ready__header > span { display: flex; align-items: center; gap: .35rem; border-radius: 99px; background: #eaf8ee; padding: .5rem .7rem; color: #16853a; font-size: .78rem; font-weight: 850; }
 .pgh-ready__art { position: relative; height: min(39vh, 21rem); margin-top: .9rem; overflow: hidden; border-radius: 1.8rem; }
 .pgh-ready__art img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
@@ -233,8 +223,7 @@
 .pgh-login__visual { position: absolute; inset: 3.9rem -.8rem -1.5rem 15%; overflow: hidden; }
 .pgh-login__visual img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; border-radius: 2rem; filter: saturate(1.08) contrast(1.04); }
 .pgh-login__veil { position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgba(12,9,23,.22), rgba(12,9,23,.1) 45%, rgba(12,9,23,.94) 100%), linear-gradient(90deg, rgba(12,9,23,.96), transparent 70%); }
-.pgh-login__hero > .pgh-brand { position: relative; z-index: 3; }
-.pgh-login__copy { z-index: 3; max-width: 72%; margin-top: 1.7rem; }
+.pgh-login__copy { z-index: 3; max-width: 72%; margin-top: .75rem; }
 .pgh-login__copy .pgh-title { color: white; font-size: clamp(2.2rem, 10vw, 3rem); }
 .pgh-login__copy .pgh-title em { color: #c4a9ff; }
 .pgh-login__copy .pgh-subtitle { color: rgba(255,255,255,.72); max-width: 17rem; }
@@ -294,7 +283,6 @@
 .pgh-ready__backdrop img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .pgh-ready__backdrop > span { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,6,11,.22), transparent 52%, rgba(5,6,11,.82) 82%, #080910 100%); }
 .pgh-ready--journey .pgh-ready__header { position: absolute; z-index: 6; top: max(1rem, env(safe-area-inset-top)); left: 1.15rem; right: 1.15rem; }
-.pgh-ready--journey .pgh-ready__header .pgh-brand { padding: .38rem .7rem .38rem .38rem; border-radius: 999px; background: rgba(8,8,15,.38); backdrop-filter: blur(16px); }
 .pgh-ready--journey .pgh-ready__header > span { color: #dfffe6; background: rgba(18,75,37,.48); border: 1px solid rgba(140,255,174,.25); backdrop-filter: blur(14px); }
 .pgh-ready__sheet { position: relative; z-index: 4; width: min(100%, 34rem); border-radius: 2rem 2rem 0 0; background: rgba(255,255,255,.98); padding: .65rem 1.25rem max(1.2rem, env(safe-area-inset-bottom)); color: #0a1230; box-shadow: 0 -20px 55px rgba(4,3,12,.28); }
 .pgh-ready__grab { width: 2.8rem; height: .28rem; margin: 0 auto .65rem; border-radius: 99px; background: #d8dbe3; }
@@ -352,9 +340,8 @@
 
 .pgh-email-auth.pgh-shell--light { background: linear-gradient(155deg, #e8f2ff, #f8fbff 48%, #e2f7ff); }
 .pgh-email-auth__page { width: min(100%, 34rem); height: 100dvh; min-height: 0; margin: 0 auto; display: grid; grid-template-rows: 3.8rem minmax(8.2rem, 22dvh) minmax(0, 1fr); padding: max(.55rem, env(safe-area-inset-top)) 1rem max(.65rem, env(safe-area-inset-bottom)); overflow: hidden; }
-.pgh-email-auth__header { display: grid; grid-template-columns: 4.6rem 1fr auto; align-items: center; gap: .45rem; }
+.pgh-email-auth__header { display: flex; align-items: center; justify-content: space-between; gap: .45rem; }
 .pgh-email-auth__header > button { height: 2.6rem; border: 1px solid #cfe2ff; border-radius: .85rem; background: rgba(255,255,255,.9); display: inline-flex; align-items: center; justify-content: center; gap: .3rem; color: #12305f; font-size: .78rem; font-weight: 800; }
-.pgh-email-auth__header > .pgh-brand { justify-self: center; }
 .pgh-email-auth__header > span { color: #55708f; font-size: .68rem; font-weight: 800; white-space: nowrap; }
 .pgh-email-auth__hero { position: relative; min-height: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.55); border-radius: 1.45rem; background: linear-gradient(135deg, #0f5bd7, #38bdf8); box-shadow: 0 15px 35px rgba(23,105,255,.18); }
 .pgh-email-auth__hero > div { position: relative; z-index: 2; width: 58%; padding: 1rem; color: white; }
@@ -407,9 +394,7 @@
 
 @media (max-width: 380px) {
   .pgh-email-auth__page { padding-inline: .75rem; }
-  .pgh-email-auth__header { grid-template-columns: 4.2rem 1fr auto; }
   .pgh-email-auth__header > span { font-size: .62rem; }
-  .pgh-setup-header__brand small { display: none; }
 }
 
 @media (max-height: 740px) {

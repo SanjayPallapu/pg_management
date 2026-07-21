@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import journeySecurity from "@/assets/pg-hub/hub-security.png";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -150,13 +149,12 @@ export default function EmailAuth() {
       <div className="pgh-email-auth__page">
         <header className="pgh-email-auth__header">
           <button type="button" onClick={() => navigate("/auth")}><ArrowLeft size={19} /> Back</button>
-          <PGHubBrand compact />
           <span>Secure access</span>
         </header>
 
         <section className="pgh-email-auth__hero">
           <div><span>Email & Google</span><h1>{mode === "signin" ? "Welcome back" : "Create account"}</h1></div>
-          <img src={journeySecurity} alt="Secure PG HUB access" />
+          <img src={journeySecurity} alt="Secure account access" />
         </section>
 
         <section className="pgh-email-auth__card">
@@ -173,7 +171,7 @@ export default function EmailAuth() {
               <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
               <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
               <PGHubButton type="submit" loading={submitting}>Sign in</PGHubButton>
-              <p>New to PG HUB? <button type="button" onClick={() => switchMode("signup")}>Create account</button></p>
+              <p>New here? <button type="button" onClick={() => switchMode("signup")}>Create account</button></p>
             </form>
           )}
 

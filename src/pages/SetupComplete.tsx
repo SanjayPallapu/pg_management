@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { BedDouble, Building2, CheckCircle2, DoorOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import journeyComplete from "@/assets/pg-hub/hub-building-check.png";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { PGHubStat } from "@/features/pg-hub/PGHubStats";
@@ -30,7 +29,7 @@ export default function SetupComplete() {
           <img src={journeyComplete} alt="Completed PG property" />
           <span aria-hidden="true" />
         </div>
-        <header className="pgh-ready__header"><PGHubBrand dark compact /><span><CheckCircle2 size={18} /> Setup complete</span></header>
+        <header className="pgh-ready__header"><span><CheckCircle2 size={18} /> Setup complete</span></header>
         <section className="pgh-ready__sheet">
           <div className="pgh-ready__grab" aria-hidden="true" />
           <div className="pgh-ready__copy">

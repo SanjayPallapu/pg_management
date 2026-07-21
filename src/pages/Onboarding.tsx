@@ -6,7 +6,6 @@ import onboardingScreen1 from "@/assets/pg-hub/onboarding-screen-1.png";
 import onboardingScreen2 from "@/assets/pg-hub/onboarding-screen-2.png";
 import onboardingScreen3 from "@/assets/pg-hub/onboarding-screen-3.png";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import {
   completeOnboarding,
   hasCompletedOnboarding,
@@ -84,7 +83,6 @@ export default function Onboarding() {
   return (
     <PGHubShell variant="dark" className="pgh-onboarding">
       <div className="pgh-onboarding__page">
-        <div className="pgh-onboarding__brand"><PGHubBrand dark compact /></div>
         <section key={slide.id} className={`pgh-onboarding__slide pgh-onboarding__slide--${slide.id}`}>
           <img className="pgh-onboarding__background" src={slide.image} alt="" aria-hidden="true" />
           <div className="pgh-onboarding__shade" aria-hidden="true" />

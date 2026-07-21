@@ -3,7 +3,6 @@ import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import journeyHero from "@/assets/pg-hub/hub-building-platform.png";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,10 +54,9 @@ export default function PhoneLogin() {
             <img src={journeyHero} alt="" />
           </div>
           <div className="pgh-login__veil" aria-hidden="true" />
-          <PGHubBrand dark />
           <div className="pgh-login__copy">
             <span className="pgh-login__eyebrow"><ShieldCheck size={15} /> Secure owner access</span>
-            <h1 className="pgh-title">Welcome to<br /><em>PG HUB</em></h1>
+            <h1 className="pgh-title">Welcome<br /><em>back</em></h1>
           </div>
         </section>
 

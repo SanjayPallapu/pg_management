@@ -3,7 +3,6 @@ import { ArrowLeft, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import journeySecurity from "@/assets/pg-hub/hub-security.png";
-import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -106,7 +105,6 @@ export default function OTPVerification() {
       <div className="pgh-page">
         <header className="pgh-otp__header">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
-          <PGHubBrand compact />
           <span className="pgh-otp__step">2 of 2</span>
         </header>
         <section className="pgh-otp__copy">
