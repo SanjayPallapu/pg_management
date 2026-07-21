@@ -100,7 +100,7 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null | 
     // Attempt to use standard Web Contact Picker API (supported in mobile Chrome/Safari)
     if ('contacts' in navigator && 'select' in navigator.contacts) {
       try {
-        const contacts = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
+        const contacts: any = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
         if (contacts && contacts.length > 0) {
           const webContact: any = contacts[0];
           const name = webContact.name?.[0] || 'Unknown';

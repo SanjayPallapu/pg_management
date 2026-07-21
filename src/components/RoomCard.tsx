@@ -535,7 +535,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,
                       calcMode: isCustom ? ("custom" as const) : ("commercial" as const),
-                    };
+                    } as any;
                   }
                 }
                 const balance = tenant.monthlyRent - amountPaid;

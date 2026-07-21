@@ -43,7 +43,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   useImperativeHandle(ref, () => ({
     openSheet: () => setLocalOpen(true),
   }));
-  const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due'>('overdue');
+  const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due' | 'previous-month'>('overdue');
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderTenant, setReminderTenant] = useState<TenantWithPayment | null>(null);
@@ -179,7 +179,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amountPaid: 0,
           paymentEntries: [],
           monthlyRent: tenant.monthlyRent,
-        } as TenantWithPayment);
+          paymentCategory: 'overdue',
+        } as unknown as TenantWithPayment);
       } else if (payment.paymentStatus === 'Partial') {
         pendingList.push({
           ...tenant,
@@ -187,7 +188,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           amountPaid: payment.amountPaid || 0,
           paymentEntries: payment.paymentEntries || [],
           monthlyRent: tenant.monthlyRent,
-        } as TenantWithPayment);
+          paymentCategory: 'partial',
+        } as unknown as TenantWithPayment);
       }
     });
 
@@ -235,7 +237,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       {showSummaryCard && (
         <Card 
         className="cursor-pointer transition-colors hover:bg-accent/50"
-        onClick={() => setSheetOpen(true)}
+        onClick={() => setLocalOpen(true)}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
           <CardTitle className="text-sm font-medium">Pending Tenants</CardTitle>
