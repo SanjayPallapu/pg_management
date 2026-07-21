@@ -9,7 +9,7 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft, type PGFloorDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { usePGSetup } from "@/hooks/usePGSetup";
 import { usePG } from "@/contexts/PGContext";
-import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
+import journeyBuilding from "@/assets/pg-hub/hub-building-hero.png";
 
 function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: Partial<PGFloorDraft>) => void }) {
   const [editing, setEditing] = useState(false);
@@ -66,12 +66,12 @@ export default function PGSetupCapacity() {
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
         <section className="pgh-capacity-hero">
           <img src={journeyBuilding} alt="PG room setup" />
-          <div><span>Almost ready</span><h1>Shape your<br /><em>property</em></h1><p>Fine-tune rooms and beds before we build your dashboard.</p></div>
+          <div><span>Room planning</span><h1>Plan your<br /><em>space</em></h1><p>Review rooms, beds, and floor details before we create your dashboard.</p></div>
         </section>
-        <section className="pgh-setup-title"><h2>Rooms & capacity</h2><p>Set the room plan for each floor.</p></section>
+        <section className="pgh-setup-title"><h2>Your room plan</h2><p>Customise the capacity for every floor.</p></section>
 
         <section className="pgh-card pgh-capacity-card">
-          <h2 className="pgh-section-title"><Building2 size={21} /> Overall Capacity</h2>
+          <h2 className="pgh-section-title"><Building2 size={21} /> Capacity at a glance</h2>
           <div className="pgh-capacity-grid">
             <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
             <div><BedDouble /><span>Total Beds</span><strong>{totals.beds}</strong></div>
@@ -81,7 +81,7 @@ export default function PGSetupCapacity() {
         </section>
 
         <section className="pgh-floor-section">
-          <h2>Floor Setup</h2>
+          <h2>Set up each floor</h2>
           <div>{floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}</div>
           <button type="button" className="pgh-add-floor" onClick={addFloor} disabled={floors.length >= 20}><CirclePlus size={21} /> Add Floor</button>
         </section>

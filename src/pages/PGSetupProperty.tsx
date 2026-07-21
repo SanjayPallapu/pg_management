@@ -50,12 +50,12 @@ export default function PGSetupProperty() {
         <section className="pgh-setup-hero">
           <img src={journeyBuilding} alt="PG property" />
           <div aria-hidden="true" />
-          <span>Build your workspace</span>
-          <h1>Tell us about<br /><em>your PG</em></h1>
-          <p>We’ll prepare rooms and capacity around your property.</p>
+          <span>Property setup</span>
+          <h1>Build your<br /><em>PG profile</em></h1>
+          <p>Add the essentials now. Edit every detail anytime.</p>
         </section>
         <section className="pgh-setup-surface">
-          <section className="pgh-setup-title"><h2>Property details</h2><p>You can edit all of this later.</p></section>
+          <section className="pgh-setup-title"><h2>Start with the basics</h2><p>Tell us where your property is and how it operates.</p></section>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>
