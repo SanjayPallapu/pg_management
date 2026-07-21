@@ -75,7 +75,8 @@ export const requestContactPermission = async (): Promise<boolean> => {
   }
 
   try {
-    const { Contacts } = await import('@capgo/capacitor-contacts');
+    const mod: any = await import('@capgo/capacitor-contacts');
+    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
     const status = await Contacts.checkPermissions();
     if (status.contacts === 'granted') {
       return true;
@@ -97,11 +98,11 @@ export const requestContactPermission = async (): Promise<boolean> => {
 export const pickContactFromDevice = async (): Promise<SelectedContact | null | undefined> => {
   if (!Capacitor.isNativePlatform()) {
     // Attempt to use standard Web Contact Picker API (supported in mobile Chrome/Safari)
-    if ('contacts' in navigator && 'select' in navigator.contacts) {
+    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
       try {
-        const contacts = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
+        const contacts: any = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
         if (contacts && contacts.length > 0) {
-          const webContact = contacts[0];
+          const webContact: any = contacts[0];
           const name = webContact.name?.[0] || 'Unknown';
           const phones = webContact.tel || [];
           return { name, phones };
@@ -118,7 +119,8 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null | 
   }
 
   try {
-    const { Contacts } = await import('@capgo/capacitor-contacts');
+    const mod: any = await import('@capgo/capacitor-contacts');
+    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
     
     // Check and request permission first
     const permissionGranted = await requestContactPermission();

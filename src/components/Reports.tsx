@@ -210,8 +210,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
     ];
 
     const finalWb = applyStyledExport(summaryRows, "Overview Report", colWidths, {
-      title: `${activeMonthName} ${selectedYear} Executive Report`,
-      subtitle: `Generated on ${new Date().toLocaleDateString()}`
+      fileName: `${activeMonthName} ${selectedYear} Executive Report`,
     });
 
     // Re-append the other sheets to finalWb

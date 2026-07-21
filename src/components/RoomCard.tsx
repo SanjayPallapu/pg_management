@@ -535,7 +535,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,
                       calcMode: isCustom ? ("custom" as const) : ("commercial" as const),
-                    };
+                    } as any;
                   }
                 }
                 const balance = tenant.monthlyRent - amountPaid;
@@ -549,7 +549,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
-                });
+                } as any);
                 setTimeout(() => {
                   setReminderDialogOpen(true);
                 }, 100);

@@ -83,8 +83,10 @@ export type Database = {
       day_guests: {
         Row: {
           amount_paid: number | null
+          collected_by: string | null
           created_at: string
           from_date: string
+          gender: string | null
           guest_name: string
           id: string
           id_proof: string | null
@@ -95,14 +97,17 @@ export type Database = {
           payment_status: string
           per_day_rate: number
           room_id: string
+          room_no: string | null
           to_date: string
           total_amount: number
           updated_at: string
         }
         Insert: {
           amount_paid?: number | null
+          collected_by?: string | null
           created_at?: string
           from_date: string
+          gender?: string | null
           guest_name: string
           id?: string
           id_proof?: string | null
@@ -113,14 +118,17 @@ export type Database = {
           payment_status?: string
           per_day_rate?: number
           room_id: string
+          room_no?: string | null
           to_date: string
           total_amount: number
           updated_at?: string
         }
         Update: {
           amount_paid?: number | null
+          collected_by?: string | null
           created_at?: string
           from_date?: string
+          gender?: string | null
           guest_name?: string
           id?: string
           id_proof?: string | null
@@ -131,6 +139,7 @@ export type Database = {
           payment_status?: string
           per_day_rate?: number
           room_id?: string
+          room_no?: string | null
           to_date?: string
           total_amount?: number
           updated_at?: string
@@ -422,6 +431,7 @@ export type Database = {
           address: string | null
           created_at: string
           id: string
+          is_archived: boolean
           logo_url: string | null
           name: string
           updated_at: string
@@ -430,6 +440,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           id?: string
+          is_archived?: boolean
           logo_url?: string | null
           name: string
           updated_at?: string
@@ -438,6 +449,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           id?: string
+          is_archived?: boolean
           logo_url?: string | null
           name?: string
           updated_at?: string
@@ -447,9 +459,14 @@ export type Database = {
       room_electricity_readings: {
         Row: {
           created_at: string
+          end_reading: number | null
           id: string
           month: number
           room_id: string
+          source: string | null
+          split_count: number | null
+          split_type: string | null
+          start_reading: number | null
           unit_price: number
           units: number
           updated_at: string
@@ -457,9 +474,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          end_reading?: number | null
           id?: string
           month: number
           room_id: string
+          source?: string | null
+          split_count?: number | null
+          split_type?: string | null
+          start_reading?: number | null
           unit_price?: number
           units?: number
           updated_at?: string
@@ -467,9 +489,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          end_reading?: number | null
           id?: string
           month?: number
           room_id?: string
+          source?: string | null
+          split_count?: number | null
+          split_type?: string | null
+          start_reading?: number | null
           unit_price?: number
           units?: number
           updated_at?: string
@@ -591,6 +618,7 @@ export type Database = {
       }
       tenant_payments: {
         Row: {
+          ac_payment_status: string | null
           amount: number
           amount_paid: number | null
           created_at: string
@@ -607,6 +635,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          ac_payment_status?: string | null
           amount: number
           amount_paid?: number | null
           created_at?: string
@@ -623,6 +652,7 @@ export type Database = {
           year: number
         }
         Update: {
+          ac_payment_status?: string | null
           amount?: number
           amount_paid?: number | null
           created_at?: string

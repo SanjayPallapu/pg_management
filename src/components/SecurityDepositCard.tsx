@@ -55,6 +55,7 @@ interface SecurityDepositCardProps {
   /** Enables responding to external triggers (CustomEvent / navigation state). */
   enableExternalTriggers?: boolean;
   defaultOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface TenantWithRoom extends Tenant {
