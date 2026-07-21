@@ -9,6 +9,10 @@ import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
+import {
+  PHONE_OTP_TEST_CODE,
+  hasPhoneOtpTestChallenge,
+} from "@/lib/phoneOtpTestMode";
 
 export default function OTPVerification() {
   const navigate = useNavigate();
@@ -20,6 +24,7 @@ export default function OTPVerification() {
   const [submitting, setSubmitting] = useState(false);
   const national = phone.replace(/^\+91/, "");
   const formatted = useMemo(() => `${national.slice(0, 5)} ${national.slice(5)}`.trim(), [national]);
+  const isTestMode = hasPhoneOtpTestChallenge(phone);
 
   useEffect(() => {
     if (!phone) navigate("/auth", { replace: true });
@@ -38,6 +43,14 @@ export default function OTPVerification() {
     if (error || !data.user) {
       setSubmitting(false);
       toast.error(error?.message || "Invalid or expired OTP.");
+      return;
+    }
+
+    if (isTestMode) {
+      setSubmitting(false);
+      sessionStorage.removeItem("pghOtpPhone");
+      sessionStorage.setItem("isNewSignup", "true");
+      navigate("/setup/property", { replace: true });
       return;
     }
 
@@ -67,6 +80,11 @@ export default function OTPVerification() {
 
   const resend = async () => {
     if (seconds > 0 || !phone) return;
+    if (isTestMode) {
+      setSeconds(24);
+      toast.info(`OTP test code: ${PHONE_OTP_TEST_CODE}`);
+      return;
+    }
     const { error } = await requestPhoneOtp(phone);
     if (error) toast.error(error.message);
     else {
@@ -87,6 +105,7 @@ export default function OTPVerification() {
           <p className="pgh-otp__kicker">Verify Phone</p>
           <h1 className="pgh-title">Enter <em>OTP</em></h1>
           <p className="pgh-subtitle">We sent a 6-digit code to<br /><strong>+91 {formatted}</strong></p>
+          {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
         </motion.section>
         <motion.div className="pgh-otp__art" initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .12 }}>
           <img src={otpSecurity} alt="Secure phone verification" />

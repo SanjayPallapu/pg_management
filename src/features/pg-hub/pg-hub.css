@@ -127,6 +127,8 @@
 .pgh-link-button:disabled { color: #98a2b3; }
 .pgh-otp__note { margin: 0; display: flex; align-items: center; gap: .65rem; color: #667085; font-size: .8rem; line-height: 1.4; }
 .pgh-otp__note i { flex: 0 0 2.25rem; height: 2.25rem; border-radius: 99px; background: #eef5ff; display: grid; place-items: center; color: #1769ff; }
+.pgh-test-mode { width: fit-content; margin: .8rem auto 0; padding: .5rem .85rem; border-radius: 999px; background: #fff4cc; color: #7a5200; font-size: .82rem; font-weight: 700; }
+.pgh-test-mode strong { letter-spacing: .12em; }
 
 .pgh-setup-title { margin: 1.6rem 0 1.3rem; }
 .pgh-setup-title h1 { margin: 0; color: #0a1230; font-size: 2rem; font-weight: 950; letter-spacing: -.035em; }

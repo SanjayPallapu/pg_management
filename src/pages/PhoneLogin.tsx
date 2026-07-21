@@ -8,6 +8,10 @@ import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  isPhoneOtpTestModeEnabled,
+  startPhoneOtpTestChallenge,
+} from "@/lib/phoneOtpTestMode";
 
 export default function PhoneLogin() {
   const navigate = useNavigate();
@@ -25,6 +29,15 @@ export default function PhoneLogin() {
     if (!valid || submitting) return;
     setSubmitting(true);
     const fullPhone = `+91${digits}`;
+
+    if (isPhoneOtpTestModeEnabled() && startPhoneOtpTestChallenge(fullPhone)) {
+      sessionStorage.setItem("pghOtpPhone", fullPhone);
+      setSubmitting(false);
+      toast.info("OTP test mode is active. Use 123456.");
+      navigate("/auth/otp");
+      return;
+    }
+
     const { error } = await requestPhoneOtp(fullPhone);
     setSubmitting(false);
     if (error) {

@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/proxyClient';
+import {
+  PHONE_OTP_TEST_CODE,
+  activatePhoneOtpTestSession,
+  clearPhoneOtpTestMode,
+  getPhoneOtpTestSession,
+  hasPhoneOtpTestChallenge,
+} from '@/lib/phoneOtpTestMode';
 
 export type AppRole = 'admin' | 'owner';
 
@@ -23,6 +30,26 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+const createPhoneTestAuth = (phone: string) => {
+  const mockUser = {
+    id: '92f3d1db-3e91-4b72-9712-ac756da63006',
+    phone,
+    app_metadata: { provider: 'phone-test', providers: ['phone-test'] },
+    user_metadata: { full_name: 'PG Owner', phone },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  } as User;
+  const mockSession = {
+    access_token: 'phone-otp-test-token',
+    token_type: 'bearer',
+    expires_in: 3600,
+    refresh_token: 'phone-otp-test-refresh-token',
+    user: mockUser,
+  } as Session;
+
+  return { mockUser, mockSession };
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -54,6 +81,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(mockSession as Session);
       setUser(mockUser as User);
       setRole('owner');
+      setIsLoading(false);
+      return () => {};
+    }
+
+    const phoneTestSession = getPhoneOtpTestSession();
+    if (phoneTestSession) {
+      const { mockUser, mockSession } = createPhoneTestAuth(phoneTestSession);
+      setSession(mockSession);
+      setUser(mockUser);
+      setRole('owner');
+      setIsNewSignup(true);
       setIsLoading(false);
       return () => {};
     }
@@ -241,6 +279,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const verifyPhoneOtp = useCallback(async (phone: string, token: string) => {
+    if (hasPhoneOtpTestChallenge(phone)) {
+      if (token !== PHONE_OTP_TEST_CODE) {
+        return {
+          data: { user: null, session: null },
+          error: new Error(`Use ${PHONE_OTP_TEST_CODE} while OTP test mode is active.`) as AuthError,
+        } as AuthResponse;
+      }
+
+      activatePhoneOtpTestSession(phone);
+      sessionStorage.setItem('isNewSignup', 'true');
+      const { mockUser, mockSession } = createPhoneTestAuth(phone);
+      setSession(mockSession);
+      setUser(mockUser);
+      setRole('owner');
+      setIsNewSignup(true);
+      return { data: { user: mockUser, session: mockSession }, error: null } as AuthResponse;
+    }
+
     const response = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
 
     if (!response.error && response.data.user) {
@@ -265,6 +321,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = useCallback(async () => {
     localStorage.removeItem("hasCompletedOnboarding");
+    const wasPhoneTestSession = Boolean(getPhoneOtpTestSession());
+    clearPhoneOtpTestMode();
+    if (wasPhoneTestSession) {
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setIsNewSignup(false);
+      return { error: null };
+    }
     const { error } = await supabase.auth.signOut();
     return { error };
   }, []);
