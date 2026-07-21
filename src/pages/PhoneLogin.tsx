@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeySecurity from "@/assets/pg-hub/journey-security-transparent.png";
+import journeyHero from "@/assets/pg-hub/hub-building-platform.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
@@ -53,14 +53,14 @@ export default function PhoneLogin() {
       <div className="pgh-login__page">
         <section className="pgh-login__hero">
           <div className="pgh-login__visual" aria-hidden="true">
-            <img src={journeySecurity} alt="" />
+            <img src={journeyHero} alt="" />
           </div>
           <div className="pgh-login__veil" aria-hidden="true" />
           <PGHubBrand dark />
           <motion.div className="pgh-login__copy" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="pgh-login__eyebrow"><ShieldCheck size={15} /> Secure owner access</span>
-            <h1 className="pgh-title">Welcome back<br /><em>to PG HUB</em></h1>
-            <p className="pgh-subtitle">Your entire property, one secure sign-in away.</p>
+            <h1 className="pgh-title">Welcome to<br /><em>PG HUB</em></h1>
+            <p className="pgh-subtitle">Sign in with your mobile number to manage your PG.</p>
           </motion.div>
         </section>
 

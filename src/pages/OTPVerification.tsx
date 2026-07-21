@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock3, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeySecurity from "@/assets/pg-hub/journey-security-transparent.png";
+import journeySecurity from "@/assets/pg-hub/hub-security.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
