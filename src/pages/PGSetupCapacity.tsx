@@ -10,7 +10,7 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft, type PGFloorDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { usePGSetup } from "@/hooks/usePGSetup";
 import { usePG } from "@/contexts/PGContext";
-import journeyBuilding from "@/assets/pg-hub/journey-building.png";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 
 function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: Partial<PGFloorDraft>) => void }) {
   const [editing, setEditing] = useState(false);

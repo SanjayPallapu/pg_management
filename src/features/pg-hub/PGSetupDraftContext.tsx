@@ -10,6 +10,7 @@ import {
 
 export type PGPropertyDraft = {
   name: string;
+  type: "Women's PG" | "Men's PG" | "Co-living";
   city: string;
   address: string;
   totalFloors: number;
@@ -69,6 +70,7 @@ const makeFloors = (count: number): PGFloorDraft[] =>
 
 const initialProperty = (): PGPropertyDraft => ({
   name: "",
+  type: "Women's PG",
   city: "",
   address: "",
   totalFloors: 3,

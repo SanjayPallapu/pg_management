@@ -1,9 +1,9 @@
 import { useState, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { Building2, Layers3, Map, MapPin, UploadCloud } from "lucide-react";
+import { Building2, Layers3, Map, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeyBuilding from "@/assets/pg-hub/journey-building.png";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubFormField } from "@/features/pg-hub/PGHubFormField";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
@@ -52,6 +52,24 @@ export default function PGSetupProperty() {
           <section className="pgh-setup-title"><h2>Property details</h2><p>You can edit all of this later.</p></section>
           <motion.div className="pgh-setup-form" initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: .06 } } }}>
             <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></motion.div>
+            <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+              <label className="pgh-field">
+                <span className="pgh-field__label">PG Type <em>*</em></span>
+                <span className="pgh-field__wrap">
+                  <UsersRound size={20} className="pgh-field__icon" />
+                  <select
+                    className="pgh-field__control pgh-field__control--icon pgh-field__select"
+                    value={property.type}
+                    onChange={(event) => updateProperty({ type: event.currentTarget.value as typeof property.type })}
+                    aria-label="PG Type"
+                  >
+                    <option>Women's PG</option>
+                    <option>Men's PG</option>
+                    <option>Co-living</option>
+                  </select>
+                </span>
+              </label>
+            </motion.div>
             <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="City / Area" required icon={MapPin} placeholder="Enter city or area" value={property.city} onChange={(event) => updateProperty({ city: event.currentTarget.value })} error={errors.city} /></motion.div>
             <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="Address" required multiline icon={Map} placeholder="Enter full address" value={property.address} onChange={(event) => updateProperty({ address: event.currentTarget.value })} error={errors.address} /></motion.div>
             <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></motion.div>

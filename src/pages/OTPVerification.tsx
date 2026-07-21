@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock3, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeySecurity from "@/assets/pg-hub/journey-security.png";
+import journeySecurity from "@/assets/pg-hub/journey-security-transparent.png";
 import { PGHubBrand } from "@/features/pg-hub/PGHubBrand";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
@@ -93,6 +93,15 @@ export default function OTPVerification() {
     }
   };
 
+  const changeNumberOrResend = () => {
+    if (seconds > 0) {
+      sessionStorage.removeItem("pghOtpPhone");
+      navigate("/auth");
+      return;
+    }
+    void resend();
+  };
+
   return (
     <PGHubShell variant="light" className="pgh-otp">
       <div className="pgh-page">
@@ -116,7 +125,7 @@ export default function OTPVerification() {
         </button>
         <div className="pgh-otp__actions">
           <div><Clock3 size={18} /><span>{seconds > 0 ? <>Resend code in <strong>00:{String(seconds).padStart(2, "0")}</strong></> : "Didn't receive the code?"}</span></div>
-          <button type="button" className="pgh-link-button" onClick={resend} disabled={seconds > 0}>{seconds > 0 ? "Change number" : "Resend code"}</button>
+          <button type="button" className="pgh-link-button" onClick={changeNumberOrResend}>{seconds > 0 ? "Change number" : "Resend code"}</button>
           <PGHubButton onClick={verify} disabled={otp.length !== 6} loading={submitting}>Continue to setup</PGHubButton>
           <p className="pgh-otp__note"><i><ShieldCheck size={18} /></i>Your number is used only for login and account security.</p>
         </div>
