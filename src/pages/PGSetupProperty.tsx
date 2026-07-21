@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Building2, Layers3, Map, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
+import journeyBuilding from "@/assets/pg-hub/hub-building-hero.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubFormField } from "@/features/pg-hub/PGHubFormField";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
