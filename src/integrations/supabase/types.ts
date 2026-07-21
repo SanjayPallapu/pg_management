@@ -618,6 +618,7 @@ export type Database = {
       }
       tenant_payments: {
         Row: {
+          ac_payment_status: string | null
           amount: number
           amount_paid: number | null
           created_at: string
@@ -634,6 +635,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          ac_payment_status?: string | null
           amount: number
           amount_paid?: number | null
           created_at?: string
@@ -650,6 +652,7 @@ export type Database = {
           year: number
         }
         Update: {
+          ac_payment_status?: string | null
           amount?: number
           amount_paid?: number | null
           created_at?: string
