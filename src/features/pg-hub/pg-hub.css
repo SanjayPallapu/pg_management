@@ -94,19 +94,14 @@
 .pgh-onboarding__slide--grow .pgh-onboarding__copy h1 em { margin-top: .7rem; color: #d9e8ff !important; }
 .pgh-onboarding__brand-text {
   display: inline-block;
-  background: linear-gradient(100deg, #67e8f9 0%, #60a5fa 28%, #a78bfa 58%, #f0abfc 78%, #67e8f9 100%);
-  background-size: 220% 100%;
-  background-position: 0 50%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(103, 232, 249, .42));
+  color: #8b5cf6;
+  -webkit-text-fill-color: #8b5cf6;
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, .38));
   animation: pgh-brand-shimmer 3.2s ease-in-out infinite;
 }
 @keyframes pgh-brand-shimmer {
-  0%, 100% { background-position: 0 50%; filter: drop-shadow(0 0 9px rgba(103, 232, 249, .34)); }
-  50% { background-position: 100% 50%; filter: drop-shadow(0 0 17px rgba(167, 139, 250, .58)); }
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(139, 92, 246, .32)); }
+  50% { filter: drop-shadow(0 0 17px rgba(139, 92, 246, .68)); }
 }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy { top: max(4.65rem, calc(env(safe-area-inset-top) + 4.35rem)); }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy h1 { margin-bottom: .65rem; font-size: clamp(2.4rem, 12vw, 3.25rem); }
