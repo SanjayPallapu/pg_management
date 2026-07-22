@@ -1,6 +1,6 @@
-const STATIC_CACHE = 'pg-static-v4';
-const DYNAMIC_CACHE = 'pg-dynamic-v4';
-const API_CACHE = 'pg-api-v4';
+const STATIC_CACHE = 'pg-static-v5';
+const DYNAMIC_CACHE = 'pg-dynamic-v5';
+const API_CACHE = 'pg-api-v5';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -61,9 +61,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets - Cache first, fallback to network
-  if (request.destination === 'script' || 
-      request.destination === 'style' || 
+  // JavaScript bundles - Network first to avoid stale chunk mismatches & white screens
+  if (request.destination === 'script') {
+    event.respondWith(networkFirstWithCache(request, DYNAMIC_CACHE));
+    return;
+  }
+
+  // Static media/styles/fonts - Cache first, fallback to network
+  if (request.destination === 'style' || 
       request.destination === 'image' ||
       request.destination === 'font') {
     event.respondWith(cacheFirstWithNetwork(request, STATIC_CACHE));

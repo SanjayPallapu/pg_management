@@ -184,19 +184,19 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="pg-manager-theme">
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppErrorBoundary>
+    <AppErrorBoundary>
+      <ThemeProvider defaultTheme="light" storageKey="pg-manager-theme">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
               <AppContent />
-            </AppErrorBoundary>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </AppErrorBoundary>
   );
 };
 
