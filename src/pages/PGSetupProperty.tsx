@@ -50,11 +50,10 @@ export default function PGSetupProperty() {
           <img src={journeyBuilding} alt="PG property" />
           <div aria-hidden="true" />
           <span>Property setup</span>
-          <h1>Build your<br /><em>PG profile</em></h1>
-          <p>Add details now. Edit them anytime.</p>
+          <h1>Property<br /><em>details</em></h1>
         </section>
         <section className="pgh-setup-surface pgh-setup-surface--full">
-          <section className="pgh-setup-title"><h2>Property details</h2></section>
+          <section className="pgh-setup-title"><h2>Basics</h2></section>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>

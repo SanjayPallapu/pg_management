@@ -12,6 +12,7 @@ import OTPVerification from "./pages/OTPVerification";
 import PGSetupProperty from "./pages/PGSetupProperty";
 import PGSetupCapacity from "./pages/PGSetupCapacity";
 import SetupComplete from "./pages/SetupComplete";
+import PGOverview from "./pages/PGOverview";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
@@ -148,6 +149,11 @@ const AppContent = () => {
           <Route path="/setup/complete" element={
             <ProtectedRoute>
               <SetupComplete />
+            </ProtectedRoute>
+          } />
+          <Route path="/pg/overview" element={
+            <ProtectedRoute>
+              <PGOverview />
             </ProtectedRoute>
           } />
           <Route path="/day-guest/:roomId" element={

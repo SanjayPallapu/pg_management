@@ -6,6 +6,7 @@ import journeyHero from "@/assets/pg-hub/hub-building-platform.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
+import { completeOnboarding } from "@/lib/onboardingState";
 import {
   isPhoneOtpTestModeEnabled,
   startPhoneOtpTestChallenge,
@@ -71,9 +72,7 @@ export default function PhoneLogin() {
       toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
       return;
     }
-    // Supabase has persisted the authenticated session at this point. Reload
-    // the protected app from that session so the route guard cannot render
-    // once with stale unauthenticated context and send the user back here.
+    completeOnboarding();
     window.location.replace("/");
   };
 
@@ -104,7 +103,7 @@ export default function PhoneLogin() {
         <section className={`pgh-login__card pgh-login__card--${authMethod}`}>
           {authMethod === "phone" ? (
             <>
-              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong><small>We’ll send a 6-digit verification code.</small></div>
+              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong></div>
               <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
               <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
                 <span className="pgh-phone-field__country">+91 <ChevronDown size={18} /></span>
@@ -117,7 +116,7 @@ export default function PhoneLogin() {
             </>
           ) : (
             <>
-              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Email or Google</strong><small>Choose how you want to continue.</small></div>
+              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Email or Google</strong></div>
               <button type="button" className="pgh-google-button" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
                 {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
               </button>
