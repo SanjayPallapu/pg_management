@@ -41,9 +41,8 @@ export default function SetupComplete() {
         </header>
         <section className="pgh-ready__content">
           <div className="pgh-ready__copy">
-            <span>Ready to launch</span>
-            <h1>Your PG is<br /><em>ready to grow</em></h1>
-            <p><strong>{creationResult.pgName}</strong> is live. Your rooms, beds, and dashboard are ready.</p>
+            <h1>Ready to<br /><em>grow</em></h1>
+            <p><strong>{creationResult.pgName}</strong> is live.</p>
           </div>
           <div className="pgh-ready__stats" aria-label="Property summary">
             <div><strong>{creationResult.floors}</strong><span>Floors</span></div>
