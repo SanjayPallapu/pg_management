@@ -1,12 +1,9 @@
-const CACHE_NAME = 'pg-management-v3';
-const STATIC_CACHE = 'pg-static-v3';
-const DYNAMIC_CACHE = 'pg-dynamic-v3';
-const API_CACHE = 'pg-api-v3';
+const STATIC_CACHE = 'pg-static-v4';
+const DYNAMIC_CACHE = 'pg-dynamic-v4';
+const API_CACHE = 'pg-api-v4';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -75,13 +72,30 @@ self.addEventListener('fetch', (event) => {
 
   // HTML pages - Network first with cache fallback
   if (request.destination === 'document' || request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(networkFirstWithCache(request, DYNAMIC_CACHE));
+    event.respondWith(networkFirstDocument(request));
     return;
   }
 
   // Default - Stale while revalidate
   event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
 });
+
+// Always check the network for the application shell. Hashed JavaScript files
+// change on every deployment, so serving an old HTML shell can request chunks
+// that no longer exist on the server.
+async function networkFirstDocument(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  try {
+    const networkResponse = await fetch(request, { cache: 'no-store' });
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+    return cachedResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }
+}
 
 // Cache first strategy
 async function cacheFirstWithNetwork(request, cacheName) {

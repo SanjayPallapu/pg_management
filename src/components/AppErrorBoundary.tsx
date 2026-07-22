@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { recoverFromStaleChunk, reloadLatestApp } from "@/lib/chunkRecovery";
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
@@ -21,10 +22,11 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[AppErrorBoundary]", error, info.componentStack);
+    recoverFromStaleChunk(error);
   }
 
   private handleReload = () => {
-    window.location.reload();
+    void reloadLatestApp();
   };
 
   private handleGoHome = () => {

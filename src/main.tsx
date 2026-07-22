@@ -2,6 +2,16 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { finishChunkRecoveryBoot, recoverFromStaleChunk } from './lib/chunkRecovery';
+
+window.addEventListener('vite:preloadError', (event) => {
+  const preloadEvent = event as Event & { payload?: unknown };
+  if (recoverFromStaleChunk(preloadEvent.payload)) event.preventDefault();
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (recoverFromStaleChunk(event.reason)) event.preventDefault();
+});
 
 console.log('main.tsx loaded');
 
@@ -14,6 +24,7 @@ try {
       <App />
     </StrictMode>,
   );
+  finishChunkRecoveryBoot();
   console.log('App rendered');
 } catch (error) {
   console.error('Error rendering app:', error);
