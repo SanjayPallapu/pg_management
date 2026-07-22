@@ -746,10 +746,10 @@
 
 /* Edge-to-edge journey refinement. */
 .pgh-onboarding__slide--everything .pgh-onboarding__background {
-  transform: translateY(1.2rem);
+  transform: translateY(2rem);
 }
 .pgh-onboarding__slide--rent .pgh-onboarding__background {
-  transform: translateY(1.45rem);
+  transform: translateY(2.25rem);
 }
 
 .pgh-login__visual {
@@ -1199,7 +1199,7 @@
 }
 
 .pgh-ready__content {
-  padding-top: max(3.95rem, calc(env(safe-area-inset-top) + 3.45rem));
+  padding-top: max(3.35rem, calc(env(safe-area-inset-top) + 2.85rem));
 }
 .pgh-ready__content .pgh-ready__copy h1 {
   margin-top: .38rem;
@@ -1253,7 +1253,7 @@
   .pgh-login__card--email .pgh-google-button,
   .pgh-login__email-form .pgh-auth-field > div { min-height: 2.55rem; }
   .pgh-login__email-form { gap: .35rem; }
-  .pgh-ready__content { padding-top: max(3.7rem, calc(env(safe-area-inset-top) + 3.2rem)); }
+  .pgh-ready__content { padding-top: max(3.1rem, calc(env(safe-area-inset-top) + 2.6rem)); }
   .pgh-ready__content .pgh-ready__stats > div { padding-block: .68rem; }
 }
 

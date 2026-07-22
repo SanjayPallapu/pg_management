@@ -233,7 +233,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error && data.session) {
+      // Existing users must never inherit a stale new-signup flag from an
+      // earlier signup or OAuth attempt. Establish the session immediately so
+      // the protected dashboard route is ready before navigation begins.
+      sessionStorage.removeItem('isNewSignup');
+      setIsNewSignup(false);
+      setSession(data.session);
+      setUser(data.user);
+    }
     return { error };
   }, []);
 

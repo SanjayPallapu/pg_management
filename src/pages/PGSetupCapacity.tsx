@@ -81,7 +81,7 @@ export default function PGSetupCapacity() {
           <img src={journeyBuilding} alt="PG room setup" />
           <div><span>Room planning</span><h1>Plan your<br /><em>space</em></h1><p>Review rooms, beds, and floor details before we create your dashboard.</p></div>
         </section>
-        <section className="pgh-setup-title"><h2>Your room plan</h2><p>Customise the capacity for every floor.</p></section>
+        <section className="pgh-setup-title"><h2>Your room plan</h2><p>Ground Floor is included automatically. Customise each level below.</p></section>
 
         <section className="pgh-capacity-card pgh-capacity-card--full">
           <h2 className="pgh-section-title"><Building2 size={21} /> Capacity at a glance</h2>
@@ -96,7 +96,7 @@ export default function PGSetupCapacity() {
         <section className="pgh-floor-section">
           <h2>Set up each floor</h2>
           <div>{floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}</div>
-          <button type="button" className="pgh-add-floor" onClick={addFloor} disabled={floors.length >= 20}><CirclePlus size={21} /> Add Floor</button>
+          <button type="button" className="pgh-add-floor" onClick={addFloor} disabled={floors.length >= 20}><CirclePlus size={21} /> Add Upper Floor</button>
         </section>
 
         <section className="pgh-overview pgh-overview--full">
