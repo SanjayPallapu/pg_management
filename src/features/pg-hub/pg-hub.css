@@ -1128,3 +1128,135 @@
   font-weight: 800;
   text-align: right;
 }
+
+/* Compact journey refinements: inline auth, raised property form, simple completion summary. */
+.pgh-login__page {
+  grid-template-rows: minmax(0, 46%) minmax(0, 54%);
+}
+.pgh-login__visual {
+  inset: 2.35rem -2.25rem -2.25rem 2%;
+}
+.pgh-login__card {
+  z-index: 5;
+  align-self: stretch;
+  margin-top: -1.35rem;
+  padding-top: 1.35rem;
+  background: #fff;
+  box-shadow: 0 -20px 48px rgba(4, 40, 100, .25);
+}
+.pgh-login__copy .pgh-title {
+  animation: pgh-welcome-reveal .72s cubic-bezier(.22, 1, .36, 1) both;
+}
+.pgh-login__card--email {
+  gap: .55rem;
+  padding-top: 1rem;
+}
+.pgh-login__card--email .pgh-sheet-heading > small {
+  margin-top: .12rem;
+}
+.pgh-login__card--email .pgh-google-button {
+  min-height: 2.9rem;
+}
+.pgh-login__email-form {
+  display: grid;
+  gap: .52rem;
+}
+.pgh-login__email-form .pgh-auth-field > div {
+  min-height: 2.85rem;
+}
+.pgh-login__email-form .pgh-button {
+  min-height: 3.05rem;
+}
+.pgh-login__error {
+  color: #d92d20;
+  font-size: .72rem;
+  font-weight: 700;
+}
+@keyframes pgh-welcome-reveal {
+  from { opacity: 0; filter: blur(8px); letter-spacing: -.02em; }
+  to { opacity: 1; filter: blur(0); letter-spacing: -.065em; }
+}
+
+.pgh-setup-page .pgh-setup-hero {
+  height: 15.5rem;
+}
+.pgh-setup-page .pgh-setup-hero > img {
+  right: -1.5rem;
+  width: 72%;
+}
+.pgh-setup-page .pgh-setup-surface--full {
+  position: relative;
+  z-index: 5;
+  margin-top: -1.65rem;
+  border-radius: 1.75rem 1.75rem 0 0;
+  padding-top: 1.3rem;
+}
+.pgh-setup-surface--full .pgh-setup-title {
+  margin-bottom: 1.05rem;
+}
+.pgh-setup-surface--full .pgh-setup-form {
+  gap: .9rem;
+}
+
+.pgh-ready__content {
+  padding-top: max(3.95rem, calc(env(safe-area-inset-top) + 3.45rem));
+}
+.pgh-ready__content .pgh-ready__copy h1 {
+  margin-top: .38rem;
+}
+.pgh-ready__content .pgh-ready__copy p {
+  margin-top: .55rem;
+}
+.pgh-ready__content .pgh-ready__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 1.2rem;
+  background: rgba(4, 28, 74, .42);
+  backdrop-filter: blur(14px);
+}
+.pgh-ready__content .pgh-ready__stats > div {
+  min-width: 0;
+  padding: .9rem .4rem;
+  border-right: 1px solid rgba(255, 255, 255, .18);
+  text-align: center;
+}
+.pgh-ready__content .pgh-ready__stats > div:last-child {
+  border-right: 0;
+}
+.pgh-ready__content .pgh-ready__stats strong,
+.pgh-ready__content .pgh-ready__stats span {
+  display: block;
+}
+.pgh-ready__content .pgh-ready__stats strong {
+  color: #fff;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+.pgh-ready__content .pgh-ready__stats span {
+  margin-top: .35rem;
+  color: rgba(235, 246, 255, .72);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+@media (max-height: 740px) {
+  .pgh-login__page { grid-template-rows: minmax(0, 43%) minmax(0, 57%); }
+  .pgh-login__visual { top: 1.7rem; }
+  .pgh-login__card { margin-top: -1rem; }
+  .pgh-login__card--email { gap: .38rem; padding-top: .7rem; }
+  .pgh-login__card--email .pgh-sheet-heading > small { display: none; }
+  .pgh-login__card--email .pgh-google-button,
+  .pgh-login__email-form .pgh-auth-field > div { min-height: 2.55rem; }
+  .pgh-login__email-form { gap: .35rem; }
+  .pgh-ready__content { padding-top: max(3.7rem, calc(env(safe-area-inset-top) + 3.2rem)); }
+  .pgh-ready__content .pgh-ready__stats > div { padding-block: .68rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pgh-login__copy .pgh-title { animation: none; }
+}

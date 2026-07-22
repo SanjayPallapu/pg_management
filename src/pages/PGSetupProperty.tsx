@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import { Building2, Layers3, Map, MapPin, UploadCloud, UsersRound } from "lucide-react";
+import { Building2, Layers3, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import journeyBuilding from "@/assets/pg-hub/hub-building-hero.png";
@@ -10,7 +10,7 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { useAuth } from "@/hooks/useAuth";
 
-type Errors = Partial<Record<"name" | "city" | "address" | "floors", string>>;
+type Errors = Partial<Record<"name" | "city" | "floors", string>>;
 
 export default function PGSetupProperty() {
   const navigate = useNavigate();
@@ -32,7 +32,6 @@ export default function PGSetupProperty() {
     const next: Errors = {};
     if (!property.name.trim()) next.name = "Enter your PG name.";
     if (!property.city.trim()) next.city = "Enter the city or area.";
-    if (!property.address.trim()) next.address = "Enter the property address.";
     if (property.totalFloors < 1) next.floors = "Enter at least one floor.";
     setErrors(next);
     if (Object.keys(next).length === 0) navigate("/setup/capacity");
@@ -55,7 +54,7 @@ export default function PGSetupProperty() {
           <p>Add details now. Edit them anytime.</p>
         </section>
         <section className="pgh-setup-surface pgh-setup-surface--full">
-          <section className="pgh-setup-title"><h2>Start with the basics</h2><p>Tell us where your property is and how it operates.</p></section>
+          <section className="pgh-setup-title"><h2>Property details</h2></section>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>
@@ -77,7 +76,6 @@ export default function PGSetupProperty() {
               </label>
             </div>
             <div><PGHubFormField label="City / Area" required icon={MapPin} placeholder="Enter city or area" value={property.city} onChange={(event) => updateProperty({ city: event.currentTarget.value })} error={errors.city} /></div>
-            <div><PGHubFormField label="Address" required multiline icon={Map} placeholder="Enter full address" value={property.address} onChange={(event) => updateProperty({ address: event.currentTarget.value })} error={errors.address} /></div>
             <div><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></div>
           </div>
 

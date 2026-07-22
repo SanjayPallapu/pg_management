@@ -1,10 +1,9 @@
 import { useEffect } from "react";
-import { BedDouble, Building2, CheckCircle2, DoorOpen } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import journeyComplete from "@/assets/pg-hub/hub-building-check.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
-import { PGHubStat } from "@/features/pg-hub/PGHubStats";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
 
 export default function SetupComplete() {
@@ -36,10 +35,10 @@ export default function SetupComplete() {
             <h1>Your PG is<br /><em>ready to grow</em></h1>
             <p><strong>{creationResult.pgName}</strong> is live. Your rooms, beds, and dashboard are ready.</p>
           </div>
-          <div className="pgh-ready__stats">
-            <PGHubStat icon={Building2} value={creationResult.floors} label="Floors" color="#1769FF" delay={260} />
-            <PGHubStat icon={DoorOpen} value={creationResult.rooms} label="Rooms" color="#7B4DFF" delay={340} />
-            <PGHubStat icon={BedDouble} value={creationResult.beds} label="Beds" color="#22A447" delay={420} />
+          <div className="pgh-ready__stats" aria-label="Property summary">
+            <div><strong>{creationResult.floors}</strong><span>Floors</span></div>
+            <div><strong>{creationResult.rooms}</strong><span>Rooms</span></div>
+            <div><strong>{creationResult.beds}</strong><span>Beds</span></div>
           </div>
           <div className="pgh-ready__buttons">
             <PGHubButton onClick={() => finish("/")}>Open dashboard</PGHubButton>

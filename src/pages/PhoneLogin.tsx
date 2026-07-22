@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ShieldCheck } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import journeyHero from "@/assets/pg-hub/hub-building-platform.png";
@@ -13,9 +13,15 @@ import {
 
 export default function PhoneLogin() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, requestPhoneOtp } = useAuth();
+  const { isAuthenticated, isLoading, requestPhoneOtp, signIn, signInWithGoogle } = useAuth();
+  const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const digits = useMemo(() => phone.replace(/\D/g, "").slice(0, 10), [phone]);
   const valid = digits.length === 10;
 
@@ -46,6 +52,38 @@ export default function PhoneLogin() {
     navigate("/auth/otp");
   };
 
+  const continueWithEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const cleanEmail = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < 6) {
+      setEmailError("Password must be at least 6 characters.");
+      return;
+    }
+    setEmailError("");
+    setSubmitting(true);
+    const { error } = await signIn(cleanEmail, password);
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
+      return;
+    }
+    navigate("/", { replace: true });
+  };
+
+  const continueWithGoogle = async () => {
+    setGoogleSubmitting(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setGoogleSubmitting(false);
+      const unsupported = error.message.toLowerCase().includes("unsupported provider");
+      toast.error(unsupported ? "Google sign-in is not enabled yet. Use email or phone sign-in." : error.message);
+    }
+  };
+
   return (
     <PGHubShell variant="light" className="pgh-login">
       <div className="pgh-login__page">
@@ -60,19 +98,53 @@ export default function PhoneLogin() {
           </div>
         </section>
 
-        <section className="pgh-login__card">
-          <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong><small>We’ll send a 6-digit verification code.</small></div>
-          <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
-          <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
-            <span className="pgh-phone-field__country">+91 <ChevronDown size={18} /></span>
-            <span className="pgh-phone-field__divider" />
-            <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="Enter mobile number" aria-describedby="phone-help" />
-          </div>
-          <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
-          <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
-          <p id="phone-help" className="pgh-login__alternative">Prefer another method? <button type="button" onClick={() => navigate("/auth/email")}>Continue with email or Google</button></p>
+        <section className={`pgh-login__card pgh-login__card--${authMethod}`}>
+          {authMethod === "phone" ? (
+            <>
+              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong><small>We’ll send a 6-digit verification code.</small></div>
+              <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
+              <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
+                <span className="pgh-phone-field__country">+91 <ChevronDown size={18} /></span>
+                <span className="pgh-phone-field__divider" />
+                <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="Enter mobile number" aria-describedby="phone-help" />
+              </div>
+              <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
+              <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
+              <p id="phone-help" className="pgh-login__alternative">Prefer another method? <button type="button" onClick={() => setAuthMethod("email")}>Continue with email or Google</button></p>
+            </>
+          ) : (
+            <>
+              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Email or Google</strong><small>Choose how you want to continue.</small></div>
+              <button type="button" className="pgh-google-button" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
+                {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
+              </button>
+              <div className="pgh-auth-divider"><span />or use email<span /></div>
+              <form className="pgh-login__email-form" onSubmit={continueWithEmail}>
+                <label className="pgh-auth-field">
+                  <span>Email</span>
+                  <div><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" autoComplete="email" /></div>
+                </label>
+                <label className="pgh-auth-field">
+                  <span>Password</span>
+                  <div><Lock size={18} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
+                </label>
+                {emailError && <small className="pgh-login__error">{emailError}</small>}
+                <PGHubButton type="submit" loading={submitting}>Sign in with email</PGHubButton>
+              </form>
+              <p className="pgh-login__alternative">Use your mobile instead? <button type="button" onClick={() => setAuthMethod("phone")}>Sign in with OTP</button></p>
+            </>
+          )}
         </section>
       </div>
     </PGHubShell>
   );
 }
+
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.31v2.77h3.56c2.09-1.92 3.28-4.74 3.28-8.09Z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.99.66-2.24 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z" fill="#34A853" />
+    <path d="M5.84 14.1A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.94l3.66-2.84Z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.58 10.58 0 0 0 12 1a11 11 0 0 0-9.82 6.06l3.66 2.84A6.49 6.49 0 0 1 12 5.38Z" fill="#EA4335" />
+  </svg>
+);
