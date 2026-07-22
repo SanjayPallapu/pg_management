@@ -746,10 +746,10 @@
 
 /* Edge-to-edge journey refinement. */
 .pgh-onboarding__slide--everything .pgh-onboarding__background {
-  transform: translateY(2rem);
+  transform: translateY(2.7rem);
 }
 .pgh-onboarding__slide--rent .pgh-onboarding__background {
-  transform: translateY(2.25rem);
+  transform: translateY(2.55rem);
 }
 
 .pgh-login__visual {
