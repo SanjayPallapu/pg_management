@@ -108,9 +108,8 @@ export default function OTPVerification() {
           <span className="pgh-otp__step">2 of 2</span>
         </header>
         <section className="pgh-otp__copy">
-          <p className="pgh-otp__kicker">One last step</p>
           <h1 className="pgh-title">Check your <em>phone</em></h1>
-          <p className="pgh-subtitle">Enter the 6-digit code sent to <strong>+91 {formatted}</strong></p>
+          <p className="pgh-subtitle">Code sent to <strong>+91 {formatted}</strong></p>
           {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
         </section>
         <div className="pgh-otp__art pgh-otp__security">
