@@ -70,7 +70,7 @@ export default function PGSetupCapacity() {
         </section>
         <section className="pgh-setup-title"><h2>Your room plan</h2><p>Customise the capacity for every floor.</p></section>
 
-        <section className="pgh-card pgh-capacity-card">
+        <section className="pgh-capacity-card pgh-capacity-card--full">
           <h2 className="pgh-section-title"><Building2 size={21} /> Capacity at a glance</h2>
           <div className="pgh-capacity-grid">
             <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
@@ -86,7 +86,7 @@ export default function PGSetupCapacity() {
           <button type="button" className="pgh-add-floor" onClick={addFloor} disabled={floors.length >= 20}><CirclePlus size={21} /> Add Floor</button>
         </section>
 
-        <section className="pgh-card pgh-overview">
+        <section className="pgh-overview pgh-overview--full">
           <h2 className="pgh-section-title"><Building2 size={21} /> PG Overview</h2>
           <div><span><Building2 /><strong>{floors.length}</strong><small>Floors</small></span><span><DoorOpen /><strong>{totals.rooms}</strong><small>Rooms</small></span><span><BedDouble /><strong>{totals.beds}</strong><small>Beds</small></span></div>
         </section>

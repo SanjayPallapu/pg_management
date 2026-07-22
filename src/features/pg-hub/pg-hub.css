@@ -743,3 +743,355 @@
   .pgh-login__visual { top: 1rem; }
   .pgh-login__card { gap: .52rem; padding-top: .75rem; }
 }
+
+/* Edge-to-edge journey refinement. */
+.pgh-onboarding__slide--everything .pgh-onboarding__background {
+  transform: translateY(1.2rem);
+}
+.pgh-onboarding__slide--rent .pgh-onboarding__background {
+  transform: translateY(1.45rem);
+}
+
+.pgh-login__visual {
+  inset: .35rem -2.25rem -1.35rem 2%;
+}
+.pgh-login__visual img {
+  transform: scale(1.2);
+  transform-origin: right bottom;
+  filter: saturate(1.08) contrast(1.05) drop-shadow(0 18px 30px rgba(3, 34, 99, .2));
+}
+.pgh-login__veil {
+  background: linear-gradient(180deg, transparent 0%, transparent 62%, rgba(4, 31, 85, .18) 78%, rgba(4, 31, 85, .6) 100%);
+}
+.pgh-login__copy {
+  max-width: 82%;
+  margin-top: 1.35rem;
+}
+.pgh-login__copy .pgh-title {
+  font-size: clamp(3.35rem, 14.5vw, 4.15rem);
+  line-height: .87;
+}
+.pgh-login__eyebrow {
+  font-size: .82rem;
+  letter-spacing: .105em;
+}
+
+.pgh-setup-shell.pgh-shell--light {
+  background: #f7fbff;
+}
+.pgh-setup-page,
+.pgh-capacity-page {
+  width: min(100%, 42rem);
+  padding: 0 0 2.5rem;
+  background: #f7fbff;
+}
+.pgh-setup-page > .pgh-setup-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  padding: max(1rem, env(safe-area-inset-top)) 1.15rem .9rem;
+  border-bottom: 1px solid rgba(210, 224, 241, .8);
+  background: rgba(247, 251, 255, .94);
+  backdrop-filter: blur(18px);
+}
+.pgh-setup-header__row button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  justify-content: flex-start;
+  padding: 0;
+}
+.pgh-progress {
+  height: .35rem;
+}
+.pgh-setup-hero,
+.pgh-capacity-hero {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.pgh-setup-hero {
+  height: 19rem;
+  background: linear-gradient(140deg, #073b96 0%, #1769ff 55%, #42c6f5 100%);
+}
+.pgh-setup-hero > img {
+  right: -1.3rem;
+  width: 76%;
+  transform: scale(1.12);
+}
+.pgh-setup-hero > div {
+  background: linear-gradient(90deg, rgba(3, 35, 100, .98) 0%, rgba(8, 70, 164, .86) 46%, rgba(30, 145, 222, .12) 78%);
+}
+.pgh-setup-hero > span,
+.pgh-setup-hero > h1,
+.pgh-setup-hero > p {
+  margin-left: 1.35rem;
+  max-width: 56%;
+}
+.pgh-setup-hero > span {
+  padding-top: 2rem;
+}
+.pgh-setup-hero > h1 {
+  font-size: clamp(2.55rem, 11vw, 3.15rem);
+}
+.pgh-setup-hero > p {
+  max-width: 48%;
+  font-size: .92rem;
+}
+.pgh-setup-surface--full {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  padding: 1.55rem 1.25rem max(2rem, env(safe-area-inset-bottom));
+  box-shadow: none;
+}
+.pgh-setup-surface--full .pgh-setup-title {
+  margin: 0 0 1.45rem;
+}
+.pgh-setup-surface--full .pgh-setup-title h2,
+.pgh-capacity-page > .pgh-setup-title h2 {
+  font-size: 1.95rem;
+}
+.pgh-setup-surface--full .pgh-setup-title p,
+.pgh-capacity-page > .pgh-setup-title p {
+  font-size: .96rem;
+}
+.pgh-setup-surface--full .pgh-setup-form {
+  gap: 1.15rem;
+}
+.pgh-setup-surface--full > .pgh-button-motion {
+  position: sticky;
+  z-index: 5;
+  bottom: max(.7rem, env(safe-area-inset-bottom));
+  margin-top: 1.25rem;
+}
+
+.pgh-capacity-hero {
+  min-height: 17rem;
+  background: linear-gradient(140deg, #073b96 0%, #1769ff 55%, #42c6f5 100%);
+}
+.pgh-capacity-hero > img {
+  right: -4%;
+  width: 72%;
+  height: 105%;
+}
+.pgh-capacity-hero > div {
+  width: 62%;
+  padding: 1.8rem 1.35rem;
+}
+.pgh-capacity-hero h1 {
+  font-size: clamp(2.5rem, 10.5vw, 3rem);
+}
+.pgh-capacity-hero p {
+  font-size: .9rem;
+}
+.pgh-capacity-page > .pgh-setup-title {
+  margin: 0;
+  padding: 1.6rem 1.25rem 1.25rem;
+  background: #f7fbff;
+}
+.pgh-capacity-card--full {
+  overflow: hidden;
+  border-block: 1px solid #dce7f4;
+  background: #fff;
+}
+.pgh-capacity-card--full > h2,
+.pgh-overview--full > h2 {
+  margin: 0;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid #e2eaf4;
+  background: #fff;
+}
+.pgh-capacity-card--full .pgh-capacity-grid > * {
+  border-color: #e2eaf4;
+  background: #fff;
+}
+.pgh-floor-section {
+  margin: 0;
+  padding: 1.65rem 1.25rem;
+  background: #f7fbff;
+}
+.pgh-floor-section > div {
+  overflow: hidden;
+  border-block: 1px solid #dce7f4;
+  background: #fff;
+}
+.pgh-floor-row {
+  border: 0;
+  border-bottom: 1px solid #e2eaf4;
+  border-radius: 0;
+  padding: 1rem .2rem;
+  box-shadow: none;
+}
+.pgh-floor-row:last-child {
+  border-bottom: 0;
+}
+.pgh-add-floor {
+  min-height: 3.6rem;
+  margin-top: .9rem;
+  border: 0;
+  border-radius: 0;
+  background: #eaf4ff;
+}
+.pgh-overview--full {
+  overflow: hidden;
+  border-block: 1px solid #dce7f4;
+  background: #fff;
+}
+.pgh-overview--full > div {
+  padding: 1.2rem 0;
+}
+.pgh-capacity-note {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: #f7fbff;
+}
+.pgh-capacity-page > .pgh-button-motion {
+  bottom: 0;
+  margin: 0;
+  padding: .85rem 1.25rem max(.85rem, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(210, 224, 241, .9);
+  background: rgba(255, 255, 255, .95);
+  backdrop-filter: blur(16px);
+}
+
+.pgh-ready--journey,
+.pgh-ready--journey > .pgh-safe-area {
+  height: 100dvh;
+  overflow: hidden;
+}
+.pgh-ready--journey.pgh-shell--dark {
+  background: #061842;
+}
+.pgh-ready__journey {
+  width: min(100%, 34rem);
+  height: 100dvh;
+  min-height: 0;
+  margin: 0 auto;
+  display: block;
+}
+.pgh-ready__backdrop img {
+  object-position: center;
+}
+.pgh-ready__backdrop > span {
+  background: linear-gradient(180deg, rgba(3, 18, 55, .86) 0%, rgba(4, 34, 91, .24) 30%, rgba(3, 25, 67, .12) 56%, rgba(2, 17, 47, .82) 76%, #020f2d 100%);
+}
+.pgh-ready--journey .pgh-ready__header {
+  top: max(1rem, env(safe-area-inset-top));
+  left: 1.25rem;
+  right: 1.25rem;
+}
+.pgh-ready--journey .pgh-ready__header > span {
+  border-color: rgba(139, 255, 180, .3);
+  background: rgba(7, 74, 42, .5);
+  color: #d9ffe8;
+}
+.pgh-ready__content {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(4.8rem, calc(env(safe-area-inset-top) + 4rem)) 1.25rem max(1rem, env(safe-area-inset-bottom));
+  color: white;
+}
+.pgh-ready__content .pgh-ready__copy {
+  margin: 0;
+  text-align: left;
+}
+.pgh-ready__content .pgh-ready__copy > span {
+  color: #8de8ff;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.pgh-ready__content .pgh-ready__copy h1 {
+  margin-top: .55rem;
+  color: white;
+  font-size: clamp(2.8rem, 12vw, 3.5rem);
+  line-height: .92;
+  letter-spacing: -.06em;
+}
+.pgh-ready__content .pgh-ready__copy h1 em {
+  color: #65d9ff;
+}
+.pgh-ready__content .pgh-ready__copy p {
+  max-width: 22rem;
+  margin-top: .75rem;
+  color: rgba(235, 246, 255, .84);
+  font-size: .92rem;
+  line-height: 1.45;
+}
+.pgh-ready__content .pgh-ready__stats {
+  margin-top: auto;
+  gap: 0;
+  border-block: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(3, 24, 66, .22);
+  backdrop-filter: blur(10px);
+}
+.pgh-ready__content .pgh-stat {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 0;
+  background: transparent;
+  padding: .75rem .35rem;
+  color: white;
+  box-shadow: none;
+}
+.pgh-ready__content .pgh-stat:last-child {
+  border-right: 0;
+}
+.pgh-ready__content .pgh-stat > span {
+  background: rgba(255, 255, 255, .12) !important;
+}
+.pgh-ready__content .pgh-stat strong {
+  color: white;
+}
+.pgh-ready__content .pgh-stat small {
+  color: rgba(235, 246, 255, .72);
+}
+.pgh-ready__content .pgh-ready__buttons {
+  gap: .65rem;
+  margin-top: .9rem;
+}
+.pgh-ready__content .pgh-button {
+  min-height: 3.45rem;
+  border-radius: 999px;
+}
+.pgh-ready__content .pgh-button--outline {
+  border-color: rgba(255, 255, 255, .48);
+  background: rgba(255, 255, 255, .1);
+  color: white;
+}
+
+@media (max-width: 380px) {
+  .pgh-setup-page > .pgh-setup-header { padding-inline: .95rem; }
+  .pgh-setup-hero > span,
+  .pgh-setup-hero > h1,
+  .pgh-setup-hero > p { margin-left: 1.1rem; }
+  .pgh-setup-surface--full,
+  .pgh-capacity-page > .pgh-setup-title,
+  .pgh-floor-section,
+  .pgh-capacity-note { padding-inline: 1rem; }
+}
+
+@media (max-height: 740px) {
+  .pgh-login__visual { top: .1rem; }
+  .pgh-login__copy .pgh-title { font-size: 3rem; }
+  .pgh-login__copy { margin-top: .4rem; }
+  .pgh-ready__content {
+    padding-top: max(4.2rem, calc(env(safe-area-inset-top) + 3.7rem));
+  }
+  .pgh-ready__content .pgh-ready__copy h1 { font-size: 2.55rem; }
+  .pgh-ready__content .pgh-ready__copy p { margin-top: .45rem; font-size: .84rem; }
+  .pgh-ready__content .pgh-stat { padding-block: .55rem; }
+  .pgh-ready__content .pgh-stat > span { width: 1.8rem; height: 1.8rem; }
+  .pgh-ready__content .pgh-ready__buttons { margin-top: .65rem; }
+  .pgh-ready__content .pgh-button { min-height: 3.2rem; }
+}

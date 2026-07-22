@@ -30,12 +30,11 @@ export default function SetupComplete() {
           <span aria-hidden="true" />
         </div>
         <header className="pgh-ready__header"><span><CheckCircle2 size={18} /> Setup complete</span></header>
-        <section className="pgh-ready__sheet">
-          <div className="pgh-ready__grab" aria-hidden="true" />
+        <section className="pgh-ready__content">
           <div className="pgh-ready__copy">
-            <span>Welcome home</span>
-            <h1>Your PG <em>is ready</em></h1>
-            <p><strong>{creationResult.pgName}</strong> is set up and waiting for its first tenant.</p>
+            <span>Ready to launch</span>
+            <h1>Your PG is<br /><em>ready to grow</em></h1>
+            <p><strong>{creationResult.pgName}</strong> is live. Your rooms, beds, and dashboard are ready.</p>
           </div>
           <div className="pgh-ready__stats">
             <PGHubStat icon={Building2} value={creationResult.floors} label="Floors" color="#1769FF" delay={260} />
@@ -43,8 +42,8 @@ export default function SetupComplete() {
             <PGHubStat icon={BedDouble} value={creationResult.beds} label="Beds" color="#22A447" delay={420} />
           </div>
           <div className="pgh-ready__buttons">
-            <PGHubButton onClick={() => finish("/")}>Enter dashboard</PGHubButton>
-            <PGHubButton variant="outline" onClick={() => finish("/?tab=rooms")}>Add your first tenant</PGHubButton>
+            <PGHubButton onClick={() => finish("/")}>Open dashboard</PGHubButton>
+            <PGHubButton variant="outline" onClick={() => finish("/?tab=rooms")}>Add first tenant</PGHubButton>
           </div>
         </section>
       </div>
