@@ -131,8 +131,8 @@ const Landing = () => {
 
             </Badge>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground leading-tight mb-6">
-              Manage Your PG
-              <span className="text-primary block mt-2">Like a Pro</span>
+              Manage, Scale &amp; Grow
+              <span className="text-primary block mt-2">with PG HUB</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               The all-in-one platform to track tenants, collect rent, send reminders, and grow your PG business — all
