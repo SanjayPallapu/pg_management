@@ -131,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const ensureOAuthProfile = async (authUser: User) => {
+      clearPhoneOtpTestMode();
       const provider = authUser.app_metadata?.provider;
       if (provider !== 'google') return;
 
@@ -141,18 +142,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ? authUser.user_metadata.name
             : authUser.email ?? null;
 
+      // Check if user already has an existing profile or existing PGs
+      const [{ data: existingProfile }, { data: existingPGs }] = await Promise.all([
+        supabase.from('profiles').select('user_id, is_new_signup').eq('user_id', authUser.id).maybeSingle(),
+        supabase.from('pgs').select('id').eq('owner_id', authUser.id).limit(1)
+      ]);
+
+      if (existingProfile || (existingPGs && existingPGs.length > 0)) {
+        // User is an existing user with profile or PGs - clear new signup flags!
+        sessionStorage.removeItem('isNewSignup');
+        setIsNewSignup(false);
+        if (existingProfile?.is_new_signup) {
+          await supabase.from('profiles').update({ is_new_signup: false }).eq('user_id', authUser.id);
+        }
+        return;
+      }
+
+      // New profile for first time Google OAuth user
       const { error } = await supabase
         .from('profiles')
-        .upsert(
-          {
-            user_id: authUser.id,
-            full_name: fullName,
-            is_new_signup: true,
-          },
-          { onConflict: 'user_id' },
-        );
+        .insert({
+          user_id: authUser.id,
+          full_name: fullName,
+          is_new_signup: true,
+        });
 
-      if (error) console.error('[Auth] Error ensuring Google profile:', error.message);
+      if (error) console.error('[Auth] Error creating Google profile:', error.message);
     };
 
     const checkIsNewSignup = (): boolean => {
@@ -233,6 +248,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    clearPhoneOtpTestMode();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.session) {
       // Existing users must never inherit a stale new-signup flag from an
@@ -242,6 +258,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsNewSignup(false);
       setSession(data.session);
       setUser(data.user);
+      supabase.from('profiles').update({ is_new_signup: false }).eq('user_id', data.user.id);
     }
     return { error };
   }, []);
