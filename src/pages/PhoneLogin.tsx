@@ -88,22 +88,25 @@ export default function PhoneLogin() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-login">
-      <div className="pgh-login__page pgh-login__page--full">
-        <section className="pgh-login__hero pgh-login__hero--centered flex flex-col items-center justify-center text-center py-6">
-          <div className="pgh-login__visual pgh-login__visual--upper" aria-hidden="true">
-            <img src={journeyBuilding} alt="" />
+    <PGHubShell variant="dark" className="pgh-login min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+      <div className="w-full max-w-md mx-auto relative z-10 my-auto">
+        <section className={`pgh-login__card bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl flex flex-col gap-6 pgh-login__card--${authMethod}`}>
+          
+          {/* Header with PG Logo + Animated PG HUB Title together */}
+          <div className="flex flex-col items-center justify-center text-center pt-2 pb-1">
+            <div className="flex items-center justify-center gap-3">
+              <img src={pgHubLogo} alt="PG HUB" className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-md" />
+              <h1 key={authMethod} className="pgh-title pgh-title--animated text-3xl sm:text-4xl font-black tracking-tight animate-pghub-switch m-0">PG HUB</h1>
+            </div>
+            <p className="text-slate-400 text-xs sm:text-sm mt-2 font-medium">Smart PG & Hostel Management</p>
           </div>
-          <div className="pgh-login__copy text-center max-w-full z-10">
-            <h1 key={authMethod} className="pgh-title pgh-title--animated pgh-title--centered-animated text-4xl sm:text-5xl font-black tracking-tight animate-pghub-switch">PG HUB</h1>
-          </div>
-        </section>
 
-        <section className={`pgh-login__card pgh-login__card--full pgh-login__card--${authMethod}`}>
+          {/* Tab method switcher */}
           <div className="pgh-login__method-switch" role="tablist" aria-label="Sign-in method">
             <button type="button" role="tab" aria-selected={authMethod === "phone"} className={authMethod === "phone" ? "is-active" : ""} onClick={() => setAuthMethod("phone")}>Mobile</button>
             <button type="button" role="tab" aria-selected={authMethod === "email"} className={authMethod === "email" ? "is-active" : ""} onClick={() => setAuthMethod("email")}>Email</button>
           </div>
+
           {authMethod === "phone" ? (
             <>
               <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
@@ -111,9 +114,9 @@ export default function PhoneLogin() {
                 <span className="pgh-phone-field__divider" />
                 <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="10-digit number" aria-label="Mobile number" aria-describedby="phone-help" />
               </div>
-              <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
+              <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 font-bold text-white shadow-lg shadow-blue-600/25">Continue with OTP</PGHubButton>
               <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
-              <p id="phone-help" className="pgh-login__alternative">Secure OTP verification. No password required.</p>
+              <p id="phone-help" className="pgh-login__alternative text-center text-xs text-slate-400">Secure OTP verification. No password required.</p>
             </>
           ) : (
             <>
@@ -121,7 +124,7 @@ export default function PhoneLogin() {
                 {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
               </button>
               <div className="pgh-auth-divider"><span />or use email<span /></div>
-              <form className="pgh-login__email-form" onSubmit={continueWithEmail}>
+              <form className="pgh-login__email-form flex flex-col gap-4" onSubmit={continueWithEmail}>
                 <label className="pgh-auth-field">
                   <span>Email</span>
                   <div><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" autoComplete="email" /></div>
@@ -131,9 +134,9 @@ export default function PhoneLogin() {
                   <div><Lock size={18} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
                 </label>
                 {emailError && <small className="pgh-login__error">{emailError}</small>}
-                <PGHubButton type="submit" loading={submitting}>Sign in with email</PGHubButton>
+                <PGHubButton type="submit" loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 font-bold text-white shadow-lg shadow-blue-600/25">Sign in with email</PGHubButton>
               </form>
-              <p className="pgh-login__alternative">Your account details stay encrypted and protected.</p>
+              <p className="pgh-login__alternative text-center text-xs text-slate-400">Your account details stay encrypted and protected.</p>
             </>
           )}
         </section>

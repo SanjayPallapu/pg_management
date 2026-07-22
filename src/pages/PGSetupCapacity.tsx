@@ -78,29 +78,77 @@ export default function PGSetupCapacity() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-setup-shell">
-      <div className="pgh-page pgh-page--wide pgh-setup-page pgh-capacity-page pgh-page--fullscreen p-0 w-full max-w-full">
-        <div className="px-4 pt-3">
-          <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
-        </div>
+    <PGHubShell variant="dark" className="pgh-setup-shell min-h-screen bg-slate-950 text-white flex flex-col justify-between">
+      <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-4 pb-24 flex-1 flex flex-col gap-6">
+        <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
 
-        <section className="pgh-capacity-card pgh-capacity-card--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-2 pb-6">
-          <div className="pgh-capacity-grid">
-            <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
-            <div><BedDouble /><span>Total Beds</span><strong>{totals.beds}</strong></div>
-            <label><DoorOpen /><span>Starting Room No.</span><input value={startingRoom} onChange={(event) => setStartingRoom(event.target.value)} inputMode="numeric" /></label>
-            <div><IndianRupee /><span>Price / Bed From</span><strong className="pgh-capacity-grid__types">₹{startingPrice.toLocaleString("en-IN")}</strong></div>
+        {/* Overview Stats Bar */}
+        <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl backdrop-blur-xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div className="bg-slate-800/50 rounded-2xl p-3 border border-slate-700/50">
+              <span className="text-xs text-slate-400 font-semibold block uppercase">Total Rooms</span>
+              <strong className="text-2xl font-black text-blue-400">{totals.rooms}</strong>
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-3 border border-slate-700/50">
+              <span className="text-xs text-slate-400 font-semibold block uppercase">Total Beds</span>
+              <strong className="text-2xl font-black text-indigo-400">{totals.beds}</strong>
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-3 border border-slate-700/50 flex flex-col items-center justify-center">
+              <span className="text-xs text-slate-400 font-semibold block uppercase">Starting Room</span>
+              <input 
+                value={startingRoom} 
+                onChange={(event) => setStartingRoom(event.target.value)} 
+                inputMode="numeric" 
+                className="w-16 text-center text-xl font-black bg-slate-700/60 border border-slate-600 rounded-lg text-white mt-1 py-0.5 focus:outline-none focus:border-blue-400"
+              />
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-3 border border-slate-700/50">
+              <span className="text-xs text-slate-400 font-semibold block uppercase">Starting Price</span>
+              <strong className="text-2xl font-black text-emerald-400">₹{startingPrice.toLocaleString("en-IN")}</strong>
+            </div>
           </div>
         </section>
 
-        <section className="pgh-floor-section">
-          <h2>Set up each floor</h2>
-          <div>{floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}</div>
-          <button type="button" className="pgh-add-floor" onClick={addFloor} disabled={floors.length >= 20}><CirclePlus size={21} /> Add Upper Floor</button>
+        {/* Floor Setup List */}
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Building2 className="text-blue-400" size={22} /> Floor & Room Setup
+            </h2>
+            <span className="text-xs text-slate-400 font-semibold">{floors.length} floors configured</span>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}
+          </div>
+
+          <button 
+            type="button" 
+            className="w-full py-3.5 px-4 rounded-2xl bg-white/5 border border-dashed border-slate-700 text-slate-300 font-bold hover:bg-white/10 hover:border-slate-500 transition-all flex items-center justify-center gap-2 text-sm mt-2" 
+            onClick={addFloor} 
+            disabled={floors.length >= 20}
+          >
+            <CirclePlus size={20} className="text-blue-400" /> Add Upper Floor
+          </button>
         </section>
 
-        <p className="pgh-capacity-note"><Info size={17} /> Edit anytime from PG Overview.</p>
-        <PGHubButton onClick={create} loading={createPGFromFloorPlan.isPending} disabled={!floors.length || totals.rooms < 1}>{creationResult ? "Return to setup complete" : "Create PG"}</PGHubButton>
+        <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1.5 pt-2">
+          <Info size={15} /> Room numbers and sharing prices can be edited anytime later.
+        </p>
+      </div>
+
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800/80 z-30">
+        <div className="max-w-2xl mx-auto">
+          <PGHubButton 
+            onClick={create} 
+            loading={createPGFromFloorPlan.isPending} 
+            disabled={!floors.length || totals.rooms < 1}
+            className="w-full h-14 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 text-white rounded-2xl font-extrabold text-base shadow-xl shadow-blue-500/25 active:scale-98 transition-all"
+          >
+            {creationResult ? "Return to setup complete" : "Create PG"}
+          </PGHubButton>
+        </div>
       </div>
     </PGHubShell>
   );

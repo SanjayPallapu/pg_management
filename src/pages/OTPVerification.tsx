@@ -104,13 +104,10 @@ export default function OTPVerification() {
   return (
     <PGHubShell variant="light" className="pgh-otp">
       <div className="pgh-page">
-        <header className="pgh-otp__header">
+        <header className="pgh-otp__header flex items-center justify-between">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
-          <div className="pgh-otp__brand"><img src={pgHubLogo} alt="" /><strong>PG HUB</strong></div>
-          <span className="pgh-otp__step">Verification</span>
         </header>
         <section className="pgh-otp__copy">
-          <span>One last step</span>
           <h1 className="pgh-title">Verify your <em>number</em></h1>
           <p className="pgh-subtitle">Enter the 6-digit code sent to <strong>+91 {formatted}</strong></p>
           {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
