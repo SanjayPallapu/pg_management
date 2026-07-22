@@ -71,7 +71,10 @@ export default function PhoneLogin() {
       toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
       return;
     }
-    navigate("/", { replace: true });
+    // Supabase has persisted the authenticated session at this point. Reload
+    // the protected app from that session so the route guard cannot render
+    // once with stale unauthenticated context and send the user back here.
+    window.location.replace("/");
   };
 
   const continueWithGoogle = async () => {

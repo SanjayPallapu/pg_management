@@ -41,13 +41,17 @@ function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: 
 
 export default function PGSetupCapacity() {
   const navigate = useNavigate();
-  const { property, floors, startingRoom, setStartingRoom, updateFloor, addFloor, setCreationResult } = usePGSetupDraft();
+  const { property, floors, startingRoom, creationResult, setStartingRoom, updateFloor, addFloor, setCreationResult } = usePGSetupDraft();
   const { createPGFromFloorPlan } = usePGSetup();
   const { refreshPGs } = usePG();
   const totals = useMemo(() => floors.reduce((sum, floor) => ({ rooms: sum.rooms + floor.rooms, beds: sum.beds + floor.rooms * floor.bedsPerRoom }), { rooms: 0, beds: 0 }), [floors]);
   const startingPrice = useMemo(() => Math.min(...floors.map((floor) => floor.pricePerBed)), [floors]);
 
   const create = async () => {
+    if (creationResult) {
+      navigate("/setup/complete");
+      return;
+    }
     if (!property.name.trim()) {
       navigate("/setup/property", { replace: true });
       return;
@@ -104,7 +108,7 @@ export default function PGSetupCapacity() {
           <div><span><Building2 /><strong>{floors.length}</strong><small>Floors</small></span><span><DoorOpen /><strong>{totals.rooms}</strong><small>Rooms</small></span><span><BedDouble /><strong>{totals.beds}</strong><small>Beds</small></span></div>
         </section>
         <p className="pgh-capacity-note"><Info size={17} /> You can edit rooms, capacity, AC settings, and floors later from Settings.</p>
-        <PGHubButton onClick={create} loading={createPGFromFloorPlan.isPending} disabled={!floors.length || totals.rooms < 1}>Create PG</PGHubButton>
+        <PGHubButton onClick={create} loading={createPGFromFloorPlan.isPending} disabled={!floors.length || totals.rooms < 1}>{creationResult ? "Return to setup complete" : "Create PG"}</PGHubButton>
       </div>
     </PGHubShell>
   );

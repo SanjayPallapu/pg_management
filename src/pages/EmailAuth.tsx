@@ -90,7 +90,7 @@ export default function EmailAuth() {
     const { error } = await signIn(email.trim(), password);
     setSubmitting(false);
     if (error) toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
-    else navigate("/", { replace: true });
+    else window.location.replace("/");
   };
 
   const continueSignup = (event: React.FormEvent) => {

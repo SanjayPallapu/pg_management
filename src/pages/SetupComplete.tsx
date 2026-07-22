@@ -24,6 +24,10 @@ export default function SetupComplete() {
     window.location.replace(target);
   };
 
+  const goBack = () => {
+    navigate("/setup/capacity");
+  };
+
   return (
     <PGHubShell variant="dark" className="pgh-ready pgh-ready--journey">
       <div className="pgh-ready__journey">
@@ -32,7 +36,7 @@ export default function SetupComplete() {
           <span aria-hidden="true" />
         </div>
         <header className="pgh-ready__header">
-          <button type="button" className="pgh-ready__back" onClick={() => finish("/")}><ArrowLeft size={18} /> Back</button>
+          <button type="button" className="pgh-ready__back" onClick={goBack}><ArrowLeft size={18} /> Back</button>
           <span><CheckCircle2 size={18} /> Setup complete</span>
         </header>
         <section className="pgh-ready__content">
