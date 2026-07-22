@@ -79,14 +79,14 @@ export default function PGSetupCapacity() {
 
   return (
     <PGHubShell variant="light" className="pgh-setup-shell">
-      <div className="pgh-page pgh-page--wide pgh-setup-page pgh-capacity-page">
+      <div className="pgh-page pgh-page--wide pgh-setup-page pgh-capacity-page pgh-page--full">
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
-        <section className="pgh-capacity-hero">
-          <img src={journeyBuilding} alt="PG room setup" />
-          <div><span>Room configuration</span><h1>Shape your<br /><em>room plan</em></h1><p>Set capacity, sharing, and pricing for every floor.</p></div>
+        <section className="pgh-capacity-hero pgh-capacity-hero--compact relative">
+          <img src={journeyBuilding} alt="PG room setup" className="pgh-capacity-hero__img--tiny" />
+          <div className="pgh-capacity-hero__copy"><p className="text-xs text-slate-300 font-medium">Set capacity, sharing, and pricing for every floor.</p></div>
         </section>
 
-        <section className="pgh-capacity-card pgh-capacity-card--full">
+        <section className="pgh-capacity-card pgh-capacity-card--full pgh-capacity-card--flush">
           <h2 className="pgh-section-title"><span>Step 2</span><Building2 size={21} /> Configuration</h2>
           <div className="pgh-capacity-grid">
             <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
