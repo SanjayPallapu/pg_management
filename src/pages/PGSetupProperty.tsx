@@ -49,7 +49,6 @@ export default function PGSetupProperty() {
           <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
         </div>
         <section className="pgh-setup-surface pgh-setup-surface--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-4 pb-8">
-          <header className="pgh-setup-section-heading mb-4"><span>Step 1</span><h2 className="text-2xl font-black text-slate-900">Property details</h2></header>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>

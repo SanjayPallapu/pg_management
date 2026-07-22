@@ -95,7 +95,7 @@ export default function PhoneLogin() {
             <img src={journeyBuilding} alt="" />
           </div>
           <div className="pgh-login__copy text-center max-w-full z-10">
-            <h1 className="pgh-title pgh-title--centered-animated text-4xl sm:text-5xl font-black tracking-tight">PG HUB</h1>
+            <h1 key={authMethod} className="pgh-title pgh-title--animated pgh-title--centered-animated text-4xl sm:text-5xl font-black tracking-tight animate-pghub-switch">PG HUB</h1>
           </div>
         </section>
 

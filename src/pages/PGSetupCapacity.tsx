@@ -84,8 +84,7 @@ export default function PGSetupCapacity() {
           <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
         </div>
 
-        <section className="pgh-capacity-card pgh-capacity-card--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-4 pb-8">
-          <h2 className="pgh-section-title mb-4"><span>Step 2</span><Building2 size={21} /> Configuration</h2>
+        <section className="pgh-capacity-card pgh-capacity-card--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-2 pb-6">
           <div className="pgh-capacity-grid">
             <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
             <div><BedDouble /><span>Total Beds</span><strong>{totals.beds}</strong></div>

@@ -250,9 +250,25 @@
   .pgh-button__shimmer, .pgh-confetti span, .pgh-spin { animation: none !important; }
 }
 
-@keyframes pghub-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes pghub-switch {
+  0% {
+    transform: scale(0.8) translateY(-10px);
+    opacity: 0.2;
+    filter: brightness(2) blur(6px);
+  }
+  50% {
+    transform: scale(1.15) translateY(3px);
+    filter: brightness(2.5);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: brightness(1) blur(0);
+  }
+}
+
+.animate-pghub-switch {
+  animation: pghub-switch 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .pgh-title--animated {
