@@ -44,16 +44,12 @@ export default function PGSetupProperty() {
 
   return (
     <PGHubShell variant="light" className="pgh-setup-shell">
-      <div className="pgh-page pgh-setup-page pgh-page--full">
-        <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
-        <section className="pgh-setup-hero pgh-setup-hero--compact">
-          <div className="pgh-setup-hero__copy">
-            <h1 className="text-xl font-bold">Property details</h1>
-          </div>
-          <img src={journeyBuilding} alt="PG property" className="pgh-setup-hero__img--tiny" />
-        </section>
-        <section className="pgh-setup-surface pgh-setup-surface--full pgh-setup-surface--flush">
-          <header className="pgh-setup-section-heading"><span>Step 1</span><h2>Property details</h2></header>
+      <div className="pgh-page pgh-setup-page pgh-page--fullscreen p-0 w-full max-w-full">
+        <div className="px-4 pt-3">
+          <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
+        </div>
+        <section className="pgh-setup-surface pgh-setup-surface--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-4 pb-8">
+          <header className="pgh-setup-section-heading mb-4"><span>Step 1</span><h2 className="text-2xl font-black text-slate-900">Property details</h2></header>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>

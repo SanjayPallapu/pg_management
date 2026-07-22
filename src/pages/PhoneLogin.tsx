@@ -90,17 +90,12 @@ export default function PhoneLogin() {
   return (
     <PGHubShell variant="light" className="pgh-login">
       <div className="pgh-login__page pgh-login__page--full">
-        <section className="pgh-login__hero pgh-login__hero--upper">
-          <div className="pgh-login__brand">
-            <img src={pgHubLogo} alt="" />
-            <strong className="pgh-title--animated">PG HUB</strong>
-          </div>
+        <section className="pgh-login__hero pgh-login__hero--centered flex flex-col items-center justify-center text-center py-6">
           <div className="pgh-login__visual pgh-login__visual--upper" aria-hidden="true">
             <img src={journeyBuilding} alt="" />
           </div>
-          <div className="pgh-login__copy">
-            <h1 className="pgh-title pgh-title--animated">PG HUB</h1>
-            <p>Your PG workspace is ready when you are.</p>
+          <div className="pgh-login__copy text-center max-w-full z-10">
+            <h1 className="pgh-title pgh-title--centered-animated text-4xl sm:text-5xl font-black tracking-tight">PG HUB</h1>
           </div>
         </section>
 
@@ -119,10 +114,6 @@ export default function PhoneLogin() {
               <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
               <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
               <p id="phone-help" className="pgh-login__alternative">Secure OTP verification. No password required.</p>
-              <div className="pgh-login__signup-bar text-center pt-2">
-                <span className="text-slate-400 text-sm">Don't have an account? </span>
-                <button type="button" onClick={() => setAuthMethod("email")} className="text-blue-500 hover:underline font-bold text-sm">Sign up now</button>
-              </div>
             </>
           ) : (
             <>
@@ -140,12 +131,9 @@ export default function PhoneLogin() {
                   <div><Lock size={18} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
                 </label>
                 {emailError && <small className="pgh-login__error">{emailError}</small>}
-                <PGHubButton type="submit" loading={submitting}>Sign in / Sign up with email</PGHubButton>
+                <PGHubButton type="submit" loading={submitting}>Sign in with email</PGHubButton>
               </form>
-              <div className="pgh-login__signup-bar text-center pt-2">
-                <span className="text-slate-400 text-sm">New to PG HUB? </span>
-                <button type="button" onClick={() => navigate("/auth/email")} className="text-blue-500 hover:underline font-bold text-sm">Create Account</button>
-              </div>
+              <p className="pgh-login__alternative">Your account details stay encrypted and protected.</p>
             </>
           )}
         </section>

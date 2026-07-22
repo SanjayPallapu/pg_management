@@ -289,8 +289,8 @@ const Index = () => {
     );
   }
 
-  // Show onboarding flow for any user who has no PGs (new signup or returning user)
-  if (needsSetup) {
+  // Only force automatic setup redirect for explicit new signups (isNewSignup)
+  if (needsSetup && isNewSignup) {
     if (canCreatePG) return <Navigate to="/setup/property" replace />;
     return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
   }

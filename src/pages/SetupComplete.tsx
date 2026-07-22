@@ -29,51 +29,57 @@ export default function SetupComplete() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-ready pgh-ready--journey pgh-ready--fullscreen">
-      <div className="pgh-ready__journey w-full min-h-screen relative flex flex-col justify-between overflow-hidden">
-        {/* Full upper screen image container with Back button on top-leftmost side */}
-        <div className="pgh-ready__hero-banner relative w-full h-[40vh] sm:h-[45vh] overflow-hidden">
-          <img src={journeyComplete} alt="Completed PG property" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
+    <PGHubShell variant="dark" className="pgh-ready pgh-ready--fullscreen bg-slate-900 text-white">
+      <div className="w-full min-h-screen relative flex flex-col justify-between p-5 bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 overflow-hidden">
+        {/* Top bar with Back button on top-leftmost side */}
+        <div className="w-full flex items-center justify-between z-20 pt-2">
           <button 
             type="button" 
             onClick={goBack} 
-            className="absolute top-4 left-4 z-30 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/60 text-white backdrop-blur-md text-xs font-bold border border-white/20 hover:bg-black/80 transition-all shadow-lg"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white/10 text-white backdrop-blur-md text-xs font-bold border border-white/15 hover:bg-white/20 transition-all active:scale-95 shadow-md"
           >
             <ArrowLeft size={16} /> Back
           </button>
         </div>
 
-        {/* Full screen card downside without gaps */}
-        <section className="pgh-ready__sheet pgh-ready__sheet--fullscreen w-full flex-1 bg-white rounded-t-3xl -mt-6 relative z-10 p-6 flex flex-col justify-between shadow-2xl border-t border-slate-100">
-          <div className="pgh-ready__copy text-center pt-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight mb-2">
-              Your PG is<br /><em className="text-blue-600 not-italic">ready to manage smarter</em>
+        {/* Center content - full screen without cards */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6 z-10 max-w-md mx-auto w-full space-y-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-blue-500/40">
+            <CheckCircle2 size={40} />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+              Your PG is<br />
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-400 bg-clip-text text-transparent">ready to manage smarter</span>
             </h1>
-            <p className="text-slate-600 text-sm"><strong>{creationResult.pgName}</strong> has been created successfully.</p>
+            <p className="text-slate-300 text-base font-medium">
+              <strong className="text-white font-bold">{creationResult.pgName}</strong> has been created successfully.
+            </p>
           </div>
 
-          <div className="pgh-ready__stats grid grid-cols-3 gap-3 my-4" aria-label="Property summary">
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center">
-              <strong className="block text-2xl font-extrabold text-blue-600">{creationResult.floors}</strong>
-              <span className="text-xs text-slate-500 font-semibold">Floors</span>
+          <div className="w-full grid grid-cols-3 gap-3 py-4" aria-label="Property summary">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-md">
+              <strong className="block text-3xl font-black text-blue-400">{creationResult.floors}</strong>
+              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Floors</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center">
-              <strong className="block text-2xl font-extrabold text-blue-600">{creationResult.rooms}</strong>
-              <span className="text-xs text-slate-500 font-semibold">Rooms</span>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-md">
+              <strong className="block text-3xl font-black text-blue-400">{creationResult.rooms}</strong>
+              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Rooms</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center">
-              <strong className="block text-2xl font-extrabold text-blue-600">{creationResult.beds}</strong>
-              <span className="text-xs text-slate-500 font-semibold">Beds</span>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-md">
+              <strong className="block text-3xl font-black text-blue-400">{creationResult.beds}</strong>
+              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Beds</span>
             </div>
           </div>
+        </div>
 
-          <div className="pgh-ready__buttons pt-2 pb-2">
-            <PGHubButton onClick={() => finish("/")} className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-500/25">
-              Open dashboard
-            </PGHubButton>
-          </div>
-        </section>
+        {/* Bottom fixed action button */}
+        <div className="w-full max-w-md mx-auto z-20 pb-4">
+          <PGHubButton onClick={() => finish("/")} className="w-full h-14 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 text-white rounded-2xl font-extrabold text-base shadow-xl shadow-blue-500/30 active:scale-98 transition-all">
+            Open dashboard
+          </PGHubButton>
+        </div>
       </div>
     </PGHubShell>
   );
