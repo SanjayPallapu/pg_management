@@ -24,8 +24,8 @@ const slides = [
   },
   {
     id: "rent",
-    titleTop: "Never Miss",
-    titleBottom: "Rent Again",
+    titleTop: "Generate Receipts",
+    titleBottom: "with Ease",
     subheading: "Automate reminders and collect rent on time.",
     body: "Track payments, send reminders, and generate receipts without chasing tenants.",
     accent: "#A855F7",

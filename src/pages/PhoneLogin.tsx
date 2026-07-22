@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeyHero from "@/assets/pg-hub/hub-building-platform.png";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
+import pgHubLogo from "@/assets/pg-hub/pg-hub-logo.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,25 +91,26 @@ export default function PhoneLogin() {
     <PGHubShell variant="light" className="pgh-login">
       <div className="pgh-login__page">
         <section className="pgh-login__hero">
-          <div className="pgh-login__visual" aria-hidden="true">
-            <img src={journeyHero} alt="" />
+          <div className="pgh-login__brand">
+            <img src={pgHubLogo} alt="" />
+            <strong>PG HUB</strong>
           </div>
-          <div className="pgh-login__veil" aria-hidden="true" />
+          <div className="pgh-login__visual" aria-hidden="true">
+            <img src={journeyBuilding} alt="" />
+          </div>
           <div className="pgh-login__copy">
-            <span className="pgh-login__eyebrow"><ShieldCheck size={15} /> Secure owner access</span>
-            <h1 className="pgh-title">Welcome<br /><em>back</em></h1>
+            <h1 className="pgh-title">Welcome back</h1>
+            <p>Manage smarter. Grow faster.</p>
           </div>
         </section>
 
         <section className={`pgh-login__card pgh-login__card--${authMethod}`}>
           {authMethod === "phone" ? (
             <>
-              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Enter your mobile number</strong></div>
-              <label className="pgh-login__label" htmlFor="phone">Mobile number</label>
               <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
                 <span className="pgh-phone-field__country">+91 <ChevronDown size={18} /></span>
                 <span className="pgh-phone-field__divider" />
-                <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="Enter mobile number" aria-describedby="phone-help" />
+                <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="10-digit number" aria-label="Mobile number" aria-describedby="phone-help" />
               </div>
               <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
               <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
@@ -116,7 +118,6 @@ export default function PhoneLogin() {
             </>
           ) : (
             <>
-              <div className="pgh-sheet-heading"><span>Sign in</span><strong>Email or Google</strong></div>
               <button type="button" className="pgh-google-button" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
                 {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
               </button>

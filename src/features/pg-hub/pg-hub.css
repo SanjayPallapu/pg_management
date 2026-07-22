@@ -1309,3 +1309,139 @@
   .pgh-login__copy .pgh-title { animation: none; }
   .pgh-onboarding__brand-text { animation: none; }
 }
+
+/* Final journey polish: clearer title rhythm, branded sign-in, and raised setup content. */
+.pgh-onboarding__copy h1 em {
+  margin-top: .55rem;
+}
+.pgh-onboarding__slide--grow .pgh-onboarding__copy h1 em {
+  margin-top: .8rem;
+  background: none;
+  -webkit-text-fill-color: #d9e8ff;
+}
+.pgh-onboarding__slide--rent .pgh-onboarding__copy h1 {
+  max-width: none;
+  font-size: clamp(2.1rem, 9.1vw, 2.55rem);
+  white-space: nowrap;
+}
+.pgh-onboarding__brand-text {
+  background: linear-gradient(105deg, #ff6fd8 0%, #9b7cff 47%, #45d9ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 11px rgba(163, 104, 255, .48));
+}
+@keyframes pgh-brand-shimmer {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 111, 216, .36)); }
+  50% { filter: drop-shadow(0 0 17px rgba(69, 217, 255, .64)); }
+}
+
+.pgh-login.pgh-shell--light,
+.pgh-login__hero {
+  background: linear-gradient(150deg, #071f5b 0%, #0f55c9 52%, #27bde8 100%);
+}
+.pgh-login__page {
+  grid-template-rows: minmax(0, 45%) minmax(0, 55%);
+}
+.pgh-login__hero {
+  padding: max(1rem, env(safe-area-inset-top)) 1.35rem 0;
+}
+.pgh-login__brand {
+  position: relative;
+  z-index: 5;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: .58rem;
+  padding: .42rem .75rem .42rem .45rem;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 999px;
+  background: rgba(4, 31, 89, .28);
+  box-shadow: 0 10px 30px rgba(3, 27, 79, .18);
+  backdrop-filter: blur(12px);
+}
+.pgh-login__brand img {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: .72rem;
+  object-fit: cover;
+}
+.pgh-login__brand strong {
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+.pgh-login__visual {
+  inset: 1.5rem -1.2rem -1.15rem 22%;
+}
+.pgh-login__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right bottom;
+  transform: none;
+  filter: drop-shadow(0 20px 28px rgba(2, 28, 78, .28));
+}
+.pgh-login__copy {
+  position: absolute;
+  z-index: 6;
+  left: 1.35rem;
+  bottom: 2.2rem;
+  max-width: 58%;
+  margin: 0;
+}
+.pgh-login__copy .pgh-title {
+  font-size: clamp(2.15rem, 9.5vw, 2.75rem);
+  line-height: .94;
+  letter-spacing: -.055em;
+}
+.pgh-login__copy > p {
+  margin: .5rem 0 0;
+  color: rgba(231, 247, 255, .82);
+  font-size: .82rem;
+  font-weight: 700;
+}
+.pgh-login__card {
+  margin-top: -1.15rem;
+  padding-top: 1.5rem;
+}
+.pgh-login__card--phone {
+  gap: 1rem;
+}
+.pgh-login__card--email {
+  padding-top: 1.15rem;
+}
+
+.pgh-setup-page .pgh-setup-hero > h1 {
+  margin-top: 0;
+  padding-top: 2.15rem;
+}
+.pgh-setup-page .pgh-setup-surface--full {
+  margin-top: -3.25rem;
+  padding-top: 1.65rem;
+}
+.pgh-capacity-hero > div {
+  padding-top: 2.15rem;
+}
+.pgh-capacity-hero h1 {
+  margin-top: 0;
+}
+.pgh-capacity-card--full {
+  position: relative;
+  z-index: 5;
+  margin-top: -2.6rem;
+  border-top: 0;
+  border-radius: 1.7rem 1.7rem 0 0;
+  box-shadow: 0 -14px 36px rgba(6, 55, 129, .12);
+}
+
+@media (max-height: 740px) {
+  .pgh-login__page { grid-template-rows: minmax(0, 42%) minmax(0, 58%); }
+  .pgh-login__visual { top: 1rem; }
+  .pgh-login__copy { bottom: 1.65rem; }
+  .pgh-login__copy .pgh-title { font-size: 2rem; }
+  .pgh-login__card { margin-top: -.9rem; padding-top: 1rem; }
+  .pgh-setup-page .pgh-setup-surface--full { margin-top: -3rem; }
+}

@@ -83,9 +83,8 @@ export default function PGSetupCapacity() {
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
         <section className="pgh-capacity-hero">
           <img src={journeyBuilding} alt="PG room setup" />
-          <div><span>Room planning</span><h1>Plan your<br /><em>space</em></h1></div>
+          <div><h1>Plan your<br /><em>space</em></h1></div>
         </section>
-        <section className="pgh-setup-title"><h2>Your room plan</h2></section>
 
         <section className="pgh-capacity-card pgh-capacity-card--full">
           <h2 className="pgh-section-title"><Building2 size={21} /> Capacity at a glance</h2>
