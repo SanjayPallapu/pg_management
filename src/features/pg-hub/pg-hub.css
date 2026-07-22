@@ -983,11 +983,26 @@
   top: max(1rem, env(safe-area-inset-top));
   left: 1.25rem;
   right: 1.25rem;
+  justify-content: space-between;
 }
 .pgh-ready--journey .pgh-ready__header > span {
   border-color: rgba(139, 255, 180, .3);
   background: rgba(7, 74, 42, .5);
   color: #d9ffe8;
+}
+.pgh-ready__back {
+  min-height: 2.35rem;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 999px;
+  background: rgba(3, 24, 66, .38);
+  padding: 0 .8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 850;
+  backdrop-filter: blur(12px);
 }
 .pgh-ready__content {
   position: relative;
