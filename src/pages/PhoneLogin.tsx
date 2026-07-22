@@ -96,24 +96,24 @@ export default function PhoneLogin() {
 
   return (
     <PGHubShell variant="light" className="pgh-login min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
-      <div className="w-full max-w-md mx-auto my-auto relative z-10 py-6">
-        <section className={`pgh-login__card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col gap-6 pgh-login__card--${authMethod}`}>
-          
-          {/* Header with Clean Curved PG Logo (No BG Cover) + Typing Up-Down Animated Title */}
-          <div className="flex flex-col items-center justify-center text-center pt-2 pb-1">
-            <div key={animKey} className="flex items-center justify-center gap-3.5 animate-pghub-typing-bounce">
-              <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 object-contain rounded-2xl shadow-sm" />
-              <h1 className="pgh-title text-3xl sm:text-4xl font-black tracking-tight text-blue-600 m-0">PG HUB</h1>
-            </div>
-            <p className="text-slate-500 text-xs sm:text-sm mt-2.5 font-semibold tracking-wide">Smart PG & Hostel Management</p>
+      <div className="w-full max-w-sm mx-auto my-auto flex flex-col items-center justify-center gap-6 text-center">
+        
+        {/* Header with Clean Curved PG Logo (No BG Cover) + Typing Up-Down Animated Title */}
+        <div className="flex flex-col items-center justify-center text-center pt-2 pb-1">
+          <div key={animKey} className="flex items-center justify-center gap-3.5 animate-pghub-typing-bounce">
+            <img src={pgHubLogo} alt="PG HUB" className="w-14 h-14 object-contain rounded-2xl shadow-sm" />
+            <h1 className="pgh-title text-4xl sm:text-5xl font-black tracking-tight text-blue-600 m-0">PG HUB</h1>
           </div>
+          <p className="text-slate-500 text-sm mt-3 font-semibold tracking-wide">Smart PG & Hostel Management</p>
+        </div>
 
-          {/* Tab method switcher */}
-          <div className="pgh-login__method-switch" role="tablist" aria-label="Sign-in method">
-            <button type="button" role="tab" aria-selected={authMethod === "phone"} className={authMethod === "phone" ? "is-active" : ""} onClick={() => handleTabSwitch("phone")}>Mobile</button>
-            <button type="button" role="tab" aria-selected={authMethod === "email"} className={authMethod === "email" ? "is-active" : ""} onClick={() => handleTabSwitch("email")}>Email</button>
-          </div>
+        {/* Tab method switcher */}
+        <div className="pgh-login__method-switch w-full" role="tablist" aria-label="Sign-in method">
+          <button type="button" role="tab" aria-selected={authMethod === "phone"} className={authMethod === "phone" ? "is-active" : ""} onClick={() => handleTabSwitch("phone")}>Mobile</button>
+          <button type="button" role="tab" aria-selected={authMethod === "email"} className={authMethod === "email" ? "is-active" : ""} onClick={() => handleTabSwitch("email")}>Email</button>
+        </div>
 
+        <div className="w-full flex flex-col gap-4">
           {authMethod === "phone" ? (
             <>
               <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
@@ -127,11 +127,11 @@ export default function PhoneLogin() {
             </>
           ) : (
             <>
-              <button type="button" className="pgh-google-button border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
+              <button type="button" className="pgh-google-button border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold shadow-sm" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
                 {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
               </button>
               <div className="pgh-auth-divider"><span />or use email<span /></div>
-              <form className="pgh-login__email-form flex flex-col gap-4" onSubmit={continueWithEmail}>
+              <form className="pgh-login__email-form flex flex-col gap-4 text-left" onSubmit={continueWithEmail}>
                 <label className="pgh-auth-field">
                   <span className="text-slate-700">Email</span>
                   <div><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" autoComplete="email" /></div>
@@ -146,7 +146,7 @@ export default function PhoneLogin() {
               <p className="pgh-login__alternative text-center text-xs text-slate-500">Your account details stay encrypted and protected.</p>
             </>
           )}
-        </section>
+        </div>
       </div>
     </PGHubShell>
   );
