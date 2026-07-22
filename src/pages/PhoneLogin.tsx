@@ -95,19 +95,17 @@ export default function PhoneLogin() {
   };
 
   return (
-    <PGHubShell variant="dark" className="pgh-login min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <PGHubShell variant="light" className="pgh-login min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
       <div className="w-full max-w-md mx-auto my-auto relative z-10 py-6">
-        <section className={`pgh-login__card bg-slate-900/90 border border-slate-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl flex flex-col gap-6 pgh-login__card--${authMethod}`}>
+        <section className={`pgh-login__card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col gap-6 pgh-login__card--${authMethod}`}>
           
-          {/* Header with Curved PG Logo + Animated PG HUB Title together */}
+          {/* Header with Clean Curved PG Logo (No BG Cover) + Typing Up-Down Animated Title */}
           <div className="flex flex-col items-center justify-center text-center pt-2 pb-1">
-            <div key={animKey} className="flex items-center justify-center gap-3.5 animate-pghub-switch">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border border-blue-500/30 p-2 shadow-lg shadow-blue-500/10 flex items-center justify-center overflow-hidden">
-                <img src={pgHubLogo} alt="PG HUB" className="w-full h-full object-contain rounded-xl" />
-              </div>
-              <h1 className="pgh-title pgh-title--animated text-3xl sm:text-4xl font-black tracking-tight m-0">PG HUB</h1>
+            <div key={animKey} className="flex items-center justify-center gap-3.5 animate-pghub-typing-bounce">
+              <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 object-contain rounded-2xl shadow-sm" />
+              <h1 className="pgh-title text-3xl sm:text-4xl font-black tracking-tight text-blue-600 m-0">PG HUB</h1>
             </div>
-            <p className="text-slate-400 text-xs sm:text-sm mt-2.5 font-medium tracking-wide">Smart PG & Hostel Management</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-2.5 font-semibold tracking-wide">Smart PG & Hostel Management</p>
           </div>
 
           {/* Tab method switcher */}
@@ -123,29 +121,29 @@ export default function PhoneLogin() {
                 <span className="pgh-phone-field__divider" />
                 <input id="phone" value={digits} onChange={(event) => setPhone(event.target.value)} inputMode="numeric" autoComplete="tel-national" placeholder="10-digit number" aria-label="Mobile number" aria-describedby="phone-help" />
               </div>
-              <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-xl shadow-blue-600/25 active:scale-98 transition-all">Continue with OTP</PGHubButton>
+              <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-lg shadow-blue-600/20 active:scale-98 transition-all">Continue with OTP</PGHubButton>
               <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
-              <p id="phone-help" className="pgh-login__alternative text-center text-xs text-slate-400">Secure OTP verification. No password required.</p>
+              <p id="phone-help" className="pgh-login__alternative text-center text-xs text-slate-500">Secure OTP verification. No password required.</p>
             </>
           ) : (
             <>
-              <button type="button" className="pgh-google-button" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
+              <button type="button" className="pgh-google-button border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold" onClick={continueWithGoogle} disabled={submitting || googleSubmitting}>
                 {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
               </button>
               <div className="pgh-auth-divider"><span />or use email<span /></div>
               <form className="pgh-login__email-form flex flex-col gap-4" onSubmit={continueWithEmail}>
                 <label className="pgh-auth-field">
-                  <span>Email</span>
+                  <span className="text-slate-700">Email</span>
                   <div><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" autoComplete="email" /></div>
                 </label>
                 <label className="pgh-auth-field">
-                  <span>Password</span>
+                  <span className="text-slate-700">Password</span>
                   <div><Lock size={18} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
                 </label>
                 {emailError && <small className="pgh-login__error">{emailError}</small>}
-                <PGHubButton type="submit" loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-xl shadow-blue-600/25 active:scale-98 transition-all">Sign in with email</PGHubButton>
+                <PGHubButton type="submit" loading={submitting} className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-lg shadow-blue-600/20 active:scale-98 transition-all">Sign in with email</PGHubButton>
               </form>
-              <p className="pgh-login__alternative text-center text-xs text-slate-400">Your account details stay encrypted and protected.</p>
+              <p className="pgh-login__alternative text-center text-xs text-slate-500">Your account details stay encrypted and protected.</p>
             </>
           )}
         </section>
