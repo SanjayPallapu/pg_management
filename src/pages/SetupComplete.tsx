@@ -18,7 +18,10 @@ export default function SetupComplete() {
 
   const finish = (target: string) => {
     reset();
-    navigate(target, { replace: true });
+    // Leaving setup also rebuilds the dashboard providers from the newly
+    // created PG. A full replacement avoids a race between clearing the setup
+    // result and React Router's protected-route redirect.
+    window.location.replace(target);
   };
 
   return (
