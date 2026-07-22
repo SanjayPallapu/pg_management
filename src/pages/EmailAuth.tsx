@@ -8,7 +8,7 @@ import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/proxyClient";
-import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
+import { completeOnboarding, hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 
 const credentialsSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
@@ -57,10 +57,13 @@ export default function EmailAuth() {
 
   useEffect(() => {
     if (isLoading) return;
+    if (isAuthenticated) {
+      completeOnboarding();
+      navigate("/", { replace: true });
+      return;
+    }
     if (shouldShowOnboardingAfterLogout() || !hasCompletedOnboarding()) {
       navigate("/onboarding", { replace: true });
-    } else if (isAuthenticated) {
-      navigate("/", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -90,7 +93,10 @@ export default function EmailAuth() {
     const { error } = await signIn(email.trim(), password);
     setSubmitting(false);
     if (error) toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
-    else window.location.replace("/");
+    else {
+      completeOnboarding();
+      window.location.replace("/");
+    }
   };
 
   const continueSignup = (event: React.FormEvent) => {
