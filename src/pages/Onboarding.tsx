@@ -23,15 +23,6 @@ const slides = [
     image: onboardingScreen1,
   },
   {
-    id: "everything",
-    titleTop: "Everything in",
-    titleBottom: "One Place",
-    subheading: "Rooms, tenants, payments, and reports—all connected.",
-    body: "Manage your entire PG from one dashboard with real-time updates and reminders.",
-    accent: "#9A67FF",
-    image: onboardingScreen3,
-  },
-  {
     id: "rent",
     titleTop: "Never Miss",
     titleBottom: "Rent Again",
@@ -39,6 +30,15 @@ const slides = [
     body: "Track payments, send reminders, and generate receipts without chasing tenants.",
     accent: "#A855F7",
     image: onboardingScreen2,
+  },
+  {
+    id: "everything",
+    titleTop: "Everything in",
+    titleBottom: "One Place",
+    subheading: "Rooms, tenants, payments, and reports—all connected.",
+    body: "Manage your entire PG from one dashboard with real-time updates and reminders.",
+    accent: "#9A67FF",
+    image: onboardingScreen3,
   },
 ] as const;
 
