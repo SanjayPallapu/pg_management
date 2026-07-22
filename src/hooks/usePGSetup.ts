@@ -188,13 +188,14 @@ export const usePGSetup = () => {
           const roomSequence = startIndex + roomIndex;
           const roomNo = `${floor.floorNumber}${roomSequence.toString().padStart(2, '0')}`;
           const capacity = Math.max(1, floor.bedsPerRoom);
+          const pricePerBed = Math.max(1, floor.pricePerBed || getPricePerBed(capacity));
           return {
             id: `${pgId}-room-${floor.floorNumber}-${roomSequence}`,
             pg_id: pgId,
             room_no: roomNo,
             floor: floor.floorNumber,
             capacity,
-            rent_amount: getPricePerBed(capacity) * capacity,
+            rent_amount: pricePerBed * capacity,
             status: 'Vacant' as const,
             is_ac: floor.isAc,
           };

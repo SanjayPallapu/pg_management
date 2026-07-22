@@ -70,7 +70,6 @@ import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
-import { getPricePerBed } from "@/constants/pricing";
 
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
@@ -253,7 +252,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     // Ensure we don't count more occupied than capacity
     const occupied = Math.min(activeCount, room.capacity);
     const emptyBeds = Math.max(0, room.capacity - occupied);
-    const perBedRent = getPricePerBed(room.capacity);
+    const perBedRent = Math.round(room.rentAmount / Math.max(1, room.capacity));
     const potentialAdditionalRent = emptyBeds * perBedRent;
 
     return {
@@ -288,8 +287,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     return sum + activeTenants.reduce((s, t) => s + t.monthlyRent, 0);
   }, 0);
 
-  // Max monthly revenue if all beds filled (using fixed per-bed rates)
-  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.capacity * getPricePerBed(room.capacity), 0);
+  // Max monthly revenue if all beds are filled at each room's configured price.
+  const maxMonthlyRevenue = rooms.reduce((sum, room) => sum + room.rentAmount, 0);
 
   // Use shared hook for total collected
   const { totalCollected: totalCollectedForExpenses } = useTotalCollected(rooms);

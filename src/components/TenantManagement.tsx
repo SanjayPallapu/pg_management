@@ -261,6 +261,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   useBackGesture(!!shiftTenant, () => setShiftTenant(null));
 
   const getPricePerPerson = (capacity: number) => {
+    const configuredPrice = Math.round(room.rentAmount / Math.max(1, capacity));
+    if (configuredPrice > 0) return configuredPrice;
     const priceMap: { [key: number]: number } = {
       1: 11500,
       2: 6000,

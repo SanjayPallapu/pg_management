@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getPricePerBed } from "@/constants/pricing";
 
 export type PGPropertyDraft = {
   name: string;
@@ -24,6 +25,7 @@ export type PGFloorDraft = {
   name: string;
   rooms: number;
   bedsPerRoom: number;
+  pricePerBed: number;
   isAc: boolean;
 };
 
@@ -65,6 +67,7 @@ const makeFloors = (count: number): PGFloorDraft[] =>
     name: floorLabel(index),
     rooms: index === 0 ? 10 : 8,
     bedsPerRoom: 3,
+    pricePerBed: getPricePerBed(3),
     isAc: false,
   }));
 
@@ -129,6 +132,7 @@ export function PGSetupDraftProvider({ children }: { children: ReactNode }) {
           name: floorLabel(floorNumber),
           rooms: 1,
           bedsPerRoom: 3,
+          pricePerBed: getPricePerBed(3),
           isAc: false,
         },
       ];

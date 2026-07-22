@@ -1095,3 +1095,36 @@
   .pgh-ready__content .pgh-ready__buttons { margin-top: .65rem; }
   .pgh-ready__content .pgh-button { min-height: 3.2rem; }
 }
+
+.pgh-floor-row__info > small {
+  line-height: 1.45;
+}
+.pgh-floor-price > span {
+  min-width: 8.5rem;
+  height: 2.35rem;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  border: 1px solid #cddbeb;
+  border-radius: .75rem;
+  background: #fff;
+  padding: 0 .65rem;
+  color: #1769ff;
+}
+.pgh-floor-price input {
+  min-width: 0;
+  width: 6rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #102344;
+  font: inherit;
+  font-weight: 850;
+}
+.pgh-floor-price-total {
+  margin-top: -.25rem;
+  color: #1769ff;
+  font-size: .72rem;
+  font-weight: 800;
+  text-align: right;
+}

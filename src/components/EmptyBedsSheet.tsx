@@ -50,18 +50,6 @@ export const EmptyBedsSheet = ({
       .sort((a, b) => b.capacity - a.capacity || a.roomNo.localeCompare(b.roomNo));
   }, [roomStats, floorFilter, sharingFilter]);
 
-  // Fixed per-bed rates by sharing type
-  const getPerBedRate = (capacity: number): number => {
-    switch (capacity) {
-      case 5: return 4000;
-      case 4: return 4500;
-      case 3: return 5000;
-      case 2: return 6000;
-      case 1: return 11500;
-      default: return 4000;
-    }
-  };
-
   // Group by sharing type (from all rooms with empty beds, not filtered)
   const bySharing = useMemo(() => {
     const allRoomsWithEmptyBeds = roomStats.filter(r => r.emptyBeds > 0);
@@ -69,7 +57,7 @@ export const EmptyBedsSheet = ({
     return allRoomsWithEmptyBeds.reduce(
       (acc, room) => {
         const key = room.capacity;
-        const perBedRate = getPerBedRate(key);
+        const perBedRate = room.perBedRent;
         if (!acc[key]) {
           acc[key] = { beds: 0, revenue: 0, perBed: perBedRate };
         }
