@@ -15,7 +15,7 @@ import {
 const slides = [
   {
     id: "grow",
-    titleTop: "Manage, Scale & Grow",
+    titleTop: "Manage Smarter",
     titleBottom: "with PG HUB",
     subheading: "Fill rooms faster. Manage less manually.",
     body: "Track occupancy, tenants, rent, and payments in one simple app.",
