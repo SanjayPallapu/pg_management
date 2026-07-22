@@ -92,8 +92,8 @@ export default function PGSetupCapacity() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-setup-shell bg-[#f7f8fc] min-h-screen">
-      <div className="max-w-xl mx-auto min-h-screen flex flex-col justify-between p-4 sm:p-6 pb-28">
+    <PGHubShell variant="light" className="pgh-setup-shell bg-slate-50 min-h-screen">
+      <div className="w-full max-w-full min-h-screen flex flex-col justify-between p-4 sm:p-6 pb-28">
         
         {/* Top Navigation & Stepper Header */}
         <div className="flex flex-col gap-3">
@@ -103,47 +103,45 @@ export default function PGSetupCapacity() {
           <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
         </div>
 
-        {/* Content Body */}
-        <div className="flex flex-col gap-5 mt-4 flex-1">
+        {/* Content Body - Full Screen Style (No Card Wrappers) */}
+        <div className="flex flex-col gap-6 mt-4 flex-1 w-full">
           
           {/* Section 1: Property Overview */}
-          <section className="flex flex-col gap-2.5">
-            <h2 className="text-base font-extrabold text-slate-900 px-1">Property Overview</h2>
-            <div className="bg-white rounded-3xl p-3.5 shadow-sm border border-slate-100/80 grid grid-cols-2 gap-3">
+          <section className="flex flex-col gap-3 w-full">
+            <h2 className="text-base font-extrabold text-slate-900">Property Overview</h2>
+            <div className="grid grid-cols-2 gap-3.5 w-full">
               
               {/* Total Rooms */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0">
-                    <Building2 size={18} />
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
+                    <Building2 size={20} />
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">Total Rooms</span>
                     <strong className="text-xl font-black text-slate-900">{totals.rooms}</strong>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-purple-400 shrink-0" />
               </div>
 
               {/* Total Beds */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0">
-                    <BedDouble size={18} />
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
+                    <BedDouble size={20} />
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">Total Beds</span>
                     <strong className="text-xl font-black text-slate-900">{totals.beds}</strong>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-purple-400 shrink-0" />
               </div>
 
               {/* Starting Room No. */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0">
-                    <DoorOpen size={18} />
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
+                    <DoorOpen size={20} />
                   </div>
                   <div className="min-w-0">
                     <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block truncate">Starting Room</span>
@@ -151,17 +149,16 @@ export default function PGSetupCapacity() {
                       value={startingRoom} 
                       onChange={(event) => setStartingRoom(event.target.value)} 
                       inputMode="numeric" 
-                      className="w-14 text-xl font-black text-slate-900 bg-transparent border-b border-purple-200 focus:border-purple-600 focus:outline-none py-0"
+                      className="w-16 text-xl font-black text-slate-900 bg-transparent border-b border-purple-300 focus:border-purple-600 focus:outline-none py-0"
                     />
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-purple-400 shrink-0" />
               </div>
 
               {/* Price / Bed From */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0 font-extrabold text-base">
                     ₹
                   </div>
                   <div>
@@ -169,27 +166,26 @@ export default function PGSetupCapacity() {
                     <strong className="text-xl font-black text-slate-900">₹{startingPrice.toLocaleString("en-IN")}</strong>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-purple-400 shrink-0" />
               </div>
 
             </div>
           </section>
 
           {/* Section 2: Set up each floor */}
-          <section className="flex flex-col gap-2.5">
-            <h2 className="text-base font-extrabold text-slate-900 px-1">Set up each floor</h2>
-            <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100/80 flex flex-col">
-              <div className="divide-y divide-slate-100">
+          <section className="flex flex-col gap-3 w-full">
+            <h2 className="text-base font-extrabold text-slate-900">Set up each floor</h2>
+            <div className="flex flex-col gap-3 w-full">
+              <div className="bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs">
                 {floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}
               </div>
               
               <button 
                 type="button" 
-                className="w-full mt-2 py-3.5 rounded-2xl border border-dashed border-purple-200 bg-purple-50/50 hover:bg-purple-100/60 text-purple-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all" 
+                className="w-full py-4 rounded-2xl border border-dashed border-purple-300 bg-purple-50/60 hover:bg-purple-100/70 text-purple-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-xs" 
                 onClick={addFloor} 
                 disabled={floors.length >= 20}
               >
-                <CirclePlus size={18} className="text-purple-600" /> Add Upper Floor
+                <CirclePlus size={19} className="text-purple-600" /> Add Upper Floor
               </button>
             </div>
           </section>
@@ -197,7 +193,7 @@ export default function PGSetupCapacity() {
         </div>
 
         {/* Fixed Bottom Action Pill Button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100 z-30">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 z-30">
           <div className="max-w-xl mx-auto">
             <PGHubButton 
               onClick={create} 

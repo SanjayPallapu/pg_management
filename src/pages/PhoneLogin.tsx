@@ -102,8 +102,8 @@ export default function PhoneLogin() {
         {/* Header section — Clean Full Image Logo Left Beside Title + Animated PG HUB Text on Tab Switch */}
         <div className="flex flex-col items-center justify-center w-full mb-[24px]">
           <div className="flex items-center justify-center gap-3.5 mb-[10px]">
-            <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-2xl shadow-sm shrink-0" />
-            <h1 key={animKey} className="text-4xl sm:text-5xl font-black tracking-tight text-blue-600 m-0 animate-pghub-title-pulse">
+            <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-2xl drop-shadow-sm shrink-0" />
+            <h1 key={animKey} className="text-4xl sm:text-5xl font-black tracking-tight text-[#8b5cf6] m-0 animate-pghub-title-pulse">
               PG HUB
             </h1>
           </div>
@@ -134,8 +134,8 @@ export default function PhoneLogin() {
           </button>
         </div>
 
-        {/* Authentication Form Container — Expands smoothly for Email tab */}
-        <div className={`w-full flex flex-col items-start text-left relative transition-all duration-300 ${authMethod === "phone" ? "min-h-[220px]" : "min-h-[380px]"}`}>
+        {/* Authentication Form Container — Expands smoothly for Email tab while maintaining perfect centering */}
+        <div className="w-full flex flex-col items-center text-center relative transition-all duration-300">
           <div key={authMethod} className="w-full flex flex-col items-center animate-pghub-tab-slide">
             {authMethod === "phone" ? (
               <div className="w-full flex flex-col items-center">
