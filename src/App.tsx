@@ -49,11 +49,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (shouldShowOnboardingAfterLogout()) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
   if (!isAuthenticated) {
+    if (shouldShowOnboardingAfterLogout()) {
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to={hasCompletedOnboarding() ? "/auth" : "/onboarding"} replace />;
   }
 
