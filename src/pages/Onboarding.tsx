@@ -87,7 +87,12 @@ export default function Onboarding() {
           <img className="pgh-onboarding__background" src={slide.image} alt="" aria-hidden="true" />
           <div className="pgh-onboarding__shade" aria-hidden="true" />
           <div className="pgh-onboarding__copy">
-            <h1>{slide.titleTop}{" "}<em style={{ color: slide.accent }}>{slide.titleBottom}</em></h1>
+            <h1>
+              {slide.titleTop}{" "}
+              <em style={{ color: slide.accent }}>
+                {slide.id === "grow" ? <>with <span className="pgh-onboarding__brand-text">PG HUB</span></> : slide.titleBottom}
+              </em>
+            </h1>
             <strong>{slide.subheading}</strong>
             <p>{slide.body}</p>
           </div>
