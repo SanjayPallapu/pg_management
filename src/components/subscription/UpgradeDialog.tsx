@@ -3,10 +3,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Crown, Loader2, Zap, Sparkles } from 'lucide-react';
+import { Check, Clock, Crown, Loader2, Zap, Sparkles, Globe } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
 import { Capacitor } from '@capacitor/core';
 
 interface UpgradeDialogProps {
@@ -18,8 +18,10 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const { subscription, refreshSubscription } = usePG();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>('monthly');
+  const [region, setRegion] = useState<string>('IN');
 
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
+  const currentLocalized = getLocalizedSubscriptionPrice(selectedPlan, region);
   const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
   const isTrialActive = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
   const isNative = Capacitor.isNativePlatform();
@@ -32,10 +34,39 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             <Crown className="h-5 w-5 text-amber-500" />
             Upgrade Subscription
           </DialogTitle>
-          <DialogDescription>
-            Start with a 1 month free trial, then choose an auto-renewing billing cycle.
+          <DialogDescription className="text-center">
+            Choose your billing plan and region for automatic localized pricing.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Region & Currency Selector */}
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50 text-xs">
+          <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+            <Globe className="h-3.5 w-3.5 text-primary" /> Region & Currency:
+          </span>
+          <div className="flex gap-1">
+            {[
+              { code: 'IN', label: 'India (₹)' },
+              { code: 'US', label: 'Global ($)' },
+              { code: 'EU', label: 'EU (€)' },
+              { code: 'GB', label: 'UK (£)' },
+              { code: 'AE', label: 'UAE (AED)' },
+            ].map((r) => (
+              <button
+                key={r.code}
+                type="button"
+                onClick={() => setRegion(r.code)}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                  region === r.code 
+                    ? 'bg-primary text-primary-foreground shadow-xs' 
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isTrialActive && (
           <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-4 text-sm">
@@ -114,8 +145,15 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
                   </div>
                   
                   <div className="text-right shrink-0">
-                    <div className="text-base font-extrabold text-foreground">₹{plan.price.toLocaleString()}</div>
-                    <div className="text-[10px] text-muted-foreground font-medium">{plan.periodLabel}</div>
+                    {(() => {
+                      const locPrice = getLocalizedSubscriptionPrice(planKey, region);
+                      return (
+                        <>
+                          <div className="text-base font-extrabold text-foreground">{locPrice.symbol}{locPrice.price.toLocaleString()}</div>
+                          <div className="text-[10px] text-muted-foreground font-medium">{plan.periodLabel}</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               );
@@ -170,7 +208,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
               {razorpayLoading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
               ) : (
-                <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} - ₹{currentPlan.price.toLocaleString()}</>
+                <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} - {currentLocalized.symbol}{currentLocalized.price.toLocaleString()}</>
               )}
             </Button>
           )}
