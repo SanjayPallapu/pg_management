@@ -247,6 +247,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .pgh-button__shimmer, .pgh-confetti span, .pgh-spin { animation: none !important; }
+}
+
 @keyframes pghub-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
