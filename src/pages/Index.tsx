@@ -197,7 +197,6 @@ const Index = () => {
     gcTime: 15 * 60 * 1000,
   });
   const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user, isNewSignup } = useAuth();
-  const [dataError, setDataError] = useState<string | null>(null);
   const navigate = useNavigate();
 
 
@@ -233,19 +232,7 @@ const Index = () => {
     }
   }, [rooms, selectedRoom]);
 
-  useEffect(() => {
-    if (!isLoading && !pgLoading) {
-      if (!currentPG?.id) {
-        setDataError('No PG selected');
-        console.warn('[Index] No current PG selected');
-      } else if (rooms.length === 0) {
-        setDataError('No rooms found');
-        console.warn('[Index] Rooms empty for PG', { pgId: currentPG.id });
-      } else {
-        setDataError(null);
-      }
-    }
-  }, [isLoading, pgLoading, currentPG?.id, rooms.length]);
+
 
   const handleViewDetails = (room: Room) => {
     setSelectedRoom(room);
@@ -391,13 +378,7 @@ const Index = () => {
         </div>
       )}
 
-      {dataError && (
-        <div className="mx-auto w-full max-w-screen-2xl px-3 pt-4 sm:px-4">
-          <div className="rounded-lg border border-muted-foreground/20 bg-muted/30 p-3 text-sm text-muted-foreground">
-            No Data Found
-          </div>
-        </div>
-      )}
+
 
       <div className="mx-auto w-full max-w-screen-2xl px-3 py-1 sm:px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
