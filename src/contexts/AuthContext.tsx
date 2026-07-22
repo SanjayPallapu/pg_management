@@ -196,6 +196,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!isMounted) return;
         console.log('[Auth] onAuthStateChange event:', event, 'session:', !!newSession);
         
+        // Guard: if getSession already resolved a valid session, ignore
+        // INITIAL_SESSION events that arrive with null — they would wipe state
+        // and cause the ProtectedRoute to bounce users back to /auth.
+        if (event === 'INITIAL_SESSION') {
+          console.log('[Auth] Skipping INITIAL_SESSION (getSession already handled init)');
+          return;
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
