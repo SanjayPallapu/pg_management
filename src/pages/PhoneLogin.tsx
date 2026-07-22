@@ -95,9 +95,9 @@ export default function PhoneLogin() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-login min-h-dvh w-full bg-slate-50 flex flex-col items-center justify-center overflow-y-auto pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] px-6 transition-all duration-300">
+    <PGHubShell variant="light" className="pgh-login-centered min-h-dvh w-full bg-slate-50 flex flex-col items-center justify-center overflow-y-auto">
       {/* Single Unified Content Group Centered Vertically */}
-      <div className="w-full max-w-sm mx-auto my-auto flex flex-col items-center text-center py-4">
+      <div className="w-full max-w-sm mx-auto my-auto flex flex-col items-center text-center py-2">
         
         {/* Header section — Clean Full Image Logo Left Beside Title + Animated PG HUB Text on Tab Switch */}
         <div className="flex flex-col items-center justify-center w-full mb-[24px]">

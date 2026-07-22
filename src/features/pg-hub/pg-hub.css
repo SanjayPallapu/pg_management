@@ -449,6 +449,15 @@
 }
 
 /* Static PG HUB journey — compact layouts with artwork-matched color systems. */
+.pgh-login-centered > .pgh-safe-area {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.5rem, env(safe-area-inset-bottom));
+}
+
 .pgh-login,
 .pgh-email-auth,
 .pgh-otp { overflow: hidden; }
