@@ -44,6 +44,7 @@ import {
   LogOut,
   History,
   CreditCard,
+  Crown,
   Loader2,
   Building,
   Bell,
@@ -65,6 +66,7 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
 import { RentProvider } from '@/contexts/RentContext';
+import { SubscriptionBadge, UpgradeDialog } from "@/components/subscription";
 
 const Index = () => {
   const { theme, setTheme } = useTheme();
@@ -92,6 +94,7 @@ const Index = () => {
     }
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -307,8 +310,9 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right: Hamburger menu button with uploaded icon type */}
+          {/* Right: Subscription Badge & Hamburger menu button */}
           <div className="flex items-center gap-2">
+            <SubscriptionBadge />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50">
@@ -322,6 +326,14 @@ const Index = () => {
                 >
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span>Profile</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => setUpgradeDialogOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer text-amber-600 dark:text-amber-400 font-semibold"
+                >
+                  <Crown className="h-4 w-4 text-amber-500" />
+                  <span>Subscription Plans</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
@@ -510,6 +522,7 @@ const Index = () => {
 
 
 
+        <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
       </div>
       </div>
 

@@ -103,7 +103,7 @@ export default function PhoneLogin() {
         <div className="flex flex-col items-center justify-center w-full mb-[24px]">
           <div className="flex items-center justify-center gap-3.5 mb-[10px]">
             <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-2xl drop-shadow-sm shrink-0" />
-            <h1 key={animKey} className="text-4xl sm:text-5xl font-black tracking-tight text-[#8b5cf6] m-0 animate-pghub-title-pulse">
+            <h1 key={animKey} className="pgh-brand-gradient-text text-4xl sm:text-5xl font-black tracking-tight m-0 animate-pghub-title-pulse">
               PG HUB
             </h1>
           </div>

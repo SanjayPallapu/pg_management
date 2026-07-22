@@ -92,16 +92,20 @@
 .pgh-onboarding__copy > p { max-width: 21rem; margin: .62rem 0 0; color: #c4c7d8; font-size: .93rem; line-height: 1.48; font-weight: 500; }
 .pgh-onboarding__slide--grow .pgh-onboarding__copy h1 { font-size: clamp(2.45rem, 11vw, 3.1rem); }
 .pgh-onboarding__slide--grow .pgh-onboarding__copy h1 em { margin-top: .7rem; color: #d9e8ff !important; }
-.pgh-onboarding__brand-text {
+.pgh-onboarding__brand-text,
+.pgh-brand-gradient-text {
   display: inline-block;
-  color: #8b5cf6;
-  -webkit-text-fill-color: #8b5cf6;
-  filter: drop-shadow(0 0 10px rgba(139, 92, 246, .38));
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #4f46e5 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  filter: drop-shadow(0 2px 14px rgba(124, 58, 237, 0.4));
+  font-weight: 900;
   animation: pgh-brand-shimmer 3.2s ease-in-out infinite;
 }
 @keyframes pgh-brand-shimmer {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(139, 92, 246, .32)); }
-  50% { filter: drop-shadow(0 0 17px rgba(139, 92, 246, .68)); }
+  0%, 100% { filter: drop-shadow(0 2px 10px rgba(124, 58, 237, 0.35)); }
+  50% { filter: drop-shadow(0 2px 18px rgba(124, 58, 237, 0.65)); }
 }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy { top: max(4.65rem, calc(env(safe-area-inset-top) + 4.35rem)); }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy h1 { margin-bottom: .65rem; font-size: clamp(2.4rem, 12vw, 3.25rem); }
