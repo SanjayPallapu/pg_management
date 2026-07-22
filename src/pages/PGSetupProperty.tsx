@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { Building2, Layers3, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeyBuilding from "@/assets/pg-hub/hub-building-hero.png";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubFormField } from "@/features/pg-hub/PGHubFormField";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
@@ -47,11 +47,15 @@ export default function PGSetupProperty() {
       <div className="pgh-page pgh-setup-page">
         <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
         <section className="pgh-setup-hero">
+          <div className="pgh-setup-hero__copy">
+            <span>Build your workspace</span>
+            <h1>Let’s set up<br /><em>your property</em></h1>
+            <p>Complete this once to start managing your PG.</p>
+          </div>
           <img src={journeyBuilding} alt="PG property" />
-          <div aria-hidden="true" />
-          <h1>Property<br /><em>details</em></h1>
         </section>
         <section className="pgh-setup-surface pgh-setup-surface--full">
+          <header className="pgh-setup-section-heading"><span>Step 1</span><h2>Property details</h2></header>
           <div className="pgh-setup-form">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>

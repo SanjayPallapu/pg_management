@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import journeyComplete from "@/assets/pg-hub/hub-building-check.png";
+import journeyComplete from "@/assets/pg-hub/ready-building.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
@@ -29,20 +29,21 @@ export default function SetupComplete() {
   };
 
   return (
-    <PGHubShell variant="dark" className="pgh-ready pgh-ready--journey">
+    <PGHubShell variant="light" className="pgh-ready pgh-ready--journey">
       <div className="pgh-ready__journey">
-        <div className="pgh-ready__backdrop">
-          <img src={journeyComplete} alt="Completed PG property" />
-          <span aria-hidden="true" />
-        </div>
         <header className="pgh-ready__header">
           <button type="button" className="pgh-ready__back" onClick={goBack}><ArrowLeft size={18} /> Back</button>
           <span><CheckCircle2 size={18} /> Setup complete</span>
         </header>
+        <div className="pgh-ready__backdrop">
+          <img src={journeyComplete} alt="Completed PG property" />
+          <i><CheckCircle2 size={31} /></i>
+        </div>
         <section className="pgh-ready__content">
           <div className="pgh-ready__copy">
-            <h1>Ready to<br /><em>grow</em></h1>
-            <p><strong>{creationResult.pgName}</strong> is live.</p>
+            <span>Your workspace is live</span>
+            <h1>Your PG is<br /><em>ready to grow</em></h1>
+            <p><strong>{creationResult.pgName}</strong> has been created successfully.</p>
           </div>
           <div className="pgh-ready__stats" aria-label="Property summary">
             <div><strong>{creationResult.floors}</strong><span>Floors</span></div>

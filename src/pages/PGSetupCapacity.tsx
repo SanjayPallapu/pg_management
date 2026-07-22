@@ -9,7 +9,7 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft, type PGFloorDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { usePGSetup } from "@/hooks/usePGSetup";
 import { usePG } from "@/contexts/PGContext";
-import journeyBuilding from "@/assets/pg-hub/hub-building-hero.png";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 import { getPricePerBed } from "@/constants/pricing";
 
 const sharingLabel = (capacity: number) => capacity === 1 ? "Single sharing" : `${capacity} sharing`;
@@ -83,11 +83,11 @@ export default function PGSetupCapacity() {
         <PGHubSetupHeader step="Step 2 of 2" progress={1} onBack={() => navigate("/setup/property")} />
         <section className="pgh-capacity-hero">
           <img src={journeyBuilding} alt="PG room setup" />
-          <div><h1>Plan your<br /><em>space</em></h1></div>
+          <div><span>Room configuration</span><h1>Shape your<br /><em>room plan</em></h1><p>Set capacity, sharing, and pricing for every floor.</p></div>
         </section>
 
         <section className="pgh-capacity-card pgh-capacity-card--full">
-          <h2 className="pgh-section-title"><Building2 size={21} /> Capacity at a glance</h2>
+          <h2 className="pgh-section-title"><span>Step 2</span><Building2 size={21} /> Configuration</h2>
           <div className="pgh-capacity-grid">
             <div><DoorOpen /><span>Total Rooms</span><strong>{totals.rooms}</strong></div>
             <div><BedDouble /><span>Total Beds</span><strong>{totals.beds}</strong></div>

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import journeySecurity from "@/assets/pg-hub/hub-security.png";
+import journeySecurity from "@/assets/pg-hub/journey-security-transparent.png";
+import pgHubLogo from "@/assets/pg-hub/pg-hub-logo.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -105,25 +106,29 @@ export default function OTPVerification() {
       <div className="pgh-page">
         <header className="pgh-otp__header">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
-          <span className="pgh-otp__step">2 of 2</span>
+          <div className="pgh-otp__brand"><img src={pgHubLogo} alt="" /><strong>PG HUB</strong></div>
+          <span className="pgh-otp__step">Verification</span>
         </header>
         <section className="pgh-otp__copy">
-          <h1 className="pgh-title">Check your <em>phone</em></h1>
-          <p className="pgh-subtitle">Code sent to <strong>+91 {formatted}</strong></p>
+          <span>One last step</span>
+          <h1 className="pgh-title">Verify your <em>number</em></h1>
+          <p className="pgh-subtitle">Enter the 6-digit code sent to <strong>+91 {formatted}</strong></p>
           {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
         </section>
         <div className="pgh-otp__art pgh-otp__security">
           <img src={journeySecurity} alt="Secure phone verification" />
         </div>
-        <button type="button" className="pgh-otp__boxes" onClick={() => inputRef.current?.focus()} aria-label="Enter OTP">
-          {Array.from({ length: 6 }, (_, index) => <span key={index} className={index === otp.length ? "is-active" : ""}>{otp[index] || ""}</span>)}
-          <input ref={inputRef} value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" autoFocus aria-hidden="true" />
-        </button>
-        <div className="pgh-otp__actions">
-          <div><Clock3 size={18} /><span>{seconds > 0 ? <>Resend code in <strong>00:{String(seconds).padStart(2, "0")}</strong></> : "Didn't receive the code?"}</span></div>
-          <button type="button" className="pgh-link-button" onClick={changeNumberOrResend}>{seconds > 0 ? "Change number" : "Resend code"}</button>
-          <PGHubButton onClick={verify} disabled={otp.length !== 6} loading={submitting}>Continue to setup</PGHubButton>
-        </div>
+        <section className="pgh-otp__panel">
+          <button type="button" className="pgh-otp__boxes" onClick={() => inputRef.current?.focus()} aria-label="Enter OTP">
+            {Array.from({ length: 6 }, (_, index) => <span key={index} className={index === otp.length ? "is-active" : ""}>{otp[index] || ""}</span>)}
+            <input ref={inputRef} value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" autoFocus aria-hidden="true" />
+          </button>
+          <div className="pgh-otp__actions">
+            <div><Clock3 size={18} /><span>{seconds > 0 ? <>Resend code in <strong>00:{String(seconds).padStart(2, "0")}</strong></> : "Didn't receive the code?"}</span></div>
+            <button type="button" className="pgh-link-button" onClick={changeNumberOrResend}>{seconds > 0 ? "Change number" : "Resend code"}</button>
+            <PGHubButton onClick={verify} disabled={otp.length !== 6} loading={submitting}>Verify & continue</PGHubButton>
+          </div>
+        </section>
       </div>
     </PGHubShell>
   );

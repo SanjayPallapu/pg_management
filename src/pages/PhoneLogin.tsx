@@ -100,11 +100,15 @@ export default function PhoneLogin() {
           </div>
           <div className="pgh-login__copy">
             <h1 className="pgh-title">Welcome back</h1>
-            <p>Manage smarter. Grow faster.</p>
+            <p>Your PG workspace is ready when you are.</p>
           </div>
         </section>
 
         <section className={`pgh-login__card pgh-login__card--${authMethod}`}>
+          <div className="pgh-login__method-switch" role="tablist" aria-label="Sign-in method">
+            <button type="button" role="tab" aria-selected={authMethod === "phone"} className={authMethod === "phone" ? "is-active" : ""} onClick={() => setAuthMethod("phone")}>Mobile</button>
+            <button type="button" role="tab" aria-selected={authMethod === "email"} className={authMethod === "email" ? "is-active" : ""} onClick={() => setAuthMethod("email")}>Email</button>
+          </div>
           {authMethod === "phone" ? (
             <>
               <div className={`pgh-phone-field ${valid ? "is-valid" : ""}`}>
@@ -114,7 +118,7 @@ export default function PhoneLogin() {
               </div>
               <PGHubButton onClick={continueWithOtp} disabled={!valid} loading={submitting}>Continue with OTP</PGHubButton>
               <div className="pgh-trust"><span /><i><ShieldCheck size={22} /></i><span /></div>
-              <p id="phone-help" className="pgh-login__alternative">Prefer another method? <button type="button" onClick={() => setAuthMethod("email")}>Continue with email or Google</button></p>
+              <p id="phone-help" className="pgh-login__alternative">Secure OTP verification. No password required.</p>
             </>
           ) : (
             <>
@@ -134,7 +138,7 @@ export default function PhoneLogin() {
                 {emailError && <small className="pgh-login__error">{emailError}</small>}
                 <PGHubButton type="submit" loading={submitting}>Sign in with email</PGHubButton>
               </form>
-              <p className="pgh-login__alternative">Use your mobile instead? <button type="button" onClick={() => setAuthMethod("phone")}>Sign in with OTP</button></p>
+              <p className="pgh-login__alternative">Your account details stay encrypted and protected.</p>
             </>
           )}
         </section>
