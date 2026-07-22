@@ -285,6 +285,27 @@
   animation: pghub-tab-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes pghub-title-pulse {
+  0% {
+    transform: scale(0.94);
+    opacity: 0.7;
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.animate-pghub-title-pulse {
+  animation: pghub-title-pulse 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .animate-pghub-typing-bounce {
   animation: pghub-typing-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, pghub-up-down 3s ease-in-out infinite 0.6s;
 }

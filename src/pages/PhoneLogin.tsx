@@ -95,17 +95,15 @@ export default function PhoneLogin() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-login min-h-dvh w-full bg-slate-50 flex flex-col items-center justify-center overflow-y-auto pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] px-6">
+    <PGHubShell variant="light" className="pgh-login min-h-dvh w-full bg-slate-50 flex flex-col items-center justify-center overflow-y-auto pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] px-6 transition-all duration-300">
       {/* Single Unified Content Group Centered Vertically */}
       <div className="w-full max-w-sm mx-auto my-auto flex flex-col items-center text-center py-4">
         
-        {/* Header section — Fixed, Static (NO Animation), Logo Left Beside Title with Matching Background Cover */}
+        {/* Header section — Clean Full Image Logo Left Beside Title + Animated PG HUB Text on Tab Switch */}
         <div className="flex flex-col items-center justify-center w-full mb-[24px]">
           <div className="flex items-center justify-center gap-3.5 mb-[10px]">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50/90 border border-blue-100 p-2 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-              <img src={pgHubLogo} alt="PG HUB" className="w-full h-full object-contain rounded-xl" />
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-blue-600 m-0">
+            <img src={pgHubLogo} alt="PG HUB" className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-2xl shadow-sm shrink-0" />
+            <h1 key={animKey} className="text-4xl sm:text-5xl font-black tracking-tight text-blue-600 m-0 animate-pghub-title-pulse">
               PG HUB
             </h1>
           </div>
@@ -121,7 +119,7 @@ export default function PhoneLogin() {
             role="tab" 
             aria-selected={authMethod === "phone"} 
             className={authMethod === "phone" ? "is-active" : ""} 
-            onClick={() => setAuthMethod("phone")}
+            onClick={() => handleTabSwitch("phone")}
           >
             Mobile
           </button>
@@ -130,15 +128,14 @@ export default function PhoneLogin() {
             role="tab" 
             aria-selected={authMethod === "email"} 
             className={authMethod === "email" ? "is-active" : ""} 
-            onClick={() => setAuthMethod("email")}
+            onClick={() => handleTabSwitch("email")}
           >
             Email
           </button>
         </div>
 
-        {/* Authentication Form Container — Fixed Minimum Height (min-h-[380px]) */}
-        {/* Form fields start from exact same top position; only form fields animate with smooth slide/fade */}
-        <div className="w-full min-h-[380px] flex flex-col items-start text-left relative">
+        {/* Authentication Form Container — Expands smoothly for Email tab */}
+        <div className={`w-full flex flex-col items-start text-left relative transition-all duration-300 ${authMethod === "phone" ? "min-h-[220px]" : "min-h-[380px]"}`}>
           <div key={authMethod} className="w-full flex flex-col items-center animate-pghub-tab-slide">
             {authMethod === "phone" ? (
               <div className="w-full flex flex-col items-center">
