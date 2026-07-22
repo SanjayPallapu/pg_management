@@ -270,13 +270,19 @@
   }
 }
 
-@keyframes pghub-up-down {
-  0%, 100% {
-    transform: translateY(0px);
+@keyframes pghub-tab-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(12px);
   }
-  50% {
-    transform: translateY(-7px);
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
+}
+
+.animate-pghub-tab-slide {
+  animation: pghub-tab-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-pghub-typing-bounce {
