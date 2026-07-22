@@ -24,10 +24,10 @@ const slides = [
   },
   {
     id: "rent",
-    titleTop: "Instant Receipts,",
-    titleBottom: "Timely Reminders",
+    titleTop: "Generate Receipts",
+    titleBottom: "with Ease",
     subheading: "Automate reminders and collect rent on time.",
-    body: "Generate receipts instantly, send WhatsApp reminders, and never chase tenants again.",
+    body: "Track payments, send reminders, and generate receipts without chasing tenants.",
     accent: "#A855F7",
     image: onboardingScreen2,
   },

@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { Building2, Layers3, MapPin, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubFormField } from "@/features/pg-hub/PGHubFormField";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
@@ -51,7 +52,7 @@ export default function PGSetupProperty() {
             <h1>Let’s set up<br /><em>your property</em></h1>
             <p>Complete this once to start managing your PG.</p>
           </div>
-          <div className="pgh-icon-hero__circle"><Building2 size={42} /></div>
+          <img src={journeyBuilding} alt="PG property" />
         </section>
         <section className="pgh-setup-surface pgh-setup-surface--full">
           <header className="pgh-setup-section-heading"><span>Step 1</span><h2>Property details</h2></header>
@@ -82,11 +83,7 @@ export default function PGSetupProperty() {
           <section className="pgh-photo">
             <label>Property Logo / Photo <small>(Optional)</small></label>
             <label className="pgh-photo__picker">
-              {property.imagePreview ? (
-                <img src={property.imagePreview} alt="Property preview" />
-              ) : (
-                <div className="pgh-icon-hero__circle pgh-icon-hero__circle--sm"><Building2 size={28} /></div>
-              )}
+              <img src={property.imagePreview || journeyBuilding} alt="Property preview" />
               <span><strong>{property.imageFile ? "Image selected" : "Add a property image"}</strong><small>This helps you recognize your PG in the app.</small><i><UploadCloud size={17} />{property.imageFile ? "Change Image" : "Upload Image"}</i></span>
               <input type="file" accept="image/png,image/jpeg,image/webp" onChange={chooseImage} />
             </label>

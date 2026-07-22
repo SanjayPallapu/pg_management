@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, MapPin, Phone, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, MapPin, Phone, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
+import journeySecurity from "@/assets/pg-hub/hub-security.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -159,7 +160,7 @@ export default function EmailAuth() {
 
         <section className="pgh-email-auth__hero">
           <div><span>Email & Google</span><h1>{mode === "signin" ? "Welcome back" : "Create account"}</h1></div>
-          <div className="pgh-icon-hero__circle" aria-label="Secure account access"><ShieldCheck size={42} /></div>
+          <img src={journeySecurity} alt="Secure account access" />
         </section>
 
         <section className="pgh-email-auth__card">

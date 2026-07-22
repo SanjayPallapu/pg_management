@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, ChevronDown, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
+import pgHubLogo from "@/assets/pg-hub/pg-hub-logo.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,8 +27,9 @@ export default function PhoneLogin() {
   const digits = useMemo(() => phone.replace(/\D/g, "").slice(0, 10), [phone]);
   const valid = digits.length === 10;
 
-  // Auth redirect is handled by continueWithEmail/continueWithOtp handlers directly.
-  // No useEffect redirect needed — it caused race conditions with window.location.replace.
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) navigate("/", { replace: true });
+  }, [isAuthenticated, isLoading, navigate]);
 
   const continueWithOtp = async () => {
     if (!valid || submitting) return;
@@ -89,11 +92,11 @@ export default function PhoneLogin() {
       <div className="pgh-login__page">
         <section className="pgh-login__hero">
           <div className="pgh-login__brand">
-            <div className="pgh-brand-icon"><Building2 size={22} /></div>
+            <img src={pgHubLogo} alt="" />
             <strong>PG HUB</strong>
           </div>
           <div className="pgh-login__visual" aria-hidden="true">
-            <div className="pgh-icon-hero__circle"><Building2 size={52} /></div>
+            <img src={journeyBuilding} alt="" />
           </div>
           <div className="pgh-login__copy">
             <h1 className="pgh-title">Welcome back</h1>

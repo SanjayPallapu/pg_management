@@ -34,15 +34,6 @@
 .pgh-orb--one { top: -8rem; right: -8rem; background: #7b4dff; }
 .pgh-orb--two { bottom: -10rem; left: -9rem; background: #1769ff; }
 
-/* Icon Hero – replaces image-based hero sections with a gradient icon circle */
-.pgh-icon-hero { display: flex; align-items: center; justify-content: center; padding: 1.5rem 0; }
-.pgh-icon-hero__circle { width: 6rem; height: 6rem; border-radius: 999px; background: linear-gradient(135deg, #1769ff, #38bdf8); display: grid; place-items: center; color: white; box-shadow: 0 16px 40px rgba(23, 105, 255, .25); flex-shrink: 0; }
-.pgh-icon-hero__circle--sm { width: 3.8rem; height: 3.8rem; box-shadow: 0 8px 20px rgba(23, 105, 255, .18); }
-.pgh-icon-hero__circle--lg { width: 7.5rem; height: 7.5rem; box-shadow: 0 20px 50px rgba(23, 105, 255, .3); }
-
-/* Brand icon – small icon lockup replacing logo images */
-.pgh-brand-icon { width: 2.2rem; height: 2.2rem; border-radius: .65rem; background: linear-gradient(135deg, #1769ff, #38bdf8); display: grid; place-items: center; color: white; flex-shrink: 0; }
-
 .pgh-button-motion { width: 100%; }
 .pgh-button { position: relative; isolation: isolate; min-height: 3.45rem; width: 100%; border: 0; border-radius: 1.05rem; padding: 0 1.3rem; display: inline-flex; align-items: center; justify-content: center; gap: .6rem; overflow: hidden; font-size: 1rem; font-weight: 850; }
 .pgh-button--primary { color: white; background: linear-gradient(135deg, #1769ff, #38bdf8); box-shadow: 0 12px 28px rgba(23, 105, 255, .25); }

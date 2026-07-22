@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
-import { completeOnboarding, hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
+import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -299,8 +299,7 @@ const Auth = () => {
         }
         setIsSubmitting(false);
       } else {
-        completeOnboarding();
-        window.location.replace("/");
+        navigate("/", { replace: true });
       }
     } catch {
       toast.error("Sign in failed. Please try again.");
@@ -335,8 +334,7 @@ const Auth = () => {
         console.error("Error creating profile:", profileError);
       }
       setIsSubmitting(false);
-      completeOnboarding();
-      window.location.replace("/");
+      navigate("/", { replace: true });
     } else {
       setIsSubmitting(false);
     }

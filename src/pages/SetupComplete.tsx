@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { ArrowLeft, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import journeyComplete from "@/assets/pg-hub/ready-building.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
@@ -35,7 +36,7 @@ export default function SetupComplete() {
           <span><CheckCircle2 size={18} /> Setup complete</span>
         </header>
         <div className="pgh-ready__backdrop">
-          <div className="pgh-icon-hero__circle pgh-icon-hero__circle--lg"><Building2 size={56} /></div>
+          <img src={journeyComplete} alt="Completed PG property" />
           <i><CheckCircle2 size={31} /></i>
         </div>
         <section className="pgh-ready__content">

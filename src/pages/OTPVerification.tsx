@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Building2, Clock3, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import journeySecurity from "@/assets/pg-hub/journey-security-transparent.png";
+import pgHubLogo from "@/assets/pg-hub/pg-hub-logo.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -104,7 +106,7 @@ export default function OTPVerification() {
       <div className="pgh-page">
         <header className="pgh-otp__header">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
-          <div className="pgh-otp__brand"><div className="pgh-brand-icon"><Building2 size={20} /></div><strong>PG HUB</strong></div>
+          <div className="pgh-otp__brand"><img src={pgHubLogo} alt="" /><strong>PG HUB</strong></div>
           <span className="pgh-otp__step">Verification</span>
         </header>
         <section className="pgh-otp__copy">
@@ -114,7 +116,7 @@ export default function OTPVerification() {
           {isTestMode && <p className="pgh-test-mode">Test mode · use OTP <strong>{PHONE_OTP_TEST_CODE}</strong></p>}
         </section>
         <div className="pgh-otp__art pgh-otp__security">
-          <div className="pgh-icon-hero__circle" aria-label="Secure phone verification"><ShieldCheck size={42} /></div>
+          <img src={journeySecurity} alt="Secure phone verification" />
         </div>
         <section className="pgh-otp__panel">
           <button type="button" className="pgh-otp__boxes" onClick={() => inputRef.current?.focus()} aria-label="Enter OTP">
