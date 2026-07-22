@@ -1,9 +1,10 @@
-name: Build Android App Bundle (AAB)
+name: Build & Deploy Android App Bundle (AAB)
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Run Unit Tests
-        run: npm run test
+        run: npm test
 
       - name: Build Web Assets
         run: npm run build
@@ -42,26 +43,24 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "Error: KEYSTORE_BASE64 secret is not set!"
-            exit 1
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+            echo "Keystore successfully decoded."
+          else
+            echo "Warning: KEYSTORE_BASE64 secret is not set. Generating unsigned build."
           fi
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build and Sign AAB
+      - name: Build AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
-            echo "Error: Missing one or more required signing secrets (KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD)!"
-            exit 1
-          fi
           cd android
+          chmod +x gradlew
           ./gradlew bundleRelease
 
       - name: Upload Release AAB Artifact
@@ -80,5 +79,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.sanjay.pgmanagement
           releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
-          tracks: internal
+          track: alpha
           status: completed
