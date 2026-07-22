@@ -79,5 +79,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.sanjay.pgmanagement
           releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
-          track: alpha
-          status: completed
+          tracks: alpha
+          status: draft
