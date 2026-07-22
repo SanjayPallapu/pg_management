@@ -90,6 +90,7 @@
 .pgh-onboarding__copy h1 em { display: block; margin-top: .16rem; font-style: normal; }
 .pgh-onboarding__copy > strong { display: block; max-width: 21rem; color: #fff; font-size: 1.08rem; line-height: 1.38; font-weight: 850; }
 .pgh-onboarding__copy > p { max-width: 21rem; margin: .62rem 0 0; color: #c4c7d8; font-size: .93rem; line-height: 1.48; font-weight: 500; }
+.pgh-onboarding__slide--grow .pgh-onboarding__copy h1 { font-size: clamp(2.45rem, 11vw, 3.1rem); }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy { top: max(4.65rem, calc(env(safe-area-inset-top) + 4.35rem)); }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy h1 { margin-bottom: .65rem; font-size: clamp(2.4rem, 12vw, 3.25rem); }
 .pgh-onboarding__slide--everything .pgh-onboarding__copy > strong { font-size: 1rem; line-height: 1.3; }
