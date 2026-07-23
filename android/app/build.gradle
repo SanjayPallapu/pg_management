@@ -41,9 +41,9 @@ android {
             def keystoreFile = file('release.keystore')
             if (keystoreFile.exists()) {
                 storeFile keystoreFile
-                storePassword System.getenv("KEYSTORE_PASSWORD") ?: 'pgmanagementpass'
-                keyAlias System.getenv("KEY_ALIAS") ?: 'pgmanagement'
-                keyPassword System.getenv("KEY_PASSWORD") ?: 'pgmanagementpass'
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: 'Pallapu@9390'
+                keyAlias System.getenv("KEY_ALIAS") ?: 'pghub'
+                keyPassword System.getenv("KEY_PASSWORD") ?: 'Pallapu@9390'
             }
         }
     }
