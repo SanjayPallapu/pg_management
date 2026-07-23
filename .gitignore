@@ -24,10 +24,10 @@ dist-ssr
 *.sw?
 scripts/
 
-# Android build artifacts
-# android/
-android/android/
-android/caches/
+# Keystore files
+*.keystore
+*.jks
+android/app/release.keystore
 android/daemon/
 android/kotlin-profile/
 android/native/
