@@ -13,9 +13,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         
-        // Dynamically increment version code on GitHub Actions, fallback to 16 locally
+        // Dynamically increment version code on GitHub Actions, fallback to 155 locally to exceed previous version code 151
         def gitHubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
-        versionCode gitHubRunNumber ? (gitHubRunNumber.toInteger() + 25) : 16
+        versionCode gitHubRunNumber ? (gitHubRunNumber.toInteger() + 200) : 155
         
         versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
