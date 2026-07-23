@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Crown, Loader2, Zap, Sparkles, Globe } from 'lucide-react';
+import { Check, Clock, Crown, Loader2, Zap, Sparkles, Globe, Star, ShieldCheck } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
 import { Capacitor } from '@capacitor/core';
 
 interface UpgradeDialogProps {
@@ -17,202 +16,183 @@ interface UpgradeDialogProps {
 export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const { subscription, refreshSubscription } = usePG();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>('pro');
   const [region, setRegion] = useState<string>('IN');
 
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
   const currentLocalized = getLocalizedSubscriptionPrice(selectedPlan, region);
-  const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
   const isTrialActive = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
   const isNative = Capacitor.isNativePlatform();
 
+  const cards: Array<{
+    key: SubscriptionPlanKey;
+    title: string;
+    tag?: string;
+    badgeStyle?: string;
+    cardStyle: string;
+    icon: React.ReactNode;
+    features: string[];
+  }> = [
+    {
+      key: 'monthly',
+      title: 'Basic',
+      tag: 'Entry Level',
+      cardStyle: 'border-slate-200 dark:border-slate-800 bg-card',
+      icon: <Zap className="h-5 w-5 text-indigo-500" />,
+      features: ['Unlimited PGs & Tenants', 'Rent Collection Sheet', 'Smart PDF Receipts'],
+    },
+    {
+      key: 'pro',
+      title: 'Plus',
+      tag: 'Most Popular',
+      badgeStyle: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs',
+      cardStyle: 'border-purple-500 dark:border-purple-400 bg-purple-500/5 dark:bg-purple-500/10 ring-2 ring-purple-500/40 shadow-md',
+      icon: <Star className="h-5 w-5 text-purple-500 fill-purple-500" />,
+      features: ['Everything in Basic', 'Auto WhatsApp Reminders', 'Occupancy Analytics', 'Priority Support'],
+    },
+    {
+      key: 'promax',
+      title: 'Pro',
+      tag: 'Ultimate',
+      badgeStyle: 'bg-amber-500 text-white shadow-xs',
+      cardStyle: 'border-amber-500/80 dark:border-amber-400/80 bg-amber-500/5 dark:bg-amber-500/10',
+      icon: <Crown className="h-5 w-5 text-amber-500 fill-amber-500" />,
+      features: ['Everything in Plus', 'Dedicated Account Manager', 'Custom API Access', '99.9% Uptime SLA'],
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2">
-            <Crown className="h-5 w-5 text-amber-500" />
-            Upgrade Subscription
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full p-4 sm:p-6 rounded-3xl">
+        <DialogHeader className="text-center sm:text-center pb-1">
+          <DialogTitle className="flex items-center justify-center gap-2 text-xl font-extrabold">
+            <Crown className="h-6 w-6 text-amber-500" />
+            Subscription Plans
           </DialogTitle>
-          <DialogDescription className="text-center">
-            Choose your billing plan and region for automatic localized pricing.
+          <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
+            Select a plan tailored for your PG management needs.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Region & Currency Selector */}
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50 text-xs">
-          <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-            <Globe className="h-3.5 w-3.5 text-primary" /> Region & Currency:
+        {/* Currency Switcher: USD ($) vs INR (₹) ONLY */}
+        <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-muted/50 border border-border/60 text-xs my-1">
+          <span className="flex items-center gap-1.5 font-bold text-foreground pl-1">
+            <Globe className="h-4 w-4 text-primary" /> Currency:
           </span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {[
-              { code: 'IN', label: 'India (₹)' },
-              { code: 'US', label: 'Global ($)' },
-              { code: 'EU', label: 'EU (€)' },
-              { code: 'GB', label: 'UK (£)' },
-              { code: 'AE', label: 'UAE (AED)' },
-            ].map((r) => (
+              { code: 'IN', label: 'INR (₹)' },
+              { code: 'US', label: 'USD ($)' },
+            ].map((c) => (
               <button
-                key={r.code}
+                key={c.code}
                 type="button"
-                onClick={() => setRegion(r.code)}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
-                  region === r.code 
+                onClick={() => setRegion(c.code)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                  region === c.code 
                     ? 'bg-primary text-primary-foreground shadow-xs' 
-                    : 'text-muted-foreground hover:bg-muted'
+                    : 'text-muted-foreground hover:bg-muted/80'
                 }`}
               >
-                {r.label}
+                {c.label}
               </button>
             ))}
           </div>
         </div>
 
         {isTrialActive && (
-          <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-4 text-sm">
-            <div className="flex items-center gap-2 font-medium text-amber-700 dark:text-amber-300">
-              <Clock className="h-4 w-4" />
-              Free Trial Active
-            </div>
-            <p className="mt-1 text-muted-foreground">
-              Your app is usable right now. Pick a paid cycle anytime before the trial ends to keep auto-renewal active.
-            </p>
+          <div className="rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs flex items-center gap-2 text-amber-800 dark:text-amber-300">
+            <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+            <span>Free Trial Active — Pick a plan to auto-renew seamlessly before trial ends.</span>
           </div>
         )}
 
-        <div className="flex flex-col gap-4 max-h-[85vh]">
-          {isTrialActive && (
-            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-3 text-xs">
-              <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
-                <Clock className="h-3.5 w-3.5" />
-                Free Trial Active
-              </div>
-              <p className="mt-1 text-muted-foreground leading-relaxed">
-                Your app is fully active. Select a billing cycle below to configure your auto-renewal before the trial ends.
-              </p>
-            </div>
-          )}
+        {/* 3-Card Grid Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-2">
+          {cards.map((c) => {
+            const locPrice = getLocalizedSubscriptionPrice(c.key, region);
+            const isSelected = selectedPlan === c.key;
 
-          {/* Scrollable Plan Selection Container */}
-          <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 scrollbar-thin">
-            {paidPlans.map((planKey) => {
-              const plan = SUBSCRIPTION_PLANS[planKey];
-              const isSelected = selectedPlan === planKey;
-
-              const getSelectedClasses = () => {
-                if (planKey.startsWith('pro') && !planKey.startsWith('promax')) {
-                  return 'border-cyan-500 dark:border-cyan-400 bg-cyan-500/5 dark:bg-cyan-500/10 shadow-sm ring-1 ring-cyan-500/30';
-                }
-                if (planKey.startsWith('promax')) {
-                  return 'border-amber-500 dark:border-amber-400 bg-amber-500/5 dark:bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30';
-                }
-                if (planKey === 'lifetime') {
-                  return 'border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30';
-                }
-                return 'border-indigo-500 dark:border-indigo-400 bg-indigo-500/5 dark:bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/30';
-              };
-
-              return (
-                <div
-                  key={planKey}
-                  onClick={() => setSelectedPlan(planKey)}
-                  className={`relative flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-                    isSelected 
-                      ? getSelectedClasses() 
-                      : 'border-border dark:border-slate-800 hover:border-primary/40 bg-card/50'
-                  }`}
-                >
-                  <div className="flex-1 min-w-0 pr-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm text-foreground">{plan.name}</span>
-                      {planKey === 'yearly' && (
-                        <Badge className="bg-primary/20 text-primary border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
-                          Best Value
-                        </Badge>
-                      )}
-                      {planKey === 'pro' && (
-                        <Badge className="bg-cyan-500/10 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400 border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
-                          Recommended
-                        </Badge>
-                      )}
-                      {planKey === 'lifetime' && (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border-0 text-[9px] px-2 py-0.5 rounded-full font-bold">
-                          Lifetime
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{plan.description}</p>
+            return (
+              <div
+                key={c.key}
+                onClick={() => setSelectedPlan(c.key)}
+                className={`relative flex flex-col justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
+                  isSelected ? c.cardStyle : 'border-border/60 hover:border-primary/40 bg-card/60'
+                }`}
+              >
+                {c.tag && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${c.badgeStyle || 'bg-muted text-muted-foreground'}`}>
+                      {c.tag}
+                    </Badge>
                   </div>
-                  
-                  <div className="text-right shrink-0">
-                    {(() => {
-                      const locPrice = getLocalizedSubscriptionPrice(planKey, region);
-                      return (
-                        <>
-                          <div className="text-base font-extrabold text-foreground">{locPrice.symbol}{locPrice.price.toLocaleString()}</div>
-                          <div className="text-[10px] text-muted-foreground font-medium">{plan.periodLabel}</div>
-                        </>
-                      );
-                    })()}
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-2 mt-1">
+                    <div className="flex items-center gap-2">
+                      {c.icon}
+                      <span className="font-extrabold text-base text-foreground">{c.title}</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <span className="text-2xl font-black tracking-tight text-foreground">
+                      {locPrice.symbol}{locPrice.price.toLocaleString()}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium ml-1">/mo</span>
+                  </div>
+
+                  <ul className="space-y-1.5 text-xs text-muted-foreground border-t border-border/40 pt-3">
+                    {c.features.map((f, i) => (
+                      <li key={i} className="flex items-center gap-1.5">
+                        <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <span className="line-clamp-1">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-4 pt-2">
+                  <div className={`w-full py-1.5 rounded-xl text-center text-xs font-extrabold transition-all ${
+                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}>
+                    {isSelected ? 'Selected' : 'Select Plan'}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Unified Core Features (Show once for clean layout) */}
-          <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3.5 border border-border/30">
-            <h4 className="text-xs font-semibold text-foreground mb-2.5 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Everything included in {SUBSCRIPTION_PLANS[selectedPlan].name}:
-            </h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                <span className="truncate">Unlimited PGs & Owners</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                <span className="truncate">Unlimited Rooms/Beds</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                <span className="truncate">Auto WhatsApp Reminders</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                <span className="truncate">AC Bill & Budget Tools</span>
-              </div>
-            </div>
-          </div>
-
-          {isNative ? (
-            <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-3.5 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground mb-1 text-amber-700 dark:text-amber-400">Manage Billing on Web</p>
-              To comply with mobile app store guidelines, upgrades cannot be purchased inside the app. Please sign in via a web browser at <span className="font-semibold text-foreground select-all">pgmanager.app</span> to upgrade.
-            </div>
-          ) : (
-            <Button
-              className="w-full gap-2 py-6 text-sm font-semibold rounded-xl bg-gradient-to-r from-primary to-[#9FA6FF] hover:from-[#6A73D5] hover:to-[#8E95EE] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
-              onClick={() => {
-                initiatePayment({
-                  plan: selectedPlan,
-                  onSuccess: async () => {
-                    await refreshSubscription();
-                    onOpenChange(false);
-                  },
-                });
-              }}
-              disabled={razorpayLoading}
-            >
-              {razorpayLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Starting Checkout...</>
-              ) : (
-                <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} - {currentLocalized.symbol}{currentLocalized.price.toLocaleString()}</>
-              )}
-            </Button>
-          )}
+            );
+          })}
         </div>
+
+        {/* Action / Checkout Button */}
+        {isNative ? (
+          <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 dark:bg-amber-950/10 p-3 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground mb-1 text-amber-700 dark:text-amber-400">Manage Billing on Web</p>
+            To comply with app store guidelines, upgrade at <span className="font-semibold text-foreground select-all">pgmanager.app</span>.
+          </div>
+        ) : (
+          <Button
+            className="w-full gap-2 py-6 text-sm font-extrabold rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg active:scale-[0.99] transition-all"
+            onClick={() => {
+              initiatePayment({
+                plan: selectedPlan,
+                onSuccess: async () => {
+                  await refreshSubscription();
+                  onOpenChange(false);
+                },
+              });
+            }}
+            disabled={razorpayLoading}
+          >
+            {razorpayLoading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+            ) : (
+              <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} Plan ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()}/mo)</>
+            )}
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );

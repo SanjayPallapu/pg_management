@@ -67,6 +67,7 @@ export interface PGBrandingData {
 }
 
 // Subscription plan definitions
+// Subscription plan definitions
 export const SUBSCRIPTION_PLANS = {
   trial: {
     name: 'Free Trial',
@@ -83,7 +84,7 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Start with a full-featured 1 month free trial.',
   },
   monthly: {
-    name: 'Monthly Basic',
+    name: 'Basic',
     price: 999,
     periodLabel: '/month',
     billingCycle: 'monthly',
@@ -94,10 +95,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Unlimited PGs, unlimited tenants, billed every month.',
+    description: 'Essential PG management tools for small to medium properties.',
   },
   pro: {
-    name: 'Pro Plan',
+    name: 'Plus',
     price: 1999,
     periodLabel: '/month',
     billingCycle: 'pro',
@@ -108,10 +109,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+    description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
   },
   pro_quarterly: {
-    name: 'Pro Plan',
+    name: 'Plus Plan (Quarterly)',
     price: 5399,
     periodLabel: '/3 months',
     billingCycle: 'pro_quarterly',
@@ -122,10 +123,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+    description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
   },
   pro_yearly: {
-    name: 'Pro Plan',
+    name: 'Plus Plan (Yearly)',
     price: 19999,
     periodLabel: '/year',
     billingCycle: 'pro_yearly',
@@ -136,10 +137,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Advanced statistics, premium WhatsApp templates, priority support.',
+    description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
   },
   promax: {
-    name: 'Pro Max Plan',
+    name: 'Pro',
     price: 3999,
     periodLabel: '/month',
     billingCycle: 'promax',
@@ -150,10 +151,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
   },
   promax_quarterly: {
-    name: 'Pro Max Plan',
+    name: 'Pro Plan (Quarterly)',
     price: 9999,
     periodLabel: '/3 months',
     billingCycle: 'promax_quarterly',
@@ -164,10 +165,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
   },
   promax_yearly: {
-    name: 'Pro Max Plan',
+    name: 'Pro Plan (Yearly)',
     price: 39999,
     periodLabel: '/year',
     billingCycle: 'promax_yearly',
@@ -178,10 +179,10 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'All Pro features plus dedicated account manager, custom API access, and zero downtime.',
+    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
   },
   quarterly: {
-    name: 'Quarterly Save',
+    name: 'Basic Plan (Quarterly)',
     price: 2699,
     periodLabel: '/3 months',
     billingCycle: 'quarterly',
@@ -195,7 +196,7 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Save 10% with a single payment every 3 months.',
   },
   yearly: {
-    name: 'Yearly Value',
+    name: 'Basic Plan (Yearly)',
     price: 9999,
     periodLabel: '/year',
     billingCycle: 'yearly',
@@ -251,79 +252,46 @@ export const REGIONAL_PRICING: Record<SubscriptionPlanKey, Record<string, Region
   trial: {
     IN: { currency: 'INR', symbol: '₹', price: 0 },
     US: { currency: 'USD', symbol: '$', price: 0 },
-    EU: { currency: 'EUR', symbol: '€', price: 0 },
-    GB: { currency: 'GBP', symbol: '£', price: 0 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 0 },
   },
   monthly: {
     IN: { currency: 'INR', symbol: '₹', price: 999 },
     US: { currency: 'USD', symbol: '$', price: 14.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 13.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 11.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 55 },
   },
   pro: {
     IN: { currency: 'INR', symbol: '₹', price: 1999 },
     US: { currency: 'USD', symbol: '$', price: 29.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 27.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 23.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 110 },
   },
   pro_quarterly: {
     IN: { currency: 'INR', symbol: '₹', price: 5399 },
     US: { currency: 'USD', symbol: '$', price: 79.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 74.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 64.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 295 },
   },
   pro_yearly: {
     IN: { currency: 'INR', symbol: '₹', price: 19999 },
     US: { currency: 'USD', symbol: '$', price: 289.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 269.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 229.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 1050 },
   },
   promax: {
     IN: { currency: 'INR', symbol: '₹', price: 3999 },
     US: { currency: 'USD', symbol: '$', price: 59.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 54.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 47.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 220 },
   },
   promax_quarterly: {
     IN: { currency: 'INR', symbol: '₹', price: 9999 },
     US: { currency: 'USD', symbol: '$', price: 149.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 139.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 119.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 550 },
   },
   promax_yearly: {
     IN: { currency: 'INR', symbol: '₹', price: 39999 },
     US: { currency: 'USD', symbol: '$', price: 579.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 539.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 459.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 2100 },
   },
   quarterly: {
     IN: { currency: 'INR', symbol: '₹', price: 2699 },
     US: { currency: 'USD', symbol: '$', price: 39.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 36.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 31.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 145 },
   },
   yearly: {
     IN: { currency: 'INR', symbol: '₹', price: 9999 },
     US: { currency: 'USD', symbol: '$', price: 149.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 139.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 119.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 550 },
   },
   lifetime: {
     IN: { currency: 'INR', symbol: '₹', price: 29999 },
     US: { currency: 'USD', symbol: '$', price: 449.99 },
-    EU: { currency: 'EUR', symbol: '€', price: 419.99 },
-    GB: { currency: 'GBP', symbol: '£', price: 359.99 },
-    AE: { currency: 'AED', symbol: 'AED ', price: 1650 },
   },
 };
 
@@ -331,10 +299,7 @@ export function getLocalizedSubscriptionPrice(planKey: SubscriptionPlanKey, regi
   let region = regionOverride || 'IN';
   if (!regionOverride && typeof navigator !== 'undefined') {
     const lang = (navigator.language || 'en-IN').toUpperCase();
-    if (lang.includes('US')) region = 'US';
-    else if (lang.includes('GB') || lang.includes('UK')) region = 'GB';
-    else if (lang.includes('DE') || lang.includes('FR') || lang.includes('ES') || lang.includes('IT') || lang.includes('EU')) region = 'EU';
-    else if (lang.includes('AE')) region = 'AE';
+    if (!lang.includes('IN')) region = 'US';
   }
   const planRegions = REGIONAL_PRICING[planKey];
   return planRegions?.[region] || planRegions?.['IN'] || { currency: 'INR', symbol: '₹', price: SUBSCRIPTION_PLANS[planKey].price };
