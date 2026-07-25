@@ -11,6 +11,7 @@ import PhoneLogin from "./pages/PhoneLogin";
 import OTPVerification from "./pages/OTPVerification";
 import PGSetupProperty from "./pages/PGSetupProperty";
 import PGSetupCapacity from "./pages/PGSetupCapacity";
+import PGSetupSubscription from "./pages/PGSetupSubscription";
 import SetupComplete from "./pages/SetupComplete";
 import PGOverview from "./pages/PGOverview";
 import Landing from "./pages/Landing";
@@ -144,6 +145,11 @@ const AppContent = () => {
           <Route path="/setup/capacity" element={
             <ProtectedRoute>
               <PGSetupCapacity />
+            </ProtectedRoute>
+          } />
+          <Route path="/setup/subscription" element={
+            <ProtectedRoute>
+              <PGSetupSubscription />
             </ProtectedRoute>
           } />
           <Route path="/setup/complete" element={

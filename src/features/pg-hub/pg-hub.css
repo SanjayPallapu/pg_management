@@ -1,7 +1,8 @@
 .pgh-shell {
-  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
   width: 100%;
-  overflow: hidden auto;
+  overflow: hidden;
   color: #0a1230;
   font-family: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-feature-settings: "ss01", "cv11";
@@ -28,7 +29,7 @@
 
 .pgh-shell--light { background: radial-gradient(circle at 85% 8%, #e8efff 0, transparent 32%), linear-gradient(180deg, #fbfcff 0%, #f5f7fc 100%); }
 .pgh-shell--dark { background: linear-gradient(155deg, #08052f 0%, #11105b 52%, #071b5c 100%); color: white; }
-.pgh-safe-area { position: relative; z-index: 1; min-height: 100dvh; padding-top: max(0px, env(safe-area-inset-top)); padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+.pgh-safe-area { position: relative; z-index: 1; height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding-top: max(0px, env(safe-area-inset-top)); padding-bottom: max(0px, env(safe-area-inset-bottom)); }
 .pgh-orbs { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
 .pgh-orb { position: absolute; width: 22rem; height: 22rem; border-radius: 999px; filter: blur(70px); opacity: .35; }
 .pgh-orb--one { top: -8rem; right: -8rem; background: #7b4dff; }
@@ -73,7 +74,7 @@
 .pgh-stat strong { font-size: 1.45rem; }
 .pgh-stat small { color: #667085; }
 
-.pgh-page { width: min(100%, 34rem); min-height: 100dvh; margin: 0 auto; padding: 1.25rem 1.35rem 2rem; }
+.pgh-page { width: min(100%, 34rem); height: 100dvh; max-height: 100dvh; overflow: hidden; margin: 0 auto; padding: 1.25rem 1.35rem 2rem; display: flex; flex-direction: column; justify-content: space-between; }
 .pgh-page--wide { width: min(100%, 46rem); }
 .pgh-card { border: 1px solid #e1e5ef; border-radius: 1.5rem; background: rgba(255,255,255,.96); padding: 1.25rem; box-shadow: 0 18px 45px rgba(16,24,40,.08); }
 .pgh-title { margin: 0; color: #0a1230; font-size: clamp(2.1rem, 10vw, 3.2rem); line-height: 1.04; letter-spacing: -.045em; font-weight: 950; }
@@ -81,7 +82,7 @@
 .pgh-subtitle { color: #667085; font-size: 1rem; line-height: 1.55; }
 .pgh-section-title { margin: 0; font-size: 1.25rem; font-weight: 900; color: #0a1230; }
 
-.pgh-onboarding__page { position: relative; width: min(100%, 34rem); height: 100dvh; min-height: 38rem; margin: 0 auto; overflow: hidden; background: #050426; }
+.pgh-onboarding__page { position: relative; width: min(100%, 34rem); height: 100dvh; max-height: 100dvh; margin: 0 auto; overflow: hidden; background: #050426; display: flex; flex-direction: column; justify-content: space-between; }
 .pgh-onboarding__slide { position: absolute; inset: 0; overflow: hidden; }
 .pgh-onboarding__background { position: absolute; inset: .45rem; width: calc(100% - .9rem); height: calc(100% - .9rem); border-radius: 1rem; object-fit: contain; object-position: center; user-select: none; pointer-events: none; }
 .pgh-onboarding__shade { position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgba(2,3,35,.66) 0%, rgba(4,4,42,.26) 27%, transparent 48%, rgba(3,3,31,.04) 68%, rgba(3,3,31,.88) 100%); pointer-events: none; }

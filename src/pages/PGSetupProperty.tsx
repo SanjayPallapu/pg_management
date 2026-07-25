@@ -43,13 +43,13 @@ export default function PGSetupProperty() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-setup-shell">
-      <div className="pgh-page pgh-setup-page pgh-page--fullscreen p-0 w-full max-w-full">
-        <div className="px-4 pt-3">
-          <PGHubSetupHeader step="Step 1 of 2" progress={.5} onBack={backToOnboarding} />
+    <PGHubShell variant="light" className="pgh-setup-shell h-dvh max-h-dvh overflow-hidden">
+      <div className="pgh-page pgh-setup-page pgh-page--fullscreen p-0 w-full max-w-full h-full flex flex-col justify-between overflow-hidden">
+        <div className="px-4 pt-2 shrink-0">
+          <PGHubSetupHeader step="Step 1 of 3" progress={.33} onBack={backToOnboarding} />
         </div>
-        <section className="pgh-setup-surface pgh-setup-surface--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 pt-4 pb-8">
-          <div className="pgh-setup-form">
+        <section className="pgh-setup-surface pgh-setup-surface--fullscreen w-full rounded-none border-none shadow-none bg-transparent px-4 py-2 flex-1 flex flex-col justify-between overflow-hidden min-h-0">
+          <div className="pgh-setup-form grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div><PGHubFormField label="PG Name" required icon={Building2} placeholder="Enter PG name" value={property.name} onChange={(event) => updateProperty({ name: event.currentTarget.value })} error={errors.name} /></div>
             <div>
               <label className="pgh-field">
@@ -73,16 +73,23 @@ export default function PGSetupProperty() {
             <div><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></div>
           </div>
 
-          <section className="pgh-photo">
-            <label>Property Logo / Photo <small>(Optional)</small></label>
-            <label className="pgh-photo__picker">
-              <img src={property.imagePreview || journeyBuilding} alt="Property preview" />
-              <span><strong>{property.imageFile ? "Image selected" : "Add a property image"}</strong><small>This helps you recognize your PG in the app.</small><i><UploadCloud size={17} />{property.imageFile ? "Change Image" : "Upload Image"}</i></span>
-              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={chooseImage} />
+          <section className="pgh-photo my-1 shrink-0">
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Property Logo / Photo <small className="text-slate-400">(Optional)</small></label>
+            <label className="pgh-photo__picker cursor-pointer flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-white">
+              <img src={property.imagePreview || journeyBuilding} alt="Property preview" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+              <span className="flex-1 min-w-0 text-xs">
+                <strong className="block text-slate-900 truncate">{property.imageFile ? "Image selected" : "Add property image"}</strong>
+                <small className="text-slate-500 block truncate">Recognize your PG in app</small>
+              </span>
+              <span className="px-2.5 py-1 text-xs font-bold text-purple-700 bg-purple-50 rounded-lg flex items-center gap-1 shrink-0">
+                <UploadCloud size={14} /> {property.imageFile ? "Change" : "Upload"}
+              </span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={chooseImage} className="hidden" />
             </label>
-            <small>JPG, PNG, or WebP up to 5 MB. Recommended ratio 4:3.</small>
           </section>
-          <PGHubButton onClick={validate} showArrow>Continue to rooms</PGHubButton>
+          <div className="shrink-0 pt-1">
+            <PGHubButton onClick={validate} showArrow>Continue to rooms</PGHubButton>
+          </div>
         </section>
       </div>
     </PGHubShell>

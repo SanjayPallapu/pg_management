@@ -102,8 +102,8 @@ export default function OTPVerification() {
   };
 
   return (
-    <PGHubShell variant="light" className="pgh-otp">
-      <div className="pgh-page">
+    <PGHubShell variant="light" className="pgh-otp h-dvh max-h-dvh overflow-hidden">
+      <div className="pgh-page h-full flex flex-col justify-between overflow-hidden">
         <header className="pgh-otp__header flex items-center justify-between">
           <button type="button" onClick={() => navigate("/auth")} aria-label="Back"><ArrowLeft size={23} /></button>
         </header>
