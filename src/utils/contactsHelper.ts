@@ -1,4 +1,10 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+export interface NativeContactPickerPlugin {
+  pickContact(): Promise<{ name: string; phoneNumber: string }>;
+}
+
+const NativeContactPicker = registerPlugin<NativeContactPickerPlugin>('NativeContactPicker');
 
 export interface SelectedContact {
   name: string;
@@ -78,11 +84,11 @@ export const requestContactPermission = async (): Promise<boolean> => {
     const mod: any = await import('@capgo/capacitor-contacts');
     const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
     const status = await Contacts.checkPermissions();
-    if (status.contacts === 'granted') {
+    if (status.readContacts === 'granted' || status.contacts === 'granted') {
       return true;
     }
     const requestStatus = await Contacts.requestPermissions();
-    return requestStatus.contacts === 'granted';
+    return requestStatus.readContacts === 'granted' || requestStatus.contacts === 'granted';
   } catch (error) {
     console.error('Error requesting contact permissions:', error);
     return false;
@@ -90,8 +96,43 @@ export const requestContactPermission = async (): Promise<boolean> => {
 };
 
 /**
+ * Fetches all contact details from the phone.
+ */
+export const getDeviceContacts = async (): Promise<SelectedContact[]> => {
+  if (!Capacitor.isNativePlatform()) {
+    return MOCK_CONTACTS;
+  }
+  try {
+    const mod: any = await import('@capgo/capacitor-contacts');
+    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
+    
+    const permissionGranted = await requestContactPermission();
+    if (!permissionGranted) {
+      throw new Error('Contact permission denied');
+    }
+    
+    const result = await Contacts.getContacts();
+    if (result && result.contacts) {
+      return result.contacts.map((c: any) => {
+        const name = c.fullName || 
+                     [c.givenName, c.familyName].filter(Boolean).join(' ') || 
+                     'Unknown';
+        const phones = (c.phoneNumbers || [])
+          .map((p: any) => p.value)
+          .filter(Boolean);
+        return { name, phones };
+      }).filter((c: any) => c.name && c.phones.length > 0);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching device contacts:', error);
+    throw error;
+  }
+};
+
+/**
  * Attempts to pick a contact from the device.
- * If running on a native platform, it uses the `@capgo/capacitor-contacts` plugin.
+ * If running on a native platform, it uses our high-reliability native system contact picker intent.
  * If running in a web browser, it tries the native Web Contact Picker API if supported.
  * Returns null if the browser picker is unsupported or failed, indicating that the UI should show the mock contact picker instead.
  */
@@ -119,32 +160,20 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null | 
   }
 
   try {
-    const mod: any = await import('@capgo/capacitor-contacts');
-    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
-    
-    // Check and request permission first
-    const permissionGranted = await requestContactPermission();
-    if (!permissionGranted) {
-      throw new Error('Contact permission denied');
-    }
-    
-    const result = await Contacts.pickContact();
-    if (result && result.contact) {
-      const contact = result.contact;
-      const name = contact.displayName || 
-                   contact.name || 
-                   [contact.givenName, contact.familyName].filter(Boolean).join(' ') || 
-                   'Unknown';
-      
-      const phones = (contact.phoneNumbers || [])
-        .map((p: any) => p.number)
-        .filter(Boolean);
-        
-      return { name, phones };
+    const result = await NativeContactPicker.pickContact();
+    if (result && (result.name || result.phoneNumber)) {
+      return {
+        name: result.name || 'Unknown',
+        phones: result.phoneNumber ? [result.phoneNumber] : []
+      };
     }
     return null;
-  } catch (error) {
-    console.error('Error picking contact natively:', error);
+  } catch (error: any) {
+    console.error('NativeContactPicker error/result:', error);
+    const errStr = String(error?.message || error || '').toLowerCase();
+    if (errStr.includes('cancel')) {
+      return undefined; // User explicitly cancelled in system UI
+    }
     throw error;
   }
 };

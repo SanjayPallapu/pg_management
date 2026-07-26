@@ -1,4 +1,5 @@
 package com.sanjay.pgmanagement;
+
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
@@ -7,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(NativeContactPickerPlugin.class);
         super.onCreate(savedInstanceState);
         // Set the status bar color to match our theme
         Window window = getWindow();
@@ -14,4 +16,3 @@ public class MainActivity extends BridgeActivity {
         window.setStatusBarColor(0xFF0E6CE7);
     }
 }
-

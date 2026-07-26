@@ -296,151 +296,229 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             
             {/* BASIC PLAN CARD */}
-            <div 
-              onClick={() => handleSelectPlan(basicPlanKey)}
-              className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
-                selectedPlanKey === basicPlanKey || selectedPlanKey === 'monthly' || selectedPlanKey === 'quarterly' || selectedPlanKey === 'yearly'
-                  ? 'border-indigo-500/50 bg-indigo-500/5 shadow-md shadow-indigo-500/5 ring-1 ring-indigo-500/20' 
-                  : 'border-border dark:border-slate-800 hover:border-indigo-500/40'
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-indigo-500/10 p-2 rounded-xl">
-                    <Send className="h-4 w-4 text-indigo-400 rotate-[-15deg]" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-foreground dark:text-white">Basic</h4>
-                    <p className="text-[10px] text-muted-foreground dark:text-slate-400">For growing PGs</p>
-                  </div>
-                </div>
-                
-                <div className="my-3">
-                  <span className="text-xl font-extrabold text-foreground dark:text-white">₹{SUBSCRIPTION_PLANS[basicPlanKey].price.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[basicPlanKey].periodLabel}</span>
-                </div>
+            {(() => {
+              const originalPrice = SUBSCRIPTION_PLANS.monthly.price;
+              const actualPrice = SUBSCRIPTION_PLANS[basicPlanKey].price;
+              const displayMonthly = billingCycle === 'yearly'
+                ? Math.round(actualPrice / 12)
+                : billingCycle === 'quarterly'
+                  ? Math.round(actualPrice / 3)
+                  : actualPrice;
+              const hasDiscount = billingCycle !== 'monthly';
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited PGs</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited tenants</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Rent reminders</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Reports & receipts</li>
-                </ul>
-              </div>
-
-              <div className="mt-5">
-                <Button 
-                  variant={selectedPlanKey === basicPlanKey ? 'default' : 'outline'}
-                  className={`w-full text-xs font-semibold h-9 rounded-xl ${
-                    selectedPlanKey === basicPlanKey 
-                      ? 'bg-indigo-500 hover:bg-indigo-600 text-white' 
-                      : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+              return (
+                <div 
+                  onClick={() => handleSelectPlan(basicPlanKey)}
+                  className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
+                    selectedPlanKey === basicPlanKey
+                      ? 'border-indigo-500/50 bg-indigo-500/5 shadow-md shadow-indigo-500/5 ring-1 ring-indigo-500/20' 
+                      : 'border-border dark:border-slate-800 hover:border-indigo-500/40'
                   }`}
                 >
-                  {activePlanKey === basicPlanKey ? 'Current Plan' : 'Choose Basic'}
-                </Button>
-              </div>
-            </div>
-
-            {/* PRO PLAN CARD (Neon Glowing Glow) */}
-            <div 
-              onClick={() => handleSelectPlan(proPlanKey)}
-              className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
-                selectedPlanKey === proPlanKey
-                  ? 'border-cyan-500 bg-cyan-500/5 dark:bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/40' 
-                  : 'border-border dark:border-slate-800 hover:border-cyan-500/40'
-              }`}
-            >
-              {/* Popular Ribbon/Badge */}
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-[9px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                <Crown className="h-2.5 w-2.5 fill-white" />
-                Most Popular
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-2 pt-1">
-                  <div className="bg-cyan-500/20 p-2 rounded-xl">
-                    <Crown className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
-                  </div>
                   <div>
-                    <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro</h4>
-                    <p className="text-[10px] text-muted-foreground dark:text-slate-400">For serious operators</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="bg-indigo-500/10 p-2 rounded-xl">
+                        <Send className="h-4 w-4 text-indigo-400 rotate-[-15deg]" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Basic</h4>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For growing PGs</p>
+                      </div>
+                    </div>
+                    
+                    <div className="my-3">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-xl font-extrabold text-foreground dark:text-white">₹{displayMonthly.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground dark:text-slate-400">/mo</span>
+                        
+                        {hasDiscount && (
+                          <span className="text-xs text-muted-foreground/60 line-through">
+                            ₹{originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {hasDiscount && (
+                        <p className="text-[9px] text-emerald-500 font-extrabold mt-0.5">
+                          Billed as ₹{actualPrice.toLocaleString()} {SUBSCRIPTION_PLANS[basicPlanKey].periodLabel}
+                        </p>
+                      )}
+                    </div>
+
+                    <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited PGs</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited tenants</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Rent reminders</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Reports & receipts</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-5">
+                    <Button 
+                      variant={selectedPlanKey === basicPlanKey ? 'default' : 'outline'}
+                      className={`w-full text-xs font-semibold h-9 rounded-xl ${
+                        selectedPlanKey === basicPlanKey 
+                          ? 'bg-indigo-500 hover:bg-indigo-600 text-white' 
+                          : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+                      }`}
+                    >
+                      {activePlanKey === basicPlanKey ? 'Current Plan' : 'Choose Basic'}
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="my-3">
-                  <span className="text-xl font-extrabold text-foreground dark:text-white">₹{SUBSCRIPTION_PLANS[proPlanKey].price.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proPlanKey].periodLabel}</span>
-                </div>
+              );
+            })()}
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Everything in Basic</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Advanced statistics</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Premium WhatsApp templates</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Priority support</li>
-                </ul>
-              </div>
+            {/* PLUS PLAN CARD (Glowing Recommended) */}
+            {(() => {
+              const originalPrice = SUBSCRIPTION_PLANS.pro.price;
+              const actualPrice = SUBSCRIPTION_PLANS[proPlanKey].price;
+              const displayMonthly = billingCycle === 'yearly'
+                ? Math.round(actualPrice / 12)
+                : billingCycle === 'quarterly'
+                  ? Math.round(actualPrice / 3)
+                  : actualPrice;
+              const hasDiscount = billingCycle !== 'monthly';
 
-              <div className="mt-5">
-                <Button 
-                  variant={selectedPlanKey === proPlanKey ? 'default' : 'outline'}
-                  className={`w-full text-xs font-semibold h-9 rounded-xl ${
-                    selectedPlanKey === proPlanKey 
-                      ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
-                      : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+              return (
+                <div 
+                  onClick={() => handleSelectPlan(proPlanKey)}
+                  className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
+                    selectedPlanKey === proPlanKey
+                      ? 'border-cyan-500 bg-cyan-500/5 dark:bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/40' 
+                      : 'border-border dark:border-slate-800 hover:border-cyan-500/40'
                   }`}
                 >
-                  {activePlanKey === proPlanKey ? 'Current Plan' : 'Choose Pro'}
-                </Button>
-              </div>
-            </div>
+                  {/* Popular Ribbon/Badge */}
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-[9px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                    <Crown className="h-2.5 w-2.5 fill-white" />
+                    Most Popular
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2 pt-1">
+                      <div className="bg-cyan-500/20 p-2 rounded-xl">
+                        <Crown className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro</h4>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For serious operators</p>
+                      </div>
+                    </div>
+                    
+                    <div className="my-3">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-xl font-extrabold text-foreground dark:text-white">₹{displayMonthly.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground dark:text-slate-400">/mo</span>
+                        
+                        {hasDiscount && (
+                          <span className="text-xs text-muted-foreground/60 line-through">
+                            ₹{originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {hasDiscount && (
+                        <p className="text-[9px] text-emerald-500 font-extrabold mt-0.5">
+                          Billed as ₹{actualPrice.toLocaleString()} {SUBSCRIPTION_PLANS[proPlanKey].periodLabel}
+                        </p>
+                      )}
+                    </div>
+
+                    <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Everything in Basic</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Advanced statistics</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Premium WhatsApp templates</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Priority support</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-5">
+                    <Button 
+                      variant={selectedPlanKey === proPlanKey ? 'default' : 'outline'}
+                      className={`w-full text-xs font-semibold h-9 rounded-xl ${
+                        selectedPlanKey === proPlanKey 
+                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
+                          : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+                      }`}
+                    >
+                      {activePlanKey === proPlanKey ? 'Current Plan' : 'Choose Pro'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* PRO MAX PLAN CARD */}
-            <div 
-              onClick={() => handleSelectPlan(proMaxPlanKey)}
-              className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
-                selectedPlanKey === proMaxPlanKey
-                  ? 'border-orange-500/50 bg-orange-500/5 shadow-md shadow-orange-500/5 ring-1 ring-orange-500/20' 
-                  : 'border-border dark:border-slate-800 hover:border-orange-500/40'
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-orange-500/10 p-2 rounded-xl">
-                    <Zap className="h-4 w-4 text-orange-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro Max</h4>
-                    <p className="text-[10px] text-muted-foreground dark:text-slate-400">For large operations</p>
-                  </div>
-                </div>
-                
-                <div className="my-3">
-                  <span className="text-xl font-extrabold text-foreground dark:text-white">₹{SUBSCRIPTION_PLANS[proMaxPlanKey].price.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">{SUBSCRIPTION_PLANS[proMaxPlanKey].periodLabel}</span>
-                </div>
+            {(() => {
+              const originalPrice = SUBSCRIPTION_PLANS.promax.price;
+              const actualPrice = SUBSCRIPTION_PLANS[proMaxPlanKey].price;
+              const displayMonthly = billingCycle === 'yearly'
+                ? Math.round(actualPrice / 12)
+                : billingCycle === 'quarterly'
+                  ? Math.round(actualPrice / 3)
+                  : actualPrice;
+              const hasDiscount = billingCycle !== 'monthly';
 
-                <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Everything in Pro</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Dedicated manager</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Custom API access</li>
-                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Priority infra</li>
-                </ul>
-              </div>
-
-              <div className="mt-5">
-                <Button 
-                  variant={selectedPlanKey === proMaxPlanKey ? 'default' : 'outline'}
-                  className={`w-full text-xs font-semibold h-9 rounded-xl ${
-                    selectedPlanKey === proMaxPlanKey 
-                      ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                      : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+              return (
+                <div 
+                  onClick={() => handleSelectPlan(proMaxPlanKey)}
+                  className={`relative p-5 rounded-2xl border transition-all cursor-pointer bg-muted/30 dark:bg-slate-900/30 flex flex-col justify-between ${
+                    selectedPlanKey === proMaxPlanKey
+                      ? 'border-orange-500/50 bg-orange-500/5 shadow-md shadow-orange-500/5 ring-1 ring-orange-500/20' 
+                      : 'border-border dark:border-slate-800 hover:border-orange-500/40'
                   }`}
                 >
-                  {activePlanKey === proMaxPlanKey ? 'Current Plan' : 'Choose Pro Max'}
-                </Button>
-              </div>
-            </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="bg-orange-500/10 p-2 rounded-xl">
+                        <Zap className="h-4 w-4 text-orange-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro Max</h4>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For large operations</p>
+                      </div>
+                    </div>
+                    
+                    <div className="my-3">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-xl font-extrabold text-foreground dark:text-white">₹{displayMonthly.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground dark:text-slate-400">/mo</span>
+                        
+                        {hasDiscount && (
+                          <span className="text-xs text-muted-foreground/60 line-through">
+                            ₹{originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {hasDiscount && (
+                        <p className="text-[9px] text-emerald-500 font-extrabold mt-0.5">
+                          Billed as ₹{actualPrice.toLocaleString()} {SUBSCRIPTION_PLANS[proMaxPlanKey].periodLabel}
+                        </p>
+                      )}
+                    </div>
+
+                    <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Everything in Pro</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Dedicated manager</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Custom API access</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Priority infra</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-5">
+                    <Button 
+                      variant={selectedPlanKey === proMaxPlanKey ? 'default' : 'outline'}
+                      className={`w-full text-xs font-semibold h-9 rounded-xl ${
+                        selectedPlanKey === proMaxPlanKey 
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                          : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
+                      }`}
+                    >
+                      {activePlanKey === proMaxPlanKey ? 'Current Plan' : 'Choose Pro Max'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
 

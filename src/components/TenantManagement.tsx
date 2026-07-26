@@ -50,6 +50,8 @@ import {
   MOCK_CONTACTS,
   getSimulatedContacts,
   saveSimulatedContact,
+  getDeviceContacts,
+  type SelectedContact,
 } from "@/utils/contactsHelper";
 import {
   DropdownMenu,
@@ -123,6 +125,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   // Handle OS back gesture to close dialog
   useBackGesture(isOpen, onClose);
+  
+  const [customContactPickerOpen, setCustomContactPickerOpen] = useState(false);
+  const [deviceContacts, setDeviceContacts] = useState<SelectedContact[]>([]);
+  const [contactSearchQuery, setContactSearchQuery] = useState("");
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
   const [paymentDateTenant, setPaymentDateTenant] = useState<string | null>(null);
   const [partialPaymentTenant, setPartialPaymentTenant] = useState<string | null>(null);
   const [partialAmount, setPartialAmount] = useState<number>(0);
@@ -326,6 +334,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
     }
   };
 
+  const filteredContacts = deviceContacts.filter((c) => {
+    const q = contactSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return c.name.toLowerCase().includes(q) || c.phones.some(p => p.toLowerCase().includes(q));
+  });
+
   const handleChooseFromContacts = async () => {
     try {
       const contact = await pickContactFromDevice();
@@ -340,11 +354,26 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       if (errStr.includes('cancel') || errStr.includes('abort') || errStr.includes('dismiss')) {
         return; // User cancelled native picker, do nothing
       }
-      toast({
-        title: "Failed to access contacts",
-        description: err?.message || "Please check your permissions and try again.",
-        variant: "destructive",
-      });
+      
+      console.log("Native pickContact failed, falling back to full list search modal:", err);
+      
+      // Open custom dialog and load device contacts
+      setLoadingContacts(true);
+      setCustomContactPickerOpen(true);
+      try {
+        const list = await getDeviceContacts();
+        setDeviceContacts(list);
+      } catch (listErr: any) {
+        console.error("Failed to load device contacts list:", listErr);
+        toast({
+          title: "Failed to access contacts",
+          description: listErr?.message || "Please check your contacts permissions in device Settings.",
+          variant: "destructive",
+        });
+        setCustomContactPickerOpen(false);
+      } finally {
+        setLoadingContacts(false);
+      }
     }
   };
 
@@ -1776,6 +1805,67 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         tenant={shiftTenant}
         currentRoom={room}
       />
+
+      {/* Custom Contact List Search & Selector Modal */}
+      <Dialog open={customContactPickerOpen} onOpenChange={setCustomContactPickerOpen}>
+        <DialogContent className="max-w-md w-[90vw] p-0 overflow-hidden rounded-2xl flex flex-col h-[70vh]">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Contact className="h-5 w-5 text-primary" />
+              Select Contact
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Search and select a tenant contact from your phone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Search input bar */}
+          <div className="p-3 border-b bg-muted/35">
+            <Input
+              type="text"
+              placeholder="Search by name or number..."
+              value={contactSearchQuery}
+              onChange={(e) => setContactSearchQuery(e.target.value)}
+              className="bg-background"
+            />
+          </div>
+
+          {/* Contacts List */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {loadingContacts ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-xs">Loading device contacts...</span>
+              </div>
+            ) : filteredContacts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-xs">
+                No contacts found matching "{contactSearchQuery}"
+              </div>
+            ) : (
+              filteredContacts.map((c, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    handleContactSelected(c.name, c.phones);
+                    setCustomContactPickerOpen(false);
+                    setContactSearchQuery("");
+                  }}
+                  className="w-full text-left p-3 rounded-xl hover:bg-muted/80 transition-colors flex items-center justify-between border border-transparent hover:border-border"
+                >
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="font-semibold text-sm truncate text-foreground">{c.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{c.phones.join(', ')}</p>
+                  </div>
+                  <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full shrink-0">
+                    Select
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Mark Left Dialog with Settlement */}
       <MarkLeftDialog
