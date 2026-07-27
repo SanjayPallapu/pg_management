@@ -1442,12 +1442,11 @@
   white-space: nowrap;
 }
 .pgh-onboarding__brand-text {
-  background: linear-gradient(105deg, #ff6fd8 0%, #9b7cff 47%, #45d9ff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 11px rgba(163, 104, 255, .48));
+  background: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  filter: drop-shadow(0 2px 12px rgba(255, 255, 255, .2));
+  animation: none;
 }
 @keyframes pgh-brand-shimmer {
   0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 111, 216, .36)); }
