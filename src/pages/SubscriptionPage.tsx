@@ -10,9 +10,9 @@ import {
   ShieldCheck, 
   Globe, 
   Loader2, 
-  Building,
-  Sparkles,
-  Award
+  Award,
+  CreditCard,
+  Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,6 @@ export default function SubscriptionPage() {
   useBackGesture(true, () => navigate(-1));
 
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [region, setRegion] = useState<string>("IN");
 
   const defaultPlanKey = useMemo<SubscriptionPlanKey>(() => {
     return billingCycle === "monthly" ? "pro" : "pro_yearly";
@@ -45,7 +44,9 @@ export default function SubscriptionPage() {
   }, [billingCycle]);
 
   const currentPlan = SUBSCRIPTION_PLANS[activePlanKey];
-  const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, region);
+  // Checkout plans are currently settled in INR. Keep one universal checkout
+  // rather than exposing country switches that can disagree with the provider.
+  const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, "IN");
   const isTrialActive = subscription?.billingCycle === "trial" && subscription?.status === "active";
 
   const daysLeft = useMemo(() => {
@@ -132,7 +133,7 @@ export default function SubscriptionPage() {
           </Button>
           <div>
             <h1 className="text-lg font-extrabold text-foreground leading-tight flex items-center gap-2">
-              Subscription & Plans
+              Plans & Billing
               <Award className="h-4 w-4 text-amber-500" />
             </h1>
             <p className="text-xs text-muted-foreground">Select a plan to power your PG management</p>
@@ -169,32 +170,11 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {/* Currency & Billing Cycle Toggle Bar */}
+        {/* Universal checkout & billing cycle */}
         <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-card p-3 rounded-2xl border border-border shadow-xs">
-          {/* Currency Selection */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1 font-bold text-muted-foreground">
-              <Globe className="h-4 w-4 text-primary" /> Currency:
-            </span>
-            <div className="flex gap-1 bg-muted p-1 rounded-xl">
-              {[
-                { code: "IN", label: "INR (₹)" },
-                { code: "US", label: "USD ($)" },
-              ].map((c) => (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => setRegion(c.code)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    region === c.code 
-                      ? "bg-primary text-primary-foreground shadow-xs" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><Globe className="h-4 w-4" /></span>
+            <span><strong className="block text-foreground">One secure checkout worldwide</strong><small className="text-muted-foreground">Billed in {currentLocalized.currency}; your bank handles any currency conversion.</small></span>
           </div>
 
           {/* Billing Cycle Switcher Toggle */}
@@ -233,8 +213,8 @@ export default function SubscriptionPage() {
             const planKey = billingCycle === "monthly" ? c.monthlyKey : c.yearlyKey;
             const isSelected = activePlanKey === planKey;
 
-            const originalPriceLocal = getLocalizedSubscriptionPrice(c.monthlyKey, region);
-            const actualPriceLocal = getLocalizedSubscriptionPrice(planKey, region);
+            const originalPriceLocal = getLocalizedSubscriptionPrice(c.monthlyKey, "IN");
+            const actualPriceLocal = getLocalizedSubscriptionPrice(planKey, "IN");
 
             const displayMonthlyPrice = billingCycle === "yearly"
               ? Math.round(actualPriceLocal.price / 12)
@@ -313,22 +293,11 @@ export default function SubscriptionPage() {
           })}
         </div>
 
-        {/* Feature Matrix / Guarantee & Auto-Pay Box */}
-        <div className="p-5 rounded-3xl bg-muted/40 border border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground mt-4">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-6 w-6 text-emerald-500 shrink-0" />
-            <div>
-              <p className="font-extrabold text-foreground text-sm flex items-center gap-2">
-                Razorpay 256-Bit SSL & UPI AutoPay Mandate
-                <Badge className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[10px] px-2 font-extrabold">
-                  Auto-Pay Supported
-                </Badge>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Seamless auto-renewal via UPI AutoPay, Google Pay, PhonePe, Paytm or Card. Cancel anytime with 1-click in App.
-              </p>
-            </div>
-          </div>
+        {/* Provider-neutral secure checkout */}
+        <div className="grid gap-3 rounded-3xl border border-border/60 bg-muted/35 p-4 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><CreditCard className="h-5 w-5 shrink-0 text-primary" /><div><strong className="block text-xs">Cards</strong><span className="text-[11px] text-muted-foreground">Major debit and credit cards</span></div></div>
+          <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><Landmark className="h-5 w-5 shrink-0 text-primary" /><div><strong className="block text-xs">Bank & local methods</strong><span className="text-[11px] text-muted-foreground">Options appear by availability</span></div></div>
+          <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500" /><div><strong className="block text-xs">Secure checkout</strong><span className="text-[11px] text-muted-foreground">Encrypted payment authorization</span></div></div>
         </div>
       </main>
 
@@ -344,11 +313,11 @@ export default function SubscriptionPage() {
                 <span className="font-extrabold text-sm text-foreground">{currentPlan.name} Plan</span>
                 <span className="text-xs text-muted-foreground font-semibold">({billingCycle === "yearly" ? "Yearly" : "Monthly"})</span>
                 <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 border-emerald-400">
-                  UPI AutoPay
+                  Secure checkout
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground font-medium">
-                {currentLocalized.symbol}{currentLocalized.price.toLocaleString()} {billingCycle === "yearly" ? "/year" : "/month"} · Auto-Renews Monthly
+                {currentLocalized.symbol}{currentLocalized.price.toLocaleString()} {billingCycle === "yearly" ? "/year" : "/month"} · Renews automatically
               </p>
             </div>
           </div>
@@ -359,9 +328,9 @@ export default function SubscriptionPage() {
             disabled={razorpayLoading}
           >
             {razorpayLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Setting Up Auto-Pay...</>
+              <><Loader2 className="h-4 w-4 animate-spin" /> Opening secure checkout...</>
             ) : (
-              <><Zap className="h-4 w-4 fill-white" /> Enable Auto-Pay ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()})</>
+              <><CreditCard className="h-4 w-4" /> Continue to checkout ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()})</>
             )}
           </Button>
         </div>

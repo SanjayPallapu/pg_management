@@ -17,49 +17,20 @@ import { usePG } from "@/contexts/PGContext";
 const RoomDirectory = lazy(() => import("@/components/RoomDirectory").then(m => ({ default: m.RoomDirectory })));
 const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then(m => ({ default: m.MonthlyRentSheet })));
 const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
-const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").then(m => ({ default: m.AuditHistorySheet })));
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 const PaymentReconciliation = lazy(() => import("@/components/PaymentReconciliation").then(m => ({ default: m.PaymentReconciliation })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher, OnboardingFlow } from "@/components/pg";
 import { Room } from "@/types";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { useTheme } from "@/components/ThemeProvider";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
   Home,
-  LogOut,
-  History,
-  CreditCard,
-  Crown,
   Loader2,
   Building,
-  Bell,
   Settings,
   Wallet,
   Menu,
-  MoreVertical,
-  Gift,
-  Sparkles,
-  User,
-  Moon,
-  Sun,
-  FileText,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
 import { useMonthContext } from "@/contexts/MonthContext";
@@ -71,12 +42,9 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
 import { RentProvider } from '@/contexts/RentContext';
-import { SubscriptionBadge, UpgradeDialog } from "@/components/subscription";
-import { ReferralDialog } from "@/components/subscription/ReferralDialog";
+import { SubscriptionBadge } from "@/components/subscription";
 
 const Index = () => {
-  const { theme, setTheme } = useTheme();
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { rooms, isLoading, error: roomsError } = useRooms();
   const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG, canCreatePG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
@@ -93,15 +61,11 @@ const Index = () => {
     // Close all open dialogs/sheets when switching tabs
     setIsDialogOpen(false);
     setSelectedRoom(null);
-    setHistorySheetOpen(false);
     // Reset scroll position so the new tab starts at the top
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
   };
-  const [historySheetOpen, setHistorySheetOpen] = useState(false);
-  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -137,7 +101,6 @@ const Index = () => {
     const handleTabClick = () => {
       setIsDialogOpen(false);
       setSelectedRoom(null);
-      setHistorySheetOpen(false);
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTop = 0;
       }
@@ -195,7 +158,7 @@ const Index = () => {
       const pending = data.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
       let upi = 0, cash = 0;
       data.forEach(g => {
-        ((g.payment_entries as any[]) || []).forEach(entry => {
+        ((g.payment_entries as Array<{ mode?: string; amount?: number }>) || []).forEach(entry => {
           if (entry.mode === 'upi') upi += entry.amount || 0;
           else if (entry.mode === 'cash') cash += entry.amount || 0;
         });
@@ -206,15 +169,9 @@ const Index = () => {
     staleTime: 3 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
-  const { signOut, isAdmin, isAuthenticated, isLoading: authLoading, user, isNewSignup } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, isNewSignup } = useAuth();
   const navigate = useNavigate();
 
-
-  const handleSignOut = async () => {
-    await signOut();
-    // Full page reload to clear all cached state
-    window.location.replace("/onboarding");
-  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data, error }) => {
@@ -317,95 +274,19 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right: Subscription Badge & Top Right 3-Dots More Options Menu */}
+          {/* Right: subscription status and full-page app menu */}
           <div className="flex items-center gap-2">
             <SubscriptionBadge />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50" title="More Options">
-                  <MoreVertical className="h-5 w-5 text-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60 mt-1 p-1.5 bg-background border border-border shadow-xl rounded-2xl">
-                <DropdownMenuItem 
-                  onClick={() => setProfileDialogOpen(true)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
-                >
-                  <User className="h-4 w-4 text-primary" />
-                  <span>Profile & Account</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => setReferralDialogOpen(true)}
-                  className="flex items-center justify-between px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer text-amber-600 dark:text-amber-400 font-bold bg-amber-500/5 my-0.5"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Gift className="h-4 w-4 text-amber-500" />
-                    <span>Refer & Earn (Free Month)</span>
-                  </div>
-                  <Badge className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2">
-                    30% OFF
-                  </Badge>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => navigate("/subscription")}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer text-foreground font-semibold"
-                >
-                  <Crown className="h-4 w-4 text-amber-500" />
-                  <span>Subscription Plans</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('settings')}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
-                >
-                  <Building className="h-4 w-4 text-primary" />
-                  <span>Property & Rooms</span>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => setHistorySheetOpen(true)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
-                >
-                  <History className="h-4 w-4 text-muted-foreground" />
-                  <span>Activity History</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <Sun className="h-4 w-4 text-amber-500" />
-                      <span>Light Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="h-4 w-4 text-indigo-500" />
-                      <span>Dark Mode</span>
-                    </>
-                  )}
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab('settings')}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
-                >
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:text-destructive rounded-xl hover:bg-destructive/10 cursor-pointer font-semibold mt-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50"
+              title="Open app menu"
+              aria-label="Open app menu"
+              onClick={() => navigate("/menu")}
+            >
+              <Menu className="h-5 w-5 text-foreground" />
+            </Button>
           </div>
         </div>
       </div>
@@ -499,59 +380,6 @@ const Index = () => {
           </Suspense>
         )}
 
-        {/* Activity History Sheet */}
-        <Suspense fallback={null}>
-          <AuditHistorySheet open={historySheetOpen} onOpenChange={setHistorySheetOpen} />
-        </Suspense>
-
-        {/* Profile Dialog */}
-        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-          <DialogContent className="max-w-sm rounded-2xl p-6 bg-background border border-border">
-            <DialogHeader className="space-y-3">
-              <div className="flex justify-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <User className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-              <DialogTitle className="text-center text-lg font-bold">User Profile</DialogTitle>
-              <DialogDescription className="text-center text-xs text-muted-foreground">
-                Your account details and system role
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="mt-4 space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
-                <span className="text-muted-foreground">Email</span>
-                <span className="font-semibold">{user?.email || "guest@pgmanager.com"}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
-                <span className="text-muted-foreground">Role</span>
-                <span className="font-semibold uppercase tracking-wider text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  {isAdmin ? "Admin (Owner)" : "Staff (Collector)"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
-                <span className="text-muted-foreground">Active PG</span>
-                <span className="font-semibold">{currentPG?.name || "None"}</span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <Button 
-                onClick={() => setProfileDialogOpen(false)} 
-                className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90"
-              >
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-
-
-
-        <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
-        <ReferralDialog open={referralDialogOpen} onOpenChange={setReferralDialogOpen} />
       </div>
       </div>
 
