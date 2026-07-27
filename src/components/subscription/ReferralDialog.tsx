@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Copy, Check, Share2, Sparkles, ShieldCheck, Users, Zap, Tag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getReferralStats, getWhatsAppShareUrl, validateAndApplyReferralCode } from "@/utils/referralHelper";
+import { getReferralStats, shareReferralInvite, validateAndApplyReferralCode } from "@/utils/referralHelper";
 import { toast } from "sonner";
 import { useBackGesture } from "@/hooks/useBackGesture";
 
@@ -30,9 +30,13 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleWhatsAppShare = () => {
-    const url = getWhatsAppShareUrl(stats.referralCode);
-    window.open(url, "_blank");
+  const handleShare = async () => {
+    try {
+      const result = await shareReferralInvite(stats.referralCode);
+      if (result === "copied") toast.success("Invite copied. Share it anywhere.");
+    } catch {
+      toast.error("Could not open sharing. Please copy your code instead.");
+    }
   };
 
   const handleApplyCode = () => {
@@ -108,11 +112,11 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
           </div>
 
           <Button
-            onClick={handleWhatsAppShare}
+            onClick={handleShare}
             className="w-full mt-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-5 shadow-md flex items-center justify-center gap-2 text-xs"
           >
             <Share2 className="h-4 w-4" />
-            Share 30% OFF Code on WhatsApp
+            Share Invite
           </Button>
         </div>
 

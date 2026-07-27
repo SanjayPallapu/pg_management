@@ -21,6 +21,7 @@ import LeftTenants from "./pages/LeftTenants";
 import Legal from "./pages/Legal";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import AppMenuPage from "./pages/AppMenuPage";
+import ReferralPage from "./pages/ReferralPage";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
@@ -38,6 +39,7 @@ import { PGSetupDraftProvider } from "@/features/pg-hub/PGSetupDraftContext";
 import { RentProvider } from "./contexts/RentContext";
 import { useMonthContext } from "./contexts/MonthContext";
 import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
+import { captureReferralCodeFromUrl } from "@/utils/referralHelper";
 
 // Protected route component that wraps children with PGProvider and RentProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -83,6 +85,10 @@ const queryClient = new QueryClient({
 
 // Inner app component that handles startup behaviours
 const AppContent = () => {
+  useEffect(() => {
+    captureReferralCodeFromUrl();
+  }, []);
+
   useEffect(() => {
     // Configure native status bar behaviour at startup
     const initStatusBar = async () => {
@@ -182,6 +188,11 @@ const AppContent = () => {
           <Route path="/menu" element={
             <ProtectedRoute>
               <AppMenuPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/referrals" element={
+            <ProtectedRoute>
+              <ReferralPage />
             </ProtectedRoute>
           } />
           <Route path="/city" element={

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   CreditCard,
   FileText,
+  Gift,
   Home,
   LogOut,
   Moon,
@@ -102,6 +103,7 @@ export default function AppMenuPage() {
         <section className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
           <h2 className="px-4 pb-2 pt-4 text-[11px] font-extrabold uppercase tracking-[.14em] text-muted-foreground">Account</h2>
           <div className="divide-y divide-border/70">
+            <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & earn" description="Give 30% off and earn free months" onClick={() => navigate("/referrals")} />
             <MenuItem icon={<CreditCard className="h-5 w-5" />} title="Plans & billing" description="Subscription, cards, and secure checkout" onClick={() => navigate("/subscription")} />
             <MenuItem icon={<Settings className="h-5 w-5" />} title="Settings & preferences" description="Notifications, security, support, and more" onClick={() => goToTab("settings")} />
             <MenuItem icon={<FileText className="h-5 w-5" />} title="Privacy & legal" description="Terms, privacy, and refund policies" onClick={() => navigate("/legal")} />

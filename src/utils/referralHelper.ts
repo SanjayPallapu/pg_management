@@ -18,6 +18,31 @@ export interface ReferralStats {
   discountPercentage: number; // 30% for referee
 }
 
+export interface ReferralShareContent {
+  title: string;
+  text: string;
+  url: string;
+}
+
+export type ReferralShareResult = "shared" | "copied" | "cancelled";
+
+const REFERRAL_CODE_PATTERN = /^PGHUB-[A-Z0-9]{5,24}$/;
+
+const getPublicAppUrl = () => {
+  if (import.meta.env.VITE_PUBLIC_APP_URL) return import.meta.env.VITE_PUBLIC_APP_URL;
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol.startsWith("http") &&
+    !["localhost", "127.0.0.1"].includes(window.location.hostname)
+  ) {
+    return window.location.origin;
+  }
+  return "https://pgmanager.app";
+};
+
+export const isReferralCodeFormatValid = (code: string) =>
+  REFERRAL_CODE_PATTERN.test(code.trim().toUpperCase());
+
 export const getOrCreateReferralCode = (userId?: string, userEmail?: string): string => {
   if (typeof window === "undefined") return "PGHUB-WELCOME";
 
@@ -49,9 +74,9 @@ export const getReferralStats = (userId?: string, userEmail?: string): ReferralS
 
   const rawStats = localStorage.getItem(`pg_referral_stats_${code}`);
   let statsData = {
-    totalInvited: 2,
-    activePaidReferrals: 1,
-    freeMonthsEarned: 1,
+    totalInvited: 0,
+    activePaidReferrals: 0,
+    freeMonthsEarned: 0,
   };
 
   if (rawStats) {
@@ -90,6 +115,10 @@ export const validateAndApplyReferralCode = (
     return { success: false, message: "You cannot refer your own account." };
   }
 
+  if (!isReferralCodeFormatValid(cleanInput)) {
+    return { success: false, message: "Enter a valid PG HUB referral code." };
+  }
+
   // Save valid applied code
   if (typeof window !== "undefined") {
     localStorage.setItem("applied_referral_code", cleanInput);
@@ -102,7 +131,66 @@ export const validateAndApplyReferralCode = (
   };
 };
 
-export const getWhatsAppShareUrl = (referralCode: string): string => {
-  const shareText = `Hey! I'm using PG HUB to manage my PG rooms, tenants & auto rent collection on WhatsApp. Use my referral code *${referralCode}* to get 30% OFF your first month subscription!\n\nSign up here: https://pgmanager.app?ref=${referralCode}`;
-  return `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+export const captureReferralCodeFromUrl = () => {
+  if (typeof window === "undefined") return null;
+  const code = new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase();
+  if (!code || !isReferralCodeFormatValid(code)) return null;
+  localStorage.setItem("applied_referral_code", code);
+  return code;
+};
+
+export const getReferralShareContent = (referralCode: string): ReferralShareContent => {
+  const code = referralCode.trim().toUpperCase();
+  const url = `${getPublicAppUrl().replace(/\/$/, "")}/onboarding?ref=${encodeURIComponent(code)}`;
+  return {
+    title: "Join me on PG HUB",
+    text: `Manage your PG smarter with PG HUB. Use my referral code ${code} to get 30% off your first month.`,
+    url,
+  };
+};
+
+const copyInvite = async ({ text, url }: ReferralShareContent) => {
+  const invitation = `${text}\n${url}`;
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(invitation);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = invitation;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+};
+
+export const shareReferralInvite = async (referralCode: string): Promise<ReferralShareResult> => {
+  const content = getReferralShareContent(referralCode);
+
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (Capacitor.isNativePlatform()) {
+      const { Share } = await import("@capacitor/share");
+      await Share.share({
+        title: content.title,
+        text: content.text,
+        url: content.url,
+        dialogTitle: "Share your PG HUB invite",
+      });
+      return "shared";
+    }
+
+    if (navigator.share) {
+      await navigator.share(content);
+      return "shared";
+    }
+
+    await copyInvite(content);
+    return "copied";
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return "cancelled";
+    throw error;
+  }
 };
