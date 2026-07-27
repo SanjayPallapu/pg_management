@@ -118,17 +118,84 @@ jobs:
       - name: Write Workflow Summary
         if: ${{ always() }}
         run: |
+          version_code=$((GITHUB_RUN_NUMBER + 200))
+
           {
             echo "## PG HUB Android AAB"
             echo ""
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Branch: \`${GITHUB_REF_NAME}\`"
             echo "- Run number: \`${GITHUB_RUN_NUMBER}\`"
+            echo "- Version code: \`${version_code}\`"
             if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.release_action }}" = "upload-alpha-draft" ]; then
               echo "- Requested action: upload an alpha-track draft"
+            elif [ "${{ github.event_name }}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/early-access" ]; then
+              echo "- Requested action: automatically upload to the alpha track"
             else
               echo "- Requested action: build only"
             fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  upload-alpha-completed:
+    name: Deliver to Google Play Alpha Testers
+    if: >-
+      ${{
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/early-access' &&
+        github.repository == 'SanjayPallapu/pg_management' &&
+        github.event.repository.fork == false
+      }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: google-play-alpha
+    concurrency:
+      group: google-play-alpha-upload
+      cancel-in-progress: false
+
+    steps:
+      - name: Download Signed AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
+          path: release
+
+      - name: Validate Google Play Secret
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing GitHub secret: GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"
+            exit 1
+          fi
+
+      - name: Upload Completed Release to Google Play Alpha
+        id: google_play_upload
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.sanjay.pgmanagement
+          releaseFiles: release/app-release.aab
+          tracks: alpha
+          status: completed
+          releaseName: PG HUB ${{ github.sha }}
+
+      - name: Write Upload Summary
+        if: ${{ always() }}
+        run: |
+          version_code=$((GITHUB_RUN_NUMBER + 200))
+
+          {
+            echo "## Google Play automatic delivery"
+            echo ""
+            echo "- Branch: \`${GITHUB_REF_NAME}\`"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Run number: \`${GITHUB_RUN_NUMBER}\`"
+            echo "- Version code: \`${version_code}\`"
+            echo "- Track: \`alpha\`"
+            echo "- Release status: \`completed\`"
+            echo "- Upload result: \`${{ steps.google_play_upload.outcome }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
   upload-alpha-draft:
@@ -139,6 +206,9 @@ jobs:
     timeout-minutes: 15
     environment:
       name: google-play-alpha
+    concurrency:
+      group: google-play-alpha-upload
+      cancel-in-progress: false
 
     steps:
       - name: Download Signed AAB
@@ -157,6 +227,7 @@ jobs:
           fi
 
       - name: Upload Draft to Google Play Alpha
+        id: google_play_upload
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -167,13 +238,20 @@ jobs:
           releaseName: PG HUB ${{ github.sha }}
 
       - name: Write Upload Summary
+        if: ${{ always() }}
         run: |
+          version_code=$((GITHUB_RUN_NUMBER + 200))
+
           {
-            echo "## Google Play upload"
+            echo "## Google Play manual draft upload"
             echo ""
-            echo "- Track: \`alpha\`"
-            echo "- Status: \`draft\`"
+            echo "- Branch: \`${GITHUB_REF_NAME}\`"
             echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Run number: \`${GITHUB_RUN_NUMBER}\`"
+            echo "- Version code: \`${version_code}\`"
+            echo "- Track: \`alpha\`"
+            echo "- Release status: \`draft\`"
+            echo "- Upload result: \`${{ steps.google_play_upload.outcome }}\`"
             echo ""
             echo "The draft must still be reviewed and released in Google Play Console."
           } >> "$GITHUB_STEP_SUMMARY"
