@@ -51,10 +51,15 @@ import {
   Settings,
   Wallet,
   Menu,
+  MoreVertical,
+  Gift,
+  Sparkles,
   User,
   Moon,
   Sun,
+  FileText,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
 import { useMonthContext } from "@/contexts/MonthContext";
@@ -67,6 +72,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
 import { RentProvider } from '@/contexts/RentContext';
 import { SubscriptionBadge, UpgradeDialog } from "@/components/subscription";
+import { ReferralDialog } from "@/components/subscription/ReferralDialog";
 
 const Index = () => {
   const { theme, setTheme } = useTheme();
@@ -95,6 +101,7 @@ const Index = () => {
   };
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
 
   // Swiggy-style header: hide on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -310,60 +317,81 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right: Subscription Badge & Hamburger menu button */}
+          {/* Right: Subscription Badge & Top Right 3-Dots More Options Menu */}
           <div className="flex items-center gap-2">
             <SubscriptionBadge />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50">
-                  <Menu className="h-5 w-5 text-foreground" />
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50" title="More Options">
+                  <MoreVertical className="h-5 w-5 text-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-1 p-1 bg-background border border-border shadow-lg rounded-xl">
+              <DropdownMenuContent align="end" className="w-60 mt-1 p-1.5 bg-background border border-border shadow-xl rounded-2xl">
                 <DropdownMenuItem 
                   onClick={() => setProfileDialogOpen(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
                 >
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>Profile</span>
+                  <User className="h-4 w-4 text-primary" />
+                  <span>Profile & Account</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => setReferralDialogOpen(true)}
+                  className="flex items-center justify-between px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer text-amber-600 dark:text-amber-400 font-bold bg-amber-500/5 my-0.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Gift className="h-4 w-4 text-amber-500" />
+                    <span>Refer & Earn (Free Month)</span>
+                  </div>
+                  <Badge className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2">
+                    30% OFF
+                  </Badge>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem 
                   onClick={() => navigate("/subscription")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer text-amber-600 dark:text-amber-400 font-semibold"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer text-foreground font-semibold"
                 >
                   <Crown className="h-4 w-4 text-amber-500" />
                   <span>Subscription Plans</span>
                 </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <Sun className="h-4 w-4 text-muted-foreground" />
-                      <span>Light Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="h-4 w-4 text-muted-foreground" />
-                      <span>Dark Mode</span>
-                    </>
-                  )}
-                </DropdownMenuItem>
 
                 <DropdownMenuItem 
+                  onClick={() => setActiveTab('settings')}
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
+                >
+                  <Building className="h-4 w-4 text-primary" />
+                  <span>Property & Rooms</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
                   onClick={() => setHistorySheetOpen(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
                 >
                   <History className="h-4 w-4 text-muted-foreground" />
                   <span>Activity History</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem 
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4 text-amber-500" />
+                      <span>Light Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4 text-indigo-500" />
+                      <span>Dark Mode</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
                   onClick={() => setActiveTab('settings')}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl hover:bg-muted/60 cursor-pointer font-medium"
                 >
                   <Settings className="h-4 w-4 text-muted-foreground" />
                   <span>Settings</span>
@@ -371,7 +399,7 @@ const Index = () => {
 
                 <DropdownMenuItem 
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:text-destructive rounded-lg hover:bg-destructive/10 cursor-pointer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:text-destructive rounded-xl hover:bg-destructive/10 cursor-pointer font-semibold mt-1"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>
@@ -523,6 +551,7 @@ const Index = () => {
 
 
         <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
+        <ReferralDialog open={referralDialogOpen} onOpenChange={setReferralDialogOpen} />
       </div>
       </div>
 

@@ -313,13 +313,20 @@ export default function SubscriptionPage() {
           })}
         </div>
 
-        {/* Feature Matrix / Guarantee Box */}
+        {/* Feature Matrix / Guarantee & Auto-Pay Box */}
         <div className="p-5 rounded-3xl bg-muted/40 border border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground mt-4">
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-6 w-6 text-emerald-500 shrink-0" />
             <div>
-              <p className="font-extrabold text-foreground text-sm">Razorpay Secure 256-Bit SSL Payment</p>
-              <p className="text-xs text-muted-foreground">Instant activation after payment. Upgrade, downgrade, or cancel anytime.</p>
+              <p className="font-extrabold text-foreground text-sm flex items-center gap-2">
+                Razorpay 256-Bit SSL & UPI AutoPay Mandate
+                <Badge className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[10px] px-2 font-extrabold">
+                  Auto-Pay Supported
+                </Badge>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Seamless auto-renewal via UPI AutoPay, Google Pay, PhonePe, Paytm or Card. Cancel anytime with 1-click in App.
+              </p>
             </div>
           </div>
         </div>
@@ -336,9 +343,12 @@ export default function SubscriptionPage() {
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-sm text-foreground">{currentPlan.name} Plan</span>
                 <span className="text-xs text-muted-foreground font-semibold">({billingCycle === "yearly" ? "Yearly" : "Monthly"})</span>
+                <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 border-emerald-400">
+                  UPI AutoPay
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground font-medium">
-                {currentLocalized.symbol}{currentLocalized.price.toLocaleString()} {billingCycle === "yearly" ? "/year" : "/month"}
+                {currentLocalized.symbol}{currentLocalized.price.toLocaleString()} {billingCycle === "yearly" ? "/year" : "/month"} · Auto-Renews Monthly
               </p>
             </div>
           </div>
@@ -349,9 +359,9 @@ export default function SubscriptionPage() {
             disabled={razorpayLoading}
           >
             {razorpayLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Starting Razorpay Checkout...</>
+              <><Loader2 className="h-4 w-4 animate-spin" /> Setting Up Auto-Pay...</>
             ) : (
-              <><Zap className="h-4 w-4 fill-white" /> Activate {currentPlan.name} ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()})</>
+              <><Zap className="h-4 w-4 fill-white" /> Enable Auto-Pay ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()})</>
             )}
           </Button>
         </div>
