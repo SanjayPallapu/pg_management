@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,15 @@ interface SubscriptionDetailsSheetProps {
 type BillingCycleToggle = 'monthly' | 'quarterly' | 'yearly';
 
 export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDetailsSheetProps) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (open) {
+      onOpenChange(false);
+      navigate('/subscription');
+    }
+  }, [open, navigate, onOpenChange]);
+
   const { subscription, pgs, isProUser, refreshSubscription } = usePG();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [billingCycle, setBillingCycle] = useState<BillingCycleToggle>('monthly');

@@ -1,14 +1,13 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Crown, AlertTriangle } from 'lucide-react';
-import { usePG } from '@/contexts/PGContext';
-import { useState } from 'react';
-import { UpgradeDialog } from './UpgradeDialog';
-import { differenceInDays } from 'date-fns';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Crown, AlertTriangle } from "lucide-react";
+import { usePG } from "@/contexts/PGContext";
+import { useNavigate } from "react-router-dom";
+import { differenceInDays } from "date-fns";
 
 export const SubscriptionBadge = () => {
   const { subscription, isProUser } = usePG();
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const navigate = useNavigate();
 
   // Calculate days until expiry
   const daysUntilExpiry = subscription?.expiresAt 
@@ -19,10 +18,13 @@ export const SubscriptionBadge = () => {
   const isExpired = daysUntilExpiry !== null && daysUntilExpiry <= 0;
 
   if (isProUser) {
-    // Show warning if expiring soon
     if (isExpiringSoon) {
       return (
-        <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50 dark:bg-amber-900/20">
+        <Badge 
+          variant="outline" 
+          onClick={() => navigate("/subscription")}
+          className="text-amber-600 border-amber-400 bg-amber-50 dark:bg-amber-900/20 cursor-pointer"
+        >
           <AlertTriangle className="h-3 w-3 mr-1" />
           {daysUntilExpiry}d left
         </Badge>
@@ -30,47 +32,45 @@ export const SubscriptionBadge = () => {
     }
     
     return (
-      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+      <Badge 
+        onClick={() => navigate("/subscription")}
+        className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 cursor-pointer"
+      >
         <Crown className="h-3 w-3 mr-1" />
         Pro
       </Badge>
     );
   }
 
-  if (isExpired || subscription?.status === 'expired') {
+  if (isExpired || subscription?.status === "expired") {
     return (
-      <>
-        <Badge variant="destructive" className="cursor-pointer" onClick={() => setShowUpgrade(true)}>
-          Expired - Renew
-        </Badge>
-        <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
-      </>
+      <Badge variant="destructive" className="cursor-pointer" onClick={() => navigate("/subscription")}>
+        Expired - Renew
+      </Badge>
     );
   }
 
-  if (subscription?.billingCycle === 'trial' && subscription?.status === 'active') {
+  if (subscription?.billingCycle === "trial" && subscription?.status === "active") {
     return (
-      <>
-        <Badge variant="outline" className="text-amber-600 border-amber-300">
-          Trial Active
-        </Badge>
-        <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
-      </>
+      <Badge 
+        variant="outline" 
+        onClick={() => navigate("/subscription")}
+        className="text-amber-600 border-amber-300 cursor-pointer"
+      >
+        Trial Active
+      </Badge>
     );
   }
 
   return (
-    <>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => setShowUpgrade(true)}
-        className="text-xs"
-      >
-        <Crown className="h-3 w-3 mr-1" />
-        Upgrade
-      </Button>
-      <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
-    </>
+    <Button 
+      variant="outline" 
+      size="sm" 
+      onClick={() => navigate("/subscription")}
+      className="text-xs"
+    >
+      <Crown className="h-3 w-3 mr-1 text-amber-500" />
+      Upgrade
+    </Button>
   );
 };

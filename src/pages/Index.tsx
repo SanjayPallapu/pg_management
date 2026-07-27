@@ -329,7 +329,7 @@ const Index = () => {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem 
-                  onClick={() => setUpgradeDialogOpen(true)}
+                  onClick={() => navigate("/subscription")}
                   className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 cursor-pointer text-amber-600 dark:text-amber-400 font-semibold"
                 >
                   <Crown className="h-4 w-4 text-amber-500" />

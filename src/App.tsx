@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
 import Legal from "./pages/Legal";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
@@ -170,6 +171,11 @@ const AppContent = () => {
           <Route path="/left-tenants" element={
             <ProtectedRoute>
               <LeftTenants />
+            </ProtectedRoute>
+          } />
+          <Route path="/subscription" element={
+            <ProtectedRoute>
+              <SubscriptionPage />
             </ProtectedRoute>
           } />
           <Route path="/city" element={

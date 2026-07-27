@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
+import { formatCleanTenantName } from "@/utils/tenantHelper";
 import {
   getPhoneOtpTestSession,
   getPhoneOtpTestWorkspace,
@@ -69,8 +70,36 @@ export const useRooms = () => {
         throw tenantsError;
       }
 
+      // Clean names and resolve room transfers if a tenant exists in multiple rooms
+      const cleanedTenants = (tenantsData || []).map((t) => ({
+        ...t,
+        cleanName: formatCleanTenantName(t.name),
+      }));
+
+      // Find active tenants per clean name / phone
+      const activeByPhoneOrName = new Map<string, typeof cleanedTenants[0]>();
+      cleanedTenants.forEach((t) => {
+        if (t.end_date) return; // already ended
+        const key = t.phone && t.phone.length >= 10 ? t.phone.slice(-10) : t.cleanName.toLowerCase();
+        if (!key || key.length < 2) return;
+        const existing = activeByPhoneOrName.get(key);
+        if (!existing) {
+          activeByPhoneOrName.set(key, t);
+        } else {
+          // Keep the newer record active, auto-close the older record!
+          const tDate = new Date(t.start_date).getTime();
+          const eDate = new Date(existing.start_date).getTime();
+          if (tDate >= eDate) {
+            existing.end_date = t.start_date;
+            activeByPhoneOrName.set(key, t);
+          } else {
+            t.end_date = existing.start_date;
+          }
+        }
+      });
+
       // Group tenants by room_id
-      const tenantsByRoom = (tenantsData || [])
+      const tenantsByRoom = cleanedTenants
         .reduce(
           (acc, tenant) => {
             if (!acc[tenant.room_id]) {
@@ -79,7 +108,7 @@ export const useRooms = () => {
             acc[tenant.room_id].push(tenant);
             return acc;
           },
-          {} as Record<string, typeof tenantsData>,
+          {} as Record<string, typeof cleanedTenants>,
         );
 
       const mappedRooms = roomsData.map((room) => ({
@@ -94,7 +123,7 @@ export const useRooms = () => {
         keyNo: (room as any).key_no || undefined,
         tenants: (tenantsByRoom[room.id] || []).map((tenant) => ({
           id: tenant.id,
-          name: tenant.name,
+          name: tenant.cleanName || tenant.name,
           phone: tenant.phone,
           startDate: tenant.start_date,
           endDate: tenant.end_date || undefined,

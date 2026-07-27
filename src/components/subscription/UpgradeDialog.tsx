@@ -8,12 +8,23 @@ import { usePG } from '@/contexts/PGContext';
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
 import { Capacitor } from '@capacitor/core';
 
+import { useNavigate } from 'react-router-dom';
+
 interface UpgradeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (open) {
+      onOpenChange(false);
+      navigate('/subscription');
+    }
+  }, [open, navigate, onOpenChange]);
+
   const { subscription, refreshSubscription } = usePG();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');

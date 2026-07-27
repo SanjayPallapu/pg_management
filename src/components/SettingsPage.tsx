@@ -344,7 +344,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 icon={<CreditCard className="h-4 w-4 text-primary" />}
                 label="Subscription"
                 description="View plan & billing details"
-                onClick={() => setSubscriptionSheetOpen(true)}
+                onClick={() => navigate("/subscription")}
               />
             </CardContent>
           </Card>
