@@ -234,23 +234,18 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   } | null>(null);
 
   useEffect(() => {
-    if (editingTenantId) {
-      const tenant = (room.tenants || []).find((t) => t.id === editingTenantId);
-      if (tenant) {
-        setEditingValues({
-          name: tenant.name,
-          phone: tenant.phone || "",
-          startDate: tenant.startDate,
-          endDate: tenant.endDate,
-          monthlyRent: tenant.monthlyRent,
-        });
-      }
-    } else {
+    if (!isOpen) {
+      setIsEditMode(false);
+      setEditingTenantId(null);
       setEditingValues(null);
     }
-  }, [editingTenantId, room.tenants]);
+  }, [isOpen]);
 
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    setIsEditMode(false);
+    setEditingTenantId(null);
+    setEditingValues(null);
+  }, [room.id]);
 
   const [confirmAction, setConfirmAction] = useState<{ type: "paid" | "delete"; tenantId: string } | null>(null);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
@@ -526,6 +521,40 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   const activeTenants = isSelectedCurrentMonth
     ? (room.tenants || []).filter((t) => t && isTenantActiveNow(t.startDate, t.endDate))
     : tenantsInSelectedMonth;
+
+  const beginEditingTenant = (tenant: Tenant) => {
+    setIsEditMode(true);
+    setEditingTenantId(tenant.id);
+    setEditingValues({
+      name: tenant.name,
+      phone: tenant.phone || "",
+      startDate: tenant.startDate,
+      endDate: tenant.endDate,
+      monthlyRent: tenant.monthlyRent,
+    });
+  };
+
+  const exitEditMode = () => {
+    setIsEditMode(false);
+    setEditingTenantId(null);
+    setEditingValues(null);
+  };
+
+  const handleEditModeToggle = () => {
+    if (isEditMode) {
+      exitEditMode();
+      return;
+    }
+
+    if (activeTenants.length === 1) {
+      beginEditingTenant(activeTenants[0]);
+      return;
+    }
+
+    setIsEditMode(true);
+    setEditingTenantId(null);
+    setEditingValues(null);
+  };
 
   const derivedStatus =
     activeTenants.length === room.capacity ? "Occupied" : activeTenants.length === 0 ? "Vacant" : "Partially Occupied";
@@ -914,12 +943,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               </div>
               {canManageTenants && (
                 <Button
+                  type="button"
                   variant={isEditMode ? "default" : "outline"}
                   size="sm"
-                  onClick={() => {
-                    setIsEditMode(!isEditMode);
-                    setEditingTenantId(null);
-                  }}
+                  onClick={handleEditModeToggle}
                 >
                   {isEditMode ? "Done" : "Edit"}
                 </Button>
@@ -927,12 +954,16 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
 
             {canManageTenants && !isEditMode && (
-              <div className="text-xs text-muted-foreground">Click Edit to enable long-press editing</div>
+              <div className="text-xs text-muted-foreground">Tap Edit to update tenant details</div>
+            )}
+
+            {canManageTenants && isEditMode && activeTenants.length > 1 && !editingTenantId && (
+              <div className="text-xs text-muted-foreground">Choose the tenant you want to edit</div>
             )}
 
             {!canManageTenants && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-                Click Edit to enable long-press editing
+                Only the PG owner can edit tenant details.
               </div>
             )}
 
@@ -948,21 +979,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   const isPartial = isTenantPartialForMonth(tenant.id);
                   const remaining = isPartial ? tenant.monthlyRent - (payment?.amountPaid || 0) : 0;
 
-                  const handleLongPressStart = () => {
-                    if (!isEditMode) return;
-
-                    longPressTimer.current = setTimeout(() => {
-                      setEditingTenantId(tenant.id);
-                    }, 500);
-                  };
-
-                  const handleLongPressEnd = () => {
-                    if (longPressTimer.current) {
-                      clearTimeout(longPressTimer.current);
-                      longPressTimer.current = null;
-                    }
-                  };
-
                   return (
                     <div
                       key={tenant.id}
@@ -971,11 +987,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                         getTenantStyles(tenant).card,
                         isEditing && "ring-2 ring-primary scale-[1.02]",
                       )}
-                      onMouseDown={handleLongPressStart}
-                      onMouseUp={handleLongPressEnd}
-                      onMouseLeave={handleLongPressEnd}
-                      onTouchStart={handleLongPressStart}
-                      onTouchEnd={handleLongPressEnd}
                     >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1 flex-1">
@@ -1103,6 +1114,17 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-2 ml-2">
+                          {isEditMode && !isEditing && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => beginEditingTenant(tenant)}
+                            >
+                              Edit details
+                            </Button>
+                          )}
+
                           {!isEditing && (
                             <>
                               {isPartial ? (
@@ -1322,8 +1344,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   if (editingValues) {
                                     await handleUpdateTenant(tenant.id, editingValues);
                                   }
-                                  setEditingTenantId(null);
-                                  setIsEditMode(false);
+                                  exitEditMode();
                                 }}
                               >
                                 Done
