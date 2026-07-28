@@ -5,7 +5,7 @@ import { useAuth } from "./useAuth";
 import { useAuditLog } from "./useAuditLog";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
-import { formatCleanTenantName } from "@/utils/tenantHelper";
+import { prepareTenantsForDisplay } from "@/utils/tenantHelper";
 import {
   getPhoneOtpTestSession,
   getPhoneOtpTestWorkspace,
@@ -59,44 +59,31 @@ export const useRooms = () => {
 
       const roomIds = roomsData.map(r => r.id);
 
-      // Fetch tenants only for rooms in this PG
-      const { data: tenantsData, error: tenantsError } = await supabase
-        .from("tenants")
-        .select("*")
-        .in("room_id", roomIds);
+      // Fetch every tenant for this PG. PostgREST commonly limits a response to
+      // 1,000 rows, so page explicitly to preserve longer tenant histories.
+      const tenantPageSize = 1000;
+      const tenantsData = [];
 
-      if (tenantsError) {
-        console.error('[Rooms] Failed to fetch tenants', tenantsError);
-        throw tenantsError;
+      for (let from = 0; ; from += tenantPageSize) {
+        const { data: tenantPage, error: tenantsError } = await supabase
+          .from("tenants")
+          .select("*")
+          .in("room_id", roomIds)
+          .order("id", { ascending: true })
+          .range(from, from + tenantPageSize - 1);
+
+        if (tenantsError) {
+          console.error('[Rooms] Failed to fetch tenants', tenantsError);
+          throw tenantsError;
+        }
+
+        tenantsData.push(...(tenantPage || []));
+        if (!tenantPage || tenantPage.length < tenantPageSize) break;
       }
 
-      // Clean names and resolve room transfers if a tenant exists in multiple rooms
-      const cleanedTenants = (tenantsData || []).map((t) => ({
-        ...t,
-        cleanName: formatCleanTenantName(t.name),
-      }));
-
-      // Find active tenants per clean name / phone
-      const activeByPhoneOrName = new Map<string, typeof cleanedTenants[0]>();
-      cleanedTenants.forEach((t) => {
-        if (t.end_date) return; // already ended
-        const key = t.phone && t.phone.length >= 10 ? t.phone.slice(-10) : t.cleanName.toLowerCase();
-        if (!key || key.length < 2) return;
-        const existing = activeByPhoneOrName.get(key);
-        if (!existing) {
-          activeByPhoneOrName.set(key, t);
-        } else {
-          // Keep the newer record active, auto-close the older record!
-          const tDate = new Date(t.start_date).getTime();
-          const eDate = new Date(existing.start_date).getTime();
-          if (tDate >= eDate) {
-            existing.end_date = t.start_date;
-            activeByPhoneOrName.set(key, t);
-          } else {
-            t.end_date = existing.start_date;
-          }
-        }
-      });
+      // Clean display names only. Never infer identity from a shared phone or
+      // name, and never fabricate an end date in the client.
+      const cleanedTenants = prepareTenantsForDisplay(tenantsData);
 
       // Group tenants by room_id
       const tenantsByRoom = cleanedTenants
@@ -149,7 +136,6 @@ export const useRooms = () => {
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
-    placeholderData: (prev) => prev, // keep old data visible during refetch
   });
 
   const updateRoom = useMutation({

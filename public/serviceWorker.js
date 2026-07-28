@@ -1,21 +1,11 @@
-const STATIC_CACHE = 'pg-static-v5';
-const DYNAMIC_CACHE = 'pg-dynamic-v5';
-const API_CACHE = 'pg-api-v5';
+const STATIC_CACHE = 'pg-static-v6';
+const DYNAMIC_CACHE = 'pg-dynamic-v6';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-];
-
-// API endpoints to cache (Supabase)
-const API_PATTERNS = [
-  /\/rest\/v1\/rooms/,
-  /\/rest\/v1\/tenants/,
-  /\/rest\/v1\/tenant_payments/,
-  /\/rest\/v1\/day_guests/,
-  /\/rest\/v1\/properties/,
 ];
 
 // Install event - cache static assets
@@ -29,7 +19,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
+  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE];
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -50,14 +40,19 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  // Never cache authenticated API data. Cache Storage keys do not safely
+  // isolate responses by Supabase user session, which can surface stale or
+  // incorrect room/tenant data after an account or PG switch.
+  const isAuthenticatedApiRequest =
+    url.hostname.endsWith('.supabase.co') ||
+    request.headers.has('authorization') ||
+    request.headers.has('apikey');
+  if (isAuthenticatedApiRequest) {
     return;
   }
 
-  // API requests - Network first, fallback to cache
-  if (API_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-    event.respondWith(networkFirstWithCache(request, API_CACHE));
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
     return;
   }
 
