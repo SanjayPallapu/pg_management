@@ -1,188 +1,253 @@
-import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { BarChart3, CalendarDays, ChevronRight, PieChart as PieIcon, TrendingUp, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
 import { MONTHS } from "@/constants/pricing";
 import { useMonthContext } from "@/contexts/MonthContext";
-import {
-  AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
-  LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend,
-} from "recharts";
-import { BarChart3, PieChart as PieIcon, TrendingUp, Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ExpenseEntry } from "@/hooks/useExpenseEntries";
 
+type Range = "1M" | "6M" | "1Y";
+
 const CAT_COLORS: Record<string, string> = {
-  current: "hsl(38 92% 50%)",
-  utility: "hsl(199 89% 48%)",
-  other: "hsl(262 83% 58%)",
-  family: "hsl(330 81% 60%)",
+  current: "#4c37ed",
+  utility: "#16b8d4",
+  other: "#31b85b",
+  family: "#f6a11a",
 };
+
 const CAT_LABEL: Record<string, string> = {
-  current: "Current", utility: "Utility", other: "Other", family: "Family",
+  current: "Current",
+  utility: "Utilities",
+  other: "Other",
+  family: "Family",
 };
+
+const formatCurrency = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
 export const BillsAnalytics = () => {
   const { currentPG } = usePG();
   const { selectedMonth, selectedYear } = useMonthContext();
+  const [range, setRange] = useState<Range>("6M");
 
-  // Pull last 6 months of expenses for trend
-  const { data: yearEntries = [] } = useQuery({
-    queryKey: ["expense_entries_year", currentPG?.id, selectedYear, selectedMonth],
+  const { data: allEntries = [], isLoading, isError } = useQuery({
+    queryKey: ["expense_entries_analytics", currentPG?.id],
     queryFn: async () => {
       if (!currentPG?.id) return [];
       const { data, error } = await supabase
-        .from("expense_entries").select("*")
+        .from("expense_entries")
+        .select("*")
         .eq("pg_id", currentPG.id)
         .order("entry_date", { ascending: true });
       if (error) throw error;
       return (data || []) as ExpenseEntry[];
     },
-    enabled: !!currentPG?.id,
+    enabled: Boolean(currentPG?.id),
   });
 
-  // Last 6 months window (ending selected)
+  const monthsToShow = range === "1M" ? 1 : range === "6M" ? 6 : 12;
   const trend = useMemo(() => {
     const out: { month: string; current: number; utility: number; other: number; family: number; total: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      let m = selectedMonth - i, y = selectedYear;
-      while (m <= 0) { m += 12; y--; }
-      const rows = yearEntries.filter((e) => e.month === m && e.year === y);
-      const sum = (cat: string) => rows.filter((r) => r.category === cat).reduce((s, r) => s + r.amount, 0);
+    for (let index = monthsToShow - 1; index >= 0; index -= 1) {
+      let month = selectedMonth - index;
+      let year = selectedYear;
+      while (month <= 0) {
+        month += 12;
+        year -= 1;
+      }
+      const rows = allEntries.filter((entry) => entry.month === month && entry.year === year);
+      const sum = (category: string) =>
+        rows.filter((row) => row.category === category).reduce((total, row) => total + row.amount, 0);
       out.push({
-        month: `${MONTHS[m - 1]?.label.slice(0, 3)} ${String(y).slice(-2)}`,
-        current: sum("current"), utility: sum("utility"),
-        other: sum("other"), family: sum("family"),
-        total: rows.reduce((s, r) => s + r.amount, 0),
+        month: monthsToShow === 12
+          ? MONTHS[month - 1]?.short
+          : `${MONTHS[month - 1]?.short} ${String(year).slice(-2)}`,
+        current: sum("current"),
+        utility: sum("utility"),
+        other: sum("other"),
+        family: sum("family"),
+        total: rows.reduce((total, row) => total + row.amount, 0),
       });
     }
     return out;
-  }, [yearEntries, selectedMonth, selectedYear]);
+  }, [allEntries, monthsToShow, selectedMonth, selectedYear]);
 
-  // Current month breakdown for pie
-  const currentBreakdown = useMemo(() => {
-    const t = trend[trend.length - 1];
-    if (!t) return [];
-    return (["current", "utility", "other", "family"] as const).map((cat) => ({
-      name: CAT_LABEL[cat], value: t[cat] as number, cat,
-    })).filter((d) => d.value > 0);
-  }, [trend]);
-
-  // Daily spend for current month
+  const currentRows = useMemo(
+    () => allEntries.filter((entry) => entry.month === selectedMonth && entry.year === selectedYear),
+    [allEntries, selectedMonth, selectedYear],
+  );
+  const currentBreakdown = useMemo(
+    () =>
+      (["current", "utility", "other", "family"] as const)
+        .map((category) => ({
+          name: CAT_LABEL[category],
+          value: currentRows.filter((entry) => entry.category === category).reduce((total, entry) => total + entry.amount, 0),
+          category,
+        }))
+        .filter((item) => item.value > 0),
+    [currentRows],
+  );
   const dailySpend = useMemo(() => {
-    const rows = yearEntries.filter((e) => e.month === selectedMonth && e.year === selectedYear);
     const map = new Map<string, number>();
-    rows.forEach((r) => {
-      const d = r.entry_date?.slice(8, 10) || "01";
-      map.set(d, (map.get(d) || 0) + r.amount);
+    currentRows.forEach((entry) => {
+      const day = entry.entry_date?.slice(8, 10) || "01";
+      map.set(day, (map.get(day) || 0) + entry.amount);
     });
     return Array.from(map.entries())
       .map(([day, amount]) => ({ day, amount }))
       .sort((a, b) => a.day.localeCompare(b.day));
-  }, [yearEntries, selectedMonth, selectedYear]);
+  }, [currentRows]);
 
-  const totalThis = trend[trend.length - 1]?.total ?? 0;
-  const totalPrev = trend[trend.length - 2]?.total ?? 0;
-  const delta = totalPrev > 0 ? ((totalThis - totalPrev) / totalPrev) * 100 : 0;
-  const avg = trend.reduce((s, t) => s + t.total, 0) / Math.max(1, trend.length);
+  const totalThisMonth = currentRows.reduce((total, entry) => total + entry.amount, 0);
+  const previousMonth = trend.length > 1 ? trend[trend.length - 2]?.total ?? 0 : 0;
+  const delta = previousMonth > 0 ? ((totalThisMonth - previousMonth) / previousMonth) * 100 : 0;
+  const average = trend.reduce((total, item) => total + item.total, 0) / Math.max(1, trend.length);
+  const hasTrendData = trend.some((item) => item.total > 0);
+  const monthLabel = `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 py-3" aria-label="Loading spending analytics">
+        <div className="h-[52px] animate-pulse rounded-[18px] bg-[#e9eaf1]" />
+        <div className="grid grid-cols-2 gap-2.5"><div className="h-28 animate-pulse rounded-[22px] bg-[#e9eaf1]" /><div className="h-28 animate-pulse rounded-[22px] bg-[#e9eaf1]" /></div>
+        <div className="h-64 animate-pulse rounded-[24px] bg-[#e9eaf1]" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="my-6 rounded-[24px] border border-[#f1c9cf] bg-white p-6 text-center dark:border-white/10 dark:bg-[#181a22]">
+        <BarChart3 className="mx-auto h-8 w-8 text-[#4936ef]" />
+        <p className="mt-3 font-black">Analytics could not be loaded</p>
+        <p className="mt-1 text-sm text-muted-foreground">Your bill entries are still available from the dashboard.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4 mt-6">
-      <div className="flex items-center gap-2">
-        <BarChart3 className="h-4 w-4 text-primary" />
-        <h2 className="text-lg font-bold tracking-tight">Analytics</h2>
+    <div className="space-y-3 py-3">
+      <div className="mx-auto grid h-[52px] w-full max-w-[390px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-white/10 dark:bg-[#181a22]" role="tablist" aria-label="Analytics period">
+        {(["1M", "6M", "1Y"] as Range[]).map((option) => (
+          <button
+            key={option}
+            type="button"
+            role="tab"
+            aria-selected={range === option}
+            className={cn("min-h-11 rounded-[14px] text-sm font-black", range === option ? "bg-[#4936ef] text-white shadow-sm" : "text-[#515669] dark:text-white/70")}
+            onClick={() => setRange(option)}
+          >
+            {option}
+          </button>
+        ))}
       </div>
 
-      {/* Stat tiles */}
-      <div className="grid grid-cols-2 gap-2">
-        <StatTile label="This Month" value={`₹${totalThis.toLocaleString()}`} sub={`${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toFixed(1)}% vs prev`} tone={delta >= 0 ? "text-orange-500" : "text-emerald-500"} />
-        <StatTile label="6-mo Avg" value={`₹${Math.round(avg).toLocaleString()}`} sub="Average monthly spend" tone="text-primary" />
+      <div className="grid grid-cols-2 gap-2.5">
+        <StatCard
+          icon={WalletCards}
+          label="This month"
+          value={formatCurrency(totalThisMonth)}
+          sub={previousMonth > 0 ? `${delta >= 0 ? "+" : ""}${delta.toFixed(0)}% vs previous` : "No change"}
+        />
+        <StatCard
+          icon={BarChart3}
+          label={`${range} average`}
+          value={formatCurrency(average)}
+          sub="Average monthly spend"
+        />
       </div>
 
-      {/* 6-month trend area chart */}
-      <Card>
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold flex items-center gap-1"><TrendingUp className="h-3 w-3" /> 6-Month Trend</span>
+      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-black">{range === "1M" ? "Monthly activity" : `${range === "6M" ? "6-month" : "12-month"} trend`}</h2>
+            <p className="text-xs text-muted-foreground">Total spend over time</p>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={trend} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><TrendingUp className="h-5 w-5" /></div>
+        </div>
+        <div className="relative mt-2 h-[230px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={trend} margin={{ top: 12, right: 8, bottom: 0, left: -22 }}>
               <defs>
-                <linearGradient id="gTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                <linearGradient id="analyticsTotal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4c37ed" stopOpacity={0.26} />
+                  <stop offset="95%" stopColor="#4c37ed" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
-              <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" fill="url(#gTotal)" strokeWidth={2} />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={10} stroke="#818699" />
+              <YAxis tickLine={false} axisLine={false} fontSize={10} stroke="#818699" />
+              <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: 14, border: "1px solid #e2e4ed", fontSize: 12 }} />
+              <Area type="monotone" dataKey="total" stroke="#4c37ed" fill="url(#analyticsTotal)" strokeWidth={3} dot={{ r: 3, fill: "#4c37ed" }} />
             </AreaChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
+          {!hasTrendData && (
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f1efff]/90 text-[#7563e9]"><TrendingUp className="h-6 w-6" /></div>
+              <p className="mt-2 text-sm font-bold text-[#61667a]">Not enough data for a trend yet</p>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Category split pie + bar */}
-      <div className="grid gap-3 md:grid-cols-2">
-        <Card>
-          <CardContent className="p-3">
-            <span className="text-xs font-semibold flex items-center gap-1"><PieIcon className="h-3 w-3" /> Category Split</span>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie data={currentBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={30} paddingAngle={2}>
-                  {currentBreakdown.map((d) => (
-                    <Cell key={d.cat} fill={CAT_COLORS[d.cat]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+        <div className="flex items-center justify-between">
+          <div><h2 className="text-base font-black">Category split</h2><p className="text-xs text-muted-foreground">{monthLabel}</p></div>
+          <PieIcon className="h-5 w-5 text-[#4936ef]" />
+        </div>
+        <div className="mt-3 flex min-h-[150px] items-center gap-3">
+          <div className="relative h-[142px] w-[142px] shrink-0">
+            {currentBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={currentBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={66} paddingAngle={3}>
+                    {currentBreakdown.map((item) => <Cell key={item.category} fill={CAT_COLORS[item.category]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: 14, border: "1px solid #e2e4ed", fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-[#f1efff]">
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full border border-dashed border-[#aaa0ef] bg-white text-[#9287dd] dark:bg-[#181a22]"><WalletCards className="h-6 w-6" /></div>
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-[#555a6e] dark:text-white/70">{currentBreakdown.length ? `${formatCurrency(totalThisMonth)} total` : `No category spending in ${MONTHS[selectedMonth - 1]?.label}`}</p>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+              {Object.entries(CAT_LABEL).map(([category, label]) => (
+                <div key={category} className="flex items-center gap-2 text-xs text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CAT_COLORS[category] }} /><span className="truncate">{label}</span></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <Card>
-          <CardContent className="p-3">
-            <span className="text-xs font-semibold flex items-center gap-1"><BarChart3 className="h-3 w-3" /> Categories x Month</span>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={trend} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
-                <Bar dataKey="current" stackId="a" fill={CAT_COLORS.current} />
-                <Bar dataKey="utility" stackId="a" fill={CAT_COLORS.utility} />
-                <Bar dataKey="other" stackId="a" fill={CAT_COLORS.other} />
-                <Bar dataKey="family" stackId="a" fill={CAT_COLORS.family} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Daily spend line */}
-      <Card>
-        <CardContent className="p-3">
-          <span className="text-xs font-semibold flex items-center gap-1"><Activity className="h-3 w-3" /> Daily Spend (this month)</span>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={dailySpend} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-              <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
-              <Line type="monotone" dataKey="amount" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <button type="button" className="flex min-h-[76px] w-full items-center rounded-[20px] border border-[#e2e4ed] bg-white px-4 text-left dark:border-white/10 dark:bg-[#181a22]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><CalendarDays className="h-5 w-5" /></div>
+        <div className="ml-3 min-w-0 flex-1"><p className="text-sm font-black">Daily spend</p><p className="truncate text-xs text-muted-foreground">{dailySpend.length ? `${dailySpend.length} active ${dailySpend.length === 1 ? "day" : "days"} this month` : "No activity this month"}</p></div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </button>
     </div>
   );
 };
 
-const StatTile = ({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: string }) => (
-  <Card>
-    <CardContent className="p-3">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-xl font-bold mt-0.5">{value}</div>
-      <div className={`text-[11px] mt-0.5 ${tone}`}>{sub}</div>
-    </CardContent>
-  </Card>
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  sub: string;
+}) => (
+  <div className="min-h-[116px] rounded-[22px] border border-[#e2e4ed] bg-white p-3.5 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><Icon className="h-5 w-5" /></div>
+    <p className="mt-2 text-xs text-muted-foreground">{label}</p>
+    <p className="text-xl font-black">{value}</p>
+    <p className="truncate text-[10px] text-muted-foreground">{sub}</p>
+  </div>
 );

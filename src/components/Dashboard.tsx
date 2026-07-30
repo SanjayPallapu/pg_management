@@ -16,7 +16,6 @@ import {
   MessageSquare,
   ArrowLeft,
   Receipt,
-  Scale,
   Wallet,
   Users,
   Settings,
@@ -692,22 +691,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               : "w-full p-0 sm:max-w-xl [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
           }
         >
-          <div className="flex h-full flex-col bg-[#f4f4ef] dark:bg-[#101114]">
-            <SheetHeader className="shrink-0 border-b border-[#dcdcd3] bg-[#fffef9] px-3 py-3 dark:border-white/10 dark:bg-[#181a1f]">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dbe7ff] text-[#1d4ed8] dark:bg-[#1e3262] dark:text-[#a8beff]">
-                    <Scale className="h-4 w-4" />
-                  </div>
-                  <SheetTitle className="text-base font-black text-foreground">Bills & Budget</SheetTitle>
-                </div>
-              </div>
-            </SheetHeader>
+          <div className="flex h-full flex-col bg-[#f8f9fd] dark:bg-[#0f1118]">
             <div className="min-h-0 flex-1 overflow-hidden relative">
-              <BillsBudgetDashboard rooms={rooms} />
+              <BillsBudgetDashboard rooms={rooms} onClose={() => setBillsBudgetOpen(false)} />
             </div>
           </div>
         </SheetContent>
