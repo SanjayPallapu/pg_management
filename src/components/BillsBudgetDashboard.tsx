@@ -154,10 +154,10 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     lockLabel?: boolean;
   } | null>(null);
 
-  const [numFloors, setNumFloors] = useState(3);
+  const [numFloors, setNumFloors] = useState(1);
   const [includeGround, setIncludeGround] = useState(false);
   const [isFloorsConfigOpen, setIsFloorsConfigOpen] = useState(false);
-  const [tempNumFloors, setTempNumFloors] = useState("3");
+  const [tempNumFloors, setTempNumFloors] = useState("1");
   const [tempIncludeGround, setTempIncludeGround] = useState(false);
 
   const storageKey = pgId ? `current_bills_floors_${pgId}` : null;
@@ -168,7 +168,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setNumFloors(parsed.n || 3);
+        setNumFloors(parsed.n || 1);
         setIncludeGround(Boolean(parsed.includeGround));
         return;
       } catch {
@@ -176,9 +176,9 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       }
     }
     const maxFloorInRooms = rooms.length > 0 ? Math.max(...rooms.map((room) => room.floor)) : 0;
-    setNumFloors(maxFloorInRooms || currentPG?.floors || 3);
+    setNumFloors(maxFloorInRooms || 1);
     setIncludeGround(rooms.some((room) => room.floor === 0));
-  }, [storageKey, rooms, currentPG]);
+  }, [storageKey, rooms]);
 
   const floors = useMemo(() => {
     const list: number[] = includeGround ? [0] : [];
@@ -553,7 +553,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
                             <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("current", preset.label, preset.subcategory, preset.floor)}>
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
-                              <div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{preset.label}</p><p className="text-xs text-muted-foreground">{matchingEntries.length ? `${formatCurrency(presetTotal)} · ${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p></div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-black">{preset.label}</p>
+                                {matchingEntries.length > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatCurrency(presetTotal)} · {matchingEntries.length} {matchingEntries.length === 1 ? "entry" : "entries"}
+                                  </p>
+                                )}
+                              </div>
                             </button>
                             <button
                               type="button"
@@ -568,7 +575,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                       })}
                     </div>
                     <div className="mt-3 flex min-h-[54px] items-center gap-3 rounded-[18px] border border-[#dcd9ff] bg-[#f5f3ff] px-3 text-sm text-[#50546a] dark:border-border dark:bg-secondary/60 dark:text-muted-foreground">
-                      <AlertCircle className="h-5 w-5 shrink-0 text-[#4936ef]" /><span>Add meter readings or bill amounts for {MONTHS[selectedMonth - 1]?.label}.</span>
+                      <AlertCircle className="h-5 w-5 shrink-0 text-[#4936ef]" /><span>Add bill amounts for {MONTHS[selectedMonth - 1]?.label}.</span>
                     </div>
                   </>
                 ) : (
