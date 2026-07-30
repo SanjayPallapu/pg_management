@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
 import {
   AlertCircle,
   ArrowLeft,
@@ -13,9 +14,11 @@ import {
   Egg,
   Flame,
   Home,
+  Inbox,
   IndianRupee,
   ListChecks,
   Milk,
+  Pencil,
   Plus,
   Receipt,
   RefreshCw,
@@ -23,11 +26,22 @@ import {
   ShoppingBag,
   Sparkles,
   Target,
+  Trash2,
   UsersRound,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -146,6 +160,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [quickAdd, setQuickAdd] = useState<QuickExpenseInitial | null>(null);
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
+  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<ExpenseEntry | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sheetState, setSheetState] = useState<{
     title: string;
@@ -612,50 +627,139 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         <button key={category} type="button" className={cn("min-h-11 rounded-[14px] text-sm font-black", detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70")} onClick={() => setDetailCategory(category)}>{CATEGORY_META[category].shortLabel}</button>
                       ))}
                     </div>
-                    <div className="mb-2 mt-4 flex min-h-11 items-center justify-between">
-                      <h3 className="text-base font-black">{detailCategory === "utility" ? "Choose a category" : `${CATEGORY_META[detailCategory].shortLabel} entries`}</h3>
-                    </div>
+
                     {detailCategory === "utility" ? (
                       <>
-                        <div className="grid grid-cols-2 gap-2.5">
+                        <div className="mb-2 mt-4 flex min-h-11 items-center justify-between">
+                          <h3 className="text-base font-black">Choose a category</h3>
+                        </div>
+                        <div className="space-y-2.5">
                           {utilityCategoryItems.map((preset) => {
                             const Icon = preset.icon;
                             const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
+                            const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                             return (
-                              <button key={preset.key} type="button" className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-[#e3e5ed] bg-white p-3 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
-                                <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", preset.tone)}><Icon className="h-5 w-5" /></div>
-                                <div className="min-w-0"><p className="truncate text-sm font-black">{preset.key}</p><p className="text-xs text-muted-foreground">{matchingEntries.length ? `${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p></div>
-                              </button>
+                              <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3.5 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
+                                <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
+                                  <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", preset.tone)}>
+                                    <Icon className="h-5 w-5" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-black text-[#101426] dark:text-white">{preset.key}</p>
+                                    <p className="text-xs text-muted-foreground">{matchingEntries.length ? `${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p>
+                                  </div>
+                                  <div className="mr-2 text-right shrink-0">
+                                    <p className="text-base font-black text-[#101426] dark:text-white">{formatCurrency(presetTotal)}</p>
+                                  </div>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-[#1766d9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1766d9] dark:bg-[#17345c] dark:text-[#78b4ff]"
+                                  onClick={() => openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
+                                  aria-label={`Add ${preset.key}`}
+                                >
+                                  <Plus className="h-5 w-5" />
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
                         <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Add custom utility bill" })}><Plus className="mr-2 h-5 w-5" /> Add custom utility bill</button>
                       </>
                     ) : (
-                      <button type="button" className="flex min-h-[96px] w-full items-center rounded-[20px] border border-[#e3e5ed] bg-white px-4 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger(detailCategory, CATEGORY_META[detailCategory].label)}>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Receipt className="h-5 w-5" /></div>
-                        <div className="ml-3 min-w-0 flex-1"><p className="font-black">View all {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bills</p><p className="text-xs text-muted-foreground">{byCategory(detailCategory).length ? `${byCategory(detailCategory).length} recorded this month` : "No entries yet"}</p></div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                      </button>
+                      <>
+                        <div className="mt-4 mb-3">
+                          <Button
+                            className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95 shadow-md"
+                            onClick={() => openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` })}
+                          >
+                            <Plus className="mr-2 h-5 w-5" /> Add {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill
+                          </Button>
+                        </div>
+
+                        <div className="mb-2 flex min-h-11 items-center justify-between">
+                          <h3 className="text-base font-black">{CATEGORY_META[detailCategory].shortLabel} entries</h3>
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}
+                          </span>
+                        </div>
+
+                        {byCategory(detailCategory).length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-10 rounded-[20px] border border-dashed border-[#e3e5ed] bg-white text-muted-foreground dark:border-border dark:bg-card">
+                            <Inbox className="h-10 w-10 mb-2 opacity-40" />
+                            <p className="text-sm font-black text-[#101426] dark:text-white">No {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bills recorded</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Tap "+ Add {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill" above to add one.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {byCategory(detailCategory).map((e) => (
+                              <div key={e.id} className="flex min-h-[68px] items-center justify-between gap-2 rounded-[20px] border border-[#e3e5ed] bg-white p-3.5 shadow-sm dark:border-border dark:bg-card">
+                                <div className="flex-1 min-w-0">
+                                  <div className="truncate text-sm font-black text-[#101426] dark:text-white">{e.label}</div>
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {format(new Date(e.entry_date), "dd MMM yyyy")}
+                                    {e.notes && ` · ${e.notes}`}
+                                  </div>
+                                </div>
+                                <div className="font-black text-sm shrink-0 text-[#101426] dark:text-white mr-1">
+                                  {formatCurrency(e.amount)}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10 shrink-0 rounded-xl"
+                                  aria-label={`Edit ${e.label}`}
+                                  onClick={() => openQuickAdd({ category: detailCategory, editing: e, label: e.label, title: `Edit ${e.label}` })}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  aria-label={`Delete ${e.label}`}
+                                  onClick={() => setConfirmDeleteEntry(e)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}
               </div>
-
-              {(detailCategory === "other" || detailCategory === "family") && (
-                <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-border dark:bg-card sm:px-4" style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}>
-                  <Button
-                    className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95"
-                    onClick={() => openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` })}
-                  >
-                    <Plus className="mr-2 h-5 w-5" /> Add bill
-                  </Button>
-                </div>
-              )}
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={Boolean(confirmDeleteEntry)} onOpenChange={(o) => !o && setConfirmDeleteEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDeleteEntry?.label} · {confirmDeleteEntry ? formatCurrency(confirmDeleteEntry.amount) : ""}. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDeleteEntry) {
+                  deleteEntry.mutate(confirmDeleteEntry.id);
+                  setConfirmDeleteEntry(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <QuickExpenseDialog
         open={Boolean(quickAdd)}
