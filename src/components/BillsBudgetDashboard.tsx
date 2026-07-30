@@ -25,7 +25,6 @@ import {
   Sparkles,
   Target,
   UsersRound,
-  WalletCards,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,6 +87,7 @@ const CATEGORY_META: Record<
     icon: React.ElementType;
     iconSurface: string;
     iconColor: string;
+    barColor: string;
   }
 > = {
   current: {
@@ -97,6 +97,7 @@ const CATEGORY_META: Record<
     icon: Zap,
     iconSurface: "bg-[#f1efff]",
     iconColor: "text-[#4932e7]",
+    barColor: "bg-[#4936ef]",
   },
   utility: {
     label: "Utilities",
@@ -105,6 +106,7 @@ const CATEGORY_META: Record<
     icon: Droplet,
     iconSurface: "bg-[#edf4ff]",
     iconColor: "text-[#1766d9]",
+    barColor: "bg-[#1aa9d2]",
   },
   other: {
     label: "Other bills",
@@ -113,6 +115,7 @@ const CATEGORY_META: Record<
     icon: Receipt,
     iconSurface: "bg-[#f3efff]",
     iconColor: "text-[#5d3ed4]",
+    barColor: "bg-[#32b45d]",
   },
   family: {
     label: "Family expenses",
@@ -121,6 +124,7 @@ const CATEGORY_META: Record<
     icon: UsersRound,
     iconSurface: "bg-[#f5f0ff]",
     iconColor: "text-[#5737d8]",
+    barColor: "bg-[#f3a21a]",
   },
 };
 
@@ -362,19 +366,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 />
               </div>
             </div>
-
-            <div className="mt-4 flex items-center justify-between pt-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/14">
-                <WalletCards className="h-5 w-5" />
-              </div>
-              <p className={cn("text-right text-[15px] font-black", remaining < 0 ? "text-[#ffd0d7]" : "text-[#63f5bf]")}>
-                {!hasBudget
-                  ? "Create a monthly limit"
-                  : remaining < 0
-                    ? `${formatCurrency(Math.abs(remaining))} over budget`
-                    : `${formatCurrency(remaining)} remaining`}
-              </p>
-            </div>
           </div>
         </section>
 
@@ -394,22 +385,33 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
             <h2 className="text-[15px] font-black tracking-[-0.015em] text-[#111526] dark:text-white">Spending groups</h2>
             <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-bold text-[#4936ef]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="overflow-hidden rounded-[20px] border border-[#e3e5ed] bg-white shadow-[0_12px_28px_-25px_rgba(25,30,58,.7)] divide-y divide-[#e8e9f0] dark:divide-white/10 dark:border-white/10 dark:bg-[#181a22]">
             {categoryData.map((item) => {
               const Icon = item.icon;
+              const share = grandTotal > 0 ? Math.round((item.total / grandTotal) * 100) : 0;
               return (
                 <button
                   key={item.category}
                   type="button"
-                  className="flex min-h-[70px] items-center gap-2.5 rounded-[20px] border border-[#e3e5ed] bg-white px-3 text-left shadow-[0_12px_28px_-25px_rgba(25,30,58,.7)] transition-transform active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:border-white/10 dark:bg-[#181a22]"
+                  className="bills-premium-group-row flex min-h-[54px] w-full items-center gap-3 px-3 text-left transition-colors hover:bg-[#fafaff] active:bg-[#f4f2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4936ef] dark:hover:bg-white/[0.04]"
                   onClick={() => setDetailCategory(item.category)}
                   aria-label={`Open ${item.label}, ${formatCurrency(item.total)}`}
                 >
-                  <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", item.iconSurface, item.iconColor)}>
-                    <Icon className="h-5 w-5" />
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", item.iconSurface, item.iconColor)}>
+                    <Icon className="h-[18px] w-[18px]" />
                   </div>
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#62677a] dark:text-white/60">{item.label}</p><p className="truncate text-base font-black">{formatCurrency(item.total)}</p></div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-[#7c8191]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="truncate text-xs font-bold text-[#35394c] dark:text-white/80">{item.label}</p>
+                      <p className="shrink-0 text-sm font-black">{formatCurrency(item.total)}</p>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ececf3] dark:bg-white/10">
+                        <div className={cn("h-full rounded-full transition-[width] duration-500", item.barColor)} style={{ width: `${share}%` }} />
+                      </div>
+                      <span className="w-7 text-right text-[10px] font-bold text-muted-foreground">{share}%</span>
+                    </div>
+                  </div>
                 </button>
               );
             })}

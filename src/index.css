@@ -259,8 +259,8 @@ All colors MUST be HSL.
     min-height: 2.25rem;
   }
 
-  .bills-premium-groups button {
-    min-height: 3.5rem;
+  .bills-premium-groups .bills-premium-group-row {
+    min-height: 2.75rem;
   }
 
   .bills-premium-activity {
