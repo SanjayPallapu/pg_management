@@ -19,7 +19,6 @@ import {
   Plus,
   Receipt,
   RefreshCw,
-  Search,
   Settings,
   ShoppingBag,
   Sparkles,
@@ -44,7 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
-import { useExpenseEntries, type ExpenseCategory } from "@/hooks/useExpenseEntries";
+import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
@@ -129,6 +128,9 @@ const CATEGORY_META: Record<
 };
 
 const formatCurrency = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
+const getEntryGroupKey = (entry: ExpenseEntry) => (
+  entry.subcategory ?? (entry.category === "utility" ? entry.label : "")
+);
 
 export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const { selectedMonth, selectedYear } = useMonthContext();
@@ -205,6 +207,27 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     ],
     [floors],
   );
+
+  const utilityCategoryItems = useMemo(() => {
+    const presetKeys = new Set(UTILITY_PRESETS.map((preset) => preset.key));
+    const customKeys = Array.from(
+      new Set(
+        entries
+          .filter((entry) => entry.category === "utility")
+          .map(getEntryGroupKey)
+          .filter((key) => key && !presetKeys.has(key)),
+      ),
+    );
+
+    return [
+      ...UTILITY_PRESETS,
+      ...customKeys.map((key) => ({
+        key,
+        icon: Receipt,
+        tone: "bg-[#f3efff] text-[#5d3ed4] dark:bg-[#302858] dark:text-[#b6a2ff]",
+      })),
+    ];
+  }, [entries]);
 
   const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[]).map((category) => ({
     category,
@@ -505,7 +528,12 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       </Dialog>
 
       <Sheet open={Boolean(detailCategory)} onOpenChange={(open) => !open && setDetailCategory(null)}>
-        <SheetContent key={detailCategory ?? "closed"} side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
+        <SheetContent
+          key={detailCategory ?? "closed"}
+          side="right"
+          className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl"
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           {detailCategory && (
             <>
               <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-border dark:bg-card sm:px-4">
@@ -515,9 +543,13 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                     <SheetTitle className="truncate text-lg font-black">{CATEGORY_META[detailCategory].label}</SheetTitle>
                     <p className="text-xs font-semibold text-[#4936ef]">{monthLabel}</p>
                   </div>
-                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]" onClick={() => detailCategory === "current" ? openFloorSettings() : undefined} aria-label={detailCategory === "current" ? "Configure floors" : "Search bills"}>
-                    {detailCategory === "current" ? <CircleGauge className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-                  </button>
+                  {detailCategory === "current" ? (
+                    <button type="button" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]" onClick={openFloorSettings} aria-label="Configure floors">
+                      <CircleGauge className="h-5 w-5" />
+                    </button>
+                  ) : (
+                    <div className="h-11 w-11" aria-hidden="true" />
+                  )}
                 </div>
               </SheetHeader>
 
@@ -531,11 +563,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                     <p className="text-[28px] font-black leading-tight">{formatCurrency(totalFor(detailCategory))}</p>
                     <p className="text-sm text-muted-foreground">{byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}</p>
                   </div>
-                  {detailCategory !== "current" && (
-                    <Button className="h-11 rounded-xl bg-[#4936ef] px-4 text-white hover:bg-[#3827d7]" onClick={() => openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` })}>
-                      <Plus className="mr-1 h-4 w-4" /> Add
-                    </Button>
-                  )}
                 </section>
 
                 {detailCategory === "current" ? (
@@ -591,9 +618,9 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                     {detailCategory === "utility" ? (
                       <>
                         <div className="grid grid-cols-2 gap-2.5">
-                          {UTILITY_PRESETS.map((preset) => {
+                          {utilityCategoryItems.map((preset) => {
                             const Icon = preset.icon;
-                            const matchingEntries = byCategory("utility").filter((entry) => (entry.subcategory ?? "") === preset.key);
+                            const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
                             return (
                               <button key={preset.key} type="button" className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-[#e3e5ed] bg-white p-3 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
                                 <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", preset.tone)}><Icon className="h-5 w-5" /></div>
@@ -602,7 +629,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                             );
                           })}
                         </div>
-                        <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Create utility category" })}><Plus className="mr-2 h-5 w-5" /> Create category</button>
+                        <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Add custom utility bill" })}><Plus className="mr-2 h-5 w-5" /> Add custom utility bill</button>
                       </>
                     ) : (
                       <button type="button" className="flex min-h-[96px] w-full items-center rounded-[20px] border border-[#e3e5ed] bg-white px-4 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger(detailCategory, CATEGORY_META[detailCategory].label)}>
@@ -615,20 +642,16 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 )}
               </div>
 
-              <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-border dark:bg-card sm:px-4" style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}>
-                <Button
-                  className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95"
-                  onClick={() => {
-                    if (detailCategory === "current") {
-                      openQuickAdd({ category: "current", title: "Add current bill" });
-                    } else {
-                      openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` });
-                    }
-                  }}
-                >
-                  <Plus className="mr-2 h-5 w-5" /> Add {detailCategory === "current" ? "current bill" : "bill"}
-                </Button>
-              </div>
+              {(detailCategory === "other" || detailCategory === "family") && (
+                <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-border dark:bg-card sm:px-4" style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}>
+                  <Button
+                    className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95"
+                    onClick={() => openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` })}
+                  >
+                    <Plus className="mr-2 h-5 w-5" /> Add bill
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </SheetContent>
@@ -654,7 +677,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           floor={sheetState.floor ?? null}
           defaultLabel={sheetState.defaultLabel}
           lockLabel={sheetState.lockLabel}
-          entries={sheetState.subcategory ? byCategory(sheetState.category).filter((entry) => (entry.subcategory ?? "") === sheetState.subcategory) : byCategory(sheetState.category)}
+          entries={sheetState.subcategory ? byCategory(sheetState.category).filter((entry) => getEntryGroupKey(entry) === sheetState.subcategory) : byCategory(sheetState.category)}
           onSave={(data) => addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear })}
           onUpdate={(id, patch) => updateEntry.mutate({ id, ...patch })}
           onDelete={(id) => deleteEntry.mutate(id)}

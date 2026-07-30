@@ -49,17 +49,21 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
 
   if (!initial) return null;
 
+  const isCurrentBill = initial.category === "current";
+  const isFixedCategory = !isCurrentBill && Boolean(initial.lockLabel && (initial.label || initial.subcategory));
+
   const handleSave = () => {
     const amt = parseInt(amount) || 0;
-    const isCurrentBill = initial.category === "current";
     const resolvedLabel = isCurrentBill
       ? initial.editing?.label || initial.label || initial.subcategory || "Current bill"
+      : isFixedCategory
+        ? initial.editing?.label || initial.label || initial.subcategory || ""
       : label.trim();
     if (!resolvedLabel || amt <= 0) return;
 
     onSave({
       category: initial.category,
-      subcategory: initial.subcategory ?? null,
+      subcategory: initial.subcategory ?? (initial.category === "utility" ? resolvedLabel : null),
       label: resolvedLabel,
       amount: amt,
       entry_date: entryDate,
@@ -70,7 +74,6 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
   };
 
   const title = initial.editing ? "Edit Entry" : (initial.title || `Add ${initial.subcategory || initial.label || "Entry"}`);
-  const isCurrentBill = initial.category === "current";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,7 +85,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          {!isCurrentBill && (
+          {!isCurrentBill && !isFixedCategory && (
             <div>
               <Label className="text-xs">Label *</Label>
               <Input

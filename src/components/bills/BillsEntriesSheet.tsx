@@ -37,13 +37,17 @@ export const BillsEntriesSheet = ({
   const initial: QuickExpenseInitial | null = adding
     ? { category, subcategory, floor, label: defaultLabel, lockLabel }
     : editing
-      ? { category, subcategory, floor, label: editing.label, editing }
+      ? { category, subcategory, floor, label: defaultLabel ?? editing.label, editing, lockLabel }
       : null;
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="flex h-[92dvh] flex-col rounded-t-[28px] p-0 animate-in duration-300 [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0">
+        <SheetContent
+          side="bottom"
+          className="flex h-[92dvh] flex-col rounded-t-[28px] p-0 animate-in duration-300 [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <SheetHeader className="border-b px-3 pb-2 pt-3 sm:px-4">
             <SheetTitle className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl" onClick={() => onOpenChange(false)} aria-label="Back to bills and budget">
