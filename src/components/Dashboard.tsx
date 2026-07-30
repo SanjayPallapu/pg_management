@@ -684,9 +684,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
       {/* Bills & Budget Sheet */}
       <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
-        <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
+        <SheetContent
+          side="right"
+          className={
+            isMobile
+              ? "w-full max-w-full p-0 sm:max-w-full [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
+              : "w-full p-0 sm:max-w-xl [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
+          }
+        >
           <div className="flex h-full flex-col bg-[#f4f4ef] dark:bg-[#101114]">
-            <SheetHeader className="shrink-0 border-b border-[#dcdcd3] bg-[#fffef9] px-4 py-3 dark:border-white/10 dark:bg-[#181a1f]">
+            <SheetHeader className="shrink-0 border-b border-[#dcdcd3] bg-[#fffef9] px-3 py-3 dark:border-white/10 dark:bg-[#181a1f]">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
                   <ArrowLeft className="h-5 w-5" />
