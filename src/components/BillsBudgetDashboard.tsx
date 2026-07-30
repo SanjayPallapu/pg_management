@@ -289,7 +289,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   return (
     <>
       <div
-        className="bills-premium-shell flex h-full min-h-0 flex-col overflow-hidden bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4"
+        className="bills-premium-shell flex h-full min-h-0 touch-pan-y flex-col overflow-y-auto overscroll-contain bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4"
         style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
       >
         <header className="flex h-[76px] shrink-0 items-center gap-2">
@@ -418,7 +418,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </section>
 
-        <section className="bills-premium-activity mt-3 flex min-h-0 flex-1 items-center rounded-[20px] border border-[#e4e6ee] bg-white px-4 dark:border-white/10 dark:bg-[#181a22]">
+        <section className="bills-premium-activity mt-3 flex min-h-[78px] shrink-0 items-center rounded-[20px] border border-[#e4e6ee] bg-white px-4 dark:border-white/10 dark:bg-[#181a22]">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#6a55e8]"><Sparkles className="h-5 w-5" /></div>
           <div className="ml-3 min-w-0 flex-1">
             <p className="truncate text-sm font-black">{entries.length === 0 ? `No spending recorded in ${MONTHS[selectedMonth - 1]?.label}` : `${entries.length} ${entries.length === 1 ? "bill" : "bills"} recorded this month`}</p>

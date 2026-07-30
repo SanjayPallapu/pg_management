@@ -263,10 +263,6 @@ All colors MUST be HSL.
     min-height: 2.75rem;
   }
 
-  .bills-premium-activity {
-    display: none;
-  }
-
   .bills-premium-cta {
     height: 3rem;
     margin-top: 0.5rem;
