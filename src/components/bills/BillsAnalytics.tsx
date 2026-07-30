@@ -119,7 +119,7 @@ export const BillsAnalytics = () => {
 
   if (isError) {
     return (
-      <div className="my-6 rounded-[24px] border border-[#f1c9cf] bg-white p-6 text-center dark:border-white/10 dark:bg-[#181a22]">
+      <div className="my-6 rounded-[24px] border border-[#f1c9cf] bg-white p-6 text-center dark:border-border dark:bg-card">
         <BarChart3 className="mx-auto h-8 w-8 text-[#4936ef]" />
         <p className="mt-3 font-black">Analytics could not be loaded</p>
         <p className="mt-1 text-sm text-muted-foreground">Your bill entries are still available from the dashboard.</p>
@@ -129,7 +129,7 @@ export const BillsAnalytics = () => {
 
   return (
     <div className="space-y-3 py-3">
-      <div className="mx-auto grid h-[52px] w-full max-w-[390px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-white/10 dark:bg-[#181a22]" role="tablist" aria-label="Analytics period">
+      <div className="mx-auto grid h-[52px] w-full max-w-[390px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" role="tablist" aria-label="Analytics period">
         {(["1M", "6M", "1Y"] as Range[]).map((option) => (
           <button
             key={option}
@@ -159,13 +159,13 @@ export const BillsAnalytics = () => {
         />
       </div>
 
-      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-black">{range === "1M" ? "Monthly activity" : `${range === "6M" ? "6-month" : "12-month"} trend`}</h2>
             <p className="text-xs text-muted-foreground">Total spend over time</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><TrendingUp className="h-5 w-5" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><TrendingUp className="h-5 w-5" /></div>
         </div>
         <div className="relative mt-2 h-[230px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -184,14 +184,14 @@ export const BillsAnalytics = () => {
           </ResponsiveContainer>
           {!hasTrendData && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f1efff]/90 text-[#7563e9]"><TrendingUp className="h-6 w-6" /></div>
-              <p className="mt-2 text-sm font-bold text-[#61667a]">Not enough data for a trend yet</p>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f1efff]/90 text-[#7563e9] dark:bg-[#302858] dark:text-[#b6a2ff]"><TrendingUp className="h-6 w-6" /></div>
+              <p className="mt-2 text-sm font-bold text-[#61667a] dark:text-muted-foreground">Not enough data for a trend yet</p>
             </div>
           )}
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+      <section className="rounded-[24px] border border-[#e2e4ed] bg-white p-4 shadow-[0_14px_34px_-28px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
         <div className="flex items-center justify-between">
           <div><h2 className="text-base font-black">Category split</h2><p className="text-xs text-muted-foreground">{monthLabel}</p></div>
           <PieIcon className="h-5 w-5 text-[#4936ef]" />
@@ -209,7 +209,7 @@ export const BillsAnalytics = () => {
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-full bg-[#f1efff]">
-                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full border border-dashed border-[#aaa0ef] bg-white text-[#9287dd] dark:bg-[#181a22]"><WalletCards className="h-6 w-6" /></div>
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full border border-dashed border-[#aaa0ef] bg-white text-[#9287dd] dark:border-[#7569cc] dark:bg-card dark:text-[#b6a2ff]"><WalletCards className="h-6 w-6" /></div>
               </div>
             )}
           </div>
@@ -224,8 +224,8 @@ export const BillsAnalytics = () => {
         </div>
       </section>
 
-      <button type="button" className="flex min-h-[76px] w-full items-center rounded-[20px] border border-[#e2e4ed] bg-white px-4 text-left dark:border-white/10 dark:bg-[#181a22]">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><CalendarDays className="h-5 w-5" /></div>
+      <button type="button" className="flex min-h-[76px] w-full items-center rounded-[20px] border border-[#e2e4ed] bg-white px-4 text-left dark:border-border dark:bg-card">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><CalendarDays className="h-5 w-5" /></div>
         <div className="ml-3 min-w-0 flex-1"><p className="text-sm font-black">Daily spend</p><p className="truncate text-xs text-muted-foreground">{dailySpend.length ? `${dailySpend.length} active ${dailySpend.length === 1 ? "day" : "days"} this month` : "No activity this month"}</p></div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
       </button>
@@ -244,8 +244,8 @@ const StatCard = ({
   value: string;
   sub: string;
 }) => (
-  <div className="min-h-[116px] rounded-[22px] border border-[#e2e4ed] bg-white p-3.5 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
-    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><Icon className="h-5 w-5" /></div>
+  <div className="min-h-[116px] rounded-[22px] border border-[#e2e4ed] bg-white p-3.5 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
+    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
     <p className="mt-2 text-xs text-muted-foreground">{label}</p>
     <p className="text-xl font-black">{value}</p>
     <p className="truncate text-[10px] text-muted-foreground">{sub}</p>

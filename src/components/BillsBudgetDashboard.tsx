@@ -68,14 +68,14 @@ const getFloorLabel = (floor: number): string => {
 };
 
 const UTILITY_PRESETS = [
-  { key: "Water Tank", icon: Droplet, tone: "text-[#2670e8] bg-[#edf3ff]" },
-  { key: "Gas Cylinder", icon: Flame, tone: "text-[#f05c3c] bg-[#fff0eb]" },
-  { key: "Water Can", icon: Coffee, tone: "text-[#0ea5b7] bg-[#eafafd]" },
-  { key: "Milk & Curd", icon: Milk, tone: "text-[#2670e8] bg-[#eef4ff]" },
-  { key: "Rice Bags", icon: ShoppingBag, tone: "text-[#159447] bg-[#edf9f0]" },
-  { key: "Palm Oil", icon: Droplet, tone: "text-[#d99000] bg-[#fff7e8]" },
-  { key: "Chicken", icon: Drumstick, tone: "text-[#ee4770] bg-[#fff0f4]" },
-  { key: "Eggs", icon: Egg, tone: "text-[#6f45dd] bg-[#f3efff]" },
+  { key: "Water Tank", icon: Droplet, tone: "bg-[#edf3ff] text-[#2670e8] dark:bg-[#17345c] dark:text-[#78b4ff]" },
+  { key: "Gas Cylinder", icon: Flame, tone: "bg-[#fff0eb] text-[#f05c3c] dark:bg-[#4b2927] dark:text-[#ff9b83]" },
+  { key: "Water Can", icon: Coffee, tone: "bg-[#eafafd] text-[#0ea5b7] dark:bg-[#173b49] dark:text-[#69d8e7]" },
+  { key: "Milk & Curd", icon: Milk, tone: "bg-[#eef4ff] text-[#2670e8] dark:bg-[#17345c] dark:text-[#78b4ff]" },
+  { key: "Rice Bags", icon: ShoppingBag, tone: "bg-[#edf9f0] text-[#159447] dark:bg-[#173b2b] dark:text-[#69d48f]" },
+  { key: "Palm Oil", icon: Droplet, tone: "bg-[#fff7e8] text-[#d99000] dark:bg-[#49391c] dark:text-[#f6c45f]" },
+  { key: "Chicken", icon: Drumstick, tone: "bg-[#fff0f4] text-[#ee4770] dark:bg-[#4a2534] dark:text-[#ff8dac]" },
+  { key: "Eggs", icon: Egg, tone: "bg-[#f3efff] text-[#6f45dd] dark:bg-[#302858] dark:text-[#b6a2ff]" },
 ];
 
 const CATEGORY_META: Record<
@@ -95,8 +95,8 @@ const CATEGORY_META: Record<
     shortLabel: "Current",
     description: "Floor and motor electricity",
     icon: Zap,
-    iconSurface: "bg-[#f1efff]",
-    iconColor: "text-[#4932e7]",
+    iconSurface: "bg-[#f1efff] dark:bg-[#302858]",
+    iconColor: "text-[#4932e7] dark:text-[#b6a2ff]",
     barColor: "bg-[#4936ef]",
   },
   utility: {
@@ -104,8 +104,8 @@ const CATEGORY_META: Record<
     shortLabel: "Utilities",
     description: "Water, food and operations",
     icon: Droplet,
-    iconSurface: "bg-[#edf4ff]",
-    iconColor: "text-[#1766d9]",
+    iconSurface: "bg-[#edf4ff] dark:bg-[#17345c]",
+    iconColor: "text-[#1766d9] dark:text-[#78b4ff]",
     barColor: "bg-[#1aa9d2]",
   },
   other: {
@@ -113,8 +113,8 @@ const CATEGORY_META: Record<
     shortLabel: "Other",
     description: "Maintenance and one-off costs",
     icon: Receipt,
-    iconSurface: "bg-[#f3efff]",
-    iconColor: "text-[#5d3ed4]",
+    iconSurface: "bg-[#f3efff] dark:bg-[#302858]",
+    iconColor: "text-[#5d3ed4] dark:text-[#b6a2ff]",
     barColor: "bg-[#32b45d]",
   },
   family: {
@@ -122,8 +122,8 @@ const CATEGORY_META: Record<
     shortLabel: "Family",
     description: "Personal and household spend",
     icon: UsersRound,
-    iconSurface: "bg-[#f5f0ff]",
-    iconColor: "text-[#5737d8]",
+    iconSurface: "bg-[#f5f0ff] dark:bg-[#332851]",
+    iconColor: "text-[#5737d8] dark:text-[#bea7ff]",
     barColor: "bg-[#f3a21a]",
   },
 };
@@ -255,7 +255,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4">
+      <div className="flex h-full min-h-0 flex-col bg-[#f8f9fd] px-3 dark:bg-background sm:px-4">
         <div className="flex h-[76px] shrink-0 items-center gap-3">
           <Skeleton className="h-11 w-11 rounded-full" />
           <div className="space-y-2"><Skeleton className="h-5 w-36" /><Skeleton className="h-3 w-20" /></div>
@@ -271,8 +271,8 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   if (isError) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4">
-        <div className="w-full max-w-sm rounded-[26px] border border-[#e2e4ec] bg-white p-6 text-center shadow-[0_18px_40px_-28px_rgba(31,36,64,.55)] dark:border-white/10 dark:bg-[#181a22]">
+      <div className="flex h-full items-center justify-center bg-[#f8f9fd] px-3 dark:bg-background sm:px-4">
+        <div className="w-full max-w-sm rounded-[26px] border border-[#e2e4ec] bg-white p-6 text-center shadow-[0_18px_40px_-28px_rgba(31,36,64,.55)] dark:border-border dark:bg-card">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ffe8eb] text-[#b4232d]">
             <AlertCircle className="h-7 w-7" />
           </div>
@@ -289,8 +289,8 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   return (
     <>
       <div
-        className="bills-premium-shell flex h-full min-h-0 touch-pan-y flex-col overflow-y-auto overscroll-contain bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4"
-        style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
+        className="bills-premium-shell flex min-h-full flex-col bg-[#f8f9fd] px-3 dark:bg-background sm:px-4"
+        style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
       >
         <header className="flex h-[76px] shrink-0 items-center gap-2">
           <button
@@ -369,13 +369,13 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </section>
 
-        <section className="bills-premium-stats mt-3 grid h-[74px] shrink-0 grid-cols-2 divide-x divide-[#e7e8ef] rounded-[22px] border border-[#e4e6ee] bg-white shadow-[0_14px_32px_-26px_rgba(25,30,58,.65)] dark:divide-white/10 dark:border-white/10 dark:bg-[#181a22]">
+        <section className="bills-premium-stats mt-3 grid h-[74px] shrink-0 grid-cols-2 divide-x divide-[#e7e8ef] rounded-[22px] border border-[#e4e6ee] bg-white shadow-[0_14px_32px_-26px_rgba(25,30,58,.65)] dark:divide-border dark:border-border dark:bg-card">
           <div className="flex items-center gap-3 px-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7]"><Receipt className="h-5 w-5" /></div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]"><Receipt className="h-5 w-5" /></div>
             <div className="min-w-0"><p className="text-xs text-muted-foreground">Total bills</p><p className="truncate text-lg font-black">{formatCurrency(grandTotal)}</p></div>
           </div>
           <div className="flex items-center gap-3 px-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7]"><ListChecks className="h-5 w-5" /></div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]"><ListChecks className="h-5 w-5" /></div>
             <div><p className="text-xs text-muted-foreground">Entries</p><p className="text-lg font-black">{entries.length}</p></div>
           </div>
         </section>
@@ -383,9 +383,9 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         <section className="bills-premium-groups mt-4 shrink-0">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-[15px] font-black tracking-[-0.015em] text-[#111526] dark:text-white">Spending groups</h2>
-            <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-bold text-[#4936ef]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
+            <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-bold text-[#4936ef] dark:text-[#b6a2ff]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
           </div>
-          <div className="overflow-hidden rounded-[20px] border border-[#e3e5ed] bg-white shadow-[0_12px_28px_-25px_rgba(25,30,58,.7)] divide-y divide-[#e8e9f0] dark:divide-white/10 dark:border-white/10 dark:bg-[#181a22]">
+          <div className="divide-y divide-[#e8e9f0] overflow-hidden rounded-[20px] border border-[#e3e5ed] bg-white shadow-[0_12px_28px_-25px_rgba(25,30,58,.7)] dark:divide-border dark:border-border dark:bg-card">
             {categoryData.map((item) => {
               const Icon = item.icon;
               const share = grandTotal > 0 ? Math.round((item.total / grandTotal) * 100) : 0;
@@ -393,7 +393,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 <button
                   key={item.category}
                   type="button"
-                  className="bills-premium-group-row flex min-h-[54px] w-full items-center gap-3 px-3 text-left transition-colors hover:bg-[#fafaff] active:bg-[#f4f2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4936ef] dark:hover:bg-white/[0.04]"
+                  className="bills-premium-group-row flex min-h-[54px] w-full items-center gap-3 px-3 text-left transition-colors hover:bg-[#fafaff] active:bg-[#f4f2ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4936ef] dark:hover:bg-accent/40 dark:active:bg-accent/60"
                   onClick={() => setDetailCategory(item.category)}
                   aria-label={`Open ${item.label}, ${formatCurrency(item.total)}`}
                 >
@@ -406,7 +406,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                       <p className="shrink-0 text-sm font-black">{formatCurrency(item.total)}</p>
                     </div>
                     <div className="mt-1.5 flex items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ececf3] dark:bg-white/10">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ececf3] dark:bg-secondary">
                         <div className={cn("h-full rounded-full transition-[width] duration-500", item.barColor)} style={{ width: `${share}%` }} />
                       </div>
                       <span className="w-7 text-right text-[10px] font-bold text-muted-foreground">{share}%</span>
@@ -418,8 +418,8 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </section>
 
-        <section className="bills-premium-activity mt-3 flex min-h-[78px] shrink-0 items-center rounded-[20px] border border-[#e4e6ee] bg-white px-4 dark:border-white/10 dark:bg-[#181a22]">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#6a55e8]"><Sparkles className="h-5 w-5" /></div>
+        <section className="bills-premium-activity mt-3 flex min-h-[78px] shrink-0 items-center rounded-[20px] border border-[#e4e6ee] bg-white px-4 dark:border-border dark:bg-card">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#6a55e8] dark:bg-[#302858] dark:text-[#b6a2ff]"><Sparkles className="h-5 w-5" /></div>
           <div className="ml-3 min-w-0 flex-1">
             <p className="truncate text-sm font-black">{entries.length === 0 ? `No spending recorded in ${MONTHS[selectedMonth - 1]?.label}` : `${entries.length} ${entries.length === 1 ? "bill" : "bills"} recorded this month`}</p>
             <p className="truncate text-xs text-muted-foreground">{entries.length === 0 ? "Add your first bill to start tracking." : `${formatCurrency(grandTotal)} across ${categoryData.filter((item) => item.count > 0).length} spending groups`}</p>
@@ -437,7 +437,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       <Dialog open={editingBudget} onOpenChange={setEditingBudget}>
         <DialogContent className="max-w-[calc(100%-32px)] rounded-[26px] sm:max-w-sm">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7]"><Target className="h-6 w-6" /></div>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]"><Target className="h-6 w-6" /></div>
             <DialogTitle className="text-center">Set monthly budget</DialogTitle>
             <DialogDescription className="text-center">Create a spending limit for {monthLabel}.</DialogDescription>
           </DialogHeader>
@@ -505,25 +505,25 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       </Dialog>
 
       <Sheet open={Boolean(detailCategory)} onOpenChange={(open) => !open && setDetailCategory(null)}>
-        <SheetContent key={detailCategory ?? "closed"} side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
+        <SheetContent key={detailCategory ?? "closed"} side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
           {detailCategory && (
             <>
-              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22] sm:px-4">
+              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-border dark:bg-card sm:px-4">
                 <div className="flex min-h-[58px] items-center gap-2">
-                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7]" onClick={() => setDetailCategory(null)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
+                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:hover:bg-accent/50" onClick={() => setDetailCategory(null)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
                   <div className="min-w-0 flex-1 text-center">
                     <SheetTitle className="truncate text-lg font-black">{CATEGORY_META[detailCategory].label}</SheetTitle>
                     <p className="text-xs font-semibold text-[#4936ef]">{monthLabel}</p>
                   </div>
-                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]" onClick={() => detailCategory === "current" ? openFloorSettings() : undefined} aria-label={detailCategory === "current" ? "Configure floors" : "Search bills"}>
+                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]" onClick={() => detailCategory === "current" ? openFloorSettings() : undefined} aria-label={detailCategory === "current" ? "Configure floors" : "Search bills"}>
                     {detailCategory === "current" ? <CircleGauge className="h-5 w-5" /> : <Search className="h-5 w-5" />}
                   </button>
                 </div>
               </SheetHeader>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4">
-                <section className="mt-3 flex min-h-[108px] items-center rounded-[24px] border border-[#dddafa] bg-[linear-gradient(110deg,#fff,#f6f4ff)] p-4 dark:border-white/10 dark:bg-[#181a22]">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[#eeebff] text-[#4936ef]">
+                <section className="mt-3 flex min-h-[108px] items-center rounded-[24px] border border-[#dddafa] bg-[linear-gradient(110deg,#fff,#f6f4ff)] p-4 dark:border-border dark:bg-card dark:bg-none">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[#eeebff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]">
                     {(() => { const Icon = CATEGORY_META[detailCategory].icon; return <Icon className="h-7 w-7" />; })()}
                   </div>
                   <div className="ml-4 min-w-0 flex-1">
@@ -542,7 +542,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                   <>
                     <div className="mb-2 mt-3 flex min-h-11 items-center justify-between">
                       <h3 className="text-base font-black">Floor meters</h3>
-                      <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef]" onClick={openFloorSettings}>Configure floors</button>
+                      <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]" onClick={openFloorSettings}>Configure floors</button>
                     </div>
                     <div className="space-y-2.5">
                       {currentBillPresets.map((preset) => {
@@ -550,14 +550,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         const matchingEntries = byCategory("current").filter((entry) => (entry.subcategory ?? "") === preset.subcategory);
                         const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                         return (
-                          <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-white/10 dark:bg-[#181a22]">
+                          <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
                             <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("current", preset.label, preset.subcategory, preset.floor)}>
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><Icon className="h-5 w-5" /></div>
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
                               <div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{preset.label}</p><p className="text-xs text-muted-foreground">{matchingEntries.length ? `${formatCurrency(presetTotal)} · ${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p></div>
                             </button>
                             <button
                               type="button"
-                              className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef]"
+                              className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
                               onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` })}
                               aria-label={`Add ${preset.label}`}
                             >
@@ -567,13 +567,13 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         );
                       })}
                     </div>
-                    <div className="mt-3 flex min-h-[54px] items-center gap-3 rounded-[18px] border border-[#dcd9ff] bg-[#f5f3ff] px-3 text-sm text-[#50546a] dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+                    <div className="mt-3 flex min-h-[54px] items-center gap-3 rounded-[18px] border border-[#dcd9ff] bg-[#f5f3ff] px-3 text-sm text-[#50546a] dark:border-border dark:bg-secondary/60 dark:text-muted-foreground">
                       <AlertCircle className="h-5 w-5 shrink-0 text-[#4936ef]" /><span>Add meter readings or bill amounts for {MONTHS[selectedMonth - 1]?.label}.</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="mt-3 grid h-[52px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-white/10 dark:bg-[#181a22]">
+                    <div className="mt-3 grid h-[52px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card">
                       {(["utility", "other", "family"] as ExpenseCategory[]).map((category) => (
                         <button key={category} type="button" className={cn("min-h-11 rounded-[14px] text-sm font-black", detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70")} onClick={() => setDetailCategory(category)}>{CATEGORY_META[category].shortLabel}</button>
                       ))}
@@ -588,18 +588,18 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                             const Icon = preset.icon;
                             const matchingEntries = byCategory("utility").filter((entry) => (entry.subcategory ?? "") === preset.key);
                             return (
-                              <button key={preset.key} type="button" className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-[#e3e5ed] bg-white p-3 text-left dark:border-white/10 dark:bg-[#181a22]" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
+                              <button key={preset.key} type="button" className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-[#e3e5ed] bg-white p-3 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
                                 <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", preset.tone)}><Icon className="h-5 w-5" /></div>
                                 <div className="min-w-0"><p className="truncate text-sm font-black">{preset.key}</p><p className="text-xs text-muted-foreground">{matchingEntries.length ? `${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p></div>
                               </button>
                             );
                           })}
                         </div>
-                        <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef]" onClick={() => openQuickAdd({ category: "utility", title: "Create utility category" })}><Plus className="mr-2 h-5 w-5" /> Create category</button>
+                        <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Create utility category" })}><Plus className="mr-2 h-5 w-5" /> Create category</button>
                       </>
                     ) : (
-                      <button type="button" className="flex min-h-[96px] w-full items-center rounded-[20px] border border-[#e3e5ed] bg-white px-4 text-left dark:border-white/10 dark:bg-[#181a22]" onClick={() => openPresetLedger(detailCategory, CATEGORY_META[detailCategory].label)}>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><Receipt className="h-5 w-5" /></div>
+                      <button type="button" className="flex min-h-[96px] w-full items-center rounded-[20px] border border-[#e3e5ed] bg-white px-4 text-left dark:border-border dark:bg-card" onClick={() => openPresetLedger(detailCategory, CATEGORY_META[detailCategory].label)}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Receipt className="h-5 w-5" /></div>
                         <div className="ml-3 min-w-0 flex-1"><p className="font-black">View all {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bills</p><p className="text-xs text-muted-foreground">{byCategory(detailCategory).length ? `${byCategory(detailCategory).length} recorded this month` : "No entries yet"}</p></div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </button>
@@ -608,7 +608,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 )}
               </div>
 
-              <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-white/10 dark:bg-[#181a22] sm:px-4" style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}>
+              <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-border dark:bg-card sm:px-4" style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}>
                 <Button
                   className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95"
                   onClick={() => {
@@ -659,7 +659,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       <Dialog open={isFloorsConfigOpen} onOpenChange={setIsFloorsConfigOpen}>
         <DialogContent className="max-w-[calc(100%-32px)] rounded-[26px] sm:max-w-sm">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7]"><Building2 className="h-6 w-6" /></div>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]"><Building2 className="h-6 w-6" /></div>
             <DialogTitle className="text-center">Configure floor meters</DialogTitle>
             <DialogDescription className="text-center">Choose which floors appear in current bills.</DialogDescription>
           </DialogHeader>
@@ -694,12 +694,12 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       </Dialog>
 
       <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
-        <SheetContent side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
-          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22] sm:px-4">
+        <SheetContent side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
+          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-border dark:bg-card sm:px-4">
             <div className="flex min-h-[58px] items-center gap-2">
-              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7]" onClick={() => setAnalyticsOpen(false)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
+              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:hover:bg-accent/50" onClick={() => setAnalyticsOpen(false)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
               <div className="min-w-0 flex-1 text-center"><SheetTitle className="text-lg font-black">Spending analytics</SheetTitle><p className="text-xs font-medium text-muted-foreground">{monthLabel}</p></div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><BarChart3 className="h-5 w-5" /></div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><BarChart3 className="h-5 w-5" /></div>
             </div>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-4"><BillsAnalytics /></div>

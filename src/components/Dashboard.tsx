@@ -687,12 +687,12 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           side="right"
           className={
             isMobile
-              ? "w-full max-w-full p-0 sm:max-w-full [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
-              : "w-full p-0 sm:max-w-xl [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
+              ? "w-full max-w-full p-0 sm:max-w-full [&>button]:hidden [&>div:last-child]:overflow-hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
+              : "w-full p-0 sm:max-w-xl [&>div:last-child]:overflow-hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
           }
         >
-          <div className="flex h-full flex-col bg-[#f8f9fd] dark:bg-[#0f1118]">
-            <div className="min-h-0 flex-1 overflow-hidden relative">
+          <div className="flex h-full flex-col bg-[#f8f9fd] dark:bg-background">
+            <div className="relative min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain">
               <BillsBudgetDashboard rooms={rooms} onClose={() => setBillsBudgetOpen(false)} />
             </div>
           </div>

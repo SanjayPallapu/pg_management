@@ -133,7 +133,7 @@ export const BillsEntriesSheet = ({
 
           <div
             className="border-t bg-background px-3 pt-4 sm:px-4"
-            style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
+            style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
           >
             <Button className="h-12 w-full rounded-xl" onClick={() => setAdding(true)}>
               <Plus className="h-4 w-4 mr-1" /> Add
