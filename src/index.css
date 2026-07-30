@@ -226,36 +226,43 @@ All colors MUST be HSL.
   display: none;
 }
 
-/* Keep the Bills & Budget overview within short mobile viewports. */
+/* Keep the ledger-first Bills & Budget screen inside short mobile viewports. */
 @media (max-height: 720px) {
-  .bills-dashboard-shell {
+  .bills-ledger-shell {
     gap: 0.5rem;
     padding-top: 0.5rem;
   }
 
-  .bills-budget-hero {
-    padding: 0.75rem;
+  .bills-ledger-summary {
+    padding: 0.5rem 0.75rem;
   }
 
-  .bills-hero-top {
+  .bills-ledger-summary-top {
     display: none;
   }
 
-  .bills-hero-spend,
-  .bills-hero-progress {
+  .bills-ledger-balance {
     margin-top: 0;
   }
 
-  .bills-hero-progress {
-    margin-top: 0.5rem;
-  }
-
-  .bills-short-month {
+  .bills-ledger-short-month {
     display: inline;
   }
 
-  .bills-empty-prompt {
+  .bills-ledger-entry-count {
     display: none;
+  }
+
+  .bills-ledger-short-limit {
+    display: flex;
+  }
+
+  .bills-ledger-metrics {
+    display: none;
+  }
+
+  .bills-ledger-row {
+    min-height: 3.25rem;
   }
 }
 

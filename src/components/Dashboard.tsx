@@ -685,17 +685,17 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       {/* Bills & Budget Sheet */}
       <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950">
-            <SheetHeader className="px-4 pt-3 pb-3 border-b bg-background shrink-0">
+          <div className="flex h-full flex-col bg-[#f4f4ef] dark:bg-[#101114]">
+            <SheetHeader className="shrink-0 border-b border-[#dcdcd3] bg-[#fffef9] px-4 py-3 dark:border-white/10 dark:bg-[#181a1f]">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
+                <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div className="flex items-center gap-2 flex-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500">
-                    <Scale className="h-4 w-4 text-white" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dbe7ff] text-[#1d4ed8] dark:bg-[#1e3262] dark:text-[#a8beff]">
+                    <Scale className="h-4 w-4" />
                   </div>
-                  <SheetTitle className="text-base text-foreground font-bold">Bills & Budget</SheetTitle>
+                  <SheetTitle className="text-base font-black text-foreground">Bills & Budget</SheetTitle>
                 </div>
               </div>
             </SheetHeader>
