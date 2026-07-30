@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Pencil, Trash2, Plus, Inbox, Receipt } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Plus, Inbox } from "lucide-react";
 import { format } from "date-fns";
 import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./QuickExpenseDialog";
-import { CurrentBillReceiptDialog } from "./CurrentBillReceiptDialog";
-import { Room } from "@/types";
 
 interface Props {
   open: boolean;
@@ -23,39 +20,18 @@ interface Props {
   defaultLabel?: string;
   lockLabel?: boolean;
   entries: ExpenseEntry[];
-  rooms: Room[];
   onSave: (data: Omit<ExpenseEntry, "id" | "pg_id" | "month" | "year">) => void;
   onUpdate: (id: string, patch: Partial<ExpenseEntry>) => void;
   onDelete: (id: string) => void;
 }
 
-const parseUnitsAndNotes = (notesStr: string | null | undefined) => {
-  if (!notesStr) return { units: 0, notes: "" };
-  if (notesStr.startsWith("Units: ")) {
-    const match = notesStr.match(/^Units:\s*(\d+)(?:\s*\|\s*(.*))?$/);
-    if (match) {
-      return {
-        units: parseInt(match[1]) || 0,
-        notes: match[2] ?? "",
-      };
-    }
-  }
-  return { units: 0, notes: notesStr };
-};
-
 export const BillsEntriesSheet = ({
   open, onOpenChange, title, category, subcategory, floor, defaultLabel, lockLabel,
-  entries, rooms, onSave, onUpdate, onDelete,
+  entries, onSave, onUpdate, onDelete,
 }: Props) => {
   const [editing, setEditing] = useState<ExpenseEntry | null>(null);
   const [adding, setAdding] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ExpenseEntry | null>(null);
-  const [selectedReceipt, setSelectedReceipt] = useState<{
-    entry: ExpenseEntry;
-    units: number;
-    notes: string;
-  } | null>(null);
-
   const total = entries.reduce((s, e) => s + e.amount, 0);
 
   const initial: QuickExpenseInitial | null = adding
@@ -88,33 +64,21 @@ export const BillsEntriesSheet = ({
                 <p className="text-sm">No entries yet</p>
               </div>
             ) : (
-              entries.map((e) => {
-                const { units, notes: cleanNotes } = parseUnitsAndNotes(e.notes);
-                return (
+              entries.map((e) => (
                   <div key={e.id}
                     className="flex min-h-[68px] items-center justify-between gap-2 rounded-2xl border bg-card p-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate flex items-center gap-2">
-                        {e.label}
-                        {units > 0 && (
-                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 text-[10px] py-0 px-1.5 font-normal border-amber-200/50 hover:bg-amber-100">
-                            ⚡ {units} units
-                          </Badge>
-                        )}
+                      <div className="truncate text-sm font-medium">
+                        {category === "current" ? format(new Date(e.entry_date), "dd MMM yyyy") : e.label}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(e.entry_date), "dd MMM")}
-                        {cleanNotes && ` · ${cleanNotes}`}
-                      </div>
+                      {category !== "current" && (
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(e.entry_date), "dd MMM")}
+                          {e.notes && ` · ${e.notes}`}
+                        </div>
+                      )}
                     </div>
                     <div className="font-semibold text-sm shrink-0">₹{e.amount.toLocaleString()}</div>
-                    {units > 0 && (
-                      <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl text-amber-600 dark:text-amber-400"
-                        aria-label={`View receipt for ${e.label}`}
-                        onClick={() => setSelectedReceipt({ entry: e, units, notes: cleanNotes })}>
-                        <Receipt className="h-4 w-4" />
-                      </Button>
-                    )}
                     <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl"
                       aria-label={`Edit ${e.label}`}
                       onClick={() => setEditing(e)}>
@@ -126,8 +90,7 @@ export const BillsEntriesSheet = ({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                );
-              })
+              ))
             )}
           </div>
 
@@ -146,7 +109,6 @@ export const BillsEntriesSheet = ({
         open={!!initial}
         onOpenChange={(o) => { if (!o) { setAdding(false); setEditing(null); } }}
         initial={initial}
-        rooms={rooms}
         onSave={(data) => {
           if (editing) onUpdate(editing.id, data);
           else onSave(data);
@@ -173,17 +135,6 @@ export const BillsEntriesSheet = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {selectedReceipt && (
-        <CurrentBillReceiptDialog
-          open={!!selectedReceipt}
-          onOpenChange={(open) => {
-            if (!open) setSelectedReceipt(null);
-          }}
-          entry={selectedReceipt.entry}
-          units={selectedReceipt.units}
-          originalNotes={selectedReceipt.notes}
-        />
-      )}
     </>
   );
 };

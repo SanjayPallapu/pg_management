@@ -631,7 +631,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         open={Boolean(quickAdd)}
         onOpenChange={(open) => !open && setQuickAdd(null)}
         initial={quickAdd}
-        rooms={rooms}
         onSave={(data) => {
           addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear });
           setQuickAdd(null);
@@ -649,7 +648,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           defaultLabel={sheetState.defaultLabel}
           lockLabel={sheetState.lockLabel}
           entries={sheetState.subcategory ? byCategory(sheetState.category).filter((entry) => (entry.subcategory ?? "") === sheetState.subcategory) : byCategory(sheetState.category)}
-          rooms={rooms}
           onSave={(data) => addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear })}
           onUpdate={(id, patch) => updateEntry.mutate({ id, ...patch })}
           onDelete={(id) => deleteEntry.mutate(id)}
