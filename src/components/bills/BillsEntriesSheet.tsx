@@ -67,8 +67,8 @@ export const BillsEntriesSheet = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="flex h-[92dvh] flex-col rounded-t-[28px] p-0 animate-in duration-300 [&>button]:hidden">
-          <SheetHeader className="p-4 pb-2 border-b">
+        <SheetContent side="bottom" className="flex h-[92dvh] flex-col rounded-t-[28px] p-0 animate-in duration-300 [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0">
+          <SheetHeader className="border-b px-3 pb-2 pt-3 sm:px-4">
             <SheetTitle className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl" onClick={() => onOpenChange(false)} aria-label="Back to bills and budget">
                 <ArrowLeft className="h-5 w-5" />
@@ -81,7 +81,7 @@ export const BillsEntriesSheet = ({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4 sm:px-4">
             {entries.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Inbox className="h-10 w-10 mb-2 opacity-40" />
@@ -132,7 +132,7 @@ export const BillsEntriesSheet = ({
           </div>
 
           <div
-            className="border-t bg-background px-4 pt-4"
+            className="border-t bg-background px-3 pt-4 sm:px-4"
             style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
           >
             <Button className="h-12 w-full rounded-xl" onClick={() => setAdding(true)}>

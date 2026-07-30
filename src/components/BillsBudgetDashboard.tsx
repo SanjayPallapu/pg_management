@@ -58,8 +58,6 @@ interface Props {
   onClose?: () => void;
 }
 
-type DetailFilter = "all" | "floors" | "motor";
-
 const getFloorLabel = (floor: number): string => {
   if (floor === 0) return "Ground Floor";
   const j = floor % 10;
@@ -142,7 +140,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [quickAdd, setQuickAdd] = useState<QuickExpenseInitial | null>(null);
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
-  const [detailFilter, setDetailFilter] = useState<DetailFilter>("all");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sheetState, setSheetState] = useState<{
     title: string;
@@ -193,7 +190,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         subcategory: getFloorLabel(floor),
         floor,
         icon: floor === 0 ? Home : Building2,
-        kind: "floors" as const,
       })),
       {
         key: "motor",
@@ -201,15 +197,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         subcategory: "Motor",
         floor: null,
         icon: Settings,
-        kind: "motor" as const,
       },
     ],
     [floors],
   );
 
-  const visibleCurrentPresets = currentBillPresets.filter(
-    (preset) => detailFilter === "all" || detailFilter === preset.kind,
-  );
   const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[]).map((category) => ({
     category,
     total: totalFor(category),
@@ -259,7 +251,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#f8f9fd] px-3 dark:bg-[#0f1118]">
+      <div className="flex h-full min-h-0 flex-col bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4">
         <div className="flex h-[76px] shrink-0 items-center gap-3">
           <Skeleton className="h-11 w-11 rounded-full" />
           <div className="space-y-2"><Skeleton className="h-5 w-36" /><Skeleton className="h-3 w-20" /></div>
@@ -275,7 +267,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   if (isError) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#f8f9fd] px-5 dark:bg-[#0f1118]">
+      <div className="flex h-full items-center justify-center bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4">
         <div className="w-full max-w-sm rounded-[26px] border border-[#e2e4ec] bg-white p-6 text-center shadow-[0_18px_40px_-28px_rgba(31,36,64,.55)] dark:border-white/10 dark:bg-[#181a22]">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ffe8eb] text-[#b4232d]">
             <AlertCircle className="h-7 w-7" />
@@ -293,7 +285,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   return (
     <>
       <div
-        className="bills-premium-shell flex h-full min-h-0 flex-col overflow-hidden bg-[#f8f9fd] px-3 dark:bg-[#0f1118]"
+        className="bills-premium-shell flex h-full min-h-0 flex-col overflow-hidden bg-[#f8f9fd] px-3 dark:bg-[#0f1118] sm:px-4"
         style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
       >
         <header className="flex h-[76px] shrink-0 items-center gap-2">
@@ -371,7 +363,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-dashed border-white/25 pt-3">
+            <div className="mt-4 flex items-center justify-between pt-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/14">
                 <WalletCards className="h-5 w-5" />
               </div>
@@ -511,10 +503,10 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       </Dialog>
 
       <Sheet open={Boolean(detailCategory)} onOpenChange={(open) => !open && setDetailCategory(null)}>
-        <SheetContent key={detailCategory ?? "closed"} side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden sm:max-w-xl">
+        <SheetContent key={detailCategory ?? "closed"} side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
           {detailCategory && (
             <>
-              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22]">
+              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22] sm:px-4">
                 <div className="flex min-h-[58px] items-center gap-2">
                   <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7]" onClick={() => setDetailCategory(null)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
                   <div className="min-w-0 flex-1 text-center">
@@ -527,7 +519,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 </div>
               </SheetHeader>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4">
                 <section className="mt-3 flex min-h-[108px] items-center rounded-[24px] border border-[#dddafa] bg-[linear-gradient(110deg,#fff,#f6f4ff)] p-4 dark:border-white/10 dark:bg-[#181a22]">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[#eeebff] text-[#4936ef]">
                     {(() => { const Icon = CATEGORY_META[detailCategory].icon; return <Icon className="h-7 w-7" />; })()}
@@ -546,17 +538,12 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
                 {detailCategory === "current" ? (
                   <>
-                    <div className="mt-3 grid h-[52px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-white/10 dark:bg-[#181a22]" role="tablist" aria-label="Current bill filters">
-                      {(["all", "floors", "motor"] as DetailFilter[]).map((filter) => (
-                        <button key={filter} type="button" role="tab" aria-selected={detailFilter === filter} className={cn("min-h-11 rounded-[14px] text-sm font-black capitalize", detailFilter === filter ? "bg-[#4936ef] text-white shadow-sm" : "text-[#262a3c] dark:text-white/70")} onClick={() => setDetailFilter(filter)}>{filter}</button>
-                      ))}
-                    </div>
-                    <div className="mb-2 mt-4 flex min-h-11 items-center justify-between">
+                    <div className="mb-2 mt-3 flex min-h-11 items-center justify-between">
                       <h3 className="text-base font-black">Floor meters</h3>
                       <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef]" onClick={openFloorSettings}>Configure floors</button>
                     </div>
                     <div className="space-y-2.5">
-                      {visibleCurrentPresets.map((preset) => {
+                      {currentBillPresets.map((preset) => {
                         const Icon = preset.icon;
                         const matchingEntries = byCategory("current").filter((entry) => (entry.subcategory ?? "") === preset.subcategory);
                         const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -565,7 +552,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                             <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("current", preset.label, preset.subcategory, preset.floor)}>
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><Icon className="h-5 w-5" /></div>
                               <div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{preset.label}</p><p className="text-xs text-muted-foreground">{matchingEntries.length ? `${formatCurrency(presetTotal)} · ${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p></div>
-                              <ChevronRight className="h-5 w-5 text-[#7b8091]" />
                             </button>
                             <button
                               type="button"
@@ -620,7 +606,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 )}
               </div>
 
-              <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-white/10 dark:bg-[#181a22]" style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}>
+              <div className="shrink-0 border-t border-[#e4e6ee] bg-white px-3 pt-3 dark:border-white/10 dark:bg-[#181a22] sm:px-4" style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}>
                 <Button
                   className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95"
                   onClick={() => {
@@ -706,15 +692,15 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       </Dialog>
 
       <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
-        <SheetContent side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden sm:max-w-xl">
-          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22]">
+        <SheetContent side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-[#0f1118] [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
+          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-white/10 dark:bg-[#181a22] sm:px-4">
             <div className="flex min-h-[58px] items-center gap-2">
               <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7]" onClick={() => setAnalyticsOpen(false)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
               <div className="min-w-0 flex-1 text-center"><SheetTitle className="text-lg font-black">Spending analytics</SheetTitle><p className="text-xs font-medium text-muted-foreground">{monthLabel}</p></div>
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef]"><BarChart3 className="h-5 w-5" /></div>
             </div>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4"><BillsAnalytics /></div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-4"><BillsAnalytics /></div>
         </SheetContent>
       </Sheet>
     </>
