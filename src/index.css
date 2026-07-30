@@ -226,6 +226,39 @@ All colors MUST be HSL.
   display: none;
 }
 
+/* Keep the Bills & Budget overview within short mobile viewports. */
+@media (max-height: 720px) {
+  .bills-dashboard-shell {
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .bills-budget-hero {
+    padding: 0.75rem;
+  }
+
+  .bills-hero-top {
+    display: none;
+  }
+
+  .bills-hero-spend,
+  .bills-hero-progress {
+    margin-top: 0;
+  }
+
+  .bills-hero-progress {
+    margin-top: 0.5rem;
+  }
+
+  .bills-short-month {
+    display: inline;
+  }
+
+  .bills-empty-prompt {
+    display: none;
+  }
+}
+
 /* Prevent horizontal overflow on main content */
 .overflow-x-hidden {
   overflow-x: hidden;

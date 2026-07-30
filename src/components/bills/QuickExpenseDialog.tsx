@@ -113,7 +113,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[92dvh] max-w-[calc(100%-24px)] overflow-y-auto rounded-[24px] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-xs">Quick entry — only what's needed.</DialogDescription>
@@ -122,6 +122,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
           <div>
             <Label className="text-xs">Label *</Label>
             <Input
+              className="h-11"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               disabled={!!initial.lockLabel && !initial.editing}
@@ -152,6 +153,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
             <div>
               <Label className="text-xs">Units Consumed *</Label>
               <Input
+                className="h-11"
                 type="number"
                 value={units}
                 onChange={(e) => setUnits(e.target.value)}
@@ -181,6 +183,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
             <div>
               <Label className="text-xs">Amount (₹) *</Label>
               <Input
+                className="h-11"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -190,7 +193,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
             </div>
             <div>
               <Label className="text-xs">Date</Label>
-              <Input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
+              <Input className="h-11" type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
             </div>
           </div>
           {initial.category === "current" && rooms.length > 0 && (
@@ -209,12 +212,12 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, rooms, onSave 
           )}
           <div>
             <Label className="text-xs">Notes (optional)</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="..." />
+            <Input className="h-11" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="..." />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>{initial.editing ? "Update" : "Add"}</Button>
+          <Button className="h-11" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button className="h-11" onClick={handleSave}>{initial.editing ? "Update" : "Add"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

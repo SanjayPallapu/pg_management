@@ -67,10 +67,10 @@ export const BillsEntriesSheet = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="p-0 flex flex-col animate-in duration-300">
+        <SheetContent side="bottom" className="flex h-[92dvh] flex-col rounded-t-[28px] p-0 animate-in duration-300 [&>button]:hidden">
           <SheetHeader className="p-4 pb-2 border-b">
             <SheetTitle className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onOpenChange(false)}>
+              <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl" onClick={() => onOpenChange(false)} aria-label="Back to bills and budget">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               {title}
@@ -92,7 +92,7 @@ export const BillsEntriesSheet = ({
                 const { units, notes: cleanNotes } = parseUnitsAndNotes(e.notes);
                 return (
                   <div key={e.id}
-                    className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-card">
+                    className="flex min-h-[68px] items-center justify-between gap-2 rounded-2xl border bg-card p-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate flex items-center gap-2">
                         {e.label}
@@ -109,16 +109,19 @@ export const BillsEntriesSheet = ({
                     </div>
                     <div className="font-semibold text-sm shrink-0">₹{e.amount.toLocaleString()}</div>
                     {units > 0 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 dark:text-amber-400 shrink-0"
+                      <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl text-amber-600 dark:text-amber-400"
+                        aria-label={`View receipt for ${e.label}`}
                         onClick={() => setSelectedReceipt({ entry: e, units, notes: cleanNotes })}>
                         <Receipt className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"
+                    <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl"
+                      aria-label={`Edit ${e.label}`}
                       onClick={() => setEditing(e)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0"
+                    <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl text-destructive"
+                      aria-label={`Delete ${e.label}`}
                       onClick={() => setConfirmDelete(e)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -128,8 +131,11 @@ export const BillsEntriesSheet = ({
             )}
           </div>
 
-          <div className="p-4 border-t bg-background">
-            <Button className="w-full" onClick={() => setAdding(true)}>
+          <div
+            className="border-t bg-background px-4 pt-4"
+            style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
+          >
+            <Button className="h-12 w-full rounded-xl" onClick={() => setAdding(true)}>
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>

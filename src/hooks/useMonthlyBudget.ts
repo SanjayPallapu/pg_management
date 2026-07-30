@@ -3,11 +3,20 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "@/hooks/use-toast";
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Please try again.";
+
 export const useMonthlyBudget = (month: number, year: number) => {
   const { currentPG } = usePG();
   const qc = useQueryClient();
 
-  const { data: budget, isLoading } = useQuery({
+  const {
+    data: budget,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["monthly_budget", currentPG?.id, month, year],
     queryFn: async () => {
       if (!currentPG?.id) return null;
@@ -41,8 +50,17 @@ export const useMonthlyBudget = (month: number, year: number) => {
       qc.invalidateQueries({ queryKey: ["monthly_budget", currentPG?.id, month, year] });
       toast({ title: "Budget updated" });
     },
-    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (error: unknown) =>
+      toast({ title: "Failed", description: getErrorMessage(error), variant: "destructive" }),
   });
 
-  return { budget, amount: budget?.amount ?? 0, isLoading, setBudget };
+  return {
+    budget,
+    amount: budget?.amount ?? 0,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    setBudget,
+  };
 };

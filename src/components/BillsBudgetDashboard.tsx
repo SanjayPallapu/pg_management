@@ -1,41 +1,69 @@
-import { useMemo, useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import {
+  AlertCircle,
+  ArrowLeft,
+  BarChart3,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Coffee,
+  Droplet,
+  Egg,
+  Flame,
+  Home,
+  IndianRupee,
+  Layers3,
+  Milk,
+  Pencil,
+  Plus,
+  Receipt,
+  RefreshCw,
+  Settings,
+  ShoppingBag,
+  Sparkles,
+  Wallet,
+  Drumstick,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Building2, Droplet, Receipt, Home, Wallet, IndianRupee, Plus, Settings,
-  Flame, Egg, Milk, Drumstick, Coffee, ShoppingBag,
-} from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useMonthContext } from "@/contexts/MonthContext";
-import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
+import { usePG } from "@/contexts/PGContext";
+import { useExpenseEntries, type ExpenseCategory } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
-import { usePG } from "@/contexts/PGContext";
 
-interface Props { rooms: Room[]; }
+interface Props {
+  rooms: Room[];
+}
 
-export const getFloorLabel = (floor: number): string => {
+type DashboardTab = "overview" | "activity";
+
+const getFloorLabel = (floor: number): string => {
   if (floor === 0) return "Ground Floor";
-  const j = floor % 10, k = floor % 100;
-  if (j === 1 && k !== 11) {
-    return `${floor}st Floor`;
-  }
-  if (j === 2 && k !== 12) {
-    return `${floor}nd Floor`;
-  }
-  if (j === 3 && k !== 13) {
-    return `${floor}rd Floor`;
-  }
+  const j = floor % 10;
+  const k = floor % 100;
+  if (j === 1 && k !== 11) return `${floor}st Floor`;
+  if (j === 2 && k !== 12) return `${floor}nd Floor`;
+  if (j === 3 && k !== 13) return `${floor}rd Floor`;
   return `${floor}th Floor`;
 };
 
@@ -50,86 +78,98 @@ const UTILITY_PRESETS = [
   { key: "Eggs", icon: Egg },
 ];
 
-const SectionHeader = ({
-  title, icon: Icon, color = "text-primary", onSettings, onAdd, onConfigureFloors,
-}: { title: string; icon: React.ElementType; color?: string; onSettings?: () => void; onAdd?: () => void; onConfigureFloors?: () => void }) => (
-  <div className="flex items-center justify-between px-1">
-    <h3 className="text-sm font-semibold flex items-center gap-2">
-      <Icon className={cn("h-4 w-4", color)} /> {title}
-    </h3>
-    <div className="flex items-center gap-1.5">
-      {onConfigureFloors && (
-        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20" onClick={onConfigureFloors}>
-          <Settings className="h-3 w-3 mr-1 animate-none" /> Configure Floors
-        </Button>
-      )}
-      {onSettings && (
-        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onSettings}>
-          <Settings className="h-3.5 w-3.5" />
-        </Button>
-      )}
-      {onAdd && (
-        <Button variant="default" size="sm" className="h-7 px-3 text-xs" onClick={onAdd}>
-          <Plus className="h-3 w-3 mr-1" /> Add
-        </Button>
-      )}
-    </div>
-  </div>
-);
+const CATEGORY_META: Record<
+  ExpenseCategory,
+  {
+    label: string;
+    shortLabel: string;
+    description: string;
+    icon: React.ElementType;
+    iconTone: string;
+    surfaceTone: string;
+    barTone: string;
+  }
+> = {
+  current: {
+    label: "Current bills",
+    shortLabel: "Current",
+    description: "Floors & motor",
+    icon: Building2,
+    iconTone: "text-amber-700 dark:text-amber-300",
+    surfaceTone: "bg-amber-50 dark:bg-amber-950/25",
+    barTone: "bg-amber-500",
+  },
+  utility: {
+    label: "Utilities",
+    shortLabel: "Utilities",
+    description: "Daily operations",
+    icon: Droplet,
+    iconTone: "text-sky-700 dark:text-sky-300",
+    surfaceTone: "bg-sky-50 dark:bg-sky-950/25",
+    barTone: "bg-sky-500",
+  },
+  other: {
+    label: "Other bills",
+    shortLabel: "Other",
+    description: "One-off costs",
+    icon: Receipt,
+    iconTone: "text-violet-700 dark:text-violet-300",
+    surfaceTone: "bg-violet-50 dark:bg-violet-950/25",
+    barTone: "bg-violet-500",
+  },
+  family: {
+    label: "Family expenses",
+    shortLabel: "Family",
+    description: "Personal spend",
+    icon: Home,
+    iconTone: "text-rose-700 dark:text-rose-300",
+    surfaceTone: "bg-rose-50 dark:bg-rose-950/25",
+    barTone: "bg-rose-500",
+  },
+};
 
-const Tile = ({
-  icon: Icon, label, sub, total, onAdd, color = "text-muted-foreground",
-}: { icon: React.ElementType; label: string; sub: string; total: number; onAdd: () => void; color?: string }) => (
-  <button
-    onClick={onAdd}
-    className="group flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all text-left w-full"
-  >
-    <div className={cn("h-9 w-9 rounded-md bg-muted/60 flex items-center justify-center shrink-0", color)}>
-      <Icon className="h-4 w-4" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-medium truncate">{label}</div>
-      <div className="text-xs text-muted-foreground truncate">{sub}</div>
-    </div>
-    <div className="text-right shrink-0">
-      {total > 0 && <div className="text-sm font-semibold">₹{total.toLocaleString()}</div>}
-      <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary inline-block ml-1" />
-    </div>
-  </button>
-);
-
-const TotalBar = ({ label, total, tone }: { label: string; total: number; tone: string }) => (
-  <div className={cn("rounded-lg p-3 flex items-center justify-between", tone)}>
-    <span className="text-xs font-medium">{label}</span>
-    <span className="text-base font-bold">₹{total.toLocaleString()}</span>
-  </div>
-);
+const formatCurrency = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
 export const BillsBudgetDashboard = ({ rooms }: Props) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
   const pgId = currentPG?.id;
 
+  const expenseQuery = useExpenseEntries(selectedMonth, selectedYear);
+  const budgetQuery = useMonthlyBudget(selectedMonth, selectedYear);
   const {
-    entries, byCategory, totalFor, grandTotal,
-    addEntry, updateEntry, deleteEntry,
-  } = useExpenseEntries(selectedMonth, selectedYear);
-  const { amount: budgetAmount, setBudget } = useMonthlyBudget(selectedMonth, selectedYear);
+    entries,
+    byCategory,
+    totalFor,
+    grandTotal,
+    addEntry,
+    updateEntry,
+    deleteEntry,
+  } = expenseQuery;
+  const { amount: budgetAmount, setBudget } = budgetQuery;
 
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState("");
   const [quickAdd, setQuickAdd] = useState<QuickExpenseInitial | null>(null);
+  const [addPickerOpen, setAddPickerOpen] = useState(false);
+  const [addPickerCategory, setAddPickerCategory] = useState<ExpenseCategory | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sheetState, setSheetState] = useState<{
-    title: string; category: ExpenseCategory; subcategory?: string | null;
-    floor?: number | null; defaultLabel?: string; lockLabel?: boolean;
+    title: string;
+    category: ExpenseCategory;
+    subcategory?: string | null;
+    floor?: number | null;
+    defaultLabel?: string;
+    lockLabel?: boolean;
   } | null>(null);
 
-  // Custom floor state
-  const [numFloors, setNumFloors] = useState<number>(3);
-  const [includeGround, setIncludeGround] = useState<boolean>(false);
+  const [numFloors, setNumFloors] = useState(3);
+  const [includeGround, setIncludeGround] = useState(false);
   const [isFloorsConfigOpen, setIsFloorsConfigOpen] = useState(false);
-  const [tempNumFloors, setTempNumFloors] = useState<string>("3");
-  const [tempIncludeGround, setTempIncludeGround] = useState<boolean>(false);
+  const [tempNumFloors, setTempNumFloors] = useState("3");
+  const [tempIncludeGround, setTempIncludeGround] = useState(false);
 
   const storageKey = pgId ? `current_bills_floors_${pgId}` : null;
 
@@ -140,269 +180,622 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
       try {
         const parsed = JSON.parse(saved);
         setNumFloors(parsed.n || 3);
-        setIncludeGround(!!parsed.includeGround);
-      } catch (e) {
-        console.error(e);
+        setIncludeGround(Boolean(parsed.includeGround));
+        return;
+      } catch (error) {
+        console.error("Unable to read floor configuration", error);
       }
-    } else {
-      const maxFloorInRooms = rooms.length > 0 ? Math.max(...rooms.map((r) => r.floor)) : 0;
-      const defaultFloors = maxFloorInRooms || currentPG?.floors || 3;
-      const hasGround = rooms.some((r) => r.floor === 0);
-      setNumFloors(defaultFloors);
-      setIncludeGround(hasGround);
     }
+
+    const maxFloorInRooms = rooms.length > 0 ? Math.max(...rooms.map((room) => room.floor)) : 0;
+    setNumFloors(maxFloorInRooms || currentPG?.floors || 3);
+    setIncludeGround(rooms.some((room) => room.floor === 0));
   }, [storageKey, rooms, currentPG]);
 
-  // Floors list derived from custom configuration
   const floors = useMemo(() => {
-    const list: number[] = [];
-    if (includeGround) {
-      list.push(0);
-    }
-    for (let i = 1; i <= numFloors; i++) {
-      list.push(i);
-    }
+    const list: number[] = includeGround ? [0] : [];
+    for (let floor = 1; floor <= numFloors; floor += 1) list.push(floor);
     return list;
-  }, [numFloors, includeGround]);
+  }, [includeGround, numFloors]);
 
-  const currentBillTiles = useMemo(() => {
-    const tiles: { key: string; label: string; subcategory: string; floor: number | null }[] =
-      floors.map((f) => ({
-        key: `floor-${f}`,
-        label: getFloorLabel(f),
-        subcategory: getFloorLabel(f),
-        floor: f,
-      }));
-    tiles.push({ key: "motor", label: "Motor Bill", subcategory: "Motor", floor: null });
-    return tiles;
-  }, [floors]);
+  const currentBillPresets = useMemo(
+    () => [
+      ...floors.map((floor) => ({
+        key: `floor-${floor}`,
+        label: getFloorLabel(floor),
+        subcategory: getFloorLabel(floor),
+        floor,
+        icon: Building2,
+      })),
+      {
+        key: "motor",
+        label: "Motor Bill",
+        subcategory: "Motor",
+        floor: null,
+        icon: Settings,
+      },
+    ],
+    [floors],
+  );
 
-  const utilityTotal = totalFor("utility");
-  const otherTotal = totalFor("other");
-  const familyTotal = totalFor("family");
-  const currentTotal = totalFor("current");
+  const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[]).map((category) => ({
+    category,
+    total: totalFor(category),
+    count: byCategory(category).length,
+    ...CATEGORY_META[category],
+  }));
 
-  const percentUsed = budgetAmount > 0 ? Math.min(100, (grandTotal / budgetAmount) * 100) : 0;
+  const hasBudget = budgetAmount > 0;
+  const rawPercentUsed = hasBudget ? (grandTotal / budgetAmount) * 100 : 0;
+  const percentUsed = Math.min(100, rawPercentUsed);
   const remaining = budgetAmount - grandTotal;
-  const barTone =
-    percentUsed >= 100 ? "bg-destructive"
-      : percentUsed >= 70 ? "bg-orange-500" : "bg-emerald-500";
+  const budgetTone =
+    rawPercentUsed >= 100 ? "bg-rose-400" : rawPercentUsed >= 75 ? "bg-amber-400" : "bg-emerald-400";
+  const recentEntries = entries.slice(0, 3);
+  const largestCategory = [...categoryData].sort((a, b) => b.total - a.total)[0];
+  const isLoading = expenseQuery.isLoading || budgetQuery.isLoading;
+  const isError = expenseQuery.isError || budgetQuery.isError;
 
-  // entries by subcategory helper
-  const entriesBySub = (cat: ExpenseCategory, sub: string) =>
-    byCategory(cat).filter((e) => (e.subcategory ?? "") === sub);
+  const openFloorSettings = () => {
+    setTempNumFloors(String(numFloors));
+    setTempIncludeGround(includeGround);
+    setIsFloorsConfigOpen(true);
+  };
 
-  return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight">Bills Management</h2>
-          <p className="text-xs text-muted-foreground">{MONTHS[selectedMonth - 1]?.label} {selectedYear}</p>
+  const openCategory = (category: ExpenseCategory) => {
+    setSheetState({
+      title: CATEGORY_META[category].label,
+      category,
+    });
+  };
+
+  const openQuickAdd = (initial: QuickExpenseInitial) => {
+    setAddPickerOpen(false);
+    setAddPickerCategory(null);
+    setQuickAdd(initial);
+  };
+
+  const chooseAddCategory = (category: ExpenseCategory) => {
+    if (category === "other" || category === "family") {
+      openQuickAdd({
+        category,
+        title: category === "other" ? "Add other bill" : "Add family expense",
+      });
+      return;
+    }
+    setAddPickerCategory(category);
+  };
+
+  const retryQueries = () => {
+    void expenseQuery.refetch();
+    void budgetQuery.refetch();
+  };
+
+  if (isLoading) {
+    return (
+      <div
+        className="bills-dashboard-shell flex h-full min-h-0 flex-col gap-3 px-3 pt-3"
+        style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
+      >
+        <Skeleton className="h-[154px] shrink-0 rounded-[24px]" />
+        <Skeleton className="h-11 shrink-0 rounded-xl" />
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
+          {[0, 1, 2, 3].map((item) => (
+            <Skeleton key={item} className="min-h-[108px] rounded-2xl" />
+          ))}
+        </div>
+        <Skeleton className="h-12 shrink-0 rounded-xl" />
+        <Skeleton className="h-12 shrink-0 rounded-xl" />
+        <span className="sr-only">Loading bills and budget</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-full items-center justify-center px-5">
+        <div className="w-full max-w-sm rounded-[24px] border bg-card p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-300">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <h3 className="text-base font-bold">Couldn’t load your bills</h3>
+          <p className="mt-1 text-sm leading-5 text-muted-foreground">
+            Check your connection and try again. Your saved data is safe.
+          </p>
+          <Button className="mt-5 h-11 w-full" onClick={retryQueries}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Try again
+          </Button>
         </div>
       </div>
+    );
+  }
 
-      {/* Monthly Budget */}
-      <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Wallet className="h-4 w-4 text-emerald-500" />
+  return (
+    <>
+      <div
+        className="bills-dashboard-shell flex h-full min-h-0 flex-col gap-3 px-3 pt-3"
+        style={{ paddingBottom: "calc(var(--bottom-nav-offset, 0px) + 12px)" }}
+      >
+        <section className="bills-budget-hero shrink-0 rounded-[24px] bg-slate-950 p-4 text-white shadow-[0_14px_36px_-20px_rgba(15,23,42,0.85)] dark:border dark:border-white/10">
+          <div className="bills-hero-top flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                <Wallet className="h-[18px] w-[18px] text-indigo-200" />
               </div>
-              <div>
-                <div className="text-sm font-semibold">Monthly Budget</div>
-                <div className="text-xs text-muted-foreground">Track your spending limit</div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium text-slate-300">Monthly spending</p>
+                <p className="truncate text-sm font-bold">
+                  {MONTHS[selectedMonth - 1]?.label} {selectedYear}
+                </p>
               </div>
             </div>
-            {!editingBudget ? (
-              <Button variant="ghost" size="sm" className="h-7 text-xs"
-                onClick={() => { setBudgetDraft(String(budgetAmount)); setEditingBudget(true); }}>
-                <Settings className="h-3.5 w-3.5 mr-1" /> {budgetAmount > 0 ? `₹${budgetAmount.toLocaleString()}` : "Set"}
-              </Button>
-            ) : null}
+            <Button
+              variant="ghost"
+              className="h-11 shrink-0 rounded-xl px-3 text-xs text-white hover:bg-white/10 hover:text-white"
+              onClick={() => setAnalyticsOpen(true)}
+            >
+              <BarChart3 className="mr-1.5 h-4 w-4 text-indigo-200" />
+              Insights
+            </Button>
           </div>
-          {editingBudget ? (
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Label className="text-xs">Budget Amount (₹)</Label>
-                <Input type="number" value={budgetDraft} onChange={(e) => setBudgetDraft(e.target.value)}
-                  placeholder="e.g. 80000" className="mt-1" autoFocus />
+
+          <div className="bills-hero-spend mt-3 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                Spent
+                <span className="bills-short-month hidden">
+                  {" "}· {MONTHS[selectedMonth - 1]?.short} {selectedYear}
+                </span>
+              </p>
+              <p className="mt-0.5 text-[28px] font-bold leading-none tracking-tight">
+                {formatCurrency(grandTotal)}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-3 text-left transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+              onClick={() => {
+                setBudgetDraft(hasBudget ? String(budgetAmount) : "");
+                setEditingBudget(true);
+              }}
+              aria-label={hasBudget ? `Edit budget of ${formatCurrency(budgetAmount)}` : "Set monthly budget"}
+            >
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Budget</p>
+                <p className="text-sm font-bold">{hasBudget ? formatCurrency(budgetAmount) : "Set now"}</p>
               </div>
-              <Button size="sm" onClick={() => { setBudget.mutate(parseInt(budgetDraft) || 0); setEditingBudget(false); }}>Save</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditingBudget(false)}>Cancel</Button>
+              <Pencil className="h-3.5 w-3.5 text-indigo-200" />
+            </button>
+          </div>
+
+          <div className="bills-hero-progress mt-3">
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
+              <div
+                className={cn("h-full rounded-full transition-[width] duration-500", budgetTone)}
+                style={{ width: `${hasBudget ? Math.max(percentUsed, grandTotal > 0 ? 2 : 0) : 0}%` }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-slate-400">
+                {hasBudget ? `${Math.round(rawPercentUsed)}% used` : "Add a budget to track your limit"}
+              </span>
+              {hasBudget && (
+                <span className={cn("font-semibold", remaining < 0 ? "text-rose-300" : "text-emerald-300")}>
+                  {formatCurrency(Math.abs(remaining))} {remaining < 0 ? "over" : "left"}
+                </span>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <div
+          className="grid h-[52px] shrink-0 grid-cols-2 rounded-xl bg-muted/80 p-1"
+          role="tablist"
+          aria-label="Bills dashboard views"
+        >
+          {(["overview", "activity"] as DashboardTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
+              className={cn(
+                "min-h-11 rounded-lg text-sm font-semibold capitalize transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                activeTab === tab ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+              {tab === "activity" && entries.length > 0 && (
+                <span className="ml-1.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px]">
+                  {entries.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="min-h-0 flex-1">
+          {activeTab === "overview" ? (
+            <div className="flex h-full min-h-0 flex-col gap-3">
+              <div className="bills-category-grid grid min-h-[226px] flex-1 grid-cols-2 gap-2.5">
+                {categoryData.map((item) => {
+                  const Icon = item.icon;
+                  const share = grandTotal > 0 ? Math.round((item.total / grandTotal) * 100) : 0;
+                  return (
+                    <div key={item.category} className="relative min-h-0">
+                      <button
+                        type="button"
+                        className="bills-category-card flex h-full w-full min-h-[110px] flex-col rounded-2xl border bg-card p-3 text-left shadow-[0_8px_22px_-18px_rgba(15,23,42,0.55)] transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]"
+                        onClick={() => openCategory(item.category)}
+                        aria-label={`Open ${item.label}, ${formatCurrency(item.total)}, ${item.count} entries`}
+                      >
+                        <div className="flex w-full items-start justify-between">
+                          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", item.surfaceTone, item.iconTone)}>
+                            <Icon className="h-[18px] w-[18px]" />
+                          </div>
+                          {item.category !== "current" && (
+                            <ChevronRight className="mt-1 h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="mt-auto w-full pt-2">
+                          <div className="flex items-end justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-medium text-muted-foreground">{item.label}</p>
+                              <p className="mt-0.5 truncate text-lg font-bold leading-tight">{formatCurrency(item.total)}</p>
+                            </div>
+                            <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">
+                              {grandTotal > 0 ? `${share}%` : `${item.count}`}
+                            </span>
+                          </div>
+                          <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                            <div className={cn("h-full rounded-full", item.barTone)} style={{ width: `${share}%` }} />
+                          </div>
+                        </div>
+                      </button>
+                      {item.category === "current" && (
+                        <button
+                          type="button"
+                          className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={openFloorSettings}
+                          aria-label="Configure floors for current bills"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {entries.length === 0 && (
+                <div className="bills-empty-prompt flex shrink-0 items-center gap-3 rounded-2xl border border-dashed bg-muted/25 px-3 py-2.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-foreground">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">Ready for your first expense</p>
+                    <p className="truncate text-xs text-muted-foreground">Add a bill to start tracking this month.</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <>
-              <div className="flex items-end justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Spent</span>
-                <span className="font-semibold">₹{grandTotal.toLocaleString()} / ₹{budgetAmount.toLocaleString()}</span>
+            <div className="flex h-full min-h-0 flex-col gap-2.5">
+              <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl border bg-card px-3 py-1.5">
+                <div>
+                  <p className="text-xs text-muted-foreground">Largest category</p>
+                  <p className="text-sm font-bold">{largestCategory.label}</p>
+                </div>
+                <div className="ml-auto text-right">
+                  <p className="text-base font-bold">{formatCurrency(largestCategory.total)}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {grandTotal > 0 ? Math.round((largestCategory.total / grandTotal) * 100) : 0}% of spend
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-xl"
+                  onClick={() => setAnalyticsOpen(true)}
+                  aria-label="Open spending insights"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div className={cn("h-full transition-all", barTone)} style={{ width: `${percentUsed}%` }} />
-              </div>
-              <div className="flex items-center justify-between mt-2 text-xs">
-                <span className="text-muted-foreground">{percentUsed.toFixed(1)}% used</span>
-                <span className={cn("font-medium", remaining < 0 ? "text-destructive" : "text-emerald-500")}>
-                  ₹{Math.abs(remaining).toLocaleString()} {remaining < 0 ? "over" : "remaining"}
-                </span>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Grand Total */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-primary font-semibold uppercase tracking-wide">Grand Total (All Bills)</div>
-            <div className="text-2xl font-bold flex items-center mt-1">
-              <IndianRupee className="h-5 w-5" />{grandTotal.toLocaleString()}
+              <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border bg-card">
+                <div className="flex h-11 items-center justify-between border-b px-3">
+                  <p className="text-sm font-semibold">Recent activity</p>
+                  {entries.length > 3 && (
+                    <button
+                      type="button"
+                      className="min-h-11 px-1 text-xs font-semibold text-primary-foreground"
+                      onClick={() => openCategory(recentEntries[0]?.category ?? "other")}
+                    >
+                      View category
+                    </button>
+                  )}
+                </div>
+                {recentEntries.length === 0 ? (
+                  <div className="flex h-[calc(100%-44px)] flex-col items-center justify-center px-5 text-center">
+                    <Receipt className="mb-2 h-7 w-7 text-muted-foreground/40" />
+                    <p className="text-sm font-semibold">No activity yet</p>
+                    <p className="mt-1 text-xs text-muted-foreground">New expenses will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {recentEntries.map((entry) => {
+                      const meta = CATEGORY_META[entry.category];
+                      const Icon = meta.icon;
+                      return (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          className="flex min-h-[62px] w-full items-center gap-3 px-3 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                          onClick={() => openCategory(entry.category)}
+                        >
+                          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", meta.surfaceTone, meta.iconTone)}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold">{entry.label}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {meta.shortLabel} · {format(new Date(entry.entry_date), "dd MMM")}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm font-bold">{formatCurrency(entry.amount)}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Collapsible open={shortcutsOpen} onOpenChange={setShortcutsOpen} className="relative shrink-0 rounded-2xl border bg-card">
+          <div className="flex min-h-11 items-center">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex min-h-11 flex-1 items-center justify-between rounded-l-2xl px-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <span className="flex items-center gap-2 text-sm font-semibold">
+                  <Layers3 className="h-4 w-4 text-muted-foreground" />
+                  Quick-add shortcuts
+                </span>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", shortcutsOpen && "rotate-180")} />
+              </button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-20 overflow-hidden rounded-2xl border bg-card shadow-[0_18px_45px_-18px_rgba(15,23,42,0.5)]">
+            <div className="flex h-10 items-center justify-between border-b px-3">
+              <span className="text-xs font-semibold">Choose a shortcut</span>
+              <span className="text-[11px] text-muted-foreground">Swipe for more</span>
+            </div>
+            <div className="scrollbar-hide flex snap-x gap-2 overflow-x-auto px-3 py-2.5">
+              {currentBillPresets.map((preset) => {
+                const Icon = preset.icon;
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    className="flex h-14 min-w-[112px] snap-start items-center gap-2 rounded-xl bg-amber-50 px-3 text-left text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-amber-950/30 dark:text-amber-100"
+                    onClick={() =>
+                      openQuickAdd({
+                        category: "current",
+                        subcategory: preset.subcategory,
+                        floor: preset.floor,
+                        label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`,
+                        title: `Add ${preset.label}`,
+                      })
+                    }
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-semibold leading-4">{preset.label}</span>
+                  </button>
+                );
+              })}
+              {UTILITY_PRESETS.map((preset) => {
+                const Icon = preset.icon;
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    className="flex h-14 min-w-[112px] snap-start items-center gap-2 rounded-xl bg-sky-50 px-3 text-left text-sky-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-sky-950/30 dark:text-sky-100"
+                    onClick={() =>
+                      openQuickAdd({
+                        category: "utility",
+                        subcategory: preset.key,
+                        label: preset.key,
+                        title: `Add ${preset.key}`,
+                      })
+                    }
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-semibold leading-4">{preset.key}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Button
+          className="h-12 shrink-0 rounded-xl text-sm font-bold shadow-[0_10px_24px_-14px_hsl(var(--primary))]"
+          onClick={() => {
+            setAddPickerCategory(null);
+            setAddPickerOpen(true);
+          }}
+        >
+          <Plus className="mr-2 h-5 w-5" />
+          Add expense
+        </Button>
+      </div>
+
+      <Dialog open={editingBudget} onOpenChange={setEditingBudget}>
+        <DialogContent className="max-w-[calc(100%-32px)] rounded-[24px] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Set monthly budget</DialogTitle>
+            <DialogDescription>
+              Choose a spending limit for {MONTHS[selectedMonth - 1]?.label} {selectedYear}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="budget-amount">Budget amount</Label>
+            <div className="relative">
+              <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="budget-amount"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={budgetDraft}
+                onChange={(event) => setBudgetDraft(event.target.value)}
+                placeholder="80,000"
+                className="h-12 pl-9 text-base"
+                autoFocus
+              />
             </div>
           </div>
-          <div className="text-right text-xs text-muted-foreground">
-            <div>{entries.length} entries</div>
-          </div>
-        </CardContent>
-      </Card>
+          <DialogFooter className="flex-row gap-2">
+            <Button variant="outline" className="h-11 flex-1" onClick={() => setEditingBudget(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="h-11 flex-1"
+              disabled={!budgetDraft || Number(budgetDraft) < 0 || setBudget.isPending}
+              onClick={() => {
+                const amount = Number.parseInt(budgetDraft, 10);
+                if (Number.isNaN(amount) || amount < 0) return;
+                setBudget.mutate(amount, { onSuccess: () => setEditingBudget(false) });
+              }}
+            >
+              {setBudget.isPending ? "Saving…" : "Save budget"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Current Bills */}
-      <section className="space-y-2">
-        <SectionHeader
-          title="Current Bills"
-          icon={Building2}
-          color="text-amber-500"
-          onConfigureFloors={() => {
-            setTempNumFloors(String(numFloors));
-            setTempIncludeGround(includeGround);
-            setIsFloorsConfigOpen(true);
-          }}
-          onSettings={() => setSheetState({
-            title: "Current Bills · All Entries", category: "current",
-          })}
-        />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {currentBillTiles.map((t) => {
-            const items = entriesBySub("current", t.subcategory);
-            const total = items.reduce((s, e) => s + e.amount, 0);
-            return (
-              <Tile
-                key={t.key}
-                icon={Building2}
-                color="text-amber-500"
-                label={t.label}
-                sub={`${items.length} ${items.length === 1 ? "entry" : "entries"}`}
-                total={total}
-                onAdd={() => setQuickAdd({
-                  category: "current",
-                  subcategory: t.subcategory,
-                  floor: t.floor,
-                  label: `${t.label} - ${MONTHS[selectedMonth - 1]?.label}`,
-                  title: `Add ${t.label}`,
-                })}
-              />
-            );
-          })}
-        </div>
-        <TotalBar label="Total Current Bills" total={currentTotal} tone="bg-amber-500/10 text-amber-700 dark:text-amber-300" />
-      </section>
-      {/* Utility Bills */}
-      <section className="space-y-2">
-        <SectionHeader
-          title="Utility Bills"
-          icon={Droplet}
-          color="text-sky-500"
-          onSettings={() => setSheetState({ title: "Utility Bills · All Entries", category: "utility" })}
-        />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {UTILITY_PRESETS.map((p) => {
-            const items = entriesBySub("utility", p.key);
-            const total = items.reduce((s, e) => s + e.amount, 0);
-            return (
-              <Tile
-                key={p.key}
-                icon={p.icon}
-                color="text-sky-500"
-                label={p.key}
-                sub={`${items.length} ${items.length === 1 ? "entry" : "entries"}`}
-                total={total}
-                onAdd={() => setQuickAdd({
-                  category: "utility", subcategory: p.key, label: p.key,
-                  title: `Add ${p.key}`,
-                })}
-              />
-            );
-          })}
-        </div>
-        <TotalBar label="Total Utility Bills" total={utilityTotal} tone="bg-sky-500/10 text-sky-700 dark:text-sky-300" />
-      </section>
-      {/* Other Bills */}
-      <section className="space-y-2">
-        <SectionHeader
-          title="Other Bills"
-          icon={Receipt}
-          color="text-violet-500"
-          onSettings={() => setSheetState({ title: "Other Bills", category: "other" })}
-          onAdd={() => setQuickAdd({ category: "other", title: "Add Other Bill" })}
-        />
-        {byCategory("other").length === 0 ? (
-          <div className="rounded-lg border border-dashed py-8 text-center text-xs text-muted-foreground">
-            <Receipt className="h-6 w-6 mx-auto mb-1 opacity-40" />
-            No other bills added yet
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {byCategory("other").slice(0, 3).map((e) => (
-              <Tile key={e.id} icon={Receipt} color="text-violet-500" label={e.label}
-                sub={e.notes ?? ""} total={e.amount}
-                onAdd={() => setSheetState({ title: "Other Bills", category: "other" })} />
-            ))}
-            {byCategory("other").length > 3 && (
-              <Button variant="ghost" size="sm" className="w-full text-xs"
-                onClick={() => setSheetState({ title: "Other Bills", category: "other" })}>
-                View all {byCategory("other").length} →
-              </Button>
-            )}
-          </div>
-        )}
-        <TotalBar label="Total Other Bills" total={otherTotal} tone="bg-violet-500/10 text-violet-700 dark:text-violet-300" />
-      </section>
-      {/* Family Expenses */}
-      <section className="space-y-2">
-        <SectionHeader
-          title="Family Expenses"
-          icon={Home}
-          color="text-pink-500"
-          onSettings={() => setSheetState({ title: "Family Expenses", category: "family" })}
-          onAdd={() => setQuickAdd({ category: "family", title: "Add Family Expense" })}
-        />
-        {byCategory("family").length === 0 ? (
-          <div className="rounded-lg border border-dashed py-8 text-center text-xs text-muted-foreground">
-            <Home className="h-6 w-6 mx-auto mb-1 opacity-40" />
-            No family expenses added yet
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {byCategory("family").slice(0, 3).map((e) => (
-              <Tile key={e.id} icon={Home} color="text-pink-500" label={e.label}
-                sub={e.notes ?? ""} total={e.amount}
-                onAdd={() => setSheetState({ title: "Family Expenses", category: "family" })} />
-            ))}
-            {byCategory("family").length > 3 && (
-              <Button variant="ghost" size="sm" className="w-full text-xs"
-                onClick={() => setSheetState({ title: "Family Expenses", category: "family" })}>
-                View all {byCategory("family").length} →
-              </Button>
-            )}
-          </div>
-        )}
-        <TotalBar label="Total Family Expenses" total={familyTotal} tone="bg-pink-500/10 text-pink-700 dark:text-pink-300" />
-      </section>
-      {/* Quick add dialog */}
+      <Dialog
+        open={addPickerOpen}
+        onOpenChange={(open) => {
+          setAddPickerOpen(open);
+          if (!open) setAddPickerCategory(null);
+        }}
+      >
+        <DialogContent className="max-w-[calc(100%-24px)] overflow-hidden rounded-[24px] p-0 sm:max-w-sm">
+          <DialogHeader className="px-5 pb-0 pt-5">
+            <DialogTitle className="flex items-center gap-2">
+              {addPickerCategory && (
+                <button
+                  type="button"
+                  className="-ml-2 flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setAddPickerCategory(null)}
+                  aria-label="Back to categories"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              {addPickerCategory ? `Choose ${CATEGORY_META[addPickerCategory].shortLabel}` : "Add an expense"}
+            </DialogTitle>
+            <DialogDescription>
+              {addPickerCategory ? "Choose a shortcut or add a custom entry." : "What kind of expense are you recording?"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!addPickerCategory ? (
+            <div className="grid grid-cols-2 gap-2.5 px-5 pb-5 pt-3">
+              {categoryData.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.category}
+                    type="button"
+                    className="flex min-h-[92px] flex-col items-start justify-between rounded-2xl border bg-card p-3 text-left hover:border-primary/40 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => chooseAddCategory(item.category)}
+                  >
+                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", item.surfaceTone, item.iconTone)}>
+                      <Icon className="h-[18px] w-[18px]" />
+                    </div>
+                    <span className="text-sm font-bold">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="min-w-0 overflow-hidden pb-5 pt-3">
+              <div className="scrollbar-hide flex w-full max-w-full snap-x gap-2.5 overflow-x-auto px-5 pb-3">
+                {addPickerCategory === "current" &&
+                  currentBillPresets.map((preset) => {
+                    const Icon = preset.icon;
+                    return (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        className="flex h-[92px] min-w-[128px] snap-start flex-col items-start justify-between rounded-2xl bg-amber-50 p-3 text-left text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-amber-950/30 dark:text-amber-100"
+                        onClick={() =>
+                          openQuickAdd({
+                            category: "current",
+                            subcategory: preset.subcategory,
+                            floor: preset.floor,
+                            label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`,
+                            title: `Add ${preset.label}`,
+                          })
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-sm font-bold">{preset.label}</span>
+                      </button>
+                    );
+                  })}
+                {addPickerCategory === "utility" &&
+                  UTILITY_PRESETS.map((preset) => {
+                    const Icon = preset.icon;
+                    return (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        className="flex h-[92px] min-w-[128px] snap-start flex-col items-start justify-between rounded-2xl bg-sky-50 p-3 text-left text-sky-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-sky-950/30 dark:text-sky-100"
+                        onClick={() =>
+                          openQuickAdd({
+                            category: "utility",
+                            subcategory: preset.key,
+                            label: preset.key,
+                            title: `Add ${preset.key}`,
+                          })
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-sm font-bold">{preset.key}</span>
+                      </button>
+                    );
+                  })}
+              </div>
+              <div className="px-5">
+                <Button
+                  variant="outline"
+                  className="h-11 w-full rounded-xl"
+                  onClick={() =>
+                    openQuickAdd({
+                      category: addPickerCategory,
+                      title: `Add custom ${CATEGORY_META[addPickerCategory].shortLabel.toLowerCase()} expense`,
+                    })
+                  }
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add custom entry
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <QuickExpenseDialog
-        open={!!quickAdd}
-        onOpenChange={(o) => !o && setQuickAdd(null)}
+        open={Boolean(quickAdd)}
+        onOpenChange={(open) => !open && setQuickAdd(null)}
         initial={quickAdd}
         rooms={rooms}
         onSave={(data) => {
@@ -410,11 +803,11 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           setQuickAdd(null);
         }}
       />
-      {/* Settings sheet for category */}
+
       {sheetState && (
         <BillsEntriesSheet
-          open={!!sheetState}
-          onOpenChange={(o) => !o && setSheetState(null)}
+          open={Boolean(sheetState)}
+          onOpenChange={(open) => !open && setSheetState(null)}
           title={sheetState.title}
           category={sheetState.category}
           subcategory={sheetState.subcategory ?? null}
@@ -423,7 +816,9 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           lockLabel={sheetState.lockLabel}
           entries={
             sheetState.subcategory
-              ? entriesBySub(sheetState.category, sheetState.subcategory)
+              ? byCategory(sheetState.category).filter(
+                  (entry) => (entry.subcategory ?? "") === sheetState.subcategory,
+                )
               : byCategory(sheetState.category)
           }
           rooms={rooms}
@@ -432,73 +827,92 @@ export const BillsBudgetDashboard = ({ rooms }: Props) => {
           onDelete={(id) => deleteEntry.mutate(id)}
         />
       )}
-      {/* Floors Configuration Dialog */}
+
       <Dialog open={isFloorsConfigOpen} onOpenChange={setIsFloorsConfigOpen}>
-        <DialogContent className="max-w-[340px] rounded-lg">
+        <DialogContent className="max-w-[calc(100%-32px)] rounded-[24px] sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">Configure Floors</DialogTitle>
-            <DialogDescription className="text-xs">
-              Configure how many floors are tracked for current bills.
+            <DialogTitle>Configure current-bill floors</DialogTitle>
+            <DialogDescription>
+              These shortcuts help you record electricity bills faster.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="num-floors" className="text-xs">Number of Floors (1 - 20)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="num-floors">Number of floors</Label>
               <Input
                 id="num-floors"
+                className="h-11"
                 type="number"
+                inputMode="numeric"
                 min={1}
                 max={20}
                 value={tempNumFloors}
-                onChange={(e) => setTempNumFloors(e.target.value)}
+                onChange={(event) => setTempNumFloors(event.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Choose between 1 and 20 floors.</p>
             </div>
-            <div className="flex items-center space-x-2">
+            <label
+              htmlFor="ground-floor"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3"
+            >
               <Checkbox
                 id="ground-floor"
                 checked={tempIncludeGround}
-                onCheckedChange={(checked) => setTempIncludeGround(!!checked)}
+                onCheckedChange={(checked) => setTempIncludeGround(Boolean(checked))}
               />
-              <Label htmlFor="ground-floor" className="text-xs cursor-pointer select-none">
-                Include Ground Floor (Floor 0)
-              </Label>
-            </div>
+              <span className="text-sm font-medium">Include ground floor</span>
+            </label>
           </div>
-          <DialogFooter className="flex-row gap-2 mt-2">
-            <Button
-              className="flex-1 text-xs h-9"
-              variant="outline"
-              onClick={() => setIsFloorsConfigOpen(false)}
-            >
+          <DialogFooter className="flex-row gap-2">
+            <Button variant="outline" className="h-11 flex-1" onClick={() => setIsFloorsConfigOpen(false)}>
               Cancel
             </Button>
             <Button
-              className="flex-1 text-xs h-9"
+              className="h-11 flex-1"
               onClick={() => {
-                const parsed = parseInt(tempNumFloors);
-                if (isNaN(parsed) || parsed < 1 || parsed > 20) {
-                  return;
-                }
+                const parsed = Number.parseInt(tempNumFloors, 10);
+                if (Number.isNaN(parsed) || parsed < 1 || parsed > 20) return;
                 setNumFloors(parsed);
                 setIncludeGround(tempIncludeGround);
                 if (storageKey) {
                   localStorage.setItem(
                     storageKey,
-                    JSON.stringify({ n: parsed, includeGround: tempIncludeGround })
+                    JSON.stringify({ n: parsed, includeGround: tempIncludeGround }),
                   );
                 }
                 setIsFloorsConfigOpen(false);
               }}
             >
-              Save Configuration
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Analytics dashboard */}
-      <BillsAnalytics />
-    </div>
+      <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+        <SheetContent
+          side="right"
+          className="flex w-full max-w-full flex-col p-0 [&>button]:hidden sm:max-w-xl"
+        >
+          <SheetHeader className="shrink-0 border-b px-4 py-3">
+            <SheetTitle className="flex items-center gap-2 text-left">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-11 w-11 rounded-xl"
+                onClick={() => setAnalyticsOpen(false)}
+                aria-label="Back to bills and budget"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              Spending insights
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            <BillsAnalytics />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
-

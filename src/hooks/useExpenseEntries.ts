@@ -20,11 +20,20 @@ export interface ExpenseEntry {
   notes: string | null;
 }
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Please try again.";
+
 export const useExpenseEntries = (month: number, year: number) => {
   const { currentPG } = usePG();
   const qc = useQueryClient();
 
-  const { data: entries = [], isLoading } = useQuery({
+  const {
+    data: entries = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["expense_entries", currentPG?.id, month, year],
     queryFn: async () => {
       if (!currentPG?.id) return [];
@@ -53,7 +62,8 @@ export const useExpenseEntries = (month: number, year: number) => {
       qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] });
       toast({ title: "Expense added" });
     },
-    onError: (e: any) => toast({ title: "Failed to add", description: e.message, variant: "destructive" }),
+    onError: (error: unknown) =>
+      toast({ title: "Failed to add", description: getErrorMessage(error), variant: "destructive" }),
   });
 
   const updateEntry = useMutation({
@@ -65,8 +75,12 @@ export const useExpenseEntries = (month: number, year: number) => {
       qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] });
       toast({ title: "Expense updated" });
     },
-    onError: (e: any) => {
-      toast({ title: "Failed to update expense", description: e.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Failed to update expense",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     },
   });
 
@@ -79,8 +93,12 @@ export const useExpenseEntries = (month: number, year: number) => {
       qc.invalidateQueries({ queryKey: ["expense_entries", currentPG?.id, month, year] });
       toast({ title: "Expense deleted" });
     },
-    onError: (e: any) => {
-      toast({ title: "Failed to delete expense", description: e.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Failed to delete expense",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     },
   });
 
@@ -88,5 +106,17 @@ export const useExpenseEntries = (month: number, year: number) => {
   const totalFor = (cat: ExpenseCategory) => byCategory(cat).reduce((s, e) => s + e.amount, 0);
   const grandTotal = entries.reduce((s, e) => s + e.amount, 0);
 
-  return { entries, isLoading, byCategory, totalFor, grandTotal, addEntry, updateEntry, deleteEntry };
+  return {
+    entries,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    byCategory,
+    totalFor,
+    grandTotal,
+    addEntry,
+    updateEntry,
+    deleteEntry,
+  };
 };
