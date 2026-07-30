@@ -685,19 +685,21 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       {/* Bills & Budget Sheet */}
       <Sheet open={billsBudgetOpen} onOpenChange={setBillsBudgetOpen}>
         <SheetContent side="right" className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden" : "w-full sm:max-w-xl p-0"}>
-          <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+          <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950">
+            <SheetHeader className="px-4 pt-3 pb-3 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-xl" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
+                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl" onClick={() => setBillsBudgetOpen(false)} aria-label="Back">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <div className="flex items-center gap-1.5 flex-1">
-                  <Scale className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500">
+                    <Scale className="h-4 w-4 text-white" />
+                  </div>
                   <SheetTitle className="text-base text-foreground font-bold">Bills & Budget</SheetTitle>
                 </div>
               </div>
             </SheetHeader>
-            <div className="min-h-0 flex-1 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-hidden relative">
               <BillsBudgetDashboard rooms={rooms} />
             </div>
           </div>
