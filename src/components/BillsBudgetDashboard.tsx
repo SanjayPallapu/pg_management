@@ -23,6 +23,7 @@ import {
   Receipt,
   RefreshCw,
   Settings,
+  Settings2,
   ShoppingBag,
   Sparkles,
   Target,
@@ -161,6 +162,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
   const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<ExpenseEntry | null>(null);
+  const [inlineManageMode, setInlineManageMode] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sheetState, setSheetState] = useState<{
     title: string;
@@ -456,13 +458,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </section>
 
-        <section className="bills-premium-activity mt-3 flex min-h-[78px] shrink-0 items-center rounded-[20px] border border-[#e4e6ee] bg-white px-4 dark:border-border dark:bg-card">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#6a55e8] dark:bg-[#302858] dark:text-[#b6a2ff]"><Sparkles className="h-5 w-5" /></div>
-          <div className="ml-3 min-w-0 flex-1">
-            <p className="truncate text-sm font-black">{entries.length === 0 ? `No spending recorded in ${MONTHS[selectedMonth - 1]?.label}` : `${entries.length} ${entries.length === 1 ? "bill" : "bills"} recorded this month`}</p>
-            <p className="truncate text-xs text-muted-foreground">{entries.length === 0 ? "Add your first bill to start tracking." : `${formatCurrency(grandTotal)} across ${categoryData.filter((item) => item.count > 0).length} spending groups`}</p>
-          </div>
-        </section>
 
         <Button
           className="bills-premium-cta mb-3 mt-3 h-[52px] shrink-0 rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white shadow-[0_14px_28px_-18px_rgba(67,48,233,.9)] hover:opacity-95"
@@ -583,7 +578,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 {detailCategory === "current" ? (
                   <>
                     <div className="mb-2 mt-3 flex min-h-11 items-center justify-between">
-                      <h3 className="text-base font-black">Floor meters</h3>
+                      <h3 className="text-base font-black">Floor meters <span className="text-xs font-bold text-muted-foreground ml-1">({byCategory("current").length} {byCategory("current").length === 1 ? "entry" : "entries"})</span></h3>
                       <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]" onClick={openFloorSettings}>Configure floors</button>
                     </div>
                     <div className="space-y-2.5">
@@ -616,8 +611,13 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         );
                       })}
                     </div>
-                    <div className="mt-3 flex min-h-[54px] items-center gap-3 rounded-[18px] border border-[#dcd9ff] bg-[#f5f3ff] px-3 text-sm text-[#50546a] dark:border-border dark:bg-secondary/60 dark:text-muted-foreground">
-                      <AlertCircle className="h-5 w-5 shrink-0 text-[#4936ef]" /><span>Add bill amounts for {MONTHS[selectedMonth - 1]?.label}.</span>
+                    <div className="mt-4">
+                      <Button
+                        className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95 shadow-md"
+                        onClick={() => openQuickAdd({ category: "current", title: "Add current bill" })}
+                      >
+                        <Plus className="mr-2 h-5 w-5" /> Add current bill
+                      </Button>
                     </div>
                   </>
                 ) : (
@@ -679,9 +679,26 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
                         <div className="mb-2 flex min-h-11 items-center justify-between">
                           <h3 className="text-base font-black">{CATEGORY_META[detailCategory].shortLabel} entries</h3>
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              {byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}
+                            </span>
+                            {byCategory(detailCategory).length > 0 && (
+                              <button
+                                type="button"
+                                className={cn(
+                                  "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-colors ml-1",
+                                  inlineManageMode
+                                    ? "bg-[#4936ef] text-white"
+                                    : "text-[#4936ef] hover:bg-[#f1efff] dark:text-[#b6a2ff] dark:hover:bg-[#302858]"
+                                )}
+                                onClick={() => setInlineManageMode((prev) => !prev)}
+                              >
+                                <Settings2 className="h-3.5 w-3.5" />
+                                {inlineManageMode ? "Done" : "Manage"}
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {byCategory(detailCategory).length === 0 ? (
@@ -704,24 +721,28 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                                 <div className="font-black text-sm shrink-0 text-[#101426] dark:text-white mr-1">
                                   {formatCurrency(e.amount)}
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-10 w-10 shrink-0 rounded-xl"
-                                  aria-label={`Edit ${e.label}`}
-                                  onClick={() => openQuickAdd({ category: detailCategory, editing: e, label: e.label, title: `Edit ${e.label}` })}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-10 w-10 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  aria-label={`Delete ${e.label}`}
-                                  onClick={() => setConfirmDeleteEntry(e)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {inlineManageMode && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 shrink-0 rounded-xl"
+                                      aria-label={`Edit ${e.label}`}
+                                      onClick={() => openQuickAdd({ category: detailCategory, editing: e, label: e.label, title: `Edit ${e.label}` })}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      aria-label={`Delete ${e.label}`}
+                                      onClick={() => setConfirmDeleteEntry(e)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>

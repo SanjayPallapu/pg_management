@@ -8,6 +8,7 @@ import { MONTHS } from "@/constants/pricing";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { cn } from "@/lib/utils";
 import { ExpenseEntry } from "@/hooks/useExpenseEntries";
+import { DailySpendCalendar } from "./DailySpendCalendar";
 
 type Range = "1M" | "6M" | "1Y";
 
@@ -224,11 +225,7 @@ export const BillsAnalytics = () => {
         </div>
       </section>
 
-      <button type="button" className="flex min-h-[76px] w-full items-center rounded-[20px] border border-[#e2e4ed] bg-white px-4 text-left dark:border-border dark:bg-card">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><CalendarDays className="h-5 w-5" /></div>
-        <div className="ml-3 min-w-0 flex-1"><p className="text-sm font-black">Daily spend</p><p className="truncate text-xs text-muted-foreground">{dailySpend.length ? `${dailySpend.length} active ${dailySpend.length === 1 ? "day" : "days"} this month` : "No activity this month"}</p></div>
-        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-      </button>
+      <DailySpendCalendar month={selectedMonth} year={selectedYear} entries={currentRows} />
     </div>
   );
 };
