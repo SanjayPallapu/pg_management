@@ -273,9 +273,11 @@ export const useRooms = () => {
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.phone !== undefined) updateData.phone = updates.phone;
       if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
-      if (updates.endDate !== undefined) {
-        updateData.end_date = updates.endDate;
-        changes.end_date = { old: null, new: updates.endDate };
+      if (Object.prototype.hasOwnProperty.call(updates, "endDate")) {
+        // An explicit undefined/empty endDate means Reactivate. Sending null is
+        // required to actually clear the value in Postgres.
+        updateData.end_date = updates.endDate || null;
+        changes.end_date = { old: null, new: updates.endDate || null };
       }
       if (updates.monthlyRent !== undefined) {
         updateData.monthly_rent = updates.monthlyRent;

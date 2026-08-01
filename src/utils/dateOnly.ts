@@ -55,8 +55,9 @@ export const isTenantActiveInMonth = (
   return leaveDate > monthStart;
 };
 
-// Active now means: joined on/before today AND (has NOT left OR endDate is today or in the future)
-// Note: Tenant is considered active on their endDate
+// Active now means: joined on/before today AND (has NOT left OR leaves after today).
+// The leave date is exclusive: marking a tenant as left today removes them from
+// current occupancy immediately.
 export const isTenantActiveNow = (startDate: string, endDate: string | undefined) => {
   const todayOnly = getISTTodayOnly();
   const joinDate = parseDateOnly(startDate);
@@ -66,7 +67,7 @@ export const isTenantActiveNow = (startDate: string, endDate: string | undefined
   if (!endDate) return true; // no end date means still active
   
   const leaveDate = parseDateOnly(endDate);
-  return leaveDate >= todayOnly; // if endDate is today or in the future, still active
+  return leaveDate > todayOnly;
 };
 
 export const tenantLeftInMonth = (endDate: string | undefined, year: number, month: number) => {
@@ -82,11 +83,10 @@ export const tenantJoinedInMonth = (startDate: string, year: number, month: numb
   return joinDate >= monthStart && joinDate <= monthEnd;
 };
 
-// Left now means: endDate exists AND endDate is in the past (before today)
+// Left now means: endDate exists AND the leave date is today or earlier.
 export const hasTenantLeftNow = (endDate: string | undefined) => {
   if (!endDate) return false;
   const todayOnly = getISTTodayOnly();
   const leaveDate = parseDateOnly(endDate);
-  return leaveDate < todayOnly;
+  return leaveDate <= todayOnly;
 };
-

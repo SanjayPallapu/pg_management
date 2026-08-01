@@ -59,7 +59,7 @@ const LeftTenants = () => {
   const leftTenants = useMemo(() => {
     const all = rooms.flatMap(r =>
       r.tenants
-        .filter(t => !!t.endDate)
+        .filter(t => hasTenantLeftNow(t.endDate))
         .map(t => ({
           roomNo: r.roomNo,
           capacity: r.capacity,
