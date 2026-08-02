@@ -9,9 +9,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useBillPaymentTransactions } from "@/hooks/useBillPaymentTransactions";
-import { buildUpiPaymentUri, getAmountConflict, maskUpiId, parseUpiQr, UpiQrError } from "@/features/bill-payments/upi";
+import { buildUpiPaymentUri, getAmountConflict, isLikelyPersonalUpiQr, maskUpiId, parseUpiQr, UpiQrError } from "@/features/bill-payments/upi";
 import { DuplicatePaymentGuard, resolveUpiOutcome, type UpiOutcome } from "@/features/bill-payments/paymentOutcome";
-import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan } from "@/features/bill-payments/nativePayments";
+import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan } from "@/features/bill-payments/nativePayments";
 import type { BillPaymentDraft, BillPaymentRequest, ParsedUpiQr } from "@/features/bill-payments/types";
 
 interface Props { open: boolean; request: BillPaymentRequest | null; onOpenChange: (open: boolean) => void }
@@ -139,6 +139,20 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     finally { setBusy(false); }
   };
 
+  const launchManualUpiId = async (packageName: string) => {
+    if (!qr) return;
+    setBusy(true); setError(null);
+    try {
+      if (remember) localStorage.setItem(preferredKey, packageName);
+      awaitingUpiReturn.current = true;
+      upiAppWasBackgrounded.current = false;
+      await launchUpiAppForManualPayment(packageName, qr.payeeUpiId);
+      awaitingUpiReturn.current = false;
+      setStage("result");
+    } catch (launchError) { awaitingUpiReturn.current = false; setError(messageForError(launchError)); }
+    finally { setBusy(false); }
+  };
+
   const save = async (method: BillPaymentDraft["paymentMethod"], status: BillPaymentDraft["status"], resolvedNote?: string, upiAttempted = false) => {
     const transactionId = draftId.current;
     if (!guard.begin(transactionId)) return;
@@ -163,11 +177,12 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   const resetScan = () => { setQr(null); setApps([]); setError(null); setStage("entry"); draftId.current = crypto.randomUUID(); };
   const sheetTitle = stage === "entry" ? "Add payment" : stage === "scanner" ? "Scan UPI QR" : stage === "apps" ? "Choose UPI app" : stage === "result" ? "Confirm payment result" : "Payment recorded";
+  const personalQr = qr ? isLikelyPersonalUpiQr(qr) : false;
 
   return (
     <>
       <Sheet open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-        <SheetContent side="right" className="h-[100dvh] w-full max-w-full border-0 bg-[#f8f9fd] p-0 shadow-none dark:bg-background sm:max-w-full [&>button]:hidden">
+        <SheetContent side="right" className="inset-0 h-[100dvh] min-h-[100dvh] w-screen max-w-none border-0 bg-[#f8f9fd] p-0 shadow-none dark:bg-background sm:max-w-none [&>button]:hidden">
           <SheetHeader className="sticky top-0 z-10 border-b bg-white px-3 py-2 dark:bg-card sm:px-4">
             <div className="flex min-h-12 items-center gap-2">
               <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted" onClick={() => stage === "entry" ? onOpenChange(false) : resetScan()} aria-label="Back"><ArrowLeft className="h-5 w-5" /></button>
@@ -210,8 +225,9 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
             {stage === "apps" && qr && <>
               <div className="rounded-2xl border bg-white p-4 dark:bg-card"><p className="text-xs font-bold text-muted-foreground">Paying</p><div className="mt-1 flex items-end justify-between gap-3"><div><p className="text-base font-black">{qr.payeeName || "UPI payee"}</p><p className="text-xs text-muted-foreground">{maskUpiId(qr.payeeUpiId)}</p></div><p className="text-2xl font-black">₹{Number(amount).toLocaleString("en-IN")}</p></div></div>
+              {nativePlatform && personalQr && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"><p className="text-sm font-black">Personal UPI QR detected</p><p className="mt-1 text-xs leading-5">Some UPI apps block personal payments opened by another app. Choose an app below; PG HUB will copy the UPI ID and open that app. Select “Pay by UPI ID,” paste it, and enter ₹{Number(amount).toLocaleString("en-IN")}.</p></div>}
               {nativePlatform ? <>
-                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void launch(app.packageName)} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1 text-sm font-black">{app.label}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}<button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-dashed px-4 text-left"><Smartphone className="h-5 w-5" /><span className="flex-1 text-sm font-black">Choose another UPI app</span></button></div>
+                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void (personalQr ? launchManualUpiId(app.packageName) : launch(app.packageName))} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">{app.label}</span>{personalQr && <span className="block text-[11px] font-semibold text-muted-foreground">Copy UPI ID and open app</span>}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}<button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-dashed px-4 text-left"><Smartphone className="h-5 w-5" /><span className="flex-1 text-sm font-black">{personalQr ? "Try direct UPI link instead" : "Choose another UPI app"}</span></button></div>
                 <label className="flex min-h-11 items-center gap-3 rounded-xl px-1 text-sm font-semibold"><Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} /> Remember the app I choose</label>
               </> : <button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:opacity-45"><Smartphone className="h-5 w-5" /><span className="flex-1"><span className="block text-sm font-black">Open UPI app</span><span className="block text-xs text-white/70">Available on a phone browser</span></span><ChevronRight className="h-5 w-5" /></button>}
               <p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">PG HUB never sees or stores your UPI PIN. Returning to PG HUB does not prove payment success.</p>

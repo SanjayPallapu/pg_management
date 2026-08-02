@@ -7,6 +7,7 @@ interface UpiApp { packageName: string; label: string }
 interface UpiPaymentPlugin {
   getCompatibleApps(options: { uri: string }): Promise<{ apps: UpiApp[] }>;
   launch(options: { uri: string; packageName?: string; forceChooser?: boolean }): Promise<{ returned: boolean }>;
+  launchForUpiId(options: { packageName: string; upiId: string }): Promise<{ returned: boolean }>;
 }
 
 const UpiPayment = registerPlugin<UpiPaymentPlugin>("UpiPayment");
@@ -147,6 +148,18 @@ export const launchUpiPayment = async (uri: string, packageName?: string) => {
   }
   try {
     return await UpiPayment.launch({ uri, packageName, forceChooser: !packageName });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("NO_UPI_APP")) throw new NativePaymentError("NO_UPI_APP");
+    throw error;
+  }
+};
+
+export const launchUpiAppForManualPayment = async (packageName: string, upiId: string) => {
+  if (!navigator.onLine) throw new NativePaymentError("OFFLINE");
+  if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED");
+  try {
+    return await UpiPayment.launchForUpiId({ packageName, upiId });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("NO_UPI_APP")) throw new NativePaymentError("NO_UPI_APP");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildUpiPaymentUri, getAmountConflict, maskUpiId, parseUpiQr, UpiQrError } from "./upi";
+import { buildUpiPaymentUri, getAmountConflict, isLikelyPersonalUpiQr, maskUpiId, parseUpiQr, UpiQrError } from "./upi";
 import { DuplicatePaymentGuard, resolveUpiOutcome } from "./paymentOutcome";
 
 describe("UPI QR parsing", () => {
@@ -40,6 +40,12 @@ describe("UPI QR parsing", () => {
       am: "10",
       cu: "INR",
     });
+    expect(isLikelyPersonalUpiQr(qr)).toBe(false);
+  });
+
+  it("identifies personal QR codes that need the manual UPI ID fallback", () => {
+    expect(isLikelyPersonalUpiQr(parseUpiQr("upi://pay?pa=person%40ybl&pn=Person"))).toBe(true);
+    expect(isLikelyPersonalUpiQr(parseUpiQr("upi://pay?pa=person%40ybl&pn=Person&mc=0000"))).toBe(true);
   });
 });
 
