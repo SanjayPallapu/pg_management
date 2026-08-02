@@ -292,6 +292,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const bannerAutoPausedRef = useRef(false);
+  const bannerResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pauseBannerAutoAdvance = () => {
+    bannerAutoPausedRef.current = true;
+    if (bannerResumeTimerRef.current) clearTimeout(bannerResumeTimerRef.current);
+    bannerResumeTimerRef.current = setTimeout(() => {
+      bannerAutoPausedRef.current = false;
+    }, 8000);
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
@@ -361,6 +371,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     }
   ];
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (bannerAutoPausedRef.current || document.visibilityState !== "visible") return;
+      const container = carouselRef.current;
+      if (!container) return;
+      const nextSlide = (activeSlide + 1) % banners.length;
+      container.scrollTo({ left: nextSlide * (container.offsetWidth + 8), behavior: "smooth" });
+      setActiveSlide(nextSlide);
+    }, 5500);
+    return () => window.clearInterval(interval);
+  }, [activeSlide, banners.length]);
+
+  useEffect(() => () => {
+    if (bannerResumeTimerRef.current) clearTimeout(bannerResumeTimerRef.current);
+  }, []);
+
   return (
     <>
       <div ref={dashboardRef} className="space-y-4 md:space-y-6 max-w-[1200px] mx-auto">
@@ -369,6 +395,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
+            onPointerDown={pauseBannerAutoAdvance}
+            onWheel={pauseBannerAutoAdvance}
             className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-2 pb-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
@@ -394,6 +422,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 key={idx}
                 type="button"
                 onClick={() => {
+                  pauseBannerAutoAdvance();
                   const container = carouselRef.current;
                   if (container) {
                     const slideWidth = container.offsetWidth;
@@ -472,40 +501,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </Card>
         </div>
 
-        {/* Potential Revenue Card - moved below Collected/Pending */}
-        <Card
-          className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 cursor-pointer transition-all hover:shadow-md"
-          onClick={() => setEmptyBedsSheetOpen(true)}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Max capacity</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="text-sm font-semibold text-pending">
-                +₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible
-              </div>
-              <div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Tap to view breakdown</p>
-          </CardContent>
-        </Card>
-
                 {/* ═══════════════════════════════════════════════
             Quick Actions
            ═══════════════════════════════════════════════ */}
@@ -560,6 +555,22 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Paid<br/>Tenants</span>
           </div>
         </div>
+
+        {/* Potential revenue belongs at the end of the Home summary. */}
+        <Card
+          className="cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 transition-all hover:shadow-md"
+          onClick={() => setEmptyBedsSheetOpen(true)}
+        >
+          <CardContent className="p-4">
+            <div className="mb-2 flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /><span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span></div>
+            <div className="mb-2 grid grid-cols-2 gap-2">
+              <div><div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div><p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p></div>
+              <div className="text-right"><div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div><p className="text-xs text-muted-foreground">Max capacity</p></div>
+            </div>
+            <div className="flex items-center justify-between border-t pt-2"><div className="text-sm font-semibold text-pending">+₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible</div><div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div></div>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Tap to view breakdown</p>
+          </CardContent>
+        </Card>
 
         {/* Category List Sections Removed */}
         {/* ── Financials ── */}

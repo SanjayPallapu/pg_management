@@ -710,8 +710,8 @@ export const PaymentReconciliation = ({
                           );
                         }} 
                       />
-                      <Bar dataKey="upi" stackId="a" fill="#3b82f6" name="upi" />
-                      <Bar dataKey="cash" stackId="a" fill="#10b981" radius={[3, 3, 0, 0]} name="cash" />
+                      <Bar dataKey="upi" stackId="a" fill="#3b82f6" radius={[4, 4, 4, 4]} name="upi" />
+                      <Bar dataKey="cash" stackId="a" fill="#10b981" radius={[4, 4, 4, 4]} name="cash" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
