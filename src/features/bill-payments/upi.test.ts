@@ -46,6 +46,7 @@ describe("UPI QR parsing", () => {
   it("identifies personal QR codes that need the manual UPI ID fallback", () => {
     expect(isLikelyPersonalUpiQr(parseUpiQr("upi://pay?pa=person%40ybl&pn=Person"))).toBe(true);
     expect(isLikelyPersonalUpiQr(parseUpiQr("upi://pay?pa=person%40ybl&pn=Person&mc=0000"))).toBe(true);
+    expect(isLikelyPersonalUpiQr(parseUpiQr("upi://pay?pa=person%40ybl&pn=Person&mode=02&orgid=400011"))).toBe(true);
   });
 });
 

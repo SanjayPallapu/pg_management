@@ -74,8 +74,8 @@ export const getAmountConflict = (entered: number, qrAmount: number | null) =>
   qrAmount !== null && Math.abs(entered - qrAmount) >= 0.01 ? { entered, qrAmount } : null;
 
 export const isLikelyPersonalUpiQr = (qr: ParsedUpiQr) => {
-  const { mc, tr, mode, orgid } = qr.paymentParameters;
-  return mc === "0000" || (!mc && !tr && !mode && !orgid);
+  const { mc } = qr.paymentParameters;
+  return !mc || mc === "0000";
 };
 
 export const maskUpiId = (upiId: string) => {

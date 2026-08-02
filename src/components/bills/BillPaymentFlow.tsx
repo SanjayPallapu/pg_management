@@ -51,6 +51,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [conflict, setConflict] = useState<{ entered: number; qrAmount: number } | null>(null);
   const [receipt, setReceipt] = useState<BillPaymentDraft | null>(null);
+  const [savingOutcome, setSavingOutcome] = useState<UpiOutcome | null>(null);
   const [scannerVersion, setScannerVersion] = useState(0);
   const draftId = useRef(crypto.randomUUID());
   const awaitingUpiReturn = useRef(false);
@@ -73,7 +74,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   useEffect(() => {
     if (!open || !request) return;
     setStage("entry"); setAmount(""); setLabel(request.label ?? request.subcategory ?? ""); setNote("");
-    setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null);
+    setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null);
     draftId.current = crypto.randomUUID();
   }, [open, request]);
 
@@ -155,7 +156,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   const save = async (method: BillPaymentDraft["paymentMethod"], status: BillPaymentDraft["status"], resolvedNote?: string, upiAttempted = false) => {
     const transactionId = draftId.current;
-    if (!guard.begin(transactionId)) return;
+    if (!guard.begin(transactionId)) return false;
     setBusy(true); setError(null);
     const draft: BillPaymentDraft = {
       ...request, transactionId, amount: Number(amount), label: label.trim(), paymentMethod: method, status,
@@ -165,14 +166,18 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     try {
       await record.mutateAsync(draft);
       setReceipt(draft); setStage("receipt");
-    } catch (saveError) { setError(messageForError(saveError)); guard.end(transactionId); }
+      return true;
+    } catch (saveError) { setError(messageForError(saveError)); guard.end(transactionId); return false; }
     finally { setBusy(false); }
   };
 
   const chooseOutcome = async (outcome: UpiOutcome) => {
+    if (busy || savingOutcome) return;
+    setSavingOutcome(outcome);
     const resolved = resolveUpiOutcome(outcome);
     if (!resolved.shouldRecord) { onOpenChange(false); return; }
-    await save(resolved.method!, resolved.status!, resolved.note, true);
+    const saved = await save(resolved.method!, resolved.status!, resolved.note, true);
+    if (!saved) setSavingOutcome(null);
   };
 
   const resetScan = () => { setQr(null); setApps([]); setError(null); setStage("entry"); draftId.current = crypto.randomUUID(); };
@@ -233,15 +238,15 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">PG HUB never sees or stores your UPI PIN. Returning to PG HUB does not prove payment success.</p>
             </>}
 
-            {stage === "result" && <><div className="text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#f1efff] text-[#4936ef]"><CircleAlert className="h-8 w-8" /></div><h2 className="mt-3 text-xl font-black">How was this payment completed?</h2><p className="mt-1 text-sm text-muted-foreground">Choose what actually happened in your UPI app.</p></div><div className="space-y-2">
-              <ResultButton icon={Check} tone="text-emerald-600 bg-emerald-50" label="UPI payment successful" onClick={() => void chooseOutcome("success")} />
-              <ResultButton icon={X} tone="text-rose-600 bg-rose-50" label="UPI payment failed" onClick={() => void chooseOutcome("failed")} />
-              <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" onClick={() => void chooseOutcome("cash")} />
-              <ResultButton icon={Clock3} tone="text-blue-600 bg-blue-50" label="Payment pending" onClick={() => void chooseOutcome("pending")} />
-              <button type="button" disabled={busy} onClick={() => void chooseOutcome("cancel")} className="min-h-12 w-full rounded-xl text-sm font-bold text-muted-foreground">Cancel without recording</button>
+            {stage === "result" && <><div className="text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#f1efff] text-[#4936ef]"><CircleAlert className="h-8 w-8" /></div><h2 className="mt-3 text-xl font-black">How was this payment completed?</h2><p className="mt-1 text-sm text-muted-foreground">Choose once. PG HUB records only what you confirm.</p></div><div className="space-y-2">
+              <ResultButton icon={Check} tone="text-emerald-600 bg-emerald-50" label="UPI payment successful" helper="Add to bill totals and payment history" loading={savingOutcome === "success"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("success")} />
+              <ResultButton icon={X} tone="text-rose-600 bg-rose-50" label="UPI payment failed" helper="Record failure only; totals stay unchanged" loading={savingOutcome === "failed"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("failed")} />
+              <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" helper="Add as cash and note the UPI attempt" loading={savingOutcome === "cash"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cash")} />
+              <ResultButton icon={Clock3} tone="text-blue-600 bg-blue-50" label="Payment pending" helper="Record pending only; totals stay unchanged" loading={savingOutcome === "pending"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("pending")} />
+              <button type="button" disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cancel")} className="min-h-12 w-full rounded-xl text-sm font-bold text-muted-foreground disabled:opacity-50">Cancel without recording</button>
             </div></>}
 
-            {stage === "receipt" && receipt && <div className="text-center"><div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><Check className="h-10 w-10" /></div><h2 className="mt-3 text-2xl font-black">Recorded</h2><p className="text-sm text-muted-foreground">The Bills totals were updated only after your confirmation.</p><div className="mt-5 rounded-[22px] border bg-white p-4 text-left dark:bg-card"><div className="grid grid-cols-3 gap-2 border-b pb-3 text-center"><ReceiptAmount label="Bill total" amount={receipt.amount} /><ReceiptAmount label="Paid" amount={["Paid", "Partially Paid"].includes(receipt.status) ? receipt.amount : 0} /><ReceiptAmount label="Remaining" amount={["Paid", "Partially Paid"].includes(receipt.status) ? 0 : receipt.amount} /></div><ReceiptRow label="Transaction ID" value={receipt.transactionId} mono /><ReceiptRow label="Category" value={receipt.categoryName} /><ReceiptRow label="Method" value={receipt.paymentMethod} /><ReceiptRow label="Status" value={receipt.status} /><ReceiptRow label="Payee" value={receipt.payeeName || "Not provided"} /><ReceiptRow label="UPI ID" value={receipt.maskedUpiId || "Not stored"} /></div><Button className="mt-4 h-12 w-full rounded-2xl bg-[#4936ef] font-black" onClick={() => onOpenChange(false)}>Done</Button></div>}
+            {stage === "receipt" && receipt && <PaymentReceipt receipt={receipt} onDone={() => onOpenChange(false)} />}
 
             {error && <div role="alert" className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">{error.includes("offline") ? <WifiOff className="h-5 w-5 shrink-0" /> : permissionDenied ? <Camera className="h-5 w-5 shrink-0" /> : <CircleAlert className="h-5 w-5 shrink-0" />}<div className="flex-1"><p className="font-bold">{error}</p>{permissionDenied && nativePlatform && <button type="button" onClick={() => void openCameraSettings()} className="mt-2 min-h-11 rounded-xl bg-white px-3 text-xs font-black text-rose-700">Open app settings</button>}{permissionDenied && !nativePlatform && <p className="mt-2 text-xs font-semibold">Allow camera access in this site's browser settings, then rescan.</p>}{qr && stage !== "receipt" && <button type="button" onClick={resetScan} className="mt-2 flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-rose-700"><RotateCcw className="h-4 w-4" /> Rescan QR</button>}</div></div>}
             {busy && stage !== "entry" && <div className="flex items-center justify-center gap-2 py-2 text-sm font-bold text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Please wait…</div>}
@@ -254,7 +259,17 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   );
 };
 
-const ResultButton = ({ icon: Icon, tone, label, onClick }: { icon: typeof Check; tone: string; label: string; onClick: () => void }) => <button type="button" onClick={onClick} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-3 text-left dark:bg-card"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${tone}`}><Icon className="h-5 w-5" /></span><span className="flex-1 text-sm font-black">{label}</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>;
+const ResultButton = ({ icon: Icon, tone, label, helper, loading, disabled, onClick }: { icon: typeof Check; tone: string; label: string; helper: string; loading: boolean; disabled: boolean; onClick: () => void }) => <button type="button" disabled={disabled} onClick={onClick} className="flex min-h-[64px] w-full items-center gap-3 rounded-2xl border bg-white px-3 text-left disabled:cursor-wait disabled:opacity-55 dark:bg-card"><span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}</span><span className="min-w-0 flex-1"><span className="block text-sm font-black">{label}</span><span className="mt-0.5 block text-[11px] font-semibold text-muted-foreground">{loading ? "Saving your selection…" : helper}</span></span><ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" /></button>;
+const PaymentReceipt = ({ receipt, onDone }: { receipt: BillPaymentDraft; onDone: () => void }) => {
+  const affectsTotals = receipt.status === "Paid" || receipt.status === "Partially Paid";
+  const failed = receipt.status === "Failed";
+  const pending = receipt.status === "Pending";
+  const Icon = failed ? X : pending ? Clock3 : Check;
+  const iconTone = failed ? "bg-rose-100 text-rose-700" : pending ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700";
+  const title = failed ? "Failure recorded" : pending ? "Pending payment recorded" : "Payment recorded";
+  const description = affectsTotals ? "Bill totals and payment history are updated." : "Payment history is updated; bill totals remain unchanged.";
+  return <div className="text-center"><div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${iconTone}`}><Icon className="h-10 w-10" /></div><h2 className="mt-3 text-2xl font-black">{title}</h2><p className="text-sm text-muted-foreground">{description}</p><div className="mt-5 rounded-[22px] border bg-white p-4 text-left dark:bg-card"><div className="grid grid-cols-3 gap-2 border-b pb-3 text-center"><ReceiptAmount label="Amount" amount={receipt.amount} /><ReceiptAmount label="Added to bills" amount={affectsTotals ? receipt.amount : 0} /><ReceiptAmount label="Not added" amount={affectsTotals ? 0 : receipt.amount} /></div><ReceiptRow label="Transaction ID" value={receipt.transactionId} mono /><ReceiptRow label="Category" value={receipt.categoryName} /><ReceiptRow label="Method" value={receipt.paymentMethod} /><ReceiptRow label="Status" value={receipt.status} /><ReceiptRow label="Payee" value={receipt.payeeName || "Not provided"} /><ReceiptRow label="UPI ID" value={receipt.maskedUpiId || "Not stored"} /></div><Button className="mt-4 h-12 w-full rounded-2xl bg-[#4936ef] font-black" onClick={onDone}>Done</Button></div>;
+};
 const WebQrScanner = ({ onScan, onError }: { onScan: (rawValue: string) => void; onError: (error: unknown) => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onScanRef = useRef(onScan);
