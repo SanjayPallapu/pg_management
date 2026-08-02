@@ -40,6 +40,7 @@ import { RentProvider } from "./contexts/RentContext";
 import { useMonthContext } from "./contexts/MonthContext";
 import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 import { captureReferralCodeFromUrl } from "@/utils/referralHelper";
+import { PlayStoreUpdateManager } from "@/components/PlayStoreUpdateManager";
 
 // Protected route component that wraps children with PGProvider and RentProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -109,7 +110,8 @@ const AppContent = () => {
 
   return (
     <MonthProvider>
-    <ActiveTabProvider>
+      <PlayStoreUpdateManager />
+      <ActiveTabProvider>
       <PGSetupDraftProvider>
       <BrowserRouter>
         <Routes>
@@ -206,7 +208,7 @@ const AppContent = () => {
         </Routes>
       </BrowserRouter>
       </PGSetupDraftProvider>
-    </ActiveTabProvider>
+      </ActiveTabProvider>
     </MonthProvider>
   );
 };
