@@ -278,14 +278,14 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <SubscriptionBadge />
             <Button
-              variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-xl border border-border bg-background shadow-sm hover:bg-muted/50"
+              className="relative h-9 w-9 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
               title="Open app menu"
               aria-label="Open app menu"
               onClick={() => navigate("/menu")}
             >
-              <Menu className="h-5 w-5 text-foreground" />
+              <Menu className="h-5 w-5" />
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-300 ring-2 ring-primary" />
             </Button>
           </div>
         </div>

@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { ArrowLeft, Banknote, CheckCircle2, Phone, Smartphone } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, MessageCircle, MessageSquare, Phone, Receipt, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { PaymentEntry, Room } from '@/types';
+import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 
 interface PaidTenantsCardProps {
   rooms: Room[];
@@ -22,7 +24,26 @@ interface PaidTenantRow {
   phone: string;
   roomNo: string;
   amountPaid: number;
+  monthlyRent: number;
+  startDate: string;
+  roomCapacity: number;
   paymentDate?: string;
+  paymentEntries: PaymentEntry[];
+}
+
+interface PaidReceiptData {
+  tenantName: string;
+  tenantPhone: string;
+  paymentMode: string;
+  paymentDate: string;
+  joiningDate: string;
+  forMonth: string;
+  roomNo: string;
+  sharingType: string;
+  amount: number;
+  amountPaid: number;
+  isFullPayment: boolean;
+  remainingBalance: number;
   paymentEntries: PaymentEntry[];
 }
 
@@ -36,6 +57,8 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const [activeTab, setActiveTab] = useState<'present' | 'previous'>('present');
+  const [receiptData, setReceiptData] = useState<PaidReceiptData | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
 
   const previousPeriod = useMemo(() => {
     if (selectedMonth === 1) return { month: 12, year: selectedYear - 1 };
@@ -60,6 +83,9 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
           phone: tenant.phone,
           roomNo: room.roomNo,
           amountPaid: payment.amountPaid || entryTotal || payment.amount,
+          monthlyRent: tenant.monthlyRent,
+          startDate: tenant.startDate,
+          roomCapacity: room.capacity,
           paymentDate: payment.paymentDate,
           paymentEntries: payment.paymentEntries,
         };
@@ -90,7 +116,28 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
     0,
   );
 
+  const openReceipt = (tenant: PaidTenantRow) => {
+    const lastEntry = tenant.paymentEntries[tenant.paymentEntries.length - 1];
+    setReceiptData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      paymentMode: lastEntry?.mode || 'cash',
+      paymentDate: tenant.paymentDate ? format(parseDateOnly(tenant.paymentDate), 'dd-MMM-yyyy') : format(new Date(), 'dd-MMM-yyyy'),
+      joiningDate: format(parseDateOnly(tenant.startDate), 'dd-MMM-yyyy'),
+      forMonth: `${monthNames[visiblePeriod.month - 1]} ${visiblePeriod.year}`,
+      roomNo: tenant.roomNo,
+      sharingType: `${tenant.roomCapacity} Sharing`,
+      amount: tenant.monthlyRent,
+      amountPaid: tenant.amountPaid,
+      isFullPayment: true,
+      remainingBalance: 0,
+      paymentEntries: tenant.paymentEntries,
+    });
+    setReceiptOpen(true);
+  };
+
   return (
+    <>
     <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <SheetContent
         side="right"
@@ -170,6 +217,35 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                                     <Phone className="h-3 w-3" />
                                   </a>
                                 )}
+                                {tenant.phone && tenant.phone !== '••••••••••' && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button
+                                        type="button"
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+                                        aria-label={`Chat and receipt options for ${tenant.name}`}
+                                      >
+                                        <MessageCircle className="h-3.5 w-3.5" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                      <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant), 100)}>
+                                        <Receipt className="h-4 w-4" />
+                                        Generate Receipt
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="gap-2"
+                                        onClick={() => {
+                                          const phone = tenant.phone.replace(/\D/g, '');
+                                          window.location.href = `https://wa.me/${phone}`;
+                                        }}
+                                      >
+                                        <MessageSquare className="h-4 w-4" />
+                                        Chat with Tenant
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 Room {tenant.roomNo}
@@ -193,5 +269,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         </div>
       </SheetContent>
     </Sheet>
+    <WhatsAppReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} receiptData={receiptData} />
+    </>
   );
 };

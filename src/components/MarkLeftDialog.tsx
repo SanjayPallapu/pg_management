@@ -231,12 +231,12 @@ export const MarkLeftDialog = ({
             {step === "date" && <CalendarIcon className="h-5 w-5" />}
             {step === "calculation" && <IndianRupee className="h-5 w-5" />}
             {step === "confirm" && <CheckCircle2 className="h-5 w-5" />}
-            Mark {tenant.name} as Left
+            Move Out {tenant.name}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {step === "date" && "Select the date when the tenant left."}
-            {step === "calculation" && "Review and adjust the settlement calculation."}
-            {step === "confirm" && "Confirm how to handle the pending amount."}
+            {step === "date" && "Only the move-out date is required."}
+            {step === "calculation" && "Review the rent settlement; adjustments are optional."}
+            {step === "confirm" && "Confirm the move-out and pending balance choice."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -268,7 +268,7 @@ export const MarkLeftDialog = ({
             </div>
 
             <div>
-              <Label className="mb-2 block">Leave Date</Label>
+              <Label className="mb-2 block">Move-out Date <span className="text-destructive">*</span></Label>
               <Calendar
                 mode="single"
                 selected={leaveDate}
@@ -572,7 +572,7 @@ export const MarkLeftDialog = ({
                 Back
               </Button>
               <AlertDialogAction onClick={handleConfirmSettlement} className="bg-destructive hover:bg-destructive/90">
-                Confirm & Mark Left
+                Confirm Move Out
               </AlertDialogAction>
             </>
           )}

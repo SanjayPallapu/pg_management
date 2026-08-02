@@ -2655,15 +2655,16 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       </Dialog>
       
       {acPaymentRecord && (
-        <AlertDialog open={acPaymentRecord !== null} onOpenChange={(open) => !open && setAcPaymentRecord(null)}>
-          <AlertDialogContent className="max-w-md">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Record AC Bill Payment</AlertDialogTitle>
-              <AlertDialogDescription>
-                Record AC electricity bill payment for <span className="font-semibold text-foreground">{acPaymentRecord.tenantName}</span> (Room {acPaymentRecord.roomNo}).
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+        <Sheet open={acPaymentRecord !== null} onOpenChange={(open) => !open && setAcPaymentRecord(null)}>
+          <SheetContent side="right" className="w-full max-w-full p-0 sm:max-w-lg [&>button]:hidden">
+            <div className="flex h-full flex-col bg-background">
+            <SheetHeader className="shrink-0 border-b bg-background px-4 pb-3 pt-4">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setAcPaymentRecord(null)} aria-label="Back"><ArrowLeft className="h-5 w-5" /></Button>
+                <div className="text-left"><SheetTitle className="text-base font-bold">Record AC Bill Payment</SheetTitle><p className="text-xs text-muted-foreground">{acPaymentRecord.tenantName} · Room {acPaymentRecord.roomNo}</p></div>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 space-y-4 overflow-y-auto bg-muted/20 px-4 py-4">
               <div className="space-y-2">
                 <Label>Amount (₹)</Label>
                 <Input
@@ -2723,17 +2724,17 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 </div>
               </div>
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl" onClick={() => setAcPaymentRecord(null)}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5"
+            <div className="shrink-0 border-t bg-background p-4">
+              <Button
+                className="h-12 w-full rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/95"
                 onClick={handleConfirmAcPayment}
               >
                 Confirm Payment
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
       {acShareData && (

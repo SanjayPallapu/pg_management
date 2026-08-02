@@ -518,6 +518,14 @@ export const PaymentReconciliation = ({
   };
   const renderContent = () => (
     <>
+      {standalone && (
+        <div className="rounded-b-3xl bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-4 pb-5 pt-4 text-white shadow-lg shadow-blue-900/10">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15"><Wallet className="h-5 w-5" /></div>
+            <div><h1 className="text-lg font-black tracking-tight">Payments</h1><p className="text-xs text-blue-100">Collections, modes, and tenant payment history</p></div>
+          </div>
+        </div>
+      )}
       {!standalone && (
         <SheetHeader className="pb-2 px-4 pt-4 border-b bg-background">
           <div className="flex items-center justify-between">
@@ -531,11 +539,11 @@ export const PaymentReconciliation = ({
         </SheetHeader>
       )}
 
-      <div className={standalone ? "" : "px-4 pb-4 mt-2"}>
+      <div className={standalone ? "pt-4" : "px-4 pb-4 mt-2"}>
         <div>
           <div className="space-y-4">
             {/* Date Range Filter */}
-            <div className="flex items-center gap-2 bg-background p-1 w-full justify-between sm:justify-start">
+            <div className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border/70 bg-background p-2 shadow-sm sm:justify-start">
               <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
                 <SelectTrigger className="w-[130px] h-9 rounded-xl bg-background border border-input text-xs sm:text-sm">
                   <SelectValue />
@@ -560,6 +568,24 @@ export const PaymentReconciliation = ({
                 <Download className="h-4 w-4" />
                 <span>Export</span>
               </Button>
+            </div>
+
+            <div className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-background to-emerald-500/5 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[.12em] text-muted-foreground">Collected this period</p>
+                  <p className="mt-1 text-3xl font-black tracking-tight text-foreground">₹{reconciliationData.rentCollected.toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{reconciliationData.paidCount} paid · {reconciliationData.partialCount} partial</p>
+                </div>
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${reconciliationData.isMatching ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'}`}>
+                  {reconciliationData.isMatching ? 'Ledger matched' : `Review ₹${Math.abs(reconciliationData.difference).toLocaleString()}`}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="rounded-2xl border border-blue-500/15 bg-blue-500/[0.07] p-2.5"><p className="text-[10px] font-bold text-blue-600 dark:text-blue-400">UPI</p><p className="mt-1 text-sm font-extrabold">₹{reconciliationData.upiTotal.toLocaleString()}</p><p className="text-[9px] text-muted-foreground">{reconciliationData.upiCount} entries</p></div>
+                <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.07] p-2.5"><p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Cash</p><p className="mt-1 text-sm font-extrabold">₹{reconciliationData.cashTotal.toLocaleString()}</p><p className="text-[9px] text-muted-foreground">{reconciliationData.cashCount} entries</p></div>
+                <div className="rounded-2xl border border-violet-500/15 bg-violet-500/[0.07] p-2.5"><p className="text-[10px] font-bold text-violet-600 dark:text-violet-400">Total entries</p><p className="mt-1 text-sm font-extrabold">{reconciliationData.upiCount + reconciliationData.cashCount}</p><p className="text-[9px] text-muted-foreground">transactions</p></div>
+              </div>
             </div>
 
             {/* Month Trend Comparison - Only show for multi-month view */}
@@ -721,28 +747,28 @@ export const PaymentReconciliation = ({
 
 
             {/* Individual Payment Details */}
-            <div className="space-y-2.5">
+            <div className="space-y-3 rounded-3xl border border-border/70 bg-background p-3 shadow-sm">
               <div className="flex flex-col gap-3">
                 {/* Top row: Title and Search */}
-                <div className="flex items-center justify-between w-full gap-3">
-                  <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
-                  <div className="relative shrink-0">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <div className="w-full">
+                  <div className="flex items-center justify-between"><div><h3 className="text-sm font-bold">Payment Details</h3><p className="text-[10px] text-muted-foreground">{filteredPaymentDetails.length} tenant records</p></div></div>
+                  <div className="relative mt-3">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Search tenant"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-7 w-32 pl-6 text-xs"
+                      className="h-10 w-full rounded-xl bg-muted/30 pl-9 text-xs"
                     />
                   </div>
                 </div>
                 {/* Bottom row: Filter and Expand/Collapse */}
-                <div className="flex items-center justify-between w-full gap-3">
-                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
-                    <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
-                    <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
-                    <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm" className="rounded-xl bg-muted/50 p-1">
+                    <ToggleGroupItem value="all" className="h-7 rounded-lg px-3 text-xs">All</ToggleGroupItem>
+                    <ToggleGroupItem value="upi" className="h-7 rounded-lg px-3 text-xs">UPI</ToggleGroupItem>
+                    <ToggleGroupItem value="cash" className="h-7 rounded-lg px-3 text-xs">Cash</ToggleGroupItem>
                   </ToggleGroup>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={expandAll}>
@@ -759,20 +785,20 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className={`border border-border/60 bg-card rounded-xl overflow-hidden shadow-sm transition-all hover:shadow border-l-4 ${
+                      <div className={`overflow-hidden rounded-2xl border border-border/60 border-l-4 bg-card shadow-sm transition-all hover:shadow-md ${
                         detail.status === 'Paid' 
                           ? 'border-l-emerald-500 dark:border-l-emerald-600' 
                           : 'border-l-amber-500 dark:border-l-amber-600'
                       }`}>
                         <CollapsibleTrigger asChild>
-                          <div className="p-2.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
+                          <div className="flex cursor-pointer items-center justify-between border-b border-border/20 bg-muted/25 p-3.5 transition-colors hover:bg-muted/40 dark:bg-muted/10">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-black text-primary">
                                 R{detail.roomNo}
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-sm text-foreground truncate">{detail.tenantName}</span>
+                                  <span className="truncate text-sm font-extrabold text-foreground">{detail.tenantName}</span>
                                   {dateRange !== 'current' && 'month' in detail && (
                                     <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
                                       {monthsShort[(detail as any).month - 1]}
@@ -785,14 +811,14 @@ export const PaymentReconciliation = ({
                                   ) : (
                                     <ChevronRight className="h-3 w-3 shrink-0" />
                                   )}
-                                  <span>View break-up</span>
+                                  <span>Room {detail.roomNo} · View details</span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-2.5 shrink-0">
                               <div className="text-right">
-                                <div className="font-extrabold text-sm text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
+                                <div className="text-sm font-black text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
                               </div>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 detail.status === 'Paid' 
@@ -886,7 +912,7 @@ export const PaymentReconciliation = ({
   );
 
   if (standalone) {
-    return <div className="flex flex-col h-full bg-background overflow-y-auto px-1.5 pb-12">{renderContent()}</div>;
+    return <div className="flex h-full flex-col overflow-y-auto bg-muted/20 px-3 pb-12">{renderContent()}</div>;
   }
 
   return (

@@ -63,7 +63,6 @@ import { ChangePasswordDialog } from "./settings/ChangePasswordDialog";
 import { LoginActivityDialog } from "./settings/LoginActivityDialog";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ThreeDScene } from "@/components/ThreeDScene";
 
 const APP_VERSION = "1.0.0";
 const SUPPORT_EMAIL = "support@pgmanager.in";
@@ -78,16 +77,23 @@ interface SettingItemProps {
 }
 
 const SettingItem = ({ icon, label, description, onClick, trailing, destructive }: SettingItemProps) => (
-  <button
-    type="button"
+  <div
+    role="button"
+    tabIndex={0}
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-all active:scale-[0.98] ${
+    onKeyDown={(event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && onClick) {
+        event.preventDefault();
+        onClick();
+      }
+    }}
+    className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-all active:scale-[0.99] ${
       destructive
         ? "hover:bg-destructive/10 text-destructive"
         : "hover:bg-accent/60"
     }`}
   >
-    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
       destructive ? "bg-destructive/10" : "bg-primary/10"
     }`}>
       {icon}
@@ -97,7 +103,7 @@ const SettingItem = ({ icon, label, description, onClick, trailing, destructive 
       {description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{description}</p>}
     </div>
     {trailing || (onClick && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />)}
-  </button>
+  </div>
 );
 
 const SectionHeader = ({ title }: { title: string }) => (
@@ -256,33 +262,36 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   return (
     <>
       <motion.div
-        className="space-y-2"
+        className="space-y-4 pb-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
+        <motion.div variants={itemVariants} className="px-1 pt-1">
+          <h1 className="text-xl font-black tracking-tight">Settings</h1>
+          <p className="text-xs text-muted-foreground">Manage your property, account, and preferences</p>
+        </motion.div>
+
         {/* Profile Card */}
         <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/8 via-card to-card relative">
-            {/* 3D Background */}
-            <div className="absolute right-0 top-0 h-full w-32 opacity-40">
-              <ThreeDScene variant="orbs" className="h-full w-full" />
-            </div>
-            <CardContent className="p-5 relative z-10">
+          <Card className="relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-lg shadow-blue-900/15">
+            <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
+            <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-cyan-300/10" />
+            <CardContent className="relative z-10 p-5">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
-                  <User className="h-7 w-7 text-primary" />
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+                  <User className="h-7 w-7 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
-                  {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
+                  {user?.email && <p className="truncate text-xs text-blue-100">{user.email}</p>}
                   <div className="mt-1 flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${roleBadge.color}`}>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
                       <Shield className="h-3 w-3" />
                       {roleBadge.label}
                     </span>
                     {currentPG && (
-                      <span className="truncate text-xs text-muted-foreground">
+                      <span className="truncate text-xs text-blue-100">
                         · {currentPG.name}
                       </span>
                     )}
@@ -293,9 +302,21 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           </Card>
         </motion.div>
 
+        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2">
+          <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
+            <Building className="mx-auto h-5 w-5 text-blue-600" /><span className="mt-2 block text-[10px] font-bold">Properties</span>
+          </button>
+          <button type="button" onClick={() => setReportsOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
+            <FileBarChart className="mx-auto h-5 w-5 text-emerald-600" /><span className="mt-2 block text-[10px] font-bold">Reports</span>
+          </button>
+          <button type="button" onClick={() => navigate('/subscription')} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
+            <CreditCard className="mx-auto h-5 w-5 text-violet-600" /><span className="mt-2 block text-[10px] font-bold">Billing</span>
+          </button>
+        </motion.div>
+
         {/* Preferences */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Preferences" />
             <CardContent className="p-2">
               <SettingItem
@@ -321,38 +342,9 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           </Card>
         </motion.div>
 
-        {/* PG Management */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <SectionHeader title="PG Management" />
-            <CardContent className="p-2">
-              <SettingItem
-                icon={<Building className="h-4 w-4 text-primary" />}
-                label="Manage Properties"
-                description={currentPG ? `Current: ${currentPG.name}` : "Setup your PG"}
-                onClick={() => setPropertiesOpen(true)}
-              />
-
-              <SettingItem
-                icon={<FileBarChart className="h-4 w-4 text-primary" />}
-                label="Reports & Analytics"
-                description="Occupancy, vacancy, collections & bed availability"
-                onClick={() => setReportsOpen(true)}
-              />
-
-              <SettingItem
-                icon={<CreditCard className="h-4 w-4 text-primary" />}
-                label="Subscription"
-                description="View plan & billing details"
-                onClick={() => navigate("/subscription")}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Security */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Security" />
             <CardContent className="p-2">
               <SettingItem
@@ -373,7 +365,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
         {/* Support & Share */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Support" />
             <CardContent className="p-2">
               <SettingItem
@@ -406,7 +398,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
         {/* Legal */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Legal" />
             <CardContent className="p-2">
               <SettingItem

@@ -2,7 +2,6 @@ import { useState, useMemo, forwardRef, useImperativeHandle, useEffect } from 'r
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -582,25 +581,23 @@ interface TenantSelectItemProps {
 
 const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const bgClass = categoryColor === 'pending' 
-    ? 'bg-pending-muted border-pending/30' 
+    ? 'bg-red-500/10 border-red-500/20 border-l-red-500'
     : categoryColor === 'amber'
-    ? 'bg-amber-500/10 border-amber-500/30'
-    : 'bg-blue-500/10 border-blue-500/30';
+    ? 'bg-amber-500/10 border-amber-500/20 border-l-amber-500'
+    : 'bg-blue-500/10 border-blue-500/20 border-l-blue-500';
 
   return (
     <div 
-      className={`p-3 rounded-lg border ${bgClass} ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      className={`rounded-2xl border border-l-4 p-3.5 shadow-sm transition-all ${bgClass} ${isSelected ? 'ring-2 ring-primary ring-offset-1' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      <div className="flex items-center gap-3">
-        <Checkbox 
-          checked={isSelected}
-          onCheckedChange={() => onToggle(tenant.id)}
-          className="pointer-events-none"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold truncate">{tenant.name}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="truncate text-sm font-bold">{tenant.name}</span>
+            {isSelected && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
+            )}
             {tenant.phone && tenant.phone !== '••••••••••' && (
               <>
                 <a
@@ -645,12 +642,10 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
               </>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Room {tenant.roomNo}
+          <p className="mt-1.5 text-xs font-medium text-muted-foreground">Room {tenant.roomNo}</p>
+          <p className="mt-4 text-xs text-muted-foreground">
             {tenant.startDate && (
-              <span className="ml-2 text-xs">
-                Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
-              </span>
+              <span>Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
             )}
             {tenant.amountPaid > 0 && (
               <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">
@@ -659,21 +654,13 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             )}
           </p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <Badge className={
-            categoryColor === 'pending'
-              ? 'bg-pending text-pending-foreground font-bold'
-              : categoryColor === 'amber'
-              ? 'bg-amber-500 text-white font-bold'
-              : 'bg-blue-500 text-white font-bold'
-          }>
-            ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
-          </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-8">
+          <span className="text-sm font-extrabold text-foreground">₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}</span>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 rounded-full border-emerald-500/40 bg-background px-2.5 text-[11px] font-semibold text-emerald-700 shadow-sm hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400"
+            className="h-8 rounded-xl border-border/70 bg-background px-3 text-[11px] font-semibold text-foreground shadow-sm hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400"
             onClick={(event) => {
               event.stopPropagation();
               onMarkPaid?.(tenant);

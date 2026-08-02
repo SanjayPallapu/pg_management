@@ -1034,22 +1034,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   }}
                                 />
                               </div>
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Leave Date (if left)</Label>
-                                <Input
-                                  type="date"
-                                  value={editingValues?.endDate ?? tenant.endDate ?? ""}
-                                  onChange={(e) => {
-                                    setEditingValues(prev => prev ? { ...prev, endDate: e.target.value || undefined } : null);
-                                  }}
-                                  onBlur={async () => {
-                                    if (editingValues) {
-                                      await handleUpdateTenant(tenant.id, { endDate: editingValues.endDate });
-                                    }
-                                  }}
-                                  placeholder="Leave date"
-                                />
-                              </div>
                             </div>
                           ) : (
                             <>
@@ -1303,11 +1287,14 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                  className="h-auto min-h-9 border-orange-300 px-3 py-2 text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
                                   onClick={() => setMarkLeftTenant(tenant)}
                                 >
                                   <LogOut className="h-4 w-4 mr-1" />
-                                  Mark Left
+                                  <span className="text-left leading-tight">
+                                    <span className="block text-xs font-bold">Move Out</span>
+                                    <span className="block text-[9px] font-normal opacity-75">Date & settlement</span>
+                                  </span>
                                 </Button>
                               )}
                               {!tenant.endDate && (
