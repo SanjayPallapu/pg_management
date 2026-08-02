@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePG } from "@/contexts/PGContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
-import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
+import { type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { format, differenceInDays } from "date-fns";
 
@@ -43,7 +43,6 @@ export default function SubscriptionPage() {
     setSelectedPlanKey(null);
   }, [billingCycle]);
 
-  const currentPlan = SUBSCRIPTION_PLANS[activePlanKey];
   // Checkout plans are currently settled in INR. Keep one universal checkout
   // rather than exposing country switches that can disagree with the provider.
   const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, "IN");
@@ -141,12 +140,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        {subscription?.status === "active" ? (
-          <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Active ({subscription.billingCycle?.toUpperCase()})
-          </Badge>
-        ) : (
+        {subscription?.status !== "active" && (
           <Badge className="border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
             Free Trial
           </Badge>
@@ -155,7 +149,7 @@ export default function SubscriptionPage() {
       </header>
 
       {/* Main Full-Screen Body */}
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-3 py-4 pb-36 sm:px-4">
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-3 py-4 pb-10 sm:px-4">
         
         {/* Active Trial Notification Banner */}
         {isTrialActive && (
@@ -282,13 +276,18 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="mt-3 pt-1">
-                  <div className={`w-full py-2.5 rounded-2xl text-center text-xs font-extrabold transition-all ${
-                    isSelected 
-                      ? "bg-primary text-primary-foreground shadow-md" 
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}>
-                    {isSelected ? "Selected Plan" : "Select Plan"}
-                  </div>
+                  {isSelected ? (
+                    <Button
+                      type="button"
+                      className="h-11 w-full rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-xs font-extrabold text-white shadow-md"
+                      onClick={(event) => { event.stopPropagation(); handleCheckout(); }}
+                      disabled={razorpayLoading}
+                    >
+                      {razorpayLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Opening checkout…</> : `Choose ${c.title} · ${actualPriceLocal.symbol}${actualPriceLocal.price.toLocaleString()}`}
+                    </Button>
+                  ) : (
+                    <div className="w-full rounded-xl bg-muted py-2.5 text-center text-xs font-extrabold text-muted-foreground">Tap to select</div>
+                  )}
                 </div>
               </div>
             );
@@ -303,40 +302,6 @@ export default function SubscriptionPage() {
         </div>
       </main>
 
-      {/* Sticky Bottom Action Drawer Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 px-3 py-3 shadow-2xl backdrop-blur-md sm:px-4">
-        <div className="mx-auto flex max-w-screen-2xl flex-col items-center justify-between gap-3 sm:flex-row">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="bg-primary/10 p-2.5 rounded-2xl text-primary shrink-0">
-              <Zap className="h-5 w-5 fill-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm text-foreground">{currentPlan.name} Plan</span>
-                <span className="text-xs text-muted-foreground font-semibold">({billingCycle === "yearly" ? "Yearly" : "Monthly"})</span>
-                <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 border-emerald-400">
-                  Secure checkout
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                {currentLocalized.symbol}{currentLocalized.price.toLocaleString()} {billingCycle === "yearly" ? "/year" : "/month"} · Renews automatically
-              </p>
-            </div>
-          </div>
-
-          <Button
-            className="w-full sm:w-auto px-8 py-6 text-sm font-extrabold rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-            onClick={handleCheckout}
-            disabled={razorpayLoading}
-          >
-            {razorpayLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Opening secure checkout...</>
-            ) : (
-              <><CreditCard className="h-4 w-4" /> Continue to checkout ({currentLocalized.symbol}{currentLocalized.price.toLocaleString()})</>
-            )}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

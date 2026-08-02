@@ -365,7 +365,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
         className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
       >
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+          <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-2 pt-4 sm:px-4">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 rounded-full shrink-0">
                 <ArrowLeft className="h-5 w-5" />
@@ -375,7 +375,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
               </SheetTitle>
             </div>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+          <div className="mx-auto w-full max-w-screen-2xl flex-1 overflow-y-auto bg-background px-3 py-1 sm:px-4">
             <div className="space-y-3 mt-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

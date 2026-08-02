@@ -624,10 +624,13 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
     : categoryColor === 'amber'
     ? 'bg-amber-500/10 border-amber-500/20 border-l-amber-500'
     : 'bg-blue-500/10 border-blue-500/20 border-l-blue-500';
+  const cardClass = isSelected
+    ? 'border-primary/50 border-l-primary bg-primary/[0.08] shadow-none'
+    : bgClass;
 
   return (
     <div 
-      className={`rounded-2xl border border-l-4 p-3.5 shadow-sm transition-all ${bgClass} ${isSelected ? 'ring-2 ring-primary ring-offset-1' : ''}`}
+      className={`rounded-2xl border border-l-4 p-3.5 shadow-sm transition-colors ${cardClass}`}
       onClick={() => onToggle(tenant.id)}
     >
       <div className="flex items-start justify-between gap-3">

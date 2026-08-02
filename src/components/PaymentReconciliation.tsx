@@ -911,8 +911,93 @@ export const PaymentReconciliation = ({
     </>
   );
 
+  const renderPaymentsExperience = () => (
+    <>
+      {standalone ? (
+        <header className="border-b border-border/60 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-primary">Money movement</p><h1 className="mt-1 text-2xl font-black tracking-tight">Payments</h1><p className="text-xs text-muted-foreground">A clear ledger of every collection.</p></div>
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/10 text-primary"><Wallet className="h-5 w-5" /></div>
+          </div>
+        </header>
+      ) : (
+        <SheetHeader className="border-b bg-background px-3 py-3 sm:px-4">
+          <div className="flex items-center justify-between"><SheetTitle className="text-base font-black">Payment ledger</SheetTitle><Button variant="ghost" size="icon" onClick={() => onOpenChange?.(false)} className="h-9 w-9"><X className="h-4 w-4" /></Button></div>
+        </SheetHeader>
+      )}
+
+      <div className={standalone ? "py-1" : "px-3 py-1 sm:px-4"}>
+        <div className="flex items-center gap-2 border-b border-border/60 py-3">
+          <Select value={dateRange} onValueChange={(value: DateRangeOption) => setDateRange(value)}>
+            <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl border-0 bg-muted/60 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="current">Current month</SelectItem><SelectItem value="last3">Last 3 months</SelectItem><SelectItem value="last6">Last 6 months</SelectItem></SelectContent>
+          </Select>
+          <div className="shrink-0 text-right"><p className="text-[10px] text-muted-foreground">Period</p><p className="text-xs font-black">{dateRange === 'current' ? `${monthsShort[selectedMonth - 1]} ${selectedYear}` : `${monthsShort[monthsToShow[0].month - 1]}–${monthsShort[monthsToShow[monthsToShow.length - 1].month - 1]}`}</p></div>
+          <Button onClick={handleExportExcel} variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-primary/10 text-primary" aria-label="Export payments"><Download className="h-4 w-4" /></Button>
+        </div>
+
+        <section className="border-b border-border/60 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div><p className="text-[10px] font-black uppercase tracking-[.15em] text-muted-foreground">Collected</p><p className="mt-1 text-4xl font-black tracking-[-.05em]">₹{reconciliationData.rentCollected.toLocaleString()}</p><p className="mt-1 text-xs text-muted-foreground">{reconciliationData.paidCount} paid · {reconciliationData.partialCount} partial</p></div>
+            <span className={`mt-1 rounded-full px-2.5 py-1 text-[9px] font-black ${reconciliationData.isMatching ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>{reconciliationData.isMatching ? 'MATCHED' : `CHECK ₹${Math.abs(reconciliationData.difference).toLocaleString()}`}</span>
+          </div>
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="flex h-full w-full">{reconciliationData.paymentModeTotal > 0 && <><span className="h-full bg-blue-500" style={{ width: `${(reconciliationData.upiTotal / reconciliationData.paymentModeTotal) * 100}%` }} /><span className="h-full flex-1 bg-emerald-500" /></>}</div>
+          </div>
+          <div className="mt-3 grid grid-cols-3 divide-x divide-border/60 text-center">
+            <div><p className="text-[9px] font-black uppercase text-blue-500">UPI</p><p className="mt-0.5 text-sm font-black">₹{reconciliationData.upiTotal.toLocaleString()}</p><p className="text-[9px] text-muted-foreground">{reconciliationData.upiCount} entries</p></div>
+            <div><p className="text-[9px] font-black uppercase text-emerald-500">Cash</p><p className="mt-0.5 text-sm font-black">₹{reconciliationData.cashTotal.toLocaleString()}</p><p className="text-[9px] text-muted-foreground">{reconciliationData.cashCount} entries</p></div>
+            <div><p className="text-[9px] font-black uppercase text-violet-500">Total</p><p className="mt-0.5 text-sm font-black">{reconciliationData.upiCount + reconciliationData.cashCount}</p><p className="text-[9px] text-muted-foreground">transactions</p></div>
+          </div>
+        </section>
+
+        {dateRange !== 'current' && multiMonthData.length > 1 && (
+          <section className="border-b border-border/60 py-4">
+            <div className="flex items-center justify-between"><h2 className="text-sm font-black">Month rhythm</h2><TrendingUp className="h-4 w-4 text-primary" /></div>
+            <div className="mt-3 flex items-end gap-2">
+              {multiMonthData.map((data) => {
+                const highest = Math.max(...multiMonthData.map((item) => item.rentCollected), 1);
+                return <div key={`${data.month}-${data.year}`} className="flex flex-1 flex-col items-center"><div className="flex h-20 w-full items-end"><div className="w-full rounded-t-md bg-gradient-to-t from-primary to-violet-400" style={{ height: `${Math.max(6, (data.rentCollected / highest) * 100)}%` }} /></div><p className="mt-1 text-[9px] font-bold text-muted-foreground">{monthsShort[data.month - 1]}</p><p className="text-[9px] font-black">₹{Math.round(data.rentCollected / 1000)}k</p></div>;
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="py-5">
+          <div className="flex items-end justify-between gap-3"><div><h2 className="text-base font-black tracking-tight">Tenant ledger</h2><p className="text-[10px] text-muted-foreground">{filteredPaymentDetails.length} records</p></div><FileText className="h-4 w-4 text-muted-foreground" /></div>
+          <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search tenant" className="h-11 rounded-xl border-0 bg-muted/60 pl-9 shadow-none" /></div>
+          <div className="mt-2 flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+            <ToggleGroup type="single" value={paymentFilter} onValueChange={(value) => value && setPaymentFilter(value)} size="sm" className="gap-1"><ToggleGroupItem value="all" className="h-8 rounded-lg px-3 text-xs">All</ToggleGroupItem><ToggleGroupItem value="upi" className="h-8 rounded-lg px-3 text-xs">UPI</ToggleGroupItem><ToggleGroupItem value="cash" className="h-8 rounded-lg px-3 text-xs">Cash</ToggleGroupItem></ToggleGroup>
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-[10px]" onClick={() => expandedTenants.size ? collapseAll() : expandAll()}>{expandedTenants.size ? 'Collapse' : 'Expand all'}</Button>
+          </div>
+
+          <div className="divide-y divide-border/60">
+            {filteredPaymentDetails.map((detail) => {
+              const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
+              const isExpanded = expandedTenants.has(detailKey);
+              return (
+                <Collapsible key={detailKey} open={isExpanded} onOpenChange={() => toggleTenantExpanded(detailKey)}>
+                  <CollapsibleTrigger asChild><button type="button" className="flex min-h-14 w-full items-center gap-3 py-2 text-left">
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[10px] font-black ${detail.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>R{detail.roomNo}</span>
+                    <span className="min-w-0 flex-1"><strong className="block truncate text-[13px]">{detail.tenantName}</strong><small className="block text-[10px] text-muted-foreground">Room {detail.roomNo} · {detail.entries.length} entr{detail.entries.length === 1 ? 'y' : 'ies'}</small></span>
+                    <span className="text-right"><strong className="block text-[13px]">₹{detail.amountPaid.toLocaleString()}</strong><small className={detail.status === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}>{detail.status}</small></span>
+                    {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                  </button></CollapsibleTrigger>
+                  <CollapsibleContent><div className="border-l-2 border-primary/30 bg-muted/20 py-1 pl-4 pr-2">{detail.entries.map((entry, index) => <div key={index} className="flex items-center justify-between border-b border-border/40 py-2 text-xs last:border-0"><span><strong className={entry.mode === 'upi' ? 'text-blue-500' : 'text-emerald-500'}>{entry.mode.toUpperCase()}</strong><small className="ml-2 text-muted-foreground">{format(new Date(entry.date), 'dd MMM yyyy')}</small></span><strong>₹{entry.amount.toLocaleString()}</strong></div>)}</div></CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+            {filteredPaymentDetails.length === 0 && <div className="py-14 text-center"><Wallet className="mx-auto h-8 w-8 text-muted-foreground/30" /><p className="mt-3 text-sm font-bold">No payments in this period</p><p className="mt-1 text-xs text-muted-foreground">Recorded rent payments will appear here.</p></div>}
+          </div>
+        </section>
+      </div>
+
+      <TenantsByDueDaySheet open={dueDaySheetOpen} onOpenChange={setDueDaySheetOpen} day={selectedDueDay} rooms={rooms} payments={payments} selectedMonth={selectedMonth} selectedYear={selectedYear} />
+    </>
+  );
+
   if (standalone) {
-    return <div className="mx-auto flex h-full w-full max-w-screen-2xl flex-col overflow-y-auto bg-muted/20 px-3 py-1 pb-12 sm:px-4">{renderContent()}</div>;
+    return <div className="mx-auto flex h-full w-full max-w-screen-2xl flex-col overflow-y-auto bg-background px-3 py-1 pb-12 sm:px-4">{renderPaymentsExperience()}</div>;
   }
 
   return (
@@ -922,7 +1007,7 @@ export const PaymentReconciliation = ({
         className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden animate-in duration-300 bg-background" : "w-full sm:max-w-lg p-0 bg-background"}
       >
         <div className="flex flex-col h-full overflow-y-auto pb-4">
-          {renderContent()}
+          {renderPaymentsExperience()}
         </div>
       </SheetContent>
     </Sheet>

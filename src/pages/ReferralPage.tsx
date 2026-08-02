@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
 import {
   ArrowLeft,
   Check,
@@ -7,10 +6,10 @@ import {
   Gift,
   Share2,
   ShieldCheck,
-  Sparkles,
-  TicketCheck,
+  ArrowRight,
+  Users,
   UserPlus,
-  WalletCards,
+  Trophy,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -68,136 +67,55 @@ export default function ReferralPage() {
   };
 
   return (
-    <main className="min-h-screen bg-muted/20 text-foreground">
-      <header className="sticky top-0 z-20 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-3 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur-xl sm:px-4">
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Back"
-            className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-black tracking-tight">Refer & Earn</h1>
-            <p className="text-xs font-medium text-blue-100">Share PG HUB and earn subscription rewards</p>
-          </div>
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-xl hover:bg-muted"><ArrowLeft className="h-5 w-5" /></button>
+          <div><h1 className="text-lg font-black tracking-tight">Refer &amp; Earn</h1><p className="text-xs text-muted-foreground">Invite. Activate. Earn.</p></div>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-screen-2xl space-y-4 px-3 py-4 pb-10 sm:px-4">
-        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-violet-700 via-indigo-700 to-blue-600 p-5 text-white shadow-xl shadow-indigo-950/15 sm:p-7">
-          <Sparkles className="absolute -right-4 -top-5 h-28 w-28 text-white/10" />
-          <div className="relative max-w-md">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[.12em]">
-              <Gift className="h-3.5 w-3.5" /> PG HUB Rewards
-            </span>
-            <h2 className="mt-4 text-2xl font-black leading-tight">Give 30% off.<br />Get one month free.</h2>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-indigo-100">
-              Your friend saves on their first paid month. Your free month unlocks after their first successful subscription payment.
-            </p>
+      <div className="mx-auto w-full max-w-screen-2xl px-3 py-1 pb-10 sm:px-4">
+        <section className="relative overflow-hidden border-b border-border/60 py-6">
+          <div className="absolute right-0 top-2 grid h-24 w-24 place-items-center rounded-full bg-violet-500/10 text-violet-500"><Gift className="h-10 w-10" /></div>
+          <div className="relative max-w-[270px]">
+            <p className="text-[10px] font-black uppercase tracking-[.18em] text-violet-600 dark:text-violet-400">PG HUB rewards</p>
+            <h2 className="mt-2 text-3xl font-black leading-[1.05] tracking-tight">They save 30%.<br />You earn a month.</h2>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Your reward unlocks when the invited owner completes their first subscription payment.</p>
           </div>
         </section>
 
-        <section className="grid grid-cols-3 overflow-hidden border-y border-border/70 bg-background">
-          <div className="border-r border-border p-3 text-center">
-            <strong className="block text-xl font-black">{stats.totalInvited}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Invited</span>
+        <section className="grid grid-cols-3 border-b border-border/60 py-4 text-center">
+          <div><Users className="mx-auto h-4 w-4 text-blue-500" /><strong className="mt-1 block text-lg font-black">{stats.totalInvited}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Invited</span></div>
+          <div className="border-x border-border/60"><UserPlus className="mx-auto h-4 w-4 text-emerald-500" /><strong className="mt-1 block text-lg font-black">{stats.activePaidReferrals}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Joined</span></div>
+          <div><Trophy className="mx-auto h-4 w-4 text-violet-500" /><strong className="mt-1 block text-lg font-black">{stats.freeMonthsEarned}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Earned</span></div>
+        </section>
+
+        <section className="border-b border-border/60 py-5">
+          <div className="flex items-end justify-between"><div><h2 className="text-sm font-black">Your invite</h2><p className="text-[11px] text-muted-foreground">Share the link or copy the code.</p></div><Share2 className="h-4 w-4 text-violet-500" /></div>
+          <div className="mt-3 flex items-center gap-2 border-y border-dashed border-violet-500/40 py-3">
+            <span className="min-w-0 flex-1 truncate font-mono text-sm font-black tracking-wider text-violet-600 dark:text-violet-400">{stats.referralCode}</span>
+            <Button type="button" variant="ghost" size="icon" onClick={copyCode} className="h-9 w-9" aria-label="Copy referral code">{copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}</Button>
           </div>
-          <div className="border-r border-border p-3 text-center">
-            <strong className="block text-xl font-black text-emerald-600">{stats.activePaidReferrals}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Subscribed</span>
-          </div>
-          <div className="p-3 text-center">
-            <strong className="block text-xl font-black text-violet-700">{stats.freeMonthsEarned}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Free months</span>
+          <Button type="button" onClick={shareInvite} disabled={sharing} className="mt-3 h-12 w-full rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-sm font-black text-white"><Share2 className="mr-2 h-4 w-4" />{sharing ? "Opening share options…" : "Share invitation"}</Button>
+        </section>
+
+        <section className="border-b border-border/60 py-5">
+          <h2 className="text-sm font-black">How it works</h2>
+          <div className="mt-4 flex items-start justify-between gap-1 text-center">
+            {[{ icon: Share2, label: 'Share' }, { icon: UserPlus, label: 'Friend joins' }, { icon: Trophy, label: 'Reward' }].map((step, index, list) => {
+              const Icon = step.icon;
+              return <div key={step.label} className="contents"><div className="w-20"><span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400"><Icon className="h-4 w-4" /></span><p className="mt-2 text-[10px] font-bold">{step.label}</p></div>{index < list.length - 1 && <ArrowRight className="mt-3 h-4 w-4 text-muted-foreground/50" />}</div>;
+            })}
           </div>
         </section>
 
-        <section className="border-b border-border/70 bg-background py-4">
-          <div className="mb-3">
-            <h2 className="text-sm font-black">Your referral code</h2>
-            <p className="mt-0.5 text-xs font-medium text-muted-foreground">Use the share button to open your device’s sharing options.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-3 text-center font-mono text-sm font-black tracking-wider text-violet-800">
-              {stats.referralCode}
-            </div>
-            <Button type="button" variant="outline" size="icon" onClick={copyCode} className="h-11 w-11 shrink-0 rounded-xl" aria-label="Copy referral code">
-              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-          <Button
-            type="button"
-            onClick={shareInvite}
-            disabled={sharing}
-            className="mt-3 h-12 w-full gap-2 rounded-xl bg-gradient-to-r from-violet-700 to-blue-600 text-sm font-black text-white shadow-md"
-          >
-            <Share2 className="h-4 w-4" /> {sharing ? "Opening share options…" : "Share invite"}
-          </Button>
+        <section className="py-5">
+          <h2 className="text-sm font-black">Apply a code</h2><p className="mt-0.5 text-[11px] text-muted-foreground">Available before your first paid subscription.</p>
+          {appliedCode ? <div className="mt-3 flex items-center gap-2 border-y border-emerald-500/30 py-3 text-xs font-bold text-emerald-600"><Check className="h-4 w-4" />Applied: <span className="font-mono">{appliedCode}</span></div> : <div className="mt-3 flex gap-2"><Input value={inputCode} onChange={(event) => setInputCode(event.target.value.toUpperCase())} placeholder="PGHUB-OWNER1234" autoCapitalize="characters" className="h-11 rounded-xl font-mono text-xs" /><Button type="button" onClick={applyCode} disabled={!inputCode.trim()} className="h-11 rounded-xl px-5 font-bold">Apply</Button></div>}
+          <p className="mt-5 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />Maximum {stats.maxMonthsPerYear} free months yearly. Self-referrals and duplicate accounts are excluded.</p>
         </section>
-
-        <section className="border-b border-border/70 bg-background py-4">
-          <h2 className="text-sm font-black">How rewards work</h2>
-          <div className="mt-4 space-y-4">
-            <RewardStep icon={<Share2 className="h-4 w-4" />} number="1" title="Share your invitation" description="Choose WhatsApp, Messages, email, or another app from the share sheet." />
-            <RewardStep icon={<UserPlus className="h-4 w-4" />} number="2" title="Your friend joins" description="They create their PG HUB account using your referral link or code." />
-            <RewardStep icon={<WalletCards className="h-4 w-4" />} number="3" title="Both receive rewards" description="Their discount and your free month activate after the first successful paid subscription." />
-          </div>
-        </section>
-
-        <section className="border-b border-border/70 bg-background py-4">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700"><TicketCheck className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-black">Have a referral code?</h2>
-              <p className="mt-0.5 text-xs font-medium text-muted-foreground">Apply it before your first paid subscription.</p>
-            </div>
-          </div>
-          {appliedCode ? (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800">
-              <Check className="h-4 w-4" /> Applied: <span className="font-mono">{appliedCode}</span>
-            </div>
-          ) : (
-            <div className="mt-3 flex gap-2">
-              <Input
-                value={inputCode}
-                onChange={(event) => setInputCode(event.target.value.toUpperCase())}
-                placeholder="PGHUB-OWNER1234"
-                autoCapitalize="characters"
-                className="h-11 rounded-xl font-mono text-xs"
-              />
-              <Button type="button" onClick={applyCode} disabled={!inputCode.trim()} className="h-11 rounded-xl px-5 font-bold">Apply</Button>
-            </div>
-          )}
-        </section>
-
-        <p className="flex items-start justify-center gap-1.5 px-4 text-center text-[11px] font-medium leading-relaxed text-muted-foreground">
-          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-          Maximum {stats.maxMonthsPerYear} free months per year. Self-referrals and duplicate accounts are not eligible.
-        </p>
       </div>
     </main>
-  );
-}
-
-function RewardStep({ icon, number, title, description }: {
-  icon: ReactNode;
-  number: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-700">
-        {icon}
-        <small className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-violet-700 text-[9px] font-black text-white">{number}</small>
-      </span>
-      <div>
-        <strong className="block text-sm font-bold">{title}</strong>
-        <p className="mt-0.5 text-xs font-medium leading-relaxed text-muted-foreground">{description}</p>
-      </div>
-    </div>
   );
 }
