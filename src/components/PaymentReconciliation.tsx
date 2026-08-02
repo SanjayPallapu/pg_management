@@ -780,47 +780,47 @@ export const PaymentReconciliation = ({
                   </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="divide-y divide-border/60 border-y border-border/60">
                 {filteredPaymentDetails.map((detail, detailIdx) => {
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className={`overflow-hidden border-b border-border/60 border-l-4 bg-background transition-colors hover:bg-muted/20 ${
+                      <div className={`overflow-hidden border-l-2 bg-background transition-colors hover:bg-muted/20 ${
                         detail.status === 'Paid' 
                           ? 'border-l-emerald-500 dark:border-l-emerald-600' 
                           : 'border-l-amber-500 dark:border-l-amber-600'
                       }`}>
                         <CollapsibleTrigger asChild>
-                          <div className="flex cursor-pointer items-center justify-between border-b border-border/20 bg-muted/25 p-3.5 transition-colors hover:bg-muted/40 dark:bg-muted/10">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-black text-primary">
+                          <div className="flex min-h-14 cursor-pointer items-center justify-between bg-background px-2 py-2 transition-colors hover:bg-muted/30">
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-black text-primary">
                                 R{detail.roomNo}
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="truncate text-sm font-extrabold text-foreground">{detail.tenantName}</span>
+                                  <span className="truncate text-[13px] font-extrabold text-foreground">{detail.tenantName}</span>
                                   {dateRange !== 'current' && 'month' in detail && (
                                     <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
                                       {monthsShort[(detail as any).month - 1]}
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                                <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
                                   {expandedTenants.has(detailKey) ? (
                                     <ChevronDown className="h-3 w-3 shrink-0" />
                                   ) : (
                                     <ChevronRight className="h-3 w-3 shrink-0" />
                                   )}
-                                  <span>Room {detail.roomNo} · View details</span>
+                                  <span>Room {detail.roomNo} · {detail.entries.length} payment{detail.entries.length === 1 ? '' : 's'}</span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2.5 shrink-0">
+                            <div className="flex shrink-0 items-center gap-2">
                               <div className="text-right">
-                                <div className="text-sm font-black text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
+                                <div className="text-[13px] font-black text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
                               </div>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                                 detail.status === 'Paid' 
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
                                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'

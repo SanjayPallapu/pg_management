@@ -156,8 +156,8 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
             </div>
           </SheetHeader>
 
-          <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto bg-background px-3 py-1 sm:px-4">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'present' | 'previous')}>
+          <div className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col overflow-y-auto bg-background px-3 py-1 sm:px-4">
+            <Tabs className="w-full" value={activeTab} onValueChange={(value) => setActiveTab(value as 'present' | 'previous')}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="present" className="gap-1.5 text-xs">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />

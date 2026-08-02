@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, X as XIcon } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, MessageSquare, Bell, ArrowLeft, CalendarClock, Wallet, Receipt, PartyPopper, BookOpen, X as XIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaymentEntry, Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -19,6 +19,8 @@ import { format as fmtDate } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { OverduePaymentDialog } from '@/components/OverduePaymentDialog';
 import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
+import { WelcomeDialog } from '@/components/WelcomeDialog';
+import { RulesShareDialog } from '@/components/RulesShareDialog';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -68,6 +70,17 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const [reminderTenant, setReminderTenant] = useState<TenantWithPayment | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
+  const [welcomeData, setWelcomeData] = useState<{
+    tenantName: string;
+    tenantPhone: string;
+    joiningDate: string;
+    roomNo: string;
+    sharingType: string;
+    monthlyRent: number;
+  } | null>(null);
+  const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [receiptData, setReceiptData] = useState<PaymentReceiptDialogData | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<{
     tenant: TenantWithPayment;
@@ -464,6 +477,13 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="pending"
                             onReminder={handleOpenReminder}
+                            rooms={rooms}
+                            onWelcome={(tenant) => {
+                              const room = rooms.find((item) => item.roomNo === tenant.roomNo);
+                              setWelcomeData({ tenantName: tenant.name, tenantPhone: tenant.phone || '', joiningDate: tenant.startDate || '', roomNo: tenant.roomNo, sharingType: room ? `${room.capacity} Sharing` : '', monthlyRent: tenant.monthlyRent });
+                              setWelcomeDialogOpen(true);
+                            }}
+                            onRules={(tenant) => { setRulesShareData({ tenantName: tenant.name, tenantPhone: tenant.phone || '' }); setRulesDialogOpen(true); }}
                             onMarkPaid={handleMarkPaid}
                             isMarkingPaid={upsertPayment.isPending}
                           />
@@ -485,6 +505,13 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="amber"
                             onReminder={handleOpenReminder}
+                            rooms={rooms}
+                            onWelcome={(tenant) => {
+                              const room = rooms.find((item) => item.roomNo === tenant.roomNo);
+                              setWelcomeData({ tenantName: tenant.name, tenantPhone: tenant.phone || '', joiningDate: tenant.startDate || '', roomNo: tenant.roomNo, sharingType: room ? `${room.capacity} Sharing` : '', monthlyRent: tenant.monthlyRent });
+                              setWelcomeDialogOpen(true);
+                            }}
+                            onRules={(tenant) => { setRulesShareData({ tenantName: tenant.name, tenantPhone: tenant.phone || '' }); setRulesDialogOpen(true); }}
                             onMarkPaid={handleMarkPaid}
                             isMarkingPaid={upsertPayment.isPending}
                           />
@@ -506,6 +533,13 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="blue"
                             onReminder={handleOpenReminder}
+                            rooms={rooms}
+                            onWelcome={(tenant) => {
+                              const room = rooms.find((item) => item.roomNo === tenant.roomNo);
+                              setWelcomeData({ tenantName: tenant.name, tenantPhone: tenant.phone || '', joiningDate: tenant.startDate || '', roomNo: tenant.roomNo, sharingType: room ? `${room.capacity} Sharing` : '', monthlyRent: tenant.monthlyRent });
+                              setWelcomeDialogOpen(true);
+                            }}
+                            onRules={(tenant) => { setRulesShareData({ tenantName: tenant.name, tenantPhone: tenant.phone || '' }); setRulesDialogOpen(true); }}
                             onMarkPaid={handleMarkPaid}
                             isMarkingPaid={upsertPayment.isPending}
                           />
@@ -566,6 +600,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
         receiptData={receiptData}
         onWhatsappSent={() => {}}
       />
+      <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
+      <RulesShareDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} shareData={rulesShareData} />
     </>
   );
 });
@@ -577,9 +613,12 @@ interface TenantSelectItemProps {
   categoryColor: 'pending' | 'blue' | 'amber';
   onMarkPaid?: (tenant: TenantWithPayment) => void;
   isMarkingPaid?: boolean;
+  rooms: Room[];
+  onWelcome: (tenant: TenantWithPayment) => void;
+  onRules: (tenant: TenantWithPayment) => void;
 }
 
-const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false, rooms, onWelcome, onRules }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-red-500/10 border-red-500/20 border-l-red-500'
     : categoryColor === 'amber'
@@ -634,8 +673,27 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                       }}
                       className="flex items-center gap-2"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageSquare className="h-4 w-4" />
                       Chat with Tenant
+                    </DropdownMenuItem>
+                    {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) ? (
+                      <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => {
+                        e.stopPropagation();
+                        const room = rooms.find((item) => item.roomNo === tenant.roomNo);
+                        setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDeposit', { detail: { tenantId: tenant.id, tenantName: tenant.name, tenantPhone: tenant.phone, roomNo: tenant.roomNo, roomCapacity: room?.capacity } })), 100);
+                      }}>
+                        <Wallet className="h-4 w-4" /> Security Deposit
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDepositReceipt', { detail: { tenantId: tenant.id } })), 100); }}>
+                        <Receipt className="h-4 w-4" /> Security Deposit Receipt
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => onWelcome(tenant), 100); }}>
+                      <PartyPopper className="h-4 w-4" /> Welcome
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => onRules(tenant), 100); }}>
+                      <BookOpen className="h-4 w-4" /> Rules &amp; Regulations
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

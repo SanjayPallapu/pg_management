@@ -1,10 +1,10 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, ArrowLeft, ChevronDown, ChevronRight, User, Phone, MessageCircle, Receipt, Bell, CreditCard, Pencil } from 'lucide-react';
+import { History, ArrowLeft, ChevronDown, ChevronRight, User, Phone, MessageCircle, Receipt, Bell, CreditCard } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -22,9 +22,6 @@ import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PaymentReminderDialog } from './PaymentReminderDialog';
 import { OverduePaymentDialog } from './OverduePaymentDialog';
 import { toast } from '@/hooks/use-toast';
-import { CollectorSettingsDialog } from './CollectorSettingsDialog';
-import { useCollectorNames } from '@/hooks/useCollectorNames';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface StillPendingTenant {
   id: string;
@@ -84,11 +81,7 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
-  const [collectorSettingsOpen, setCollectorSettingsOpen] = useState(false);
   const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
-  const [collectorEditTenantId, setCollectorEditTenantId] = useState<string | null>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { collectors, getCollectorDisplayName } = useCollectorNames();
   
   // Dialog states for still pending sheet
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -101,43 +94,6 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
   useBackGesture(sheetOpen, () => setSheetOpen(false));
   useBackGesture(pendingSheetOpen, () => setPendingSheetOpen(false));
 
-  const handleLongPressStart = useCallback((tenantId: string) => {
-    longPressTimer.current = setTimeout(() => {
-      setCollectorEditTenantId(tenantId);
-    }, 500);
-  }, []);
-
-  const handleLongPressEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  const handleUpdateCollector = useCallback((tenantId: string, collectorName: string, prevMonth: number, prevYear: number) => {
-    const payment = payments.find(p => p.tenantId === tenantId && p.month === prevMonth && p.year === prevYear);
-    if (!payment) return;
-
-    const updatedEntries = (payment.paymentEntries || []).map(entry => ({
-      ...entry,
-      collectedBy: collectorName,
-    }));
-
-    upsertPayment.mutate({
-      tenantId: payment.tenantId,
-      month: payment.month,
-      year: payment.year,
-      paymentStatus: payment.paymentStatus,
-      paymentDate: payment.paymentDate,
-      amount: payment.amount,
-      amountPaid: payment.amountPaid,
-      paymentEntries: updatedEntries,
-      notes: payment.notes,
-    });
-
-    setCollectorEditTenantId(null);
-
-  }, [payments, upsertPayment]);
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   // Calculate previous month
@@ -303,7 +259,6 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
     existingPaid: number;
     discount?: number;
     notes?: string;
-    collectedBy?: string;
   }) => {
     const discount = data.discount || 0;
     const effectiveMonthlyRent = data.monthlyRent - discount;
@@ -322,7 +277,6 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
       date: data.date,
       type: isFullPayment ? 'full' : 'partial',
       mode: data.mode,
-      collectedBy: data.collectedBy || collectors[0]?.displayName || 'Owner',
     };
 
     // Combine notes
@@ -566,51 +520,14 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">Payment Details</h3>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" onClick={() => setCollectorSettingsOpen(true)}>
-                    <Pencil className="h-3 w-3" />
-                    Edit Collectors
-                  </Button>
-                </div>
+                <h3 className="font-semibold text-sm">Payment Details</h3>
                 {collectedData.map(detail => (
                   <Collapsible 
                     key={detail.tenantId} 
                     open={expandedTenants.has(detail.tenantId)} 
                     onOpenChange={() => toggleTenantExpanded(detail.tenantId)}
                   >
-                    <div 
-                      className="border rounded-lg overflow-hidden relative"
-                      onTouchStart={() => handleLongPressStart(detail.tenantId)}
-                      onTouchEnd={handleLongPressEnd}
-                      onTouchCancel={handleLongPressEnd}
-                      onMouseDown={() => handleLongPressStart(detail.tenantId)}
-                      onMouseUp={handleLongPressEnd}
-                      onMouseLeave={handleLongPressEnd}
-                    >
-                      {/* Collector edit popover */}
-                      <Popover open={collectorEditTenantId === detail.tenantId} onOpenChange={(open) => !open && setCollectorEditTenantId(null)}>
-                        <PopoverTrigger asChild>
-                          <span className="hidden" />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2" side="top">
-                          <div className="text-xs font-medium mb-2 text-muted-foreground">Update Collected By</div>
-                          <div className="flex gap-2">
-                            {collectors.map((c) => (
-                              <Button
-                                key={c.id}
-                                size="sm"
-                                variant={detail.currentMonthEntries[0]?.collectedBy === c.displayName ? 'default' : 'outline'}
-                                className="h-8 text-xs"
-                                onClick={() => handleUpdateCollector(detail.tenantId, c.displayName, prevMonth, prevYear)}
-                              >
-                                {c.displayName}
-                              </Button>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
+                    <div className="border rounded-lg overflow-hidden relative">
                       <CollapsibleTrigger asChild>
                         <div className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
                           <div className="flex items-center justify-between">
@@ -669,9 +586,6 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
                                   {format(new Date(entry.date), 'dd MMM yyyy')}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  {entry.collectedBy && (
-                                    <span className="text-muted-foreground">{getCollectorDisplayName(entry.collectedBy)}</span>
-                                  )}
                                   <span className={`px-1.5 py-0.5 rounded ${
                                     entry.mode === 'upi' 
                                       ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
@@ -891,7 +805,6 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
         onOpenChange={setReminderDialogOpen}
         reminderData={reminderData}
       />
-      <CollectorSettingsDialog open={collectorSettingsOpen} onOpenChange={setCollectorSettingsOpen} />
     </>
   );
 };

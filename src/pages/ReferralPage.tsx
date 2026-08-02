@@ -68,26 +68,26 @@ export default function ReferralPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-3">
+    <main className="min-h-screen bg-muted/20 text-foreground">
+      <header className="sticky top-0 z-20 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-3 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur-xl sm:px-4">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3">
           <button
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
-            className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white shadow-sm"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
             <h1 className="text-lg font-black tracking-tight">Refer & Earn</h1>
-            <p className="text-xs font-medium text-slate-500">Share PG HUB and earn subscription rewards</p>
+            <p className="text-xs font-medium text-blue-100">Share PG HUB and earn subscription rewards</p>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-2xl space-y-4 px-3 py-4 pb-10">
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-700 via-indigo-700 to-blue-600 p-5 text-white shadow-xl shadow-indigo-950/15">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-4 px-3 py-4 pb-10 sm:px-4">
+        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-violet-700 via-indigo-700 to-blue-600 p-5 text-white shadow-xl shadow-indigo-950/15 sm:p-7">
           <Sparkles className="absolute -right-4 -top-5 h-28 w-28 text-white/10" />
           <div className="relative max-w-md">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[.12em]">
@@ -100,25 +100,25 @@ export default function ReferralPage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-r border-slate-200 p-3 text-center">
+        <section className="grid grid-cols-3 overflow-hidden border-y border-border/70 bg-background">
+          <div className="border-r border-border p-3 text-center">
             <strong className="block text-xl font-black">{stats.totalInvited}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Invited</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Invited</span>
           </div>
-          <div className="border-r border-slate-200 p-3 text-center">
+          <div className="border-r border-border p-3 text-center">
             <strong className="block text-xl font-black text-emerald-600">{stats.activePaidReferrals}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Subscribed</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Subscribed</span>
           </div>
           <div className="p-3 text-center">
             <strong className="block text-xl font-black text-violet-700">{stats.freeMonthsEarned}</strong>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Free months</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Free months</span>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="border-b border-border/70 bg-background py-4">
           <div className="mb-3">
             <h2 className="text-sm font-black">Your referral code</h2>
-            <p className="mt-0.5 text-xs font-medium text-slate-500">Use the share button to open your device’s sharing options.</p>
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground">Use the share button to open your device’s sharing options.</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="min-w-0 flex-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-3 text-center font-mono text-sm font-black tracking-wider text-violet-800">
@@ -138,7 +138,7 @@ export default function ReferralPage() {
           </Button>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="border-b border-border/70 bg-background py-4">
           <h2 className="text-sm font-black">How rewards work</h2>
           <div className="mt-4 space-y-4">
             <RewardStep icon={<Share2 className="h-4 w-4" />} number="1" title="Share your invitation" description="Choose WhatsApp, Messages, email, or another app from the share sheet." />
@@ -147,12 +147,12 @@ export default function ReferralPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="border-b border-border/70 bg-background py-4">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700"><TicketCheck className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-black">Have a referral code?</h2>
-              <p className="mt-0.5 text-xs font-medium text-slate-500">Apply it before your first paid subscription.</p>
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground">Apply it before your first paid subscription.</p>
             </div>
           </div>
           {appliedCode ? (
@@ -173,7 +173,7 @@ export default function ReferralPage() {
           )}
         </section>
 
-        <p className="flex items-start justify-center gap-1.5 px-4 text-center text-[11px] font-medium leading-relaxed text-slate-500">
+        <p className="flex items-start justify-center gap-1.5 px-4 text-center text-[11px] font-medium leading-relaxed text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
           Maximum {stats.maxMonthsPerYear} free months per year. Self-referrals and duplicate accounts are not eligible.
         </p>
@@ -196,7 +196,7 @@ function RewardStep({ icon, number, title, description }: {
       </span>
       <div>
         <strong className="block text-sm font-bold">{title}</strong>
-        <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500">{description}</p>
+        <p className="mt-0.5 text-xs font-medium leading-relaxed text-muted-foreground">{description}</p>
       </div>
     </div>
   );

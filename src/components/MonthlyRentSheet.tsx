@@ -87,7 +87,6 @@ import { isTenantActiveInMonth, parseDateOnly, hasTenantLeftNow, getISTTodayOnly
 import { calculateProRataRent } from "@/utils/proRataRent";
 import { MONTHS } from "@/constants/pricing";
 import { StayPeriodIndicator } from "./StayPeriodIndicator";
-import { useCollectorNames } from "@/hooks/useCollectorNames";
 import { usePG } from "@/contexts/PGContext";
 import { useSearchParams } from "react-router-dom";
 import { RoomQuickNav } from "./RoomQuickNav";
@@ -105,7 +104,6 @@ type PaymentDisplayExtras = {
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
-  const { collectors, getCollectorDisplayName } = useCollectorNames();
 
   const isMobile = useIsMobile();
   const [acMonth, setAcMonth] = useState(selectedMonth);
@@ -144,11 +142,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   } | null>(null);
   const [acPaymentModeState, setAcPaymentModeState] = useState<"upi" | "cash">("upi");
   const [acPaymentDateState, setAcPaymentDateState] = useState<Date>(new Date());
-  const [acPaymentCollectedBy, setAcPaymentCollectedBy] = useState<string>("Me");
   const [splitMode, setSplitMode] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
   const [cashAmount, setCashAmount] = useState(0);
-  const defaultCollectorId = useMemo(() => collectors[0]?.id ?? "Me", [collectors]);
   const [deletePaymentTenant, setDeletePaymentTenant] = useState<{
     id: string;
     name: string;
@@ -165,8 +161,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [payRemainingExtra, setPayRemainingExtra] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("upi");
   const [remainingPaymentMode, setRemainingPaymentMode] = useState<"upi" | "cash">("upi");
-  const [collectedBy, setCollectedBy] = useState<string>("Me");
-  const [remainingCollectedBy, setRemainingCollectedBy] = useState<string>("Me");
   const [overpaymentReason, setOverpaymentReason] = useState<string>("");
   const [overpaymentError, setOverpaymentError] = useState<boolean>(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
@@ -273,12 +267,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     window.addEventListener('tab-click', handleCloseAll);
     return () => window.removeEventListener('tab-click', handleCloseAll);
   }, []);
-
-  useEffect(() => {
-    if (collectors.length === 0) return;
-    setCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
-    setRemainingCollectedBy((prev) => (collectors.some((c) => c.id === prev) ? prev : defaultCollectorId));
-  }, [collectors, defaultCollectorId]);
 
   const openRulesDialog = (tenantName: string, tenantPhone: string) => {
     setRulesShareData({ tenantName, tenantPhone });
@@ -784,7 +772,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     const acEntry = existingPayment?.paymentEntries?.find((e: any) => e.type === 'ac');
     const paymentDate = acEntry ? format(new Date(acEntry.date), 'dd MMM yyyy') : (existingPayment?.paymentDate ? format(new Date(existingPayment.paymentDate), 'dd MMM yyyy') : undefined);
     const paymentMode = acEntry?.mode;
-    const collectedBy = acEntry?.collectedBy;
 
     const tenantsWithOverdue = tenantShares.map((share) => {
       const tenantObj = item.activeTenants.find((t) => t.name === share.name);
@@ -816,7 +803,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       isPaid,
       paymentDate,
       paymentMode,
-      collectedBy,
     });
 
     setTimeout(async () => {
@@ -965,7 +951,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       });
       setAcPaymentModeState("upi");
       setAcPaymentDateState(new Date());
-      setAcPaymentCollectedBy(defaultCollectorId);
     }
   };
 
@@ -978,13 +963,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     
     // Add AC payment entry
     const formattedDate = format(acPaymentDateState, "yyyy-MM-dd");
-    const collectorName = getCollectorDisplayName(acPaymentCollectedBy);
     const acEntry: PaymentEntry = {
       amount,
       date: formattedDate,
       type: 'ac' as any,
       mode: acPaymentModeState,
-      collectedBy: collectorName,
     };
 
     upsertPayment.mutate({
@@ -1102,7 +1085,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       setPayRemainingDate(new Date());
       setPayRemainingDiscount(0);
       setPayRemainingExtra(0);
-      setRemainingCollectedBy(defaultCollectorId);
     }
   };
   const confirmPaymentAmount = () => {
@@ -1129,16 +1111,16 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     if (splitMode && (upiAmount > 0 || cashAmount > 0)) {
       if (upiAmount > 0) newEntries.push({
         amount: upiAmount, date: formattedDate,
-        type: isFullPayment ? "full" : "partial", mode: "upi", collectedBy,
+        type: isFullPayment ? "full" : "partial", mode: "upi",
       });
       if (cashAmount > 0) newEntries.push({
         amount: cashAmount, date: formattedDate,
-        type: isFullPayment ? "full" : "partial", mode: "cash", collectedBy,
+        type: isFullPayment ? "full" : "partial", mode: "cash",
       });
     } else {
       newEntries.push({
         amount: paymentAmount, date: formattedDate,
-        type: isFullPayment ? "full" : "partial", mode: paymentMode, collectedBy,
+        type: isFullPayment ? "full" : "partial", mode: paymentMode,
       });
     }
     const updatedEntries = [...existingEntries, ...newEntries];
@@ -1190,7 +1172,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPaymentAmountTenant(null);
     setPaymentAmount(0);
     setOverpaymentReason("");
-    setCollectedBy(defaultCollectorId);
     setSplitMode(false);
     setUpiAmount(0);
     setCashAmount(0);
@@ -1218,7 +1199,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       date: formattedDate,
       type: isFullPayment ? ("remaining" as const) : ("partial" as const),
       mode: remainingPaymentMode,
-      collectedBy: remainingCollectedBy,
     };
     const existingEntries = tenant.payment.paymentEntries || [];
     const updatedEntries = [...existingEntries, newEntry];
@@ -1276,7 +1256,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setPayRemainingAmount(0);
     setPayRemainingDiscount(0);
     setPayRemainingExtra(0);
-    setRemainingCollectedBy(defaultCollectorId);
   };
   const handleDeletePayments = (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => {
     if (!deletePaymentTenant) return;
@@ -2040,7 +2019,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </div>
                   )}
 
-                  {/* Collected By badges moved to room number row */}
 
                   <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
@@ -2707,22 +2685,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Collected By</Label>
-                <div className="flex gap-2">
-                  {collectors.map((c) => (
-                    <Button
-                      key={c.id}
-                      type="button"
-                      variant={acPaymentCollectedBy === c.id ? "default" : "outline"}
-                      className="flex-1 h-10 rounded-xl"
-                      onClick={() => setAcPaymentCollectedBy(c.id)}
-                    >
-                      {c.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </div>
             <div className="shrink-0 border-t bg-background p-4">
               <Button

@@ -118,25 +118,26 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="flex min-h-screen flex-col bg-muted/20 text-foreground">
       {/* Top Full Screen Header Bar */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-3 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur sm:px-4">
+        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-foreground"
+            className="h-9 w-9 rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-white"
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-lg font-extrabold text-foreground leading-tight flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-lg font-extrabold leading-tight text-white">
               Plans & Billing
               <Award className="h-4 w-4 text-amber-500" />
             </h1>
-            <p className="text-xs text-muted-foreground">Select a plan to power your PG management</p>
+            <p className="truncate text-xs text-blue-100">Choose the right plan for your property</p>
           </div>
         </div>
 
@@ -146,14 +147,15 @@ export default function SubscriptionPage() {
             Active ({subscription.billingCycle?.toUpperCase()})
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-xs font-semibold px-2.5 py-1">
+          <Badge className="border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
             Free Trial
           </Badge>
         )}
+        </div>
       </header>
 
       {/* Main Full-Screen Body */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-28">
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-3 py-4 pb-36 sm:px-4">
         
         {/* Active Trial Notification Banner */}
         {isTrialActive && (
@@ -171,7 +173,7 @@ export default function SubscriptionPage() {
         )}
 
         {/* Universal checkout & billing cycle */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-card p-3 rounded-2xl border border-border shadow-xs">
+        <div className="flex flex-col items-stretch justify-between gap-3 border-b border-border/70 bg-background py-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2.5 text-xs">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><Globe className="h-4 w-4" /></span>
             <span><strong className="block text-foreground">One secure checkout worldwide</strong><small className="text-muted-foreground">Billed in {currentLocalized.currency}; your bank handles any currency conversion.</small></span>
@@ -208,7 +210,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* 3-Column Plan Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+        <div className="grid grid-cols-1 gap-3 pt-1 md:grid-cols-3">
           {cards.map((c) => {
             const planKey = billingCycle === "monthly" ? c.monthlyKey : c.yearlyKey;
             const isSelected = activePlanKey === planKey;
@@ -224,29 +226,29 @@ export default function SubscriptionPage() {
               <div
                 key={planKey}
                 onClick={() => setSelectedPlanKey(planKey)}
-                className={`relative flex flex-col justify-between p-6 rounded-3xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
+                className={`relative flex cursor-pointer flex-col justify-between rounded-2xl border p-4 transition-all duration-200 ${
                   isSelected ? c.cardStyle : "border-border/60 hover:border-primary/40 bg-card/60"
                 }`}
               >
                 {c.tag && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <Badge className={`text-[10px] font-black uppercase px-3 py-0.5 rounded-full ${c.badgeStyle}`}>
+                    <Badge className={`rounded-full px-3 py-0.5 text-[10px] font-black uppercase ${c.badgeStyle}`}>
                       {c.tag}
                     </Badge>
                   </div>
                 )}
 
                 <div>
-                  <div className="flex items-center justify-between mb-3 mt-1">
+                  <div className="mb-2 mt-1 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       {c.icon}
                       <span className="font-extrabold text-lg text-foreground">{c.title}</span>
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-3xl font-black tracking-tight text-foreground">
+                      <span className="text-2xl font-black tracking-tight text-foreground">
                         {actualPriceLocal.symbol}{displayMonthlyPrice.toLocaleString()}
                       </span>
                       <span className="text-xs text-muted-foreground font-semibold">/mo</span>
@@ -269,7 +271,7 @@ export default function SubscriptionPage() {
                     )}
                   </div>
 
-                  <ul className="space-y-2.5 text-xs text-muted-foreground border-t border-border/40 pt-4">
+                  <ul className="grid gap-2 border-t border-border/40 pt-3 text-xs text-muted-foreground sm:grid-cols-2 md:grid-cols-1">
                     {c.features.map((f, i) => (
                       <li key={i} className="flex items-center gap-2 text-foreground/90">
                         <Check className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -279,7 +281,7 @@ export default function SubscriptionPage() {
                   </ul>
                 </div>
 
-                <div className="mt-6 pt-2">
+                <div className="mt-3 pt-1">
                   <div className={`w-full py-2.5 rounded-2xl text-center text-xs font-extrabold transition-all ${
                     isSelected 
                       ? "bg-primary text-primary-foreground shadow-md" 
@@ -294,7 +296,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Provider-neutral secure checkout */}
-        <div className="grid gap-3 rounded-3xl border border-border/60 bg-muted/35 p-4 sm:grid-cols-3">
+        <div className="grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-3">
           <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><CreditCard className="h-5 w-5 shrink-0 text-primary" /><div><strong className="block text-xs">Cards</strong><span className="text-[11px] text-muted-foreground">Major debit and credit cards</span></div></div>
           <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><Landmark className="h-5 w-5 shrink-0 text-primary" /><div><strong className="block text-xs">Bank & local methods</strong><span className="text-[11px] text-muted-foreground">Options appear by availability</span></div></div>
           <div className="flex items-center gap-3 rounded-2xl bg-background p-3"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500" /><div><strong className="block text-xs">Secure checkout</strong><span className="text-[11px] text-muted-foreground">Encrypted payment authorization</span></div></div>
@@ -302,8 +304,8 @@ export default function SubscriptionPage() {
       </main>
 
       {/* Sticky Bottom Action Drawer Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 border-t border-border backdrop-blur-md z-40 shadow-2xl">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 px-3 py-3 shadow-2xl backdrop-blur-md sm:px-4">
+        <div className="mx-auto flex max-w-screen-2xl flex-col items-center justify-between gap-3 sm:flex-row">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="bg-primary/10 p-2.5 rounded-2xl text-primary shrink-0">
               <Zap className="h-5 w-5 fill-primary" />

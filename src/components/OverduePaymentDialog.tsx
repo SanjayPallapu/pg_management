@@ -11,7 +11,6 @@ import { UpiLogo } from './icons/UpiLogo';
 import { CashLogo } from './icons/CashLogo';
 import { StayPeriodIndicator } from './StayPeriodIndicator';
 import { PaymentEntry } from '@/types';
-import { useCollectorNames } from '@/hooks/useCollectorNames';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface PreviousMonthPending {
@@ -56,7 +55,6 @@ interface OverduePaymentDialogProps {
     previousMonthPending?: PreviousMonthPending | null;
     discount?: number;
     notes?: string;
-    collectedBy?: string;
   }) => void;
 }
 
@@ -77,8 +75,6 @@ export const OverduePaymentDialog = ({
   const [paymentMode, setPaymentMode] = useState<'upi' | 'cash'>('upi');
   const [dateOpen, setDateOpen] = useState(false);
   const [discount, setDiscount] = useState<number>(0);
-  const { collectors } = useCollectorNames();
-  const [collectedBy, setCollectedBy] = useState<string>(collectors[0]?.displayName || 'Owner');
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -89,7 +85,6 @@ export const OverduePaymentDialog = ({
       setPaymentDate(new Date());
       setPaymentMode('upi');
       setDiscount(0);
-      setCollectedBy(collectors[0]?.displayName || 'Owner');
     }
     onOpenChange(isOpen);
   };
@@ -122,7 +117,6 @@ export const OverduePaymentDialog = ({
       previousMonthPending: previousMonthPending,
       discount: discount > 0 ? discount : undefined,
       notes: notes || undefined,
-      collectedBy,
     });
     
     handleOpenChange(false);
@@ -205,10 +199,6 @@ export const OverduePaymentDialog = ({
                     <Button type="button" variant={paymentMode === 'cash' ? 'default' : 'outline'} onClick={() => setPaymentMode('cash')} className="h-12 rounded-xl"><CashLogo className="mr-2 h-5 w-5" />Cash</Button>
                   </div>
                 </section>
-
-                {collectors.length > 0 && (
-                  <section className="rounded-2xl border bg-background p-4 shadow-sm"><Label>Collected by</Label><div className="mt-2 flex flex-wrap gap-2">{collectors.map((collector) => <Button key={collector.id} type="button" size="sm" variant={collectedBy === collector.id ? 'default' : 'outline'} className="rounded-xl" onClick={() => setCollectedBy(collector.id)}>{collector.displayName}</Button>)}</div></section>
-                )}
 
                 <section className="rounded-2xl border bg-background p-4 shadow-sm">
                   <Label>Payment date</Label>
