@@ -389,9 +389,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   return (
     <>
-      <div ref={dashboardRef} className="space-y-4 md:space-y-6 max-w-[1200px] mx-auto">
+      <div ref={dashboardRef} className="mx-auto flex max-w-[1200px] flex-col gap-4 md:gap-6">
         {/* Banner Carousel */}
-        <div className="w-full max-w-[850px] mx-auto relative group">
+        <div className="group relative order-1 mx-auto w-full max-w-[850px]">
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
@@ -443,7 +443,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         </div>
 
         {/* Split KPI Cards */}
-        <div className="grid gap-2 md:grid-cols-2">
+        <div className="order-3 grid gap-2 md:grid-cols-2">
           {/* Capacity & Occupancy Split Card */}
           <Card>
             <CardContent className="p-0">
@@ -504,7 +504,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 {/* ═══════════════════════════════════════════════
             Quick Actions
            ═══════════════════════════════════════════════ */}
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-4">
+        <div className="order-2 grid grid-cols-5 gap-1.5 sm:gap-2">
           <div onClick={() => setAddTenantRoomSelectOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-blue-500/10 p-2 rounded-full"><UserPlus className="w-5 h-5 text-blue-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
@@ -558,7 +558,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
         {/* Potential revenue belongs at the end of the Home summary. */}
         <Card
-          className="cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 transition-all hover:shadow-md"
+          className="order-4 cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 transition-all hover:shadow-md"
           onClick={() => setEmptyBedsSheetOpen(true)}
         >
           <CardContent className="p-4">
