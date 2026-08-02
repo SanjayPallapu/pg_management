@@ -9,6 +9,7 @@ export interface ParsedUpiQr {
   transactionNote: string | null;
   currency: "INR";
   amount: number | null;
+  paymentParameters: Record<string, string>;
 }
 
 export interface BillPaymentRequest {

@@ -14,7 +14,6 @@ import {
   Egg,
   Flame,
   Home,
-  History,
   Inbox,
   IndianRupee,
   ListChecks,
@@ -67,7 +66,6 @@ import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpen
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
 import { BillPaymentFlow } from "./bills/BillPaymentFlow";
-import { BillPaymentHistorySheet } from "./bills/BillPaymentHistorySheet";
 import type { BillPaymentRequest } from "@/features/bill-payments/types";
 
 interface Props {
@@ -164,7 +162,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [budgetDraft, setBudgetDraft] = useState("");
   const [quickAdd, setQuickAdd] = useState<QuickExpenseInitial | null>(null);
   const [paymentRequest, setPaymentRequest] = useState<BillPaymentRequest | null>(null);
-  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
   const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<ExpenseEntry | null>(null);
@@ -351,46 +348,42 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         className="bills-premium-shell flex min-h-full flex-col bg-[#f8f9fd] px-3 dark:bg-background sm:px-4"
         style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
       >
-        <header className="flex h-[76px] shrink-0 items-center gap-2">
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
-            onClick={() => setPaymentHistoryOpen(true)}
-            aria-label="Open payment history"
-          >
-            <History className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
-            onClick={onClose}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="min-w-0 flex-1">
+        <header className="grid h-[76px] shrink-0 grid-cols-[88px_minmax(0,1fr)_88px] items-center">
+          <div className="flex justify-start">
+            <button
+              type="button"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
+              onClick={onClose}
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="min-w-0 text-center">
             <h1 className="truncate text-[20px] font-black tracking-[-0.025em] text-[#101426] dark:text-white">Bills &amp; Budget</h1>
             <p className="text-xs font-medium text-[#73788b]">{monthLabel}</p>
           </div>
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
-            onClick={() => setAnalyticsOpen(true)}
-            aria-label="Open spending analytics"
-          >
-            <BarChart3 className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
-            onClick={() => {
-              setBudgetDraft(hasBudget ? String(budgetAmount) : "");
-              setEditingBudget(true);
-            }}
-            aria-label={hasBudget ? "Edit monthly budget" : "Set monthly budget"}
-          >
-            <CalendarDays className="h-5 w-5" />
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
+              onClick={() => setAnalyticsOpen(true)}
+              aria-label="Open spending analytics"
+            >
+              <BarChart3 className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
+              onClick={() => {
+                setBudgetDraft(hasBudget ? String(budgetAmount) : "");
+                setEditingBudget(true);
+              }}
+              aria-label={hasBudget ? "Edit monthly budget" : "Set monthly budget"}
+            >
+              <CalendarDays className="h-5 w-5" />
+            </button>
+          </div>
         </header>
 
         <nav className="mb-3 grid shrink-0 grid-cols-4 gap-1 rounded-2xl border border-[#e4e6ee] bg-white p-1.5 shadow-[0_10px_24px_-24px_rgba(25,30,58,.8)] dark:border-border dark:bg-card" aria-label="Bill categories">
@@ -826,7 +819,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       />
 
       <BillPaymentFlow open={Boolean(paymentRequest)} request={paymentRequest} onOpenChange={(next) => !next && setPaymentRequest(null)} />
-      <BillPaymentHistorySheet open={paymentHistoryOpen} onOpenChange={setPaymentHistoryOpen} />
 
       {sheetState && (
         <BillsEntriesSheet

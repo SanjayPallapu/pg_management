@@ -1,7 +1,10 @@
 import type { ParsedUpiQr } from "./types";
 
 const MAX_TEXT_LENGTH = 120;
+const MAX_QR_LENGTH = 4096;
+const MAX_QR_PARAMETERS = 32;
 const UPI_ID_PATTERN = /^[a-zA-Z0-9._-]{2,128}@[a-zA-Z0-9.-]{2,64}$/;
+const PARAMETER_KEY_PATTERN = /^[a-z][a-z0-9._-]{0,31}$/;
 
 const clean = (value: string | null, max = MAX_TEXT_LENGTH) => {
   if (!value) return null;
@@ -23,22 +26,35 @@ export class UpiQrError extends Error {
 }
 
 export const parseUpiQr = (rawValue: string): ParsedUpiQr => {
+  const normalizedValue = rawValue.trim();
+  if (!normalizedValue || normalizedValue.length > MAX_QR_LENGTH) throw new UpiQrError("NOT_UPI");
   let url: URL;
   try {
-    url = new URL(rawValue.trim());
+    url = new URL(normalizedValue);
   } catch {
     throw new UpiQrError("NOT_UPI");
   }
   if (url.protocol.toLowerCase() !== "upi:" || url.hostname.toLowerCase() !== "pay") {
     throw new UpiQrError("NOT_UPI");
   }
-  const payeeUpiId = clean(url.searchParams.get("pa"), 196);
+  const paymentParameters: Record<string, string> = {};
+  let parameterCount = 0;
+  for (const [rawKey, rawParameter] of url.searchParams.entries()) {
+    if (parameterCount >= MAX_QR_PARAMETERS) break;
+    const key = rawKey.toLowerCase();
+    const value = clean(rawParameter, 512);
+    if (!PARAMETER_KEY_PATTERN.test(key) || !value) continue;
+    paymentParameters[key] = value;
+    parameterCount += 1;
+  }
+
+  const payeeUpiId = clean(paymentParameters.pa ?? null, 196);
   if (!payeeUpiId || !UPI_ID_PATTERN.test(payeeUpiId)) throw new UpiQrError("INVALID_UPI");
 
-  const currency = (clean(url.searchParams.get("cu"), 3) ?? "INR").toUpperCase();
+  const currency = (clean(paymentParameters.cu ?? null, 3) ?? "INR").toUpperCase();
   if (currency !== "INR") throw new UpiQrError("INVALID_CURRENCY");
 
-  const rawAmount = clean(url.searchParams.get("am"), 16);
+  const rawAmount = clean(paymentParameters.am ?? null, 16);
   const amount = rawAmount === null ? null : Number(rawAmount);
   if (rawAmount !== null && (!Number.isFinite(amount) || amount! <= 0 || amount! > 10_000_000 || !/^\d+(\.\d{1,2})?$/.test(rawAmount))) {
     throw new UpiQrError("INVALID_AMOUNT");
@@ -46,10 +62,11 @@ export const parseUpiQr = (rawValue: string): ParsedUpiQr => {
 
   return {
     payeeUpiId,
-    payeeName: clean(url.searchParams.get("pn")),
-    transactionNote: clean(url.searchParams.get("tn")),
+    payeeName: clean(paymentParameters.pn ?? null),
+    transactionNote: clean(paymentParameters.tn ?? null),
     currency: "INR",
     amount,
+    paymentParameters,
   };
 };
 
@@ -64,12 +81,12 @@ export const maskUpiId = (upiId: string) => {
 
 export const buildUpiPaymentUri = (qr: ParsedUpiQr, amount: number, category: string, note?: string) => {
   if (!Number.isFinite(amount) || amount <= 0) throw new Error("INVALID_AMOUNT");
-  const params = new URLSearchParams({
-    pa: qr.payeeUpiId,
-    am: amount.toFixed(2),
-    cu: "INR",
-    tn: clean(note || qr.transactionNote || `PG HUB ${category}`, 80) || `PG HUB ${category}`,
-  });
-  if (qr.payeeName) params.set("pn", qr.payeeName);
+  const params = new URLSearchParams(qr.paymentParameters);
+  params.set("pa", qr.payeeUpiId);
+  if (!params.has("cu")) params.set("cu", "INR");
+  if (qr.amount === null || Math.abs(qr.amount - amount) >= 0.01) params.set("am", amount.toFixed(2));
+  if (note?.trim()) params.set("tn", clean(note, 80) || `PG HUB ${category}`);
+  else if (!params.has("tn")) params.set("tn", `PG HUB ${category}`);
+  if (qr.payeeName && !params.has("pn")) params.set("pn", qr.payeeName);
   return `upi://pay?${params.toString()}`;
 };

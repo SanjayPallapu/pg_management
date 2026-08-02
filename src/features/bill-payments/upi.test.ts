@@ -5,7 +5,7 @@ import { DuplicatePaymentGuard, resolveUpiOutcome } from "./paymentOutcome";
 describe("UPI QR parsing", () => {
   it("parses and sanitizes supported UPI fields", () => {
     const result = parseUpiQr("upi://pay?pa=merchant%40okaxis&pn=PG%20Shop&tn=Electricity&cu=INR&am=1250.50");
-    expect(result).toEqual({ payeeUpiId: "merchant@okaxis", payeeName: "PG Shop", transactionNote: "Electricity", currency: "INR", amount: 1250.5 });
+    expect(result).toMatchObject({ payeeUpiId: "merchant@okaxis", payeeName: "PG Shop", transactionNote: "Electricity", currency: "INR", amount: 1250.5 });
     expect(maskUpiId(result.payeeUpiId)).toBe("me••••••@okaxis");
   });
 
@@ -25,6 +25,21 @@ describe("UPI QR parsing", () => {
     expect(uri.searchParams.get("am")).toBe("20.00");
     expect(uri.searchParams.get("tn")).toBe("Water bill");
     expect(uri.searchParams.get("pa")).toBe("merchant@okaxis");
+  });
+
+  it("preserves PSP and merchant QR parameters required by UPI apps", () => {
+    const qr = parseUpiQr("upi://pay?pa=merchant%40okaxis&pn=Shop&mc=5812&tr=REF123&mode=02&orgid=000000&sign=signed-value&am=10&cu=INR");
+    const uri = new URL(buildUpiPaymentUri(qr, 10, "Utilities"));
+    expect(Object.fromEntries(uri.searchParams)).toMatchObject({
+      pa: "merchant@okaxis",
+      mc: "5812",
+      tr: "REF123",
+      mode: "02",
+      orgid: "000000",
+      sign: "signed-value",
+      am: "10",
+      cu: "INR",
+    });
   });
 });
 
