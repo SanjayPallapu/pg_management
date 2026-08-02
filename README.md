@@ -76,3 +76,23 @@ dark mode and light mode toggle logo - 91 line index.tsx u can addd if needed
 
 
 Testing GitHub Actions build
+
+## Publish to Google Play closed testing
+
+Normal commits never upload a Google Play release. When `main` is clean and fully pushed, explicitly request a release with:
+
+```sh
+npm run release:closed
+```
+
+The command verifies that local `main` exactly matches `origin/main`, creates a unique `play-release-*` tag, and pushes that tag. GitHub Actions then builds and signs the AAB and uploads a completed release to the Google Play `alpha` closed-testing track.
+
+Required GitHub secrets:
+
+- `KEYSTORE_BASE64`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
+
+The same release can be requested from GitHub Actions using **Run workflow → upload-closed-testing**.

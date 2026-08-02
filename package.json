@@ -12,6 +12,7 @@
     "cap:sync": "npx cap sync android",
     "cap:open": "npx cap open android",
     "build:android": "npm run build && npx cap sync android",
+    "release:closed": "node release-closed.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
