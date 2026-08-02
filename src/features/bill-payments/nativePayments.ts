@@ -1,6 +1,7 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
-import { BarcodeFormat, BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
+import { BarcodeFormat, BarcodeScanner, LensFacing } from "@capacitor-mlkit/barcode-scanning";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
+import "barcode-detector/polyfill";
 
 interface UpiApp { packageName: string; label: string }
 interface UpiPaymentPlugin {
@@ -22,6 +23,61 @@ const firstRawValue = (barcodes: Array<{ rawValue: string }>) => {
   return value;
 };
 
+const isMobileBrowser = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+const webCameraError = (error: unknown) => {
+  if (error instanceof DOMException && ["NotAllowedError", "PermissionDeniedError", "SecurityError"].includes(error.name)) {
+    return new NativePaymentError("PERMISSION_DENIED");
+  }
+  if (!window.isSecureContext) {
+    return new NativePaymentError("UNSUPPORTED", "Camera scanning on web requires HTTPS or localhost.");
+  }
+  return error instanceof NativePaymentError ? error : new NativePaymentError("UNSUPPORTED", "This browser could not start the camera scanner.");
+};
+
+export const isNativePaymentPlatform = () => Capacitor.isNativePlatform();
+
+export const startWebUpiQrScan = async (
+  videoElement: HTMLVideoElement,
+  onScan: (rawValue: string) => void,
+) => {
+  if (Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED");
+  if (!window.isSecureContext) throw new NativePaymentError("UNSUPPORTED", "Camera scanning on web requires HTTPS or localhost.");
+  if (!navigator.mediaDevices?.getUserMedia) throw new NativePaymentError("UNSUPPORTED", "Camera scanning is not supported by this browser.");
+
+  const supported = await BarcodeScanner.isSupported();
+  if (!supported.supported) throw new NativePaymentError("UNSUPPORTED", "QR scanning is not supported by this browser.");
+
+  let stopped = false;
+  const listener = await BarcodeScanner.addListener("barcodesScanned", async ({ barcodes }) => {
+    if (stopped || barcodes.length === 0) return;
+    try {
+      const rawValue = firstRawValue(barcodes);
+      stopped = true;
+      await BarcodeScanner.stopScan();
+      await listener.remove();
+      onScan(rawValue);
+    } catch {
+      // Keep the camera open when a frame does not contain a readable value.
+    }
+  });
+
+  try {
+    await BarcodeScanner.startScan({ formats: [BarcodeFormat.QrCode], lensFacing: LensFacing.Back, videoElement });
+  } catch (error) {
+    stopped = true;
+    await listener.remove();
+    throw webCameraError(error);
+  }
+
+  return async () => {
+    if (stopped) return;
+    stopped = true;
+    await listener.remove();
+    await BarcodeScanner.stopScan();
+  };
+};
+
 export const scanUpiQr = async () => {
   if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED", "QR scanning is available in the Android app.");
   const supported = await BarcodeScanner.isSupported();
@@ -39,7 +95,26 @@ export const scanUpiQr = async () => {
 };
 
 export const scanUpiQrFromGallery = async () => {
-  if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED", "Gallery scanning is available in the Android app.");
+  if (!Capacitor.isNativePlatform()) {
+    return await new Promise<string>((resolve, reject) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.addEventListener("cancel", () => reject(new NativePaymentError("CANCELLED")), { once: true });
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) { reject(new NativePaymentError("CANCELLED")); return; }
+        try {
+          const detector = new BarcodeDetector({ formats: ["qr_code"] });
+          const barcodes = await detector.detect(file);
+          resolve(firstRawValue(barcodes));
+        } catch (error) {
+          reject(error instanceof NativePaymentError ? error : new NativePaymentError("INVALID_QR"));
+        }
+      };
+      input.click();
+    });
+  }
   try {
     const picked = await FilePicker.pickImages({ limit: 1, skipTranscoding: true });
     const path = picked.files[0]?.path;
@@ -52,7 +127,10 @@ export const scanUpiQrFromGallery = async () => {
   }
 };
 
-export const openCameraSettings = () => BarcodeScanner.openSettings();
+export const openCameraSettings = () => {
+  if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED", "Allow camera access from your browser's site settings.");
+  return BarcodeScanner.openSettings();
+};
 
 export const getCompatibleUpiApps = async (uri: string) => {
   if (!Capacitor.isNativePlatform()) return [] as UpiApp[];
@@ -62,7 +140,11 @@ export const getCompatibleUpiApps = async (uri: string) => {
 
 export const launchUpiPayment = async (uri: string, packageName?: string) => {
   if (!navigator.onLine) throw new NativePaymentError("OFFLINE");
-  if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED", "UPI apps can only be opened from the Android app.");
+  if (!Capacitor.isNativePlatform()) {
+    if (!isMobileBrowser()) throw new NativePaymentError("NO_UPI_APP", "Open PG HUB on your phone to launch a UPI app. Desktop browsers cannot open phone payment apps.");
+    window.location.assign(uri);
+    return { returned: false };
+  }
   try {
     return await UpiPayment.launch({ uri, packageName, forceChooser: !packageName });
   } catch (error) {
