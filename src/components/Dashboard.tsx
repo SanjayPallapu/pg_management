@@ -26,7 +26,7 @@ import {
   ArrowRightLeft,
   ShieldCheck,
   DoorOpen,
-  Calculator
+  CircleCheckBig
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -54,7 +54,7 @@ import { PersonalExpensesCard } from "./PersonalExpensesCard";
 import { TodaySpendingCard } from "./TodaySpendingCard";
 import { AllCollectedCard } from "./AllCollectedCard";
 import { PendingTenantsCard, PendingTenantsCardRef } from "./PendingTenantsCard";
-import { CalculatorCard } from "./CalculatorCard";
+import { PaidTenantsCard } from "./PaidTenantsCard";
 import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
 import { PGRulesCard } from "./PGRulesCard";
@@ -97,7 +97,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
   const [pendingTenantsDefaultTab, setPendingTenantsDefaultTab] = useState<'overdue' | 'not-yet-due' | 'previous-month'>('overdue');
-  const [calculatorSheetOpen, setCalculatorSheetOpen] = useState(false);
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
   const [rulesLanguage, setRulesLanguage] = useState<'en' | 'te'>('en');
@@ -129,7 +128,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       setDayGuestSheetOpen(false);
       setEmptyBedsSheetOpen(false);
       setSettlementSheetOpen(false);
-      setCalculatorSheetOpen(false);
       setRulesTemplateOpen(false);
       setBillsBudgetGridOpen(false);
       setBillsBudgetOpen(false);
@@ -426,8 +424,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Capacity</span>
                     <Building
-                      className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => setCalculatorSheetOpen(true)}
+                      className="h-4 w-4 text-muted-foreground"
                     />
                   </div>
                   <div className="text-2xl font-bold">
@@ -558,9 +555,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
           </div>
 
-          <div onClick={() => setCalculatorSheetOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-slate-500/10 p-2 rounded-full"><Calculator className="w-5 h-5 text-slate-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Calc</span>
+          <div data-testid="paid-tenants-action" onClick={() => setActiveSheet("paid-tenants")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+            <div className="bg-emerald-500/10 p-2 rounded-full"><CircleCheckBig className="w-5 h-5 text-emerald-600" /></div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Paid<br/>Tenants</span>
           </div>
         </div>
 
@@ -655,6 +652,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         showSummaryCard={false} 
         defaultTab={pendingTenantsDefaultTab}
       />
+      <PaidTenantsCard
+        rooms={rooms}
+        open={activeSheet === "paid-tenants"}
+        onClose={() => setActiveSheet(null)}
+      />
       <ExpectedCollectionCard 
         open={activeSheet === "expected-collection"} 
         onClose={() => setActiveSheet(null)} 
@@ -668,9 +670,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       )}
 
       {/* Tool Sheets */}
-      {activeSheet === "calculator" && (
-        <CalculatorCard defaultOpen={true} onExternalOpenChange={(open) => !open && setActiveSheet(null)} hideCard={true} />
-      )}
       {activeSheet === "key-numbers" && (
         <KeyNumbersCard defaultOpen={true} onClose={() => setActiveSheet(null)} showSummaryCard={false} />
       )}
@@ -711,8 +710,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         totalPotentialRevenue={totalPotentialAdditionalRevenue}
       />
       <SettlementSummarySheet open={settlementSheetOpen} onOpenChange={setSettlementSheetOpen} rooms={rooms} />
-      {/* Hidden calculator triggered by building icon */}
-      <CalculatorCard externalOpen={calculatorSheetOpen} onExternalOpenChange={setCalculatorSheetOpen} hideCard />
       <Sheet open={financialsOpen} onOpenChange={setFinancialsOpen}>
         <SheetContent side="bottom" className="h-auto max-h-[70vh] px-6 pt-6 pb-8 rounded-t-[2rem]">
           <SheetHeader className="mb-5">
@@ -796,7 +793,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </SheetHeader>
           <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
-              { key: "calculator", icon: "/icons/calculator-3d.jpg", label: "Calculator" },
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
               { key: "bill-prices", icon: "/icons/electricity-bill-update.png", label: "Bill Prices" },

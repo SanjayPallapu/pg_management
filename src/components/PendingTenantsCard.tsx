@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, X as XIcon } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, CheckCircle2, X as XIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Room } from '@/types';
+import { PaymentEntry, Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
 import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculations';
@@ -18,6 +18,8 @@ import { usePG } from '@/contexts/PGContext';
 import { isTenantActiveInMonth, parseDateOnly } from '@/utils/dateOnly';
 import { format as fmtDate } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { OverduePaymentDialog } from '@/components/OverduePaymentDialog';
+import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -31,10 +33,28 @@ export interface PendingTenantsCardRef {
   openSheet: () => void;
 }
 
+interface PaymentReceiptDialogData {
+  tenantName: string;
+  tenantPhone: string;
+  paymentMode: 'upi' | 'cash';
+  paymentDate: string;
+  joiningDate: string;
+  forMonth: string;
+  roomNo: string;
+  sharingType: string;
+  amount: number;
+  amountPaid: number;
+  isFullPayment: boolean;
+  remainingBalance: number;
+  paymentEntries: PaymentEntry[];
+  pgName?: string;
+  pgLogoUrl?: string;
+}
+
 export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenantsCardProps>(({ rooms, open, onClose, showSummaryCard = true, defaultTab = 'overdue' }, ref) => {
   const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
-  const { payments } = useTenantPayments();
+  const { payments, upsertPayment } = useTenantPayments();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { currentPG } = usePG();
   const [localOpen, setLocalOpen] = useState(false);
@@ -47,6 +67,18 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderTenant, setReminderTenant] = useState<TenantWithPayment | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<PaymentReceiptDialogData | null>(null);
+  const [paymentTarget, setPaymentTarget] = useState<{
+    tenant: TenantWithPayment;
+    month: number;
+    year: number;
+    monthlyRent: number;
+    amountPaid: number;
+    remaining: number;
+    paymentEntries: PaymentEntry[];
+  } | null>(null);
 
   const handleOpenReminder = (tenant: TenantWithPayment) => {
     setReminderTenant(tenant);
@@ -232,6 +264,94 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     setSelectedTenants(new Set()); // Clear selection when switching tabs
   };
 
+  const handleMarkPaid = (tenant: TenantWithPayment) => {
+    const month = activeTab === 'previous-month' ? prevMonth : selectedMonth;
+    const year = activeTab === 'previous-month' ? prevYear : selectedYear;
+    const existingPayment = payments.find(
+      (payment) => payment.tenantId === tenant.id && payment.month === month && payment.year === year,
+    );
+    const amountPaid = existingPayment?.amountPaid || tenant.amountPaid || 0;
+    const monthlyRent = existingPayment?.amount || tenant.monthlyRent;
+
+    setPaymentTarget({
+      tenant,
+      month,
+      year,
+      monthlyRent,
+      amountPaid,
+      remaining: Math.max(0, monthlyRent - amountPaid),
+      paymentEntries: existingPayment?.paymentEntries || [],
+    });
+    setPaymentDialogOpen(true);
+  };
+
+  const handleConfirmPayment = async (data: {
+    tenantId: string;
+    amount: number;
+    date: string;
+    mode: 'upi' | 'cash';
+    month: number;
+    year: number;
+    monthlyRent: number;
+    existingPaid: number;
+    discount?: number;
+    notes?: string;
+    collectedBy?: string;
+  }) => {
+    if (!paymentTarget) return;
+
+    const discount = data.discount || 0;
+    const effectiveRent = Math.max(0, data.monthlyRent - discount);
+    const totalPaid = data.existingPaid + data.amount;
+    const isFullPayment = totalPaid >= effectiveRent;
+    const existingPayment = payments.find(
+      (payment) => payment.tenantId === data.tenantId && payment.month === data.month && payment.year === data.year,
+    );
+    const existingEntries = existingPayment?.paymentEntries || [];
+    const newEntry: PaymentEntry = {
+      amount: data.amount,
+      date: data.date,
+      type: isFullPayment ? 'full' : 'partial',
+      mode: data.mode,
+      collectedBy: data.collectedBy,
+    };
+    const notes = [existingPayment?.notes, data.notes].filter(Boolean).join(' | ') || undefined;
+
+    await upsertPayment.mutateAsync({
+      tenantId: data.tenantId,
+      month: data.month,
+      year: data.year,
+      paymentStatus: isFullPayment ? 'Paid' : 'Partial',
+      paymentDate: data.date,
+      amount: data.monthlyRent,
+      amountPaid: isFullPayment ? effectiveRent : totalPaid,
+      paymentEntries: [...existingEntries, newEntry],
+      notes,
+      tenantName: paymentTarget.tenant.name,
+      roomNo: paymentTarget.tenant.roomNo,
+    });
+
+    const room = rooms.find((item) => item.roomNo === paymentTarget.tenant.roomNo);
+    setReceiptData({
+      tenantName: paymentTarget.tenant.name,
+      tenantPhone: paymentTarget.tenant.phone || '',
+      paymentMode: data.mode,
+      paymentDate: fmtDate(parseDateOnly(data.date), 'dd-MMM-yyyy'),
+      joiningDate: paymentTarget.tenant.startDate,
+      forMonth: `${monthNames[data.month - 1]} ${data.year}`,
+      roomNo: paymentTarget.tenant.roomNo,
+      sharingType: room ? `${room.capacity} Sharing` : '',
+      amount: data.monthlyRent,
+      amountPaid: data.amount,
+      isFullPayment,
+      remainingBalance: isFullPayment ? 0 : Math.max(0, effectiveRent - totalPaid),
+      paymentEntries: [...existingEntries, newEntry],
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+    setReceiptDialogOpen(true);
+  };
+
   return (
     <>
       {showSummaryCard && (
@@ -345,7 +465,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="pending"
                             onReminder={handleOpenReminder}
-
+                            onMarkPaid={handleMarkPaid}
+                            isMarkingPaid={upsertPayment.isPending}
                           />
                         ))
                       )}
@@ -365,7 +486,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="amber"
                             onReminder={handleOpenReminder}
-
+                            onMarkPaid={handleMarkPaid}
+                            isMarkingPaid={upsertPayment.isPending}
                           />
                         ))
                       )}
@@ -385,7 +507,8 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                             onToggle={handleToggleTenant}
                             categoryColor="blue"
                             onReminder={handleOpenReminder}
-
+                            onMarkPaid={handleMarkPaid}
+                            isMarkingPaid={upsertPayment.isPending}
                           />
                         ))
                       )}
@@ -419,6 +542,31 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       />
     );
   })()}
+      <OverduePaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        tenant={paymentTarget ? {
+          id: paymentTarget.tenant.id,
+          name: paymentTarget.tenant.name,
+          roomNo: paymentTarget.tenant.roomNo,
+          monthlyRent: paymentTarget.monthlyRent,
+          remaining: paymentTarget.remaining,
+          amountPaid: paymentTarget.amountPaid,
+          startDate: paymentTarget.tenant.startDate,
+          endDate: paymentTarget.tenant.endDate,
+          paymentEntries: paymentTarget.paymentEntries,
+        } : null}
+        month={paymentTarget?.month || selectedMonth}
+        year={paymentTarget?.year || selectedYear}
+        previousMonthPending={null}
+        onConfirmPayment={handleConfirmPayment}
+      />
+      <WhatsAppReceiptDialog
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        receiptData={receiptData}
+        onWhatsappSent={() => {}}
+      />
     </>
   );
 });
@@ -428,9 +576,11 @@ interface TenantSelectItemProps {
   isSelected: boolean;
   onToggle: (id: string) => void;
   categoryColor: 'pending' | 'blue' | 'amber';
+  onMarkPaid?: (tenant: TenantWithPayment) => void;
+  isMarkingPaid?: boolean;
 }
 
-const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
+const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const bgClass = categoryColor === 'pending' 
     ? 'bg-pending-muted border-pending/30' 
     : categoryColor === 'amber'
@@ -509,15 +659,31 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             )}
           </p>
         </div>
-        <Badge className={
-          categoryColor === 'pending' 
-            ? 'bg-pending text-pending-foreground font-bold' 
-            : categoryColor === 'amber'
-            ? 'bg-amber-500 text-white font-bold'
-            : 'bg-blue-500 text-white font-bold'
-        }>
-          ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
-        </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <Badge className={
+            categoryColor === 'pending'
+              ? 'bg-pending text-pending-foreground font-bold'
+              : categoryColor === 'amber'
+              ? 'bg-amber-500 text-white font-bold'
+              : 'bg-blue-500 text-white font-bold'
+          }>
+            ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
+          </Badge>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-full border-emerald-500/40 bg-background px-2.5 text-[11px] font-semibold text-emerald-700 shadow-sm hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400"
+            onClick={(event) => {
+              event.stopPropagation();
+              onMarkPaid?.(tenant);
+            }}
+            disabled={isMarkingPaid}
+          >
+            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+            Mark Paid
+          </Button>
+        </div>
       </div>
     </div>
   );
