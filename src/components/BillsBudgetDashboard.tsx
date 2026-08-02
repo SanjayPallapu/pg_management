@@ -14,6 +14,7 @@ import {
   Egg,
   Flame,
   Home,
+  History,
   Inbox,
   IndianRupee,
   ListChecks,
@@ -65,6 +66,9 @@ import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
+import { BillPaymentFlow } from "./bills/BillPaymentFlow";
+import { BillPaymentHistorySheet } from "./bills/BillPaymentHistorySheet";
+import type { BillPaymentRequest } from "@/features/bill-payments/types";
 
 interface Props {
   rooms: Room[];
@@ -159,6 +163,8 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState("");
   const [quickAdd, setQuickAdd] = useState<QuickExpenseInitial | null>(null);
+  const [paymentRequest, setPaymentRequest] = useState<BillPaymentRequest | null>(null);
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
   const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<ExpenseEntry | null>(null);
@@ -269,7 +275,20 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   const openQuickAdd = (initial: QuickExpenseInitial) => {
     setAddPickerOpen(false);
-    setQuickAdd(initial);
+    if (initial.editing) {
+      setQuickAdd(initial);
+      return;
+    }
+    const categoryName = initial.subcategory || initial.label || CATEGORY_META[initial.category].label;
+    setPaymentRequest({
+      category: initial.category,
+      categoryName,
+      billCategoryId: `${initial.category}:${initial.subcategory ?? initial.floor ?? "general"}`,
+      label: initial.label,
+      subcategory: initial.subcategory,
+      floor: initial.floor,
+      lockLabel: initial.lockLabel,
+    });
   };
 
   const openPresetLedger = (
@@ -333,6 +352,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
       >
         <header className="flex h-[76px] shrink-0 items-center gap-2">
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
+            onClick={() => setPaymentHistoryOpen(true)}
+            aria-label="Open payment history"
+          >
+            <History className="h-5 w-5" />
+          </button>
           <button
             type="button"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
@@ -798,6 +825,9 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         }}
       />
 
+      <BillPaymentFlow open={Boolean(paymentRequest)} request={paymentRequest} onOpenChange={(next) => !next && setPaymentRequest(null)} />
+      <BillPaymentHistorySheet open={paymentHistoryOpen} onOpenChange={setPaymentHistoryOpen} />
+
       {sheetState && (
         <BillsEntriesSheet
           open={Boolean(sheetState)}
@@ -812,6 +842,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           onSave={(data) => addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear })}
           onUpdate={(id, patch) => updateEntry.mutate({ id, ...patch })}
           onDelete={(id) => deleteEntry.mutate(id)}
+          onAddPayment={() => openQuickAdd({ category: sheetState.category, subcategory: sheetState.subcategory, floor: sheetState.floor, label: sheetState.defaultLabel, lockLabel: sheetState.lockLabel, title: `Add ${sheetState.title}` })}
         />
       )}
 

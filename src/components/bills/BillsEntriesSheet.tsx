@@ -24,21 +24,19 @@ interface Props {
   onSave: (data: Omit<ExpenseEntry, "id" | "pg_id" | "month" | "year">) => void;
   onUpdate: (id: string, patch: Partial<ExpenseEntry>) => void;
   onDelete: (id: string) => void;
+  onAddPayment: () => void;
 }
 
 export const BillsEntriesSheet = ({
   open, onOpenChange, title, category, subcategory, floor, defaultLabel, lockLabel,
-  entries, onSave, onUpdate, onDelete,
+  entries, onSave, onUpdate, onDelete, onAddPayment,
 }: Props) => {
   const [editing, setEditing] = useState<ExpenseEntry | null>(null);
-  const [adding, setAdding] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ExpenseEntry | null>(null);
   const [manageMode, setManageMode] = useState(false);
   const total = entries.reduce((s, e) => s + e.amount, 0);
 
-  const initial: QuickExpenseInitial | null = adding
-    ? { category, subcategory, floor, label: defaultLabel, lockLabel }
-    : editing
+  const initial: QuickExpenseInitial | null = editing
       ? { category, subcategory, floor, label: defaultLabel ?? editing.label, editing, lockLabel }
       : null;
 
@@ -124,8 +122,8 @@ export const BillsEntriesSheet = ({
             className="border-t bg-background px-3 pt-4 sm:px-4"
             style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
           >
-            <Button className="h-12 w-full rounded-xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95" onClick={() => setAdding(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Add
+            <Button className="h-12 w-full rounded-xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95" onClick={onAddPayment}>
+              <Plus className="h-4 w-4 mr-1" /> Add Payment
             </Button>
           </div>
         </SheetContent>
@@ -133,12 +131,12 @@ export const BillsEntriesSheet = ({
 
       <QuickExpenseDialog
         open={!!initial}
-        onOpenChange={(o) => { if (!o) { setAdding(false); setEditing(null); } }}
+        onOpenChange={(o) => { if (!o) setEditing(null); }}
         initial={initial}
         onSave={(data) => {
           if (editing) onUpdate(editing.id, data);
           else onSave(data);
-          setAdding(false); setEditing(null);
+          setEditing(null);
         }}
       />
 

@@ -90,7 +90,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
           paymentEntries: payment.paymentEntries,
         };
       })
-      .filter((tenant): tenant is PaidTenantRow => tenant !== null)
+      .filter((tenant): tenant is Exclude<typeof tenant, null> => tenant !== null)
       .sort((a, b) => {
         const dateDifference = (b.paymentDate || '').localeCompare(a.paymentDate || '');
         return dateDifference || a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true });

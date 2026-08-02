@@ -154,6 +154,84 @@ export type Database = {
           },
         ]
       }
+      bill_payment_transactions: {
+        Row: {
+          amount: number
+          bill_category_id: string
+          category: string
+          category_name: string
+          created_at: string
+          expense_entry_id: string | null
+          id: string
+          label: string
+          masked_upi_id: string | null
+          note: string | null
+          paid_at: string
+          payee_name: string | null
+          payment_method: string
+          pg_id: string
+          status: string
+          transaction_id: string
+          updated_at: string
+          upi_attempted: boolean
+        }
+        Insert: {
+          amount: number
+          bill_category_id: string
+          category: string
+          category_name: string
+          created_at?: string
+          expense_entry_id?: string | null
+          id?: string
+          label: string
+          masked_upi_id?: string | null
+          note?: string | null
+          paid_at?: string
+          payee_name?: string | null
+          payment_method: string
+          pg_id: string
+          status: string
+          transaction_id: string
+          updated_at?: string
+          upi_attempted?: boolean
+        }
+        Update: {
+          amount?: number
+          bill_category_id?: string
+          category?: string
+          category_name?: string
+          created_at?: string
+          expense_entry_id?: string | null
+          id?: string
+          label?: string
+          masked_upi_id?: string | null
+          note?: string | null
+          paid_at?: string
+          payee_name?: string | null
+          payment_method?: string
+          pg_id?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+          upi_attempted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_payment_transactions_expense_entry_id_fkey"
+            columns: ["expense_entry_id"]
+            isOneToOne: false
+            referencedRelation: "expense_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payment_transactions_pg_id_fkey"
+            columns: ["pg_id"]
+            isOneToOne: false
+            referencedRelation: "pgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_entries: {
         Row: {
           amount: number
@@ -801,6 +879,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_bill_payment: {
+        Args: {
+          p_amount: number
+          p_bill_category_id: string
+          p_category: string
+          p_category_name: string
+          p_floor?: number | null
+          p_label: string
+          p_masked_upi_id?: string | null
+          p_month?: number | null
+          p_note?: string | null
+          p_paid_at: string
+          p_payee_name?: string | null
+          p_payment_method: string
+          p_pg_id: string
+          p_status: string
+          p_subcategory?: string | null
+          p_transaction_id: string
+          p_upi_attempted?: boolean
+          p_year?: number | null
+        }
+        Returns: Json
+      }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

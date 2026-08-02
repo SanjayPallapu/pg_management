@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeContactPickerPlugin.class);
+        registerPlugin(UpiPaymentPlugin.class);
         super.onCreate(savedInstanceState);
         // Set the status bar color to match our theme
         Window window = getWindow();
