@@ -581,16 +581,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
               </SheetHeader>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4">
-                <section className="mt-3 flex min-h-[108px] items-center rounded-[24px] border border-[#dddafa] bg-[linear-gradient(110deg,#fff,#f6f4ff)] p-4 dark:border-border dark:bg-card dark:bg-none">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[#eeebff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]">
-                    {(() => { const Icon = CATEGORY_META[detailCategory].icon; return <Icon className="h-7 w-7" />; })()}
-                  </div>
-                  <div className="ml-4 min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Total {CATEGORY_META[detailCategory].label.toLowerCase()}</p>
-                    <p className="text-[28px] font-black leading-tight">{formatCurrency(totalFor(detailCategory))}</p>
-                    <p className="text-sm text-muted-foreground">{byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}</p>
-                  </div>
-                </section>
+                <nav className="mt-3 grid h-[52px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
+                  {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => (
+                    <button key={category} type="button" className={cn("min-h-11 min-w-0 rounded-[14px] px-1 text-xs font-black", detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70")} onClick={() => setDetailCategory(category)}><span className="block truncate">{CATEGORY_META[category].shortLabel}</span></button>
+                  ))}
+                </nav>
 
                 {detailCategory === "current" ? (
                   <>
@@ -639,12 +634,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                   </>
                 ) : (
                   <>
-                    <div className="mt-3 grid h-[52px] grid-cols-3 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card">
-                      {(["utility", "other", "family"] as ExpenseCategory[]).map((category) => (
-                        <button key={category} type="button" className={cn("min-h-11 rounded-[14px] text-sm font-black", detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70")} onClick={() => setDetailCategory(category)}>{CATEGORY_META[category].shortLabel}</button>
-                      ))}
-                    </div>
-
                     {detailCategory === "utility" ? (
                       <>
                         <div className="mb-2 mt-4 flex min-h-11 items-center justify-between">

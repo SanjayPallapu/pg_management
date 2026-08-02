@@ -362,7 +362,7 @@ export const AuditHistorySheet = ({ open, onOpenChange }: AuditHistorySheetProps
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
+        className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900 [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
       >
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-2 pt-4 sm:px-4">

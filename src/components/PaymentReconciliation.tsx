@@ -765,36 +765,36 @@ export const PaymentReconciliation = ({
                           : 'border-l-amber-500 dark:border-l-amber-600'
                       }`}>
                         <CollapsibleTrigger asChild>
-                          <div className="p-2.5 bg-muted/35 dark:bg-muted/15 cursor-pointer hover:bg-muted/45 dark:hover:bg-muted/20 transition-colors flex items-center justify-between border-b border-border/20">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                          <div className="flex min-h-12 cursor-pointer items-center justify-between border-b border-border/20 bg-muted/35 p-2 transition-colors hover:bg-muted/45 dark:bg-muted/15 dark:hover:bg-muted/20">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
                                 R{detail.roomNo}
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-sm text-foreground truncate">{detail.tenantName}</span>
+                                  <span className="truncate text-[13px] font-bold text-foreground">{detail.tenantName}</span>
                                   {dateRange !== 'current' && 'month' in detail && (
                                     <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
                                       {monthsShort[(detail as any).month - 1]}
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                                <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
                                   {expandedTenants.has(detailKey) ? (
                                     <ChevronDown className="h-3 w-3 shrink-0" />
                                   ) : (
                                     <ChevronRight className="h-3 w-3 shrink-0" />
                                   )}
-                                  <span>View break-up</span>
+                                  <span>Room {detail.roomNo}</span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2.5 shrink-0">
+                            <div className="flex shrink-0 items-center gap-1.5">
                               <div className="text-right">
-                                <div className="font-extrabold text-sm text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
+                                <div className="text-[13px] font-extrabold text-foreground">₹{detail.amountPaid.toLocaleString()}</div>
                               </div>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                                 detail.status === 'Paid' 
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
                                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
