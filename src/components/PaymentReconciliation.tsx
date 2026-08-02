@@ -539,11 +539,11 @@ export const PaymentReconciliation = ({
         </SheetHeader>
       )}
 
-      <div className={standalone ? "pt-4" : "px-4 pb-4 mt-2"}>
+      <div className={standalone ? "pt-1" : "px-3 pb-4 mt-2 sm:px-4"}>
         <div>
           <div className="space-y-4">
             {/* Date Range Filter */}
-            <div className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border/70 bg-background p-2 shadow-sm sm:justify-start">
+            <div className="flex w-full items-center justify-between gap-2 border-b border-border/60 bg-background py-2 sm:justify-start">
               <Select value={dateRange} onValueChange={(v: DateRangeOption) => setDateRange(v)}>
                 <SelectTrigger className="w-[130px] h-9 rounded-xl bg-background border border-input text-xs sm:text-sm">
                   <SelectValue />
@@ -570,7 +570,7 @@ export const PaymentReconciliation = ({
               </Button>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-background to-emerald-500/5 p-4 shadow-sm">
+            <div className="overflow-hidden border-b border-primary/20 bg-gradient-to-br from-primary/10 via-background to-emerald-500/5 px-1 py-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[.12em] text-muted-foreground">Collected this period</p>
@@ -747,11 +747,11 @@ export const PaymentReconciliation = ({
 
 
             {/* Individual Payment Details */}
-            <div className="space-y-3 rounded-3xl border border-border/70 bg-background p-3 shadow-sm">
+            <section className="space-y-4 border-t border-border/60 pt-4">
               <div className="flex flex-col gap-3">
                 {/* Top row: Title and Search */}
                 <div className="w-full">
-                  <div className="flex items-center justify-between"><div><h3 className="text-sm font-bold">Payment Details</h3><p className="text-[10px] text-muted-foreground">{filteredPaymentDetails.length} tenant records</p></div></div>
+                  <div className="flex items-end justify-between gap-3"><div><h3 className="text-base font-black tracking-tight">Payment ledger</h3><p className="text-[10px] text-muted-foreground">{filteredPaymentDetails.length} tenant records · tap a row for entries</p></div><FileText className="h-4 w-4 text-muted-foreground" /></div>
                   <div className="relative mt-3">
                     <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -785,7 +785,7 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className={`overflow-hidden rounded-2xl border border-border/60 border-l-4 bg-card shadow-sm transition-all hover:shadow-md ${
+                      <div className={`overflow-hidden border-b border-border/60 border-l-4 bg-background transition-colors hover:bg-muted/20 ${
                         detail.status === 'Paid' 
                           ? 'border-l-emerald-500 dark:border-l-emerald-600' 
                           : 'border-l-amber-500 dark:border-l-amber-600'
@@ -832,7 +832,7 @@ export const PaymentReconciliation = ({
                         </CollapsibleTrigger>
                         
                         <CollapsibleContent>
-                          <div className="px-3 pb-3 pt-2.5 space-y-3 bg-background dark:bg-background/40">
+                          <div className="space-y-3 border-t border-border/40 bg-muted/10 px-3 pb-3 pt-2.5">
                             {/* Summary breakdown row */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pb-1 text-xs border-b border-border/20">
                               <div className="flex items-center gap-1.5">
@@ -861,7 +861,7 @@ export const PaymentReconciliation = ({
                               <div className="space-y-1.5 pt-1">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Log</span>
                                 {detail.entries.map((entry, idx) => (
-                                  <div key={idx} className="flex items-center justify-between bg-background dark:bg-card p-2 rounded-lg border border-border/20 text-xs shadow-sm">
+                                  <div key={idx} className="flex items-center justify-between border-b border-border/30 py-2 text-xs last:border-0">
                                     <div className="flex items-center gap-2">
                                       <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
                                         entry.mode === 'upi' 
@@ -893,7 +893,7 @@ export const PaymentReconciliation = ({
                     No payments recorded for the selected period
                   </div>}
               </div>
-            </div>
+            </section>
           </div>
         </div>
         </div>
@@ -912,7 +912,7 @@ export const PaymentReconciliation = ({
   );
 
   if (standalone) {
-    return <div className="flex h-full flex-col overflow-y-auto bg-muted/20 px-3 pb-12">{renderContent()}</div>;
+    return <div className="mx-auto flex h-full w-full max-w-screen-2xl flex-col overflow-y-auto bg-muted/20 px-3 py-1 pb-12 sm:px-4">{renderContent()}</div>;
   }
 
   return (

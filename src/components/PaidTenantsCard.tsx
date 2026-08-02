@@ -144,7 +144,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         className={isMobile ? 'w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background' : 'w-full sm:max-w-xl p-0 bg-background'}
       >
         <div className="flex h-full flex-col bg-background">
-          <SheetHeader className="shrink-0 border-b bg-background px-4 pb-3 pt-4">
+          <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-3 pt-4 sm:px-4">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose} aria-label="Back">
                 <ArrowLeft className="h-5 w-5" />
@@ -156,7 +156,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto bg-background px-4 py-4">
+          <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto bg-background px-3 py-1 sm:px-4">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'present' | 'previous')}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="present" className="gap-1.5 text-xs">

@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, CheckCircle2, X as XIcon } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, Bell, ArrowLeft, CalendarClock, X as XIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaymentEntry, Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -386,7 +386,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
         >
           <div className="flex flex-col h-full bg-background">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <SheetHeader className="mx-auto w-full max-w-screen-2xl px-3 pb-2 pt-4 sm:px-4 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -401,7 +401,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-3 py-1 sm:px-4 bg-background">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
                 <TabsList className="grid w-full grid-cols-3 shrink-0">
                   <TabsTrigger value="overdue" className="gap-1 text-[11px] px-1 truncate">
@@ -667,7 +667,6 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             }}
             disabled={isMarkingPaid}
           >
-            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
             Mark Paid
           </Button>
         </div>
