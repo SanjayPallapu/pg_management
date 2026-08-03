@@ -99,6 +99,9 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     draftId.current = crypto.randomUUID();
   }, [open, request]);
 
+  const preferredPackage = typeof window !== "undefined" ? localStorage.getItem(preferredKey) : null;
+  const sortedApps = useMemo(() => [...apps].sort((a, b) => Number(b.packageName === preferredPackage) - Number(a.packageName === preferredPackage)), [apps, preferredPackage]);
+
   if (!request) return null;
 
   const parsedAmount = Number(amount);
@@ -106,8 +109,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const resolvedLabel = label.trim() || request.label || request.subcategory || request.categoryName || "Bill Payment";
   const canPayCash = validAmount;
   const nativePlatform = isNativePaymentPlatform();
-  const preferredPackage = localStorage.getItem(preferredKey);
-  const sortedApps = useMemo(() => [...apps].sort((a, b) => Number(b.packageName === preferredPackage) - Number(a.packageName === preferredPackage)), [apps, preferredPackage]);
 
   const handleRawQr = async (raw: string) => {
     try {
