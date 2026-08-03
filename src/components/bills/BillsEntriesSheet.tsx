@@ -229,20 +229,18 @@ export const BillsEntriesSheet = ({
                       </div>
                     </div>
                     <div className="font-black text-base shrink-0 text-[#101426] dark:text-white">₹{e.amount.toLocaleString()}</div>
-                    {manageMode && (
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl"
-                          aria-label={`Edit ${e.label}`}
-                          onClick={() => setEditing(e)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                          aria-label={`Delete ${e.label}`}
-                          onClick={() => setConfirmDelete(e)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                        aria-label={`Edit ${e.label}`}
+                        onClick={(ev) => { ev.stopPropagation(); setEditing(e); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                        aria-label={`Delete ${e.label}`}
+                        onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e); }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })
@@ -251,7 +249,7 @@ export const BillsEntriesSheet = ({
 
           <div
             className="sticky bottom-0 border-t bg-white px-3 pt-3 dark:bg-card sm:px-4"
-            style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))" }}
+            style={{ paddingBottom: "calc(90px + env(safe-area-inset-bottom, 0px))" }}
           >
             <Button
               className="h-12 w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95 shadow-md"

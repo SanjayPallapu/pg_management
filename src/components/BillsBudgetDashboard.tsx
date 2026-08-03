@@ -584,7 +584,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 </div>
               </SheetHeader>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4" style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}>
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
                 <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
                   {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => {
                     const catTotal = totalFor(category);
@@ -611,34 +611,69 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                   <>
                     <div className="mb-2 mt-3 flex min-h-11 items-center justify-between">
                       <h3 className="text-base font-black">Floor meters <span className="text-xs font-bold text-muted-foreground ml-1">({byCategory("current").length} {byCategory("current").length === 1 ? "entry" : "entries"})</span></h3>
-                      <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]" onClick={openFloorSettings}>Configure floors</button>
+                      <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]" onClick={openFloorSettings}>Manage floors</button>
                     </div>
                     <div className="space-y-2.5">
                       {currentBillPresets.map((preset) => {
                         const Icon = preset.icon;
                         const matchingEntries = byCategory("current").filter((entry) => (entry.subcategory ?? "") === preset.subcategory);
-                        const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
+                        const hasEntry = matchingEntries.length > 0;
+                        const entry = matchingEntries[0];
+                        const presetTotal = matchingEntries.reduce((sum, e) => sum + e.amount, 0);
                         return (
                           <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
-                            <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` })}>
+                            <button
+                              type="button"
+                              className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left"
+                              onClick={() => {
+                                if (hasEntry) {
+                                  openPresetLedger("current", preset.label, preset.subcategory, preset.floor);
+                                } else {
+                                  openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` });
+                                }
+                              }}
+                            >
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-black">{preset.label}</p>
-                                {matchingEntries.length > 0 && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatCurrency(presetTotal)} · {matchingEntries.length} {matchingEntries.length === 1 ? "entry" : "entries"}
+                                {hasEntry ? (
+                                  <p className="text-xs font-semibold text-[#4936ef] dark:text-[#b6a2ff]">
+                                    {formatCurrency(presetTotal)} · {format(new Date(entry.entry_date), "dd MMM")}
                                   </p>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">No entry recorded for this month</p>
                                 )}
                               </div>
                             </button>
-                            <button
-                              type="button"
-                              className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
-                              onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` })}
-                              aria-label={`Add ${preset.label}`}
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
+                            {hasEntry ? (
+                              <div className="ml-2 flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1efff] text-[#4936ef] hover:bg-[#e4e0ff] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                                  onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, editing: entry, label: entry.label, title: `Edit ${preset.label}` })}
+                                  aria-label={`Edit ${preset.label}`}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  onClick={() => setConfirmDeleteEntry(entry)}
+                                  aria-label={`Delete ${preset.label}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                                onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` })}
+                                aria-label={`Add ${preset.label}`}
+                              >
+                                <Plus className="h-5 w-5" />
+                              </button>
+                            )}
                           </div>
                         );
                       })}
