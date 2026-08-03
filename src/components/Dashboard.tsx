@@ -382,7 +382,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       const nextSlide = (activeSlide + 1) % banners.length;
       container.scrollTo({ left: nextSlide * (container.offsetWidth + 8), behavior: "smooth" });
       setActiveSlide(nextSlide);
-    }, 5500);
+    }, 3000);
     return () => window.clearInterval(interval);
   }, [activeSlide, banners.length]);
 
