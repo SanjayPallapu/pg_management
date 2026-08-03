@@ -69,6 +69,7 @@ import { CollectedByCard } from "./CollectedByCard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
+import { useBackGesture } from "@/hooks/useBackGesture";
 
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
@@ -109,6 +110,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
+
+  useBackGesture(billsBudgetOpen, () => setBillsBudgetOpen(false));
   
   // Add Tenant workflow state
   const [addTenantRoomSelectOpen, setAddTenantRoomSelectOpen] = useState(false);

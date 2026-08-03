@@ -421,8 +421,6 @@ const CalculatorDialog = ({
 }) => {
   const [expr, setExpr] = useState(initialExpr || "");
 
-  useBackGesture(open, () => onOpenChange(false));
-
   useEffect(() => {
     if (open) setExpr(initialExpr || "");
   }, [open, initialExpr]);

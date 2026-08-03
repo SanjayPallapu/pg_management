@@ -183,7 +183,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [tempNumFloors, setTempNumFloors] = useState("1");
   const [tempIncludeGround, setTempIncludeGround] = useState(false);
 
-  useBackGesture(true, () => onClose?.());
   useBackGesture(Boolean(detailCategory), () => setDetailCategory(null));
   useBackGesture(editingBudget, () => setEditingBudget(false));
   useBackGesture(addPickerOpen, () => setAddPickerOpen(false));
