@@ -195,7 +195,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-[#f8f9fd] dark:bg-[#0f172a] text-foreground dark:text-white border-l border-[#e4e6ee] dark:border-slate-800 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 px-[1px] [&>button]:hidden bg-[#f8f9fd] dark:bg-[#0f172a] text-foreground dark:text-white border-l border-[#e4e6ee] dark:border-slate-800 flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -215,7 +215,7 @@ export const ACElectricitySheet = ({
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
-            <SheetHeader className="px-5 pt-5 pb-2 border-b border-border dark:border-slate-900 shrink-0">
+            <SheetHeader className="px-3 pt-4 pb-2 border-b border-border dark:border-slate-900 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={() => onOpenChange(false)} aria-label="Back">
@@ -292,7 +292,7 @@ export const ACElectricitySheet = ({
               </div>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-1.5 py-3 space-y-3.5">
               {activeTab === 'ac-bill' && (
                 <>
                   {/* Overview Card */}
@@ -602,7 +602,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <SheetHeader className="px-5 pt-5 pb-3 border-b border-border dark:border-slate-900 shrink-0">
+      <SheetHeader className="px-3 pt-4 pb-2 border-b border-border dark:border-slate-900 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={onBack}>
@@ -619,7 +619,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
         </div>
       </SheetHeader>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-1.5 py-3 space-y-3.5">
         {/* Summary card */}
         <div className="rounded-2xl border border-border dark:border-slate-900 bg-muted dark:bg-slate-950/30 p-4 flex flex-col gap-3">
           <div className="flex justify-between items-center">
