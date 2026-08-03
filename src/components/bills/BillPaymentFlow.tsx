@@ -279,13 +279,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                         {chip}
                       </button>
                     ))}
-                    <button
-                      type="button"
-                      className="min-h-11 rounded-xl border border-dashed border-[#4936ef]/50 bg-white px-3 text-xs font-bold text-[#4936ef] hover:bg-[#f1efff] dark:bg-card dark:text-[#b6a2ff]"
-                      onClick={() => setLabel("")}
-                    >
-                      Custom
-                    </button>
                   </div>
                 </div>
               )}
