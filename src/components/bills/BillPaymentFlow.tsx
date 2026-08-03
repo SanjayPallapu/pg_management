@@ -99,6 +99,8 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     draftId.current = crypto.randomUUID();
   }, [open, request]);
 
+  if (!request) return null;
+
   const parsedAmount = Number(amount);
   const validAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 && parsedAmount <= 10_000_000;
   const resolvedLabel = label.trim() || request.label || request.subcategory || request.categoryName || "Bill Payment";
@@ -106,8 +108,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const nativePlatform = isNativePaymentPlatform();
   const preferredPackage = localStorage.getItem(preferredKey);
   const sortedApps = useMemo(() => [...apps].sort((a, b) => Number(b.packageName === preferredPackage) - Number(a.packageName === preferredPackage)), [apps, preferredPackage]);
-
-  if (!request) return null;
 
   const handleRawQr = async (raw: string) => {
     try {
