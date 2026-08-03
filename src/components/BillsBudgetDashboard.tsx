@@ -386,23 +386,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </header>
 
-        <nav className="mb-3 grid shrink-0 grid-cols-4 gap-1 rounded-2xl border border-[#e4e6ee] bg-white p-1.5 shadow-[0_10px_24px_-24px_rgba(25,30,58,.8)] dark:border-border dark:bg-card" aria-label="Bill categories">
-          {categoryData.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.category}
-                type="button"
-                className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-black text-[#53586b] transition-colors hover:bg-[#f1efff] hover:text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white/70 dark:hover:bg-[#302858] dark:hover:text-[#b6a2ff]"
-                onClick={() => setDetailCategory(item.category)}
-              >
-                <Icon className={cn("h-4 w-4", item.iconColor)} />
-                <span className="w-full truncate text-center">{item.shortLabel}</span>
-              </button>
-            );
-          })}
-        </nav>
-
         <section className="bills-premium-budget relative shrink-0 overflow-hidden rounded-[26px] bg-[radial-gradient(circle_at_82%_18%,rgba(127,108,255,.95),transparent_34%),linear-gradient(135deg,#2018ad_0%,#3126d6_52%,#5138f6_100%)] p-5 text-white shadow-[0_20px_42px_-24px_rgba(51,38,214,.9)]">
           <div className="pointer-events-none absolute -right-14 -top-20 h-60 w-60 rounded-full border border-white/10" />
           <div className="pointer-events-none absolute -right-4 -top-10 h-44 w-44 rounded-full border border-white/10" />

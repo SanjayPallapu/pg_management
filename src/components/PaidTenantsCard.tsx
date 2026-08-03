@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { ArrowLeft, Banknote, CheckCircle2, MessageCircle, MessageSquare, Phone, Receipt, Smartphone } from 'lucide-react';
+import { ArrowLeft, Banknote, Calendar, CheckCircle2, ChevronDown, MessageCircle, MessageSquare, Phone, Receipt, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -56,14 +58,28 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
   const isMobile = useIsMobile();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
+  const [viewMonth, setViewMonth] = useState<number>(selectedMonth);
+  const [viewYear, setViewYear] = useState<number>(selectedYear);
   const [activeTab, setActiveTab] = useState<'present' | 'previous'>('present');
   const [receiptData, setReceiptData] = useState<PaidReceiptData | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
+  useEffect(() => {
+    if (open) {
+      setViewMonth(selectedMonth);
+      setViewYear(selectedYear);
+    }
+  }, [open, selectedMonth, selectedYear]);
+
+  const years = useMemo(() => {
+    const currentYr = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => currentYr - 2 + i);
+  }, []);
+
   const previousPeriod = useMemo(() => {
-    if (selectedMonth === 1) return { month: 12, year: selectedYear - 1 };
-    return { month: selectedMonth - 1, year: selectedYear };
-  }, [selectedMonth, selectedYear]);
+    if (viewMonth === 1) return { month: 12, year: viewYear - 1 };
+    return { month: viewMonth - 1, year: viewYear };
+  }, [viewMonth, viewYear]);
 
   const { presentTenants, previousTenants } = useMemo(() => {
     const getPaidTenants = (month: number, year: number): PaidTenantRow[] => rooms
@@ -97,14 +113,14 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
       });
 
     return {
-      presentTenants: getPaidTenants(selectedMonth, selectedYear),
+      presentTenants: getPaidTenants(viewMonth, viewYear),
       previousTenants: getPaidTenants(previousPeriod.month, previousPeriod.year),
     };
-  }, [rooms, payments, selectedMonth, selectedYear, previousPeriod.month, previousPeriod.year]);
+  }, [rooms, payments, viewMonth, viewYear, previousPeriod.month, previousPeriod.year]);
 
   const visibleTenants = activeTab === 'present' ? presentTenants : previousTenants;
   const visiblePeriod = activeTab === 'present'
-    ? { month: selectedMonth, year: selectedYear }
+    ? { month: viewMonth, year: viewYear }
     : previousPeriod;
   const totalPaid = visibleTenants.reduce((sum, tenant) => sum + tenant.amountPaid, 0);
   const upiTotal = visibleTenants.reduce(
@@ -145,14 +161,60 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
       >
         <div className="flex h-full flex-col bg-background">
           <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-3 pt-4 sm:px-4">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose} aria-label="Back">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="min-w-0 text-left">
-                <SheetTitle className="text-base font-bold">Paid Tenants</SheetTitle>
-                <p className="truncate text-xs text-muted-foreground">Present and previous month collections</p>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose} aria-label="Back">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="min-w-0 text-left">
+                  <SheetTitle className="text-base font-bold">Paid Tenants</SheetTitle>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {monthNames[viewMonth - 1]} {viewYear} collections
+                  </p>
+                </div>
               </div>
+
+              {/* Month Selector in Top Right Header */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-xl border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold px-2.5">
+                    <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs">{monthNames[viewMonth - 1]?.slice(0, 3)} {viewYear}</span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="end">
+                  <div className="space-y-3">
+                    <div className="text-xs font-bold text-muted-foreground">Select Month & Year</div>
+                    <div className="flex gap-2">
+                      <Select value={viewMonth.toString()} onValueChange={(val) => setViewMonth(parseInt(val))}>
+                        <SelectTrigger className="w-[120px] h-9 text-xs">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {monthNames.map((m, idx) => (
+                            <SelectItem key={m} value={(idx + 1).toString()} className="text-xs">
+                              {m}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={viewYear.toString()} onValueChange={(val) => setViewYear(parseInt(val))}>
+                        <SelectTrigger className="w-[85px] h-9 text-xs">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {years.map((y) => (
+                            <SelectItem key={y} value={y.toString()} className="text-xs">
+                              {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </SheetHeader>
 
@@ -161,11 +223,11 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="present" className="gap-1.5 text-xs">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Present ({presentTenants.length})
+                  {monthNames[viewMonth - 1]?.slice(0, 3)} ({presentTenants.length})
                 </TabsTrigger>
                 <TabsTrigger value="previous" className="gap-1.5 text-xs">
                   <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
-                  Previous ({previousTenants.length})
+                  {monthNames[previousPeriod.month - 1]?.slice(0, 3)} ({previousTenants.length})
                 </TabsTrigger>
               </TabsList>
 

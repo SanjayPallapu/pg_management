@@ -86,12 +86,30 @@ export const maskUpiId = (upiId: string) => {
 
 export const buildUpiPaymentUri = (qr: ParsedUpiQr, amount: number, category: string, note?: string) => {
   if (!Number.isFinite(amount) || amount <= 0) throw new Error("INVALID_AMOUNT");
-  const params = new URLSearchParams(qr.paymentParameters);
+  const params = new URLSearchParams();
+  
+  // Set required parameters in standard NPCI order: pa, pn, am, cu, tn
   params.set("pa", qr.payeeUpiId);
-  if (!params.has("cu")) params.set("cu", "INR");
-  if (qr.amount === null || Math.abs(qr.amount - amount) >= 0.01) params.set("am", amount.toFixed(2));
-  if (note?.trim()) params.set("tn", clean(note, 80) || `PG HUB ${category}`);
-  else if (!params.has("tn")) params.set("tn", `PG HUB ${category}`);
-  if (qr.payeeName && !params.has("pn")) params.set("pn", qr.payeeName);
-  return `upi://pay?${params.toString()}`;
+  if (qr.payeeName) {
+    params.set("pn", qr.payeeName);
+  }
+
+  // Retain additional valid parameters from QR (excluding pa, pn, am, cu, tn)
+  for (const [k, v] of Object.entries(qr.paymentParameters)) {
+    const keyLower = k.toLowerCase();
+    if (!["pa", "pn", "am", "cu", "tn"].includes(keyLower) && v) {
+      params.set(keyLower, v);
+    }
+  }
+
+  params.set("am", amount.toFixed(2));
+  params.set("cu", "INR");
+
+  const resolvedNote = note?.trim() ? clean(note, 80) : (qr.transactionNote ? clean(qr.transactionNote, 80) : `PG HUB ${category}`);
+  if (resolvedNote) {
+    params.set("tn", resolvedNote);
+  }
+
+  // URLSearchParams uses '+' for spaces, which triggers security declines in PhonePe/GooglePay. Use %20 instead.
+  return `upi://pay?${params.toString().replace(/\+/g, "%20")}`;
 };

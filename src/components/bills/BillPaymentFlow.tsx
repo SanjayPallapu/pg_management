@@ -33,6 +33,11 @@ const messageForError = (error: unknown) => {
     if (error.code === "OFFLINE") return "You appear to be offline. Connect to the internet before opening a UPI app.";
     return error.message || "This action is not supported on this device.";
   }
+  if (typeof error === "object" && error !== null) {
+    const errObj = error as Record<string, unknown>;
+    if (typeof errObj.message === "string" && errObj.message) return errObj.message;
+    if (typeof errObj.details === "string" && errObj.details) return errObj.details;
+  }
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
 };
 
