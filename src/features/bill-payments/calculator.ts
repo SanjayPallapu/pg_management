@@ -40,3 +40,12 @@ export const evaluateAmountExpression = (expression: string): number | null => {
   if (position !== tokens.length || !Number.isFinite(value)) return null;
   return Math.round(value * 100) / 100;
 };
+
+export const safeEvaluateExpression = (expression: string): string => {
+  if (!expression.trim()) return "0";
+  const cleanExpr = expression.trim().replace(/[+\-*/.]+$/, "");
+  if (!cleanExpr) return "0";
+  const result = evaluateAmountExpression(cleanExpr);
+  return result === null ? "Error" : String(result);
+};
+

@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { evaluateAmountExpression } from "@/features/bill-payments/calculator";
+import { evaluateAmountExpression, safeEvaluateExpression } from "@/features/bill-payments/calculator";
 import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
+import { useBackGesture } from "@/hooks/useBackGesture";
 
 export interface QuickExpenseInitial {
   category: ExpenseCategory;
@@ -43,6 +44,8 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
   const [notes, setNotes] = useState("");
   const [entryDate, setEntryDate] = useState(todayISO());
   const [calcOpen, setCalcOpen] = useState(false);
+
+  useBackGesture(open, () => onOpenChange(false));
 
   useEffect(() => {
     if (!open || !initial) return;
@@ -133,21 +136,12 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
             </div>
           )}
 
-          {/* Amount with Calculator + Date */}
+          {/* Amount + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs flex items-center justify-between">
-                <span>Amount (₹) *</span>
-                <button
-                  type="button"
-                  className="flex items-center gap-1 text-[10px] font-black text-[#4936ef] hover:text-[#3827d7]"
-                  onClick={() => setCalcOpen((prev) => !prev)}
-                >
-                  <Calculator className="h-3 w-3" /> Calc
-                </button>
-              </Label>
+              <Label className="text-xs">Amount (₹) *</Label>
               <Input
-                className="h-11"
+                className="h-11 font-bold text-base"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -157,8 +151,25 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
             </div>
             <div>
               <Label className="text-xs">Date</Label>
-              <Input className="h-11" type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
+              <Input className="h-11 font-medium" type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
             </div>
+          </div>
+
+          {/* Calculator toggle button moved down */}
+          <div className="flex justify-start pt-1">
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-black transition-all px-3 py-1.5 rounded-xl border border-dashed",
+                calcOpen
+                  ? "bg-[#f1efff] text-[#4936ef] border-[#4936ef]/40 dark:bg-[#302858] dark:text-[#b6a2ff]"
+                  : "text-[#4936ef] hover:bg-[#f1efff] border-[#4936ef]/30 dark:text-[#b6a2ff] dark:hover:bg-[#302858]"
+              )}
+              onClick={() => setCalcOpen((prev) => !prev)}
+            >
+              <Calculator className="h-3.5 w-3.5" />
+              {calcOpen ? "Hide Calculator" : "Use Calculator"}
+            </button>
           </div>
 
           {/* Mini Calculator (collapsible) */}
@@ -198,9 +209,7 @@ const MiniCalcPanel = ({
   const [expr, setExpr] = useState(initialExpr || "");
 
   const evalResult = useMemo(() => {
-    if (!expr.trim()) return "0";
-    const result = evaluateAmountExpression(expr);
-    return result === null ? "Error" : String(result);
+    return safeEvaluateExpression(expr);
   }, [expr]);
 
   const handleKey = (key: string) => {
@@ -269,3 +278,4 @@ const MiniCalcPanel = ({
     </div>
   );
 };
+

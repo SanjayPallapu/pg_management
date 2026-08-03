@@ -23,7 +23,8 @@ import { DuplicatePaymentGuard, resolveUpiOutcome, type UpiOutcome } from "@/fea
 import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan, type UpiApp } from "@/features/bill-payments/nativePayments";
 import type { BillPaymentDraft, BillPaymentRequest, ParsedUpiQr } from "@/features/bill-payments/types";
 import { cn } from "@/lib/utils";
-import { evaluateAmountExpression } from "@/features/bill-payments/calculator";
+import { evaluateAmountExpression, safeEvaluateExpression } from "@/features/bill-payments/calculator";
+import { useBackGesture } from "@/hooks/useBackGesture";
 
 interface Props { open: boolean; request: BillPaymentRequest | null; onOpenChange: (open: boolean) => void }
 type Stage = "entry" | "scanner" | "apps" | "result" | "receipt";
@@ -76,6 +77,8 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const draftId = useRef(crypto.randomUUID());
   const awaitingUpiReturn = useRef(false);
   const upiAppWasBackgrounded = useRef(false);
+
+  useBackGesture(open, () => onOpenChange(false));
 
   useEffect(() => {
     let disposed = false;
@@ -416,14 +419,14 @@ const CalculatorDialog = ({
 }) => {
   const [expr, setExpr] = useState(initialExpr || "");
 
+  useBackGesture(open, () => onOpenChange(false));
+
   useEffect(() => {
     if (open) setExpr(initialExpr || "");
   }, [open, initialExpr]);
 
   const evalResult = useMemo(() => {
-    if (!expr.trim()) return "0";
-    const result = evaluateAmountExpression(expr);
-    return result === null ? "Error" : String(result);
+    return safeEvaluateExpression(expr);
   }, [expr]);
 
   const handleKey = (key: string) => {

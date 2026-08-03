@@ -60,6 +60,7 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { usePG } from "@/contexts/PGContext";
 import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
+import { useBackGesture } from "@/hooks/useBackGesture";
 import { MONTHS } from "@/constants/pricing";
 import { Room } from "@/types";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
@@ -181,6 +182,12 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [isFloorsConfigOpen, setIsFloorsConfigOpen] = useState(false);
   const [tempNumFloors, setTempNumFloors] = useState("1");
   const [tempIncludeGround, setTempIncludeGround] = useState(false);
+
+  useBackGesture(Boolean(detailCategory), () => setDetailCategory(null));
+  useBackGesture(editingBudget, () => setEditingBudget(false));
+  useBackGesture(addPickerOpen, () => setAddPickerOpen(false));
+  useBackGesture(analyticsOpen, () => setAnalyticsOpen(false));
+  useBackGesture(isFloorsConfigOpen, () => setIsFloorsConfigOpen(false));
 
   const storageKey = pgId ? `current_bills_floors_${pgId}` : null;
 
@@ -441,10 +448,10 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           </div>
         </section>
 
-        <section className="bills-premium-groups mt-4 shrink-0">
-          <div className="mb-2 flex items-center justify-between">
+        <section className="bills-premium-groups mt-2 shrink-0">
+          <div className="mb-1 flex items-center justify-between">
             <h2 className="text-[15px] font-black tracking-[-0.015em] text-[#111526] dark:text-white">Spending groups</h2>
-            <button type="button" className="min-h-11 rounded-xl px-2 text-xs font-bold text-[#4936ef] dark:text-[#b6a2ff]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
+            <button type="button" className="h-7 min-h-0 rounded-lg px-2 text-xs font-bold text-[#4936ef] dark:text-[#b6a2ff]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
           </div>
           <div className="divide-y divide-[#e8e9f0] overflow-hidden rounded-[20px] border border-[#e3e5ed] bg-white shadow-[0_12px_28px_-25px_rgba(25,30,58,.7)] dark:divide-border dark:border-border dark:bg-card">
             {categoryData.map((item) => {

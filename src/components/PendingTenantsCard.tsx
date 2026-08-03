@@ -21,6 +21,7 @@ import { OverduePaymentDialog } from '@/components/OverduePaymentDialog';
 import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 import { WelcomeDialog } from '@/components/WelcomeDialog';
 import { RulesShareDialog } from '@/components/RulesShareDialog';
+import { useBackGesture } from '@/hooks/useBackGesture';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -96,6 +97,24 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     setReminderTenant(tenant);
     setReminderOpen(true);
   };
+
+  useBackGesture(isSheetOpen, () => {
+    if (reminderOpen) setReminderOpen(false);
+    else if (paymentDialogOpen) setPaymentDialogOpen(false);
+    else if (receiptDialogOpen) setReceiptDialogOpen(false);
+    else if (welcomeDialogOpen) setWelcomeDialogOpen(false);
+    else if (rulesDialogOpen) setRulesDialogOpen(false);
+    else {
+      setLocalOpen(false);
+      onClose?.();
+    }
+  });
+
+  useBackGesture(reminderOpen, () => setReminderOpen(false));
+  useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
+  useBackGesture(receiptDialogOpen, () => setReceiptDialogOpen(false));
+  useBackGesture(welcomeDialogOpen, () => setWelcomeDialogOpen(false));
+  useBackGesture(rulesDialogOpen, () => setRulesDialogOpen(false));
 
   useEffect(() => {
     if (isSheetOpen) {
@@ -393,7 +412,18 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       </Card>
       )}
 
-      <Sheet open={isSheetOpen} onOpenChange={(val) => { if (!val) { setLocalOpen(false); onClose?.(); } }}>
+      <Sheet
+        open={isSheetOpen}
+        onOpenChange={(val) => {
+          if (!val) {
+            if (reminderOpen || paymentDialogOpen || receiptDialogOpen || welcomeDialogOpen || rulesDialogOpen) {
+              return;
+            }
+            setLocalOpen(false);
+            onClose?.();
+          }
+        }}
+      >
         <SheetContent 
           side="right" 
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}

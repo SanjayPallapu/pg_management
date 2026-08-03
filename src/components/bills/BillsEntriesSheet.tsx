@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./QuickExpenseDialog";
 import { cn } from "@/lib/utils";
+import { useBackGesture } from "@/hooks/useBackGesture";
 
 interface Props {
   open: boolean;
@@ -41,6 +42,8 @@ export const BillsEntriesSheet = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [otherFilter, setOtherFilter] = useState<(typeof OTHER_FILTERS)[number]>("All");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useBackGesture(open, () => onOpenChange(false));
 
   const filteredEntries = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
