@@ -13,6 +13,7 @@ import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./QuickExpenseDialog";
 import { cn } from "@/lib/utils";
 import { useBackGesture } from "@/hooks/useBackGesture";
+import { fuzzyMatch } from "../BillsBudgetDashboard";
 
 interface Props {
   open: boolean;
@@ -46,7 +47,7 @@ export const BillsEntriesSheet = ({
   useBackGesture(open, () => onOpenChange(false));
 
   const filteredEntries = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = searchQuery.trim();
     return entries.filter(
       (e) => {
         const matchesKind = category !== "other" || otherFilter === "All" || (
@@ -54,9 +55,8 @@ export const BillsEntriesSheet = ({
             ? !OTHER_FILTERS.slice(1, -1).some((label) => label.toLowerCase() === e.label.toLowerCase())
             : e.label.toLowerCase() === otherFilter.toLowerCase()
         );
-        const matchesQuery = !query || e.label.toLowerCase().includes(query) ||
-          Boolean(e.notes?.toLowerCase().includes(query)) ||
-          format(new Date(e.entry_date), "dd MMM yyyy").toLowerCase().includes(query);
+        const targetStr = `${e.label} ${e.notes ?? ""} ${format(new Date(e.entry_date), "dd MMM yyyy")}`;
+        const matchesQuery = fuzzyMatch(query, targetStr);
         return matchesKind && matchesQuery;
       }
     );

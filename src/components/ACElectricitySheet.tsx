@@ -195,7 +195,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900 text-foreground dark:text-white border-l border-border dark:border-slate-900 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-[#f8f9fd] dark:bg-[#0f172a] text-foreground dark:text-white border-l border-[#e4e6ee] dark:border-slate-800 flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -742,11 +742,14 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
         </div>
       </div>
 
-      <div className="border-t border-border dark:border-slate-900 bg-muted dark:bg-slate-950/80 backdrop-blur-md p-4 flex items-center gap-2 shrink-0">
-        <Button variant="outline" className="flex-1 text-[11px] font-bold h-9 border-border dark:border-slate-800 bg-slate-900/50 text-foreground dark:text-slate-300 hover:bg-muted dark:hover:bg-slate-900 hover:text-foreground dark:text-white" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
+      <div
+        className="border-t border-[#e4e6ee] dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md p-4 flex items-center gap-2 shrink-0"
+        style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <Button variant="outline" className="flex-1 text-[11px] font-bold h-10 border-[#e4e6ee] dark:border-slate-800 bg-white dark:bg-slate-900 text-foreground dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
           <Send className="mr-1.5 h-3.5 w-3.5" /> Send Reminder
         </Button>
-        <Button variant="outline" className="flex-1 text-[11px] font-bold h-9 border-border dark:border-slate-800 bg-slate-900/50 text-foreground dark:text-slate-300 hover:bg-muted dark:hover:bg-slate-900 hover:text-foreground dark:text-white" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
+        <Button className="flex-1 text-[11px] font-bold h-10 bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
           <Zap className="mr-1.5 h-3.5 w-3.5" /> Share Bill
         </Button>
       </div>

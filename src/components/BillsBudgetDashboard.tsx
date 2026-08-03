@@ -143,9 +143,48 @@ const CATEGORY_META: Record<
     icon: UsersRound,
     iconSurface: "bg-[#f5f0ff] dark:bg-[#332851]",
     iconColor: "text-[#5737d8] dark:text-[#bea7ff]",
-    barColor: "bg-[#f3a21a]",
+    barColor: "bg-[#794ef6]",
   },
 };
+
+function levenshteinDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Uint8Array(n + 1));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
+
+export function fuzzyMatch(query: string, target: string): boolean {
+  const q = query.trim().toLowerCase();
+  const t = target.toLowerCase();
+  if (!q) return true;
+  if (t.includes(q)) return true;
+
+  const qWords = q.split(/\s+/).filter(Boolean);
+  const tWords = t.split(/\s+/).filter(Boolean);
+
+  return qWords.every((qw) => {
+    if (tWords.some((tw) => tw.includes(qw) || qw.includes(tw))) return true;
+    return tWords.some((tw) => {
+      const maxDist = qw.length > 5 ? 2 : qw.length > 2 ? 1 : 0;
+      return levenshteinDistance(qw, tw) <= maxDist;
+    });
+  });
+}
 
 const formatCurrency = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 const getEntryGroupKey = (entry: ExpenseEntry) => (
@@ -626,11 +665,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                               type="button"
                               className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left"
                               onClick={() => {
-                                if (hasEntry) {
-                                  openPresetLedger("current", preset.label, preset.subcategory, preset.floor);
-                                } else {
-                                  openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` });
-                                }
+                                openPresetLedger("current", preset.label, preset.subcategory, preset.floor);
                               }}
                             >
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
@@ -644,27 +679,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                                   <p className="text-xs text-muted-foreground">No entry recorded for this month</p>
                                 )}
                               </div>
+                              {hasEntry ? (
+                                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                              ) : null}
                             </button>
-                            {hasEntry ? (
-                              <div className="ml-2 flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1efff] text-[#4936ef] hover:bg-[#e4e0ff] dark:bg-[#302858] dark:text-[#b6a2ff]"
-                                  onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, editing: entry, label: entry.label, title: `Edit ${preset.label}` })}
-                                  aria-label={`Edit ${preset.label}`}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20"
-                                  onClick={() => setConfirmDeleteEntry(entry)}
-                                  aria-label={`Delete ${preset.label}`}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ) : (
+                            {!hasEntry && (
                               <button
                                 type="button"
                                 className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-[#4936ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
@@ -678,6 +697,56 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         );
                       })}
                     </div>
+
+                    {/* Unassigned / Orphaned current entries section if any exist */}
+                    {(() => {
+                      const unassignedEntries = byCategory("current").filter(
+                        (entry) => !currentBillPresets.some((p) => p.subcategory === entry.subcategory)
+                      );
+                      if (unassignedEntries.length === 0) return null;
+                      return (
+                        <div className="mt-5 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-amber-600 dark:text-amber-400">Other / Unassigned current entries</h3>
+                            <span className="text-xs text-muted-foreground">{unassignedEntries.length} {unassignedEntries.length === 1 ? "entry" : "entries"}</span>
+                          </div>
+                          {unassignedEntries.map((e) => (
+                            <div key={e.id} className="flex min-h-[68px] items-center justify-between gap-2 rounded-[20px] border border-amber-200 bg-amber-50/50 p-3.5 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/20">
+                              <div className="flex-1 min-w-0">
+                                <div className="truncate text-sm font-black text-[#101426] dark:text-white">{e.label}</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  {format(new Date(e.entry_date), "dd MMM yyyy")}
+                                  {e.notes && ` · ${e.notes}`}
+                                </div>
+                              </div>
+                              <div className="font-black text-sm shrink-0 text-[#101426] dark:text-white mr-1">
+                                {formatCurrency(e.amount)}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 shrink-0 rounded-xl"
+                                  aria-label={`Edit ${e.label}`}
+                                  onClick={() => openQuickAdd({ category: "current", editing: e, label: e.label, title: `Edit ${e.label}` })}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  aria-label={`Delete ${e.label}`}
+                                  onClick={() => setConfirmDeleteEntry(e)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </>
                 ) : (
                   <>
@@ -748,7 +817,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           <h3 className="text-base font-black">{CATEGORY_META[detailCategory].shortLabel} entries</h3>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-muted-foreground">
-                              {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase()) || format(new Date(e.entry_date), "dd MMM yyyy").toLowerCase().includes(inlineSearchQuery.toLowerCase())).length} {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase())).length === 1 ? "entry" : "entries"}
+                              {byCategory(detailCategory).filter((e) => fuzzyMatch(inlineSearchQuery, e.label + " " + (e.notes ?? "") + " " + format(new Date(e.entry_date), "dd MMM yyyy"))).length} {byCategory(detailCategory).filter((e) => fuzzyMatch(inlineSearchQuery, e.label + " " + (e.notes ?? "") + " " + format(new Date(e.entry_date), "dd MMM yyyy"))).length === 1 ? "entry" : "entries"}
                             </span>
                             {byCategory(detailCategory).length > 0 && (
                               <button
@@ -776,7 +845,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           </div>
                         ) : (
                           <div className="space-y-2.5">
-                            {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase()) || format(new Date(e.entry_date), "dd MMM yyyy").toLowerCase().includes(inlineSearchQuery.toLowerCase())).map((e) => (
+                            {byCategory(detailCategory).filter((e) => fuzzyMatch(inlineSearchQuery, e.label + " " + (e.notes ?? "") + " " + format(new Date(e.entry_date), "dd MMM yyyy"))).map((e) => (
                               <div key={e.id} className="flex min-h-[68px] items-center justify-between gap-2 rounded-[20px] border border-[#e3e5ed] bg-white p-3.5 shadow-sm dark:border-border dark:bg-card">
                                 <div className="flex-1 min-w-0">
                                   <div className="truncate text-sm font-black text-[#101426] dark:text-white">{e.label}</div>
