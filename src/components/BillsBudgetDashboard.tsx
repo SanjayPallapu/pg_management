@@ -280,7 +280,21 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   const openQuickAdd = (initial: QuickExpenseInitial) => {
     setAddPickerOpen(false);
-    setQuickAdd(initial);
+    if (initial.editing) {
+      setQuickAdd(initial);
+      return;
+    }
+    const categoryName = initial.subcategory || CATEGORY_META[initial.category].label;
+    setPaymentRequest({
+      category: initial.category,
+      categoryName,
+      billCategoryId: `${initial.category}:${initial.subcategory ?? initial.floor ?? "general"}`,
+      label: initial.label,
+      subcategory: initial.subcategory,
+      floor: initial.floor,
+      lockLabel: initial.lockLabel,
+      suggestedAmount: initial.suggestedAmount,
+    });
   };
 
   const openPresetLedger = (
