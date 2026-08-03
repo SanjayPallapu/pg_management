@@ -206,6 +206,13 @@ export default function PhoneLogin() {
                   </PGHubButton>
                 </form>
 
+                <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[16px] m-0">
+                  Don’t have an account?{' '}
+                  <button type="button" className="pgh-link-button" onClick={() => navigate("/auth/email?mode=signup")}>
+                    Sign up
+                  </button>
+                </p>
+
                 <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[28px] m-0">
                   Your account details stay encrypted and protected.
                 </p>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, MapPin, Phone, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import journeySecurity from "@/assets/pg-hub/hub-security.png";
@@ -42,6 +42,7 @@ const googleErrorMessage = (message: string) => {
 
 export default function EmailAuth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [signupStep, setSignupStep] = useState<1 | 2>(1);
@@ -66,6 +67,19 @@ export default function EmailAuth() {
       navigate("/onboarding", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    const requestedMode = searchParams.get("mode");
+    if (requestedMode === "signup") {
+      setMode("signup");
+      setSignupStep(1);
+      setErrors({});
+    } else if (requestedMode === "signin") {
+      setMode("signin");
+      setSignupStep(1);
+      setErrors({});
+    }
+  }, [searchParams]);
 
   const readErrors = (error: z.ZodError) => {
     const next: FieldErrors = {};
@@ -148,6 +162,7 @@ export default function EmailAuth() {
     setMode(next);
     setSignupStep(1);
     setErrors({});
+    navigate(`/auth/email?mode=${next}`, { replace: true });
   };
 
   return (
@@ -177,7 +192,7 @@ export default function EmailAuth() {
               <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
               <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
               <PGHubButton type="submit" loading={submitting}>Sign in</PGHubButton>
-              <p>New here? <button type="button" onClick={() => switchMode("signup")}>Create account</button></p>
+              <p>Don’t have an account? <button type="button" onClick={() => switchMode("signup")}>Sign up</button></p>
             </form>
           )}
 
@@ -186,7 +201,7 @@ export default function EmailAuth() {
               <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
               <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
               <PGHubButton type="submit" showArrow>Continue</PGHubButton>
-              <p>Already registered? <button type="button" onClick={() => switchMode("signin")}>Sign in</button></p>
+              <p>Already have an account? <button type="button" onClick={() => switchMode("signin")}>Sign in</button></p>
             </form>
           )}
 
