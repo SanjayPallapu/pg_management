@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, MapPin, Phone, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -7,7 +7,6 @@ import journeySecurity from "@/assets/pg-hub/hub-security.png";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/proxyClient";
 import { completeOnboarding, hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 
 const credentialsSchema = z.object({
@@ -15,13 +14,7 @@ const credentialsSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
-const profileSchema = z.object({
-  fullName: z.string().trim().min(2, "Enter your full name."),
-  phone: z.string().transform((value) => value.replace(/\D/g, "")).refine((value) => value.length >= 10, "Enter a valid phone number."),
-  city: z.string().trim().min(2, "Enter your city."),
-});
-
-type FieldErrors = Partial<Record<"email" | "password" | "fullName" | "phone" | "city", string>>;
+type FieldErrors = Partial<Record<"email" | "password", string>>;
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -45,12 +38,8 @@ export default function EmailAuth() {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [signupStep, setSignupStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
@@ -72,11 +61,9 @@ export default function EmailAuth() {
     const requestedMode = searchParams.get("mode");
     if (requestedMode === "signup") {
       setMode("signup");
-      setSignupStep(1);
       setErrors({});
     } else if (requestedMode === "signin") {
       setMode("signin");
-      setSignupStep(1);
       setErrors({});
     }
   }, [searchParams]);
@@ -113,36 +100,21 @@ export default function EmailAuth() {
     }
   };
 
-  const continueSignup = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (validateCredentials()) setSignupStep(2);
-  };
-
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    const result = profileSchema.safeParse({ fullName, phone, city });
-    if (!result.success) {
-      readErrors(result.error);
-      return;
-    }
-    setErrors({});
+    if (!validateCredentials()) return;
     setSubmitting(true);
     const { data, error } = await signUp(email.trim(), password);
+    setSubmitting(false);
     if (error || !data.user) {
-      setSubmitting(false);
       toast.error(error?.message || "Could not create your account.");
       return;
     }
-    const { error: profileError } = await supabase.from("profiles").insert({
-      user_id: data.user.id,
-      full_name: fullName.trim(),
-      phone: phone.replace(/\D/g, ""),
-      city: city.trim(),
-      is_new_signup: true,
-    });
-    setSubmitting(false);
-    if (profileError) console.error("[EmailAuth] Failed to create profile:", profileError.message);
-    navigate("/", { replace: true });
+    toast.success("Account created. You can now sign in.");
+    setEmail("");
+    setPassword("");
+    setMode("signin");
+    navigate("/auth/email?mode=signin", { replace: true });
   };
 
   const handleGoogle = async () => {
@@ -160,7 +132,6 @@ export default function EmailAuth() {
 
   const switchMode = (next: "signin" | "signup") => {
     setMode(next);
-    setSignupStep(1);
     setErrors({});
     navigate(`/auth/email?mode=${next}`, { replace: true });
   };
@@ -174,48 +145,35 @@ export default function EmailAuth() {
         </header>
 
         <section className="pgh-email-auth__hero">
-          <div><span>Email & Google</span><h1>{mode === "signin" ? "Welcome back" : "Create account"}</h1></div>
+          <div><span>Email & Google</span><h1>Welcome back</h1></div>
           <img src={journeySecurity} alt="Secure account access" />
         </section>
 
         <section className="pgh-email-auth__card">
-          {signupStep === 1 && (
-            <button type="button" className="pgh-google-button" onClick={handleGoogle} disabled={submitting || googleSubmitting}>
-              {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
-            </button>
-          )}
+          <button type="button" className="pgh-google-button" onClick={handleGoogle} disabled={submitting || googleSubmitting}>
+            {googleSubmitting ? <Loader2 className="pgh-spin" size={19} /> : <GoogleIcon />} Continue with Google
+          </button>
 
-          {signupStep === 1 && <div className="pgh-auth-divider"><span />or use email<span /></div>}
+          <div className="pgh-auth-divider"><span />or use email<span /></div>
 
-          {mode === "signin" && (
-            <form className="pgh-email-auth__form" onSubmit={handleSignIn}>
-              <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
-              <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
-              <PGHubButton type="submit" loading={submitting}>Sign in</PGHubButton>
-              <p>Don’t have an account? <button type="button" onClick={() => switchMode("signup")}>Sign up</button></p>
-            </form>
-          )}
-
-          {mode === "signup" && signupStep === 1 && (
-            <form className="pgh-email-auth__form" onSubmit={continueSignup}>
-              <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
-              <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
-              <PGHubButton type="submit" showArrow>Continue</PGHubButton>
-              <p>Already have an account? <button type="button" onClick={() => switchMode("signin")}>Sign in</button></p>
-            </form>
-          )}
-
-          {mode === "signup" && signupStep === 2 && (
-            <form className="pgh-email-auth__form pgh-email-auth__form--profile" onSubmit={handleSignUp}>
-              <AuthField icon={User} label="Full name" value={fullName} onChange={setFullName} error={errors.fullName} autoComplete="name" />
-              <AuthField icon={Phone} label="Phone" type="tel" value={phone} onChange={setPhone} error={errors.phone} autoComplete="tel" />
-              <AuthField icon={MapPin} label="City" value={city} onChange={setCity} error={errors.city} autoComplete="address-level2" />
-              <div className="pgh-email-auth__actions">
-                <button type="button" onClick={() => setSignupStep(1)}>Back</button>
-                <PGHubButton type="submit" loading={submitting}>Create account</PGHubButton>
-              </div>
-            </form>
-          )}
+          <form className="pgh-email-auth__form" onSubmit={mode === "signin" ? handleSignIn : handleSignUp}>
+            <AuthField icon={Mail} label="Email" type="email" value={email} onChange={setEmail} error={errors.email} autoComplete="email" />
+            <PasswordField value={password} onChange={setPassword} error={errors.password} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
+            <PGHubButton type="submit" loading={submitting}>
+              {mode === "signin" ? "Sign in with email" : "Sign up with email"}
+            </PGHubButton>
+            <p>
+              {mode === "signin" ? (
+                <>
+                  Don’t have an account? <button type="button" onClick={() => switchMode("signup")}>Sign up</button>
+                </>
+              ) : (
+                <>
+                  Already have an account? <button type="button" onClick={() => switchMode("signin")}>Sign in</button>
+                </>
+              )}
+            </p>
+          </form>
         </section>
       </div>
     </PGHubShell>

@@ -15,8 +15,9 @@ import {
 
 export default function PhoneLogin() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, requestPhoneOtp, signIn, signInWithGoogle } = useAuth();
+  const { isAuthenticated, isLoading, requestPhoneOtp, signIn, signUp, signInWithGoogle } = useAuth();
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
+  const [emailMode, setEmailMode] = useState<"signin" | "signup">("signin");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +68,21 @@ export default function PhoneLogin() {
     }
     setEmailError("");
     setSubmitting(true);
+
+    if (emailMode === "signup") {
+      const { data, error } = await signUp(cleanEmail, password);
+      setSubmitting(false);
+      if (error || !data.user) {
+        toast.error(error?.message || "Could not create your account.");
+        return;
+      }
+      toast.success("Account created. You can now sign in.");
+      setEmail("");
+      setPassword("");
+      setEmailMode("signin");
+      return;
+    }
+
     const { error } = await signIn(cleanEmail, password);
     setSubmitting(false);
     if (error) {
@@ -202,15 +218,26 @@ export default function PhoneLogin() {
                     loading={submitting} 
                     className="w-full h-12 mt-[24px] rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-lg shadow-blue-600/20 active:scale-98 transition-all"
                   >
-                    Sign in with email
+                    {emailMode === "signup" ? "Sign up with email" : "Sign in with email"}
                   </PGHubButton>
                 </form>
 
                 <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[16px] m-0">
-                  Don’t have an account?{' '}
-                  <button type="button" className="pgh-link-button" onClick={() => navigate("/auth/email?mode=signup")}>
-                    Sign up
-                  </button>
+                  {emailMode === "signup" ? (
+                    <>
+                      Already have an account?{' '}
+                      <button type="button" className="pgh-link-button" onClick={() => setEmailMode("signin")}>
+                        Sign in
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Don’t have an account?{' '}
+                      <button type="button" className="pgh-link-button" onClick={() => setEmailMode("signup")}>
+                        Sign up
+                      </button>
+                    </>
+                  )}
                 </p>
 
                 <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[28px] m-0">
