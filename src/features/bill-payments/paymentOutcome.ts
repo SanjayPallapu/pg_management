@@ -1,6 +1,6 @@
 import type { BillPaymentMethod, BillPaymentStatus } from "./types";
 
-export type UpiOutcome = "success" | "failed" | "cash" | "pending" | "cancel";
+export type UpiOutcome = "success" | "cash" | "cancel";
 
 export const resolveUpiOutcome = (outcome: UpiOutcome): {
   shouldRecord: boolean;
@@ -10,8 +10,6 @@ export const resolveUpiOutcome = (outcome: UpiOutcome): {
 } => {
   switch (outcome) {
     case "success": return { shouldRecord: true, method: "UPI", status: "Paid" };
-    case "failed": return { shouldRecord: true, method: "UPI", status: "Failed" };
-    case "pending": return { shouldRecord: true, method: "UPI", status: "Pending" };
     case "cash": return { shouldRecord: true, method: "Cash", status: "Paid", note: "UPI attempted, payment completed using cash" };
     case "cancel": return { shouldRecord: false };
   }

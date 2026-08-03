@@ -3,9 +3,9 @@ import { BarcodeFormat, BarcodeScanner, LensFacing } from "@capacitor-mlkit/barc
 import { FilePicker } from "@capawesome/capacitor-file-picker";
 import "barcode-detector/polyfill";
 
-interface UpiApp { packageName: string; label: string }
+export interface UpiApp { packageName: string; label: string; supportsPaymentIntent: boolean }
 interface UpiPaymentPlugin {
-  getCompatibleApps(options: { uri: string }): Promise<{ apps: UpiApp[] }>;
+  getCompatibleApps(options: { uri: string; includeInstalledUpiApps?: boolean }): Promise<{ apps: UpiApp[] }>;
   launch(options: { uri: string; packageName?: string; forceChooser?: boolean }): Promise<{ returned: boolean }>;
   launchForUpiId(options: { packageName: string; upiId: string }): Promise<{ returned: boolean }>;
 }
@@ -133,9 +133,9 @@ export const openCameraSettings = () => {
   return BarcodeScanner.openSettings();
 };
 
-export const getCompatibleUpiApps = async (uri: string) => {
+export const getCompatibleUpiApps = async (uri: string, includeInstalledUpiApps = false) => {
   if (!Capacitor.isNativePlatform()) return [] as UpiApp[];
-  const { apps } = await UpiPayment.getCompatibleApps({ uri });
+  const { apps } = await UpiPayment.getCompatibleApps({ uri, includeInstalledUpiApps });
   return apps;
 };
 

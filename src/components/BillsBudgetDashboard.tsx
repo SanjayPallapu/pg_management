@@ -276,7 +276,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       setQuickAdd(initial);
       return;
     }
-    const categoryName = initial.subcategory || initial.label || CATEGORY_META[initial.category].label;
+    const categoryName = initial.subcategory || CATEGORY_META[initial.category].label;
     setPaymentRequest({
       category: initial.category,
       categoryName,
@@ -285,6 +285,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       subcategory: initial.subcategory,
       floor: initial.floor,
       lockLabel: initial.lockLabel,
+      suggestedAmount: initial.suggestedAmount,
     });
   };
 
@@ -538,7 +539,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 <button
                   key={item.category}
                   type="button"
-                  className="flex min-h-[98px] flex-col items-start justify-between rounded-[20px] border bg-card p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef]"
+                  className="flex min-h-[98px] flex-col items-start justify-between rounded-[20px] border bg-card p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] hover:border-[#4936ef]/40 transition-colors"
                   onClick={() => {
                     setAddPickerOpen(false);
                     if (item.category === "other" || item.category === "family") {
@@ -548,7 +549,10 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                     }
                   }}
                 >
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", item.iconSurface, item.iconColor)}><Icon className="h-5 w-5" /></div>
+                  <div className="flex w-full items-center justify-between">
+                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", item.iconSurface, item.iconColor)}><Icon className="h-5 w-5" /></div>
+                    <span className="text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]">₹{item.total.toLocaleString()}</span>
+                  </div>
                   <span className="text-sm font-black">{item.label}</span>
                 </button>
               );
@@ -561,7 +565,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         <SheetContent
           key={detailCategory ?? "closed"}
           side="right"
-          className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl"
+          className="!w-screen !max-w-none !sm:max-w-none inset-0 flex h-[100dvh] min-h-[100dvh] flex-col border-0 bg-[#f8f9fd] p-0 shadow-none dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0"
           onInteractOutside={(event) => event.preventDefault()}
         >
           {detailCategory && (
@@ -584,10 +588,26 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
               </SheetHeader>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4">
-                <nav className="mt-3 grid h-[52px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
-                  {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => (
-                    <button key={category} type="button" className={cn("min-h-11 min-w-0 rounded-[14px] px-1 text-xs font-black", detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70")} onClick={() => setDetailCategory(category)}><span className="block truncate">{CATEGORY_META[category].shortLabel}</span></button>
-                  ))}
+                <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
+                  {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => {
+                    const catTotal = totalFor(category);
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        className={cn(
+                          "flex flex-col items-center justify-center min-h-12 min-w-0 rounded-[14px] px-1 text-xs font-black py-1 transition-all",
+                          detailCategory === category ? "bg-[#4936ef] text-white shadow-sm" : "text-[#4f5467] dark:text-white/70 hover:bg-[#f1efff] dark:hover:bg-[#302858]"
+                        )}
+                        onClick={() => setDetailCategory(category)}
+                      >
+                        <span className="block truncate text-[11px] leading-tight">{CATEGORY_META[category].shortLabel}</span>
+                        <span className={cn("block text-[10px] font-extrabold truncate mt-0.5", detailCategory === category ? "text-white/90" : "text-[#4936ef] dark:text-[#b6a2ff]")}>
+                          ₹{catTotal.toLocaleString()}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </nav>
 
                 {detailCategory === "current" ? (
@@ -817,7 +837,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
           onSave={(data) => addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear })}
           onUpdate={(id, patch) => updateEntry.mutate({ id, ...patch })}
           onDelete={(id) => deleteEntry.mutate(id)}
-          onAddPayment={() => openQuickAdd({ category: sheetState.category, subcategory: sheetState.subcategory, floor: sheetState.floor, label: sheetState.defaultLabel, lockLabel: sheetState.lockLabel, title: `Add ${sheetState.title}` })}
+          onAddPayment={(selection) => openQuickAdd({ category: sheetState.category, subcategory: sheetState.subcategory, floor: sheetState.floor, label: selection?.label ?? sheetState.defaultLabel, lockLabel: selection ? false : sheetState.lockLabel, suggestedAmount: selection?.amount, title: `Add ${sheetState.title}` })}
         />
       )}
 

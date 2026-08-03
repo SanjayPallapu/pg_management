@@ -20,6 +20,7 @@ export interface BillPaymentRequest {
   subcategory?: string | null;
   floor?: number | null;
   lockLabel?: boolean;
+  suggestedAmount?: number;
 }
 
 export interface BillPaymentDraft extends BillPaymentRequest {
@@ -31,6 +32,7 @@ export interface BillPaymentDraft extends BillPaymentRequest {
   payeeName: string | null;
   maskedUpiId: string | null;
   upiAttempted: boolean;
+  paymentDate?: string | null;
 }
 
 export interface BillPaymentTransaction extends BillPaymentDraft {

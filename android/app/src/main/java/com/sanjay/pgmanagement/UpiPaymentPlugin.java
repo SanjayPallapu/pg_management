@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -18,11 +20,37 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @CapacitorPlugin(name = "UpiPayment")
 public class UpiPaymentPlugin extends Plugin {
+    private static final long CLIPBOARD_CLEAR_DELAY_MS = 120_000L;
+    private static final String[][] KNOWN_UPI_APPS = {
+        {"com.phonepe.app", "PhonePe"},
+        {"net.one97.paytm", "Paytm"},
+        {"money.super.payments", "super.money"},
+        {"com.kotak.bank.mobile", "Kotak Bank"},
+        {"com.msf.kbank.mobile", "Kotak Bank (Old)"},
+        {"com.kotak811mobilebankingapp.instantsavingsupiscanandpayrecharge", "Kotak 811"},
+        {"com.google.android.apps.nbu.paisa.user", "Google Pay"},
+        {"in.org.npci.upiapp", "BHIM"}
+    };
+
     private Intent paymentIntent(String uri) {
         return new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+    }
+
+    private void clearCopiedUpiIdLater(String upiId) {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData current = clipboard.getPrimaryClip();
+            if (current == null || current.getItemCount() == 0) return;
+            CharSequence text = current.getItemAt(0).coerceToText(getContext());
+            if (!upiId.contentEquals(text)) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) clipboard.clearPrimaryClip();
+            else clipboard.setPrimaryClip(ClipData.newPlainText("", ""));
+        }, CLIPBOARD_CLEAR_DELAY_MS);
     }
 
     @PluginMethod
@@ -31,13 +59,29 @@ public class UpiPaymentPlugin extends Plugin {
         if (uri == null || !uri.startsWith("upi://pay?")) { call.reject("INVALID_UPI_URI"); return; }
         PackageManager pm = getContext().getPackageManager();
         List<ResolveInfo> matches = pm.queryIntentActivities(paymentIntent(uri), PackageManager.MATCH_DEFAULT_ONLY);
-        JSArray apps = new JSArray();
+        Map<String, JSObject> discovered = new LinkedHashMap<>();
         for (ResolveInfo match : matches) {
             JSObject app = new JSObject();
             app.put("packageName", match.activityInfo.packageName);
             app.put("label", String.valueOf(match.loadLabel(pm)));
-            apps.put(app);
+            app.put("supportsPaymentIntent", true);
+            discovered.put(match.activityInfo.packageName, app);
         }
+
+        if (Boolean.TRUE.equals(call.getBoolean("includeInstalledUpiApps", false))) {
+            for (String[] candidate : KNOWN_UPI_APPS) {
+                if (discovered.containsKey(candidate[0])) continue;
+                Intent launchIntent = pm.getLaunchIntentForPackage(candidate[0]);
+                if (launchIntent == null) continue;
+                JSObject app = new JSObject();
+                app.put("packageName", candidate[0]);
+                app.put("label", candidate[1]);
+                app.put("supportsPaymentIntent", false);
+                discovered.put(candidate[0], app);
+            }
+        }
+        JSArray apps = new JSArray();
+        for (JSObject app : discovered.values()) apps.put(app);
         JSObject result = new JSObject(); result.put("apps", apps); call.resolve(result);
     }
 
@@ -74,19 +118,12 @@ public class UpiPaymentPlugin extends Plugin {
 
         ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(ClipData.newPlainText("UPI ID", upiId));
+        clearCopiedUpiIdLater(upiId);
         startActivityForResult(call, launchIntent, "paymentReturned");
     }
 
     @ActivityCallback
     private void paymentReturned(PluginCall call, ActivityResult result) {
-        if (call.getString("upiId") != null) {
-            ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                clipboard.clearPrimaryClip();
-            } else {
-                clipboard.setPrimaryClip(ClipData.newPlainText("", ""));
-            }
-        }
         JSObject response = new JSObject();
         response.put("returned", true);
         response.put("androidResultCode", result.getResultCode() == Activity.RESULT_OK ? "OK" : "RETURNED");

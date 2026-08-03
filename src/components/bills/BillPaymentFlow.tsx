@@ -1,23 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { App } from "@capacitor/app";
-import { ArrowLeft, Banknote, Camera, Check, ChevronRight, CircleAlert, Clock3, FileCheck2, Image, Loader2, QrCode, ReceiptText, RotateCcw, Smartphone, WifiOff, X } from "lucide-react";
+import { format } from "date-fns";
+import {
+  ArrowLeft, Banknote, Calculator, Calendar, Camera, Check, ChevronRight, CircleAlert,
+  Clock3, ExternalLink, FileCheck2, Image, Loader2, QrCode, ReceiptText, RotateCcw,
+  Smartphone, WifiOff, X
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMonthContext } from "@/contexts/MonthContext";
 import { useBillPaymentTransactions } from "@/hooks/useBillPaymentTransactions";
 import { buildUpiPaymentUri, getAmountConflict, isLikelyPersonalUpiQr, maskUpiId, parseUpiQr, UpiQrError } from "@/features/bill-payments/upi";
 import { DuplicatePaymentGuard, resolveUpiOutcome, type UpiOutcome } from "@/features/bill-payments/paymentOutcome";
-import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan } from "@/features/bill-payments/nativePayments";
+import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan, type UpiApp } from "@/features/bill-payments/nativePayments";
 import type { BillPaymentDraft, BillPaymentRequest, ParsedUpiQr } from "@/features/bill-payments/types";
+import { cn } from "@/lib/utils";
+import { evaluateAmountExpression } from "@/features/bill-payments/calculator";
 
 interface Props { open: boolean; request: BillPaymentRequest | null; onOpenChange: (open: boolean) => void }
 type Stage = "entry" | "scanner" | "apps" | "result" | "receipt";
 const guard = new DuplicatePaymentGuard();
 const preferredKey = "pg_hub_preferred_upi_app";
+
+const PREDEFINED_PAYMENT_FOR = ["Vegetables", "Poori", "Chapati", "Dry Grocery"];
 
 const messageForError = (error: unknown) => {
   if (error instanceof UpiQrError) {
@@ -48,8 +61,10 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
   const [note, setNote] = useState("");
+  const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [calcOpen, setCalcOpen] = useState(false);
   const [qr, setQr] = useState<ParsedUpiQr | null>(null);
-  const [apps, setApps] = useState<Array<{ packageName: string; label: string }>>([]);
+  const [apps, setApps] = useState<UpiApp[]>([]);
   const [remember, setRemember] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +93,8 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   useEffect(() => {
     if (!open || !request) return;
-    setStage("entry"); setAmount(""); setLabel(request.label ?? request.subcategory ?? ""); setNote("");
+    setStage("entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote("");
+    setPaymentDate(format(new Date(), "yyyy-MM-dd"));
     setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null);
     draftId.current = crypto.randomUUID();
   }, [open, request]);
@@ -124,7 +140,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   const prepareApps = async (parsed: ParsedUpiQr, selectedAmount: number) => {
     const uri = buildUpiPaymentUri(parsed, selectedAmount, request.categoryName, note);
-    const compatible = await getCompatibleUpiApps(uri);
+    const compatible = await getCompatibleUpiApps(uri, isLikelyPersonalUpiQr(parsed));
     if (nativePlatform && compatible.length === 0) throw new NativePaymentError("NO_UPI_APP");
     setApps(compatible); setStage("apps");
   };
@@ -163,10 +179,12 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     const transactionId = draftId.current;
     if (!guard.begin(transactionId)) return false;
     setBusy(true); setError(null);
+
     const draft: BillPaymentDraft = {
       ...request, transactionId, amount: Number(amount), label: label.trim(), paymentMethod: method, status,
       note: resolvedNote || note.trim() || qr?.transactionNote || null,
       payeeName: qr?.payeeName ?? null, maskedUpiId: qr ? maskUpiId(qr.payeeUpiId) : null, upiAttempted,
+      paymentDate: paymentDate || null,
     };
     try {
       await record.mutateAsync(draft);
@@ -183,6 +201,17 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     if (!resolved.shouldRecord) { onOpenChange(false); return; }
     const saved = await save(resolved.method!, resolved.status!, resolved.note, true);
     if (!saved) setSavingOutcome(null);
+  };
+
+  const retryUpiScan = () => {
+    if (busy || savingOutcome) return;
+    setQr(null);
+    setApps([]);
+    setConflict(null);
+    setError(null);
+    setPermissionDenied(false);
+    if (nativePlatform) void prepareScan(false);
+    else setStage("scanner");
   };
 
   const resetScan = () => { setQr(null); setApps([]); setError(null); setStage("entry"); draftId.current = crypto.randomUUID(); };
@@ -204,15 +233,104 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
           <div className="mx-auto w-full max-w-lg space-y-4 px-3 py-4 sm:px-4">
             {stage === "entry" && <>
               <div className="rounded-[24px] bg-[linear-gradient(135deg,#2e23ca,#5a3fff)] p-5 text-white shadow-lg">
-                <Label htmlFor="bill-payment-amount" className="text-xs font-bold text-white/75">Payment amount</Label>
-                <div className="mt-1 flex items-center border-b border-white/25 pb-2"><span className="text-3xl font-black">₹</span><input id="bill-payment-amount" type="number" inputMode="decimal" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0" autoFocus className="min-w-0 flex-1 bg-transparent px-2 text-[42px] font-black leading-none tracking-tight text-white outline-none placeholder:text-white/35" /></div>
-                <p className="mt-2 text-xs text-white/70">Enter the amount before choosing how to pay.</p>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bill-payment-amount" className="text-xs font-bold text-white/75">Payment amount</Label>
+                  <button
+                    type="button"
+                    className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-3 text-xs font-black text-white hover:bg-white/30 backdrop-blur-sm transition-all"
+                    onClick={() => setCalcOpen(true)}
+                  >
+                    <Calculator className="h-3.5 w-3.5" /> Calc
+                  </button>
+                </div>
+                <div className="mt-1 flex items-center border-b border-white/25 pb-2 gap-2">
+                  <span className="text-3xl font-black">₹</span>
+                  <input
+                    id="bill-payment-amount"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={amount}
+                    onChange={(event) => setAmount(event.target.value)}
+                    placeholder="0"
+                    autoFocus
+                    className="min-w-0 flex-1 bg-transparent px-2 text-[42px] font-black leading-none tracking-tight text-white outline-none placeholder:text-white/35"
+                  />
+                  <button
+                    type="button"
+                    className="flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-white/25 px-3 text-xs font-black text-white hover:bg-white/35 backdrop-blur-sm transition-all"
+                    onClick={() => setCalcOpen(true)}
+                    aria-label="Open calculator to compute amount"
+                  >
+                    <Calculator className="h-4 w-4" /> Calc
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-white/70">Enter amount or tap Calc to calculate and auto-fill.</p>
               </div>
-              {(!request.lockLabel || !request.label) && <div><Label htmlFor="bill-payment-label" className="text-xs font-bold">What is this payment for?</Label><Input id="bill-payment-label" className="mt-1 h-12 rounded-xl" value={label} maxLength={120} onChange={(event) => setLabel(event.target.value)} placeholder={`e.g. ${request.categoryName} payment`} /></div>}
+
+              {/* What is this payment for? with Predefined Text Chips */}
+              {(!request.lockLabel || !request.label) && (
+                <div>
+                  <Label htmlFor="bill-payment-label" className="text-xs font-bold">What is this payment for?</Label>
+                  <Input
+                    id="bill-payment-label"
+                    className="mt-1 h-12 rounded-xl font-bold"
+                    value={label}
+                    maxLength={120}
+                    onChange={(event) => setLabel(event.target.value)}
+                    placeholder={`e.g. ${request.categoryName} payment`}
+                  />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {PREDEFINED_PAYMENT_FOR.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        className={cn(
+                          "min-h-11 rounded-xl border px-3 text-xs font-bold transition-all",
+                          label === chip
+                            ? "bg-[#4936ef] text-white border-[#4936ef]"
+                            : "bg-white text-[#4936ef] border-[#e0e2ea] hover:bg-[#f1efff] dark:bg-card dark:border-border dark:text-[#b6a2ff]"
+                        )}
+                        onClick={() => setLabel(chip)}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="min-h-11 rounded-xl border border-dashed border-[#4936ef]/50 bg-white px-3 text-xs font-bold text-[#4936ef] hover:bg-[#f1efff] dark:bg-card dark:text-[#b6a2ff]"
+                      onClick={() => setLabel("")}
+                    >
+                      Custom
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Date Picker (Default Today) */}
+              <div>
+                <Label htmlFor="bill-payment-date" className="text-xs font-bold flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-[#4936ef]" /> Payment Date
+                </Label>
+                <Input
+                  id="bill-payment-date"
+                  type="date"
+                  value={paymentDate}
+                  onChange={(event) => setPaymentDate(event.target.value)}
+                  className="mt-1 h-12 rounded-xl font-semibold"
+                />
+              </div>
+
               <div><Label htmlFor="bill-payment-note" className="text-xs font-bold">Note (optional)</Label><Input id="bill-payment-note" className="mt-1 h-12 rounded-xl" value={note} maxLength={120} onChange={(event) => setNote(event.target.value)} placeholder="Shown in payment history" /></div>
-              <div className="space-y-2">
-                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan Any UPI QR</span><span className="block text-xs text-white/70">Scan a fresh physical QR</span></span><ChevronRight className="h-5 w-5" /></button>
-                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1 text-sm font-black">Scan QR from Gallery</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
+
+              <div className="space-y-2 pt-1">
+                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan Any UPI QR</span><span className="block text-xs text-white/70">Scan a fresh physical QR code</span></span><ChevronRight className="h-5 w-5" /></button>
+
+                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">Scan QR from Gallery</span><span className="block text-[11px] text-muted-foreground">Choose a QR screenshot from this phone</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
+
+                {!nativePlatform && <button type="button" onClick={() => window.open("https://lens.google.com/", "_blank", "noopener,noreferrer")} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]"><ExternalLink className="h-4 w-4" /> Open Google Lens</button>}
+
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" disabled={!canProceed || busy} onClick={() => void save("Cash", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash</button>
                   <button type="button" disabled={!canProceed || busy} onClick={() => void save("Record Only", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><FileCheck2 className="h-5 w-5 text-blue-600" /> Record Only</button>
@@ -237,19 +355,27 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <div className="rounded-2xl border bg-white p-4 dark:bg-card"><p className="text-xs font-bold text-muted-foreground">Paying</p><div className="mt-1 flex items-end justify-between gap-3"><div><p className="text-base font-black">{qr.payeeName || "UPI payee"}</p><p className="text-xs text-muted-foreground">{maskUpiId(qr.payeeUpiId)}</p></div><p className="text-2xl font-black">₹{Number(amount).toLocaleString("en-IN")}</p></div></div>
               {nativePlatform && personalQr && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"><p className="text-sm font-black">Personal UPI QR detected</p><p className="mt-1 text-xs leading-5">Some UPI apps block personal payments opened by another app. Choose an app below; PG HUB will copy the UPI ID and open that app. Select “Pay by UPI ID,” paste it, and enter ₹{Number(amount).toLocaleString("en-IN")}.</p></div>}
               {nativePlatform ? <>
-                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void (personalQr ? launchManualUpiId(app.packageName) : launch(app.packageName))} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">{app.label}</span>{personalQr && <span className="block text-[11px] font-semibold text-muted-foreground">Copy UPI ID and open app</span>}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}<button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-dashed px-4 text-left"><Smartphone className="h-5 w-5" /><span className="flex-1 text-sm font-black">{personalQr ? "Try direct UPI link instead" : "Choose another UPI app"}</span></button></div>
+                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void (personalQr ? launchManualUpiId(app.packageName) : launch(app.packageName))} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">{app.label}</span>{personalQr && <span className="block text-[11px] font-semibold text-muted-foreground">UPI ID copied · open Pay by UPI ID</span>}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}{!personalQr && <button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-dashed px-4 text-left"><Smartphone className="h-5 w-5" /><span className="flex-1 text-sm font-black">Choose another UPI app</span></button>}</div>
                 <label className="flex min-h-11 items-center gap-3 rounded-xl px-1 text-sm font-semibold"><Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} /> Remember the app I choose</label>
               </> : <button type="button" disabled={busy} onClick={() => void launch()} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:opacity-45"><Smartphone className="h-5 w-5" /><span className="flex-1"><span className="block text-sm font-black">Open UPI app</span><span className="block text-xs text-white/70">Available on a phone browser</span></span><ChevronRight className="h-5 w-5" /></button>}
               <p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">PG HUB never sees or stores your UPI PIN. Returning to PG HUB does not prove payment success.</p>
             </>}
 
-            {stage === "result" && <><div className="text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#f1efff] text-[#4936ef]"><CircleAlert className="h-8 w-8" /></div><h2 className="mt-3 text-xl font-black">How was this payment completed?</h2><p className="mt-1 text-sm text-muted-foreground">Choose once. PG HUB records only what you confirm.</p></div><div className="space-y-2">
-              <ResultButton icon={Check} tone="text-emerald-600 bg-emerald-50" label="UPI payment successful" helper="Add to bill totals and payment history" loading={savingOutcome === "success"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("success")} />
-              <ResultButton icon={X} tone="text-rose-600 bg-rose-50" label="UPI payment failed" helper="Record failure only; totals stay unchanged" loading={savingOutcome === "failed"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("failed")} />
-              <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" helper="Add as cash and note the UPI attempt" loading={savingOutcome === "cash"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cash")} />
-              <ResultButton icon={Clock3} tone="text-blue-600 bg-blue-50" label="Payment pending" helper="Record pending only; totals stay unchanged" loading={savingOutcome === "pending"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("pending")} />
-              <button type="button" disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cancel")} className="min-h-12 w-full rounded-xl text-sm font-bold text-muted-foreground disabled:opacity-50">Cancel without recording</button>
-            </div></>}
+            {stage === "result" && <>
+              <div className="text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#f1efff] text-[#4936ef]">
+                  <CircleAlert className="h-8 w-8" />
+                </div>
+                <h2 className="mt-3 text-xl font-black">How was this payment completed?</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Choose once. PG HUB records only what you confirm.</p>
+              </div>
+              <div className="space-y-2">
+                <ResultButton icon={Check} tone="text-emerald-600 bg-emerald-50" label="UPI payment successful" helper="Add to bill totals and payment history" loading={savingOutcome === "success"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("success")} />
+                <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" helper="Add as cash and note the UPI attempt" loading={savingOutcome === "cash"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cash")} />
+                <ResultButton icon={QrCode} tone="text-purple-600 bg-purple-50" label="Scan another UPI QR" helper="Retry with a different physical QR code" loading={false} disabled={Boolean(savingOutcome)} onClick={retryUpiScan} />
+                <button type="button" disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cancel")} className="min-h-12 w-full rounded-xl text-sm font-bold text-muted-foreground disabled:opacity-50">Cancel without recording</button>
+              </div>
+            </>}
 
             {stage === "receipt" && receipt && <PaymentReceipt receipt={receipt} onDone={() => onOpenChange(false)} />}
 
@@ -259,8 +385,125 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
         </SheetContent>
       </Sheet>
 
+      {/* Mini Calculator Dialog */}
+      <CalculatorDialog
+        open={calcOpen}
+        onOpenChange={setCalcOpen}
+        initialExpr={amount}
+        onApply={(calcAmount) => setAmount(calcAmount)}
+      />
+
       <AlertDialog open={Boolean(conflict)} onOpenChange={(next) => !next && setConflict(null)}><AlertDialogContent className="max-w-[calc(100%-28px)] rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>QR amount is different</AlertDialogTitle><AlertDialogDescription>This QR contains ₹{conflict?.qrAmount.toLocaleString("en-IN")}. Use QR amount or keep ₹{conflict?.entered.toLocaleString("en-IN")}?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter className="gap-2 sm:gap-0"><AlertDialogCancel onClick={() => { const selected = qr; setConflict(null); if (selected) void prepareApps(selected, Number(amount)).catch((e) => setError(messageForError(e))); }}>Keep ₹{conflict?.entered.toLocaleString("en-IN")}</AlertDialogCancel><AlertDialogAction className="bg-[#4936ef]" onClick={() => { const selected = qr; const nextAmount = conflict?.qrAmount; if (nextAmount) setAmount(String(nextAmount)); setConflict(null); if (selected && nextAmount) void prepareApps(selected, nextAmount).catch((e) => setError(messageForError(e))); }}>Use ₹{conflict?.qrAmount.toLocaleString("en-IN")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </>
+  );
+};
+
+const CalculatorDialog = ({
+  open,
+  onOpenChange,
+  initialExpr,
+  onApply,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialExpr: string;
+  onApply: (val: string) => void;
+}) => {
+  const [expr, setExpr] = useState(initialExpr || "");
+
+  useEffect(() => {
+    if (open) setExpr(initialExpr || "");
+  }, [open, initialExpr]);
+
+  const evalResult = useMemo(() => {
+    if (!expr.trim()) return "0";
+    const result = evaluateAmountExpression(expr);
+    return result === null ? "Error" : String(result);
+  }, [expr]);
+
+  const handleKey = (key: string) => {
+    if (key === "C") setExpr("");
+    else if (key === "⌫") setExpr((prev) => prev.slice(0, -1));
+    else if (key === "=") {
+      if (evalResult !== "Error") setExpr(evalResult);
+    } else setExpr((prev) => prev + key);
+  };
+
+  const keys = [
+    ["7", "8", "9", "/"],
+    ["4", "5", "6", "*"],
+    ["1", "2", "3", "-"],
+    ["0", ".", "⌫", "+"],
+  ];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[calc(100%-32px)] rounded-[26px] p-4 sm:max-w-xs">
+        <DialogHeader>
+          <DialogTitle className="text-center flex items-center justify-center gap-2">
+            <Calculator className="h-5 w-5 text-[#4936ef]" /> Amount Calculator
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="my-2 rounded-2xl bg-slate-900 p-4 text-right text-white">
+          <div className="h-5 text-xs text-slate-400 font-mono overflow-x-auto truncate">{expr || "0"}</div>
+          <div className="mt-1 text-3xl font-black font-mono text-emerald-400">₹{evalResult}</div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            type="button"
+            className="col-span-2 min-h-11 rounded-xl bg-rose-100 text-rose-700 font-black text-xs hover:bg-rose-200"
+            onClick={() => handleKey("C")}
+          >
+            Clear (C)
+          </button>
+          <button
+            type="button"
+            className="col-span-2 min-h-11 rounded-xl bg-slate-200 text-slate-800 font-black text-xs hover:bg-slate-300 dark:bg-slate-800 dark:text-white"
+            onClick={() => handleKey("⌫")}
+          >
+            Delete ⌫
+          </button>
+
+          {keys.flat().map((k) => {
+            const isOp = ["/", "*", "-", "+"].includes(k);
+            return (
+              <button
+                key={k}
+                type="button"
+                className={cn(
+                  "min-h-11 rounded-xl text-base font-black transition-all active:scale-95",
+                  isOp
+                    ? "bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                    : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-card dark:text-white"
+                )}
+                onClick={() => handleKey(k)}
+              >
+                {k}
+              </button>
+            );
+          })}
+        </div>
+
+        <DialogFooter className="mt-2 flex-row gap-2">
+          <Button variant="outline" className="flex-1 rounded-xl" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 rounded-xl bg-[#4936ef] text-white font-black hover:bg-[#3827d7]"
+            onClick={() => {
+              if (evalResult !== "Error") {
+                onApply(evalResult);
+                onOpenChange(false);
+              }
+            }}
+          >
+            Use ₹{evalResult}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

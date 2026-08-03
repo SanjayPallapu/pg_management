@@ -24,7 +24,9 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
   const record = useMutation({
     mutationFn: async (draft: BillPaymentDraft) => {
       if (!currentPG?.id) throw new Error("No PG selected");
-      const paidAt = new Date().toISOString();
+      const paidAt = draft.paymentDate
+        ? new Date(draft.paymentDate + "T12:00:00").toISOString()
+        : new Date().toISOString();
 
       try {
         const { data, error } = await supabase.rpc("record_bill_payment", {
@@ -55,7 +57,7 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
 
         // If status is Paid or Partially Paid, insert directly into expense_entries
         if (draft.status === "Paid" || draft.status === "Partially Paid") {
-          const entryDate = format(new Date(paidAt), "yyyy-MM-dd");
+          const entryDate = draft.paymentDate || format(new Date(paidAt), "yyyy-MM-dd");
           const { data: expData, error: expErr } = await supabase
             .from("expense_entries")
             .insert({

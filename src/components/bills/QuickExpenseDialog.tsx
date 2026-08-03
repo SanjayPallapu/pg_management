@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Calculator } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { evaluateAmountExpression } from "@/features/bill-payments/calculator";
 import type { ExpenseCategory, ExpenseEntry } from "@/hooks/useExpenseEntries";
 
 export interface QuickExpenseInitial {
@@ -16,6 +19,7 @@ export interface QuickExpenseInitial {
   editing?: ExpenseEntry;
   lockLabel?: boolean;
   title?: string;
+  suggestedAmount?: number;
 }
 
 interface Props {
@@ -31,11 +35,14 @@ const todayISO = () => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 
+const PREDEFINED_LABELS = ["Vegetables", "Poori", "Chapati", "Dry Grocery"];
+
 export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Props) => {
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
   const [notes, setNotes] = useState("");
   const [entryDate, setEntryDate] = useState(todayISO());
+  const [calcOpen, setCalcOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !initial) return;
@@ -45,12 +52,14 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
     setLabel(e?.label ?? initial.label ?? "");
     setNotes(e?.notes ?? "");
     setEntryDate(e?.entry_date ?? todayISO());
+    setCalcOpen(false);
   }, [open, initial]);
 
   if (!initial) return null;
 
   const isCurrentBill = initial.category === "current";
   const isFixedCategory = !isCurrentBill && Boolean(initial.lockLabel && (initial.label || initial.subcategory));
+  const showLabelField = !isCurrentBill && !isFixedCategory;
 
   const handleSave = () => {
     const amt = parseInt(amount) || 0;
@@ -85,23 +94,58 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          {!isCurrentBill && !isFixedCategory && (
+          {/* Label Field with Predefined Chips */}
+          {showLabelField && (
             <div>
               <Label className="text-xs">Label *</Label>
               <Input
-                className="h-11"
+                className="h-11 font-bold"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 disabled={!!initial.lockLabel && !initial.editing}
                 placeholder="e.g. June water tanker"
                 autoFocus
               />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {PREDEFINED_LABELS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    className={cn(
+                      "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border",
+                      label === chip
+                        ? "bg-[#4936ef] text-white border-[#4936ef]"
+                        : "bg-white text-[#4936ef] border-[#e0e2ea] hover:bg-[#f1efff] dark:bg-card dark:border-border dark:text-[#b6a2ff]"
+                    )}
+                    onClick={() => setLabel(chip)}
+                  >
+                    {chip}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="rounded-xl border border-dashed border-[#4936ef]/50 bg-white px-3 py-1.5 text-xs font-bold text-[#4936ef] hover:bg-[#f1efff] dark:bg-card dark:text-[#b6a2ff]"
+                  onClick={() => setLabel("")}
+                >
+                  Custom
+                </button>
+              </div>
             </div>
           )}
 
+          {/* Amount with Calculator + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Amount (₹) *</Label>
+              <Label className="text-xs flex items-center justify-between">
+                <span>Amount (₹) *</span>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-[10px] font-black text-[#4936ef] hover:text-[#3827d7]"
+                  onClick={() => setCalcOpen((prev) => !prev)}
+                >
+                  <Calculator className="h-3 w-3" /> Calc
+                </button>
+              </Label>
               <Input
                 className="h-11"
                 type="number"
@@ -116,6 +160,18 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
               <Input className="h-11" type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
             </div>
           </div>
+
+          {/* Mini Calculator (collapsible) */}
+          {calcOpen && (
+            <MiniCalcPanel
+              onApply={(val) => {
+                setAmount(val);
+                setCalcOpen(false);
+              }}
+              initialExpr={amount}
+            />
+          )}
+
           {!isCurrentBill && (
             <div>
               <Label className="text-xs">Notes (optional)</Label>
@@ -129,5 +185,83 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const MiniCalcPanel = ({
+  onApply,
+  initialExpr,
+}: {
+  onApply: (val: string) => void;
+  initialExpr: string;
+}) => {
+  const [expr, setExpr] = useState(initialExpr || "");
+
+  const evalResult = useMemo(() => {
+    if (!expr.trim()) return "0";
+    const result = evaluateAmountExpression(expr);
+    return result === null ? "Error" : String(result);
+  }, [expr]);
+
+  const handleKey = (key: string) => {
+    if (key === "C") setExpr("");
+    else if (key === "⌫") setExpr((prev) => prev.slice(0, -1));
+    else setExpr((prev) => prev + key);
+  };
+
+  const keys = [
+    ["7", "8", "9", "/"],
+    ["4", "5", "6", "*"],
+    ["1", "2", "3", "-"],
+    ["0", ".", "⌫", "+"],
+  ];
+
+  return (
+    <div className="rounded-2xl border bg-slate-50 p-3 dark:bg-card">
+      <div className="mb-2 rounded-xl bg-slate-900 p-3 text-right text-white">
+        <div className="h-4 text-[10px] text-slate-400 font-mono truncate">{expr || "0"}</div>
+        <div className="text-xl font-black font-mono text-emerald-400">₹{evalResult}</div>
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        <button
+          type="button"
+          className="col-span-2 min-h-9 rounded-lg bg-rose-100 text-rose-700 font-black text-[10px] hover:bg-rose-200"
+          onClick={() => handleKey("C")}
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          className="col-span-2 min-h-9 rounded-lg bg-slate-200 text-slate-800 font-black text-[10px] hover:bg-slate-300 dark:bg-slate-800 dark:text-white"
+          onClick={() => handleKey("⌫")}
+        >
+          Delete ⌫
+        </button>
+        {keys.flat().map((k) => {
+          const isOp = ["/", "*", "-", "+"].includes(k);
+          return (
+            <button
+              key={k}
+              type="button"
+              className={cn(
+                "min-h-9 rounded-lg text-sm font-black transition-all active:scale-95",
+                isOp
+                  ? "bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                  : "bg-white text-slate-900 hover:bg-slate-200 dark:bg-card dark:text-white"
+              )}
+              onClick={() => handleKey(k)}
+            >
+              {k}
+            </button>
+          );
+        })}
+      </div>
+      <Button
+        className="mt-2 h-9 w-full rounded-xl bg-[#4936ef] text-white text-xs font-black hover:bg-[#3827d7]"
+        onClick={() => evalResult !== "Error" && onApply(evalResult)}
+      >
+        Use ₹{evalResult}
+      </Button>
+    </div>
   );
 };
