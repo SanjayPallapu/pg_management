@@ -15,6 +15,7 @@ import {
   Flame,
   Home,
   Inbox,
+  Search,
   IndianRupee,
   ListChecks,
   Milk,
@@ -61,6 +62,8 @@ import { usePG } from "@/contexts/PGContext";
 import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
 import { useBackGesture } from "@/hooks/useBackGesture";
+import { MONTHS } from "@/constants/pricing";
+import { Room } from "@/types";
 import { MonthYearPicker } from "./MonthYearPicker";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
@@ -166,6 +169,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [detailCategory, setDetailCategory] = useState<ExpenseCategory | null>(null);
   const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<ExpenseEntry | null>(null);
   const [inlineManageMode, setInlineManageMode] = useState(false);
+  const [inlineSearchQuery, setInlineSearchQuery] = useState("");
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sheetState, setSheetState] = useState<{
     title: string;
@@ -616,7 +620,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                         return (
                           <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
-                            <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("current", preset.label, preset.subcategory, preset.floor)}>
+                            <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openQuickAdd({ category: "current", subcategory: preset.subcategory, floor: preset.floor, label: `${preset.label} - ${MONTHS[selectedMonth - 1]?.label}`, title: `Add ${preset.label}` })}>
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><Icon className="h-5 w-5" /></div>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-black">{preset.label}</p>
@@ -638,14 +642,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           </div>
                         );
                       })}
-                    </div>
-                    <div className="mt-4">
-                      <Button
-                        className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95 shadow-md"
-                        onClick={() => openQuickAdd({ category: "current", title: "Add current bill" })}
-                      >
-                        <Plus className="mr-2 h-5 w-5" /> Add current bill
-                      </Button>
                     </div>
                   </>
                 ) : (
@@ -686,7 +682,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                             );
                           })}
                         </div>
-                        <button type="button" className="mt-3 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Add custom utility bill" })}><Plus className="mr-2 h-5 w-5" /> Add custom utility bill</button>
+                        <button type="button" className="mt-3 mb-6 flex min-h-[54px] w-full items-center justify-center rounded-[18px] border border-dashed border-[#897aff] text-sm font-black text-[#4936ef] dark:border-[#7569cc] dark:text-[#b6a2ff]" onClick={() => openQuickAdd({ category: "utility", title: "Add custom utility bill" })}><Plus className="mr-2 h-5 w-5" /> Add custom utility bill</button>
                       </>
                     ) : (
                       <>
@@ -699,11 +695,25 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           </Button>
                         </div>
 
+                        {/* Search bar for other/family */}
+                        {byCategory(detailCategory).length > 0 && (
+                          <div className="relative mb-2">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder={`Search ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bills...`}
+                              value={inlineSearchQuery}
+                              onChange={(e) => setInlineSearchQuery(e.target.value)}
+                              className="h-11 w-full rounded-xl border border-[#e0e2ea] bg-white pl-9 pr-3 text-xs font-semibold outline-none focus:border-[#4936ef] focus:ring-1 focus:ring-[#4936ef] dark:border-border dark:bg-card dark:text-white"
+                            />
+                          </div>
+                        )}
+
                         <div className="mb-2 flex min-h-11 items-center justify-between">
                           <h3 className="text-base font-black">{CATEGORY_META[detailCategory].shortLabel} entries</h3>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-muted-foreground">
-                              {byCategory(detailCategory).length} {byCategory(detailCategory).length === 1 ? "entry" : "entries"}
+                              {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase()) || format(new Date(e.entry_date), "dd MMM yyyy").toLowerCase().includes(inlineSearchQuery.toLowerCase())).length} {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase())).length === 1 ? "entry" : "entries"}
                             </span>
                             {byCategory(detailCategory).length > 0 && (
                               <button
@@ -727,11 +737,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           <div className="flex flex-col items-center justify-center py-10 rounded-[20px] border border-dashed border-[#e3e5ed] bg-white text-muted-foreground dark:border-border dark:bg-card">
                             <Inbox className="h-10 w-10 mb-2 opacity-40" />
                             <p className="text-sm font-black text-[#101426] dark:text-white">No {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bills recorded</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Tap "+ Add {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill" above to add one.</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Tap the button above to add one.</p>
                           </div>
                         ) : (
                           <div className="space-y-2.5">
-                            {byCategory(detailCategory).map((e) => (
+                            {byCategory(detailCategory).filter((e) => !inlineSearchQuery.trim() || e.label.toLowerCase().includes(inlineSearchQuery.toLowerCase()) || format(new Date(e.entry_date), "dd MMM yyyy").toLowerCase().includes(inlineSearchQuery.toLowerCase())).map((e) => (
                               <div key={e.id} className="flex min-h-[68px] items-center justify-between gap-2 rounded-[20px] border border-[#e3e5ed] bg-white p-3.5 shadow-sm dark:border-border dark:bg-card">
                                 <div className="flex-1 min-w-0">
                                   <div className="truncate text-sm font-black text-[#101426] dark:text-white">{e.label}</div>

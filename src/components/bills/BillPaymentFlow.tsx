@@ -306,7 +306,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                     onClick={() => void save("UPI", "Paid")}
                     className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl bg-[#4936ef] text-sm font-black text-white disabled:opacity-45 shadow-sm active:scale-[0.99]"
                   >
-                    <Smartphone className="h-5 w-5 text-white" /> Pay by UPI
+                    <Smartphone className="h-5 w-5 text-white" /> Paid by UPI
                   </button>
                   <button
                     type="button"
@@ -314,7 +314,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                     onClick={() => void save("Cash", "Paid")}
                     className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card shadow-sm active:scale-[0.99]"
                   >
-                    <Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash
+                    <Banknote className="h-5 w-5 text-emerald-600" /> Paid by Cash
                   </button>
                 </div>
               </div>
