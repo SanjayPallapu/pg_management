@@ -405,6 +405,28 @@ const CalculatorDialog = ({
   const [expr, setExpr] = useState(initialExpr || "");
   const evalResult = useMemo(() => safeEvaluateExpression(expr), [expr]);
 
+  useEffect(() => {
+    if (open) setExpr(initialExpr || "");
+  }, [open, initialExpr]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const finalVal = evalResult !== "Error" ? evalResult : expr;
+        if (finalVal) {
+          onApply(finalVal);
+          onOpenChange(false);
+        }
+      } else if (e.key === "Escape") {
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, evalResult, expr, onApply, onOpenChange]);
+
   const handleKey = (key: string) => {
     if (key === "AC" || key === "C") setExpr("");
     else if (key === "⌫") setExpr((prev) => prev.slice(0, -1));
@@ -424,7 +446,18 @@ const CalculatorDialog = ({
         onPointerDownOutside={(e) => e.preventDefault()}
         style={{ position: 'fixed', zIndex: 9999 }}
       >
-        <div className="mx-auto -mt-1 mb-2 h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+        <div className="relative flex items-center justify-between pb-1">
+          <div className="mx-auto h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 active:scale-95 transition-all"
+            aria-label="Close calculator"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
         <div className="my-1 rounded-2xl bg-[#f8f9fa] dark:bg-slate-800/80 p-4 text-right border border-slate-100 dark:border-slate-800">
           <div className="flex h-10 items-center justify-end overflow-x-auto truncate text-3xl font-extrabold tracking-tight text-[#0f172a] dark:text-white font-sans">
             {expr || "0"}

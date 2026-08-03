@@ -110,12 +110,6 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     }
   });
 
-  useBackGesture(reminderOpen, () => setReminderOpen(false));
-  useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
-  useBackGesture(receiptDialogOpen, () => setReceiptDialogOpen(false));
-  useBackGesture(welcomeDialogOpen, () => setWelcomeDialogOpen(false));
-  useBackGesture(rulesDialogOpen, () => setRulesDialogOpen(false));
-
   useEffect(() => {
     if (isSheetOpen) {
       setActiveTab(defaultTab);
