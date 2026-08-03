@@ -308,18 +308,24 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <div className="space-y-2 pt-1">
                 <button type="button" disabled={busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan UPI QR</span></span><ChevronRight className="h-5 w-5" /></button>
 
-                <button type="button" disabled={busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">QR from Gallery</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
-
-                {!nativePlatform && <button type="button" onClick={() => window.open("https://lens.google.com/", "_blank", "noopener,noreferrer")} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]"><ExternalLink className="h-4 w-4" /> Open Google Lens</button>}
-
-                <button
-                  type="button"
-                  disabled={!canPayCash || busy}
-                  onClick={() => void save("Cash", "Paid")}
-                  className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card shadow-sm active:scale-[0.99]"
-                >
-                  <Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={!canPayCash || busy}
+                    onClick={() => void save("UPI", "Paid")}
+                    className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl bg-[#4936ef] text-sm font-black text-white disabled:opacity-45 shadow-sm active:scale-[0.99]"
+                  >
+                    <Smartphone className="h-5 w-5 text-white" /> Pay by UPI
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canPayCash || busy}
+                    onClick={() => void save("Cash", "Paid")}
+                    className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card shadow-sm active:scale-[0.99]"
+                  >
+                    <Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash
+                  </button>
+                </div>
               </div>
             </>}
 

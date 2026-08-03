@@ -105,11 +105,57 @@ export const scanUpiQrFromGallery = async () => {
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) { reject(new NativePaymentError("CANCELLED")); return; }
+        const objectUrl = URL.createObjectURL(file);
         try {
-          const detector = new BarcodeDetector({ formats: ["qr_code"] });
-          const barcodes = await detector.detect(file);
-          resolve(firstRawValue(barcodes));
+          const img = new Image();
+          img.src = objectUrl;
+          await new Promise((res, rej) => {
+            img.onload = res;
+            img.onerror = () => rej(new NativePaymentError("INVALID_QR"));
+          });
+
+          // 1. Try native/polyfilled BarcodeDetector on HTMLImageElement
+          if ("BarcodeDetector" in window) {
+            try {
+              const detector = new BarcodeDetector({ formats: ["qr_code"] });
+              const barcodes = await detector.detect(img);
+              if (barcodes && barcodes.length > 0) {
+                const val = barcodes.find((b: { rawValue: string }) => b.rawValue.trim())?.rawValue;
+                if (val) {
+                  URL.revokeObjectURL(objectUrl);
+                  resolve(val);
+                  return;
+                }
+              }
+            } catch {
+              // Fallback to canvas
+            }
+          }
+
+          // 2. Fallback: Draw on HTMLCanvasElement and use BarcodeDetector or BarcodeScanner
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            if ("BarcodeDetector" in window) {
+              const detector = new BarcodeDetector({ formats: ["qr_code"] });
+              const barcodes = await detector.detect(canvas);
+              if (barcodes && barcodes.length > 0) {
+                const val = barcodes.find((b: { rawValue: string }) => b.rawValue.trim())?.rawValue;
+                if (val) {
+                  URL.revokeObjectURL(objectUrl);
+                  resolve(val);
+                  return;
+                }
+              }
+            }
+          }
+          URL.revokeObjectURL(objectUrl);
+          reject(new NativePaymentError("INVALID_QR"));
         } catch (error) {
+          URL.revokeObjectURL(objectUrl);
           reject(error instanceof NativePaymentError ? error : new NativePaymentError("INVALID_QR"));
         }
       };

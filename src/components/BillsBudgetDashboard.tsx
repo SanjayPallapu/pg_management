@@ -61,8 +61,7 @@ import { usePG } from "@/contexts/PGContext";
 import { useExpenseEntries, type ExpenseCategory, type ExpenseEntry } from "@/hooks/useExpenseEntries";
 import { useMonthlyBudget } from "@/hooks/useMonthlyBudget";
 import { useBackGesture } from "@/hooks/useBackGesture";
-import { MONTHS } from "@/constants/pricing";
-import { Room } from "@/types";
+import { MonthYearPicker } from "./MonthYearPicker";
 import { QuickExpenseDialog, type QuickExpenseInitial } from "./bills/QuickExpenseDialog";
 import { BillsEntriesSheet } from "./bills/BillsEntriesSheet";
 import { BillsAnalytics } from "./bills/BillsAnalytics";
@@ -267,7 +266,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const rawPercentUsed = hasBudget ? (grandTotal / budgetAmount) * 100 : 0;
   const percentUsed = Math.min(100, rawPercentUsed);
   const remaining = budgetAmount - grandTotal;
-  const monthLabel = `${MONTHS[selectedMonth - 1]?.label} ${selectedYear}`;
+  const monthLabel = format(new Date(selectedYear, selectedMonth - 1, 1), "MMMM yyyy");
   const isLoading = expenseQuery.isLoading || budgetQuery.isLoading;
   const isError = expenseQuery.isError || budgetQuery.isError;
 
@@ -371,7 +370,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
             <h1 className="truncate text-[20px] font-black tracking-[-0.025em] text-[#101426] dark:text-white">Bills &amp; Budget</h1>
             <p className="text-xs font-medium text-[#73788b]">{monthLabel}</p>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center gap-1">
             <button
               type="button"
               className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
@@ -380,17 +379,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
             >
               <BarChart3 className="h-5 w-5" />
             </button>
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
-              onClick={() => {
-                setBudgetDraft(hasBudget ? String(budgetAmount) : "");
-                setEditingBudget(true);
-              }}
-              aria-label={hasBudget ? "Edit monthly budget" : "Set monthly budget"}
-            >
-              <CalendarDays className="h-5 w-5" />
-            </button>
+            <MonthYearPicker />
           </div>
         </header>
 
