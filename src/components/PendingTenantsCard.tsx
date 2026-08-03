@@ -405,7 +405,22 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0"
-                  onClick={() => { setLocalOpen(false); onClose?.(); }}
+                  onClick={() => {
+          if (reminderOpen) {
+            setReminderOpen(false);
+          } else if (paymentDialogOpen) {
+            setPaymentDialogOpen(false);
+          } else if (receiptDialogOpen) {
+            setReceiptDialogOpen(false);
+          } else if (welcomeDialogOpen) {
+            setWelcomeDialogOpen(false);
+          } else if (rulesDialogOpen) {
+            setRulesDialogOpen(false);
+          } else {
+            setLocalOpen(false);
+            onClose?.();
+          }
+        }}
                   aria-label="Back"
                 >
                   <ArrowLeft className="h-5 w-5" />
