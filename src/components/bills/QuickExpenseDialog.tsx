@@ -206,14 +206,16 @@ const MiniCalcPanel = ({
   const handleKey = (key: string) => {
     if (key === "C") setExpr("");
     else if (key === "⌫") setExpr((prev) => prev.slice(0, -1));
-    else setExpr((prev) => prev + key);
+    else if (key === "=") {
+      if (evalResult !== "Error") setExpr(evalResult);
+    } else setExpr((prev) => prev + key);
   };
 
   const keys = [
     ["7", "8", "9", "/"],
     ["4", "5", "6", "*"],
     ["1", "2", "3", "-"],
-    ["0", ".", "⌫", "+"],
+    ["0", ".", "=", "+"],
   ];
 
   return (
@@ -225,7 +227,7 @@ const MiniCalcPanel = ({
       <div className="grid grid-cols-4 gap-1.5">
         <button
           type="button"
-          className="col-span-2 min-h-9 rounded-lg bg-rose-100 text-rose-700 font-black text-[10px] hover:bg-rose-200"
+          className="col-span-2 min-h-9 rounded-lg bg-rose-100 text-rose-700 font-black text-[10px] hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/50"
           onClick={() => handleKey("C")}
         >
           Clear
@@ -247,6 +249,8 @@ const MiniCalcPanel = ({
                 "min-h-9 rounded-lg text-sm font-black transition-all active:scale-95",
                 isOp
                   ? "bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                  : k === "="
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
                   : "bg-white text-slate-900 hover:bg-slate-200 dark:bg-card dark:text-white"
               )}
               onClick={() => handleKey(k)}

@@ -644,18 +644,18 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
               <>
                 <a
                   href={`tel:${tenant.phone}`}
-                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  className="h-7 w-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-900/60 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Phone className="h-3 w-3" />
                 </a>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <button className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30">
+                    <button className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors">
                       <MessageCircle className="h-3 w-3" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuContent align="end" className="min-w-[200px] rounded-xl border border-border/60 bg-popover p-1.5 shadow-xl dark:border-border dark:bg-card" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenuItem 
                       onClick={(e) => { 
                         e.stopPropagation(); 
@@ -663,9 +663,9 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                           onReminder?.(tenant); 
                         }, 100);
                       }}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
                     >
-                      <Bell className="h-4 w-4" />
+                      <Bell className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                       Payment Reminder
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -674,29 +674,29 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                         const phone = tenant.phone.replace(/\D/g, '');
                         window.location.href = `https://wa.me/${phone}`;
                       }}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-green-50 dark:hover:bg-green-950/40 cursor-pointer"
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
                       Chat with Tenant
                     </DropdownMenuItem>
                     {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) ? (
-                      <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => {
+                      <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" onClick={(e) => {
                         e.stopPropagation();
                         const room = rooms.find((item) => item.roomNo === tenant.roomNo);
                         setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDeposit', { detail: { tenantId: tenant.id, tenantName: tenant.name, tenantPhone: tenant.phone, roomNo: tenant.roomNo, roomCapacity: room?.capacity } })), 100);
                       }}>
-                        <Wallet className="h-4 w-4" /> Security Deposit
+                        <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Security Deposit
                       </DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDepositReceipt', { detail: { tenantId: tenant.id } })), 100); }}>
-                        <Receipt className="h-4 w-4" /> Security Deposit Receipt
+                      <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDepositReceipt', { detail: { tenantId: tenant.id } })), 100); }}>
+                        <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Security Deposit Receipt
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => onWelcome(tenant), 100); }}>
-                      <PartyPopper className="h-4 w-4" /> Welcome
+                    <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-purple-50 dark:hover:bg-purple-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => onWelcome(tenant), 100); }}>
+                      <PartyPopper className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Welcome
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setTimeout(() => onRules(tenant), 100); }}>
-                      <BookOpen className="h-4 w-4" /> Rules &amp; Regulations
+                    <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => onRules(tenant), 100); }}>
+                      <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Rules &amp; Regulations
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

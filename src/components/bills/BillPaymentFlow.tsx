@@ -270,14 +270,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                     autoFocus
                     className="min-w-0 flex-1 bg-transparent px-2 text-[42px] font-black leading-none tracking-tight text-white outline-none placeholder:text-white/35"
                   />
-                  <button
-                    type="button"
-                    className="flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-white/25 px-3 text-xs font-black text-white hover:bg-white/35 backdrop-blur-sm transition-all"
-                    onClick={() => setCalcOpen(true)}
-                    aria-label="Open calculator to compute amount"
-                  >
-                    <Calculator className="h-4 w-4" /> Calc
-                  </button>
                 </div>
                 <p className="mt-2 text-xs text-white/70">Enter amount or tap Calc to calculate and auto-fill.</p>
               </div>
@@ -446,7 +438,7 @@ const CalculatorDialog = ({
     ["7", "8", "9", "/"],
     ["4", "5", "6", "*"],
     ["1", "2", "3", "-"],
-    ["0", ".", "⌫", "+"],
+    ["0", ".", "=", "+"],
   ];
 
   return (
@@ -489,6 +481,8 @@ const CalculatorDialog = ({
                   "min-h-11 rounded-xl text-base font-black transition-all active:scale-95",
                   isOp
                     ? "bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"
+                    : k === "="
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
                     : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-card dark:text-white"
                 )}
                 onClick={() => handleKey(k)}
