@@ -355,8 +355,8 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         className="bills-premium-shell flex min-h-full flex-col bg-[#f8f9fd] px-3 dark:bg-background sm:px-4"
         style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
       >
-        <header className="grid h-[76px] shrink-0 grid-cols-[88px_minmax(0,1fr)_88px] items-center">
-          <div className="flex justify-start">
+        <header className="flex h-[76px] shrink-0 items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
@@ -365,15 +365,12 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-          </div>
-          <div className="min-w-0 text-center">
             <h1 className="truncate text-[20px] font-black tracking-[-0.025em] text-[#101426] dark:text-white">Bills &amp; Budget</h1>
-            <p className="text-xs font-medium text-[#73788b]">{monthLabel}</p>
           </div>
-          <div className="flex justify-end items-center gap-1">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:text-white dark:hover:bg-white/5"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 text-[#101426] hover:bg-[#eeeff7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:border-border dark:text-white dark:hover:bg-white/5"
               onClick={() => setAnalyticsOpen(true)}
               aria-label="Open spending analytics"
             >
@@ -583,7 +580,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 </div>
               </SheetHeader>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4">
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4" style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}>
                 <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
                   {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => {
                     const catTotal = totalFor(category);

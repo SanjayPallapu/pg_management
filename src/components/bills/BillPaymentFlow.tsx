@@ -303,8 +303,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                 />
               </div>
 
-              <div><Label htmlFor="bill-payment-note" className="text-xs font-bold">Note (optional)</Label><Input id="bill-payment-note" className="mt-1 h-12 rounded-xl" value={note} maxLength={120} onChange={(event) => setNote(event.target.value)} placeholder="Shown in payment history" /></div>
-
               <div className="space-y-2 pt-1">
                 <button type="button" disabled={busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan UPI QR</span></span><ChevronRight className="h-5 w-5" /></button>
 
