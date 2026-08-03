@@ -249,15 +249,8 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
           <div className="mx-auto w-full max-w-lg space-y-4 px-3 py-4 sm:px-4">
             {stage === "entry" && <>
               <div className="rounded-[24px] bg-[linear-gradient(135deg,#2e23ca,#5a3fff)] p-5 text-white shadow-lg">
-                <div className="flex items-center justify-between">
+                <div>
                   <Label htmlFor="bill-payment-amount" className="text-xs font-bold text-white/75">Payment amount</Label>
-                  <button
-                    type="button"
-                    className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-3 text-xs font-black text-white hover:bg-white/30 backdrop-blur-sm transition-all"
-                    onClick={() => setCalcOpen(true)}
-                  >
-                    <Calculator className="h-3.5 w-3.5" /> Calc
-                  </button>
                 </div>
                 <div className="mt-1 flex items-center border-b border-white/25 pb-2 gap-2">
                   <span className="text-3xl font-black">₹</span>
@@ -274,7 +267,16 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                     className="min-w-0 flex-1 bg-transparent px-2 text-[42px] font-black leading-none tracking-tight text-white outline-none placeholder:text-white/35"
                   />
                 </div>
-                <p className="mt-2 text-xs text-white/70">Enter amount or tap Calc to calculate and auto-fill.</p>
+                <div className="mt-2.5 flex items-center justify-between">
+                  <p className="text-xs text-white/70">Enter amount or tap to calculate.</p>
+                  <button
+                    type="button"
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-3 text-xs font-black text-white hover:bg-white/30 backdrop-blur-sm transition-all"
+                    onClick={() => setCalcOpen(true)}
+                  >
+                    <Calculator className="h-3.5 w-3.5" /> Use Calculator
+                  </button>
+                </div>
               </div>
 
               {/* What is this payment for? with Predefined Text Chips */}

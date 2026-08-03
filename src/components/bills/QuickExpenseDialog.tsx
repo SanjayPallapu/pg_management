@@ -155,7 +155,14 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
             </div>
           </div>
 
-          {/* Calculator toggle button moved down */}
+          {!isCurrentBill && (
+            <div>
+              <Label className="text-xs">Notes (optional)</Label>
+              <Input className="h-11" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="..." />
+            </div>
+          )}
+
+          {/* Calculator toggle button placed down below input fields */}
           <div className="flex justify-start pt-1">
             <button
               type="button"
@@ -181,13 +188,6 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
               }}
               initialExpr={amount}
             />
-          )}
-
-          {!isCurrentBill && (
-            <div>
-              <Label className="text-xs">Notes (optional)</Label>
-              <Input className="h-11" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="..." />
-            </div>
           )}
         </div>
         <DialogFooter>

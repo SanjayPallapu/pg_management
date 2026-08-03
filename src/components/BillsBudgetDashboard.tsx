@@ -183,6 +183,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   const [tempNumFloors, setTempNumFloors] = useState("1");
   const [tempIncludeGround, setTempIncludeGround] = useState(false);
 
+  useBackGesture(true, () => onClose?.());
   useBackGesture(Boolean(detailCategory), () => setDetailCategory(null));
   useBackGesture(editingBudget, () => setEditingBudget(false));
   useBackGesture(addPickerOpen, () => setAddPickerOpen(false));
@@ -279,21 +280,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
   const openQuickAdd = (initial: QuickExpenseInitial) => {
     setAddPickerOpen(false);
-    if (initial.editing) {
-      setQuickAdd(initial);
-      return;
-    }
-    const categoryName = initial.subcategory || CATEGORY_META[initial.category].label;
-    setPaymentRequest({
-      category: initial.category,
-      categoryName,
-      billCategoryId: `${initial.category}:${initial.subcategory ?? initial.floor ?? "general"}`,
-      label: initial.label,
-      subcategory: initial.subcategory,
-      floor: initial.floor,
-      lockLabel: initial.lockLabel,
-      suggestedAmount: initial.suggestedAmount,
-    });
+    setQuickAdd(initial);
   };
 
   const openPresetLedger = (
