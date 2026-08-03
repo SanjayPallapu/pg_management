@@ -217,7 +217,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
             {stage === "entry" && <>
               <div className="rounded-[24px] bg-[linear-gradient(135deg,#2e23ca,#5a3fff)] p-5 text-white shadow-lg">
                 <div>
-                  <Label htmlFor="bill-payment-amount" className="text-xs font-bold text-white/75">Payment amount</Label>
+                  <Label htmlFor="bill-payment-amount" className="text-xs font-bold text-white/75">Amount</Label>
                 </div>
                 <div className="mt-1 flex items-center border-b border-white/25 pb-2 gap-2">
                   <span className="text-3xl font-black">₹</span>
@@ -236,13 +236,21 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                   <button
                     type="button"
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all active:scale-95"
-                    onClick={() => setCalcOpen(true)}
+                    onClick={() => setCalcOpen((prev) => !prev)}
                     aria-label="Calculator"
                   >
                     <Calculator className="h-5 w-5" />
                   </button>
                 </div>
               </div>
+
+              {calcOpen && (
+                <InlineCalculatorPanel
+                  initialExpr={amount}
+                  onClose={() => setCalcOpen(false)}
+                  onApply={(calcAmount) => setAmount(calcAmount)}
+                />
+              )}
 
               {(!request.lockLabel || !request.label) && (
                 <div>
@@ -376,13 +384,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
             {error && <div role="alert" className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">{error.includes("offline") ? <WifiOff className="h-5 w-5 shrink-0" /> : permissionDenied ? <Camera className="h-5 w-5 shrink-0" /> : <CircleAlert className="h-5 w-5 shrink-0" />}<div className="flex-1"><p className="font-bold">{error}</p>{permissionDenied && nativePlatform && <button type="button" onClick={() => void openCameraSettings()} className="mt-2 min-h-11 rounded-xl bg-white px-3 text-xs font-black text-rose-700">Open app settings</button>}{permissionDenied && !nativePlatform && <p className="mt-2 text-xs font-semibold">Allow camera access in this site's browser settings, then rescan.</p>}{qr && stage !== "receipt" && <button type="button" onClick={resetScan} className="mt-2 flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-rose-700"><RotateCcw className="h-4 w-4" /> Rescan QR</button>}</div></div>}
             {busy && stage !== "entry" && <div className="flex items-center justify-center gap-2 py-2 text-sm font-bold text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Please wait…</div>}
           </div>
-
-          <CalculatorDialog
-            open={calcOpen}
-            onOpenChange={setCalcOpen}
-            initialExpr={amount}
-            onApply={(calcAmount) => setAmount(calcAmount)}
-          />
         </SheetContent>
       </Sheet>
 
@@ -391,41 +392,38 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   );
 };
 
-const CalculatorDialog = ({
-  open,
-  onOpenChange,
+const InlineCalculatorPanel = ({
   initialExpr,
+  onClose,
   onApply,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   initialExpr: string;
+  onClose: () => void;
   onApply: (val: string) => void;
 }) => {
   const [expr, setExpr] = useState(initialExpr || "");
   const evalResult = useMemo(() => safeEvaluateExpression(expr), [expr]);
 
   useEffect(() => {
-    if (open) setExpr(initialExpr || "");
-  }, [open, initialExpr]);
+    setExpr(initialExpr || "");
+  }, [initialExpr]);
 
   useEffect(() => {
-    if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault();
         const finalVal = evalResult !== "Error" ? evalResult : expr;
         if (finalVal) {
           onApply(finalVal);
-          onOpenChange(false);
+          onClose();
         }
       } else if (e.key === "Escape") {
-        onOpenChange(false);
+        onClose();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, evalResult, expr, onApply, onOpenChange]);
+  }, [evalResult, expr, onApply, onClose]);
 
   const handleKey = (key: string) => {
     if (key === "AC" || key === "C") setExpr("");
@@ -439,75 +437,68 @@ const CalculatorDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent
-        className="max-w-[calc(100%-24px)] rounded-[32px] p-4 sm:max-w-xs bg-white dark:bg-slate-900 border-0 shadow-2xl [&>button]:hidden"
-        onInteractOutside={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        style={{ position: 'fixed', zIndex: 9999 }}
-      >
-        <div className="relative flex items-center justify-between pb-1">
-          <div className="mx-auto h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 active:scale-95 transition-all"
-            aria-label="Close calculator"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="my-1 rounded-2xl bg-[#f8f9fa] dark:bg-slate-800/80 p-4 text-right border border-slate-100 dark:border-slate-800">
-          <div className="flex h-10 items-center justify-end overflow-x-auto truncate text-3xl font-extrabold tracking-tight text-[#0f172a] dark:text-white font-sans">
-            {expr || "0"}
-          </div>
-          <div className="mt-1 text-sm font-semibold text-slate-400 dark:text-slate-400 font-sans">
-            = {evalResult !== "Error" ? evalResult : "0"}
-          </div>
-        </div>
-
-        <div className="my-2 grid grid-cols-5 gap-2">
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("7")}>7</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("8")}>8</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("9")}>9</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] text-base font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("AC")}>AC</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] text-xl font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("÷")}>÷</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("4")}>4</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("5")}>5</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("6")}>6</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] text-xl font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("+")}>+</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] text-xl font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("×")}>×</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("1")}>1</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("2")}>2</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("3")}>3</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] dark:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("⌫")}>
-            <div className="flex h-6 w-7 items-center justify-center rounded border border-amber-600/80 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <X className="h-3.5 w-3.5 font-bold" />
-            </div>
-          </button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full bg-[#f1f3f9] text-xl font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("-")}>-</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("00")}>00</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("0")}>0</button>
-          <button type="button" className="flex h-12 items-center justify-center rounded-full text-2xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey(".")}>.</button>
-          <button type="button" className="col-span-2 flex h-12 items-center justify-center rounded-full border-2 border-[#4936ef] bg-[#f1efff] text-2xl font-bold text-[#4936ef] dark:bg-[#282168] dark:text-[#a594ff] active:scale-95 transition-all" onClick={() => handleKey("=")}>=</button>
-        </div>
-
+    <div className="w-full rounded-[24px] border border-blue-200 bg-white p-4 shadow-lg dark:bg-slate-900 dark:border-slate-800 my-2">
+      <div className="relative flex items-center justify-between pb-1">
+        <div className="mx-auto h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
         <button
           type="button"
-          className="mt-3 w-full rounded-2xl bg-[#b5f67a] py-3.5 text-base font-extrabold text-[#0f172a] shadow-sm transition-all hover:bg-[#a3e635] active:scale-[0.98]"
-          onClick={() => {
-            const finalVal = evalResult !== "Error" ? evalResult : expr;
-            if (finalVal) {
-              onApply(finalVal);
-              onOpenChange(false);
-            }
-          }}
+          onClick={onClose}
+          className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 active:scale-95 transition-all"
+          aria-label="Close calculator"
         >
-          Enter Result
+          <X className="h-4 w-4" />
         </button>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      <div className="my-1 rounded-2xl bg-[#f8f9fa] dark:bg-slate-800/80 p-3 text-right border border-slate-100 dark:border-slate-800">
+        <div className="flex h-9 items-center justify-end overflow-x-auto truncate text-2xl font-extrabold tracking-tight text-[#0f172a] dark:text-white font-sans">
+          {expr || "0"}
+        </div>
+        <div className="mt-0.5 text-xs font-semibold text-slate-400 dark:text-slate-400 font-sans">
+          = {evalResult !== "Error" ? evalResult : "0"}
+        </div>
+      </div>
+
+      <div className="my-2 grid grid-cols-5 gap-1.5">
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("7")}>7</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("8")}>8</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("9")}>9</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] text-sm font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("AC")}>AC</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] text-lg font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("÷")}>÷</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("4")}>4</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("5")}>5</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("6")}>6</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] text-lg font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("+")}>+</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] text-lg font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("×")}>×</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("1")}>1</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("2")}>2</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("3")}>3</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] dark:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("⌫")}>
+          <div className="flex h-5 w-6 items-center justify-center rounded border border-amber-600/80 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <X className="h-3 w-3 font-bold" />
+          </div>
+        </button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full bg-[#f1f3f9] text-lg font-bold text-[#475569] dark:bg-slate-800 dark:text-slate-200 active:scale-95 transition-all" onClick={() => handleKey("-")}>-</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("00")}>00</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey("0")}>0</button>
+        <button type="button" className="flex h-11 items-center justify-center rounded-full text-xl font-bold text-[#0f172a] hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800 active:scale-95 transition-all" onClick={() => handleKey(".")}>.</button>
+        <button type="button" className="col-span-2 flex h-11 items-center justify-center rounded-full border-2 border-[#4936ef] bg-[#f1efff] text-xl font-bold text-[#4936ef] dark:bg-[#282168] dark:text-[#a594ff] active:scale-95 transition-all" onClick={() => handleKey("=")}>=</button>
+      </div>
+
+      <button
+        type="button"
+        className="mt-2 w-full rounded-2xl bg-[#b5f67a] py-3 text-sm font-extrabold text-[#0f172a] shadow-sm transition-all hover:bg-[#a3e635] active:scale-[0.98]"
+        onClick={() => {
+          const finalVal = evalResult !== "Error" ? evalResult : expr;
+          if (finalVal) {
+            onApply(finalVal);
+            onClose();
+          }
+        }}
+      >
+        Enter Result
+      </button>
+    </div>
   );
 };
 

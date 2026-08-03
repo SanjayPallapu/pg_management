@@ -28,18 +28,25 @@ export class UpiQrError extends Error {
 export const parseUpiQr = (rawValue: string): ParsedUpiQr => {
   const normalizedValue = rawValue.trim();
   if (!normalizedValue || normalizedValue.length > MAX_QR_LENGTH) throw new UpiQrError("NOT_UPI");
-  let url: URL;
-  try {
-    url = new URL(normalizedValue);
-  } catch {
+  
+  // Check if string starts with upi: (case-insensitive)
+  if (!normalizedValue.toLowerCase().startsWith("upi://")) {
     throw new UpiQrError("NOT_UPI");
   }
-  if (url.protocol.toLowerCase() !== "upi:" || url.hostname.toLowerCase() !== "pay") {
-    throw new UpiQrError("NOT_UPI");
+
+  // Extract parameters after '?' or fallback to searchParams
+  let searchStr = "";
+  const qIndex = normalizedValue.indexOf("?");
+  if (qIndex !== -1) {
+    searchStr = normalizedValue.slice(qIndex + 1);
+  } else {
+    searchStr = normalizedValue.replace(/^upi:\/\/[^?]*\??/i, "");
   }
+
+  const searchParams = new URLSearchParams(searchStr);
   const paymentParameters: Record<string, string> = {};
   let parameterCount = 0;
-  for (const [rawKey, rawParameter] of url.searchParams.entries()) {
+  for (const [rawKey, rawParameter] of searchParams.entries()) {
     if (parameterCount >= MAX_QR_PARAMETERS) break;
     const key = rawKey.toLowerCase();
     const value = clean(rawParameter, 512);
