@@ -266,15 +266,13 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                     autoFocus
                     className="min-w-0 flex-1 bg-transparent px-2 text-[42px] font-black leading-none tracking-tight text-white outline-none placeholder:text-white/35"
                   />
-                </div>
-                <div className="mt-2.5 flex items-center justify-between">
-                  <p className="text-xs text-white/70">Enter amount or tap to calculate.</p>
                   <button
                     type="button"
-                    className="flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-3 text-xs font-black text-white hover:bg-white/30 backdrop-blur-sm transition-all"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all active:scale-95"
                     onClick={() => setCalcOpen(true)}
+                    aria-label="Calculator"
                   >
-                    <Calculator className="h-3.5 w-3.5" /> Use Calculator
+                    <Calculator className="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -335,9 +333,9 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <div><Label htmlFor="bill-payment-note" className="text-xs font-bold">Note (optional)</Label><Input id="bill-payment-note" className="mt-1 h-12 rounded-xl" value={note} maxLength={120} onChange={(event) => setNote(event.target.value)} placeholder="Shown in payment history" /></div>
 
               <div className="space-y-2 pt-1">
-                <button type="button" disabled={busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan Any UPI QR</span><span className="block text-xs text-white/70">Scan a fresh physical QR code</span></span><ChevronRight className="h-5 w-5" /></button>
+                <button type="button" disabled={busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan UPI QR</span></span><ChevronRight className="h-5 w-5" /></button>
 
-                <button type="button" disabled={busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">Scan QR from Gallery</span><span className="block text-[11px] text-muted-foreground">Choose a QR screenshot from this phone</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
+                <button type="button" disabled={busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">QR from Gallery</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
 
                 {!nativePlatform && <button type="button" onClick={() => window.open("https://lens.google.com/", "_blank", "noopener,noreferrer")} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]"><ExternalLink className="h-4 w-4" /> Open Google Lens</button>}
 
@@ -357,8 +355,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                   setPermissionDenied(scanError instanceof NativePaymentError && scanError.code === "PERMISSION_DENIED");
                 }}
               />
-              <button type="button" onClick={() => { setStage("entry"); void prepareScan(true); }} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-sm font-black dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /> Scan QR from Gallery</button>
-              <p className="px-2 text-center text-xs leading-5 text-muted-foreground">Point the camera at any physical UPI payment QR. Camera access requires HTTPS or localhost.</p>
+              <button type="button" onClick={() => { setStage("entry"); void prepareScan(true); }} className="flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-sm font-black dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /> QR from Gallery</button>
             </>}
 
             {stage === "apps" && qr && <>
@@ -392,16 +389,16 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
             {error && <div role="alert" className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">{error.includes("offline") ? <WifiOff className="h-5 w-5 shrink-0" /> : permissionDenied ? <Camera className="h-5 w-5 shrink-0" /> : <CircleAlert className="h-5 w-5 shrink-0" />}<div className="flex-1"><p className="font-bold">{error}</p>{permissionDenied && nativePlatform && <button type="button" onClick={() => void openCameraSettings()} className="mt-2 min-h-11 rounded-xl bg-white px-3 text-xs font-black text-rose-700">Open app settings</button>}{permissionDenied && !nativePlatform && <p className="mt-2 text-xs font-semibold">Allow camera access in this site's browser settings, then rescan.</p>}{qr && stage !== "receipt" && <button type="button" onClick={resetScan} className="mt-2 flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-rose-700"><RotateCcw className="h-4 w-4" /> Rescan QR</button>}</div></div>}
             {busy && stage !== "entry" && <div className="flex items-center justify-center gap-2 py-2 text-sm font-bold text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Please wait…</div>}
           </div>
+
+          {/* Mini Calculator Dialog — rendered INSIDE the Sheet to prevent overlay events from closing the parent */}
+          <CalculatorDialog
+            open={calcOpen}
+            onOpenChange={setCalcOpen}
+            initialExpr={amount}
+            onApply={(calcAmount) => setAmount(calcAmount)}
+          />
         </SheetContent>
       </Sheet>
-
-      {/* Mini Calculator Dialog */}
-      <CalculatorDialog
-        open={calcOpen}
-        onOpenChange={setCalcOpen}
-        initialExpr={amount}
-        onApply={(calcAmount) => setAmount(calcAmount)}
-      />
 
       <AlertDialog open={Boolean(conflict)} onOpenChange={(next) => !next && setConflict(null)}><AlertDialogContent className="max-w-[calc(100%-28px)] rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>QR amount is different</AlertDialogTitle><AlertDialogDescription>This QR contains ₹{conflict?.qrAmount.toLocaleString("en-IN")}. Use QR amount or keep ₹{conflict?.entered.toLocaleString("en-IN")}?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter className="gap-2 sm:gap-0"><AlertDialogCancel onClick={() => { const selected = qr; setConflict(null); if (selected) void prepareApps(selected, Number(amount)).catch((e) => setError(messageForError(e))); }}>Keep ₹{conflict?.entered.toLocaleString("en-IN")}</AlertDialogCancel><AlertDialogAction className="bg-[#4936ef]" onClick={() => { const selected = qr; const nextAmount = conflict?.qrAmount; if (nextAmount) setAmount(String(nextAmount)); setConflict(null); if (selected && nextAmount) void prepareApps(selected, nextAmount).catch((e) => setError(messageForError(e))); }}>Use ₹{conflict?.qrAmount.toLocaleString("en-IN")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </>
@@ -445,8 +442,8 @@ const CalculatorDialog = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-32px)] rounded-[26px] p-4 sm:max-w-xs">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent className="max-w-[calc(100%-32px)] rounded-[26px] p-4 sm:max-w-xs" onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} style={{ position: 'fixed', zIndex: 9999 }}>
         <DialogHeader>
           <DialogTitle className="text-center flex items-center justify-center gap-2">
             <Calculator className="h-5 w-5 text-[#4936ef]" /> Amount Calculator
@@ -554,17 +551,13 @@ const WebQrScanner = ({ onScan, onError }: { onScan: (rawValue: string) => void;
   }, []);
 
   return <div className="relative aspect-[3/4] max-h-[62dvh] overflow-hidden rounded-[28px] bg-slate-950 shadow-lg">
-    <video ref={videoRef} muted playsInline className="h-full w-full object-cover" aria-label="Live QR camera preview" />
+    <video ref={videoRef} muted playsInline autoPlay className="h-full w-full object-cover" aria-label="Live QR camera preview" />
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,transparent_31%,rgba(2,6,23,.58)_32%)]" />
     <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[66%] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border-2 border-white/90 shadow-[0_0_0_1px_rgba(73,54,239,.9)]">
       <span className="absolute -left-0.5 -top-0.5 h-12 w-12 rounded-tl-[28px] border-l-4 border-t-4 border-[#7c6cff]" />
       <span className="absolute -right-0.5 -top-0.5 h-12 w-12 rounded-tr-[28px] border-r-4 border-t-4 border-[#7c6cff]" />
       <span className="absolute -bottom-0.5 -left-0.5 h-12 w-12 rounded-bl-[28px] border-b-4 border-l-4 border-[#7c6cff]" />
       <span className="absolute -bottom-0.5 -right-0.5 h-12 w-12 rounded-br-[28px] border-b-4 border-r-4 border-[#7c6cff]" />
-    </div>
-    <div className="absolute inset-x-4 bottom-5 rounded-2xl bg-black/55 px-4 py-3 text-center text-white backdrop-blur-sm">
-      <p className="text-sm font-black">Align the UPI QR inside the frame</p>
-      <p className="mt-1 text-xs text-white/70">It scans automatically when the code is clear.</p>
     </div>
     {starting && <div className="absolute inset-0 flex items-center justify-center bg-slate-950/75 text-white"><Loader2 className="mr-2 h-5 w-5 animate-spin" /><span className="text-sm font-bold">Starting camera…</span></div>}
   </div>;
