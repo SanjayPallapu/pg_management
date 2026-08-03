@@ -101,8 +101,8 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   const parsedAmount = Number(amount);
   const validAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 && parsedAmount <= 10_000_000;
-  const validLabel = Boolean(label.trim());
-  const canProceed = validAmount && validLabel;
+  const resolvedLabel = label.trim() || request.label || request.subcategory || request.categoryName || "Bill Payment";
+  const canPayCash = validAmount;
   const nativePlatform = isNativePaymentPlatform();
   const preferredPackage = localStorage.getItem(preferredKey);
   const sortedApps = useMemo(() => [...apps].sort((a, b) => Number(b.packageName === preferredPackage) - Number(a.packageName === preferredPackage)), [apps, preferredPackage]);
@@ -112,10 +112,16 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const handleRawQr = async (raw: string) => {
     try {
       const parsed = parseUpiQr(raw);
-      const amountConflict = getAmountConflict(parsedAmount, parsed.amount);
+      const activeAmount = parsedAmount > 0 ? parsedAmount : (parsed.amount ?? 0);
+      if (parsed.amount && parsedAmount > 0) {
+        const amountConflict = getAmountConflict(parsedAmount, parsed.amount);
+        setQr(parsed);
+        if (amountConflict) { setConflict(amountConflict); return; }
+      } else if (parsed.amount && !parsedAmount) {
+        setAmount(String(parsed.amount));
+      }
       setQr(parsed);
-      if (amountConflict) { setConflict(amountConflict); return; }
-      await prepareApps(parsed, parsedAmount);
+      await prepareApps(parsed, activeAmount > 0 ? activeAmount : 0);
     } catch (scanError) {
       setError(messageForError(scanError));
       setScannerVersion((current) => current + 1);
@@ -123,7 +129,6 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   };
 
   const prepareScan = async (fromGallery: boolean) => {
-    if (!canProceed) return;
     if (!fromGallery && !nativePlatform) {
       setError(null); setPermissionDenied(false); setStage("scanner");
       return;
@@ -181,10 +186,17 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     setBusy(true); setError(null);
 
     const draft: BillPaymentDraft = {
-      ...request, transactionId, amount: Number(amount), label: label.trim(), paymentMethod: method, status,
+      ...request,
+      transactionId,
+      amount: Number(amount),
+      label: label.trim() || resolvedLabel,
+      paymentMethod: method,
+      status,
       note: resolvedNote || note.trim() || qr?.transactionNote || null,
-      payeeName: qr?.payeeName ?? null, maskedUpiId: qr ? maskUpiId(qr.payeeUpiId) : null, upiAttempted,
-      paymentDate: paymentDate || null,
+      payeeName: qr?.payeeName ?? null,
+      maskedUpiId: qr ? maskUpiId(qr.payeeUpiId) : null,
+      upiAttempted,
+      paymentDate: paymentDate || format(new Date(), "yyyy-MM-dd"),
     };
     try {
       await record.mutateAsync(draft);
@@ -325,15 +337,15 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <div><Label htmlFor="bill-payment-note" className="text-xs font-bold">Note (optional)</Label><Input id="bill-payment-note" className="mt-1 h-12 rounded-xl" value={note} maxLength={120} onChange={(event) => setNote(event.target.value)} placeholder="Shown in payment history" /></div>
 
               <div className="space-y-2 pt-1">
-                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan Any UPI QR</span><span className="block text-xs text-white/70">Scan a fresh physical QR code</span></span><ChevronRight className="h-5 w-5" /></button>
+                <button type="button" disabled={busy} onClick={() => void prepareScan(false)} className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl bg-[#4936ef] px-4 text-left text-white shadow-md disabled:cursor-not-allowed disabled:opacity-45"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">{busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}</span><span className="flex-1"><span className="block text-sm font-black">Scan Any UPI QR</span><span className="block text-xs text-white/70">Scan a fresh physical QR code</span></span><ChevronRight className="h-5 w-5" /></button>
 
-                <button type="button" disabled={!canProceed || busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">Scan QR from Gallery</span><span className="block text-[11px] text-muted-foreground">Choose a QR screenshot from this phone</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
+                <button type="button" disabled={busy} onClick={() => void prepareScan(true)} className="flex min-h-[54px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left disabled:opacity-45 dark:bg-card"><Image className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">Scan QR from Gallery</span><span className="block text-[11px] text-muted-foreground">Choose a QR screenshot from this phone</span></span><ChevronRight className="h-5 w-5 text-muted-foreground" /></button>
 
                 {!nativePlatform && <button type="button" onClick={() => window.open("https://lens.google.com/", "_blank", "noopener,noreferrer")} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]"><ExternalLink className="h-4 w-4" /> Open Google Lens</button>}
 
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" disabled={!canProceed || busy} onClick={() => void save("Cash", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash</button>
-                  <button type="button" disabled={!canProceed || busy} onClick={() => void save("Record Only", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><FileCheck2 className="h-5 w-5 text-blue-600" /> Record Only</button>
+                  <button type="button" disabled={!canPayCash || busy} onClick={() => void save("Cash", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><Banknote className="h-5 w-5 text-emerald-600" /> Pay by Cash</button>
+                  <button type="button" disabled={!canPayCash || busy} onClick={() => void save("Record Only", "Paid")} className="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border bg-white text-sm font-black disabled:opacity-45 dark:bg-card"><FileCheck2 className="h-5 w-5 text-blue-600" /> Record Only</button>
                 </div>
               </div>
             </>}

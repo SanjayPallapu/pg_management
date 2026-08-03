@@ -67,7 +67,7 @@ export const QuickExpenseDialog = ({ open, onOpenChange, initial, onSave }: Prop
       ? initial.editing?.label || initial.label || initial.subcategory || "Current bill"
       : isFixedCategory
         ? initial.editing?.label || initial.label || initial.subcategory || ""
-      : label.trim();
+      : label.trim() || initial.editing?.label || initial.label || initial.subcategory || initial.category;
     if (!resolvedLabel || amt <= 0) return;
 
     onSave({
