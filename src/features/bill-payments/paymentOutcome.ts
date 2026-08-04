@@ -4,7 +4,7 @@ export type UpiOutcome = "success" | "cash" | "cancel";
 
 export interface ResolvedUpiOutcome {
   shouldRecord: boolean;
-  paymentMethod?: BillPaymentMethod;
+  method?: BillPaymentMethod;
   status?: BillPaymentStatus;
   note?: string;
 }
@@ -13,12 +13,12 @@ export const resolveUpiOutcome = (outcome: UpiOutcome, qr?: ParsedUpiQr | null):
   const payee = qr?.payeeName ? ` to ${qr.payeeName}` : "";
   switch (outcome) {
     case "success":
-      return { shouldRecord: true, paymentMethod: "UPI", status: "Paid", note: `UPI payment completed${payee}` };
+      return { shouldRecord: true, method: "UPI", status: "Paid", note: `UPI payment completed${payee}` };
     case "cash":
-      return { shouldRecord: true, paymentMethod: "Cash", status: "Paid", note: `UPI attempted${payee}, payment completed using cash` };
+      return { shouldRecord: true, method: "Cash", status: "Paid", note: `UPI attempted${payee}, payment completed using cash` };
     case "cancel":
     default:
-      return { shouldRecord: false, paymentMethod: "Record Only", status: "Unpaid" };
+      return { shouldRecord: false };
   }
 };
 
