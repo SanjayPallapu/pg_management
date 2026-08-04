@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard } from 'lucide-react';
 import { Room, PaymentEntry } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -152,11 +151,10 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-        <CardTitle className="text-sm font-medium">All Collections</CardTitle>
-        <CreditCard className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
+        <span className="text-lg font-bold">₹{grandTotal.toLocaleString()}</span>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <div className="text-2xl font-bold mb-3">₹{grandTotal.toLocaleString()}</div>
         
         <div className="grid grid-cols-2 gap-2 text-sm">
           {/* UPI Column */}
@@ -171,10 +169,6 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Overdue</span>
               <span>₹{stats.boarder.upi.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Day Guest</span>
-              <span>₹{stats.dayGuest.upi.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Security</span>
@@ -194,10 +188,6 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Overdue</span>
               <span>₹{stats.boarder.cash.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Day Guest</span>
-              <span>₹{stats.dayGuest.cash.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Security</span>
