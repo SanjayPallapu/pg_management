@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar, CheckCircle2, ChevronDown, MessageCircle, MessageSquare, Phone, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -179,11 +178,6 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="truncate text-sm font-semibold">{tenant.name}</p>
-            {tenant.source === 'arrears' && (
-              <Badge className="border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                Prev month
-              </Badge>
-            )}
             {tenant.phone && tenant.phone !== '••••••••••' && (
               <a
                 href={`tel:${tenant.phone}`}
