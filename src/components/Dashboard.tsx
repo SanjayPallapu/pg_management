@@ -26,7 +26,8 @@ import {
   ArrowRightLeft,
   ShieldCheck,
   DoorOpen,
-  CircleCheckBig
+  CircleCheckBig,
+  ScanLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -70,6 +71,8 @@ import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { useBackGesture } from "@/hooks/useBackGesture";
+import { BillPaymentFlow } from "./bills/BillPaymentFlow";
+import type { BillPaymentRequest } from "@/features/bill-payments/types";
 
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
@@ -110,6 +113,14 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
+  const [scanPayOpen, setScanPayOpen] = useState(false);
+  const scanPayRequest: BillPaymentRequest = {
+    category: "other",
+    categoryName: "Scan & Pay",
+    billCategoryId: "other:scan-and-pay",
+    label: "Scan & Pay",
+    entryMode: "scanner",
+  };
 
   useBackGesture(billsBudgetOpen, () => setBillsBudgetOpen(false));
   
@@ -518,9 +529,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
           </div>
 
-          <div onClick={() => setActiveSheet("total-collected")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-emerald-500/10 p-2 rounded-full"><Wallet className="w-5 h-5 text-emerald-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Total<br/>Collected</span>
+          <div onClick={() => setScanPayOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+            <div className="bg-primary/10 p-2 rounded-full"><ScanLine className="w-5 h-5 text-primary" /></div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Scan<br/>& Pay</span>
           </div>
 
           <div onClick={openPendingTenants} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
@@ -711,6 +722,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </div>
         </SheetContent>
       </Sheet>
+
+      <BillPaymentFlow open={scanPayOpen} request={scanPayRequest} onOpenChange={setScanPayOpen} />
 
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />

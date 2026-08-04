@@ -12,6 +12,8 @@ export interface ParsedUpiQr {
   paymentParameters: Record<string, string>;
 }
 
+export type BillPaymentEntryMode = "entry" | "scanner";
+
 export interface BillPaymentRequest {
   category: ExpenseCategory;
   categoryName: string;
@@ -21,6 +23,7 @@ export interface BillPaymentRequest {
   floor?: number | null;
   lockLabel?: boolean;
   suggestedAmount?: number;
+  entryMode?: BillPaymentEntryMode;
 }
 
 export interface BillPaymentDraft extends BillPaymentRequest {

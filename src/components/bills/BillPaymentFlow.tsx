@@ -20,11 +20,12 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { useBillPaymentTransactions } from "@/hooks/useBillPaymentTransactions";
 import { buildUpiPaymentUri, getAmountConflict, isLikelyPersonalUpiQr, maskUpiId, parseUpiQr, UpiQrError } from "@/features/bill-payments/upi";
 import { DuplicatePaymentGuard, resolveUpiOutcome, type UpiOutcome } from "@/features/bill-payments/paymentOutcome";
-import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan, type UpiApp } from "@/features/bill-payments/nativePayments";
+import { getCompatibleUpiApps, isNativePaymentPlatform, launchUpiAppForManualPayment, launchUpiAppForPhonePayment, launchUpiPayment, NativePaymentError, openCameraSettings, scanUpiQr, scanUpiQrFromGallery, startWebUpiQrScan, type UpiApp } from "@/features/bill-payments/nativePayments";
 import type { BillPaymentDraft, BillPaymentRequest, ParsedUpiQr } from "@/features/bill-payments/types";
 import { cn } from "@/lib/utils";
 import { safeEvaluateExpression } from "@/features/bill-payments/calculator";
 import { useBackGesture } from "@/hooks/useBackGesture";
+import { getContactPhone, pickContactFromDevice, sanitizePhoneNumber, isValidIndianPhoneNumber } from "@/utils/contactsHelper";
 
 interface Props { open: boolean; request: BillPaymentRequest | null; onOpenChange: (open: boolean) => void }
 type Stage = "entry" | "scanner" | "apps" | "result" | "receipt";
@@ -43,6 +44,7 @@ const messageForError = (error: unknown) => {
   if (error instanceof NativePaymentError) {
     if (error.code === "PERMISSION_DENIED") return "Camera permission is denied. Enable it in app settings to scan a QR.";
     if (error.code === "CANCELLED") return "Scanning was cancelled. You can try again or choose a QR screenshot.";
+    if (error.code === "NO_QR") return "No QR code was found in that image. Choose a clearer screenshot or scan again.";
     if (error.code === "NO_UPI_APP") return error.message === "NO_UPI_APP" ? "No compatible UPI app is installed on this phone." : error.message;
     if (error.code === "OFFLINE") return "You appear to be offline. Connect to the internet before opening a UPI app.";
     return error.message || "This action is not supported on this device.";
@@ -62,6 +64,9 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
   const [note, setNote] = useState("");
+  const [recipient, setRecipient] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientIsPhone, setRecipientIsPhone] = useState(false);
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [calcOpen, setCalcOpen] = useState(false);
   const [qr, setQr] = useState<ParsedUpiQr | null>(null);
@@ -96,7 +101,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   useEffect(() => {
     if (!open || !request) return;
-    setStage("entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote("");
+    setStage(request.entryMode === "scanner" ? "scanner" : "entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote(""); setRecipient(""); setRecipientName(""); setRecipientIsPhone(false);
     setPaymentDate(format(new Date(), "yyyy-MM-dd"));
     setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null);
     draftId.current = crypto.randomUUID();
@@ -105,6 +110,12 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const preferredPackage = typeof window !== "undefined" ? localStorage.getItem(preferredKey) : null;
   const sortedApps = useMemo(() => [...apps].sort((a, b) => Number(b.packageName === preferredPackage) - Number(a.packageName === preferredPackage)), [apps, preferredPackage]);
 
+  useEffect(() => {
+    if (open && request?.entryMode === "scanner") void prepareScan(false);
+    // The initialization effect intentionally runs only when a new sheet request opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, request?.entryMode]);
+
   if (!request) return null;
 
   const parsedAmount = Number(amount);
@@ -112,6 +123,31 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const resolvedLabel = label.trim() || request.label || request.subcategory || request.categoryName || "Bill Payment";
   const canPayCash = validAmount;
   const nativePlatform = isNativePaymentPlatform();
+
+  const handleRecipient = async () => {
+    const raw = recipient.trim();
+    const isPhone = isValidIndianPhoneNumber(raw);
+    const upiId = isPhone ? `phone${sanitizePhoneNumber(raw)}@upi` : raw;
+    setRecipientIsPhone(isPhone);
+    if (!isPhone && !/^[a-zA-Z0-9._-]{2,128}@[a-zA-Z0-9.-]{2,64}$/.test(upiId)) {
+      setError("Enter a valid UPI ID or 10-digit Indian mobile number.");
+      return;
+    }
+    if (!validAmount) { setError("Enter a valid amount first."); return; }
+    const parsed: ParsedUpiQr = { payeeUpiId: upiId, payeeName: recipientName.trim() || null, transactionNote: null, currency: "INR", amount: null, paymentParameters: { pa: upiId, cu: "INR" } };
+    setQr(parsed);
+    if (isPhone && !nativePlatform) { setError("Phone handoff is available in the Android app. Use a UPI ID or scan a QR here."); return; }
+    await prepareApps(parsed, parsedAmount);
+  };
+
+  const handleContact = async () => {
+    try {
+      const contact = await pickContactFromDevice();
+      const phone = getContactPhone(contact);
+      if (phone) { setRecipient(phone); setRecipientName(contact?.name ?? ""); }
+      else if (contact) setError("That contact has no valid Indian mobile number.");
+    } catch { setError("Contacts could not be opened. You can enter the number manually."); }
+  };
 
   const handleRawQr = async (raw: string) => {
     try {
@@ -252,6 +288,12 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                 />
               )}
 
+              <div className="rounded-2xl border bg-white p-4 dark:bg-card">
+                <div className="mb-2 flex items-center justify-between gap-2"><Label htmlFor="bill-payment-recipient" className="text-xs font-bold">Pay a UPI ID or phone</Label><button type="button" onClick={() => void handleContact()} className="min-h-11 rounded-xl px-3 text-xs font-black text-[#4936ef] hover:bg-[#f1efff]">Choose contact</button></div>
+                <div className="flex gap-2"><Input id="bill-payment-recipient" value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder="name@upi or 9876543210" className="h-12 rounded-xl font-semibold" /><Button type="button" variant="outline" className="h-12 shrink-0 rounded-xl" onClick={() => void handleRecipient()} disabled={busy}>Pay</Button></div>
+                <Input value={recipientName} onChange={(event) => setRecipientName(event.target.value)} placeholder="Recipient name (optional)" className="mt-2 h-10 rounded-xl text-sm" />
+              </div>
+
               {(!request.lockLabel || !request.label) && (
                 <div>
                   <Label htmlFor="bill-payment-label" className="text-xs font-bold">What is this payment for?</Label>
@@ -337,17 +379,20 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               <div className="rounded-2xl border bg-white p-4 dark:bg-card"><p className="text-xs font-bold text-muted-foreground">Paying</p><div className="mt-1 flex items-end justify-between gap-3"><div><p className="text-base font-black">{qr.payeeName || "UPI payee"}</p><p className="text-xs text-muted-foreground">{maskUpiId(qr.payeeUpiId)}</p></div><p className="text-2xl font-black">₹{Number(amount).toLocaleString("en-IN")}</p></div></div>
               {nativePlatform && personalQr && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"><p className="text-sm font-black">Personal UPI QR detected</p><p className="mt-1 text-xs leading-5">Some UPI apps block personal payments opened by another app. Choose an app below; PG HUB will copy the UPI ID and open that app. Select “Pay by UPI ID,” paste it, and enter ₹{Number(amount).toLocaleString("en-IN")}.</p></div>}
               {nativePlatform ? <>
-                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void (personalQr ? launchUpiAppForManualPayment(app.packageName, qr.payeeUpiId) : (async () => {
+                <div className="space-y-2"><p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Available apps</p>{sortedApps.map((app) => <button type="button" key={app.packageName} disabled={busy} onClick={() => void (async () => {
                   setBusy(true); setError(null);
                   try {
-                    const uri = buildUpiPaymentUri(qr, Number(amount), request.categoryName, note);
                     if (remember) localStorage.setItem(preferredKey, app.packageName);
-                    awaitingUpiReturn.current = true;
-                    await launchUpiPayment(uri, app.packageName);
-                    awaitingUpiReturn.current = false;
+                    if (recipientIsPhone) await launchUpiAppForPhonePayment(app.packageName, sanitizePhoneNumber(recipient));
+                    else if (personalQr) await launchUpiAppForManualPayment(app.packageName, qr.payeeUpiId);
+                    else {
+                      awaitingUpiReturn.current = true;
+                      await launchUpiPayment(buildUpiPaymentUri(qr, Number(amount), request.categoryName, note), app.packageName);
+                      awaitingUpiReturn.current = false;
+                    }
                     setStage("result");
                   } catch (e) { awaitingUpiReturn.current = false; setError(messageForError(e)); } finally { setBusy(false); }
-                })())} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">{app.label}</span>{personalQr && <span className="block text-[11px] font-semibold text-muted-foreground">UPI ID copied · open Pay by UPI ID</span>}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}</div>
+                })()} className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border bg-white px-4 text-left dark:bg-card"><Smartphone className="h-5 w-5 text-[#4936ef]" /><span className="flex-1"><span className="block text-sm font-black">{app.label}</span>{personalQr && <span className="block text-[11px] font-semibold text-muted-foreground">UPI ID copied · open Pay by UPI ID</span>}</span>{app.packageName === preferredPackage && <span className="rounded-full bg-[#f1efff] px-2 py-1 text-[10px] font-black text-[#4936ef]">Preferred</span>}<ChevronRight className="h-5 w-5" /></button>)}</div>
                 <label className="flex min-h-11 items-center gap-3 rounded-xl px-1 text-sm font-semibold"><Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} /> Remember the app I choose</label>
               </> : <button type="button" disabled={busy} onClick={() => void (async () => {
                 setBusy(true); setError(null);
