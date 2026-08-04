@@ -17,6 +17,15 @@ export interface MockContact {
   phones: string[];
 }
 
+type ContactApi = {
+  checkPermissions: () => Promise<Record<string, string>>;
+  requestPermissions: () => Promise<Record<string, string>>;
+  getContacts: () => Promise<{ contacts?: ContactRecord[] }>;
+};
+type ContactRecord = { fullName?: string; givenName?: string; familyName?: string; phoneNumbers?: Array<{ value?: string }> };
+type WebContact = { name?: string[]; tel?: string[] };
+type ContactNavigator = Navigator & { contacts?: { select: (properties: string[], options: { multiple: boolean }) => Promise<WebContact[]> } };
+
 // Pre-populated mock contacts for web testing
 export const MOCK_CONTACTS: MockContact[] = [
   {
@@ -58,17 +67,25 @@ export const MOCK_CONTACTS: MockContact[] = [
  * 3. Returning the last 10 digits if the number is longer, or all digits if shorter.
  */
 export const sanitizePhoneNumber = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '');
-  
-  if (digits.length === 12 && digits.startsWith('91')) {
-    return digits.slice(2);
-  }
-  
-  if (digits.length === 11 && digits.startsWith('0')) {
-    return digits.slice(1);
-  }
-  
-  return digits.length > 10 ? digits.slice(-10) : digits;
+  const raw = String(phone ?? '').trim();
+  const digits = raw.replace(/\D/g, '');
+  if (raw.startsWith('+91') && digits.length === 12) return digits.slice(2);
+  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+  return digits.length === 10 ? digits : digits.length > 10 ? digits.slice(-10) : digits;
+};
+
+export const isValidIndianPhoneNumber = (phone: string): boolean => {
+  const normalized = sanitizePhoneNumber(phone);
+  return /^[6-9]\d{9}$/.test(normalized);
+};
+
+export const toIndianPhoneNumber = (phone: string): string | null =>
+  isValidIndianPhoneNumber(phone) ? `+91${sanitizePhoneNumber(phone)}` : null;
+
+export const getContactPhone = (contact: SelectedContact | null | undefined): string | null => {
+  const phone = contact?.phones.find((candidate) => isValidIndianPhoneNumber(candidate));
+  return phone ? sanitizePhoneNumber(phone) : null;
 };
 
 /**
@@ -81,8 +98,8 @@ export const requestContactPermission = async (): Promise<boolean> => {
   }
 
   try {
-    const mod: any = await import('@capgo/capacitor-contacts');
-    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
+    const mod = await import('@capgo/capacitor-contacts');
+    const Contacts = (mod.Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown as ContactApi;
     const status = await Contacts.checkPermissions();
     if (status.readContacts === 'granted' || status.contacts === 'granted') {
       return true;
@@ -103,8 +120,8 @@ export const getDeviceContacts = async (): Promise<SelectedContact[]> => {
     return MOCK_CONTACTS;
   }
   try {
-    const mod: any = await import('@capgo/capacitor-contacts');
-    const Contacts: any = mod.Contacts ?? mod.CapacitorContacts ?? mod.default;
+    const mod = await import('@capgo/capacitor-contacts');
+    const Contacts = (mod.Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown as ContactApi;
     
     const permissionGranted = await requestContactPermission();
     if (!permissionGranted) {
@@ -113,15 +130,15 @@ export const getDeviceContacts = async (): Promise<SelectedContact[]> => {
     
     const result = await Contacts.getContacts();
     if (result && result.contacts) {
-      return result.contacts.map((c: any) => {
-        const name = c.fullName || 
-                     [c.givenName, c.familyName].filter(Boolean).join(' ') || 
+      return result.contacts.map((c) => {
+        const name = c.fullName ||
+                     [c.givenName, c.familyName].filter(Boolean).join(' ') ||
                      'Unknown';
         const phones = (c.phoneNumbers || [])
-          .map((p: any) => p.value)
-          .filter(Boolean);
+          .map((p) => p.value)
+          .filter((value): value is string => Boolean(value));
         return { name, phones };
-      }).filter((c: any) => c.name && c.phones.length > 0);
+      }).filter((c) => c.name && c.phones.length > 0);
     }
     return [];
   } catch (error) {
@@ -139,18 +156,20 @@ export const getDeviceContacts = async (): Promise<SelectedContact[]> => {
 export const pickContactFromDevice = async (): Promise<SelectedContact | null | undefined> => {
   if (!Capacitor.isNativePlatform()) {
     // Attempt to use standard Web Contact Picker API (supported in mobile Chrome/Safari)
-    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
+    const contactNavigator = navigator as ContactNavigator;
+    if (contactNavigator.contacts) {
       try {
-        const contacts: any = await (navigator.contacts as any).select(['name', 'tel'], { multiple: false });
-        if (contacts && contacts.length > 0) {
-          const webContact: any = contacts[0];
+        const contacts = await contactNavigator.contacts.select(['name', 'tel'], { multiple: false });
+        if (contacts.length > 0) {
+          const webContact = contacts[0];
           const name = webContact.name?.[0] || 'Unknown';
           const phones = webContact.tel || [];
           return { name, phones };
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Web contact picker API failed:', e);
-        const errStr = String(e?.message || e?.name || '').toLowerCase();
+        const error = e instanceof Error ? e : new Error(String(e));
+        const errStr = String(error.message || error.name || '').toLowerCase();
         if (errStr.includes('cancel') || errStr.includes('abort')) {
           return undefined; // User explicitly cancelled
         }
@@ -168,9 +187,9 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null | 
       };
     }
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('NativeContactPicker error/result:', error);
-    const errStr = String(error?.message || error || '').toLowerCase();
+    const errStr = String(error instanceof Error ? error.message : error || '').toLowerCase();
     if (errStr.includes('cancel')) {
       return undefined; // User explicitly cancelled in system UI
     }

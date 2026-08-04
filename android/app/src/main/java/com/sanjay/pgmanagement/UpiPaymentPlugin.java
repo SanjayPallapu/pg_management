@@ -103,6 +103,20 @@ public class UpiPaymentPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void launchForPhone(PluginCall call) {
+        String packageName = call.getString("packageName");
+        String phone = call.getString("phone");
+        if (packageName == null || packageName.isEmpty()) { call.reject("NO_UPI_APP"); return; }
+        if (phone == null || !phone.matches("^[6-9]\\d{9}$")) { call.reject("INVALID_PHONE"); return; }
+        PackageManager pm = getContext().getPackageManager();
+        Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+        if (launchIntent == null) { call.reject("NO_UPI_APP"); return; }
+        ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        clipboard.setPrimaryClip(ClipData.newPlainText("Phone number", "+91" + phone));
+        startActivityForResult(call, launchIntent, "paymentReturned");
+    }
+
+    @PluginMethod
     public void launchForUpiId(PluginCall call) {
         String packageName = call.getString("packageName");
         String upiId = call.getString("upiId");

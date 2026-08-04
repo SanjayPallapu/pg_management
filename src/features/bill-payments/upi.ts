@@ -29,20 +29,10 @@ export const parseUpiQr = (rawValue: string): ParsedUpiQr => {
   const normalizedValue = rawValue.trim();
   if (!normalizedValue || normalizedValue.length > MAX_QR_LENGTH) throw new UpiQrError("NOT_UPI");
   
-  // Check if string starts with upi: (case-insensitive)
-  if (!normalizedValue.toLowerCase().startsWith("upi://")) {
-    throw new UpiQrError("NOT_UPI");
-  }
+  if (!/^upi:\/\/pay(?:\?|$)/i.test(normalizedValue)) throw new UpiQrError("NOT_UPI");
 
-  // Extract parameters after '?' or fallback to searchParams
-  let searchStr = "";
   const qIndex = normalizedValue.indexOf("?");
-  if (qIndex !== -1) {
-    searchStr = normalizedValue.slice(qIndex + 1);
-  } else {
-    searchStr = normalizedValue.replace(/^upi:\/\/[^?]*\??/i, "");
-  }
-
+  const searchStr = qIndex === -1 ? "" : normalizedValue.slice(qIndex + 1);
   const searchParams = new URLSearchParams(searchStr);
   const paymentParameters: Record<string, string> = {};
   let parameterCount = 0;

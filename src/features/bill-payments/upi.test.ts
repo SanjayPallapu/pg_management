@@ -9,9 +9,16 @@ describe("UPI QR parsing", () => {
     expect(maskUpiId(result.payeeUpiId)).toBe("me••••••@okaxis");
   });
 
+  it("accepts case-varied schemes and encoded values", () => {
+    const result = parseUpiQr("UPI://PAY?PA=merchant%40okaxis&PN=PG%20Shop&CU=inr");
+    expect(result.payeeUpiId).toBe("merchant@okaxis");
+    expect(result.currency).toBe("INR");
+  });
+
   it("rejects non-UPI and malformed payees", () => {
     expect(() => parseUpiQr("https://example.com/pay")).toThrowError(UpiQrError);
     expect(() => parseUpiQr("upi://pay?pa=not-an-id")).toThrowError(UpiQrError);
+    expect(() => parseUpiQr("upi://collect?pa=a1%40okaxis")).toThrowError(UpiQrError);
   });
 
   it("rejects unsupported currency and unsafe amounts", () => {
