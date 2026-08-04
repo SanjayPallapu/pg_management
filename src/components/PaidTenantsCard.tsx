@@ -31,6 +31,7 @@ interface PaidTenantRow {
   roomCapacity: number;
   paymentDate?: string;
   paymentEntries: PaymentEntry[];
+  source: 'current' | 'arrears';
 }
 
 interface PaidReceiptData {
@@ -76,13 +77,23 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
     return Array.from({ length: 5 }, (_, i) => currentYr - 2 + i);
   }, []);
 
+  const getPaymentCycle = (paymentDate?: string, fallbackMonth = viewMonth, fallbackYear = viewYear) => {
+    if (paymentDate) {
+      const parsed = new Date(paymentDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        return { month: parsed.getMonth() + 1, year: parsed.getFullYear() };
+      }
+    }
+    return { month: fallbackMonth, year: fallbackYear };
+  };
+
   const previousPeriod = useMemo(() => {
     if (viewMonth === 1) return { month: 12, year: viewYear - 1 };
     return { month: viewMonth - 1, year: viewYear };
   }, [viewMonth, viewYear]);
 
-  const { presentTenants, previousTenants } = useMemo(() => {
-    const getPaidTenants = (month: number, year: number): PaidTenantRow[] => rooms
+  const { presentTenants, previousTenants, currentMonthTotal, arrearsSettledTotal } = useMemo(() => {
+    const getPaidTenants = (month: number, year: number, paymentMonth?: number, paymentYear?: number, source: 'current' | 'arrears' = 'current'): PaidTenantRow[] => rooms
       .flatMap((room) => room.tenants.map((tenant) => ({ tenant, room })))
       .filter(({ tenant }) => !tenant.isLocked && isTenantActiveInMonth(tenant.startDate, tenant.endDate, year, month))
       .map(({ tenant, room }) => {
@@ -91,6 +102,11 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         );
 
         if (!payment || payment.paymentStatus !== 'Paid') return null;
+
+        const cycle = getPaymentCycle(payment.paymentDate, month, year);
+        if (paymentMonth !== undefined && paymentYear !== undefined) {
+          if (cycle.month !== paymentMonth || cycle.year !== paymentYear) return null;
+        }
 
         const entryTotal = payment.paymentEntries.reduce((sum, entry) => sum + entry.amount, 0);
         return {
@@ -104,6 +120,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
           roomCapacity: room.capacity,
           paymentDate: payment.paymentDate,
           paymentEntries: payment.paymentEntries,
+          source,
         };
       })
       .filter((tenant): tenant is Exclude<typeof tenant, null> => tenant !== null)
@@ -112,9 +129,15 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         return dateDifference || a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true });
       });
 
+    const currentMonthPayments = getPaidTenants(viewMonth, viewYear, viewMonth, viewYear, 'current');
+    const arrearsPaidThisMonth = getPaidTenants(previousPeriod.month, previousPeriod.year, viewMonth, viewYear, 'arrears');
+    const previousMonthPayments = getPaidTenants(previousPeriod.month, previousPeriod.year, previousPeriod.month, previousPeriod.year, 'current');
+
     return {
-      presentTenants: getPaidTenants(viewMonth, viewYear),
-      previousTenants: getPaidTenants(previousPeriod.month, previousPeriod.year),
+      presentTenants: [...currentMonthPayments, ...arrearsPaidThisMonth],
+      previousTenants: previousMonthPayments,
+      currentMonthTotal: currentMonthPayments.reduce((sum, tenant) => sum + tenant.amountPaid, 0),
+      arrearsSettledTotal: arrearsPaidThisMonth.reduce((sum, tenant) => sum + tenant.amountPaid, 0),
     };
   }, [rooms, payments, viewMonth, viewYear, previousPeriod.month, previousPeriod.year]);
 
@@ -238,6 +261,14 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                       {monthNames[visiblePeriod.month - 1]} {visiblePeriod.year}
                     </p>
                     <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-400">₹{totalPaid.toLocaleString()}</p>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold">
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-700 dark:text-emerald-300">
+                        Current month ₹{currentMonthTotal.toLocaleString()}
+                      </span>
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700 dark:text-amber-300">
+                        Previous dues paid this month ₹{arrearsSettledTotal.toLocaleString()}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground">{visibleTenants.length} fully paid tenant{visibleTenants.length === 1 ? '' : 's'}</p>
                   </div>
                   <div className="space-y-1 text-right text-xs">
@@ -262,14 +293,22 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                   ) : (
                     <div className="space-y-2 pb-8">
                       {visibleTenants.map((tenant) => (
-                        <div key={tenant.id} className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3">
+                        <div
+                          key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                          className={`rounded-xl border p-3 ${tenant.source === 'arrears' ? 'border-amber-500/25 bg-amber-500/[0.08]' : 'border-emerald-500/25 bg-emerald-500/[0.07]'}`}
+                        >
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tenant.source === 'arrears' ? 'bg-amber-500/15' : 'bg-emerald-500/15'}`}>
+                              <CheckCircle2 className={`h-5 w-5 ${tenant.source === 'arrears' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                {tenant.source === 'arrears' && (
+                                  <Badge className="border border-amber-500/20 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                                    Previous month paid now
+                                  </Badge>
+                                )}
                                 {tenant.phone && tenant.phone !== '••••••••••' && (
                                   <a
                                     href={`tel:${tenant.phone}`}
@@ -316,7 +355,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                                 )}
                               </p>
                             </div>
-                            <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white ${tenant.source === 'arrears' ? 'bg-amber-600' : 'bg-emerald-600'}`}>
                               ₹{tenant.amountPaid.toLocaleString()}
                             </span>
                           </div>

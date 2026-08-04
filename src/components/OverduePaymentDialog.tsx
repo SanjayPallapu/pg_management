@@ -211,7 +211,10 @@ export const OverduePaymentDialog = ({
             )}
           </div>
 
-          <div className="shrink-0 border-t bg-background p-4">
+          <div
+            className="shrink-0 border-t bg-background p-4"
+            style={{ paddingBottom: 'calc(1rem + var(--bottom-nav-offset, 0px))' }}
+          >
             {step === 'confirm' ? (
               <Button onClick={handleProceedToPayment} className="h-12 w-full rounded-xl text-sm font-bold">Continue to Payment</Button>
             ) : (
