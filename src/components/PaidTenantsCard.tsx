@@ -22,6 +22,13 @@ interface PaidTenantsCardProps {
 }
 
 interface PaidTenantRow {
+              </Tabs>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      <WhatsAppReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} receiptData={receiptData} />
+    </>
   id: string;
   name: string;
   phone: string;
