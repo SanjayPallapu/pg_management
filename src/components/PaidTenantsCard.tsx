@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ArrowLeft, Banknote, Calendar, CheckCircle2, ChevronDown, MessageCircle, MessageSquare, Phone, Receipt, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
