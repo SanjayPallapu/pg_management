@@ -4,6 +4,24 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
 import type { BillPaymentDraft } from "@/features/bill-payments/types";
 
+// These tables/RPCs are not present in the generated Supabase types yet.
+const db = supabase as unknown as {
+  from: (table: string) => any;
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>;
+};
+
+export interface BillPaymentTransactionRow {
+  id: string;
+  transaction_id: string;
+  label: string;
+  category_name: string;
+  amount: number;
+  payment_method: string;
+  status: string;
+  paid_at: string;
+  note: string | null;
+}
+
 export const useBillPaymentTransactions = (month: number, year: number) => {
   const { currentPG } = usePG();
   const queryClient = useQueryClient();
@@ -15,9 +33,9 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
     queryFn: async () => {
       const start = new Date(year, month - 1, 1).toISOString();
       const end = new Date(year, month, 1).toISOString();
-      const { data, error } = await supabase.from("bill_payment_transactions").select("*").eq("pg_id", currentPG!.id).gte("paid_at", start).lt("paid_at", end).order("paid_at", { ascending: false });
+      const { data, error } = await db.from("bill_payment_transactions").select("*").eq("pg_id", currentPG!.id).gte("paid_at", start).lt("paid_at", end).order("paid_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data ?? []) as BillPaymentTransactionRow[];
     },
   });
 
@@ -29,7 +47,7 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
         : new Date().toISOString();
 
       try {
-        const { data, error } = await supabase.rpc("record_bill_payment", {
+        const { data, error } = await db.rpc("record_bill_payment", {
           p_transaction_id: draft.transactionId,
           p_pg_id: currentPG.id,
           p_bill_category_id: draft.billCategoryId,
@@ -84,7 +102,7 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
 
         // Try inserting into bill_payment_transactions table directly if available
         try {
-          await supabase.from("bill_payment_transactions").insert({
+          await db.from("bill_payment_transactions").insert({
             transaction_id: draft.transactionId,
             pg_id: currentPG.id,
             expense_entry_id: expenseEntryId,
@@ -114,5 +132,5 @@ export const useBillPaymentTransactions = (month: number, year: number) => {
     },
   });
 
-  return { transactions: query.data ?? [], isLoading: query.isLoading, record };
+  return { transactions: (query.data ?? []) as BillPaymentTransactionRow[], isLoading: query.isLoading, record };
 };
