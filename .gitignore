@@ -35,3 +35,4 @@ android/wrapper/
 android/build/
 android/app/build/
 .gradle/
+supabase/.temp/
