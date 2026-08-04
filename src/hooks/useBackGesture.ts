@@ -19,20 +19,21 @@ const handleGlobalPopState = () => {
     return;
   }
 
-  // Back gesture detected: close the most recently opened modal (top of stack)
+  // Back gesture detected: ask the most recently opened modal to close.
+  // Peek instead of pop — the owning component removes itself from the stack in its
+  // cleanup only if it actually closed. A handler that just closes a nested dialog
+  // (while its sheet stays open) must keep its history entry alive.
   if (activeModals.length > 0) {
-    const onClose = activeModals.pop();
-    if (onClose) {
-      isHandlingPopState = true;
-      try {
-        onClose();
-      } finally {
-        isHandlingPopState = false;
-      }
+    const onClose = activeModals[activeModals.length - 1];
+    isHandlingPopState = true;
+    try {
+      onClose();
+    } finally {
+      isHandlingPopState = false;
     }
   }
 
-  // If there are still active modals, push the state back so the next swipe-back works
+  // Keep a history entry alive while any modal is still registered
   if (activeModals.length > 0) {
     window.history.pushState({ modalOpen: true }, '');
   } else {
