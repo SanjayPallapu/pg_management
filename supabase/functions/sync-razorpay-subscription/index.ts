@@ -6,14 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly" | "pro_quarterly" | "pro_yearly" | "promax_quarterly" | "promax_yearly" | "lifetime";
+type PlanKey = "monthly" | "yearly" | "pro" | "pro_yearly" | "promax" | "promax_yearly";
 
-const PAID_PLANS = new Set<PlanKey>(["pro", "promax", "monthly", "quarterly", "yearly", "pro_quarterly", "pro_yearly", "promax_quarterly", "promax_yearly", "lifetime"]);
+const PAID_PLANS = new Set<PlanKey>(["monthly", "yearly", "pro", "pro_yearly", "promax", "promax_yearly"]);
 const TRIAL_DAYS = 30;
 
 const getPlanDurationDays = (plan: PlanKey) => {
   if (plan === "yearly" || plan === "pro_yearly" || plan === "promax_yearly") return 365;
-  if (plan === "quarterly" || plan === "pro_quarterly" || plan === "promax_quarterly") return 90;
   return 30;
 };
 
@@ -59,7 +58,7 @@ Deno.serve(async (req) => {
     }
 
     const { plan, razorpay_subscription_id } = await req.json();
-    if (!razorpay_subscription_id || !plan || !PAID_PLANS.has(plan)) {
+    if (!razorpay_subscription_id || !plan || !PAID_PLANS.has(plan as PlanKey)) {
       return new Response(JSON.stringify({ error: "Invalid subscription request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -116,12 +115,14 @@ Deno.serve(async (req) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
+    const planKey = plan as PlanKey;
+
     const { error: subError } = await adminSupabase
       .from("subscriptions")
       .upsert(
         {
           user_id: userId,
-          plan: "pro",
+          plan: planKey, // EXACT plan saved
           status: "active",
           max_pgs: -1,
           max_tenants_per_pg: -1,
@@ -130,7 +131,7 @@ Deno.serve(async (req) => {
             daily_reports: true,
             ai_logo: true,
             billing_cycle: "trial",
-            next_billing_cycle: plan,
+            next_billing_cycle: planKey,
             razorpay_subscription_id,
             razorpay_status: status,
           },
@@ -149,7 +150,7 @@ Deno.serve(async (req) => {
         reviewed_at: now.toISOString(),
         notes: JSON.stringify({
           razorpay_subscription_id,
-          billing_cycle: plan,
+          billing_cycle: planKey,
           trial_days: TRIAL_DAYS,
           razorpay_status: status,
         }),
@@ -162,9 +163,9 @@ Deno.serve(async (req) => {
         success: true,
         status,
         billing_cycle: "trial",
-        next_billing_cycle: plan,
+        next_billing_cycle: planKey,
         trial_days: TRIAL_DAYS,
-        paid_cycle_days: getPlanDurationDays(plan),
+        paid_cycle_days: getPlanDurationDays(planKey),
       }),
       {
         status: 200,

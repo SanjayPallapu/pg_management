@@ -32,7 +32,7 @@ interface SubscriptionDetailsSheetProps {
   onUpgradeClick?: () => void; // Maintained for prop compatibility
 }
 
-type BillingCycleToggle = 'monthly' | 'quarterly' | 'yearly';
+type BillingCycleToggle = 'monthly' | 'yearly';
 
 export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDetailsSheetProps) => {
   const navigate = useNavigate();
@@ -77,30 +77,27 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
   // Map toggle options to actual plan keys
   const basicPlanKey = useMemo((): SubscriptionPlanKey => {
-    if (billingCycle === 'quarterly') return 'quarterly';
     if (billingCycle === 'yearly') return 'yearly';
     return 'monthly';
   }, [billingCycle]);
 
   const proPlanKey = useMemo((): SubscriptionPlanKey => {
-    if (billingCycle === 'quarterly') return 'pro_quarterly';
     if (billingCycle === 'yearly') return 'pro_yearly';
     return 'pro';
   }, [billingCycle]);
 
   const proMaxPlanKey = useMemo((): SubscriptionPlanKey => {
-    if (billingCycle === 'quarterly') return 'promax_quarterly';
     if (billingCycle === 'yearly') return 'promax_yearly';
     return 'promax';
   }, [billingCycle]);
 
   // Keep selected plan key in sync when billing cycle changes
   useEffect(() => {
-    if (selectedPlanKey === 'monthly' || selectedPlanKey === 'quarterly' || selectedPlanKey === 'yearly') {
+    if (selectedPlanKey === 'monthly' || selectedPlanKey === 'yearly') {
       setSelectedPlanKey(basicPlanKey);
-    } else if (selectedPlanKey === 'pro' || selectedPlanKey === 'pro_quarterly' || selectedPlanKey === 'pro_yearly') {
+    } else if (selectedPlanKey === 'pro' || selectedPlanKey === 'pro_yearly') {
       setSelectedPlanKey(proPlanKey);
-    } else if (selectedPlanKey === 'promax' || selectedPlanKey === 'promax_quarterly' || selectedPlanKey === 'promax_yearly') {
+    } else if (selectedPlanKey === 'promax' || selectedPlanKey === 'promax_yearly') {
       setSelectedPlanKey(proMaxPlanKey);
     }
   }, [billingCycle, basicPlanKey, proPlanKey, proMaxPlanKey]);
@@ -272,7 +269,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
             <p className="text-xs text-muted-foreground dark:text-slate-400 mt-0.5">Start with a 1 month free trial. Cancel anytime.</p>
             
             {/* Segmented control toggle */}
-            <div className="inline-flex p-1 bg-muted dark:bg-slate-950 rounded-xl border border-border dark:border-slate-900 mt-3.5 w-full max-w-sm">
+            <div className="inline-flex p-1 bg-muted dark:bg-slate-950 rounded-xl border border-border dark:border-slate-900 mt-3.5 w-full max-w-xs">
               <button
                 onClick={() => setBillingCycle('monthly')}
                 className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all ${
@@ -280,15 +277,6 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                 }`}
               >
                 Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('quarterly')}
-                className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all flex flex-col items-center justify-center ${
-                  billingCycle === 'quarterly' ? 'bg-primary text-foreground dark:text-white shadow-sm' : 'text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-slate-200'
-                }`}
-              >
-                <span>Quarterly</span>
-                <span className={`text-[8px] mt-0.5 font-bold ${billingCycle === 'quarterly' ? 'text-foreground dark:text-white' : 'text-emerald-500'}`}>Save 10%</span>
               </button>
               <button
                 onClick={() => setBillingCycle('yearly')}
@@ -311,9 +299,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               const actualPrice = SUBSCRIPTION_PLANS[basicPlanKey].price;
               const displayMonthly = billingCycle === 'yearly'
                 ? Math.round(actualPrice / 12)
-                : billingCycle === 'quarterly'
-                  ? Math.round(actualPrice / 3)
-                  : actualPrice;
+                : actualPrice;
               const hasDiscount = billingCycle !== 'monthly';
 
               return (
@@ -384,9 +370,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               const actualPrice = SUBSCRIPTION_PLANS[proPlanKey].price;
               const displayMonthly = billingCycle === 'yearly'
                 ? Math.round(actualPrice / 12)
-                : billingCycle === 'quarterly'
-                  ? Math.round(actualPrice / 3)
-                  : actualPrice;
+                : actualPrice;
               const hasDiscount = billingCycle !== 'monthly';
 
               return (
@@ -463,9 +447,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               const actualPrice = SUBSCRIPTION_PLANS[proMaxPlanKey].price;
               const displayMonthly = billingCycle === 'yearly'
                 ? Math.round(actualPrice / 12)
-                : billingCycle === 'quarterly'
-                  ? Math.round(actualPrice / 3)
-                  : actualPrice;
+                : actualPrice;
               const hasDiscount = billingCycle !== 'monthly';
 
               return (

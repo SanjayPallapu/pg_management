@@ -149,6 +149,6 @@ export const useSubscription = () => {
     rejectPaymentRequest,
     isPending: subscription?.status === 'pending',
     isActive: subscription?.status === 'active',
-    isPro: subscription?.plan === 'pro' && subscription?.status === 'active',
+    isPro: subscription?.status === 'active' && subscription?.plan !== 'free',
   };
 };

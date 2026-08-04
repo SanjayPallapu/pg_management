@@ -81,11 +81,25 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Start with a full-featured 1 month free trial.',
+    description: 'Start with a full-featured 30-day free trial.',
+  },
+  free: {
+    name: 'Free Plan',
+    price: 0,
+    periodLabel: 'forever',
+    billingCycle: 'free',
+    maxPgs: 1,
+    maxTenantsPerPg: 10,
+    features: {
+      autoReminders: false,
+      dailyReports: false,
+      aiLogo: false,
+    },
+    description: 'Free basic management for a single small PG.',
   },
   monthly: {
     name: 'Basic',
-    price: 999,
+    price: 499,
     periodLabel: '/month',
     billingCycle: 'monthly',
     maxPgs: -1,
@@ -97,9 +111,23 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Essential PG management tools for small to medium properties.',
   },
+  yearly: {
+    name: 'Basic Plan (Yearly)',
+    price: 4999,
+    periodLabel: '/year',
+    billingCycle: 'yearly',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Best value for growing PG operators (Save over ₹900).',
+  },
   pro: {
     name: 'Plus',
-    price: 1999,
+    price: 999,
     periodLabel: '/month',
     billingCycle: 'pro',
     maxPgs: -1,
@@ -111,23 +139,9 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
   },
-  pro_quarterly: {
-    name: 'Plus Plan (Quarterly)',
-    price: 5399,
-    periodLabel: '/3 months',
-    billingCycle: 'pro_quarterly',
-    maxPgs: -1,
-    maxTenantsPerPg: -1,
-    features: {
-      autoReminders: true,
-      dailyReports: true,
-      aiLogo: true,
-    },
-    description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
-  },
   pro_yearly: {
     name: 'Plus Plan (Yearly)',
-    price: 19999,
+    price: 9999,
     periodLabel: '/year',
     billingCycle: 'pro_yearly',
     maxPgs: -1,
@@ -140,8 +154,8 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Advanced analytics, auto WhatsApp reminders & priority support.',
   },
   promax: {
-    name: 'Pro',
-    price: 3999,
+    name: 'Pro Max',
+    price: 1999,
     periodLabel: '/month',
     billingCycle: 'promax',
     maxPgs: -1,
@@ -151,25 +165,11 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
-  },
-  promax_quarterly: {
-    name: 'Pro Plan (Quarterly)',
-    price: 9999,
-    periodLabel: '/3 months',
-    billingCycle: 'promax_quarterly',
-    maxPgs: -1,
-    maxTenantsPerPg: -1,
-    features: {
-      autoReminders: true,
-      dailyReports: true,
-      aiLogo: true,
-    },
-    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
+    description: 'Multi-PG management, dedicated account manager & zero downtime.',
   },
   promax_yearly: {
-    name: 'Pro Plan (Yearly)',
-    price: 39999,
+    name: 'Pro Max (Yearly)',
+    price: 19999,
     periodLabel: '/year',
     billingCycle: 'promax_yearly',
     maxPgs: -1,
@@ -179,57 +179,14 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'All Plus features plus dedicated account manager, API access & zero downtime.',
-  },
-  quarterly: {
-    name: 'Basic Plan (Quarterly)',
-    price: 2699,
-    periodLabel: '/3 months',
-    billingCycle: 'quarterly',
-    maxPgs: -1,
-    maxTenantsPerPg: -1,
-    features: {
-      autoReminders: true,
-      dailyReports: true,
-      aiLogo: true,
-    },
-    description: 'Save 10% with a single payment every 3 months.',
-  },
-  yearly: {
-    name: 'Basic Plan (Yearly)',
-    price: 9999,
-    periodLabel: '/year',
-    billingCycle: 'yearly',
-    maxPgs: -1,
-    maxTenantsPerPg: -1,
-    features: {
-      autoReminders: true,
-      dailyReports: true,
-      aiLogo: true,
-    },
-    description: 'Best value for serious multi-PG operators.',
-  },
-  lifetime: {
-    name: 'Lifetime Unlimited',
-    price: 29999,
-    periodLabel: 'one-time',
-    billingCycle: 'lifetime',
-    maxPgs: -1,
-    maxTenantsPerPg: -1,
-    features: {
-      autoReminders: true,
-      dailyReports: true,
-      aiLogo: true,
-    },
-    description: 'Pay once, use forever. Free updates and all premium features included.',
+    description: 'Multi-PG management, dedicated account manager & zero downtime.',
   },
 } as const;
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
 
 export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = [
-  'trial', 'monthly', 'pro', 'promax', 'quarterly', 'yearly', 'lifetime',
-  'pro_quarterly', 'pro_yearly', 'promax_quarterly', 'promax_yearly'
+  'trial', 'free', 'monthly', 'pro', 'promax', 'yearly', 'pro_yearly', 'promax_yearly'
 ];
 
 export const SUBSCRIPTION_PLAN_META = {
@@ -253,45 +210,33 @@ export const REGIONAL_PRICING: Record<SubscriptionPlanKey, Record<string, Region
     IN: { currency: 'INR', symbol: '₹', price: 0 },
     US: { currency: 'USD', symbol: '$', price: 0 },
   },
+  free: {
+    IN: { currency: 'INR', symbol: '₹', price: 0 },
+    US: { currency: 'USD', symbol: '$', price: 0 },
+  },
   monthly: {
+    IN: { currency: 'INR', symbol: '₹', price: 499 },
+    US: { currency: 'USD', symbol: '$', price: 6.99 },
+  },
+  yearly: {
+    IN: { currency: 'INR', symbol: '₹', price: 4999 },
+    US: { currency: 'USD', symbol: '$', price: 69.99 },
+  },
+  pro: {
     IN: { currency: 'INR', symbol: '₹', price: 999 },
     US: { currency: 'USD', symbol: '$', price: 14.99 },
   },
-  pro: {
+  pro_yearly: {
+    IN: { currency: 'INR', symbol: '₹', price: 9999 },
+    US: { currency: 'USD', symbol: '$', price: 149.99 },
+  },
+  promax: {
     IN: { currency: 'INR', symbol: '₹', price: 1999 },
     US: { currency: 'USD', symbol: '$', price: 29.99 },
   },
-  pro_quarterly: {
-    IN: { currency: 'INR', symbol: '₹', price: 5399 },
-    US: { currency: 'USD', symbol: '$', price: 79.99 },
-  },
-  pro_yearly: {
+  promax_yearly: {
     IN: { currency: 'INR', symbol: '₹', price: 19999 },
     US: { currency: 'USD', symbol: '$', price: 289.99 },
-  },
-  promax: {
-    IN: { currency: 'INR', symbol: '₹', price: 3999 },
-    US: { currency: 'USD', symbol: '$', price: 59.99 },
-  },
-  promax_quarterly: {
-    IN: { currency: 'INR', symbol: '₹', price: 9999 },
-    US: { currency: 'USD', symbol: '$', price: 149.99 },
-  },
-  promax_yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 39999 },
-    US: { currency: 'USD', symbol: '$', price: 579.99 },
-  },
-  quarterly: {
-    IN: { currency: 'INR', symbol: '₹', price: 2699 },
-    US: { currency: 'USD', symbol: '$', price: 39.99 },
-  },
-  yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 9999 },
-    US: { currency: 'USD', symbol: '$', price: 149.99 },
-  },
-  lifetime: {
-    IN: { currency: 'INR', symbol: '₹', price: 29999 },
-    US: { currency: 'USD', symbol: '$', price: 449.99 },
   },
 };
 

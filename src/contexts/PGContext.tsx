@@ -186,7 +186,7 @@ export const PGProvider = ({ children }: PGProviderProps) => {
     ? (subscription.maxPgs === -1 || pgs.length < subscription.maxPgs)
     : pgs.length < 1;
 
-  const isProUser = subscription?.status === 'active' && subscription?.plan === 'pro';
+  const isProUser = subscription?.status === 'active' && subscription?.plan !== 'free';
   
   // User needs setup if no PGs created yet
   const needsSetup = !isLoading && !authLoading && pgs.length === 0;

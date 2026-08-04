@@ -6,19 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PlanKey = "pro" | "promax" | "monthly" | "quarterly" | "yearly" | "pro_quarterly" | "pro_yearly" | "promax_quarterly" | "promax_yearly" | "lifetime";
+type PlanKey = "monthly" | "yearly" | "pro" | "pro_yearly" | "promax" | "promax_yearly";
 
 const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly"; interval: number; totalCount: number; label: string }> = {
-  pro: { amount: 199900, period: "monthly", interval: 1, totalCount: 120, label: "Pro" },
-  promax: { amount: 399900, period: "monthly", interval: 1, totalCount: 120, label: "Pro Max" },
-  monthly: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Monthly" },
-  quarterly: { amount: 269900, period: "monthly", interval: 3, totalCount: 40, label: "Quarterly" },
-  yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Yearly" },
-  pro_quarterly: { amount: 539900, period: "monthly", interval: 3, totalCount: 40, label: "Pro Quarterly" },
-  pro_yearly: { amount: 1999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Yearly" },
-  promax_quarterly: { amount: 999900, period: "monthly", interval: 3, totalCount: 40, label: "Pro Max Quarterly" },
-  promax_yearly: { amount: 3999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Max Yearly" },
-  lifetime: { amount: 2999900, period: "yearly", interval: 100, totalCount: 1, label: "Lifetime" }, // Dummy config for edge function order notes, lifetime is single invoice
+  monthly: { amount: 49900, period: "monthly", interval: 1, totalCount: 120, label: "Basic" },
+  yearly: { amount: 499900, period: "yearly", interval: 1, totalCount: 10, label: "Basic Yearly" },
+  pro: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Plus" },
+  pro_yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Plus Yearly" },
+  promax: { amount: 199900, period: "monthly", interval: 1, totalCount: 120, label: "Pro Max" },
+  promax_yearly: { amount: 1999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Max Yearly" },
 };
 
 const TRIAL_DAYS = 30;
@@ -58,6 +54,7 @@ async function createOrFetchPlan(credentials: string, plan: PlanKey) {
         description: `PG HUB ${cfg.label} auto-renewing subscription`,
       },
       notes: {
+        payment_type: "pghub_subscription",
         plan_key: plan,
       },
     }),
@@ -85,6 +82,7 @@ async function createSubscription(
     quantity: 1,
     customer_notify: true,
     notes: {
+      payment_type: "pghub_subscription",
       user_id: userId,
       plan_key: planKey,
       trial_days: String(TRIAL_DAYS),
@@ -150,8 +148,63 @@ Deno.serve(async (req) => {
     }
 
     const userId = userData.user.id;
-    const { plan } = await req.json();
+    const body = await req.json();
+    const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
 
+    // Check if this is a Tenant Rent Order creation vs SaaS Subscription
+    if (body.payment_type === "tenant_rent" || body.tenant_id) {
+      const { amount, tenant_id, month, year, tenant_payment_id } = body;
+      if (!amount || amount <= 0 || !tenant_id) {
+        return new Response(JSON.stringify({ error: "Invalid tenant rent payment details" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const amountPaise = Math.round(amount * 100);
+      const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: amountPaise,
+          currency: "INR",
+          receipt: `rent_${tenant_id}_${month || 0}_${year || 0}`.substring(0, 40),
+          notes: {
+            payment_type: "tenant_rent",
+            tenant_id,
+            month: String(month || ""),
+            year: String(year || ""),
+            tenant_payment_id: tenant_payment_id || "",
+            created_by: userId,
+          },
+        }),
+      });
+
+      const orderJson = await orderRes.json();
+      if (!orderRes.ok || !orderJson?.id) {
+        throw new Error(orderJson?.error?.description || "Failed to create Razorpay order for rent");
+      }
+
+      return new Response(
+        JSON.stringify({
+          order_id: orderJson.id,
+          key_id: RAZORPAY_KEY_ID,
+          amount: orderJson.amount,
+          currency: "INR",
+          description: "PG Rent Payment",
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Default: SaaS Subscription creation
+    const { plan } = body;
     if (!plan || !(plan in PLAN_CONFIG)) {
       return new Response(JSON.stringify({ error: "Invalid plan selected" }), {
         status: 400,
@@ -160,7 +213,6 @@ Deno.serve(async (req) => {
     }
 
     const planKey = plan as PlanKey;
-    const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
     const planId = await createOrFetchPlan(credentials, planKey);
     const cfg = PLAN_CONFIG[planKey];
 
@@ -188,6 +240,7 @@ Deno.serve(async (req) => {
       payment_method: "razorpay",
       status: "pending",
       notes: JSON.stringify({
+        payment_type: "pghub_subscription",
         razorpay_plan_id: planId,
         razorpay_subscription_id: subscriptionJson.id,
         billing_cycle: planKey,
@@ -207,7 +260,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error creating Razorpay subscription:", error);
+    console.error("Error creating Razorpay order/subscription:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {
