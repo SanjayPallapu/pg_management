@@ -6,21 +6,23 @@ import "barcode-detector/polyfill";
 export interface UpiApp { packageName: string; label: string; supportsPaymentIntent: boolean }
 interface UpiPaymentPlugin {
   getCompatibleApps(options: { uri: string; includeInstalledUpiApps?: boolean }): Promise<{ apps: UpiApp[] }>;
+  getInstalledUpiApps(): Promise<{ apps: UpiApp[] }>;
   launch(options: { uri: string; packageName?: string; forceChooser?: boolean }): Promise<{ returned: boolean }>;
   launchForUpiId(options: { packageName: string; upiId: string }): Promise<{ returned: boolean }>;
+  launchForContact(options: { packageName: string; phoneNumber: string }): Promise<{ returned: boolean }>;
 }
 
 const UpiPayment = registerPlugin<UpiPaymentPlugin>("UpiPayment");
 
 export class NativePaymentError extends Error {
-  constructor(public readonly code: "UNSUPPORTED" | "PERMISSION_DENIED" | "CANCELLED" | "INVALID_QR" | "NO_UPI_APP" | "OFFLINE", message?: string) {
+  constructor(public readonly code: "UNSUPPORTED" | "PERMISSION_DENIED" | "CANCELLED" | "INVALID_QR" | "NO_QR" | "UNREADABLE_IMAGE" | "NO_UPI_APP" | "OFFLINE", message?: string) {
     super(message || code);
   }
 }
 
 const firstRawValue = (barcodes: Array<{ rawValue: string }>) => {
   const value = barcodes.find((barcode) => barcode.rawValue.trim())?.rawValue;
-  if (!value) throw new NativePaymentError("INVALID_QR");
+  if (!value) throw new NativePaymentError("NO_QR", "No readable QR code was found in this image.");
   return value;
 };
 
@@ -95,6 +97,60 @@ export const scanUpiQr = async () => {
   }
 };
 
+const decodeWebQrImage = async (file: File) => {
+  if (!file.type.startsWith("image/")) {
+    throw new NativePaymentError("UNREADABLE_IMAGE", "Choose a valid image or QR screenshot.");
+  }
+  try {
+    const source = await createImageBitmap(file);
+    try {
+      const detector = new BarcodeDetector({ formats: ["qr_code"] });
+      const barcodes = await detector.detect(source);
+      return firstRawValue(barcodes);
+    } finally {
+      source.close();
+    }
+  } catch (error) {
+    if (error instanceof NativePaymentError) throw error;
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new NativePaymentError("UNREADABLE_IMAGE", "This image could not be opened. Try another screenshot."));
+        image.src = objectUrl;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context || !canvas.width || !canvas.height) {
+        throw new NativePaymentError("UNREADABLE_IMAGE", "This image could not be read.");
+      }
+      context.drawImage(image, 0, 0);
+      const detector = new BarcodeDetector({ formats: ["qr_code"] });
+      return firstRawValue(await detector.detect(canvas));
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+};
+
+const nativeGalleryError = (error: unknown) => {
+  if (error instanceof NativePaymentError) return error;
+  const message = error instanceof Error ? error.message : String(error);
+  const normalized = message.toLowerCase();
+  if (normalized.includes("cancel") || normalized.includes("canceled") || normalized.includes("cancelled")) {
+    return new NativePaymentError("CANCELLED");
+  }
+  if (normalized.includes("decode") || normalized.includes("image") || normalized.includes("file")) {
+    return new NativePaymentError("UNREADABLE_IMAGE", "This image could not be read. Try a clearer screenshot.");
+  }
+  return new NativePaymentError("INVALID_QR", "The selected image could not be scanned.");
+};
+
 export const scanUpiQrFromGallery = async () => {
   if (!Capacitor.isNativePlatform()) {
     return await new Promise<string>((resolve, reject) => {
@@ -105,59 +161,8 @@ export const scanUpiQrFromGallery = async () => {
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) { reject(new NativePaymentError("CANCELLED")); return; }
-        const objectUrl = URL.createObjectURL(file);
-        try {
-          const img = new Image();
-          img.src = objectUrl;
-          await new Promise((res, rej) => {
-            img.onload = res;
-            img.onerror = () => rej(new NativePaymentError("INVALID_QR"));
-          });
-
-          // 1. Try native/polyfilled BarcodeDetector on HTMLImageElement
-          if ("BarcodeDetector" in window) {
-            try {
-              const detector = new BarcodeDetector({ formats: ["qr_code"] });
-              const barcodes = await detector.detect(img);
-              if (barcodes && barcodes.length > 0) {
-                const val = barcodes.find((b: { rawValue: string }) => b.rawValue.trim())?.rawValue;
-                if (val) {
-                  URL.revokeObjectURL(objectUrl);
-                  resolve(val);
-                  return;
-                }
-              }
-            } catch {
-              // Fallback to canvas
-            }
-          }
-
-          // 2. Fallback: Draw on HTMLCanvasElement and use BarcodeDetector or BarcodeScanner
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            if ("BarcodeDetector" in window) {
-              const detector = new BarcodeDetector({ formats: ["qr_code"] });
-              const barcodes = await detector.detect(canvas);
-              if (barcodes && barcodes.length > 0) {
-                const val = barcodes.find((b: { rawValue: string }) => b.rawValue.trim())?.rawValue;
-                if (val) {
-                  URL.revokeObjectURL(objectUrl);
-                  resolve(val);
-                  return;
-                }
-              }
-            }
-          }
-          URL.revokeObjectURL(objectUrl);
-          reject(new NativePaymentError("INVALID_QR"));
-        } catch (error) {
-          URL.revokeObjectURL(objectUrl);
-          reject(error instanceof NativePaymentError ? error : new NativePaymentError("INVALID_QR"));
-        }
+        try { resolve(await decodeWebQrImage(file)); }
+        catch (error) { reject(error instanceof NativePaymentError ? error : new NativePaymentError("INVALID_QR")); }
       };
       input.click();
     });
@@ -169,8 +174,7 @@ export const scanUpiQrFromGallery = async () => {
     const result = await BarcodeScanner.readBarcodesFromImage({ path, formats: [BarcodeFormat.QrCode] });
     return firstRawValue(result.barcodes);
   } catch (error) {
-    if (error instanceof NativePaymentError) throw error;
-    throw new NativePaymentError("CANCELLED");
+    throw nativeGalleryError(error);
   }
 };
 
@@ -182,6 +186,12 @@ export const openCameraSettings = () => {
 export const getCompatibleUpiApps = async (uri: string, includeInstalledUpiApps = false) => {
   if (!Capacitor.isNativePlatform()) return [] as UpiApp[];
   const { apps } = await UpiPayment.getCompatibleApps({ uri, includeInstalledUpiApps });
+  return apps;
+};
+
+export const getInstalledUpiApps = async () => {
+  if (!Capacitor.isNativePlatform()) return [] as UpiApp[];
+  const { apps } = await UpiPayment.getInstalledUpiApps();
   return apps;
 };
 

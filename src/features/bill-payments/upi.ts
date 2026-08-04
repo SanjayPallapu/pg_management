@@ -4,6 +4,7 @@ const MAX_TEXT_LENGTH = 120;
 const MAX_QR_LENGTH = 4096;
 const MAX_QR_PARAMETERS = 32;
 const UPI_ID_PATTERN = /^[a-zA-Z0-9._-]{2,128}@[a-zA-Z0-9.-]{2,64}$/;
+const INDIAN_PHONE_PATTERN = /^[6-9]\d{9}$/;
 const PARAMETER_KEY_PATTERN = /^[a-z][a-z0-9._-]{0,31}$/;
 
 const clean = (value: string | null, max = MAX_TEXT_LENGTH) => {
@@ -25,25 +26,29 @@ export class UpiQrError extends Error {
   }
 }
 
+export const isValidUpiId = (value: string) => UPI_ID_PATTERN.test(value.trim());
+
+export const normalizeIndianPhone = (value: string) => {
+  let digits = value.replace(/\D/g, "");
+  if (digits.startsWith("91") && digits.length === 12) digits = digits.slice(2);
+  if (digits.startsWith("0") && digits.length === 11) digits = digits.slice(1);
+  return INDIAN_PHONE_PATTERN.test(digits) ? digits : null;
+};
+
 export const parseUpiQr = (rawValue: string): ParsedUpiQr => {
   const normalizedValue = rawValue.trim();
   if (!normalizedValue || normalizedValue.length > MAX_QR_LENGTH) throw new UpiQrError("NOT_UPI");
   
-  // Check if string starts with upi: (case-insensitive)
-  if (!normalizedValue.toLowerCase().startsWith("upi://")) {
+  if (!/^upi:\/\/pay(?:\?|$)/i.test(normalizedValue)) {
     throw new UpiQrError("NOT_UPI");
   }
 
-  // Extract parameters after '?' or fallback to searchParams
-  let searchStr = "";
   const qIndex = normalizedValue.indexOf("?");
-  if (qIndex !== -1) {
-    searchStr = normalizedValue.slice(qIndex + 1);
-  } else {
-    searchStr = normalizedValue.replace(/^upi:\/\/[^?]*\??/i, "");
-  }
-
+  const searchStr = qIndex === -1 ? "" : normalizedValue.slice(qIndex + 1).split("#", 1)[0];
   const searchParams = new URLSearchParams(searchStr);
+  if (Array.from(searchParams.keys()).length > MAX_QR_PARAMETERS) {
+    throw new UpiQrError("INVALID_UPI");
+  }
   const paymentParameters: Record<string, string> = {};
   let parameterCount = 0;
   for (const [rawKey, rawParameter] of searchParams.entries()) {
