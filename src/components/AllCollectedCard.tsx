@@ -122,9 +122,13 @@ export const AllCollectedCard = ({ rooms }: AllCollectedCardProps) => {
     
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        if (!tenant.securityDepositAmount || !tenant.securityDepositDate) return;
-        
-        const depositDate = new Date(tenant.securityDepositDate);
+        if (tenant.isLocked || !tenant.securityDepositAmount || !tenant.securityDepositDate) return;
+        // Only include deposits collected for tenants active in the selected month.
+        // Deposits from the previous month (or an earlier tenant) must not inflate
+        // the current-month tenant collection total.
+        if (!isTenantActiveInMonth(tenant.startDate, tenant.endDate, selectedYear, selectedMonth)) return;
+
+        const depositDate = new Date(`${tenant.securityDepositDate}T00:00:00`);
         if (depositDate.getMonth() + 1 === selectedMonth && depositDate.getFullYear() === selectedYear) {
           const mode = tenant.securityDepositMode;
           if (mode === 'upi') {
