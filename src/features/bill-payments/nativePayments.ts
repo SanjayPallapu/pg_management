@@ -8,12 +8,13 @@ interface UpiPaymentPlugin {
   getCompatibleApps(options: { uri: string; includeInstalledUpiApps?: boolean }): Promise<{ apps: UpiApp[] }>;
   launch(options: { uri: string; packageName?: string; forceChooser?: boolean }): Promise<{ returned: boolean }>;
   launchForUpiId(options: { packageName: string; upiId: string }): Promise<{ returned: boolean }>;
+  launchForPhone(options: { packageName: string; phone: string }): Promise<{ returned: boolean }>;
 }
 
 const UpiPayment = registerPlugin<UpiPaymentPlugin>("UpiPayment");
 
 export class NativePaymentError extends Error {
-  constructor(public readonly code: "UNSUPPORTED" | "PERMISSION_DENIED" | "CANCELLED" | "INVALID_QR" | "NO_UPI_APP" | "OFFLINE", message?: string) {
+  constructor(public readonly code: "UNSUPPORTED" | "PERMISSION_DENIED" | "CANCELLED" | "INVALID_QR" | "NO_QR" | "NO_UPI_APP" | "OFFLINE", message?: string) {
     super(message || code);
   }
 }
@@ -114,11 +115,11 @@ export const scanUpiQrFromGallery = async () => {
             img.onerror = () => rej(new NativePaymentError("INVALID_QR"));
           });
 
-          // 1. Try native/polyfilled BarcodeDetector on HTMLImageElement
+          // Prefer the original Blob so ML Kit/polyfills can decode EXIF orientation and full resolution.
           if ("BarcodeDetector" in window) {
             try {
               const detector = new BarcodeDetector({ formats: ["qr_code"] });
-              const barcodes = await detector.detect(img);
+              const barcodes = await detector.detect(file);
               if (barcodes && barcodes.length > 0) {
                 const val = barcodes.find((b: { rawValue: string }) => b.rawValue.trim())?.rawValue;
                 if (val) {
@@ -194,6 +195,18 @@ export const launchUpiPayment = async (uri: string, packageName?: string) => {
   }
   try {
     return await UpiPayment.launch({ uri, packageName, forceChooser: !packageName });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("NO_UPI_APP")) throw new NativePaymentError("NO_UPI_APP");
+    throw error;
+  }
+};
+
+export const launchUpiAppForPhonePayment = async (packageName: string, phone: string) => {
+  if (!navigator.onLine) throw new NativePaymentError("OFFLINE");
+  if (!Capacitor.isNativePlatform()) throw new NativePaymentError("UNSUPPORTED");
+  try {
+    return await UpiPayment.launchForPhone({ packageName, phone });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("NO_UPI_APP")) throw new NativePaymentError("NO_UPI_APP");
