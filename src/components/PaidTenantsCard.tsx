@@ -22,13 +22,6 @@ interface PaidTenantsCardProps {
 }
 
 interface PaidTenantRow {
-              </Tabs>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <WhatsAppReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} receiptData={receiptData} />
-    </>
   id: string;
   name: string;
   phone: string;
@@ -307,175 +300,153 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                       <p className="mt-1 text-xs text-muted-foreground">Payments marked as paid will appear here.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2 pb-8">
-                      {visibleTenants.map((tenant) => (
-                        <div
-                          key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
-                          className={`rounded-xl border p-3 ${tenant.source === 'arrears' ? 'border-amber-500/25 bg-amber-500/[0.08]' : 'border-emerald-500/25 bg-emerald-500/[0.07]'}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tenant.source === 'arrears' ? 'bg-amber-500/15' : 'bg-emerald-500/15'}`}>
-                              <CheckCircle2 className={`h-5 w-5 ${tenant.source === 'arrears' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <p className="truncate text-sm font-semibold">{tenant.name}</p>
-                                {tenant.source === 'arrears' && (
-                                  <Badge className="border border-amber-500/20 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
-                                    Previous month paid now
-                                  </Badge>
-                                )}
-                                {tenant.phone && tenant.phone !== '••••••••••' && (
-                                  <a
-                                    href={`tel:${tenant.phone}`}
-                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600"
-                                    aria-label={`Call ${tenant.name}`}
-                                  >
-                                    <Phone className="h-3 w-3" />
-                                  </a>
-                                )}
-                                {tenant.phone && tenant.phone !== '••••••••••' && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button
-                                        type="button"
-                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
-                                        aria-label={`Chat and receipt options for ${tenant.name}`}
+                    <div className="space-y-4 pb-8">
+                      {tab === 'present' && presentCurrentTenants.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Current Month</div>
+                          {presentCurrentTenants.map((tenant) => (
+                            <div
+                              key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                              className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                    {tenant.phone && tenant.phone !== '••••••••••' && (
+                                      <a
+                                        href={`tel:${tenant.phone}`}
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600"
+                                        aria-label={`Call ${tenant.name}`}
                                       >
-                                        <div className="space-y-4 pb-8">
-                                          {tab === 'present' && (
-                                            <div className="space-y-2">
-                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Current Month</div>
-                                              {presentCurrentTenants.map((tenant) => (
-                                                <div
-                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
-                                                  className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
-                                                >
-                                                  <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                      <div className="flex items-center gap-1.5">
-                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
-                                                        {tenant.phone && tenant.phone !== '••••••••••' && (
-                                                          <a
-                                                            href={`tel:${tenant.phone}`}
-                                                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600"
-                                                            aria-label={`Call ${tenant.name}`}
-                                                          >
-                                                            <Phone className="h-3 w-3" />
-                                                          </a>
-                                                        )}
-                                                        {tenant.phone && tenant.phone !== '••••••••••' && (
-                                                          <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                              <button
-                                                                type="button"
-                                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
-                                                                aria-label={`Chat and receipt options for ${tenant.name}`}
-                                                              >
-                                                                <MessageCircle className="h-3.5 w-3.5" />
-                                                              </button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="start">
-                                                              <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant), 100)}>
-                                                                <Receipt className="h-4 w-4" />
-                                                                Generate Receipt
-                                                              </DropdownMenuItem>
-                                                              <DropdownMenuItem
-                                                                className="gap-2"
-                                                                onClick={() => {
-                                                                  const phone = tenant.phone.replace(/\D/g, '');
-                                                                  window.location.href = `https://wa.me/${phone}`;
-                                                                }}
-                                                              >
-                                                                <MessageSquare className="h-4 w-4" />
-                                                                Chat with Tenant
-                                                              </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                          </DropdownMenu>
-                                                        )}
-                                                      </div>
-                                                      <p className="text-xs text-muted-foreground">
-                                                        Room {tenant.roomNo}
-                                                        {tenant.paymentDate && (
-                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
-                                                        )}
-                                                      </p>
-                                                    </div>
-                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
-                                                      ₹{tenant.amountPaid.toLocaleString()}
-                                                    </span>
-                                                  </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
+                                        <Phone className="h-3 w-3" />
+                                      </a>
+                                    )}
+                                    {tenant.phone && tenant.phone !== '••••••••••' && (
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <button
+                                            type="button"
+                                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+                                            aria-label={`Chat and receipt options for ${tenant.name}`}
+                                          >
+                                            <MessageCircle className="h-3.5 w-3.5" />
+                                          </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                          <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant), 100)}>
+                                            <Receipt className="h-4 w-4" />
+                                            Generate Receipt
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            className="gap-2"
+                                            onClick={() => {
+                                              const phone = tenant.phone.replace(/\D/g, '');
+                                              window.location.href = `https://wa.me/${phone}`;
+                                            }}
+                                          >
+                                            <MessageSquare className="h-4 w-4" />
+                                            Chat with Tenant
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Room {tenant.roomNo}
+                                    {tenant.paymentDate && (
+                                      <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                    )}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                  ₹{tenant.amountPaid.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                                          {tab === 'present' && presentArrearsTenants.length > 0 && (
-                                            <div className="space-y-2">
-                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Paid This Month</div>
-                                              {presentArrearsTenants.map((tenant) => (
-                                                <div
-                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
-                                                  className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3"
-                                                >
-                                                  <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                      <div className="flex items-center gap-1.5">
-                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
-                                                        <Badge className="border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                                                          Prev month paid now
-                                                        </Badge>
-                                                      </div>
-                                                      <p className="text-xs text-muted-foreground">
-                                                        Room {tenant.roomNo}
-                                                        {tenant.paymentDate && (
-                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
-                                                        )}
-                                                      </p>
-                                                    </div>
-                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
-                                                      ₹{tenant.amountPaid.toLocaleString()}
-                                                    </span>
-                                                  </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
+                      {tab === 'present' && presentArrearsTenants.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Paid This Month</div>
+                          {presentArrearsTenants.map((tenant) => (
+                            <div
+                              key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                              className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                    <Badge className="border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                      Prev month paid now
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Room {tenant.roomNo}
+                                    {tenant.paymentDate && (
+                                      <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                    )}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                  ₹{tenant.amountPaid.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                                          {tab === 'previous' && (
-                                            <div className="space-y-2">
-                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Collections</div>
-                                              {previousTenants.map((tenant) => (
-                                                <div
-                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
-                                                  className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
-                                                >
-                                                  <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                      <div className="flex items-center gap-1.5">
-                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
-                                                      </div>
-                                                      <p className="text-xs text-muted-foreground">
-                                                        Room {tenant.roomNo}
-                                                        {tenant.paymentDate && (
-                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
-                                                        )}
-                                                      </p>
-                                                    </div>
-                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
-                                                      ₹{tenant.amountPaid.toLocaleString()}
-                                                    </span>
-                                                  </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
+                      {tab === 'previous' && (
+                        <div className="space-y-2">
+                          <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Collections</div>
+                          {previousTenants.map((tenant) => (
+                            <div
+                              key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                              className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Room {tenant.roomNo}
+                                    {tenant.paymentDate && (
+                                      <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                    )}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                  ₹{tenant.amountPaid.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+    <WhatsAppReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} receiptData={receiptData} />
+    </>
+  );
+};
