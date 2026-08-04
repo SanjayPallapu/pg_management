@@ -142,6 +142,9 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
     };
   }, [rooms, payments, viewMonth, viewYear, previousPeriod.month, previousPeriod.year]);
 
+  const presentCurrentTenants = presentTenants.filter((tenant) => tenant.source === 'current');
+  const presentArrearsTenants = presentTenants.filter((tenant) => tenant.source === 'arrears');
+
   const visibleTenants = activeTab === 'present' ? presentTenants : previousTenants;
   const visiblePeriod = activeTab === 'present'
     ? { month: viewMonth, year: viewYear }
@@ -262,14 +265,6 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                       {monthNames[visiblePeriod.month - 1]} {visiblePeriod.year}
                     </p>
                     <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-400">₹{totalPaid.toLocaleString()}</p>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold">
-                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-700 dark:text-emerald-300">
-                        Current month ₹{currentMonthTotal.toLocaleString()}
-                      </span>
-                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700 dark:text-amber-300">
-                        Previous dues paid this month ₹{arrearsSettledTotal.toLocaleString()}
-                      </span>
-                    </div>
                     <p className="text-xs text-muted-foreground">{visibleTenants.length} fully paid tenant{visibleTenants.length === 1 ? '' : 's'}</p>
                   </div>
                   <div className="space-y-1 text-right text-xs">
@@ -280,6 +275,19 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                       <Banknote className="h-3.5 w-3.5" /> Cash ₹{cashTotal.toLocaleString()}
                     </p>
                   </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 mt-3">
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Current Month Collections</p>
+                  <p className="mt-1 text-xl font-black text-emerald-700 dark:text-emerald-300">₹{currentMonthTotal.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{presentCurrentTenants.length} tenant{presentCurrentTenants.length === 1 ? '' : 's'}</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Dues Paid This Month</p>
+                  <p className="mt-1 text-xl font-black text-emerald-700 dark:text-emerald-300">₹{arrearsSettledTotal.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{presentArrearsTenants.length} tenant{presentArrearsTenants.length === 1 ? '' : 's'}</p>
                 </div>
               </div>
 
@@ -327,51 +335,140 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                                         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
                                         aria-label={`Chat and receipt options for ${tenant.name}`}
                                       >
-                                        <MessageCircle className="h-3.5 w-3.5" />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start">
-                                      <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant), 100)}>
-                                        <Receipt className="h-4 w-4" />
-                                        Generate Receipt
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        className="gap-2"
-                                        onClick={() => {
-                                          const phone = tenant.phone.replace(/\D/g, '');
-                                          window.location.href = `https://wa.me/${phone}`;
-                                        }}
-                                      >
-                                        <MessageSquare className="h-4 w-4" />
-                                        Chat with Tenant
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                Room {tenant.roomNo}
-                                {tenant.paymentDate && (
-                                  <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
-                                )}
-                              </p>
-                            </div>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white ${tenant.source === 'arrears' ? 'bg-amber-600' : 'bg-emerald-600'}`}>
-                              ₹{tenant.amountPaid.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-    <WhatsAppReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} receiptData={receiptData} />
-    </>
-  );
-};
+                                        <div className="space-y-4 pb-8">
+                                          {tab === 'present' && (
+                                            <div className="space-y-2">
+                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Current Month</div>
+                                              {presentCurrentTenants.map((tenant) => (
+                                                <div
+                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                                                  className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
+                                                >
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                      <div className="flex items-center gap-1.5">
+                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                                                          <a
+                                                            href={`tel:${tenant.phone}`}
+                                                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600"
+                                                            aria-label={`Call ${tenant.name}`}
+                                                          >
+                                                            <Phone className="h-3 w-3" />
+                                                          </a>
+                                                        )}
+                                                        {tenant.phone && tenant.phone !== '••••••••••' && (
+                                                          <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                              <button
+                                                                type="button"
+                                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+                                                                aria-label={`Chat and receipt options for ${tenant.name}`}
+                                                              >
+                                                                <MessageCircle className="h-3.5 w-3.5" />
+                                                              </button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="start">
+                                                              <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant), 100)}>
+                                                                <Receipt className="h-4 w-4" />
+                                                                Generate Receipt
+                                                              </DropdownMenuItem>
+                                                              <DropdownMenuItem
+                                                                className="gap-2"
+                                                                onClick={() => {
+                                                                  const phone = tenant.phone.replace(/\D/g, '');
+                                                                  window.location.href = `https://wa.me/${phone}`;
+                                                                }}
+                                                              >
+                                                                <MessageSquare className="h-4 w-4" />
+                                                                Chat with Tenant
+                                                              </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                          </DropdownMenu>
+                                                        )}
+                                                      </div>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        Room {tenant.roomNo}
+                                                        {tenant.paymentDate && (
+                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                                        )}
+                                                      </p>
+                                                    </div>
+                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                                      ₹{tenant.amountPaid.toLocaleString()}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+
+                                          {tab === 'present' && presentArrearsTenants.length > 0 && (
+                                            <div className="space-y-2">
+                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Paid This Month</div>
+                                              {presentArrearsTenants.map((tenant) => (
+                                                <div
+                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                                                  className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3"
+                                                >
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                      <div className="flex items-center gap-1.5">
+                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                                        <Badge className="border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                                          Prev month paid now
+                                                        </Badge>
+                                                      </div>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        Room {tenant.roomNo}
+                                                        {tenant.paymentDate && (
+                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                                        )}
+                                                      </p>
+                                                    </div>
+                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                                      ₹{tenant.amountPaid.toLocaleString()}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+
+                                          {tab === 'previous' && (
+                                            <div className="space-y-2">
+                                              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Previous Month Collections</div>
+                                              {previousTenants.map((tenant) => (
+                                                <div
+                                                  key={`${tenant.id}-${tenant.source}-${tenant.paymentDate || ''}`}
+                                                  className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
+                                                >
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                                                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                      <div className="flex items-center gap-1.5">
+                                                        <p className="truncate text-sm font-semibold">{tenant.name}</p>
+                                                      </div>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        Room {tenant.roomNo}
+                                                        {tenant.paymentDate && (
+                                                          <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
+                                                        )}
+                                                      </p>
+                                                    </div>
+                                                    <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                                                      ₹{tenant.amountPaid.toLocaleString()}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}

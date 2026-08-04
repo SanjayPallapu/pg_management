@@ -12,6 +12,7 @@ import { CashLogo } from './icons/CashLogo';
 import { StayPeriodIndicator } from './StayPeriodIndicator';
 import { PaymentEntry } from '@/types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useBackGesture } from '@/hooks/useBackGesture';
 
 interface PreviousMonthPending {
   month: number;
@@ -77,6 +78,8 @@ export const OverduePaymentDialog = ({
   const [discount, setDiscount] = useState<number>(0);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  useBackGesture(open, () => onOpenChange(false), { keepHistoryOnClose: true });
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
