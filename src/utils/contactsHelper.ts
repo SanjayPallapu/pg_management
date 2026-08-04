@@ -187,9 +187,9 @@ export const pickContactFromDevice = async (): Promise<SelectedContact | null | 
       };
     }
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('NativeContactPicker error/result:', error);
-    const errStr = String(error?.message || error || '').toLowerCase();
+    const errStr = String(error instanceof Error ? error.message : error || '').toLowerCase();
     if (errStr.includes('cancel')) {
       return undefined; // User explicitly cancelled in system UI
     }
