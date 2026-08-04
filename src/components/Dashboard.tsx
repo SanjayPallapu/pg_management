@@ -213,7 +213,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       let upi = 0;
       let cash = 0;
       data.forEach((g) => {
-        const entries = (g.payment_entries as any[]) || [];
+        const entries = (g.payment_entries as unknown as Array<{ mode?: string; amount?: number }>) || [];
         entries.forEach((entry) => {
           if (entry.mode === "upi") {
             upi += entry.amount || 0;
@@ -223,7 +223,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         });
       });
 
-      const guests = data.map((g: any) => ({
+      const guests = data.map((g: {
+        guest_name: string;
+        rooms?: { room_no?: string } | null;
+        from_date: string;
+        to_date: string;
+        total_amount: number;
+        amount_paid?: number | null;
+        payment_status: string;
+        payment_entries?: unknown;
+      }) => ({
         name: g.guest_name as string,
         roomNo: (g.rooms?.room_no as string) || "",
         fromDate: g.from_date as string,
