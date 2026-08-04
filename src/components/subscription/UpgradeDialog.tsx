@@ -50,6 +50,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
   const currentLocalized = getLocalizedSubscriptionPrice(finalPlanKey, region);
   const isTrialActive = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
   const isNative = Capacitor.isNativePlatform();
+  const activePlanKey = subscription?.status === 'active' ? subscription?.billingCycle : undefined;
 
   const cards = useMemo(() => {
     return [
@@ -169,6 +170,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
           {cards.map((c) => {
             const planKey = billingCycle === 'monthly' ? c.monthlyKey : c.yearlyKey;
             const isSelected = finalPlanKey === planKey;
+            const isActivePlan = activePlanKey === planKey;
 
             // Get original monthly pricing to show struck-out discount
             const originalPriceLocal = getLocalizedSubscriptionPrice(c.monthlyKey, region);
@@ -182,9 +184,14 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             return (
               <div
                 key={planKey}
-                onClick={() => setActivePlanSelection(planKey)}
+                onClick={() => {
+                  if (isActivePlan) return;
+                  setActivePlanSelection(planKey);
+                }}
                 className={`relative flex flex-col justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
-                  isSelected ? c.cardStyle : 'border-border/60 hover:border-primary/40 bg-card/60'
+                  isActivePlan
+                    ? 'border-emerald-500/40 bg-emerald-500/5 opacity-70 cursor-not-allowed'
+                    : isSelected ? c.cardStyle : 'border-border/60 hover:border-primary/40 bg-card/60'
                 }`}
               >
                 {c.tag && (
@@ -236,9 +243,11 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
 
                 <div className="mt-4 pt-2">
                   <div className={`w-full py-1.5 rounded-xl text-center text-xs font-extrabold transition-all ${
-                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    isActivePlan
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                      : isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}>
-                    {isSelected ? 'Selected' : 'Select Plan'}
+                    {isActivePlan ? 'Active Plan' : isSelected ? 'Selected' : 'Select Plan'}
                   </div>
                 </div>
               </div>

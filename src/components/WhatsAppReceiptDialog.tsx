@@ -74,7 +74,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
   }, [showSuccessAnimation, successAnimationData]);
 
   // Handle OS back gesture to close dialog
-  useBackGesture(open, () => onOpenChange(false));
+  useBackGesture(open, () => onOpenChange(false), { keepHistoryOnClose: true });
 
   useEffect(() => {
     if (receiptData && open) {

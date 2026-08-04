@@ -47,6 +47,7 @@ export default function SubscriptionPage() {
   // rather than exposing country switches that can disagree with the provider.
   const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, "IN");
   const isTrialActive = subscription?.billingCycle === "trial" && subscription?.status === "active";
+  const activePlanKeyOnSubscription = subscription?.status === "active" ? subscription?.billingCycle : undefined;
 
   const daysLeft = useMemo(() => {
     if (!subscription?.expiresAt) return null;
@@ -208,6 +209,7 @@ export default function SubscriptionPage() {
           {cards.map((c) => {
             const planKey = billingCycle === "monthly" ? c.monthlyKey : c.yearlyKey;
             const isSelected = activePlanKey === planKey;
+            const isActivePlan = activePlanKeyOnSubscription === planKey;
 
             const originalPriceLocal = getLocalizedSubscriptionPrice(c.monthlyKey, "IN");
             const actualPriceLocal = getLocalizedSubscriptionPrice(planKey, "IN");
@@ -219,9 +221,14 @@ export default function SubscriptionPage() {
             return (
               <div
                 key={planKey}
-                onClick={() => setSelectedPlanKey(planKey)}
+                onClick={() => {
+                  if (isActivePlan) return;
+                  setSelectedPlanKey(planKey);
+                }}
                 className={`relative flex cursor-pointer flex-col justify-between rounded-2xl border p-4 transition-all duration-200 ${
-                  isSelected ? c.cardStyle : "border-border/60 hover:border-primary/40 bg-card/60"
+                  isActivePlan
+                    ? "border-emerald-500/40 bg-emerald-500/5 opacity-70 cursor-not-allowed"
+                    : isSelected ? c.cardStyle : "border-border/60 hover:border-primary/40 bg-card/60"
                 }`}
               >
                 {c.tag && (
@@ -276,7 +283,11 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="mt-3 pt-1">
-                  {isSelected ? (
+                  {isActivePlan ? (
+                    <div className="w-full rounded-xl bg-emerald-500/10 py-2.5 text-center text-xs font-extrabold text-emerald-700 dark:text-emerald-300">
+                      Active Plan
+                    </div>
+                  ) : isSelected ? (
                     <Button
                       type="button"
                       className="h-11 w-full rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-xs font-extrabold text-white shadow-md"

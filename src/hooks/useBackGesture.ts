@@ -45,7 +45,11 @@ const handleGlobalPopState = () => {
  * Manages modal closures using a global stack to handle nested dialogs/sheets
  * correctly without conflicting with browser history.
  */
-export const useBackGesture = (open: boolean, onClose: () => void) => {
+export const useBackGesture = (
+  open: boolean,
+  onClose: () => void,
+  options?: { keepHistoryOnClose?: boolean }
+) => {
   const onCloseRef = useRef(onClose);
 
   // Keep the close callback ref up to date
@@ -82,11 +86,11 @@ export const useBackGesture = (open: boolean, onClose: () => void) => {
       // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
-        if (!isHandlingPopState) {
+        if (!isHandlingPopState && options?.keepHistoryOnClose !== true) {
           window.history.back();
         }
         globalHistoryPushed = false;
       }
     };
-  }, [open]);
+  }, [open, options?.keepHistoryOnClose]);
 };
