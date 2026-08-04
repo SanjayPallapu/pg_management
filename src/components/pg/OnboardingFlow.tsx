@@ -307,7 +307,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             <Card className="border-border">
               <CardContent className="pt-4 space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Trial</span><span>1 month free</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">After trial</span><span>{currentPlan.periodLabel === '/month' ? `₹${currentPlan.price} every month` : currentPlan.periodLabel === '/3 months' ? `₹${currentPlan.price} every 3 months` : `₹${currentPlan.price} every year`}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">After trial</span><span>{currentPlan.periodLabel === '/month' ? `₹${currentPlan.price} every month` : `₹${currentPlan.price} every year`}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Billing</span><span>Auto-renewing</span></div>
               </CardContent>
             </Card>

@@ -30,9 +30,11 @@ export interface BillPaymentDraft extends BillPaymentRequest {
   status: BillPaymentStatus;
   note: string | null;
   payeeName: string | null;
+  payeeUpiId?: string | null;
   maskedUpiId: string | null;
   upiAttempted: boolean;
   paymentDate?: string | null;
+  createdDate?: string | null;
 }
 
 export interface BillPaymentTransaction extends BillPaymentDraft {

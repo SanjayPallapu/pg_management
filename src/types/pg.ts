@@ -181,12 +181,26 @@ export const SUBSCRIPTION_PLANS = {
     },
     description: 'Multi-PG management, dedicated account manager & zero downtime.',
   },
+  lifetime: {
+    name: 'Lifetime',
+    price: 49999,
+    periodLabel: 'one-time',
+    billingCycle: 'lifetime',
+    maxPgs: -1,
+    maxTenantsPerPg: -1,
+    features: {
+      autoReminders: true,
+      dailyReports: true,
+      aiLogo: true,
+    },
+    description: 'Pay once, use forever. All Pro Max features with no renewals.',
+  },
 } as const;
 
 export type SubscriptionPlanKey = keyof typeof SUBSCRIPTION_PLANS;
 
 export const SUBSCRIPTION_PLAN_ORDER: SubscriptionPlanKey[] = [
-  'trial', 'free', 'monthly', 'pro', 'promax', 'yearly', 'pro_yearly', 'promax_yearly'
+  'trial', 'free', 'monthly', 'pro', 'promax', 'yearly', 'pro_yearly', 'promax_yearly', 'lifetime'
 ];
 
 export const SUBSCRIPTION_PLAN_META = {
@@ -237,6 +251,10 @@ export const REGIONAL_PRICING: Record<SubscriptionPlanKey, Record<string, Region
   promax_yearly: {
     IN: { currency: 'INR', symbol: '₹', price: 19999 },
     US: { currency: 'USD', symbol: '$', price: 289.99 },
+  },
+  lifetime: {
+    IN: { currency: 'INR', symbol: '₹', price: 49999 },
+    US: { currency: 'USD', symbol: '$', price: 699.99 },
   },
 };
 
