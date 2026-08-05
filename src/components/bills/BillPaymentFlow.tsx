@@ -416,6 +416,38 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                 <h2 className="mt-3 text-xl font-black">How was this payment completed?</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Choose once. PG HUB records only what you confirm.</p>
               </div>
+
+              {/* Category summary card */}
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="px-4 pt-3 pb-2 border-b border-border">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Recording under</p>
+                  <p className="text-sm font-black text-[#4936ef] mt-0.5">{request.categoryName}</p>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-y divide-border">
+                  {([
+                    { label: "Utilities", category: "utility" as const, color: "text-[#1766d9]" },
+                    { label: "Other bills", category: "other" as const, color: "text-[#5d3ed4]" },
+                    { label: "Current bills", category: "current" as const, color: "text-[#4932e7]" },
+                    { label: "Family", category: "family" as const, color: "text-[#5737d8]" },
+                  ]).map(({ label, category, color }) => (
+                    <div
+                      key={category}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2.5 transition-colors",
+                        request.category === category
+                          ? "bg-[#f1efff] dark:bg-[#302858]"
+                          : "bg-white dark:bg-card"
+                      )}
+                    >
+                      <div className={cn("text-[10px] font-bold", color)}>{label}</div>
+                      {request.category === category && (
+                        <div className="ml-auto h-2 w-2 rounded-full bg-[#4936ef]" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <ResultButton icon={Check} tone="text-emerald-600 bg-emerald-50" label="UPI payment successful" helper="Add to bill totals and payment history" loading={savingOutcome === "success"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("success")} />
                 <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" helper="Add as cash and note the UPI attempt" loading={savingOutcome === "cash"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cash")} />
