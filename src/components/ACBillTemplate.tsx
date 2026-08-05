@@ -48,16 +48,24 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
     >
       <div style={{ 
         position: "relative",
-        padding: "16px 20px 12px", 
-        borderBottom: "1px solid #f1f5f9",
-        marginBottom: "12px",
-        minHeight: "115px",
+        padding: "18px 20px 46px", 
+        marginBottom: "-30px",
+        minHeight: "130px",
+        background: isPaid
+          ? "linear-gradient(135deg,#0f7a4d 0%,#16a34a 55%,#4ade80 100%)"
+          : "linear-gradient(135deg,#0b2f6b 0%,#1d4ed8 55%,#38bdf8 100%)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
+        overflow: "hidden",
       }}>
+        {/* Illustrated background shapes */}
+        <div style={{ position: "absolute", top: "-70px", right: "-50px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.10)" }} />
+        <div style={{ position: "absolute", bottom: "-90px", left: "-60px", width: "190px", height: "190px", borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ position: "absolute", top: "18px", left: "150px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.35)" }} />
+        <div style={{ position: "absolute", bottom: "50px", right: "120px", width: "6px", height: "6px", borderRadius: "50%", background: "rgba(255,255,255,0.35)" }} />
         {/* Left Side: Logo */}
         <div style={{ 
           position: "absolute", 
@@ -66,36 +74,41 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
           transform: "translateY(-50%)",
           zIndex: 10 
         }}>
-          <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
-            style={{ 
-              width: "105px", 
-              height: "105px", 
-              objectFit: "contain",
-              display: "block"
-            }} 
-          />
+          <div style={{
+            width: "86px", height: "86px", borderRadius: "26px",
+            background: "rgba(255,255,255,0.92)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 10px 24px rgba(2,20,54,.25)",
+          }}>
+            <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
+              style={{ width: "68px", height: "68px", objectFit: "contain", display: "block" }} 
+            />
+          </div>
         </div>
 
         {/* Top Right: Receipt/Bill Details */}
         <div style={{
           position: "absolute",
-          top: "24px",
-          right: "20px",
+          top: "18px",
+          right: "18px",
           textAlign: "right",
           fontSize: "9px",
-          color: "#64748b",
+          color: "rgba(255,255,255,0.8)",
           lineHeight: "1.3",
-          fontWeight: 500,
+          fontWeight: 600,
+          background: "rgba(255,255,255,0.14)",
+          borderRadius: "10px",
+          padding: "6px 10px",
         }}>
           <div style={{ textTransform: "uppercase", letterSpacing: "0.3px" }}>{isPaid ? "Receipt No:" : "Bill No:"}</div>
-          <div style={{ fontWeight: 700, color: "#334155", fontFamily: "monospace", fontSize: "10px" }}>
+          <div style={{ fontWeight: 800, color: "#ffffff", fontFamily: "monospace", fontSize: "10px" }}>
             AC-{data.roomNo}-{data.monthLabel.split(" ")[0].substring(0,3).toUpperCase()}{data.monthLabel.split(" ")[1] || ""}
           </div>
         </div>
 
         {/* Center: PG Details & Invoice Title */}
-        <div style={{ width: "100%", paddingLeft: "80px", paddingRight: "80px" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        <div style={{ width: "100%", paddingLeft: "110px", paddingRight: "100px", position: "relative", zIndex: 5 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: "0.8px" }}>
             {pgName}
           </div>
           <div style={{ 
@@ -103,22 +116,22 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
             alignItems: "center", 
             justifyContent: "center",
             gap: "6px", 
-            fontSize: 17, 
-            fontWeight: 700, 
-            color: "#0f172a",
-            marginTop: "3px"
+            fontSize: 19, 
+            fontWeight: 800, 
+            color: "#ffffff",
+            marginTop: "4px"
           }}>
             <span style={{ fontSize: "15px" }}>{isPaid ? "🧾" : "⚡"}</span>
             <span>{isPaid ? "AC Payment Receipt" : "AC Electricity Bill"}</span>
           </div>
           <div style={{ 
             fontSize: 11, 
-            fontWeight: 600, 
-            color: "#475569", 
+            fontWeight: 700, 
+            color: "#ffffff", 
             marginTop: "5px",
-            background: "#f1f5f9",
-            padding: "2px 8px",
-            borderRadius: "6px",
+            background: "rgba(255,255,255,0.2)",
+            padding: "3px 10px",
+            borderRadius: "999px",
             display: "inline-block",
             width: "fit-content"
           }}>
@@ -128,17 +141,17 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       </div>
 
             {/* Tenant + Room meta strip */}
-      <div style={{ margin: "4px 20px 8px", display: "flex", gap: 8 }}>
+      <div style={{ position: "relative", zIndex: 6, margin: "0 16px 10px", display: "flex", gap: 8 }}>
         {data.tenantName ? (
           <>
-            <div style={{ flex: 1, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ flex: 1, background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "10px 12px", boxShadow: "0 10px 24px -18px rgba(15,23,42,.6)" }}>
               <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Tenant
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{data.tenantName}</div>
             </div>
-            <div style={{ flex: 1, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ flex: 1, background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "10px 12px", boxShadow: "0 10px 24px -18px rgba(15,23,42,.6)" }}>
               <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "4px" }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M15 11h.01"/></svg>
                 Room
@@ -147,7 +160,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 16px" }}>
+          <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "12px 16px", boxShadow: "0 10px 24px -18px rgba(15,23,42,.6)" }}>
             <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.4, display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M15 11h.01"/></svg>
               Room
@@ -159,7 +172,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
 
 
       {/* Reading breakdown */}
-      <div style={{ margin: "0 20px 10px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ margin: "0 16px 10px", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", background: "#ffffff" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <tbody>
             {data.startReading !== undefined && data.startReading !== null && (
@@ -221,16 +234,18 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
       </div>
 
       <div style={{
-        margin: "0 20px 12px",
-        background: isPaid ? "linear-gradient(180deg,#f0fdf4 0%,#dcfce7 100%)" : "linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%)",
-        borderRadius: 12, padding: "16px 12px", textAlign: "center", 
-        border: isPaid ? "1px solid #bbf7d0" : "1px solid #93c5fd",
+        margin: "0 16px 12px",
+        background: isPaid ? "linear-gradient(140deg,#f0fdf4 0%,#dcfce7 100%)" : "linear-gradient(140deg,#eff6ff 0%,#dbeafe 60%,#e0f2fe 100%)",
+        borderRadius: 20, padding: "18px 12px", textAlign: "center", 
+        border: isPaid ? "1px solid #bbf7d0" : "1px solid #bfdbfe",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
       }}>
+        <div style={{ position: "absolute", top: "-50px", left: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: isPaid ? "rgba(22,163,74,.08)" : "rgba(29,78,216,.08)" }} />
         {isPaid && (
           <img 
             src={paidStamp} 
@@ -307,7 +322,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         )}
       </div>
 
-      <div style={{ margin: "0 20px 12px", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ margin: "0 16px 12px", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", background: "#ffffff" }}>
         <div style={{ background: isPaid ? "#c8e6c9" : "#dbeafe", color: isPaid ? "#1b5e20" : "#0c4a6e", padding: "10px 16px", fontWeight: 600, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 2 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
