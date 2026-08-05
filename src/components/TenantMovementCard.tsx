@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { parseDateOnly } from '@/utils/dateOnly';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,6 +26,8 @@ interface TenantWithRoom extends Tenant {
 export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSummaryCard = true }: TenantMovementCardProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const [sheetOpen, setSheetOpen] = useState(defaultOpen);
+  const [movementMonth, setMovementMonth] = useState(selectedMonth);
+  const [movementYear, setMovementYear] = useState(selectedYear);
   const [activeTab, setActiveTab] = useState<'joined' | 'left'>('joined');
   const isMobile = useIsMobile();
 
@@ -34,20 +37,20 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
 
     rooms.forEach(room => {
       room.tenants.forEach(tenant => {
-        const startDate = new Date(tenant.startDate);
+        const startDate = parseDateOnly(tenant.startDate);
         const startMonth = startDate.getMonth() + 1;
         const startYear = startDate.getFullYear();
 
-        if (startMonth === selectedMonth && startYear === selectedYear) {
+        if (startMonth === movementMonth && startYear === movementYear) {
           joinedList.push({ ...tenant, roomNo: room.roomNo, floor: room.floor });
         }
 
         if (tenant.endDate) {
-          const endDate = new Date(tenant.endDate);
+          const endDate = parseDateOnly(tenant.endDate);
           const endMonth = endDate.getMonth() + 1;
           const endYear = endDate.getFullYear();
 
-          if (endMonth === selectedMonth && endYear === selectedYear) {
+          if (endMonth === movementMonth && endYear === movementYear) {
             leftList.push({ ...tenant, roomNo: room.roomNo, floor: room.floor });
           }
         }
@@ -69,7 +72,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
       joinedTotal,
       leftTotal,
     };
-  }, [rooms, selectedMonth, selectedYear]);
+  }, [rooms, movementMonth, movementYear]);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -112,15 +115,26 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
         >
           <div className="flex flex-col h-full bg-background">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+            <SheetHeader className="px-4 pt-4 pb-3 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setSheetOpen(false); onClose?.(); }}>
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <SheetTitle className="text-base text-foreground font-bold text-left">
-                  Tenant Movement ({months[selectedMonth - 1]} {selectedYear})
+                <SheetTitle className="flex-1 text-base text-foreground font-bold text-left">
+                  Tenant Movement
                 </SheetTitle>
+                <div className="flex items-center gap-1.5">
+                  <label htmlFor="movement-month" className="sr-only">Movement month</label>
+                  <select id="movement-month" value={movementMonth} onChange={(event) => setMovementMonth(Number(event.target.value))} className="h-9 rounded-xl border border-border bg-card px-2 text-xs font-bold text-foreground outline-none focus:ring-2 focus:ring-primary">
+                    {months.map((month, index) => <option key={month} value={index + 1}>{month.slice(0, 3)}</option>)}
+                  </select>
+                  <label htmlFor="movement-year" className="sr-only">Movement year</label>
+                  <select id="movement-year" value={movementYear} onChange={(event) => setMovementYear(Number(event.target.value))} className="h-9 rounded-xl border border-border bg-card px-2 text-xs font-bold text-foreground outline-none focus:ring-2 focus:ring-primary">
+                    {Array.from({ length: 5 }, (_, index) => selectedYear - 2 + index).map((year) => <option key={year} value={year}>{year}</option>)}
+                  </select>
+                </div>
               </div>
+              <p className="pl-10 text-left text-xs text-muted-foreground">{months[movementMonth - 1]} {movementYear} · Joined and left tenants</p>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">

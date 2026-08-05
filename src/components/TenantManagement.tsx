@@ -1386,7 +1386,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                               <LogOut className="h-4 w-4 mr-2 shrink-0" />
                               <span className="text-left leading-tight">
                                 <span className="block text-xs font-bold">Move Out</span>
-                                <span className="block text-[10px] font-normal opacity-75">Set date &amp; settlement</span>
                               </span>
                             </Button>
                           )}
@@ -1888,8 +1887,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         onConfirm={async (data) => {
           if (!markLeftTenant) return;
 
-          // Update tenant with end date
-          await handleUpdateTenant(markLeftTenant.id, { endDate: data.endDate });
+          // Keep the database value date-only so the active-tenant helpers compare
+          // the selected calendar day consistently in every timezone.
+          const normalizedEndDate = data.endDate.slice(0, 10);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedEndDate)) return;
+
+          await handleUpdateTenant(markLeftTenant.id, { endDate: normalizedEndDate });
 
           const existingPayment = getSelectedMonthPayment(markLeftTenant.id);
           const previousPaid = existingPayment?.amountPaid || 0;
@@ -1901,7 +1904,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               month: selectedMonth,
               year: selectedYear,
               paymentStatus: "Paid",
-              paymentDate: data.endDate,
+              paymentDate: normalizedEndDate,
               amount: markLeftTenant.monthlyRent,
               amountPaid: markLeftTenant.monthlyRent, // Mark as fully paid
               paymentEntries: existingPayment?.paymentEntries || [],
@@ -1914,7 +1917,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               month: selectedMonth,
               year: selectedYear,
               paymentStatus: "Paid",
-              paymentDate: data.endDate,
+              paymentDate: normalizedEndDate,
               amount: markLeftTenant.monthlyRent,
               amountPaid: markLeftTenant.monthlyRent, // Mark as fully paid (with discount)
               paymentEntries: existingPayment?.paymentEntries || [],
@@ -1940,7 +1943,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               month: selectedMonth,
               year: selectedYear,
               paymentStatus: isFullPayment ? "Paid" : "Partial",
-              paymentDate: data.endDate,
+              paymentDate: normalizedEndDate,
               amount: markLeftTenant.monthlyRent,
               amountPaid: totalPaid,
               paymentEntries: updatedEntries,

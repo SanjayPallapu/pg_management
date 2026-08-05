@@ -289,11 +289,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     );
 
     return [
-      {
-        key: "Current Bill",
-        icon: Zap,
-        tone: "bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]",
-      },
       ...UTILITY_PRESETS,
       ...customKeys.map((key) => ({
         key,
@@ -769,15 +764,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         <div className="space-y-2.5">
                           {utilityCategoryItems.map((preset) => {
                             const Icon = preset.icon;
-                            // "Current Bill" in utilities → maps to the "current" category
-                            const isCurrentBill = preset.key === "Current Bill";
-                            const matchingEntries = isCurrentBill
-                              ? byCategory("current")
-                              : byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
+                            const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
                             const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                             return (
                               <div key={preset.key} className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 shadow-sm">
-                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => isCurrentBill ? setDetailCategory("current") : openPresetLedger("utility", preset.key, preset.key)}>
+                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
                                   <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", preset.tone)}>
                                     <Icon className="size-5" />
                                   </div>
@@ -787,7 +778,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                                 <button
                                   type="button"
                                   className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                  onClick={() => isCurrentBill ? setDetailCategory("current") : openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
+                                  onClick={() => openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
                                   aria-label={`Add ${preset.key}`}
                                 >
                                   <Plus className="size-4" />

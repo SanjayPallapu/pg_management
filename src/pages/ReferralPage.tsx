@@ -1,26 +1,31 @@
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   Copy,
   Gift,
+  HandCoins,
+  Link2,
   Share2,
   ShieldCheck,
-  ArrowRight,
-  Users,
-  UserPlus,
+  Sparkles,
   Trophy,
+  UserPlus,
+  Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  getReferralStats,
-  shareReferralInvite,
-  validateAndApplyReferralCode,
-} from "@/utils/referralHelper";
+import { getReferralStats, shareReferralInvite, validateAndApplyReferralCode } from "@/utils/referralHelper";
+
+const steps = [
+  { icon: Link2, title: "Share your invite", copy: "Send your personal PG HUB link to an owner." },
+  { icon: UserPlus, title: "They get started", copy: "Your invitee joins and activates a paid plan." },
+  { icon: HandCoins, title: "You get rewarded", copy: "A free month is added after their activation." },
+];
 
 export default function ReferralPage() {
   const navigate = useNavigate();
@@ -60,61 +65,44 @@ export default function ReferralPage() {
       toast.error(result.message);
       return;
     }
-    const normalizedCode = inputCode.trim().toUpperCase();
-    setAppliedCode(normalizedCode);
+    setAppliedCode(inputCode.trim().toUpperCase());
     setInputCode("");
     toast.success(result.message);
   };
 
   return (
-    <main className="min-h-screen bg-muted/20 font-sans text-foreground">
-      <header className="sticky top-0 z-20 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-lg shadow-blue-950/10">
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center gap-3 px-3 py-2 sm:px-4">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/10 hover:bg-white/20"><ArrowLeft className="h-5 w-5" /></button>
-          <div><h1 className="text-lg font-black tracking-tight">Refer &amp; Earn</h1><p className="text-xs text-blue-100">Grow the PG HUB community</p></div>
+    <main className="min-h-screen bg-[#0b1226] font-sans text-[#f7f8ff]">
+      <header className="border-b border-white/10 bg-[#0b1226]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 lg:px-8">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5 transition hover:bg-white/10"><ArrowLeft className="h-5 w-5" /></button>
+            <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9da8d2]">PG HUB</p><h1 className="text-base font-black">Refer &amp; Earn</h1></div>
+          </div>
+          <div className="hidden items-center gap-2 rounded-full border border-[#9b7bff]/30 bg-[#9b7bff]/10 px-3 py-1.5 text-xs font-bold text-[#c9bcff] sm:flex"><Sparkles className="h-3.5 w-3.5" /> Owner rewards</div>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-screen-2xl space-y-4 px-3 py-4 pb-10 sm:px-4">
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0e6ce7] via-[#2857d4] to-[#6b3ee8] p-5 text-white shadow-xl shadow-blue-950/15">
-          <div className="absolute -right-4 -top-4 grid h-28 w-28 place-items-center rounded-full bg-white/10 text-white/70"><Gift className="h-11 w-11" /></div>
-          <div className="relative max-w-[270px]">
-            <p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-100">Owner rewards</p>
-            <h2 className="mt-2 text-2xl font-black leading-tight tracking-tight">Invite an owner.<br />Earn one free month.</h2>
-            <p className="mt-3 text-xs leading-relaxed text-blue-100">They receive 30% off their first paid month. Your reward unlocks after activation.</p>
+      <div className="mx-auto max-w-6xl px-5 py-7 lg:px-8 lg:py-10">
+        <section className="grid overflow-hidden rounded-[2rem] border border-[#9b7bff]/30 bg-[#151d3a] shadow-2xl shadow-black/20 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
+            <div className="mb-5 flex w-fit items-center gap-2 rounded-full bg-[#ffbd8b]/15 px-3 py-1.5 text-xs font-black text-[#ffc49a]"><Gift className="h-3.5 w-3.5" /> One reward. Every successful invite.</div>
+            <h2 className="max-w-xl text-balance text-4xl font-black leading-[1.05] tracking-[-0.04em] sm:text-6xl">Help another owner run their PG better.</h2>
+            <p className="mt-5 max-w-lg text-sm leading-6 text-[#b9c1dd] sm:text-base">Invite a property owner to PG HUB. They get 30% off their first paid month, and you unlock one free month after activation.</p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row"><Button type="button" onClick={shareInvite} disabled={sharing} className="h-12 rounded-2xl bg-[#9b7bff] px-6 font-black text-[#0b1226] hover:bg-[#b09aff]"><Share2 className="mr-2 h-4 w-4" />{sharing ? "Opening share options..." : "Share invitation"}</Button><Button type="button" variant="outline" onClick={copyCode} className="h-12 rounded-2xl border-white/15 bg-white/5 px-6 font-black text-white hover:bg-white/10">{copied ? <Check className="mr-2 h-4 w-4 text-[#7ee4ae]" /> : <Copy className="mr-2 h-4 w-4" />}Copy code</Button></div>
+          </div>
+          <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden border-t border-white/10 bg-[#222d58] p-8 lg:border-l lg:border-t-0">
+            <div className="relative flex h-56 w-56 items-center justify-center rounded-[2.5rem] border border-[#9b7bff]/40 bg-[#101832] shadow-xl shadow-black/20"><div className="absolute -top-4 right-8 grid h-12 w-12 place-items-center rounded-2xl bg-[#ffbd8b] text-[#422138] shadow-lg"><Gift className="h-6 w-6" /></div><div className="grid h-28 w-28 place-items-center rounded-full border-[10px] border-[#9b7bff]/30 bg-[#9b7bff]/15"><Trophy className="h-14 w-14 text-[#c9bcff]" /></div><div className="absolute -bottom-5 left-6 rounded-2xl border border-[#7ee4ae]/30 bg-[#102b2e] px-4 py-3 text-center shadow-lg"><p className="text-[10px] font-black uppercase tracking-wider text-[#9ee9be]">Your reward</p><p className="text-xl font-black text-white">1 free month</p></div></div>
           </div>
         </section>
 
-        <section className="grid grid-cols-3 overflow-hidden rounded-2xl border border-border/70 bg-card py-4 text-center shadow-sm">
-          <div><Users className="mx-auto h-4 w-4 text-blue-500" /><strong className="mt-1 block text-lg font-black">{stats.totalInvited}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Invited</span></div>
-          <div className="border-x border-border/60"><UserPlus className="mx-auto h-4 w-4 text-emerald-500" /><strong className="mt-1 block text-lg font-black">{stats.activePaidReferrals}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Joined</span></div>
-          <div><Trophy className="mx-auto h-4 w-4 text-violet-500" /><strong className="mt-1 block text-lg font-black">{stats.freeMonthsEarned}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Earned</span></div>
+        <section className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-3xl border border-white/10 bg-[#151d3a] py-5 text-center"><div><Users className="mx-auto h-5 w-5 text-[#9da8d2]" /><strong className="mt-2 block text-2xl font-black">{stats.totalInvited}</strong><span className="text-[10px] font-bold uppercase tracking-wider text-[#9da8d2]">Invited</span></div><div><UserPlus className="mx-auto h-5 w-5 text-[#7ee4ae]" /><strong className="mt-2 block text-2xl font-black">{stats.activePaidReferrals}</strong><span className="text-[10px] font-bold uppercase tracking-wider text-[#9da8d2]">Activated</span></div><div><Trophy className="mx-auto h-5 w-5 text-[#ffbd8b]" /><strong className="mt-2 block text-2xl font-black">{stats.freeMonthsEarned}</strong><span className="text-[10px] font-bold uppercase tracking-wider text-[#9da8d2]">Free months</span></div></section>
+
+        <section className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-white/10 bg-[#151d3a] p-6 sm:p-7"><div className="flex items-center justify-between"><div><h3 className="text-lg font-black">Your invite code</h3><p className="mt-1 text-sm text-[#9da8d2]">Share this code with your next owner referral.</p></div><div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#9b7bff]/15 text-[#c9bcff]"><Link2 className="h-5 w-5" /></div></div><div className="mt-5 flex items-center gap-3 rounded-2xl border border-[#9b7bff]/40 bg-[#0d1530] p-3"><span className="flex-1 truncate px-2 font-mono text-lg font-black tracking-wider text-[#c9bcff]">{stats.referralCode}</span><Button type="button" variant="ghost" size="icon" onClick={copyCode} aria-label="Copy referral code" className="h-10 w-10 rounded-xl text-white hover:bg-white/10">{copied ? <Check className="h-4 w-4 text-[#7ee4ae]" /> : <Copy className="h-4 w-4" />}</Button></div></div>
+          <div className="rounded-3xl border border-white/10 bg-[#151d3a] p-6 sm:p-7"><h3 className="text-lg font-black">How it works</h3><div className="mt-5 space-y-4">{steps.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-start gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#9b7bff]/15 text-[#c9bcff]"><Icon className="h-5 w-5" /></div><div><p className="text-sm font-black">{index + 1}. {step.title}</p><p className="mt-0.5 text-xs leading-5 text-[#9da8d2]">{step.copy}</p></div>{index < steps.length - 1 && <ArrowRight className="ml-auto mt-3 hidden h-4 w-4 text-[#606b92] sm:block" />}</div>; })}</div></div>
         </section>
 
-        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <div className="flex items-end justify-between"><div><h2 className="text-sm font-black">Your invite</h2><p className="text-[11px] text-muted-foreground">Share the link or copy the code.</p></div><Share2 className="h-4 w-4 text-violet-500" /></div>
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
-            <span className="min-w-0 flex-1 truncate font-mono text-sm font-black tracking-wider text-primary">{stats.referralCode}</span>
-            <Button type="button" variant="ghost" size="icon" onClick={copyCode} className="h-9 w-9" aria-label="Copy referral code">{copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}</Button>
-          </div>
-          <Button type="button" onClick={shareInvite} disabled={sharing} className="mt-3 h-12 w-full rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-sm font-black text-white"><Share2 className="mr-2 h-4 w-4" />{sharing ? "Opening share options…" : "Share invitation"}</Button>
-        </section>
-
-        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <h2 className="text-sm font-black">How it works</h2>
-          <div className="mt-4 flex items-start justify-between gap-1 text-center">
-            {[{ icon: Share2, label: 'Share' }, { icon: UserPlus, label: 'Friend joins' }, { icon: Trophy, label: 'Reward' }].map((step, index, list) => {
-              const Icon = step.icon;
-              return <div key={step.label} className="contents"><div className="w-20"><span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span><p className="mt-2 text-[10px] font-bold">{step.label}</p></div>{index < list.length - 1 && <ArrowRight className="mt-3 h-4 w-4 text-muted-foreground/50" />}</div>;
-            })}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <h2 className="text-sm font-black">Apply a code</h2><p className="mt-0.5 text-[11px] text-muted-foreground">Available before your first paid subscription.</p>
-          {appliedCode ? <div className="mt-3 flex items-center gap-2 border-y border-emerald-500/30 py-3 text-xs font-bold text-emerald-600"><Check className="h-4 w-4" />Applied: <span className="font-mono">{appliedCode}</span></div> : <div className="mt-3 flex gap-2"><Input value={inputCode} onChange={(event) => setInputCode(event.target.value.toUpperCase())} placeholder="PGHUB-OWNER1234" autoCapitalize="characters" className="h-11 rounded-xl font-mono text-xs" /><Button type="button" onClick={applyCode} disabled={!inputCode.trim()} className="h-11 rounded-xl px-5 font-bold">Apply</Button></div>}
-          <p className="mt-5 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />Maximum {stats.maxMonthsPerYear} free months yearly. Self-referrals and duplicate accounts are excluded.</p>
-        </section>
+        <section className="mt-5 rounded-3xl border border-white/10 bg-[#151d3a] p-6 sm:p-7"><div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-black">Have a referral code?</h3><p className="mt-1 text-sm text-[#9da8d2]">Apply it before your first paid subscription.</p></div><ShieldCheck className="h-5 w-5 text-[#7ee4ae]" /></div>{appliedCode ? <div className="mt-5 flex items-center gap-2 rounded-2xl border border-[#7ee4ae]/30 bg-[#7ee4ae]/10 px-4 py-3 text-sm font-bold text-[#9ee9be]"><Check className="h-4 w-4" /> Applied: <span className="font-mono">{appliedCode}</span></div> : <div className="mt-5 flex flex-col gap-3 sm:flex-row"><Input value={inputCode} onChange={(event) => setInputCode(event.target.value.toUpperCase())} placeholder="PGHUB-OWNER1234" className="h-12 rounded-2xl border-white/10 bg-[#0d1530] font-mono text-sm text-white placeholder:text-[#606b92]" /><Button type="button" onClick={applyCode} disabled={!inputCode.trim()} className="h-12 rounded-2xl bg-[#9b7bff] px-7 font-black text-[#0b1226] hover:bg-[#b09aff]">Apply code</Button></div>}<p className="mt-5 text-xs leading-5 text-[#7f89ae]">Maximum {stats.maxMonthsPerYear} free months yearly. Self-referrals and duplicate accounts are excluded.</p></section>
       </div>
     </main>
   );

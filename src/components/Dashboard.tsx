@@ -71,7 +71,6 @@ import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { useBackGesture } from "@/hooks/useBackGesture";
-import { ReferralDialog } from "./subscription/ReferralDialog";
 
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
@@ -112,7 +111,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
-  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
 
   useBackGesture(billsBudgetOpen, () => setBillsBudgetOpen(false));
   
@@ -141,7 +139,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       setTenantsOpen(false);
       setToolsOpen(false);
       setAddTenantRoomSelectOpen(false);
-      setReferralDialogOpen(false);
     };
 
     handleCloseAll();
@@ -541,7 +538,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Security<br/>Deposit</span>
           </div>
 
-          <div onClick={() => setReferralDialogOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={() => navigate("/referrals")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-amber-500/10 p-2 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
           </div>
@@ -725,7 +722,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         </SheetContent>
       </Sheet>
 
-      <ReferralDialog open={referralDialogOpen} onOpenChange={setReferralDialogOpen} />
 
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />

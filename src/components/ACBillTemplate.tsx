@@ -44,6 +44,8 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         fontFamily: "'Segoe UI','Roboto',Arial,sans-serif",
         overflow: "hidden",
         paddingBottom: "8px",
+        border: "1px solid #dfe4f0",
+        borderRadius: "24px",
       }}
     >
       <div style={{ 

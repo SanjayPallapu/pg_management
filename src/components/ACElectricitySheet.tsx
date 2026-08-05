@@ -195,7 +195,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 px-[1px] [&>button]:hidden bg-[#f8f9fd] dark:bg-[#0f172a] text-foreground dark:text-white border-l border-[#e4e6ee] dark:border-slate-800 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 px-[1px] [&>button]:hidden bg-[#f4f6fb] dark:bg-[#0b1226] text-foreground dark:text-white border-l border-[#dfe4f0] dark:border-white/10 flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -215,7 +215,7 @@ export const ACElectricitySheet = ({
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
-            <SheetHeader className="px-3 pt-4 pb-2 border-b border-border dark:border-slate-900 shrink-0">
+            <SheetHeader className="px-4 pt-5 pb-3 border-b border-border/60 dark:border-white/10 shrink-0 bg-card/80">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={() => onOpenChange(false)} aria-label="Back">
@@ -296,8 +296,10 @@ export const ACElectricitySheet = ({
               {activeTab === 'ac-bill' && (
                 <>
                   {/* Overview Card */}
-                  <div className="relative rounded-2xl overflow-hidden bg-card border border-border dark:border-slate-800/80 p-5 shadow-lg">
-                    <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400 mb-3">Month Overview</h4>
+                  <div className="relative overflow-hidden rounded-[26px] border border-[#9b7bff]/20 bg-card p-5 shadow-xl shadow-[#4936ef]/5 dark:bg-[#151d3a]">
+                    <div className="pointer-events-none absolute right-4 top-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#9b7bff]/15 text-[#c9bcff]"><Snowflake className="h-6 w-6" /></div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground dark:text-[#9da8d2]">Month overview</p>
+                    <p className="mt-1 text-lg font-black">AC energy at a glance</p>
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
                         <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Expected</span>
@@ -358,7 +360,7 @@ export const ACElectricitySheet = ({
                         const roomPct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
 
                         return (
-                          <div key={item.room.id} onClick={() => setSelectedRoomId(item.room.id)} className="group p-4 bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-4 shadow-sm">
+                          <div key={item.room.id} onClick={() => setSelectedRoomId(item.room.id)} className="group rounded-[22px] border border-border/70 bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#9b7bff]/40 hover:shadow-lg hover:shadow-[#4936ef]/5 dark:border-white/10 dark:bg-[#151d3a] dark:hover:bg-[#1b2548] cursor-pointer flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3.5 min-w-0">
                               <div className="relative h-10 w-10 shrink-0">
                                 <svg className="w-10 h-10 -rotate-90 transform" viewBox="0 0 36 36">
