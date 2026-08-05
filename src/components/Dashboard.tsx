@@ -753,17 +753,17 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
       <Dialog open={scanPayCategoryOpen} onOpenChange={setScanPayCategoryOpen}>
         <DialogContent className="max-w-[calc(100%-28px)] rounded-[26px] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Choose a category</DialogTitle>
-            <DialogDescription>Select where this scanned payment should be saved before opening the scanner.</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 gap-2 py-2">
-            {(["utility", "other", "family"] as const).map((category) => {
-              const label = category === "utility" ? "Utilities" : category === "other" ? "Other" : "Family";
-              return <button key={category} type="button" onClick={() => setScanPayCategory(category)} className={cn("min-h-20 rounded-2xl border px-3 text-sm font-black transition-colors", scanPayCategory === category ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent")}>{label}</button>;
-            })}
-          </div>
-          <Button className="h-12 w-full rounded-2xl" onClick={continueToScanPay}>Continue to scan</Button>
+  <DialogHeader>
+  <DialogTitle>Add a bill</DialogTitle>
+  <DialogDescription>Record an expense first, or continue directly to scan a payment QR.</DialogDescription>
+  </DialogHeader>
+  <div className="flex flex-col gap-2 py-2">
+  <button type="button" className="flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-left font-black hover:bg-accent" onClick={() => { setScanPayCategory("utility"); setScanPayCategoryOpen(false); setBillsBudgetOpen(true); }}>
+    <Receipt className="size-5 text-primary" />
+    <span><span className="block text-sm">Add a bill</span><span className="block text-xs font-semibold text-muted-foreground">Record expense and save it to a category</span></span>
+  </button>
+  <Button className="h-12 w-full rounded-2xl" onClick={continueToScanPay}>Continue to scan</Button>
+  </div>
         </DialogContent>
       </Dialog>
 
