@@ -729,26 +729,28 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                               <div className="font-black text-sm shrink-0 text-[#101426] dark:text-white mr-1">
                                 {formatCurrency(e.amount)}
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-9 w-9 shrink-0 rounded-xl"
-                                  aria-label={`Edit ${e.label}`}
-                                  onClick={() => openQuickAdd({ category: "current", editing: e, label: e.label, title: `Edit ${e.label}` })}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  aria-label={`Delete ${e.label}`}
-                                  onClick={() => setConfirmDeleteEntry(e)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              {inlineManageMode && (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 shrink-0 rounded-xl"
+                                    aria-label={`Edit ${e.label}`}
+                                    onClick={() => openQuickAdd({ category: "current", editing: e, label: e.label, title: `Edit ${e.label}` })}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    aria-label={`Delete ${e.label}`}
+                                    onClick={() => setConfirmDeleteEntry(e)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -764,31 +766,26 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           <button type="button" className="min-h-11 shrink-0 rounded-xl border border-border px-3 text-xs font-black text-primary hover:bg-accent" onClick={() => openPresetLedger("utility", "Utilities — All entries")}>All entries</button>
                         </div>
                         <div className="space-y-2.5">
-                          {utilityCategoryItems.map((preset) => {
+                          {utilityCategoryItems.filter((preset) => preset.key !== "Current Bill").map((preset) => {
                             const Icon = preset.icon;
                             const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
                             const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                             return (
-                              <div key={preset.key} className="flex min-h-[76px] items-center rounded-[20px] border border-[#e3e5ed] bg-white px-3.5 shadow-[0_12px_28px_-26px_rgba(25,30,58,.7)] dark:border-border dark:bg-card">
-                                <button type="button" className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
-                                  <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", preset.tone)}>
-                                    <Icon className="h-5 w-5" />
+                              <div key={preset.key} className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 shadow-sm">
+                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
+                                  <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", preset.tone)}>
+                                    <Icon className="size-5" />
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-black text-[#101426] dark:text-white">{preset.key}</p>
-                                    <p className="text-xs text-muted-foreground">{matchingEntries.length ? `${matchingEntries.length} ${matchingEntries.length === 1 ? "entry" : "entries"}` : "No entries"}</p>
-                                  </div>
-                                  <div className="mr-2 text-right shrink-0">
-                                    <p className="text-base font-black text-[#101426] dark:text-white">{formatCurrency(presetTotal)}</p>
-                                  </div>
+                                  <p className="min-w-0 flex-1 truncate text-sm font-black">{preset.key}</p>
+                                  <p className="shrink-0 text-sm font-black">{formatCurrency(presetTotal)}</p>
                                 </button>
                                 <button
                                   type="button"
-                                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-[#1766d9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1766d9] dark:bg-[#17345c] dark:text-[#78b4ff]"
+                                  className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                   onClick={() => openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
                                   aria-label={`Add ${preset.key}`}
                                 >
-                                  <Plus className="h-5 w-5" />
+                                  <Plus className="size-4" />
                                 </button>
                               </div>
                             );

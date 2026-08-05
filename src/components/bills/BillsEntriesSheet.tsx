@@ -229,18 +229,20 @@ export const BillsEntriesSheet = ({
                       </div>
                     </div>
                     <div className="font-black text-base shrink-0 text-[#101426] dark:text-white">₹{e.amount.toLocaleString()}</div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
-                        aria-label={`Edit ${e.label}`}
-                        onClick={(ev) => { ev.stopPropagation(); setEditing(e); }}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                        aria-label={`Delete ${e.label}`}
-                        onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e); }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      {manageMode && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                            aria-label={`Edit ${e.label}`}
+                            onClick={(ev) => { ev.stopPropagation(); setEditing(e); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                            aria-label={`Delete ${e.label}`}
+                            onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e); }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                   </div>
                 );
               })

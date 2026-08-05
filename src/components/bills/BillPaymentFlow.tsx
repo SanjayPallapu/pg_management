@@ -102,7 +102,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
 
   useEffect(() => {
     if (!open || !request) return;
-    setStage(request.entryMode === "scanner" ? "scanner" : "entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote(""); setRecipient(""); setRecipientName(""); setRecipientIsPhone(false);
+    setStage(request.entryMode === "scanner" ? "scanner" : "entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote(""); setRecipient(""); setRecipientIsPhone(false);
     setPaymentDate(format(new Date(), "yyyy-MM-dd"));
     setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null); setUpiFallbackOpen(false); setUpiFallback("");
     draftId.current = crypto.randomUUID();
