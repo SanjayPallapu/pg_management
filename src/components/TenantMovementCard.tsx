@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft } from 'lucide-react';
+import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Room, Tenant } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -28,6 +28,30 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
   const [activeTab, setActiveTab] = useState<'joined' | 'left'>('joined');
   const isMobile = useIsMobile();
 
+  // Local month/year for browsing movement history inside the sheet
+  const [viewMonth, setViewMonth] = useState(selectedMonth);
+  const [viewYear, setViewYear] = useState(selectedYear);
+
+  useEffect(() => {
+    if (sheetOpen) {
+      setViewMonth(selectedMonth);
+      setViewYear(selectedYear);
+    }
+  }, [sheetOpen, selectedMonth, selectedYear]);
+
+  const shiftMonth = (delta: number) => {
+    const next = viewMonth + delta;
+    if (next < 1) {
+      setViewMonth(12);
+      setViewYear(viewYear - 1);
+    } else if (next > 12) {
+      setViewMonth(1);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(next);
+    }
+  };
+
   const { joined, left, joinedTenants, leftTenants, joinedTotal, leftTotal } = useMemo(() => {
     const joinedList: TenantWithRoom[] = [];
     const leftList: TenantWithRoom[] = [];
@@ -38,7 +62,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
         const startMonth = startDate.getMonth() + 1;
         const startYear = startDate.getFullYear();
 
-        if (startMonth === selectedMonth && startYear === selectedYear) {
+        if (startMonth === viewMonth && startYear === viewYear) {
           joinedList.push({ ...tenant, roomNo: room.roomNo, floor: room.floor });
         }
 
@@ -47,7 +71,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
           const endMonth = endDate.getMonth() + 1;
           const endYear = endDate.getFullYear();
 
-          if (endMonth === selectedMonth && endYear === selectedYear) {
+          if (endMonth === viewMonth && endYear === viewYear) {
             leftList.push({ ...tenant, roomNo: room.roomNo, floor: room.floor });
           }
         }
@@ -69,7 +93,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
       joinedTotal,
       leftTotal,
     };
-  }, [rooms, selectedMonth, selectedYear]);
+  }, [rooms, viewMonth, viewYear]);
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -118,8 +142,17 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <SheetTitle className="text-base text-foreground font-bold text-left">
-                  Tenant Movement ({months[selectedMonth - 1]} {selectedYear})
+                  Tenant Movement
                 </SheetTitle>
+              </div>
+              <div className="mt-2 flex items-center justify-between rounded-xl border border-border bg-muted/40 px-2 py-1.5">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => shiftMonth(-1)} aria-label="Previous month">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-bold text-foreground">{months[viewMonth - 1]} {viewYear}</span>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => shiftMonth(1)} aria-label="Next month">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
