@@ -190,7 +190,7 @@ export const launchUpiPayment = async (uri: string, packageName?: string) => {
   if (!navigator.onLine) throw new NativePaymentError("OFFLINE");
   if (!Capacitor.isNativePlatform()) {
     if (!isMobileBrowser()) throw new NativePaymentError("NO_UPI_APP", "Open PG HUB on your phone to launch a UPI app. Desktop browsers cannot open phone payment apps.");
-    window.location.assign(uri);
+    window.location.href = uri;
     return { returned: false };
   }
   try {

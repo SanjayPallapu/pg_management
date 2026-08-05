@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import {
   ArrowLeft, Banknote, Calculator, Calendar, Camera, Check, ChevronRight, CircleAlert,
   Clock3, ExternalLink, FileCheck2, Image, Lightbulb, Loader2, QrCode, ReceiptText, RotateCcw,
-  Smartphone, Upload, WifiOff, X
+  Smartphone, Upload, UserRound, WifiOff, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,8 +65,9 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const [label, setLabel] = useState("");
   const [note, setNote] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [recipientName, setRecipientName] = useState("");
   const [recipientIsPhone, setRecipientIsPhone] = useState(false);
+  const [upiFallbackOpen, setUpiFallbackOpen] = useState(false);
+  const [upiFallback, setUpiFallback] = useState("");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [calcOpen, setCalcOpen] = useState(false);
   const [qr, setQr] = useState<ParsedUpiQr | null>(null);
@@ -103,7 +104,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     if (!open || !request) return;
     setStage(request.entryMode === "scanner" ? "scanner" : "entry"); setAmount(request.suggestedAmount ? String(request.suggestedAmount) : ""); setLabel(request.label ?? request.subcategory ?? ""); setNote(""); setRecipient(""); setRecipientName(""); setRecipientIsPhone(false);
     setPaymentDate(format(new Date(), "yyyy-MM-dd"));
-    setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null);
+    setQr(null); setApps([]); setRemember(false); setError(null); setPermissionDenied(false); setConflict(null); setReceipt(null); setSavingOutcome(null); setUpiFallbackOpen(false); setUpiFallback("");
     draftId.current = crypto.randomUUID();
   }, [open, request]);
 
@@ -127,16 +128,15 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
   const handleRecipient = async () => {
     const raw = recipient.trim();
     const isPhone = isValidIndianPhoneNumber(raw);
-    const upiId = isPhone ? `phone${sanitizePhoneNumber(raw)}@upi` : raw;
+    const upiId = isPhone ? `${sanitizePhoneNumber(raw)}@upi` : raw;
     setRecipientIsPhone(isPhone);
     if (!isPhone && !/^[a-zA-Z0-9._-]{2,128}@[a-zA-Z0-9.-]{2,64}$/.test(upiId)) {
       setError("Enter a valid UPI ID or 10-digit Indian mobile number.");
       return;
     }
     if (!validAmount) { setError("Enter a valid amount first."); return; }
-    const parsed: ParsedUpiQr = { payeeUpiId: upiId, payeeName: recipientName.trim() || null, transactionNote: null, currency: "INR", amount: null, paymentParameters: { pa: upiId, cu: "INR" } };
+    const parsed: ParsedUpiQr = { payeeUpiId: upiId, payeeName: null, transactionNote: null, currency: "INR", amount: null, paymentParameters: { pa: upiId, cu: "INR" } };
     setQr(parsed);
-    if (isPhone && !nativePlatform) { setError("Phone handoff is available in the Android app. Use a UPI ID or scan a QR here."); return; }
     await prepareApps(parsed, parsedAmount);
   };
 
@@ -144,7 +144,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     try {
       const contact = await pickContactFromDevice();
       const phone = getContactPhone(contact);
-      if (phone) { setRecipient(phone); setRecipientName(contact?.name ?? ""); }
+      if (phone) { setRecipient(phone); setRecipientIsPhone(true); }
       else if (contact) setError("That contact has no valid Indian mobile number.");
     } catch { setError("Contacts could not be opened. You can enter the number manually."); }
   };
@@ -289,9 +289,12 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
               )}
 
               <div className="rounded-2xl border bg-white p-4 dark:bg-card">
-                <div className="mb-2 flex items-center justify-between gap-2"><Label htmlFor="bill-payment-recipient" className="text-xs font-bold">Pay a UPI ID or phone</Label><button type="button" onClick={() => void handleContact()} className="min-h-11 rounded-xl px-3 text-xs font-black text-[#4936ef] hover:bg-[#f1efff]">Choose contact</button></div>
-                <div className="flex gap-2"><Input id="bill-payment-recipient" value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder="name@upi or 9876543210" className="h-12 rounded-xl font-semibold" /><Button type="button" variant="outline" className="h-12 shrink-0 rounded-xl" onClick={() => void handleRecipient()} disabled={busy}>Pay</Button></div>
-                <Input value={recipientName} onChange={(event) => setRecipientName(event.target.value)} placeholder="Recipient name (optional)" className="mt-2 h-10 rounded-xl text-sm" />
+                <Label htmlFor="bill-payment-recipient" className="sr-only">Phone number or UPI ID</Label>
+                <div className="flex gap-2">
+                  <Input id="bill-payment-recipient" value={recipient} onChange={(event) => { setRecipient(event.target.value); setRecipientIsPhone(isValidIndianPhoneNumber(event.target.value)); }} placeholder="Phone number or UPI ID" className="h-12 rounded-xl font-semibold" />
+                  <Button type="button" variant="outline" size="icon" className="h-12 w-12 shrink-0 rounded-xl" onClick={() => void handleContact()} disabled={busy} aria-label="Choose contact"><UserRound className="h-5 w-5" /></Button>
+                  <Button type="button" variant="outline" className="h-12 shrink-0 rounded-xl" onClick={() => void handleRecipient()} disabled={busy}>Pay</Button>
+                </div>
               </div>
 
               {(!request.lockLabel || !request.label) && (
@@ -418,6 +421,10 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
                 <ResultButton icon={Banknote} tone="text-amber-700 bg-amber-50" label="Paid by cash instead" helper="Add as cash and note the UPI attempt" loading={savingOutcome === "cash"} disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cash")} />
                 <ResultButton icon={QrCode} tone="text-purple-600 bg-purple-50" label="Scan another UPI QR" helper="Retry with a different physical QR code" loading={false} disabled={Boolean(savingOutcome)} onClick={retryUpiScan} />
                 <button type="button" disabled={Boolean(savingOutcome)} onClick={() => void chooseOutcome("cancel")} className="min-h-12 w-full rounded-xl text-sm font-bold text-muted-foreground disabled:opacity-50">Cancel without recording</button>
+                <div className="rounded-2xl border border-border bg-card p-3">
+                  <button type="button" className="text-xs font-black text-primary" onClick={() => setUpiFallbackOpen((open) => !open)}>Can&apos;t resolve the phone number? Use a UPI ID</button>
+                  {upiFallbackOpen && <div className="mt-2 flex gap-2"><Input value={upiFallback} onChange={(event) => setUpiFallback(event.target.value)} placeholder="name@upi" aria-label="Fallback UPI ID" className="h-11 rounded-xl" /><Button type="button" className="h-11 rounded-xl" disabled={busy} onClick={() => { const upiId = upiFallback.trim(); if (!/^[a-zA-Z0-9._-]{2,128}@[a-zA-Z0-9.-]{2,64}$/.test(upiId)) { setError("Enter a valid UPI ID."); return; } const parsed: ParsedUpiQr = { payeeUpiId: upiId, payeeName: null, transactionNote: null, currency: "INR", amount: null, paymentParameters: { pa: upiId, cu: "INR" } }; setRecipientIsPhone(false); setQr(parsed); setError(null); void prepareApps(parsed, parsedAmount).catch((fallbackError) => setError(messageForError(fallbackError))); }}>Retry</Button></div>}
+                </div>
               </div>
             </>}
 

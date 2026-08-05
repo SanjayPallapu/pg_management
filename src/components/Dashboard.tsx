@@ -114,12 +114,31 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
   const [scanPayOpen, setScanPayOpen] = useState(false);
-  const scanPayRequest: BillPaymentRequest = {
-    category: "other",
-    categoryName: "Scan & Pay",
-    billCategoryId: "other:scan-and-pay",
-    label: "Scan & Pay",
-    entryMode: "scanner",
+  const [scanPayCategoryOpen, setScanPayCategoryOpen] = useState(false);
+  const [scanPayCategory, setScanPayCategory] = useState<BillPaymentRequest["category"]>("utility");
+  const [scanPayRequest, setScanPayRequest] = useState<BillPaymentRequest | null>(null);
+
+  const openScanPayCategoryPicker = () => {
+    setScanPayCategoryOpen(true);
+  };
+
+  const continueToScanPay = () => {
+    const categoryNames: Record<BillPaymentRequest["category"], string> = {
+      current: "Current Bill",
+      utility: "Utilities",
+      other: "Other",
+      family: "Family",
+    };
+    const categoryName = categoryNames[scanPayCategory];
+    setScanPayCategoryOpen(false);
+    setScanPayRequest({
+      category: scanPayCategory,
+      categoryName,
+      billCategoryId: `${scanPayCategory}:scan-and-pay`,
+      label: categoryName,
+      entryMode: "scanner",
+    });
+    setScanPayOpen(true);
   };
 
   useBackGesture(billsBudgetOpen, () => setBillsBudgetOpen(false));
@@ -538,7 +557,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
           </div>
 
-          <div onClick={() => setScanPayOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={openScanPayCategoryPicker} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-primary/10 p-2 rounded-full"><ScanLine className="w-5 h-5 text-primary" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Scan<br/>& Pay</span>
           </div>
@@ -732,7 +751,23 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         </SheetContent>
       </Sheet>
 
-      <BillPaymentFlow open={scanPayOpen} request={scanPayRequest} onOpenChange={setScanPayOpen} />
+      <Dialog open={scanPayCategoryOpen} onOpenChange={setScanPayCategoryOpen}>
+        <DialogContent className="max-w-[calc(100%-28px)] rounded-[26px] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose a category</DialogTitle>
+            <DialogDescription>Select where this scanned payment should be saved before opening the scanner.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2 py-2">
+            {(["utility", "other", "family"] as const).map((category) => {
+              const label = category === "utility" ? "Utilities" : category === "other" ? "Other" : "Family";
+              return <button key={category} type="button" onClick={() => setScanPayCategory(category)} className={cn("min-h-20 rounded-2xl border px-3 text-sm font-black transition-colors", scanPayCategory === category ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent")}>{label}</button>;
+            })}
+          </div>
+          <Button className="h-12 w-full rounded-2xl" onClick={continueToScanPay}>Continue to scan</Button>
+        </DialogContent>
+      </Dialog>
+
+      <BillPaymentFlow open={scanPayOpen} request={scanPayRequest} onOpenChange={(next) => { setScanPayOpen(next); if (!next) setScanPayRequest(null); }} />
 
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />
