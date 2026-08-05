@@ -221,7 +221,7 @@ export const BillPaymentFlow = ({ open, request, onOpenChange }: Props) => {
     if (busy || savingOutcome || !qr) return;
     setSavingOutcome(outcome);
     const resolved = resolveUpiOutcome(outcome, qr);
-    const saved = await save(resolved.paymentMethod!, resolved.status!, resolved.note, true);
+    const saved = await save(resolved.method!, resolved.status!, resolved.note, true);
     if (!saved) setSavingOutcome(null);
   };
 

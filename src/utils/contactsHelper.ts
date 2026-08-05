@@ -99,7 +99,7 @@ export const requestContactPermission = async (): Promise<boolean> => {
 
   try {
     const mod = await import('@capgo/capacitor-contacts');
-    const Contacts = (mod.Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown as ContactApi;
+    const Contacts = (((mod as any).Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown) as ContactApi;
     const status = await Contacts.checkPermissions();
     if (status.readContacts === 'granted' || status.contacts === 'granted') {
       return true;
@@ -121,7 +121,7 @@ export const getDeviceContacts = async (): Promise<SelectedContact[]> => {
   }
   try {
     const mod = await import('@capgo/capacitor-contacts');
-    const Contacts = (mod.Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown as ContactApi;
+    const Contacts = (((mod as any).Contacts ?? mod.CapacitorContacts ?? mod.default) as unknown) as ContactApi;
     
     const permissionGranted = await requestContactPermission();
     if (!permissionGranted) {
