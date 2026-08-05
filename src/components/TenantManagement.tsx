@@ -517,10 +517,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   );
 
   // For current month: show tenants who are active now (end_date is null or in the future)
-  // For past/future months: show tenants active in that month
-  const activeTenants = isSelectedCurrentMonth
+  // For past/future months: show tenants active in that month, but never anyone whose
+  // move-out date has already passed — a moved-out tenant is never "active" today.
+  const activeTenants = (isSelectedCurrentMonth
     ? (room.tenants || []).filter((t) => t && isTenantActiveNow(t.startDate, t.endDate))
-    : tenantsInSelectedMonth;
+    : tenantsInSelectedMonth
+  ).filter((t) => !hasTenantLeftNow(t.endDate));
 
   const beginEditingTenant = (tenant: Tenant) => {
     setIsEditMode(true);
