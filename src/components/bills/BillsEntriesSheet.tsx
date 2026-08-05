@@ -208,7 +208,7 @@ export const BillsEntriesSheet = ({
                   <div
                     key={e.id}
                     className={cn(
-                      "flex min-h-[68px] items-center justify-between gap-3 rounded-2xl border p-3.5 transition-all shadow-sm",
+                      "grid min-h-[68px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 transition-all shadow-sm",
                       isSelected
                         ? "border-[#4936ef] bg-[#f5f3ff] dark:border-[#7c6cff] dark:bg-[#27214d]"
                         : "border-[#e4e6ee] bg-white dark:border-border dark:bg-card"
@@ -228,21 +228,19 @@ export const BillsEntriesSheet = ({
                         {e.notes && ` · ${e.notes}`}
                       </div>
                     </div>
-                    <div className="font-black text-base shrink-0 text-[#101426] dark:text-white">₹{e.amount.toLocaleString()}</div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="font-black text-base text-[#101426] dark:text-white">₹{e.amount.toLocaleString()}</span>
                       {manageMode && (
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
-                            aria-label={`Edit ${e.label}`}
-                            onClick={(ev) => { ev.stopPropagation(); setEditing(e); }}>
+                        <div className="flex items-center gap-0.5">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" aria-label={`Edit ${e.label}`} onClick={(ev) => { ev.stopPropagation(); setEditing(e); }}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                            aria-label={`Delete ${e.label}`}
-                            onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e); }}>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete ${e.label}`} onClick={(ev) => { ev.stopPropagation(); setConfirmDelete(e); }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       )}
+                    </div>
                   </div>
                 );
               })

@@ -626,9 +626,22 @@ const PaymentReceipt = ({ receipt, onDone }: { receipt: BillPaymentDraft; onDone
   const pending = receipt.status === "Pending";
   const Icon = failed ? X : pending ? Clock3 : Check;
   const iconTone = failed ? "bg-rose-100 text-rose-700" : pending ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700";
-  const title = failed ? "Failure recorded" : pending ? "Pending payment recorded" : "Payment recorded";
-  const description = affectsTotals ? "Bill totals and payment history are updated." : "Payment history is updated; bill totals remain unchanged.";
-  return <div className="text-center"><div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${iconTone}`}><Icon className="h-10 w-10" /></div><h2 className="mt-3 text-2xl font-black">{title}</h2><p className="text-sm text-muted-foreground">{description}</p><div className="mt-5 rounded-[22px] border bg-white p-4 text-left dark:bg-card"><div className="grid grid-cols-3 gap-2 border-b pb-3 text-center"><ReceiptAmount label="Amount" amount={receipt.amount} /><ReceiptAmount label="Added to bills" amount={affectsTotals ? receipt.amount : 0} /><ReceiptAmount label="Not added" amount={affectsTotals ? 0 : receipt.amount} /></div><ReceiptRow label="Transaction ID" value={receipt.transactionId} mono /><ReceiptRow label="Category" value={receipt.categoryName} /><ReceiptRow label="Method" value={receipt.paymentMethod} /><ReceiptRow label="Status" value={receipt.status} /><ReceiptRow label="Payee" value={receipt.payeeName || "Not provided"} /><ReceiptRow label="UPI ID" value={receipt.maskedUpiId || "Not stored"} /></div><Button className="mt-4 h-12 w-full rounded-2xl bg-[#4936ef] font-black" onClick={onDone}>Done</Button></div>;
+  const title = failed ? "Payment not completed" : pending ? "Payment marked pending" : "Payment recorded";
+  const description = affectsTotals ? "Your bill total and payment history are up to date." : "Saved to payment history without changing the bill total.";
+  const statusLabel = receipt.status === "Paid" ? "Paid" : receipt.status;
+  return (
+    <div className="text-center">
+      <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${iconTone}`}><Icon className="h-10 w-10" /></div>
+      <h2 className="mt-3 text-2xl font-black">{title}</h2>
+      <p className="mx-auto mt-1 max-w-xs text-sm leading-6 text-muted-foreground">{description}</p>
+      <div className="mt-5 rounded-[22px] border bg-white p-4 text-left shadow-sm dark:bg-card">
+        <div className="grid grid-cols-3 gap-2 border-b pb-3 text-center"><ReceiptAmount label="Amount" amount={receipt.amount} /><ReceiptAmount label="Added to bills" amount={affectsTotals ? receipt.amount : 0} /><ReceiptAmount label="Not added" amount={affectsTotals ? 0 : receipt.amount} /></div>
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2"><span className="text-xs font-bold text-muted-foreground">Status</span><span className="text-xs font-black">{statusLabel}</span></div>
+        <ReceiptRow label="Category" value={receipt.categoryName} /><ReceiptRow label="Method" value={receipt.paymentMethod} /><ReceiptRow label="Payee" value={receipt.payeeName || "Not provided"} /><ReceiptRow label="UPI ID" value={receipt.maskedUpiId || "Not stored"} /><ReceiptRow label="Transaction ID" value={receipt.transactionId} mono />
+      </div>
+      <Button className="mt-4 h-12 w-full rounded-2xl bg-[#4936ef] font-black" onClick={onDone}>Done</Button>
+    </div>
+  );
 };
 const ReceiptAmount = ({ label, amount }: { label: string; amount: number }) => <div><p className="text-[10px] font-bold text-muted-foreground">{label}</p><p className="mt-1 text-sm font-black">₹{amount.toLocaleString("en-IN")}</p></div>;
 const ReceiptRow = ({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) => <div className="flex items-start justify-between gap-4 pt-3 text-sm"><span className="text-muted-foreground">{label}</span><span className={`max-w-[65%] break-all text-right font-bold ${mono ? "font-mono text-[10px]" : ""}`}>{value}</span></div>;
