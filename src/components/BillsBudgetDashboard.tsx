@@ -289,6 +289,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     );
 
     return [
+      {
+        key: "Current Bill",
+        icon: Zap,
+        tone: "bg-[#f1efff] text-[#4932e7] dark:bg-[#302858] dark:text-[#b6a2ff]",
+      },
       ...UTILITY_PRESETS,
       ...customKeys.map((key) => ({
         key,
@@ -298,12 +303,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
     ];
   }, [entries]);
 
-  const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[]).map((category) => ({
-    category,
-    total: totalFor(category),
-    count: byCategory(category).length,
-    ...CATEGORY_META[category],
-  }));
+  const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[])
+    .filter((category) => category !== "current")
+    .map((category) => ({
+      category,
+      total: totalFor(category),
+      count: byCategory(category).length,
+      ...CATEGORY_META[category],
+    }));
 
   const hasBudget = budgetAmount > 0;
   const rawPercentUsed = hasBudget ? (grandTotal / budgetAmount) * 100 : 0;
@@ -625,7 +632,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
               <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
                 <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
-                  {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => {
+                  {(["utility", "other", "family"] as ExpenseCategory[]).map((category) => {
                     const catTotal = totalFor(category);
                     return (
                       <button
@@ -752,8 +759,9 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                   <>
                     {detailCategory === "utility" ? (
                       <>
-                        <div className="mb-2 mt-4 flex min-h-11 items-center justify-between">
+                        <div className="mb-2 mt-4 flex min-h-11 items-center justify-between gap-2">
                           <h3 className="text-base font-black">Choose a category</h3>
+                          <button type="button" className="min-h-11 shrink-0 rounded-xl border border-border px-3 text-xs font-black text-primary hover:bg-accent" onClick={() => openPresetLedger("utility", "Utilities — All entries")}>All entries</button>
                         </div>
                         <div className="space-y-2.5">
                           {utilityCategoryItems.map((preset) => {
@@ -790,13 +798,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                       </>
                     ) : (
                       <>
-                        <div className="mt-4 mb-3">
+                        <div className="mt-4 mb-3 flex items-center gap-2">
                           <Button
-                            className="h-[52px] w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95 shadow-md"
+                            className="h-[52px] flex-1 rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] text-sm font-black text-white hover:opacity-95 shadow-md"
                             onClick={() => openQuickAdd({ category: detailCategory, title: `Add ${CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill` })}
                           >
                             <Plus className="mr-2 h-5 w-5" /> Add {CATEGORY_META[detailCategory].shortLabel.toLowerCase()} bill
                           </Button>
+                          <Button type="button" variant="outline" className="h-[52px] rounded-2xl px-3 text-xs font-black" onClick={() => openPresetLedger(detailCategory, `${CATEGORY_META[detailCategory].shortLabel} — All entries`)}>All entries</Button>
                         </div>
 
                         {/* Search bar for other/family */}
