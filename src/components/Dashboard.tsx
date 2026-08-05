@@ -27,11 +27,11 @@ import {
   ShieldCheck,
   DoorOpen,
   CircleCheckBig,
-  ScanLine
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Room, DashboardStats } from "@/types";
 import { useTotalCollected } from "@/hooks/useTotalCollected";
@@ -71,8 +71,7 @@ import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
 import { useBackGesture } from "@/hooks/useBackGesture";
-import { BillPaymentFlow } from "./bills/BillPaymentFlow";
-import type { BillPaymentRequest } from "@/features/bill-payments/types";
+import { ReferralDialog } from "./subscription/ReferralDialog";
 
 import bannerFillEveryBed from "@/assets/banner-fill-every-bed.png";
 import bannerRentOnTime from "@/assets/banner-rent-on-time.png";
@@ -113,33 +112,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [toolsOpen, setToolsOpen] = useState(false);
   const [billsBudgetGridOpen, setBillsBudgetGridOpen] = useState(false);
   const [billsBudgetOpen, setBillsBudgetOpen] = useState(false);
-  const [scanPayOpen, setScanPayOpen] = useState(false);
-  const [scanPayCategoryOpen, setScanPayCategoryOpen] = useState(false);
-  const [scanPayCategory, setScanPayCategory] = useState<BillPaymentRequest["category"]>("utility");
-  const [scanPayRequest, setScanPayRequest] = useState<BillPaymentRequest | null>(null);
-
-  const openScanPayCategoryPicker = () => {
-    setScanPayCategoryOpen(true);
-  };
-
-  const continueToScanPay = () => {
-    const categoryNames: Record<BillPaymentRequest["category"], string> = {
-      current: "Current Bill",
-      utility: "Utilities",
-      other: "Other",
-      family: "Family",
-    };
-    const categoryName = categoryNames[scanPayCategory];
-    setScanPayCategoryOpen(false);
-    setScanPayRequest({
-      category: scanPayCategory,
-      categoryName,
-      billCategoryId: `${scanPayCategory}:scan-and-pay`,
-      label: categoryName,
-      entryMode: "scanner",
-    });
-    setScanPayOpen(true);
-  };
+  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
 
   useBackGesture(billsBudgetOpen, () => setBillsBudgetOpen(false));
   
@@ -168,6 +141,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       setTenantsOpen(false);
       setToolsOpen(false);
       setAddTenantRoomSelectOpen(false);
+      setReferralDialogOpen(false);
     };
 
     handleCloseAll();
@@ -557,11 +531,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
           </div>
 
-          <div onClick={openScanPayCategoryPicker} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-primary/10 p-2 rounded-full"><ScanLine className="w-5 h-5 text-primary" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Scan<br/>& Pay</span>
-          </div>
-
           <div onClick={openPendingTenants} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-pending/10 p-2 rounded-full"><AlertTriangle className="w-5 h-5 text-pending" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
@@ -570,6 +539,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <div onClick={() => setActiveSheet("security-deposit")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-indigo-500/10 p-2 rounded-full"><ShieldCheck className="w-5 h-5 text-indigo-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Security<br/>Deposit</span>
+          </div>
+
+          <div onClick={() => setReferralDialogOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+            <div className="bg-amber-500/10 p-2 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
+            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
           </div>
 
           <div onClick={() => setActiveSheet("tenant-pricing")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
@@ -751,28 +725,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         </SheetContent>
       </Sheet>
 
-      <Dialog open={scanPayCategoryOpen} onOpenChange={setScanPayCategoryOpen}>
-        <DialogContent className="max-w-[calc(100%-28px)] rounded-[26px] sm:max-w-md">
-  <DialogHeader>
-  <DialogTitle>Add a bill</DialogTitle>
-  <DialogDescription>Choose a spending group to continue.</DialogDescription>
-  </DialogHeader>
-  <div className="grid grid-cols-2 gap-2 py-2">
-  {(["current", "utility", "other", "family"] as const).map((category) => {
-    const label = category === "current" ? "Current bills" : category === "utility" ? "Utilities" : category === "other" ? "Other bills" : "Family expenses";
-    return (
-      <button key={category} type="button" onClick={() => setScanPayCategory(category)} className={cn("min-h-24 rounded-2xl border px-3 text-left text-sm font-black transition-colors", scanPayCategory === category ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent")}>
-        <Receipt className="size-5" />
-        <span className="mt-4 block">{label}</span>
-      </button>
-    );
-  })}
-  </div>
-  <Button className="h-12 w-full rounded-2xl" onClick={continueToScanPay}>Continue to scan</Button>
-        </DialogContent>
-      </Dialog>
-
-      <BillPaymentFlow open={scanPayOpen} request={scanPayRequest} onOpenChange={(next) => { setScanPayOpen(next); if (!next) setScanPayRequest(null); }} />
+      <ReferralDialog open={referralDialogOpen} onOpenChange={setReferralDialogOpen} />
 
       {/* Rules Template Sheet */}
       <RulesTemplate open={rulesTemplateOpen} onOpenChange={setRulesTemplateOpen} rules={rulesForTemplate} language={rulesLanguage} />

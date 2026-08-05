@@ -1287,20 +1287,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-auto min-h-9 border-orange-300 px-3 py-2 text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                                  onClick={() => setMarkLeftTenant(tenant)}
-                                >
-                                  <LogOut className="h-4 w-4 mr-1" />
-                                  <span className="text-left leading-tight">
-                                    <span className="block text-xs font-bold">Move Out</span>
-                                    <span className="block text-[9px] font-normal opacity-75">Date & settlement</span>
-                                  </span>
-                                </Button>
-                              )}
-                              {!tenant.endDate && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
                                   className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                   onClick={() => setShiftTenant(tenant)}
                                 >
@@ -1371,23 +1357,39 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                       )}
 
                       {isEditing && (
-                        <div>
-                          <Label>Monthly Rent</Label>
-                          <Input
-                            type="number"
-                            value={editingValues?.monthlyRent ?? tenant.monthlyRent}
-                            readOnly={isTenantPaidForMonth(tenant.id)}
-                            className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
-                            onChange={(e) => {
-                              const val = Math.max(0, parseInt(e.target.value) || 0);
-                              setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
-                            }}
-                            onBlur={async () => {
-                              if (editingValues) {
-                                await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
-                              }
-                            }}
-                          />
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Monthly Rent</Label>
+                            <Input
+                              type="number"
+                              value={editingValues?.monthlyRent ?? tenant.monthlyRent}
+                              readOnly={isTenantPaidForMonth(tenant.id)}
+                              className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseInt(e.target.value) || 0);
+                                setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
+                              }}
+                              onBlur={async () => {
+                                if (editingValues) {
+                                  await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
+                                }
+                              }}
+                            />
+                          </div>
+                          {!tenant.endDate && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start h-auto min-h-10 border-orange-300 px-3 py-2.5 text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                              onClick={() => setMarkLeftTenant(tenant)}
+                            >
+                              <LogOut className="h-4 w-4 mr-2 shrink-0" />
+                              <span className="text-left leading-tight">
+                                <span className="block text-xs font-bold">Move Out</span>
+                                <span className="block text-[10px] font-normal opacity-75">Set date &amp; settlement</span>
+                              </span>
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

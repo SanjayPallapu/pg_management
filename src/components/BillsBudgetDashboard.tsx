@@ -576,14 +576,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
             <DialogTitle>Add a bill</DialogTitle>
             <DialogDescription>Add a bill from Record expense or continue to scan a payment QR.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-2.5 px-5 pb-5">
+          <div className="flex flex-col gap-2 px-5 pb-5">
             {categoryData.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.category}
                   type="button"
-                  className="flex min-h-[98px] flex-col items-start justify-between rounded-[20px] border bg-card p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] hover:border-[#4936ef]/40 transition-colors"
+                  className="flex min-h-[56px] w-full items-center gap-3 rounded-[18px] border bg-card px-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] hover:border-[#4936ef]/40 hover:bg-[#fafaff] dark:hover:bg-accent/40 transition-colors active:scale-[0.99]"
                   onClick={() => {
                     setAddPickerOpen(false);
                     if (item.category === "other" || item.category === "family") {
@@ -593,11 +593,11 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                     }
                   }}
                 >
-                  <div className="flex w-full items-center justify-between">
-                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", item.iconSurface, item.iconColor)}><Icon className="h-5 w-5" /></div>
-                    <span className="text-xs font-black text-[#4936ef] dark:text-[#b6a2ff]">₹{item.total.toLocaleString()}</span>
+                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", item.iconSurface, item.iconColor)}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-black">{item.label}</span>
+                  <span className="flex-1 truncate text-sm font-black">{item.label}</span>
+                  <span className="shrink-0 text-sm font-black text-[#4936ef] dark:text-[#b6a2ff]">₹{item.total.toLocaleString()}</span>
                 </button>
               );
             })}
@@ -767,13 +767,17 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                           <button type="button" className="min-h-11 shrink-0 rounded-xl border border-border px-3 text-xs font-black text-primary hover:bg-accent" onClick={() => openPresetLedger("utility", "Utilities — All entries")}>All entries</button>
                         </div>
                         <div className="space-y-2.5">
-                          {utilityCategoryItems.filter((preset) => preset.key !== "Current Bill").map((preset) => {
+                          {utilityCategoryItems.map((preset) => {
                             const Icon = preset.icon;
-                            const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
+                            // "Current Bill" in utilities → maps to the "current" category
+                            const isCurrentBill = preset.key === "Current Bill";
+                            const matchingEntries = isCurrentBill
+                              ? byCategory("current")
+                              : byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
                             const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                             return (
                               <div key={preset.key} className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 shadow-sm">
-                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
+                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => isCurrentBill ? setDetailCategory("current") : openPresetLedger("utility", preset.key, preset.key)}>
                                   <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", preset.tone)}>
                                     <Icon className="size-5" />
                                   </div>
@@ -783,7 +787,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                                 <button
                                   type="button"
                                   className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                  onClick={() => openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
+                                  onClick={() => isCurrentBill ? setDetailCategory("current") : openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
                                   aria-label={`Add ${preset.key}`}
                                 >
                                   <Plus className="size-4" />
