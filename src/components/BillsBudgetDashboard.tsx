@@ -312,11 +312,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
       ...CATEGORY_META[category],
     }));
 
-  const billSummaryRows = [
-    { key: "current", label: "Current bills", icon: Zap, total: totalFor("current"), tone: "bg-primary/10 text-primary" },
-    { key: "utility", label: "Utilities", icon: Droplet, total: totalFor("utility"), tone: "bg-sky-500/10 text-sky-600 dark:text-sky-300" },
-  ];
-
   const hasBudget = budgetAmount > 0;
   const rawPercentUsed = hasBudget ? (grandTotal / budgetAmount) * 100 : 0;
   const percentUsed = Math.min(100, rawPercentUsed);
@@ -490,18 +485,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         </section>
 
   <section className="bills-premium-groups mt-2 shrink-0">
-  <div className="mb-2 flex flex-col gap-2">
-  {billSummaryRows.map((row) => {
-    const Icon = row.icon;
-    return (
-      <button key={row.key} type="button" className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-border bg-card px-3 text-left shadow-sm transition-colors hover:bg-accent/50" onClick={() => setDetailCategory(row.key as ExpenseCategory)} aria-label={`Open ${row.label}, ${formatCurrency(row.total)}`}>
-        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", row.tone)}><Icon className="size-5" /></span>
-        <span className="min-w-0 flex-1 truncate text-sm font-black">{row.label}</span>
-        <span className="shrink-0 text-sm font-black">{formatCurrency(row.total)}</span>
-      </button>
-    );
-  })}
-  </div>
+
   <div className="mb-1 flex items-center justify-between">
   <h2 className="text-[15px] font-black tracking-[-0.015em] text-[#111526] dark:text-white">Spending groups</h2>
             <button type="button" className="h-7 min-h-0 rounded-lg px-2 text-xs font-bold text-[#4936ef] dark:text-[#b6a2ff]" onClick={() => setAnalyticsOpen(true)}>View insights</button>
