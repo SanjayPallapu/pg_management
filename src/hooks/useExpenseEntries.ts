@@ -47,8 +47,11 @@ export const useExpenseEntries = (month: number, year: number) => {
       if (error) throw error;
       return (data || []).map((entry) => {
         const currentEntry = entry as ExpenseEntry;
-        return currentEntry.category === "current"
-          ? { ...currentEntry, category: "utility", subcategory: "Current Bill" }
+        const isLegacyCurrent = currentEntry.category === "current" || (
+          currentEntry.category === "utility" && currentEntry.subcategory === "Current Bill"
+        );
+        return isLegacyCurrent
+          ? { ...currentEntry, category: "current" as const, subcategory: currentEntry.subcategory ?? currentEntry.label }
           : currentEntry;
       }) as ExpenseEntry[];
     },
@@ -58,12 +61,9 @@ export const useExpenseEntries = (month: number, year: number) => {
   const addEntry = useMutation({
     mutationFn: async (entry: Omit<ExpenseEntry, "id" | "pg_id">) => {
       if (!currentPG?.id) throw new Error("No PG selected");
-      const normalizedEntry = entry.category === "current"
-        ? { ...entry, category: "utility" as const, subcategory: "Current Bill" }
-        : entry;
       const { error } = await supabase
         .from("expense_entries")
-        .insert({ ...normalizedEntry, pg_id: currentPG.id });
+        .insert({ ...entry, pg_id: currentPG.id });
       if (error) throw error;
     },
     onSuccess: () => {
