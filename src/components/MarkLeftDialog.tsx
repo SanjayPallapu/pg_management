@@ -233,11 +233,7 @@ export const MarkLeftDialog = ({
             {step === "confirm" && <CheckCircle2 className="h-5 w-5" />}
             Move Out {tenant.name}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            {step === "date" && "Only the move-out date is required."}
-            {step === "calculation" && "Review the rent settlement; adjustments are optional."}
-            {step === "confirm" && "Confirm the move-out and pending balance choice."}
-          </AlertDialogDescription>
+          <AlertDialogDescription className="sr-only">Move out {tenant.name}</AlertDialogDescription>
         </AlertDialogHeader>
 
         {step === "date" && (
