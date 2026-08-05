@@ -4,18 +4,23 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { 
-  ArrowLeft, 
-  Snowflake, 
-  Send, 
-  Check, 
-  Zap, 
-  ChevronRight, 
-  Bell, 
-  FileSpreadsheet
+import {
+  ArrowLeft,
+  Snowflake,
+  Send,
+  Check,
+  Zap,
+  ChevronRight,
+  Bell,
+  FileSpreadsheet,
+  TrendingUp,
+  IndianRupee,
+  Users,
+  AlertTriangle,
+  Share2,
 } from 'lucide-react';
 import { applyStyledExport, saveAndShareExcel } from '@/utils/excelStyles';
 import { toast } from 'sonner';
@@ -34,12 +39,12 @@ interface ACElectricitySheetProps {
   setCustomModeRooms: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onShare: (
     item: any,
-    units: number, 
-    unitPrice: number, 
-    startReading: number | null, 
-    endReading: number | null, 
-    splitType: string, 
-    splitCount: number | null, 
+    units: number,
+    unitPrice: number,
+    startReading: number | null,
+    endReading: number | null,
+    splitType: string,
+    splitCount: number | null,
     targetTenantName?: string
   ) => void;
   onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
@@ -107,15 +112,14 @@ export const ACElectricitySheet = ({
     if (!open) setSelectedRoomId(null);
   }, [open]);
 
-
   const handleExport = async () => {
     const excelData: Record<string, string | number>[] = [];
-    
+
     acRooms.forEach(item => {
       const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
       const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
       const roomPending = Math.max(0, roomExpected - roomCollected);
-      
+
       excelData.push({
         "Room No": item.room.roomNo,
         "Tenant Name": "--- ROOM SUMMARY ---",
@@ -193,9 +197,16 @@ export const ACElectricitySheet = ({
     });
   };
 
+  const tabs: { key: typeof activeTab; label: string }[] = [
+    { key: 'ac-bill', label: 'Rooms' },
+    { key: 'pendings', label: 'Pending' },
+    { key: 'share-bills', label: 'Share' },
+    { key: 'reports', label: 'Reports' },
+  ];
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 px-[1px] [&>button]:hidden bg-[#f8f9fd] dark:bg-[#0f172a] text-foreground dark:text-white border-l border-[#e4e6ee] dark:border-slate-800 flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background text-foreground flex flex-col h-full overflow-hidden">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -214,319 +225,411 @@ export const ACElectricitySheet = ({
           />
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <SheetHeader className="px-3 pt-4 pb-2 border-b border-border dark:border-slate-900 shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={() => onOpenChange(false)} aria-label="Back">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Snowflake className="h-4 w-4 text-cyan-400 shrink-0" />
-                      <SheetTitle className="text-base font-extrabold text-foreground dark:text-white">AC Bill</SheetTitle>
+            {/* Illustrated Hero Header */}
+            <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(160deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)" }}>
+              {/* Decorative blobs */}
+              <span className="pointer-events-none absolute -left-12 -top-12 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
+              <span className="pointer-events-none absolute -right-8 top-4 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
+              <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
+              <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
+
+              <SheetHeader className="relative z-10 px-3 pt-4 pb-4">
+                {/* Top bar */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white"
+                      onClick={() => onOpenChange(false)}
+                      aria-label="Back"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Snowflake className="h-4 w-4 text-cyan-300 shrink-0" />
+                        <SheetTitle className="text-base font-extrabold text-white">AC Bill</SheetTitle>
+                      </div>
+                      <span className="text-[10px] text-cyan-200/80 block">Track. Split. Collect.</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground dark:text-slate-400 mt-0.5 block">Track. Split. Collect.</span>
+                  </div>
+                  {/* Month / Year selects */}
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={acMonth}
+                      onChange={(e) => setAcMonth(parseInt(e.target.value))}
+                      className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
+                    >
+                      {months.map((m) => (
+                        <option key={m.value} value={m.value} className="bg-[#0e7490] text-white">{m.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={acYear}
+                      onChange={(e) => setAcYear(parseInt(e.target.value))}
+                      className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
+                    >
+                      {years.map((y) => (
+                        <option key={y} value={y} className="bg-[#0e7490] text-white">{y}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <select value={acMonth} onChange={(e) => setAcMonth(parseInt(e.target.value))} className="h-7 rounded-lg bg-white dark:bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
-                    {months.map((m) => (<option key={m.value} value={m.value} className="bg-background dark:bg-slate-900 text-foreground dark:text-white">{m.label}</option>))}
-                  </select>
-                  <select value={acYear} onChange={(e) => setAcYear(parseInt(e.target.value))} className="h-7 rounded-lg bg-white dark:bg-slate-900 border border-border dark:border-slate-800 text-foreground dark:text-slate-300 px-2 text-[11px] font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer">
-                    {years.map((y) => (<option key={y} value={y} className="bg-background dark:bg-slate-900 text-foreground dark:text-white">{y}</option>))}
-                  </select>
+
+                {/* Illustration + Stats */}
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src="/ac-bill-hero.png"
+                    alt="AC electricity billing illustration"
+                    className="h-[80px] w-[120px] rounded-2xl object-cover shrink-0 shadow-lg"
+                  />
+                  <div className="flex-1 grid grid-cols-3 gap-2">
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
+                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
+                      <span className="block text-xs font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
+                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-emerald-300">Collected</span>
+                      <span className="block text-xs font-black text-white mt-0.5">₹{collectedTotal > 999 ? `${(collectedTotal / 1000).toFixed(1)}k` : collectedTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
+                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
+                      <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Segmented Tab Switcher */}
-              <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-border dark:border-slate-800/80 w-full mt-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ac-bill')}
-                  className={cn(
-                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
-                    activeTab === 'ac-bill' 
-                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  AC Bill
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('pendings')}
-                  className={cn(
-                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
-                    activeTab === 'pendings' 
-                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Pendings
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('share-bills')}
-                  className={cn(
-                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
-                    activeTab === 'share-bills' 
-                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Share
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('reports')}
-                  className={cn(
-                    "flex-1 text-[10px] sm:text-xs font-bold py-1.5 rounded-lg transition-all",
-                    activeTab === 'reports' 
-                      ? "bg-cyan-500 text-slate-950 shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Reports
-                </button>
-              </div>
-            </SheetHeader>
+                {/* Progress bar */}
+                <div className="mt-3 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-cyan-200">
+                    <span className="font-semibold">Collection Progress</span>
+                    <span className="font-black text-white">{overallPct}% Collected</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/15 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${overallPct}%`,
+                        background: overallPct === 100 ? "#10b981" : "linear-gradient(90deg, #22d3ee, #06b6d4)",
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div className="flex-1 overflow-y-auto px-1.5 py-3 space-y-3.5">
+                {/* Tab bar */}
+                <div className="mt-3 flex gap-1 rounded-2xl bg-black/20 p-1 backdrop-blur">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      className={cn(
+                        "flex-1 rounded-xl py-1.5 text-[10px] font-bold transition-all",
+                        activeTab === tab.key
+                          ? "bg-cyan-400 text-slate-900 shadow-sm"
+                          : "text-white/70 hover:text-white"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </SheetHeader>
+            </div>
+
+            {/* Main content */}
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
+              {/* ── ROOMS TAB ── */}
               {activeTab === 'ac-bill' && (
                 <>
-                  {/* Overview Card */}
-                  <div className="relative rounded-2xl overflow-hidden bg-card border border-border dark:border-slate-800/80 p-5 shadow-lg">
-                    <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400 mb-3">Month Overview</h4>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
-                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Expected</span>
-                        <span className="block text-sm font-black text-cyan-500 dark:text-cyan-400 mt-1">₹{expectedTotal.toLocaleString()}</span>
-                      </div>
-                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
-                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Collected</span>
-                        <span className="block text-sm font-black text-emerald-500 dark:text-emerald-400 mt-1">₹{collectedTotal.toLocaleString()}</span>
-                      </div>
-                      <div className="bg-muted dark:bg-muted/50 border border-border dark:border-border/50 rounded-xl p-3 text-center">
-                        <span className="block text-[9px] uppercase tracking-wider font-extrabold text-muted-foreground dark:text-slate-400">Pending</span>
-                        <span className="block text-sm font-black text-orange-500 dark:text-orange-400 mt-1">₹{pendingTotal.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-[10px] text-muted-foreground dark:text-slate-400">
-                        <span>Collection Progress</span>
-                        <span className="font-bold text-emerald-400">{overallPct}% Collected</span>
-                      </div>
-                      <Progress value={overallPct} className="h-1.5 bg-muted dark:bg-slate-950 border border-border dark:border-slate-800" />
-                    </div>
-                  </div>
-
-                  {/* Rates Template Card */}
-                  <div 
-                    onClick={() => setPricesCardOpen(true)} 
-                    className="p-4 bg-cyan-500/5 dark:bg-cyan-500/5 border border-cyan-500/20 dark:border-cyan-500/10 rounded-2xl space-y-2 cursor-pointer hover:bg-cyan-500/10 dark:hover:bg-cyan-500/10 transition-colors"
+                  {/* Rates card */}
+                  <button
+                    type="button"
+                    onClick={() => setPricesCardOpen(true)}
+                    className="w-full text-left p-4 rounded-2xl border border-cyan-500/25 bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors"
                   >
-                    <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 text-xs font-bold">
-                      <Zap className="h-3.5 w-3.5" />
-                      AC ELECTRICITY PRICING & RATES
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                        <Zap className="h-4 w-4" />
+                        <span className="text-xs font-black uppercase tracking-wide">AC Electricity Rates</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-cyan-500/60" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-xs mt-1">
+                    <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-muted-foreground block text-[9px] uppercase font-bold">Flat Rate</span>
-                        <span className="font-extrabold text-foreground dark:text-white">₹12 / Unit</span>
+                        <span className="block text-[9px] font-bold uppercase text-muted-foreground">Flat Rate</span>
+                        <span className="font-extrabold text-foreground">₹12 / Unit</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-[9px] uppercase font-bold">Govt. Commercial Slabs</span>
-                        <span className="font-extrabold text-foreground dark:text-white">₹5.4 to ₹9.95 / Unit</span>
+                        <span className="block text-[9px] font-bold uppercase text-muted-foreground">Govt. Commercial</span>
+                        <span className="font-extrabold text-foreground">₹5.4 – ₹9.95 / Unit</span>
                       </div>
                     </div>
-                  </div>
+                  </button>
 
-                  {/* Room Cards */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Rooms Summary</h3>
-                      <Badge variant="outline" className="text-[9px] border-border dark:border-slate-800 text-muted-foreground dark:text-slate-400 px-2 py-0">{acRooms.length} Rooms</Badge>
+                  {/* Room cards */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between px-0.5">
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Rooms</h3>
+                      <Badge variant="outline" className="text-[9px] px-2 py-0">{acRooms.length} Rooms</Badge>
                     </div>
-                    <div className="space-y-2.5">
-                      {acRooms.length === 0 ? (
-                        <div className="text-center text-muted-foreground dark:text-slate-500 py-12 text-xs border border-dashed border-border dark:border-slate-900 rounded-2xl">No AC Rooms configured.</div>
-                      ) : acRooms.map((item) => {
-                        const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
-                        const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
-                        const roomPending = Math.max(0, roomExpected - roomCollected);
-                        const roomPct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
 
-                        return (
-                          <div key={item.room.id} onClick={() => setSelectedRoomId(item.room.id)} className="group p-4 bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-4 shadow-sm">
-                            <div className="flex items-center gap-3.5 min-w-0">
-                              <div className="relative h-10 w-10 shrink-0">
-                                <svg className="w-10 h-10 -rotate-90 transform" viewBox="0 0 36 36">
-                                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#1e293b" strokeWidth="3.2" />
-                                  <circle cx="18" cy="18" r="15.915" fill="none" stroke={roomPct === 100 ? "#10b981" : "#06b6d4"} strokeWidth="3.2" strokeDasharray={`${roomPct} 100`} strokeLinecap="round" className="transition-all duration-500 ease-out" />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-foreground dark:text-white">{roomPct}%</div>
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-extrabold text-sm text-foreground dark:text-white">Room {item.room.roomNo}</span>
-                                  <Badge className={cn("text-[9px] font-bold py-0.5 border-0 px-2 rounded-full", roomPending > 0 ? "bg-orange-500/10 text-orange-400" : "bg-emerald-500/10 text-emerald-400")}>
-                                    {roomPending > 0 ? `₹${roomPending.toLocaleString()} Pending` : 'All Paid'}
-                                  </Badge>
-                                </div>
-                                <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</span>
-                                <span className="text-[9px] text-muted-foreground dark:text-slate-500 block mt-1">{item.units || 0} Units · ₹{item.unitPrice}/Unit · Bill: ₹{(item.total || 0).toLocaleString()}</span>
-                              </div>
+                    {acRooms.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-14 text-center rounded-2xl border border-dashed border-border">
+                        <Snowflake className="h-10 w-10 text-cyan-500/30 mb-3" />
+                        <p className="text-sm font-bold text-muted-foreground">No AC rooms configured</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">Enable AC on a room to track electricity bills.</p>
+                      </div>
+                    ) : acRooms.map((item) => {
+                      const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
+                      const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
+                      const roomPending = Math.max(0, roomExpected - roomCollected);
+                      const roomPct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
+                      const allPaid = roomPending === 0 && roomExpected > 0;
+
+                      return (
+                        <button
+                          key={item.room.id}
+                          type="button"
+                          onClick={() => setSelectedRoomId(item.room.id)}
+                          className="group w-full text-left p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all shadow-sm"
+                        >
+                          <div className="flex items-center gap-3.5">
+                            {/* Radial progress ring */}
+                            <div className="relative h-12 w-12 shrink-0">
+                              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+                                <circle cx="18" cy="18" r="15.915" fill="none" stroke="currentColor" strokeWidth="3" className="text-border" />
+                                <circle
+                                  cx="18" cy="18" r="15.915" fill="none"
+                                  stroke={allPaid ? "#10b981" : "#06b6d4"}
+                                  strokeWidth="3"
+                                  strokeDasharray={`${roomPct} 100`}
+                                  strokeLinecap="round"
+                                  className="transition-all duration-500"
+                                />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-foreground">{roomPct}%</div>
                             </div>
-                            <div className="flex items-center gap-1 text-muted-foreground dark:text-slate-500 group-hover:text-foreground dark:text-slate-300 transition-colors shrink-0">
-                              <span className="text-[10px] font-semibold hidden sm:inline">Details</span>
-                              <ChevronRight className="h-4 w-4" />
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-extrabold text-sm">Room {item.room.roomNo}</span>
+                                <Badge className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border-0", allPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-orange-500/10 text-orange-500")}>
+                                  {allPaid ? "All Paid" : `₹${roomPending.toLocaleString()} Due`}
+                                </Badge>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{item.units || 0} Units · ₹{item.unitPrice}/Unit · Bill: ₹{(item.total || 0).toLocaleString()}</p>
                             </div>
+
+                            <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
                           </div>
-                        );
-                      })}
-                    </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               )}
 
+              {/* ── PENDINGS TAB ── */}
               {activeTab === 'pendings' && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Pending AC Bills</h3>
-                  </div>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
-                          <th className="p-3">Room</th>
-                          <th className="p-3">Tenant</th>
-                          <th className="p-3 text-right">Pending</th>
-                          <th className="p-3 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {pendingTenantsList.map(tenant => (
-                          <tr key={tenant.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                            <td className="p-3 font-extrabold">{tenant.roomNo}</td>
-                            <td className="p-3 font-medium">{tenant.name}</td>
-                            <td className="p-3 text-right text-orange-400 font-extrabold">₹{tenant.pending.toLocaleString()}</td>
-                            <td className="p-3 text-center">
-                              <Button size="xs" variant="outline" className="h-7 px-2.5 text-[10px] font-bold border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10" onClick={() => onShare(tenant.roomItem, tenant.roomItem.units, tenant.roomItem.unitPrice, tenant.roomItem.startReading, tenant.roomItem.endReading, tenant.roomItem.splitType, tenant.roomItem.splitCount, tenant.name)}>
-                                Remind
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                        {pendingTenantsList.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="p-8 text-center text-muted-foreground text-xs">No pending AC bills! 🎉</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                  {/* Summary pill */}
+                  {pendingTenantsList.length > 0 && (
+                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-orange-500/8 border border-orange-500/20">
+                      <div className="h-10 w-10 rounded-2xl bg-orange-500/15 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-foreground">{pendingTenantsList.length} Pending</p>
+                        <p className="text-xs text-muted-foreground">₹{pendingTotal.toLocaleString()} outstanding</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="ml-auto h-9 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shrink-0"
+                        onClick={handleBulkReminders}
+                      >
+                        <Bell className="h-3.5 w-3.5 mr-1.5" />
+                        Remind All
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {pendingTenantsList.map(tenant => (
+                      <div key={tenant.id} className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card">
+                        <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+                          <span className="text-[10px] font-black text-orange-600">{tenant.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold truncate">{tenant.name}</p>
+                          <p className="text-[10px] text-muted-foreground">Room {tenant.roomNo}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm font-black text-orange-500">₹{tenant.pending.toLocaleString()}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-[10px] font-bold rounded-xl border-cyan-500/30 text-cyan-600 hover:bg-cyan-500/10"
+                            onClick={() => onShare(tenant.roomItem, tenant.roomItem.units, tenant.roomItem.unitPrice, tenant.roomItem.startReading, tenant.roomItem.endReading, tenant.roomItem.splitType, tenant.roomItem.splitCount, tenant.name)}
+                          >
+                            Remind
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {pendingTenantsList.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-14 text-center rounded-2xl border border-dashed border-border">
+                        <div className="h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+                          <Check className="h-7 w-7 text-emerald-500" />
+                        </div>
+                        <p className="text-sm font-black text-foreground">All cleared!</p>
+                        <p className="text-xs text-muted-foreground mt-1">No pending AC bills this month.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* ── SHARE TAB ── */}
               {activeTab === 'share-bills' && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Share AC Bills</h3>
-                  </div>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
-                          <th className="p-3">Room</th>
-                          <th className="p-3">Total Bill</th>
-                          <th className="p-3">Strategy</th>
-                          <th className="p-3 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {acRooms.map(item => (
-                          <tr key={item.room.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                            <td className="p-3 font-extrabold">{item.room.roomNo}</td>
-                            <td className="p-3 font-medium">₹{(item.total || 0).toLocaleString()}</td>
-                            <td className="p-3 text-muted-foreground text-[10px] font-semibold">{item.splitType === 'custom' ? 'Custom' : item.splitType === 'capacity' ? 'Capacity' : 'Proportional'}</td>
-                            <td className="p-3 text-center">
-                              <Button size="xs" variant="outline" className="h-7 px-2.5 text-[10px] font-bold border-blue-500/30 text-blue-500 hover:bg-blue-500/10" onClick={() => onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount)}>
-                                Share
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Share all button */}
+                  <button
+                    type="button"
+                    onClick={handleShareAll}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-[linear-gradient(120deg,#0e7490,#0369a1)] text-white shadow-lg"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm font-black">Share All Bills</p>
+                      <p className="text-[11px] text-cyan-200 mt-0.5">Send to all {acRooms.reduce((n, item) => n + (item.tenantShares || []).filter((s: any) => s.share > 0).length, 0)} tenants with AC charges</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                      <Share2 className="h-5 w-5" />
+                    </div>
+                  </button>
+
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground px-0.5">Room-wise</h3>
+                    {acRooms.map(item => (
+                      <div key={item.room.id} className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card">
+                        <div className="h-9 w-9 rounded-2xl bg-cyan-500/10 flex items-center justify-center shrink-0">
+                          <Snowflake className="h-4 w-4 text-cyan-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold">Room {item.room.roomNo}</p>
+                          <p className="text-[10px] text-muted-foreground">₹{(item.total || 0).toLocaleString()} · {item.splitType === 'custom' ? 'Custom' : item.splitType === 'capacity' ? 'Capacity' : 'Proportional'}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 text-[10px] font-bold rounded-xl border-blue-500/30 text-blue-600 hover:bg-blue-500/10 shrink-0"
+                          onClick={() => onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount)}
+                        >
+                          <Send className="h-3 w-3 mr-1" /> Share
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
+              {/* ── REPORTS TAB ── */}
               {activeTab === 'reports' && (
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[10px] font-extrabold text-muted-foreground dark:text-slate-400 uppercase tracking-wider">AC Bill Report</span>
-                    <Button size="xs" variant="outline" className="h-7 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 animate-pulse" onClick={handleExport}>
-                      <FileSpreadsheet className="h-3 w-3 mr-1" /> Excel Export
-                    </Button>
+                  {/* Export button */}
+                  <button
+                    type="button"
+                    onClick={handleExport}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-[linear-gradient(120deg,#065f46,#047857)] text-white shadow-lg"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm font-black">Export to Excel</p>
+                      <p className="text-[11px] text-emerald-200 mt-0.5">Download full AC bill report for {months.find(m => m.value === acMonth)?.label} {acYear}</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-5 w-5" />
+                    </div>
+                  </button>
+
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-4 rounded-2xl border border-border bg-card">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">Collected</span>
+                      </div>
+                      <p className="text-xl font-black text-emerald-600">₹{collectedTotal.toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 rounded-2xl border border-border bg-card">
+                      <div className="flex items-center gap-2 mb-2">
+                        <IndianRupee className="h-4 w-4 text-orange-500" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">Pending</span>
+                      </div>
+                      <p className="text-xl font-black text-orange-500">₹{pendingTotal.toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-card overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse min-w-[500px]">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-muted-foreground uppercase">
-                          <th className="p-3">Room</th>
-                          <th className="p-3">Units</th>
-                          <th className="p-3">Total Bill</th>
-                          <th className="p-3">Expected</th>
-                          <th className="p-3">Collected</th>
-                          <th className="p-3">Pending</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {acRooms.map(item => {
-                          const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
-                          const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
-                          const roomPending = Math.max(0, roomExpected - roomCollected);
-                          return (
-                            <tr key={item.room.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                              <td className="p-3 font-extrabold">{item.room.roomNo}</td>
-                              <td className="p-3">{item.units || 0}</td>
-                              <td className="p-3 font-medium">₹{(item.total || 0).toLocaleString()}</td>
-                              <td className="p-3">₹{roomExpected.toLocaleString()}</td>
-                              <td className="p-3 text-emerald-400 font-bold">₹{roomCollected.toLocaleString()}</td>
-                              <td className="p-3 text-orange-400 font-bold">₹{roomPending.toLocaleString()}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+
+                  {/* Room breakdown */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground px-0.5">Room Breakdown</h3>
+                    {acRooms.map(item => {
+                      const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
+                      const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
+                      const roomPending = Math.max(0, roomExpected - roomCollected);
+                      const pct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
+
+                      return (
+                        <div key={item.room.id} className="p-3.5 rounded-2xl border border-border bg-card space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-extrabold text-sm">Room {item.room.roomNo}</span>
+                            <span className={cn("text-xs font-bold", roomPending === 0 ? "text-emerald-500" : "text-orange-500")}>
+                              {roomPending === 0 ? "All paid" : `₹${roomPending.toLocaleString()} due`}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground">
+                            <span>{item.units || 0} units</span>
+                            <span className="text-center">₹{(item.total || 0).toLocaleString()} bill</span>
+                            <span className="text-right text-emerald-500 font-bold">{pct}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${pct}%`, background: pct === 100 ? "#10b981" : "#06b6d4" }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-border dark:border-slate-900 bg-muted dark:bg-slate-950/80 backdrop-blur-md p-4 flex items-center justify-between shrink-0 text-xs">
+            {/* Bottom summary bar */}
+            <div className="border-t border-border bg-muted/60 backdrop-blur px-4 py-3 flex items-center justify-between shrink-0 text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground dark:text-slate-500 font-bold">COLLECTED:</span>
-                <span className="text-emerald-400 font-black">₹{collectedTotal.toLocaleString()}</span>
+                <span className="text-muted-foreground font-bold">COLLECTED</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-black">₹{collectedTotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground dark:text-slate-500 font-bold">PENDING:</span>
-                <span className="text-orange-400 font-black">₹{pendingTotal.toLocaleString()}</span>
+                <span className="text-muted-foreground font-bold">PENDING</span>
+                <span className="text-orange-500 font-black">₹{pendingTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
         )}
-        <BillUnitPricesCard 
-        showSummaryCard={false} 
-        defaultOpen={pricesCardOpen} 
-        onClose={() => setPricesCardOpen(false)} 
-      />
+        <BillUnitPricesCard
+          showSummaryCard={false}
+          defaultOpen={pricesCardOpen}
+          onClose={() => setPricesCardOpen(false)}
+        />
       </SheetContent>
     </Sheet>
   );
 };
+
 interface DetailProps {
   item: any;
   onBack: () => void;
@@ -602,75 +705,154 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <SheetHeader className="px-3 pt-4 pb-2 border-b border-border dark:border-slate-900 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground dark:text-slate-400 hover:text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-900" onClick={onBack}>
-              <ArrowLeft className="h-5 w-5" />
+      {/* Illustrated sub-header */}
+      <div
+        className="relative overflow-hidden shrink-0"
+        style={{ background: "linear-gradient(150deg, #0c4a6e 0%, #0e7490 60%, #0891b2 100%)" }}
+      >
+        <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
+
+        <SheetHeader className="relative z-10 px-3 pt-4 pb-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white"
+                onClick={onBack}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <SheetTitle className="text-base font-extrabold text-white">Room {room.roomNo}</SheetTitle>
+                <span className="text-[10px] text-cyan-200/80">{room.capacity} Sharing · {activeTenants.length} Active Tenant{activeTenants.length === 1 ? '' : 's'}</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="h-9 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 text-white font-bold text-xs shrink-0"
+              onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+            >
+              <Send className="mr-1.5 h-3.5 w-3.5" /> Share All
             </Button>
-            <div className="min-w-0">
-              <SheetTitle className="text-base font-extrabold text-foreground dark:text-white">Room {room.roomNo}</SheetTitle>
-              <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{room.capacity} Sharing · {activeTenants.length} Active Tenant{activeTenants.length === 1 ? '' : 's'}</span>
+          </div>
+
+          {/* Bill summary row */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Total Bill</span>
+              <span className="block text-sm font-black text-white mt-0.5">₹{draftTotal.toLocaleString()}</span>
+            </div>
+            <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-emerald-300">Paid</span>
+              <span className="block text-sm font-black text-white mt-0.5">₹{roomCollected.toLocaleString()}</span>
+            </div>
+            <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
+              <span className={cn("block text-sm font-black mt-0.5", roomPending > 0 ? "text-orange-300" : "text-emerald-300")}>
+                ₹{roomPending.toLocaleString()}
+              </span>
             </div>
           </div>
-          <Button size="sm" variant="outline" className="h-7 text-[10px] border-border dark:border-slate-800 text-foreground dark:text-slate-300 hover:bg-muted dark:hover:bg-slate-900 hover:text-foreground dark:text-white shrink-0 px-2.5" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
-            <Send className="mr-1.5 h-3 w-3" /> Share All
-          </Button>
-        </div>
-      </SheetHeader>
 
-      <div className="flex-1 overflow-y-auto px-1.5 py-3 space-y-3.5">
-        {/* Summary card */}
-        <div className="rounded-2xl border border-border dark:border-slate-900 bg-muted dark:bg-slate-950/30 p-4 flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <div><span className="text-[10px] font-extrabold text-muted-foreground dark:text-slate-400 uppercase tracking-wider block">Total Bill</span><span className="text-lg font-black text-foreground dark:text-white mt-0.5">₹{draftTotal.toLocaleString()}</span></div>
-            <div className="text-right"><span className="text-[10px] font-extrabold text-muted-foreground dark:text-slate-400 uppercase tracking-wider block">Pending</span><span className={cn("text-lg font-black mt-0.5", roomPending > 0 ? "text-orange-400" : "text-emerald-400")}>₹{roomPending.toLocaleString()}</span></div>
-          </div>
-          <div className="space-y-1.5 border-t border-border dark:border-slate-900/60 pt-3">
-            <div className="flex justify-between text-[10px] text-muted-foreground dark:text-slate-400">
+          {/* Progress */}
+          <div className="mt-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-cyan-200">
               <span>Collection rate</span>
-              <span className={cn("font-bold", roomPct === 100 ? "text-emerald-400" : "text-cyan-400")}>{roomPct}% Collected {roomPct === 100 ? '🎉' : ''}</span>
+              <span className="font-black text-white">{roomPct}%{roomPct === 100 ? " — All paid!" : ""}</span>
             </div>
-            <Progress value={roomPct} className="h-1.5 bg-muted dark:bg-slate-950 border border-border dark:border-slate-900" />
+            <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${roomPct}%`,
+                  background: roomPct === 100 ? "#10b981" : "linear-gradient(90deg,#22d3ee,#06b6d4)",
+                }}
+              />
+            </div>
           </div>
-        </div>
+        </SheetHeader>
+      </div>
 
-        {/* Meter Reading */}
-        <div className="rounded-2xl border border-border dark:border-slate-900 bg-muted dark:bg-slate-950/30 p-4 space-y-3.5">
+      {/* Scrollable detail body */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3.5">
+        {/* Meter Readings */}
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Meter Readings</h4>
-            <div className="flex items-center gap-1.5">
-              <input type="checkbox" id={`detail-ac-mode-${room.roomNo}`} checked={isCustom} onChange={(e) => onModeToggle(e.target.checked)} className="h-3.5 w-3.5 rounded border-border dark:border-slate-800 bg-muted dark:bg-slate-950 text-cyan-600 cursor-pointer" />
-              <label htmlFor={`detail-ac-mode-${room.roomNo}`} className="text-[10px] text-muted-foreground dark:text-slate-400 cursor-pointer">Flat Rate (₹{draftUnitPrice}/unit)</label>
-            </div>
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Meter Readings</h4>
+            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isCustom}
+                onChange={(e) => onModeToggle(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-border text-cyan-600 cursor-pointer"
+              />
+              <span className="text-[10px] text-muted-foreground">Flat Rate (₹{draftUnitPrice}/unit)</span>
+            </label>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Prev Reading</Label>
-              <Input type="number" value={startReadingDraft} onChange={(e) => setStartReadingDraft(e.target.value)} onBlur={handleStartBlur} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Start" className="h-9 text-xs px-2.5 bg-muted dark:bg-slate-950 border-border dark:border-slate-900 text-foreground dark:text-white focus-visible:ring-cyan-500" />
+              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Prev Reading</Label>
+              <Input
+                type="number"
+                value={startReadingDraft}
+                onChange={(e) => setStartReadingDraft(e.target.value)}
+                onBlur={handleStartBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                placeholder="Start"
+                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+              />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Curr Reading</Label>
-              <Input type="number" value={endReadingDraft} onChange={(e) => setEndReadingDraft(e.target.value)} onBlur={handleEndBlur} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="End" className="h-9 text-xs px-2.5 bg-muted dark:bg-slate-950 border-border dark:border-slate-900 text-foreground dark:text-white focus-visible:ring-cyan-500" />
+              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Curr Reading</Label>
+              <Input
+                type="number"
+                value={endReadingDraft}
+                onChange={(e) => setEndReadingDraft(e.target.value)}
+                onBlur={handleEndBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                placeholder="End"
+                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+              />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Units Consumed</Label>
-              <Input type="number" value={unitsDraft} onChange={(e) => setUnitsDraft(e.target.value)} onBlur={handleUnitsBlur} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="0" className="h-9 text-xs px-2.5 bg-muted dark:bg-slate-950 border-border dark:border-slate-900 text-foreground dark:text-white focus-visible:ring-cyan-500" />
+              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Units Consumed</Label>
+              <Input
+                type="number"
+                value={unitsDraft}
+                onChange={(e) => setUnitsDraft(e.target.value)}
+                onBlur={handleUnitsBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                placeholder="0"
+                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+              />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Rate per Unit (₹)</Label>
-              <Input type="number" value={priceDraft} disabled={!isCustom} onChange={(e) => setPriceDraft(e.target.value)} onBlur={handlePriceBlur} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} className="h-9 text-xs px-2.5 bg-muted dark:bg-slate-950 border-border dark:border-slate-900 text-foreground dark:text-white disabled:opacity-40 focus-visible:ring-cyan-500" />
+              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Rate / Unit (₹)</Label>
+              <Input
+                type="number"
+                value={priceDraft}
+                disabled={!isCustom}
+                onChange={(e) => setPriceDraft(e.target.value)}
+                onBlur={handlePriceBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500 disabled:opacity-40"
+              />
             </div>
           </div>
         </div>
 
-        {/* Split Strategy */}
-        <div className="rounded-2xl border border-border dark:border-slate-900 bg-muted dark:bg-slate-950/30 p-4 space-y-3.5">
-          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400">Bill Split Strategy</h4>
+        {/* Bill Split Strategy */}
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Bill Split Strategy</h4>
           <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Strategy</Label>
-              <select value={selectedSplitType} onChange={(e) => handleSplitTypeChange(e.target.value)} className="h-9 rounded-lg border border-border dark:border-slate-900 bg-white dark:bg-slate-950 px-2 text-xs font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground dark:text-white w-full cursor-pointer">
+              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Strategy</Label>
+              <select
+                value={selectedSplitType}
+                onChange={(e) => handleSplitTypeChange(e.target.value)}
+                className="h-9 rounded-lg border border-border bg-background px-2 text-xs font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground w-full cursor-pointer"
+              >
                 <option value="active_tenants">Split by Active Tenants</option>
                 <option value="capacity">Split by Capacity ({room.capacity} sharing)</option>
                 <option value="custom">Split Equally (Custom Count)</option>
@@ -679,77 +861,133 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
             <div>
               {selectedSplitType === "custom" ? (
                 <>
-                  <Label className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block mb-1">Persons Count</Label>
-                  <Input type="number" min="1" value={splitCountDraft} onChange={(e) => setSplitCountDraft(e.target.value)} onBlur={handleSplitCountBlur} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Count" className="h-9 text-xs px-2.5 bg-muted dark:bg-slate-950 border-border dark:border-slate-900 text-foreground dark:text-white focus-visible:ring-cyan-500" />
+                  <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Persons</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={splitCountDraft}
+                    onChange={(e) => setSplitCountDraft(e.target.value)}
+                    onBlur={handleSplitCountBlur}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                    placeholder="Count"
+                    className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+                  />
                 </>
               ) : (
                 <div className="h-9 flex flex-col justify-center">
-                  <span className="text-[10px] font-extrabold uppercase text-muted-foreground dark:text-slate-500 block">Total</span>
-                  <span className="text-xs font-black text-cyan-400 mt-0.5">₹{draftTotal.toLocaleString()}</span>
+                  <span className="text-[10px] font-extrabold uppercase text-muted-foreground block">Total</span>
+                  <span className="text-xs font-black text-cyan-500 mt-0.5">₹{draftTotal.toLocaleString()}</span>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-xl bg-slate-100/60 dark:bg-slate-900/50 border border-border dark:border-slate-900 px-3 py-2 text-[11px] text-muted-foreground dark:text-slate-400">
-            <span>{selectedSplitType === "custom" ? `Custom split by ${draftSplitCount} persons` : selectedSplitType === "capacity" ? `Split by ${room.capacity} slots` : `Proportional by active tenants`}</span>
-            <span className="font-extrabold text-cyan-400">{shareLabel}</span>
+
+          <div className="flex items-center justify-between rounded-xl bg-cyan-500/5 border border-cyan-500/20 px-3 py-2 text-[11px]">
+            <span className="text-muted-foreground">
+              {selectedSplitType === "custom" ? `Custom split by ${draftSplitCount} persons` : selectedSplitType === "capacity" ? `Split by ${room.capacity} slots` : `Proportional by active tenants`}
+            </span>
+            <span className="font-extrabold text-cyan-600 dark:text-cyan-400">{shareLabel}</span>
           </div>
         </div>
 
-        {/* Tenants */}
-        <div className="space-y-2.5">
-          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-slate-400 px-1">Tenant Breakdown</h4>
-          <div className="grid gap-2">
-            {dayWiseShares.length === 0 ? (
-              <div className="text-center text-muted-foreground dark:text-slate-500 py-6 text-xs border border-dashed border-border dark:border-slate-900 rounded-xl">No active tenants in this room.</div>
-            ) : dayWiseShares.map((tenant: any) => {
-              const isPaid = tenant.acPaymentStatus === "Paid";
-              const hasOverdue = (tenant.overdueAcTotal || 0) > 0;
-              const initials = tenant.name ? tenant.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "??";
-              return (
-                <div key={tenant.name} className="p-3.5 bg-muted dark:bg-muted/40 dark:bg-muted/40 border border-border dark:border-slate-900 hover:border-border dark:border-slate-800/80 rounded-2xl flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn("h-9 w-9 rounded-full border flex items-center justify-center text-xs font-bold shrink-0", isPaid ? "bg-emerald-950/50 border-emerald-800/60 text-emerald-400" : "bg-slate-100 dark:bg-slate-900 border-border dark:border-slate-800 text-foreground dark:text-slate-300")}>{initials}</div>
-                    <div className="min-w-0">
-                      <span className="font-extrabold text-xs text-foreground dark:text-white truncate block">{tenant.name}</span>
-                      <span className="text-[10px] text-muted-foreground dark:text-slate-400 block mt-0.5">{tenant.daysStayed} days stayed</span>
-                      <span className="text-[10px] text-muted-foreground dark:text-slate-500 block mt-0.5">
-                        Share: ₹{(tenant.share || 0).toLocaleString()}
-                        {hasOverdue && <span className="text-orange-400 ml-1 font-bold">+ ₹{tenant.overdueAcTotal.toLocaleString()} overdue</span>}
-                      </span>
-                    </div>
+        {/* Tenant Breakdown */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between px-0.5">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Tenant Breakdown</h4>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Users className="h-3 w-3" />
+              <span>{dayWiseShares.length} tenants</span>
+            </div>
+          </div>
+
+          {dayWiseShares.length === 0 ? (
+            <div className="text-center text-muted-foreground py-6 text-xs border border-dashed border-border rounded-2xl">
+              No active tenants in this room.
+            </div>
+          ) : dayWiseShares.map((tenant: any) => {
+            const isPaid = tenant.acPaymentStatus === "Paid";
+            const hasOverdue = (tenant.overdueAcTotal || 0) > 0;
+            const initials = tenant.name
+              ? tenant.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
+              : "??";
+
+            return (
+              <div
+                key={tenant.name}
+                className={cn(
+                  "p-4 rounded-2xl border flex items-center justify-between gap-3 transition-colors",
+                  isPaid
+                    ? "border-emerald-500/25 bg-emerald-500/5"
+                    : "border-border bg-card"
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={cn(
+                    "h-10 w-10 rounded-full border flex items-center justify-center text-xs font-black shrink-0",
+                    isPaid
+                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                      : "bg-muted border-border text-foreground"
+                  )}>
+                    {initials}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {!isPaid && (
-                      <Button size="xs" variant="outline" className="h-7 w-7 p-0 rounded-lg border-border dark:border-slate-800 text-muted-foreground dark:text-slate-400 hover:bg-muted dark:hover:bg-slate-900 hover:text-foreground dark:text-white" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}>
-                        <Send className="h-3 w-3" />
-                      </Button>
-                    )}
-                    <Button
-                      size="xs"
-                      className={cn("h-7 px-3 text-[10px] font-bold rounded-lg border-0",
-                        isPaid ? "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-emerald-400" : "bg-cyan-500 hover:bg-cyan-600 text-slate-950"
+                  <div className="min-w-0">
+                    <span className="font-extrabold text-xs truncate block">{tenant.name}</span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">{tenant.daysStayed} days stayed</span>
+                    <span className="text-[10px] text-muted-foreground block">
+                      Share: ₹{(tenant.share || 0).toLocaleString()}
+                      {hasOverdue && (
+                        <span className="text-orange-500 ml-1 font-bold">+ ₹{tenant.overdueAcTotal.toLocaleString()} overdue</span>
                       )}
-                      onClick={() => { if (tenant.id && onTogglePaymentStatus) onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending'); }}
-                    >
-                      {isPaid ? "Receipt" : "Mark Paid"}
-                    </Button>
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {!isPaid && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0 rounded-xl border-border text-muted-foreground hover:text-foreground"
+                      onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    className={cn(
+                      "h-8 px-3 text-[10px] font-bold rounded-xl border-0",
+                      isPaid
+                        ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                        : "bg-cyan-500 hover:bg-cyan-600 text-white"
+                    )}
+                    onClick={() => { if (tenant.id && onTogglePaymentStatus) onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending'); }}
+                  >
+                    {isPaid ? <><Check className="h-3 w-3 mr-1" /> Paid</> : "Mark Paid"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
+      {/* Detail footer */}
       <div
-        className="border-t border-[#e4e6ee] dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md p-4 flex items-center gap-2 shrink-0"
+        className="border-t border-border bg-background/95 backdrop-blur p-4 flex items-center gap-2 shrink-0"
         style={{ paddingBottom: "calc(81px + env(safe-area-inset-bottom, 0px))" }}
       >
-        <Button variant="outline" className="flex-1 text-[11px] font-bold h-10 border-[#e4e6ee] dark:border-slate-800 bg-white dark:bg-slate-900 text-foreground dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
-          <Send className="mr-1.5 h-3.5 w-3.5" /> Send Reminder
+        <Button
+          variant="outline"
+          className="flex-1 text-[11px] font-bold h-11 rounded-xl"
+          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+        >
+          <Bell className="mr-1.5 h-3.5 w-3.5" /> Send Reminder
         </Button>
-        <Button className="flex-1 text-[11px] font-bold h-10 bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm" onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}>
+        <Button
+          className="flex-1 text-[11px] font-bold h-11 rounded-xl bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm"
+          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+        >
           <Zap className="mr-1.5 h-3.5 w-3.5" /> Share Bill
         </Button>
       </div>

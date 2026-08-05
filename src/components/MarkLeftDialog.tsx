@@ -12,7 +12,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -218,11 +217,6 @@ export const MarkLeftDialog = ({
 
   if (!tenant) return null;
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -238,31 +232,6 @@ export const MarkLeftDialog = ({
 
         {step === "date" && (
           <div className="py-4 space-y-4">
-            {/* Current Payment Status */}
-            <div className="p-3 rounded-lg bg-muted">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {monthNames[selectedMonth - 1]} {selectedYear} Status:
-                </span>
-                <Badge
-                  className={cn(
-                    currentMonthPayment?.paymentStatus === "Paid"
-                      ? "bg-paid text-paid-foreground"
-                      : currentMonthPayment?.paymentStatus === "Partial"
-                        ? "bg-partial text-partial-foreground"
-                        : "bg-pending text-pending-foreground"
-                  )}
-                >
-                  {currentMonthPayment?.paymentStatus || "Pending"}
-                </Badge>
-              </div>
-              {currentMonthPayment?.amountPaid && currentMonthPayment.amountPaid > 0 && (
-                <div className="text-sm text-muted-foreground mt-1">
-                  Amount paid: ₹{currentMonthPayment.amountPaid.toLocaleString()}
-                </div>
-              )}
-            </div>
-
             <div>
               <Label className="mb-2 block">Move-out Date <span className="text-destructive">*</span></Label>
               <Calendar
@@ -324,9 +293,6 @@ export const MarkLeftDialog = ({
                 onChange={(e) => setPerDayRate(parseInt(e.target.value) || 0)}
                 className="mt-1"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Default: ₹{Math.round(tenant.monthlyRent / 30)} (Monthly rent ÷ 30)
-              </p>
             </div>
 
             {/* Bonus/Extra */}
@@ -342,9 +308,6 @@ export const MarkLeftDialog = ({
                 className="mt-1"
                 placeholder="0"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Add extra charges (e.g., electricity, damages)
-              </p>
             </div>
 
             {/* Discount */}

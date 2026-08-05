@@ -4,7 +4,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserPlus, UserMinus, Phone, MessageCircle, ArrowLeft, Calendar, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Room, Tenant } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -39,18 +41,10 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
     }
   }, [sheetOpen, selectedMonth, selectedYear]);
 
-  const shiftMonth = (delta: number) => {
-    const next = viewMonth + delta;
-    if (next < 1) {
-      setViewMonth(12);
-      setViewYear(viewYear - 1);
-    } else if (next > 12) {
-      setViewMonth(1);
-      setViewYear(viewYear + 1);
-    } else {
-      setViewMonth(next);
-    }
-  };
+  const years = useMemo(() => {
+    const currentYr = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => currentYr - 2 + i);
+  }, []);
 
   const { joined, left, joinedTenants, leftTenants, joinedTotal, leftTotal } = useMemo(() => {
     const joinedList: TenantWithRoom[] = [];
@@ -136,23 +130,56 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
         >
           <div className="flex flex-col h-full bg-background">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setSheetOpen(false); onClose?.(); }}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <SheetTitle className="text-base text-foreground font-bold text-left">
-                  Tenant Movement
-                </SheetTitle>
-              </div>
-              <div className="mt-2 flex items-center justify-between rounded-xl border border-border bg-muted/40 px-2 py-1.5">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => shiftMonth(-1)} aria-label="Previous month">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-bold text-foreground">{months[viewMonth - 1]} {viewYear}</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => shiftMonth(1)} aria-label="Next month">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+            <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-3 pt-4 sm:px-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setSheetOpen(false); onClose?.(); }} aria-label="Back">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <div className="min-w-0 text-left">
+                    <SheetTitle className="text-base font-bold">Tenant Movement</SheetTitle>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {months[viewMonth - 1]} {viewYear} activity
+                    </p>
+                  </div>
+                </div>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-xl border-primary/30 bg-primary/10 px-2.5 font-bold text-primary dark:text-primary">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs">{months[viewMonth - 1]?.slice(0, 3)} {viewYear}</span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3" align="end">
+                    <div className="space-y-3">
+                      <div className="text-xs font-bold text-muted-foreground">Select Month & Year</div>
+                      <div className="flex gap-2">
+                        <Select value={viewMonth.toString()} onValueChange={(val) => setViewMonth(parseInt(val))}>
+                          <SelectTrigger className="h-9 w-[120px] text-xs">
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {months.map((m, idx) => (
+                              <SelectItem key={m} value={(idx + 1).toString()} className="text-xs">{m}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={viewYear.toString()} onValueChange={(val) => setViewYear(parseInt(val))}>
+                          <SelectTrigger className="h-9 w-[85px] text-xs">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {years.map((y) => (
+                              <SelectItem key={y} value={y.toString()} className="text-xs">{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
