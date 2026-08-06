@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
+import { MedalBadgeIcon } from "./MedalBadgeIcon";
 
 const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   User,
@@ -273,14 +274,14 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
           className="max-w-md w-full"
         >
           <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg mb-6"
-            >
-              <PartyPopper className="h-10 w-10 text-white" />
-            </motion.div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="inline-flex items-center justify-center mb-6"
+          >
+            <MedalBadgeIcon variant="complete" size={96} />
+          </motion.div>
             <h1 className="text-2xl font-bold mb-2">Profile Completed!</h1>
             <p className="text-sm text-muted-foreground mb-6">
               Thank you, {tenantName}! Your onboarding profile has been submitted successfully.
