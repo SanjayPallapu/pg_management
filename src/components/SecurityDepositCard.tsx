@@ -592,18 +592,12 @@ export const SecurityDepositCard = ({
                             )}
                           </div>
                         </div>
-                        <Badge variant="secondary" className="bg-paid text-paid-foreground shrink-0">
-                          <IndianRupee className="h-3 w-3 mr-0.5" />
-                          {tenant.securityDepositAmount?.toLocaleString()}
-                        </Badge>
-                      </div>
-
-                      {/* Bottom row: badges + actions */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          <Badge variant="secondary" className="bg-paid text-paid-foreground shrink-0">
+                            <IndianRupee className="h-3 w-3 mr-0.5" />
+                            {tenant.securityDepositAmount?.toLocaleString()}
+                          </Badge>
+                          <div className="flex items-center gap-1 shrink-0">
                           {tenant.phone && tenant.phone !== '••••••••••' && (
                             <a 
                               href={`tel:${tenant.phone}`}
@@ -666,6 +660,7 @@ export const SecurityDepositCard = ({
                               </Button>
                             </>
                           )}
+                          </div>
                         </div>
                       </div>
                     </div>

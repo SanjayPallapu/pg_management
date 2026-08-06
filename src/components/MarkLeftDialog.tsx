@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { Tenant, TenantPayment, PaymentEntry } from "@/types";
 import { parseDateOnly } from "@/utils/dateOnly";
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift, Plus } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift, Plus, ArrowLeft } from "lucide-react";
 
 interface MarkLeftDialogProps {
   open: boolean;
@@ -219,17 +219,33 @@ export const MarkLeftDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            {step === "date" && <CalendarIcon className="h-5 w-5" />}
-            {step === "calculation" && <IndianRupee className="h-5 w-5" />}
-            {step === "confirm" && <CheckCircle2 className="h-5 w-5" />}
-            Move Out {tenant.name}
-          </AlertDialogTitle>
+      <AlertDialogContent className="inset-0 left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 p-0 gap-0 flex flex-col data-[state=open]:slide-in-from-bottom-4">
+        <AlertDialogHeader className="shrink-0 space-y-0 text-left border-b border-border bg-background px-3 py-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => {
+                if (step === "confirm") setStep("calculation");
+                else if (step === "calculation") setStep("date");
+                else onOpenChange(false);
+              }}
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <AlertDialogTitle className="flex items-center gap-2 text-lg">
+              {step === "date" && <CalendarIcon className="h-5 w-5" />}
+              {step === "calculation" && <IndianRupee className="h-5 w-5" />}
+              {step === "confirm" && <CheckCircle2 className="h-5 w-5" />}
+              Move Out {tenant.name}
+            </AlertDialogTitle>
+          </div>
           <AlertDialogDescription className="sr-only">Move out {tenant.name}</AlertDialogDescription>
         </AlertDialogHeader>
 
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
         {step === "date" && (
           <div className="py-4 space-y-4">
             <div>
@@ -506,7 +522,9 @@ export const MarkLeftDialog = ({
           </div>
         )}
 
-        <AlertDialogFooter>
+        </div>
+
+        <AlertDialogFooter className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {step === "date" && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
