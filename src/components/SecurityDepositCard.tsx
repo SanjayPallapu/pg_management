@@ -573,9 +573,23 @@ export const SecurityDepositCard = ({
                       {/* Top row: name + amount */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-sm truncate">{tenant.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            Room {tenant.roomNo} • {tenant.securityDepositDate && format(new Date(tenant.securityDepositDate), 'dd MMM yyyy')}
+                          <div className="font-bold text-base leading-tight truncate">{tenant.name}</div>
+                          <div className="text-xs font-medium text-muted-foreground mt-1">
+                            Room {tenant.roomNo}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {tenant.startDate && format(new Date(tenant.startDate), 'dd MMM yyyy')}
+                            </span>
+                            {(tenant as any).securityDepositMode && (
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                (tenant as any).securityDepositMode === 'upi'
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                  : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              }`}>
+                                {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <Badge variant="secondary" className="bg-paid text-paid-foreground shrink-0">
@@ -587,15 +601,6 @@ export const SecurityDepositCard = ({
                       {/* Bottom row: badges + actions */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {(tenant as any).securityDepositMode && (
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                              (tenant as any).securityDepositMode === 'upi' 
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
-                                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            }`}>
-                              {(tenant as any).securityDepositMode === 'upi' ? 'UPI' : 'Cash'}
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
