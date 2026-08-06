@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { CheckCircle2, Circle } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { MedalBadgeIcon } from "./MedalBadgeIcon";
 import {
   isProfileComplete,
   type OnboardingStatus,
@@ -16,14 +16,13 @@ interface ProfileStatusBadgeProps {
 }
 
 /**
- * ProfileStatusBadge - Displays Profile Complete / Incomplete status.
- * Green (glowing) = Profile Complete, Grey = Profile Incomplete.
+ * ProfileStatusBadge - Displays Profile Complete / Incomplete status using
+ * the ribbon-medal badge icon (green = complete, grey = incomplete).
  * Clicking opens the Complete Tenant Profile workflow.
  *
- * Redesigned (2026) to use a premium circular badge indicator with a soft glow,
- * matching the new full-screen tenant onboarding UI. Fully backward compatible
- * with existing usages across Dashboard, Room Cards, Tenant Management,
- * Search Results, Rent Sheets, Reports, and Tenant Details.
+ * This badge is designed to appear consistently across:
+ * Dashboard, Room Cards, Tenant Management, Search Results, Rent Sheets,
+ * Reports, Tenant Details, and the public onboarding success screen.
  */
 export const ProfileStatusBadge = memo(function ProfileStatusBadge({
   status,
@@ -36,9 +35,9 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({
   const isClickable = !!onClick;
 
   const sizeConfig = {
-    sm: { icon: "h-3 w-3", text: "text-[10px]", padding: "px-1.5 h-4", gap: "gap-0.5" },
-    md: { icon: "h-3.5 w-3.5", text: "text-xs", padding: "px-2 h-5", gap: "gap-1" },
-    lg: { icon: "h-4 w-4", text: "text-sm", padding: "px-2.5 h-6", gap: "gap-1" },
+    sm: { icon: 16, text: "text-[10px]", padding: "px-1.5 h-5", gap: "gap-1" },
+    md: { icon: 20, text: "text-xs", padding: "px-2 h-6", gap: "gap-1.5" },
+    lg: { icon: 28, text: "text-sm", padding: "px-2.5 h-8", gap: "gap-2" },
   };
   const config = sizeConfig[size];
 
@@ -71,16 +70,12 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({
         animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 0.35 }}
         key={isComplete ? "complete" : "incomplete"}
-        className={cn(
-          "rounded-full flex items-center justify-center",
-          isComplete && "drop-shadow-[0_0_4px_rgba(34,197,94,0.6)]",
-        )}
+        className="flex items-center justify-center flex-shrink-0"
       >
-        {isComplete ? (
-          <CheckCircle2 className={cn(config.icon, "text-green-500 dark:text-green-400")} />
-        ) : (
-          <Circle className={cn(config.icon, "text-gray-400")} />
-        )}
+        <MedalBadgeIcon
+          variant={isComplete ? "complete" : "incomplete"}
+          size={config.icon}
+        />
       </motion.div>
       {showLabel && (
         <span>{isComplete ? "Profile Complete" : "Profile Incomplete"}</span>
