@@ -660,6 +660,7 @@ export const SecurityDepositCard = ({
                               </Button>
                             </>
                           )}
+                          </div>
                         </div>
                       </div>
                     </div>
