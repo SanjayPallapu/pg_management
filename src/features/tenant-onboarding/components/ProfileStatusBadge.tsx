@@ -17,8 +17,8 @@ interface ProfileStatusBadgeProps {
 
 /**
  * ProfileStatusBadge - Displays Profile Complete / Incomplete status using
- * the ribbon-medal badge icon (green = complete, grey = incomplete).
- * Clicking opens the Complete Tenant Profile workflow.
+ * the ribbon-medal badge icon only (no pill/card background), green = complete,
+ * grey = incomplete. Clicking opens the Complete Tenant Profile workflow.
  *
  * This badge is designed to appear consistently across:
  * Dashboard, Room Cards, Tenant Management, Search Results, Rent Sheets,
@@ -35,16 +35,16 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({
   const isClickable = !!onClick;
 
   const sizeConfig = {
-    sm: { icon: 16, text: "text-[10px]", padding: "px-1.5 h-5", gap: "gap-1" },
-    md: { icon: 20, text: "text-xs", padding: "px-2 h-6", gap: "gap-1.5" },
-    lg: { icon: 28, text: "text-sm", padding: "px-2.5 h-8", gap: "gap-2" },
+    sm: { icon: 18, text: "text-[10px]" },
+    md: { icon: 24, text: "text-xs" },
+    lg: { icon: 32, text: "text-sm" },
   };
   const config = sizeConfig[size];
 
   return (
     <motion.button
       type="button"
-      whileHover={isClickable ? { scale: 1.05 } : undefined}
+      whileHover={isClickable ? { scale: 1.08 } : undefined}
       whileTap={isClickable ? { scale: 0.95 } : undefined}
       onClick={(e) => {
         e.stopPropagation();
@@ -52,15 +52,8 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({
       }}
       disabled={!isClickable}
       className={cn(
-        "inline-flex items-center rounded-full font-medium border transition-all",
-        config.padding,
-        config.gap,
-        config.text,
-        isComplete
-          ? "bg-gradient-to-r from-green-500/15 to-emerald-500/15 text-green-600 dark:text-green-400 border-green-500/40 dark:border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.35)]"
-          : "bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/30 dark:border-gray-500/20",
-        isClickable && "cursor-pointer hover:shadow-md",
-        !isClickable && "cursor-default",
+        "inline-flex items-center gap-1.5 bg-transparent border-0 p-0 m-0",
+        isClickable ? "cursor-pointer" : "cursor-default",
         className,
       )}
       title={isComplete ? "Profile Complete - Click to view" : "Profile Incomplete - Click to complete"}
@@ -78,7 +71,17 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({
         />
       </motion.div>
       {showLabel && (
-        <span>{isComplete ? "Profile Complete" : "Profile Incomplete"}</span>
+        <span
+          className={cn(
+            "font-medium",
+            config.text,
+            isComplete
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-500 dark:text-gray-400",
+          )}
+        >
+          {isComplete ? "Profile Complete" : "Profile Incomplete"}
+        </span>
       )}
     </motion.button>
   );
