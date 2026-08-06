@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
   MessageCircle,
-  Sms,
+  Smartphone,
   QrCode,
   Copy,
   Check,
@@ -213,7 +213,7 @@ export function OwnerSharePanel({
             loading={generateLink.isPending}
           />
           <ShareButton
-            icon={Sms}
+            icon={Smartphone}
             label="SMS"
             color="text-blue-600"
             bgColor="bg-blue-500/10 hover:bg-blue-500/20"
