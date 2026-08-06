@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { Tenant, TenantPayment, PaymentEntry } from "@/types";
 import { parseDateOnly } from "@/utils/dateOnly";
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift, Plus } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, IndianRupee, Percent, Ban, Gift, Plus, ArrowLeft } from "lucide-react";
 
 interface MarkLeftDialogProps {
   open: boolean;
