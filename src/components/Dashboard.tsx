@@ -541,7 +541,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Security<br/>Deposit</span>
           </div>
 
-          <div onClick={() => setReferralDialogOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
+          <div onClick={() => navigate("/referrals")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
             <div className="bg-amber-500/10 p-2 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
             <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
           </div>

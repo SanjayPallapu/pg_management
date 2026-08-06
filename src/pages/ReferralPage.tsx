@@ -103,10 +103,6 @@ export default function ReferralPage() {
             <h1 className="text-base font-black tracking-tight text-white">Refer &amp; Earn</h1>
             <p className="text-[11px] text-white/70">Grow the PG HUB community</p>
           </div>
-          <Badge className="bg-amber-400/20 border border-amber-400/40 text-amber-300 font-black text-[10px] px-2.5">
-            <Zap className="h-3 w-3 mr-1 fill-amber-300" />
-            30% OFF
-          </Badge>
         </header>
 
         {/* Illustration */}
