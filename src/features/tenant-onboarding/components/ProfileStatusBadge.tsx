@@ -1,85 +1,42 @@
-import { memo } from "react";
-import { CheckCircle2, Circle } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import {
-  isProfileComplete,
-  type OnboardingStatus,
-} from "../types";
+import React from "react";
+import Image from "next/image";
 
-interface ProfileStatusBadgeProps {
-  status?: OnboardingStatus | null;
-  size?: "sm" | "md" | "lg";
+type ProfileStatusBadgeProps = {
+  status: "complete" | "incomplete";
   onClick?: () => void;
-  showLabel?: boolean;
-  className?: string;
-}
+};
 
-/**
- * ProfileStatusBadge - Displays Profile Complete / Incomplete status.
- * Gray = Profile Incomplete, Green = Profile Complete
- * Clicking opens the Complete Tenant Profile workflow.
- *
- * This badge is designed to appear consistently across:
- * Dashboard, Room Cards, Tenant Management, Search Results, Rent Sheets, Reports, Tenant Details
- */
-export const ProfileStatusBadge = memo(function ProfileStatusBadge({
+export const ProfileStatusBadge: React.FC<ProfileStatusBadgeProps> = ({
   status,
-  size = "sm",
   onClick,
-  showLabel = false,
-  className,
-}: ProfileStatusBadgeProps) {
-  const isComplete = status ? isProfileComplete(status) : false;
-  const isClickable = !!onClick;
+}) => {
+  const isComplete = status === "complete";
 
-  const sizeConfig = {
-    sm: { icon: "h-3 w-3", text: "text-[10px]", padding: "px-1.5 h-4", gap: "gap-0.5" },
-    md: { icon: "h-3.5 w-3.5", text: "text-xs", padding: "px-2 h-5", gap: "gap-1" },
-    lg: { icon: "h-4 w-4", text: "text-sm", padding: "px-2.5 h-6", gap: "gap-1" },
-  };
+  const badgeSrc = isComplete
+    ? "/assets/badges/green-profile-badge.png"
+    : "/assets/badges/grey-profile-badge.png";
 
-  const config = sizeConfig[size];
+  const label = isComplete ? "Profile Complete" : "Profile Incomplete";
+  const chipColor = isComplete
+    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40"
+    : "bg-slate-700/40 text-slate-200 border-slate-600";
 
   return (
-    <motion.button
+    <button
       type="button"
-      whileHover={isClickable ? { scale: 1.05 } : undefined}
-      whileTap={isClickable ? { scale: 0.95 } : undefined}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-      disabled={!isClickable}
-      className={cn(
-        "inline-flex items-center rounded-full font-medium border transition-all",
-        config.padding,
-        config.gap,
-        config.text,
-        isComplete
-          ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30 dark:border-green-500/20"
-          : "bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/30 dark:border-gray-500/20",
-        isClickable && "cursor-pointer hover:shadow-sm",
-        !isClickable && "cursor-default",
-        className,
-      )}
-      title={isComplete ? "Profile Complete - Click to view" : "Profile Incomplete - Click to complete"}
+      onClick={onClick}
+      className="inline-flex items-center gap-3 rounded-full px-3 py-2 bg-slate-900/60 border border-slate-700 hover:border-violet-500 hover:bg-slate-900 transition-colors"
     >
-      <motion.div
-        initial={false}
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 0.3 }}
-        key={isComplete ? "complete" : "incomplete"}
-      >
-        {isComplete ? (
-          <CheckCircle2 className={cn(config.icon)} />
-        ) : (
-          <Circle className={cn(config.icon)} />
-        )}
-      </motion.div>
-      {showLabel && (
-        <span>{isComplete ? "Complete" : "Incomplete"}</span>
-      )}
-    </motion.button>
+      <Image
+        src={badgeSrc}
+        alt={label}
+        width={40}
+        height={40}
+        className="shrink-0"
+      />
+      <div className={`px-3 py-1 rounded-full text-xs font-medium ${chipColor}`}>
+        {label}
+      </div>
+    </button>
   );
-});
+};
