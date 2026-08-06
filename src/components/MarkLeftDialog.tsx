@@ -509,10 +509,10 @@ export const MarkLeftDialog = ({
         <AlertDialogFooter>
           {step === "date" && (
             <>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleProceedToCalculation}>
-                Continue
-              </AlertDialogAction>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleProceedToCalculation}>Continue</Button>
             </>
           )}
           {step === "calculation" && (
@@ -520,9 +520,7 @@ export const MarkLeftDialog = ({
               <Button variant="outline" onClick={() => setStep("date")}>
                 Back
               </Button>
-              <AlertDialogAction onClick={handleProceedToConfirm}>
-                Continue to Confirm
-              </AlertDialogAction>
+              <Button onClick={handleProceedToConfirm}>Continue to Confirm</Button>
             </>
           )}
           {step === "confirm" && (
@@ -530,9 +528,9 @@ export const MarkLeftDialog = ({
               <Button variant="outline" onClick={() => setStep("calculation")}>
                 Back
               </Button>
-              <AlertDialogAction onClick={handleConfirmSettlement} className="bg-destructive hover:bg-destructive/90">
+              <Button onClick={handleConfirmSettlement} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Confirm Move Out
-              </AlertDialogAction>
+              </Button>
             </>
           )}
         </AlertDialogFooter>

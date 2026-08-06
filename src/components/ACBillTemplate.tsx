@@ -76,12 +76,13 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         }}>
           <div style={{
             width: "86px", height: "86px", borderRadius: "26px",
-            background: "rgba(255,255,255,0.92)",
+            background: isPaid ? "#0f7a4d" : "#0b2f6b",
             display: "flex", alignItems: "center", justifyContent: "center",
+            overflow: "hidden",
             boxShadow: "0 10px 24px rgba(2,20,54,.25)",
           }}>
             <img src={pgLogoUrl} alt={pgName} crossOrigin="anonymous"
-              style={{ width: "68px", height: "68px", objectFit: "contain", display: "block" }} 
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "26px" }}
             />
           </div>
         </div>
