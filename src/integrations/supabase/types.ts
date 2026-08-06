@@ -796,6 +796,232 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_onboarding_profiles: {
+        Row: {
+          id: string
+          tenant_id: string
+          pg_id: string
+          owner_id: string
+          status: string
+          verification_status: string
+          full_name: string | null
+          date_of_birth: string | null
+          gender: string | null
+          blood_group: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id_proof_type: string | null
+          id_proof_number: string | null
+          id_proof_url: string | null
+          address_proof_url: string | null
+          email: string | null
+          alternate_phone: string | null
+          permanent_address: string | null
+          occupation: string | null
+          company_name: string | null
+          office_address: string | null
+          stay_purpose: string | null
+          expected_stay_duration: string | null
+          move_in_date: string | null
+          payment_mode: string | null
+          upi_id: string | null
+          bank_account_number: string | null
+          ifsc_code: string | null
+          bank_name: string | null
+          food_preference: string | null
+          dietary_restrictions: string | null
+          rules_acknowledged: boolean | null
+          agreement_accepted: boolean | null
+          agreement_signed_at: string | null
+          form_progress: number | null
+          last_saved_step: string | null
+          created_at: string
+          updated_at: string
+          completed_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          pg_id: string
+          owner_id: string
+          status?: string
+          verification_status?: string
+          full_name?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          blood_group?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id_proof_type?: string | null
+          id_proof_number?: string | null
+          id_proof_url?: string | null
+          address_proof_url?: string | null
+          email?: string | null
+          alternate_phone?: string | null
+          permanent_address?: string | null
+          occupation?: string | null
+          company_name?: string | null
+          office_address?: string | null
+          stay_purpose?: string | null
+          expected_stay_duration?: string | null
+          move_in_date?: string | null
+          payment_mode?: string | null
+          upi_id?: string | null
+          bank_account_number?: string | null
+          ifsc_code?: string | null
+          bank_name?: string | null
+          food_preference?: string | null
+          dietary_restrictions?: string | null
+          rules_acknowledged?: boolean | null
+          agreement_accepted?: boolean | null
+          agreement_signed_at?: string | null
+          form_progress?: number | null
+          last_saved_step?: string | null
+          created_at?: string
+          updated_at?: string
+          completed_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      tenant_onboarding_links: {
+        Row: {
+          id: string
+          tenant_id: string
+          pg_id: string
+          owner_id: string
+          token: string
+          status: string
+          sent_via: string | null
+          sent_at: string | null
+          viewed_at: string | null
+          started_at: string | null
+          submitted_at: string | null
+          completed_at: string | null
+          expires_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          pg_id: string
+          owner_id: string
+          token?: string
+          status?: string
+          sent_via?: string | null
+          sent_at?: string | null
+          viewed_at?: string | null
+          started_at?: string | null
+          submitted_at?: string | null
+          completed_at?: string | null
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      tenant_onboarding_documents: {
+        Row: {
+          id: string
+          onboarding_profile_id: string
+          tenant_id: string
+          document_type: string
+          document_name: string | null
+          file_url: string
+          file_size: number | null
+          mime_type: string | null
+          status: string
+          rejection_reason: string | null
+          uploaded_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: string
+          onboarding_profile_id: string
+          tenant_id: string
+          document_type: string
+          document_name?: string | null
+          file_url: string
+          file_size?: number | null
+          mime_type?: string | null
+          status?: string
+          rejection_reason?: string | null
+          uploaded_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      tenant_onboarding_timeline: {
+        Row: {
+          id: string
+          tenant_id: string
+          pg_id: string
+          onboarding_profile_id: string | null
+          event_type: string
+          event_description: string | null
+          event_metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          pg_id: string
+          onboarding_profile_id?: string | null
+          event_type: string
+          event_description?: string | null
+          event_metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      tenant_onboarding_notifications: {
+        Row: {
+          id: string
+          owner_id: string
+          tenant_id: string
+          pg_id: string
+          notification_type: string
+          title: string
+          message: string | null
+          is_read: boolean
+          created_at: string
+          read_at: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          tenant_id: string
+          pg_id: string
+          notification_type: string
+          title: string
+          message?: string | null
+          is_read?: boolean
+          created_at?: string
+          read_at?: string | null
+        }
+        Update: {
+          [key: string]: any
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -809,6 +1035,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      generate_onboarding_link: { Args: { p_tenant_id: string; p_pg_id: string; p_owner_id: string; p_sent_via?: string }; Returns: any }
+      validate_onboarding_link: { Args: { p_token: string }; Returns: any }
+      save_onboarding_form_data: { Args: { p_token: string; p_form_data: Json; p_step?: string; p_progress?: number; p_submit?: boolean }; Returns: any }
+      verify_tenant_onboarding: { Args: { p_tenant_id: string; p_action: string; p_rejection_reason?: string; p_verifier_id: string }; Returns: any }
     }
     Enums: {
       app_role: "admin" | "staff"

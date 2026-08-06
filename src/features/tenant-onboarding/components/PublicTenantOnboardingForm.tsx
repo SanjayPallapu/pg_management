@@ -1,0 +1,967 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User,
+  Shield,
+  Phone,
+  Briefcase,
+  Home,
+  CreditCard,
+  Utensils,
+  ScrollText,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Loader2,
+  Save,
+  Upload,
+  FileText,
+  CheckCircle2,
+  PartyPopper,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/proxyClient";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { ONBOARDING_FORM_STEPS } from "../types";
+
+const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  User,
+  Shield,
+  Phone,
+  Briefcase,
+  Home,
+  CreditCard,
+  Utensils,
+  ScrollText,
+};
+
+interface PublicTenantOnboardingFormProps {
+  token: string;
+}
+
+interface FormData {
+  [key: string]: string | boolean | undefined;
+}
+
+export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingFormProps) {
+  const [loading, setLoading] = useState(true);
+  const [valid, setValid] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [tenantName, setTenantName] = useState("");
+  const [tenantPhone, setTenantPhone] = useState("");
+  const [existingProgress, setExistingProgress] = useState(0);
+  const [existingStatus, setExistingStatus] = useState<string>("");
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState<FormData>({});
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const validateToken = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
+      p_token: token,
+    });
+
+    if (rpcError) {
+      console.error("[Onboarding Form] Token validation failed", rpcError);
+      setError("Failed to validate onboarding link. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setValid(false);
+      setError("Invalid or expired onboarding link.");
+      setLoading(false);
+      return;
+    }
+
+    const result = data[0];
+    if (result.is_expired) {
+      setExpired(true);
+      setLoading(false);
+      return;
+    }
+
+    setValid(true);
+    setTenantName(result.tenant_name || "");
+    setTenantPhone(result.tenant_phone || "");
+    setExistingProgress(result.form_progress || 0);
+    setExistingStatus(result.onboarding_status || "");
+
+    // If form was already completed, show completion screen
+    if (result.onboarding_status === "profile_completed" || result.onboarding_status === "pending_verification") {
+      setCompleted(true);
+    }
+
+    // Restore progress
+    if (result.form_progress > 0) {
+      const stepIndex = Math.floor((result.form_progress / 100) * ONBOARDING_FORM_STEPS.length);
+      setCurrentStep(Math.min(stepIndex, ONBOARDING_FORM_STEPS.length - 1));
+    }
+
+    setLoading(false);
+  }, [token]);
+
+  // Validate token on mount
+  useEffect(() => {
+    validateToken();
+  }, [token, validateToken]);
+
+  // Auto-save form data
+  const autoSave = useCallback(
+    async (data: FormData, step: string, progress: number) => {
+      if (!valid || completed) return;
+
+      setSaving(true);
+      try {
+        const jsonData = Object.fromEntries(
+          Object.entries(data).filter(([, v]) => v !== undefined && v !== ""),
+        );
+
+        const { error } = await supabase.rpc("save_onboarding_form_data", {
+          p_token: token,
+          p_form_data: jsonData,
+          p_step: step,
+          p_progress: progress,
+          p_submit: false,
+        });
+
+        if (error) {
+          console.error("[Onboarding Form] Auto-save failed", error);
+        } else {
+          setLastSaved(new Date());
+        }
+      } catch (err) {
+        console.error("[Onboarding Form] Auto-save error", err);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [token, valid, completed],
+  );
+
+  // Debounced auto-save
+  const debouncedAutoSave = useCallback(
+    (data: FormData, step: string, progress: number) => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = setTimeout(() => {
+        autoSave(data, step, progress);
+      }, 1500);
+    },
+    [autoSave],
+  );
+
+  const updateField = (field: string, value: string | boolean) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+
+    const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
+    debouncedAutoSave(newData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
+  };
+
+  const handleNext = () => {
+    if (currentStep < ONBOARDING_FORM_STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+      const progress = Math.round(((currentStep + 2) / ONBOARDING_FORM_STEPS.length) * 100);
+      autoSave(formData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const jsonData = Object.fromEntries(
+        Object.entries(formData).filter(([, v]) => v !== undefined && v !== ""),
+      );
+
+      const progress = 100;
+      const { error } = await supabase.rpc("save_onboarding_form_data", {
+        p_token: token,
+        p_form_data: jsonData,
+        p_step: "completed",
+        p_progress: progress,
+        p_submit: true,
+      });
+
+      if (error) throw error;
+
+      setCompleted(true);
+      toast.success("Profile submitted successfully!");
+    } catch (err) {
+      console.error("[Onboarding Form] Submit failed", err);
+      toast.error("Failed to submit form. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/30">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-sm text-muted-foreground">Validating onboarding link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-slate-950 dark:to-red-950/30 p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Expired state
+  if (expired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-950 dark:to-amber-950/30 p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 mb-4">
+            <AlertCircle className="h-8 w-8 text-amber-500" />
+          </div>
+          <h1 className="text-xl font-bold mb-2">Link Expired</h1>
+          <p className="text-sm text-muted-foreground">
+            This onboarding link has expired. Please contact your PG owner to get a new link.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Completed state
+  if (completed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/30 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-md w-full"
+        >
+          <div className="text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg mb-6"
+            >
+              <PartyPopper className="h-10 w-10 text-white" />
+            </motion.div>
+            <h1 className="text-2xl font-bold mb-2">Profile Completed!</h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              Thank you, {tenantName}! Your onboarding profile has been submitted successfully.
+              The PG owner will review your details and verify your documents shortly.
+            </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm font-medium">
+              <CheckCircle2 className="h-4 w-4" />
+              Pending Verification
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!valid) return null;
+
+  const currentStepData = ONBOARDING_FORM_STEPS[currentStep];
+  const StepIcon = STEP_ICONS[currentStepData.icon] || User;
+  const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
+  const isLastStep = currentStep === ONBOARDING_FORM_STEPS.length - 1;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/30">
+      {/* Premium Glass Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-950/70 border-b border-border">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md">
+                <Home className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold">Tenant Onboarding</div>
+                <div className="text-xs text-muted-foreground">Welcome, {tenantName}</div>
+              </div>
+            </div>
+            {/* Auto-save indicator */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {saving ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : lastSaved ? (
+                <>
+                  <Save className="h-3 w-3 text-green-500" />
+                  <span className="text-green-600">Saved</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex items-center gap-2">
+            <Progress value={progress} className="h-2" />
+            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              {progress}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Content */}
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Step indicator dots */}
+        <div className="flex items-center justify-between mb-8">
+          {ONBOARDING_FORM_STEPS.map((step, index) => {
+            const Icon = STEP_ICONS[step.icon] || User;
+            const isCompleted = index < currentStep;
+            const isCurrent = index === currentStep;
+            return (
+              <div key={step.id} className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="flex items-center w-full">
+                  {index > 0 && (
+                    <div
+                      className={cn(
+                        "flex-1 h-0.5 transition-colors",
+                        isCompleted || isCurrent ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-700",
+                      )}
+                    />
+                  )}
+                  <motion.div
+                    initial={false}
+                    animate={{ scale: isCurrent ? [1, 1.1, 1] : 1 }}
+                    transition={{ duration: 0.3 }}
+                    className={cn(
+                      "flex items-center justify-center rounded-full border-2 transition-all flex-shrink-0",
+                      "w-9 h-9",
+                      isCompleted
+                        ? "bg-green-500 border-green-500 text-white"
+                        : isCurrent
+                          ? "bg-blue-500 border-blue-500 text-white shadow-lg ring-4 ring-blue-500/20"
+                          : "bg-white dark:bg-slate-800 border-gray-300 dark:border-gray-700 text-gray-400",
+                    )}
+                  >
+                    {isCompleted ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Icon className="h-4 w-4" />
+                    )}
+                  </motion.div>
+                  {index < ONBOARDING_FORM_STEPS.length - 1 && (
+                    <div
+                      className={cn(
+                        "flex-1 h-0.5 transition-colors",
+                        isCompleted ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-700",
+                      )}
+                    />
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    "text-[9px] text-center font-medium leading-tight hidden sm:block",
+                    isCurrent ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
+                  )}
+                >
+                  {step.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Step Content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Glass card */}
+            <div className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-3xl border border-border shadow-xl p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                  <StepIcon className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">{currentStepData.title}</h2>
+                  <p className="text-xs text-muted-foreground">{currentStepData.description}</p>
+                </div>
+              </div>
+
+              {/* Render fields based on step */}
+              <div className="space-y-4">
+                {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
+                {currentStep === 1 && <IdentityStep formData={formData} updateField={updateField} />}
+                {currentStep === 2 && <ContactStep formData={formData} updateField={updateField} />}
+                {currentStep === 3 && <OccupationStep formData={formData} updateField={updateField} />}
+                {currentStep === 4 && <StayStep formData={formData} updateField={updateField} />}
+                {currentStep === 5 && <PaymentStep formData={formData} updateField={updateField} />}
+                {currentStep === 6 && <FoodStep formData={formData} updateField={updateField} />}
+                {currentStep === 7 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} />}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-6">
+          <Button
+            variant="ghost"
+            onClick={handlePrev}
+            disabled={currentStep === 0}
+            className="gap-1"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </Button>
+
+          {isLastStep ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg text-white"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Submit Profile
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              className="gap-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg text-white"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Step Components
+// ============================================================================
+
+type StepProps = {
+  formData: FormData;
+  updateField: (field: string, value: string | boolean) => void;
+};
+
+function PersonalInfoStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Field label="Full Name" required>
+        <Input
+          value={(formData.full_name as string) || ""}
+          onChange={(e) => updateField("full_name", e.target.value)}
+          placeholder="Enter your full name"
+        />
+      </Field>
+      <Field label="Date of Birth">
+        <Input
+          type="date"
+          value={(formData.date_of_birth as string) || ""}
+          onChange={(e) => updateField("date_of_birth", e.target.value)}
+        />
+      </Field>
+      <Field label="Gender">
+        <Select
+          value={(formData.gender as string) || ""}
+          onValueChange={(v) => updateField("gender", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="male">Male</SelectItem>
+            <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Blood Group">
+        <Select
+          value={(formData.blood_group as string) || ""}
+          onValueChange={(v) => updateField("blood_group", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select blood group" />
+          </SelectTrigger>
+          <SelectContent>
+            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+              <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Emergency Contact Name">
+        <Input
+          value={(formData.emergency_contact_name as string) || ""}
+          onChange={(e) => updateField("emergency_contact_name", e.target.value)}
+          placeholder="Emergency contact person"
+        />
+      </Field>
+      <Field label="Emergency Contact Phone">
+        <Input
+          type="tel"
+          value={(formData.emergency_contact_phone as string) || ""}
+          onChange={(e) => updateField("emergency_contact_phone", e.target.value)}
+          placeholder="Emergency contact number"
+        />
+      </Field>
+    </div>
+  );
+}
+
+function IdentityStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="space-y-4">
+      <Field label="ID Proof Type" required>
+        <Select
+          value={(formData.id_proof_type as string) || ""}
+          onValueChange={(v) => updateField("id_proof_type", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select ID type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
+            <SelectItem value="pan">PAN Card</SelectItem>
+            <SelectItem value="driving_license">Driving License</SelectItem>
+            <SelectItem value="passport">Passport</SelectItem>
+            <SelectItem value="voter_id">Voter ID</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="ID Proof Number" required>
+        <Input
+          value={(formData.id_proof_number as string) || ""}
+          onChange={(e) => updateField("id_proof_number", e.target.value)}
+          placeholder="Enter ID number"
+        />
+      </Field>
+      <FileUploadField
+        label="Upload ID Proof"
+        field="id_proof_url"
+        formData={formData}
+        updateField={updateField}
+      />
+      <FileUploadField
+        label="Upload Address Proof"
+        field="address_proof_url"
+        formData={formData}
+        updateField={updateField}
+      />
+    </div>
+  );
+}
+
+function ContactStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Field label="Email Address">
+        <Input
+          type="email"
+          value={(formData.email as string) || ""}
+          onChange={(e) => updateField("email", e.target.value)}
+          placeholder="your@email.com"
+        />
+      </Field>
+      <Field label="Alternate Phone">
+        <Input
+          type="tel"
+          value={(formData.alternate_phone as string) || ""}
+          onChange={(e) => updateField("alternate_phone", e.target.value)}
+          placeholder="Alternate phone number"
+        />
+      </Field>
+      <div className="sm:col-span-2">
+        <Field label="Permanent Address">
+          <Textarea
+            value={(formData.permanent_address as string) || ""}
+            onChange={(e) => updateField("permanent_address", e.target.value)}
+            placeholder="Enter your permanent address"
+            rows={3}
+          />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+function OccupationStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Field label="Occupation">
+        <Select
+          value={(formData.occupation as string) || ""}
+          onValueChange={(v) => updateField("occupation", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select occupation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="student">Student</SelectItem>
+            <SelectItem value="employed">Employed</SelectItem>
+            <SelectItem value="self_employed">Self Employed</SelectItem>
+            <SelectItem value="business">Business</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Company Name">
+        <Input
+          value={(formData.company_name as string) || ""}
+          onChange={(e) => updateField("company_name", e.target.value)}
+          placeholder="Company / Institution name"
+        />
+      </Field>
+      <div className="sm:col-span-2">
+        <Field label="Office Address">
+          <Textarea
+            value={(formData.office_address as string) || ""}
+            onChange={(e) => updateField("office_address", e.target.value)}
+            placeholder="Office / College address"
+            rows={2}
+          />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+function StayStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Field label="Stay Purpose">
+        <Select
+          value={(formData.stay_purpose as string) || ""}
+          onValueChange={(v) => updateField("stay_purpose", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select purpose" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="work">Work</SelectItem>
+            <SelectItem value="study">Study</SelectItem>
+            <SelectItem value="business">Business</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Expected Stay Duration">
+        <Select
+          value={(formData.expected_stay_duration as string) || ""}
+          onValueChange={(v) => updateField("expected_stay_duration", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select duration" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1-3">1-3 months</SelectItem>
+            <SelectItem value="3-6">3-6 months</SelectItem>
+            <SelectItem value="6-12">6-12 months</SelectItem>
+            <SelectItem value="12+">12+ months</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Move-in Date">
+        <Input
+          type="date"
+          value={(formData.move_in_date as string) || ""}
+          onChange={(e) => updateField("move_in_date", e.target.value)}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function PaymentStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="space-y-4">
+      <Field label="Preferred Payment Mode">
+        <Select
+          value={(formData.payment_mode as string) || ""}
+          onValueChange={(v) => updateField("payment_mode", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select payment mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="upi">UPI</SelectItem>
+            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+            <SelectItem value="cash">Cash</SelectItem>
+            <SelectItem value="card">Card</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      {(formData.payment_mode === "upi") && (
+        <Field label="UPI ID">
+          <Input
+            value={(formData.upi_id as string) || ""}
+            onChange={(e) => updateField("upi_id", e.target.value)}
+            placeholder="yourname@upi"
+          />
+        </Field>
+      )}
+      {(formData.payment_mode === "bank_transfer") && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Bank Account Number">
+              <Input
+                value={(formData.bank_account_number as string) || ""}
+                onChange={(e) => updateField("bank_account_number", e.target.value)}
+                placeholder="Account number"
+              />
+            </Field>
+            <Field label="IFSC Code">
+              <Input
+                value={(formData.ifsc_code as string) || ""}
+                onChange={(e) => updateField("ifsc_code", e.target.value)}
+                placeholder="IFSC code"
+              />
+            </Field>
+          </div>
+          <Field label="Bank Name">
+            <Input
+              value={(formData.bank_name as string) || ""}
+              onChange={(e) => updateField("bank_name", e.target.value)}
+              placeholder="Bank name"
+            />
+          </Field>
+        </>
+      )}
+    </div>
+  );
+}
+
+function FoodStep({ formData, updateField }: StepProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Field label="Food Preference">
+        <Select
+          value={(formData.food_preference as string) || ""}
+          onValueChange={(v) => updateField("food_preference", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select preference" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="veg">Vegetarian</SelectItem>
+            <SelectItem value="non_veg">Non-Vegetarian</SelectItem>
+            <SelectItem value="egg">Eggetarian</SelectItem>
+            <SelectItem value="vegan">Vegan</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Dietary Restrictions">
+        <Textarea
+          value={(formData.dietary_restrictions as string) || ""}
+          onChange={(e) => updateField("dietary_restrictions", e.target.value)}
+          placeholder="Any allergies or restrictions"
+          rows={3}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function RulesStep({ formData, updateField, tenantName }: StepProps & { tenantName: string }) {
+  return (
+    <div className="space-y-6">
+      <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+        <div className="flex items-start gap-3">
+          <ScrollText className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-bold mb-1">PG Rules & Agreement</h3>
+            <p className="text-xs text-muted-foreground">
+              Please review and accept the following terms to complete your onboarding.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <Checkbox
+            checked={(formData.rules_acknowledged as boolean) || false}
+            onCheckedChange={(checked) => updateField("rules_acknowledged", checked === true)}
+          />
+          <div className="text-sm">
+            <span className="font-medium">I acknowledge the PG rules</span>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              I have read and understood all PG rules including visitor policies, timing restrictions, and common area guidelines.
+            </p>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <Checkbox
+            checked={(formData.agreement_accepted as boolean) || false}
+            onCheckedChange={(checked) => updateField("agreement_accepted", checked === true)}
+          />
+          <div className="text-sm">
+            <span className="font-medium">I accept the rental agreement</span>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              I agree to the terms of the rental agreement, including rent payment schedule, security deposit terms, and notice period for vacating.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20">
+        <div className="flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-bold mb-1">Almost Done, {tenantName}!</h3>
+            <p className="text-xs text-muted-foreground">
+              Click "Submit Profile" to complete your onboarding. The PG owner will be notified and will verify your details.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Reusable Field Components
+// ============================================================================
+
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium text-muted-foreground">
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function FileUploadField({
+  label,
+  field,
+  formData,
+  updateField,
+}: {
+  label: string;
+  field: string;
+  formData: FormData;
+  updateField: (field: string, value: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `onboarding/${Date.now()}_${field}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("tenant-onboarding-docs")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("tenant-onboarding-docs")
+        .getPublicUrl(uploadData.path);
+
+      updateField(field, urlData.publicUrl);
+      toast.success(`${label} uploaded successfully`);
+    } catch (err) {
+      console.error("File upload failed", err);
+      toast.error(`Failed to upload ${label}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+          accept="image/*,.pdf"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef?.current?.click()}
+          disabled={uploading}
+          className="gap-2 w-full"
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : formData[field] ? (
+            <>
+              <FileText className="h-4 w-4 text-green-500" />
+              <span className="text-green-600">Uploaded</span>
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4" />
+              <span>Upload File</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </Field>
+  );
+}

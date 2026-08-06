@@ -43,6 +43,7 @@ import {
   ArrowRightLeft,
   ArrowLeft,
   Contact,
+  ClipboardList,
 } from "lucide-react";
 import {
   pickContactFromDevice,
@@ -75,6 +76,7 @@ import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { ShiftRoomDialog } from "./ShiftRoomDialog";
+import { ProfileStatusBadge, CompleteTenantProfileDialog, useOnboardingProfileMap } from "@/features/tenant-onboarding";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 
@@ -148,6 +150,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   const [markLeftTenant, setMarkLeftTenant] = useState<Tenant | null>(null);
   const [shiftTenant, setShiftTenant] = useState<Tenant | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [onboardingDialogState, setOnboardingDialogState] = useState<{ tenantId: string; tenantName: string; tenantPhone: string } | null>(null);
+  const onboardingProfileMap = useOnboardingProfileMap();
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
     tenantName: string;
@@ -1041,6 +1045,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                             <>
                               <div className="flex items-center gap-2">
                                 <div className="font-medium text-lg">{tenant.name}</div>
+                                <ProfileStatusBadge
+                                  status={onboardingProfileMap.get(tenant.id)?.status}
+                                  size="sm"
+                                  onClick={() => setOnboardingDialogState({ tenantId: tenant.id, tenantName: tenant.name, tenantPhone: tenant.phone })}
+                                />
                                 {isNewTenant(tenant.startDate) && !tenant.endDate && (
                                   <Badge className="h-5 px-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 animate-pulse">
                                     NEW
@@ -1275,6 +1284,19 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                       >
                                         <PartyPopper className="h-4 w-4" />
                                         Welcome
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setOnboardingDialogState({
+                                            tenantId: tenant.id,
+                                            tenantName: tenant.name,
+                                            tenantPhone: tenant.phone,
+                                          });
+                                        }}
+                                        className="gap-2"
+                                      >
+                                        <ClipboardList className="h-4 w-4" />
+                                        Complete Tenant Profile
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -2014,6 +2036,17 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
       {/* Welcome Dialog for new tenants */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
+
+      {/* Complete Tenant Profile Dialog */}
+      {onboardingDialogState && (
+        <CompleteTenantProfileDialog
+          tenantId={onboardingDialogState.tenantId}
+          tenantName={onboardingDialogState.tenantName}
+          tenantPhone={onboardingDialogState.tenantPhone}
+          open={!!onboardingDialogState}
+          onOpenChange={(open) => { if (!open) setOnboardingDialogState(null); }}
+        />
+      )}
     </Sheet>
   );
 };

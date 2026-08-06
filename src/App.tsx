@@ -28,6 +28,7 @@ const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const TenantOnboardingFormPage = lazy(() => import("./pages/TenantOnboardingFormPage"));
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { MonthProvider } from "@/contexts/MonthContext";
 import { PGProvider } from "@/contexts/PGContext";
@@ -118,6 +119,11 @@ const AppContent = () => {
           <Route path="/auth" element={<PhoneLogin />} />
           <Route path="/auth/otp" element={<OTPVerification />} />
           <Route path="/auth/email" element={<EmailAuth />} />
+          <Route path="/tenant-onboarding/:token" element={
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+              <TenantOnboardingFormPage />
+            </Suspense>
+          } />
           <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/onboarding" element={

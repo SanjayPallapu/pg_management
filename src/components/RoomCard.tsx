@@ -24,6 +24,7 @@ import {
   Key,
   CalendarClock,
   X as XIcon,
+  ClipboardList,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ import { DayGuest } from "@/hooks/useDayGuests";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
+import { ProfileStatusBadge, CompleteTenantProfileDialog, useOnboardingProfileMap } from "@/features/tenant-onboarding";
 import { format, differenceInDays } from "date-fns";
 import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
 import {
@@ -245,6 +247,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     };
   } | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [onboardingDialogState, setOnboardingDialogState] = useState<{ tenantId: string; tenantName: string; tenantPhone: string } | null>(null);
+  const onboardingProfileMap = useOnboardingProfileMap();
   const [welcomeData, setWelcomeData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -584,6 +588,11 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                         <span className="text-sm font-medium truncate">
                           {tenant.name}
                         </span>
+                        <ProfileStatusBadge
+                          status={onboardingProfileMap.get(tenant.id)?.status}
+                          size="sm"
+                          onClick={() => setOnboardingDialogState({ tenantId: tenant.id, tenantName: tenant.name, tenantPhone: tenant.phone })}
+                        />
                         {isNew && !leftThisMonth && (
                           <Badge className="h-4 px-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 animate-pulse">
                             <Sparkles className="h-2.5 w-2.5 mr-0.5" />
@@ -707,6 +716,19 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                             Welcome
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                            onClick={() => {
+                              setOnboardingDialogState({
+                                tenantId: tenant.id,
+                                tenantName: tenant.name,
+                                tenantPhone: tenant.phone,
+                              });
+                            }}
+                            className="gap-2"
+                          >
+                            <ClipboardList className="h-4 w-4" />
+                            Complete Tenant Profile
+                          </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <Badge
@@ -833,6 +855,17 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
 
       {/* Welcome Dialog */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
+
+      {/* Complete Tenant Profile Dialog */}
+      {onboardingDialogState && (
+        <CompleteTenantProfileDialog
+          tenantId={onboardingDialogState.tenantId}
+          tenantName={onboardingDialogState.tenantName}
+          tenantPhone={onboardingDialogState.tenantPhone}
+          open={!!onboardingDialogState}
+          onOpenChange={(open) => { if (!open) setOnboardingDialogState(null); }}
+        />
+      )}
     </Card>
   );
 };

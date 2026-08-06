@@ -22,6 +22,7 @@ import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 import { WelcomeDialog } from '@/components/WelcomeDialog';
 import { RulesShareDialog } from '@/components/RulesShareDialog';
 import { useBackGesture } from '@/hooks/useBackGesture';
+import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -59,6 +60,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const { payments, upsertPayment } = useTenantPayments();
   const { byRoom: acByRoom } = useElectricityReadings(selectedMonth, selectedYear);
   const { currentPG } = usePG();
+  const onboardingProfileMap = useOnboardingProfileMap();
   const [localOpen, setLocalOpen] = useState(false);
   const isSheetOpen = open !== undefined ? open : localOpen;
 
@@ -676,6 +678,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate text-sm font-bold">{tenant.name}</span>
+            <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
             {isSelected && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
             )}

@@ -32,6 +32,7 @@ import { useExpenseEntries } from '@/hooks/useExpenseEntries';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { toast } from 'sonner';
 import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from "@/utils/excelStyles";
+import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 interface ReportsProps {
   rooms: Room[];
@@ -40,6 +41,7 @@ interface ReportsProps {
 export const Reports = ({ rooms }: ReportsProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
+  const onboardingProfileMap = useOnboardingProfileMap();
   const { rentRecords } = useRent();
   const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'occupancy'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
@@ -562,6 +564,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
                       <div className="text-left space-y-0.5">
                         <div className="font-bold text-xs text-foreground flex items-center gap-1.5">
                           {tenant.name}
+                          <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
                           <Badge variant="outline" className={`text-[8px] font-bold px-1.5 py-0 rounded ${statusColor}`}>
                             {tenant.paymentCategory === 'overdue' ? 'Overdue' 
                              : tenant.paymentCategory === 'partial' ? 'Partial' 

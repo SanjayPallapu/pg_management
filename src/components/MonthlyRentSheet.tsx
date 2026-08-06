@@ -92,6 +92,7 @@ import { useSearchParams } from "react-router-dom";
 import { RoomQuickNav } from "./RoomQuickNav";
 import { CalendarClock, X as XIcon } from "lucide-react";
 import { generateReceiptImage, dataURLtoBlob } from "@/utils/generateReceiptImage";
+import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -104,6 +105,7 @@ type PaymentDisplayExtras = {
 export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG } = usePG();
+  const onboardingProfileMap = useOnboardingProfileMap();
 
   const isMobile = useIsMobile();
   const [acMonth, setAcMonth] = useState(selectedMonth);
@@ -1835,6 +1837,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <div className="font-semibold text-sm">
                         {tenant.name}
                       </div>
+                      <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
 
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== "••••••••••" && (
