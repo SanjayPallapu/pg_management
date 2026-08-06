@@ -18,49 +18,51 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
-      <header className="px-6 py-4 flex items-center justify-between border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Home className="h-5 w-5" />
-          <div>
-            <div className="text-sm font-bold">Tenant Onboarding</div>
-            <div className="text-xs text-slate-400">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-50 flex flex-col overflow-x-hidden">
+      <header className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 border-b border-slate-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <Home className="h-5 w-5 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-sm font-bold truncate">Tenant Onboarding</div>
+            <div className="text-xs text-slate-400 truncate">
               Welcome{tenantName ? `, ${tenantName}` : ""}
             </div>
           </div>
         </div>
-        <div className="text-sm text-slate-300">
+        <div className="text-xs sm:text-sm text-slate-300 shrink-0">
           Step {step} of {TOTAL_STEPS}
         </div>
       </header>
 
-      <main className="flex-1 flex justify-center px-4 py-8">
+      <main className="flex-1 flex justify-center px-4 py-6 sm:py-8">
         <div className="w-full max-w-5xl">
           {/* Replace this switch with your real step components */}
           {step === 1 && (
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-4">
-                <h1 className="text-3xl md:text-4xl font-semibold">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
+              <div className="space-y-3 sm:space-y-4 text-center md:text-left">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold">
                   Welcome to PGHub
                 </h1>
-                <p className="text-slate-300">
+                <p className="text-sm sm:text-base text-slate-300">
                   Complete your profile so we can make your stay safer, smoother,
                   and more comfortable.
                 </p>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col justify-between w-full">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-400 mb-2">
                     Tenant onboarding
                   </p>
-                  <h2 className="text-xl font-semibold mb-2">Complete your profile</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2">Complete your profile</h2>
                   <p className="text-sm text-slate-300 mb-6">
                     Takes around 3–5 minutes. You can edit details later.
                   </p>
                 </div>
                 <button
-                  className="mt-4 w-full py-3 rounded-xl bg-violet-500 hover:bg-violet-600 text-sm font-medium"
+                  type="button"
+                  className="mt-4 w-full py-3 min-h-[44px] rounded-xl bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                   onClick={goNext}
+                  aria-label="Get started with tenant onboarding"
                 >
                   Get started
                 </button>
@@ -69,23 +71,25 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
           )}
 
           {step > 1 && step < TOTAL_STEPS && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6">
               <p className="text-sm text-slate-300 mb-4">
                 This is a placeholder for steps 2–7 (personal details, ID, contact, stay, payment, rules).
                 Wire your existing form fields and validation here.
               </p>
-              <div className="flex justify-between">
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-lg border border-slate-700 text-sm text-slate-200"
+                  className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                   onClick={goBack}
+                  aria-label="Go back to previous step"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-sm font-medium"
+                  className="px-4 py-2 min-h-[44px] rounded-lg bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                   onClick={goNext}
+                  aria-label="Continue to next step"
                 >
                   Continue
                 </button>
@@ -94,24 +98,27 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
           )}
 
           {step === TOTAL_STEPS && (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
+            <div className="min-h-[50vh] sm:min-h-[60vh] flex flex-col items-center justify-center text-center space-y-5 sm:space-y-6 px-2">
               <div className="relative">
                 {/* Use the green badge asset here if available */}
                 <img
                   src="/assets/badges/green-profile-badge.png"
                   alt="Profile complete badge"
-                  className="w-40 h-40 mx-auto"
+                  className="w-28 h-28 sm:w-40 sm:h-40 mx-auto"
                 />
               </div>
               <div className="space-y-2 max-w-md">
-                <h1 className="text-2xl md:text-3xl font-semibold">Profile Submitted!</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold">Profile Submitted!</h1>
                 <p className="text-sm text-slate-300">
                   Thank you. Your profile has been submitted successfully. Your PG
                   owner will review your details and confirm your stay soon.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button className="px-5 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-sm font-medium">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
+                <button
+                  type="button"
+                  className="px-5 py-2.5 min-h-[44px] rounded-xl bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                >
                   Back to home
                 </button>
               </div>
