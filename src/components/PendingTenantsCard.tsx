@@ -660,6 +660,7 @@ interface TenantSelectItemProps {
 }
 
 const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false, rooms, onWelcome, onRules }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
+  const onboardingProfileMap = useOnboardingProfileMap();
   const bgClass = categoryColor === 'pending' 
     ? 'bg-red-500/10 border-red-500/20 border-l-red-500'
     : categoryColor === 'amber'
