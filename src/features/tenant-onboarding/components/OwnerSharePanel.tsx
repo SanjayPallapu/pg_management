@@ -13,6 +13,7 @@ import {
   FileEdit,
   FileCheck,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useGenerateOnboardingLink, useOnboardingLink } from "../hooks/useOnboarding";
+import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
+import { usePG } from "@/contexts/PGContext";
 import { getCommunicationStatusLabel, type OnboardingLink as OnboardingLinkType } from "../types";
 
 interface OwnerSharePanelProps {
@@ -45,6 +50,7 @@ export function OwnerSharePanel({
 }: OwnerSharePanelProps) {
   const generateLink = useGenerateOnboardingLink();
   const { data: existingLink } = useOnboardingLink(tenantId);
+  const { currentPG } = usePG();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
@@ -53,87 +59,72 @@ export function OwnerSharePanel({
     ? `${window.location.origin}/tenant-onboarding/${link.token}`
     : "";
 
-  const handleGenerateLink = async (sentVia: string) => {
-    await generateLink.mutateAsync({
-      tenantId,
-      tenantName,
-      sentVia,
-    });
+  // Records a link_shared timeline event after sending/copying the link
+  const recordLinkShared = async (via: string) => {
+    if (!currentPG?.id) return;
+    try {
+      await supabase.from("tenant_onboarding_timeline").insert({
+        tenant_id: tenantId,
+        pg_id: currentPG.id,
+        event_type: "link_shared",
+        event_description: `Onboarding link shared via ${via}`,
+      });
+    } catch (e) {
+      // Non-critical — swallow silently
+      console.warn("[Onboarding] link_shared timeline insert failed", e);
+    }
   };
 
+  // Returns the current token, generating one if needed
+  const ensureToken = async (sentVia: string): Promise<string | null> => {
+    if (link?.token) return link.token;
+    const result = await generateLink.mutateAsync({ tenantId, tenantName, sentVia });
+    // RPC returns an array of rows; extract token from first row
+    const rows = result as Array<{ token?: string }> | null;
+    return rows?.[0]?.token ?? null;
+  };
+
+  const isLinkExpired = link ? new Date(link.expires_at) < new Date() : false;
+
   const handleShareWhatsApp = async () => {
-    let token = link?.token;
-
-    if (!token) {
-      const result = await generateLink.mutateAsync({
-        tenantId,
-        tenantName,
-        sentVia: "whatsapp",
-      });
-      token = (result as Array<{ token: string }>)?.[0]?.token;
-    }
-
-    if (!token) {
-      toast.error("Failed to generate onboarding link");
-      return;
-    }
-
+    const token = await ensureToken("whatsapp");
+    if (!token) { toast.error("Failed to generate onboarding link"); return; }
     const url = `${window.location.origin}/tenant-onboarding/${token}`;
     const phone = tenantPhone.replace(/\D/g, "");
     const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nExpires in 7 days.`;
+    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nLink expires on ${link ? new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "in 7 days"}.`;
+    await recordLinkShared("WhatsApp");
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const handleShareSMS = async () => {
-    let token = link?.token;
-
-    if (!token) {
-      const result = await generateLink.mutateAsync({
-        tenantId,
-        tenantName,
-        sentVia: "sms",
-      });
-      token = (result as Array<{ token: string }>)?.[0]?.token;
-    }
-
-    if (!token) {
-      toast.error("Failed to generate onboarding link");
-      return;
-    }
-
+    const token = await ensureToken("sms");
+    if (!token) { toast.error("Failed to generate onboarding link"); return; }
     const url = `${window.location.origin}/tenant-onboarding/${token}`;
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
+    await recordLinkShared("SMS");
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
   };
 
   const handleCopyLink = async () => {
-    let token = link?.token;
-
-    if (!token) {
-      const result = await generateLink.mutateAsync({
-        tenantId,
-        tenantName,
-        sentVia: "copy",
-      });
-      token = (result as Array<{ token: string }>)?.[0]?.token;
-    }
-
-    if (!token) {
-      toast.error("Failed to generate onboarding link");
-      return;
-    }
-
+    const token = await ensureToken("copy");
+    if (!token) { toast.error("Failed to generate onboarding link"); return; }
     const url = `${window.location.origin}/tenant-onboarding/${token}`;
-
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success("Link copied to clipboard");
+      await recordLinkShared("Copy");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy link");
     }
+  };
+
+  const handleShowQR = async () => {
+    if (!link) await ensureToken("qr");
+    setShowQR(true);
+    await recordLinkShared("QR Code");
   };
 
   const statusSteps = [
@@ -160,6 +151,14 @@ export function OwnerSharePanel({
             Send a secure onboarding link to {tenantName} to complete their profile.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Expired link warning */}
+        {link && isLinkExpired && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            <span>This link has expired. Generate a new link to share with {tenantName}.</span>
+          </div>
+        )}
 
         {/* Communication Status Tracker */}
         {link && (
@@ -258,12 +257,7 @@ export function OwnerSharePanel({
             label="QR Code"
             color="text-purple-600"
             bgColor="bg-purple-500/10 hover:bg-purple-500/20"
-            onClick={() => {
-              if (!link) {
-                handleGenerateLink("qr");
-              }
-              setShowQR(true);
-            }}
+            onClick={handleShowQR}
             loading={generateLink.isPending}
           />
           <ShareButton
@@ -297,9 +291,15 @@ export function OwnerSharePanel({
 
         {/* Expiry notice */}
         {link && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className={cn(
+            "flex items-center gap-2 text-xs",
+            isLinkExpired ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+          )}>
             <Clock className="h-3.5 w-3.5" />
-            Link expires {new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            {isLinkExpired
+              ? `Link expired on ${new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+              : `Link expires on ${new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+            }
           </div>
         )}
       </DialogContent>

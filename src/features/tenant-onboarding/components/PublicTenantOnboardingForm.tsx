@@ -74,6 +74,13 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Per-step required fields — used to guard Next/Submit
+  const STEP_REQUIRED: Record<number, string[]> = {
+    0: ["full_name"],         // Personal: Full Name required
+    1: ["id_proof_type", "id_proof_number"], // Identity: type + number required
+    7: ["rules_acknowledged", "agreement_accepted"], // Rules: both checkboxes
+  };
+
   const validateToken = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -110,12 +117,22 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
     setExistingStatus(result.onboarding_status || "");
 
     // If form was already completed, show completion screen
-    if (result.onboarding_status === "profile_completed" || result.onboarding_status === "pending_verification") {
+    if (result.onboarding_status === "profile_completed" || result.onboarding_status === "pending_verification" || result.onboarding_status === "verified") {
       setCompleted(true);
     }
 
-    // Restore progress
-    if (result.form_progress > 0) {
+    // Restore saved form data if the RPC returns it
+    if (result.form_data && typeof result.form_data === "object") {
+      setFormData(result.form_data as FormData);
+    }
+
+    // Restore progress — go to the last saved step
+    if (result.last_saved_step) {
+      const stepIndex = ONBOARDING_FORM_STEPS.findIndex((s) => s.id === result.last_saved_step);
+      if (stepIndex >= 0) {
+        setCurrentStep(stepIndex);
+      }
+    } else if (result.form_progress > 0) {
       const stepIndex = Math.floor((result.form_progress / 100) * ONBOARDING_FORM_STEPS.length);
       setCurrentStep(Math.min(stepIndex, ONBOARDING_FORM_STEPS.length - 1));
     }
@@ -180,7 +197,27 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
     debouncedAutoSave(newData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
   };
 
+  // Validate required fields for the current step before proceeding
+  const validateCurrentStep = (): boolean => {
+    const required = STEP_REQUIRED[currentStep] || [];
+    const missing = required.filter((field) => {
+      const val = formData[field];
+      return val === undefined || val === "" || val === false;
+    });
+
+    if (missing.length > 0) {
+      const stepLabel = ONBOARDING_FORM_STEPS[currentStep].title;
+      const fieldLabel = missing[0]
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      toast.error(`${stepLabel}: "${fieldLabel}" is required`, { duration: 3000 });
+      return false;
+    }
+    return true;
+  };
+
   const handleNext = () => {
+    if (!validateCurrentStep()) return;
     if (currentStep < ONBOARDING_FORM_STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
       const progress = Math.round(((currentStep + 2) / ONBOARDING_FORM_STEPS.length) * 100);
@@ -195,6 +232,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   };
 
   const handleSubmit = async () => {
+    if (!validateCurrentStep()) return;
     setSubmitting(true);
     try {
       const jsonData = Object.fromEntries(
