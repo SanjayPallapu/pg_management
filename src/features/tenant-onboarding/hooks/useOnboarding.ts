@@ -403,3 +403,61 @@ export const useUploadOnboardingDocument = () => {
     },
   });
 };
+
+// ============================================================================
+// Hook: useUpsertOnboardingProfile
+// Saves public onboarding form data into tenant_onboarding_profiles with progress.
+// ============================================================================
+export const useUpsertOnboardingProfile = () => {
+  const queryClient = useQueryClient();
+  const { currentPG } = usePG();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      tenantId,
+      data,
+      status,
+      lastSavedStep,
+      formProgress,
+    }: {
+      tenantId: string;
+      data: Partial<OnboardingProfile>;
+      status?: OnboardingStatus;
+      lastSavedStep?: string;
+      formProgress?: number;
+    }) => {
+      if (!currentPG?.id || !user?.id) {
+        throw new Error("Missing PG or user context");
+      }
+
+      const payload: Partial<OnboardingProfile> = {
+        ...data,
+        tenant_id: tenantId,
+        pg_id: currentPG.id,
+        owner_id: user.id,
+        status: status ?? "form_started",
+        last_saved_step: lastSavedStep ?? data.last_saved_step,
+        form_progress: formProgress ?? data.form_progress,
+      };
+
+      const { data: upserted, error } = await supabase
+        .from("tenant_onboarding_profiles")
+        .upsert(payload, { onConflict: "tenant_id" })
+        .select()
+        .maybeSingle();
+
+      if (error) throw error;
+      return upserted as OnboardingProfile;
+    },
+    onSuccess: (profile) => {
+      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", profile.tenant_id] });
+      queryClient.invalidateQueries({ queryKey: ["onboarding-profiles"] });
+      toast.success("Profile saved successfully");
+    },
+    onError: (error) => {
+      console.error("[Onboarding] Failed to save profile", error);
+      toast.error("Failed to save profile");
+    },
+  });
+};
