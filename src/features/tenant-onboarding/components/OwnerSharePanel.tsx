@@ -68,7 +68,7 @@ export function OwnerSharePanel({
     // Re-fetch the link after generation
     const url = existingLink
       ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
+      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
     const phone = tenantPhone.replace(/\D/g, "");
     const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
     const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding by filling out the form at the link below:\n\n${url}\n\nThis link is secure and expires in 7 days.\n\nThank you!`;
@@ -81,7 +81,7 @@ export function OwnerSharePanel({
     }
     const url = existingLink
       ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
+      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
   };
@@ -92,7 +92,7 @@ export function OwnerSharePanel({
     }
     const url = existingLink
       ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
+      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);

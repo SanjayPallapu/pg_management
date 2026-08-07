@@ -27,7 +27,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/proxyClient";
+import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
+// Onboarding tables live outside the generated types; use an untyped client.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
