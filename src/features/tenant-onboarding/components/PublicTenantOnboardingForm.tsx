@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Home, User, Shield, Phone, Briefcase, CreditCard, Utensils, ScrollText } from "lucide-react";
-import { useOnboardingProfile } from "../hooks/useOnboarding";
+import { useOnboardingProfile, useUpsertOnboardingProfile } from "../hooks/useOnboarding";
 import { ONBOARDING_FORM_STEPS, OnboardingFormStep } from "../types";
 
 const TOTAL_STEPS = ONBOARDING_FORM_STEPS.length + 2; // 1 welcome + steps + 1 success
@@ -15,7 +15,9 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
   tenantName,
 }) => {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: profile } = useOnboardingProfile(tenantId);
+  const upsertProfile = useUpsertOnboardingProfile();
 
   const goNext = () => {
     setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
@@ -23,6 +25,38 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
 
   const goBack = () => {
     setStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleSaveStep = async (
+    stepConfig: OnboardingFormStep,
+    formData: Record<string, string>,
+    isFinalStep = false,
+  ) => {
+    setIsSubmitting(true);
+    try {
+      const progress = isFinalStep
+        ? 100
+        : Math.round(((ONBOARDING_FORM_STEPS.findIndex((s) => s.id === stepConfig.id) + 1) / ONBOARDING_FORM_STEPS.length) * 100);
+
+      await upsertProfile.mutateAsync({
+        tenantId,
+        data: {
+          ...(profile || {}),
+          ...formData,
+        },
+        status: isFinalStep ? "profile_completed" : "form_started",
+        lastSavedStep: stepConfig.id,
+        formProgress: progress,
+      });
+
+      if (isFinalStep) {
+        setStep(TOTAL_STEPS);
+      } else {
+        goNext();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStepIcon = (icon: string) => {
@@ -46,7 +80,22 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
     }
   };
 
-  const renderFormStep = (stepConfig: OnboardingFormStep) => {
+  const renderFormStep = (stepConfig: OnboardingFormStep, isLastFormStep: boolean) => {
+    const initialValues: Record<string, string> = {};
+    stepConfig.fields.forEach((fieldKey) => {
+      initialValues[fieldKey] = (profile as any)?.[fieldKey] ?? "";
+    });
+
+    const [localValues, setLocalValues] = useState<Record<string, string>>(initialValues);
+
+    const onChangeField = (fieldKey: string, value: string) => {
+      setLocalValues((prev) => ({ ...prev, [fieldKey]: value }));
+    };
+
+    const onSubmit = () => {
+      void handleSaveStep(stepConfig, localValues, isLastFormStep);
+    };
+
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-3">
@@ -60,21 +109,19 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {stepConfig.fields.map((fieldKey) => {
-            const value = (profile as any)?.[fieldKey] ?? "";
-            return (
-              <div key={fieldKey} className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">
-                  {fieldKey.replace(/_/g, " ")}
-                </label>
-                <input
-                  type="text"
-                  defaultValue={value}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-                />
-              </div>
-            );
-          })}
+          {stepConfig.fields.map((fieldKey) => (
+            <div key={fieldKey} className="space-y-1">
+              <label className="text-xs font-medium text-slate-300">
+                {fieldKey.replace(/_/g, " ")}
+              </label>
+              <input
+                type="text"
+                value={localValues[fieldKey]}
+                onChange={(e) => onChangeField(fieldKey, e.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+              />
+            </div>
+          ))}
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
@@ -82,20 +129,26 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
             type="button"
             className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             onClick={goBack}
+            disabled={isSubmitting}
           >
             Back
           </button>
           <button
             type="button"
-            className="px-4 py-2 min-h-[44px] rounded-lg bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-            onClick={goNext}
+            className="px-4 py-2 min-h-[44px] rounded-lg bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onSubmit}
+            disabled={isSubmitting}
           >
-            Continue
+            {isLastFormStep ? "Submit" : "Continue"}
           </button>
         </div>
       </div>
     );
   };
+
+  const currentFormIndex = step - 2;
+  const currentFormStep = ONBOARDING_FORM_STEPS[currentFormIndex];
+  const isLastFormStep = currentFormIndex === ONBOARDING_FORM_STEPS.length - 1;
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-50 flex flex-col overflow-x-hidden">
@@ -149,8 +202,8 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
             </div>
           )}
 
-          {step > 1 && step < TOTAL_STEPS && (
-            renderFormStep(ONBOARDING_FORM_STEPS[step - 2])
+          {step > 1 && step < TOTAL_STEPS && currentFormStep && (
+            renderFormStep(currentFormStep, isLastFormStep)
           )}
 
           {step === TOTAL_STEPS && (
