@@ -62,37 +62,70 @@ export function OwnerSharePanel({
   };
 
   const handleShareWhatsApp = async () => {
-    if (!link) {
-      await handleGenerateLink("whatsapp");
+    let token = link?.token;
+
+    if (!token) {
+      const result = await generateLink.mutateAsync({
+        tenantId,
+        tenantName,
+        sentVia: "whatsapp",
+      });
+      token = (result as Array<{ token: string }>)?.[0]?.token;
     }
-    // Re-fetch the link after generation
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
+
+    if (!token) {
+      toast.error("Failed to generate onboarding link");
+      return;
+    }
+
+    const url = `${window.location.origin}/tenant-onboarding/${token}`;
     const phone = tenantPhone.replace(/\D/g, "");
     const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding by filling out the form at the link below:\n\n${url}\n\nThis link is secure and expires in 7 days.\n\nThank you!`;
+    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nExpires in 7 days.`;
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const handleShareSMS = async () => {
-    if (!link) {
-      await handleGenerateLink("sms");
+    let token = link?.token;
+
+    if (!token) {
+      const result = await generateLink.mutateAsync({
+        tenantId,
+        tenantName,
+        sentVia: "sms",
+      });
+      token = (result as Array<{ token: string }>)?.[0]?.token;
     }
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
+
+    if (!token) {
+      toast.error("Failed to generate onboarding link");
+      return;
+    }
+
+    const url = `${window.location.origin}/tenant-onboarding/${token}`;
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
   };
 
   const handleCopyLink = async () => {
-    if (!link) {
-      await handleGenerateLink("copy");
+    let token = link?.token;
+
+    if (!token) {
+      const result = await generateLink.mutateAsync({
+        tenantId,
+        tenantName,
+        sentVia: "copy",
+      });
+      token = (result as Array<{ token: string }>)?.[0]?.token;
     }
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as unknown as Array<{ token: string }>)?.[0]?.token || ""}`;
+
+    if (!token) {
+      toast.error("Failed to generate onboarding link");
+      return;
+    }
+
+    const url = `${window.location.origin}/tenant-onboarding/${token}`;
+
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -157,8 +190,8 @@ export function OwnerSharePanel({
                         className={cn(
                           "flex items-center justify-center rounded-full border-2 transition-colors",
                           isCompleted
-                            ? "bg-green-500 border-green-500 text-white"
-                            : "bg-white dark:bg-slate-800 border-gray-300 dark:border-gray-700 text-gray-400",
+                            ? "bg-green-500 border-green-500 text:white"
+                            : "bg:white dark:bg-slate-800 border-gray-300 dark:border-gray-700 text-gray-400",
                           isCurrent && "ring-2 ring-green-500/30",
                         )}
                         style={{ width: 28, height: 28 }}

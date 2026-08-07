@@ -124,12 +124,20 @@ export const useGenerateOnboardingLink = () => {
       if (error) throw error;
 
       // Add timeline event for tenant_added if first time
-      await supabase.from("tenant_onboarding_timeline").insert({
-        tenant_id: tenantId,
-        pg_id: currentPG.id,
-        event_type: "tenant_added",
-        event_description: `Tenant ${tenantName} added to the system`,
-      });
+      try {
+        const { error: timelineError } = await supabase.from("tenant_onboarding_timeline").insert({
+          tenant_id: tenantId,
+          pg_id: currentPG.id,
+          event_type: "tenant_added",
+          event_description: `Tenant ${tenantName} added to the system`,
+        });
+
+        if (timelineError) {
+          console.warn("[Onboarding] Timeline insert failed (non-critical)", timelineError);
+        }
+      } catch (e) {
+        console.warn("[Onboarding] Timeline insert failed (non-critical)", e);
+      }
 
       return data;
     },
