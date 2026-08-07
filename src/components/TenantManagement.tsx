@@ -1156,6 +1156,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                       </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                                        className="gap-2"
+                                      >
+                                        <User className="h-4 w-4" />
+                                        Open Profile
+                                      </DropdownMenuItem>
                                       {(isPaid || isPartial) && (
                                         <DropdownMenuItem
                                           onClick={() => {

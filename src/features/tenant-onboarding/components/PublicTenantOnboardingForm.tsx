@@ -74,6 +74,32 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
 
   const goBack = () => {
     setStep((prev) => Math.max(prev - 1, 1));
+  // Validate required fields for the current step before proceeding
+  const validateCurrentStep = (): boolean => {
+    const required = STEP_REQUIRED[currentStep] || [];
+    const missing = required.filter((field) => {
+      const val = formData[field];
+      return val === undefined || val === "" || val === false;
+    });
+
+    if (missing.length > 0) {
+      const stepLabel = ONBOARDING_FORM_STEPS[currentStep].title;
+      const fieldLabel = missing[0]
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      toast.error(`${stepLabel}: "${fieldLabel}" is required`, { duration: 3000 });
+      return false;
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateCurrentStep()) return;
+    if (currentStep < ONBOARDING_FORM_STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+      const progress = Math.round(((currentStep + 2) / ONBOARDING_FORM_STEPS.length) * 100);
+      autoSave(formData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
+    }
   };
 
   const handleSaveStep = async (
@@ -224,6 +250,47 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
       </div>
     );
   }
+
+  // Completed state
+  if (completed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/30 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-md w-full"
+        >
+          <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="inline-flex items-center justify-center mb-6"
+          >
+            <MedalBadgeIcon variant="complete" size={96} />
+          </motion.div>
+            <h1 className="text-2xl font-bold mb-2">Profile Completed!</h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              Thank you, {tenantName}! Your onboarding profile has been submitted successfully.
+              The PG owner will review your details and verify your documents shortly.
+            </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm font-medium">
+              <CheckCircle2 className="h-4 w-4" />
+              Pending Verification
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!valid) return null;
+
+  const currentStepData = ONBOARDING_FORM_STEPS[currentStep];
+  const StepIcon = STEP_ICONS[currentStepData.icon] || User;
+  const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
+  const isLastStep = currentStep === ONBOARDING_FORM_STEPS.length - 1;
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-50 flex flex-col overflow-x-hidden">

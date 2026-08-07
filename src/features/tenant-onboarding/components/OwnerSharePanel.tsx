@@ -13,6 +13,7 @@ import {
   FileEdit,
   FileCheck,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useGenerateOnboardingLink, useOnboardingLink } from "../hooks/useOnboarding";
+import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
+import { usePG } from "@/contexts/PGContext";
 import { getCommunicationStatusLabel, type OnboardingLink as OnboardingLinkType } from "../types";
 
 interface OwnerSharePanelProps {
@@ -45,18 +50,36 @@ export function OwnerSharePanel({
 }: OwnerSharePanelProps) {
   const generateLink = useGenerateOnboardingLink();
   const { data: existingLink } = useOnboardingLink(tenantId);
+  const { currentPG } = usePG();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrUrl, setQrUrl] = useState("");
 
   const link = existingLink as OnboardingLinkType | null;
 
-  const handleGenerateLink = async (sentVia: string) => {
-    await generateLink.mutateAsync({
-      tenantId,
-      tenantName,
-      sentVia,
-    });
+  // Records a link_shared timeline event after sending/copying the link
+  const recordLinkShared = async (via: string) => {
+    if (!currentPG?.id) return;
+    try {
+      await supabase.from("tenant_onboarding_timeline").insert({
+        tenant_id: tenantId,
+        pg_id: currentPG.id,
+        event_type: "link_shared",
+        event_description: `Onboarding link shared via ${via}`,
+      });
+    } catch (e) {
+      // Non-critical — swallow silently
+      console.warn("[Onboarding] link_shared timeline insert failed", e);
+    }
+  };
+
+  // Returns the current token, generating one if needed
+  const ensureToken = async (sentVia: string): Promise<string | null> => {
+    if (link?.token) return link.token;
+    const result = await generateLink.mutateAsync({ tenantId, tenantName, sentVia });
+    // RPC returns an array of rows; extract token from first row
+    const rows = result as Array<{ token?: string }> | null;
+    return rows?.[0]?.token ?? null;
   };
 
   // Single helper that ensures a link exists and returns the deep link URL.
@@ -85,6 +108,7 @@ export function OwnerSharePanel({
   const handleShareSMS = async () => {
     const url = await getOrCreateOnboardingUrl("sms");
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
+    await recordLinkShared("SMS");
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
   };
 
@@ -94,6 +118,7 @@ export function OwnerSharePanel({
       await navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success("Link copied to clipboard");
+      await recordLinkShared("Copy");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy link");
@@ -131,6 +156,14 @@ export function OwnerSharePanel({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Expired link warning */}
+        {link && isLinkExpired && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            <span>This link has expired. Generate a new link to share with {tenantName}.</span>
+          </div>
+        )}
+
         {/* Communication Status Tracker */}
         {link && (
           <div className="mb-4 p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border border-border">
@@ -160,8 +193,8 @@ export function OwnerSharePanel({
                         className={cn(
                           "flex items-center justify-center rounded-full border-2 transition-colors",
                           isCompleted
-                            ? "bg-green-500 border-green-500 text-white"
-                            : "bg-white dark:bg-slate-800 border-gray-300 dark:border-gray-700 text-gray-400",
+                            ? "bg-green-500 border-green-500 text:white"
+                            : "bg:white dark:bg-slate-800 border-gray-300 dark:border-gray-700 text-gray-400",
                           isCurrent && "ring-2 ring-green-500/30",
                         )}
                         style={{ width: 28, height: 28 }}
@@ -262,9 +295,15 @@ export function OwnerSharePanel({
 
         {/* Expiry notice */}
         {link && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className={cn(
+            "flex items-center gap-2 text-xs",
+            isLinkExpired ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+          )}>
             <Clock className="h-3.5 w-3.5" />
-            Link expires {new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            {isLinkExpired
+              ? `Link expired on ${new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+              : `Link expires on ${new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+            }
           </div>
         )}
       </DialogContent>

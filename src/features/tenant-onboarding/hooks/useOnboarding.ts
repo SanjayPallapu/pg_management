@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/proxyClient";
+import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
+// Onboarding tables live outside the generated types; use an untyped client.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
 import { usePG } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -121,12 +124,20 @@ export const useGenerateOnboardingLink = () => {
       if (error) throw error;
 
       // Add timeline event for tenant_added if first time
-      await supabase.from("tenant_onboarding_timeline").insert({
-        tenant_id: tenantId,
-        pg_id: currentPG.id,
-        event_type: "tenant_added",
-        event_description: `Tenant ${tenantName} added to the system`,
-      });
+      try {
+        const { error: timelineError } = await supabase.from("tenant_onboarding_timeline").insert({
+          tenant_id: tenantId,
+          pg_id: currentPG.id,
+          event_type: "tenant_added",
+          event_description: `Tenant ${tenantName} added to the system`,
+        });
+
+        if (timelineError) {
+          console.warn("[Onboarding] Timeline insert failed (non-critical)", timelineError);
+        }
+      } catch (e) {
+        console.warn("[Onboarding] Timeline insert failed (non-critical)", e);
+      }
 
       return data;
     },

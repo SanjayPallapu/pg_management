@@ -14,7 +14,7 @@ import { useRooms } from "@/hooks/useRooms";
 import { usePG } from "@/contexts/PGContext";
 
 // Lazy load non-critical tab components
-const RoomDirectory = lazy(() => import("@/components/RoomDirectory").then(m => ({ default: m.RoomDirectory })));
+import { RoomDirectory } from "@/components/RoomDirectory";
 const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then(m => ({ default: m.MonthlyRentSheet })));
 const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
