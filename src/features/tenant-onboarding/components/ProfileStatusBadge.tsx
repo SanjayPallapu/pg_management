@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 type ProfileStatusBadgeProps = {
   status: "complete" | "incomplete";
@@ -27,7 +26,7 @@ export const ProfileStatusBadge: React.FC<ProfileStatusBadgeProps> = ({
       onClick={onClick}
       className="inline-flex items-center gap-3 rounded-full px-3 py-2 bg-slate-900/60 border border-slate-700 hover:border-violet-500 hover:bg-slate-900 transition-colors"
     >
-      <Image
+      <img
         src={badgeSrc}
         alt={label}
         width={40}
