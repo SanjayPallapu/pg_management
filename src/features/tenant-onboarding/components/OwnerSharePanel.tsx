@@ -47,11 +47,9 @@ export function OwnerSharePanel({
   const { data: existingLink } = useOnboardingLink(tenantId);
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
 
   const link = existingLink as OnboardingLinkType | null;
-  const onboardingUrl = link
-    ? `${window.location.origin}/tenant-onboarding/${link.token}`
-    : "";
 
   const handleGenerateLink = async (sentVia: string) => {
     await generateLink.mutateAsync({
@@ -61,38 +59,37 @@ export function OwnerSharePanel({
     });
   };
 
-  const handleShareWhatsApp = async () => {
+  // Single helper that ensures a link exists and returns the deep link URL.
+  const getOrCreateOnboardingUrl = async (sentVia: string) => {
     if (!link) {
-      await handleGenerateLink("whatsapp");
+      await handleGenerateLink(sentVia);
     }
-    // Re-fetch the link after generation
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
-    const phone = tenantPhone.replace(/\D/g, "");
-    const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+
+    const token =
+      (existingLink?.token ??
+        (generateLink.data as Array<{ token: string }>)?.[0]?.token) || "";
+
+    return `${window.location.origin}/tenant-onboarding/${token}`;
+  };
+
+  const handleShareWhatsApp = async () => {
+    const url = await getOrCreateOnboardingUrl("whatsapp");
+
+    const phoneDigits = tenantPhone.replace(/\D/g, "");
+    const formattedPhone = phoneDigits.startsWith("91") ? phoneDigits : `91${phoneDigits}`;
     const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding by filling out the form at the link below:\n\n${url}\n\nThis link is secure and expires in 7 days.\n\nThank you!`;
+
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const handleShareSMS = async () => {
-    if (!link) {
-      await handleGenerateLink("sms");
-    }
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
+    const url = await getOrCreateOnboardingUrl("sms");
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
   };
 
   const handleCopyLink = async () => {
-    if (!link) {
-      await handleGenerateLink("copy");
-    }
-    const url = existingLink
-      ? onboardingUrl
-      : `${window.location.origin}/tenant-onboarding/${(generateLink.data as Array<{ token: string }>)?.[0]?.token || ""}`;
+    const url = await getOrCreateOnboardingUrl("copy");
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -101,6 +98,12 @@ export function OwnerSharePanel({
     } catch {
       toast.error("Failed to copy link");
     }
+  };
+
+  const handleShowQR = async () => {
+    const url = await getOrCreateOnboardingUrl("qr");
+    setQrUrl(url);
+    setShowQR(true);
   };
 
   const statusSteps = [
@@ -225,12 +228,7 @@ export function OwnerSharePanel({
             label="QR Code"
             color="text-purple-600"
             bgColor="bg-purple-500/10 hover:bg-purple-500/20"
-            onClick={() => {
-              if (!link) {
-                handleGenerateLink("qr");
-              }
-              setShowQR(true);
-            }}
+            onClick={handleShowQR}
             loading={generateLink.isPending}
           />
           <ShareButton
@@ -245,7 +243,7 @@ export function OwnerSharePanel({
 
         {/* QR Code Display */}
         <AnimatePresence>
-          {showQR && link && (
+          {showQR && qrUrl && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -253,9 +251,9 @@ export function OwnerSharePanel({
               className="overflow-hidden"
             >
               <div className="p-4 rounded-xl border border-border bg-white dark:bg-slate-900 flex flex-col items-center gap-3">
-                <QRCodePlaceholder url={onboardingUrl} />
+                <QRCodePlaceholder url={qrUrl} />
                 <p className="text-xs text-muted-foreground break-all text-center max-w-xs">
-                  {onboardingUrl}
+                  {qrUrl}
                 </p>
               </div>
             </motion.div>
