@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   UserPlus,
@@ -11,11 +12,13 @@ import {
   XCircle,
   RefreshCw,
   Circle,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOnboardingTimeline } from "../hooks/useOnboarding";
-import { getTimelineEventLabel, type TimelineEventType } from "../types";
+import { getTimelineEventLabel, getTimelineEventIcon, type TimelineEventType } from "../types";
 
+// Keyed by Lucide component name (as returned by getTimelineEventIcon)
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   UserPlus,
   BedDouble,
@@ -35,10 +38,24 @@ interface ActivityTimelineProps {
   maxItems?: number;
 }
 
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export function ActivityTimeline({ tenantId, maxItems }: ActivityTimelineProps) {
   const { data: events = [], isLoading } = useOnboardingTimeline(tenantId);
+  const [ascending, setAscending] = useState(false);
 
-  const displayEvents = maxItems ? events.slice(0, maxItems) : events;
+  const sortedEvents = ascending ? [...events].reverse() : events;
+  const displayEvents = maxItems ? sortedEvents.slice(0, maxItems) : sortedEvents;
 
   if (isLoading) {
     return (
@@ -58,12 +75,27 @@ export function ActivityTimeline({ tenantId, maxItems }: ActivityTimelineProps) 
 
   return (
     <div className="relative">
+      {/* Sort toggle */}
+      {!maxItems && (
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={() => setAscending((a) => !a)}
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            {ascending ? "Oldest first" : "Newest first"}
+          </button>
+        </div>
+      )}
+
       {/* Vertical line */}
       <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-500/20 via-purple-500/20 to-transparent" />
 
       <div className="space-y-4">
         {displayEvents.map((event, index) => {
-          const Icon = ICON_MAP[event.event_type] || Circle;
+          // Use getTimelineEventIcon to convert event_type -> Lucide icon name
+          const iconName = getTimelineEventIcon(event.event_type as TimelineEventType);
+          const Icon = ICON_MAP[iconName] || Circle;
           const label = getTimelineEventLabel(event.event_type as TimelineEventType);
 
           return (
@@ -93,14 +125,19 @@ export function ActivityTimeline({ tenantId, maxItems }: ActivityTimelineProps) 
                     {event.event_description}
                   </div>
                 )}
-                <div className="text-[10px] text-muted-foreground/70 mt-1">
-                  {new Date(event.created_at).toLocaleString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] text-muted-foreground/70">
+                    {new Date(event.created_at).toLocaleString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/50">
+                    &middot; {formatRelativeTime(event.created_at)}
+                  </span>
                 </div>
               </div>
             </motion.div>

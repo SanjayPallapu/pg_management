@@ -7,11 +7,13 @@ import {
   ShieldCheck,
   FileText,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useVerifyOnboarding, useOnboardingDocuments } from "../hooks/useOnboarding";
 import { getVerificationStatusLabel, type VerificationStatus } from "../types";
 
@@ -31,21 +33,21 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
   };
 
   const handleReject = () => {
-    verify.mutate({
-      tenantId,
-      action: "reject",
-      rejectionReason,
-    });
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason before rejecting.");
+      return;
+    }
+    verify.mutate({ tenantId, action: "reject", rejectionReason });
     setShowRejectForm(false);
     setRejectionReason("");
   };
 
   const handleRequestReupload = () => {
-    verify.mutate({
-      tenantId,
-      action: "request_reupload",
-      rejectionReason,
-    });
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide instructions for re-upload.");
+      return;
+    }
+    verify.mutate({ tenantId, action: "request_reupload", rejectionReason });
     setShowRejectForm(false);
     setRejectionReason("");
   };
@@ -80,7 +82,7 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
       {/* Documents List */}
       {documents.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-muted-foreground">Uploaded Documents</div>
+          <div className="text-xs font-medium text-muted-foreground">Uploaded Documents ({documents.length})</div>
           {documents.map((doc) => (
             <div
               key={doc.id}
@@ -92,23 +94,56 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
                   <div className="text-sm font-medium truncate">
                     {doc.document_name || doc.document_type}
                   </div>
-                  <div className="text-xs text-muted-foreground">{doc.document_type}</div>
+                  <div className="text-xs text-muted-foreground capitalize">
+                    {doc.document_type.replace(/_/g, " ")}
+                  </div>
+                  {doc.rejection_reason && (
+                    <div className="text-xs text-red-500 mt-0.5 italic">
+                      {doc.rejection_reason}
+                    </div>
+                  )}
                 </div>
               </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs ml-2",
-                  doc.status === "approved" && "bg-green-500/10 text-green-600 border-green-500/30",
-                  doc.status === "rejected" && "bg-red-500/10 text-red-600 border-red-500/30",
-                  doc.status === "pending" && "bg-amber-500/10 text-amber-600 border-amber-500/30",
-                  doc.status === "re_upload_requested" && "bg-blue-500/10 text-blue-600 border-blue-500/30",
+              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    doc.status === "approved" && "bg-green-500/10 text-green-600 border-green-500/30",
+                    doc.status === "rejected" && "bg-red-500/10 text-red-600 border-red-500/30",
+                    doc.status === "pending" && "bg-amber-500/10 text-amber-600 border-amber-500/30",
+                    doc.status === "re_upload_requested" && "bg-blue-500/10 text-blue-600 border-blue-500/30",
+                  )}
+                >
+                  {doc.status}
+                </Badge>
+                {doc.file_url && (
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    title="View document"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
                 )}
-              >
-                {doc.status}
-              </Badge>
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Verified success banner */}
+      {verificationStatus === "verified" && (
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-green-700 dark:text-green-400">Tenant Verified</div>
+            <div className="text-xs text-green-600/80 dark:text-green-500/80">
+              This tenant&apos;s onboarding has been approved.
+            </div>
+          </div>
         </div>
       )}
 
@@ -151,11 +186,15 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
               className="space-y-3"
             >
               <Textarea
-                placeholder="Enter rejection reason or re-upload instructions..."
+                placeholder="Enter rejection reason or re-upload instructions (required)..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={3}
+                className={cn(!rejectionReason.trim() && "border-red-300 dark:border-red-800")}
               />
+              {!rejectionReason.trim() && (
+                <p className="text-xs text-red-500">A reason is required before confirming.</p>
+              )}
               <div className="flex gap-2">
                 <Button
                   onClick={handleReject}
