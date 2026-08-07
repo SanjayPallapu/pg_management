@@ -22,7 +22,8 @@ import Legal from "./pages/Legal";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import AppMenuPage from "./pages/AppMenuPage";
 import ReferralPage from "./pages/ReferralPage";
-import TenantOnboardingScreens from "./pages/TenantOnboardingScreens";
+import TenantOnboardingScreens, { TenantOnboardingScreenDetail } from "./pages/TenantOnboardingScreens";
+import TenantProfilePage from "./pages/TenantProfilePage";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
@@ -121,6 +122,12 @@ const AppContent = () => {
           <Route path="/auth/otp" element={<OTPVerification />} />
           <Route path="/auth/email" element={<EmailAuth />} />
           <Route path="/tenant-onboarding/screens" element={<PGProvider><TenantOnboardingScreens /></PGProvider>} />
+          <Route path="/tenant-onboarding/screens/:screenId" element={<PGProvider><TenantOnboardingScreenDetail /></PGProvider>} />
+          <Route path="/tenant-profile/:tenantId" element={
+            <ProtectedRoute>
+              <TenantProfilePage />
+            </ProtectedRoute>
+          } />
           <Route path="/tenant-onboarding/:token" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <TenantOnboardingFormPage />

@@ -249,6 +249,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [onboardingDialogState, setOnboardingDialogState] = useState<{ tenantId: string; tenantName: string; tenantPhone: string } | null>(null);
   const onboardingProfileMap = useOnboardingProfileMap();
+  // Double-tap state per tenant: track last tap time
+  const lastTapRef = useRef<Record<string, number>>({});
   const [welcomeData, setWelcomeData] = useState<{
     tenantName: string;
     tenantPhone: string;
@@ -576,10 +578,21 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 return 'bg-overdue/10 border border-overdue/30 rounded-lg px-2 py-1.5';
               };
               
+              const handleTenantTap = () => {
+                const now = Date.now();
+                const last = lastTapRef.current[tenant.id] || 0;
+                if (now - last < 400) {
+                  // Double tap — open profile page
+                  navigate(`/tenant-profile/${tenant.id}`);
+                }
+                lastTapRef.current[tenant.id] = now;
+              };
+
               return (
                 <div
                   key={tenant.id}
-                  className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 ${leftThisMonth ? "opacity-60" : ""} ${getTenantBgClass()}`}
+                  onClick={handleTenantTap}
+                  className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 cursor-pointer select-none ${leftThisMonth ? "opacity-60" : ""} ${getTenantBgClass()}`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
@@ -635,6 +648,13 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                          className="gap-2"
+                        >
+                          <User className="h-4 w-4" />
+                          Open Profile
+                        </DropdownMenuItem>
                         {(isPaid || isPartial) && (
                           <DropdownMenuItem onClick={handlePaidClick} className="gap-2">
                             <Receipt className="h-4 w-4" />
