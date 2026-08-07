@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/proxyClient";
+import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
+// Onboarding tables live outside the generated types; use an untyped client.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
 import { usePG } from "@/contexts/PGContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
