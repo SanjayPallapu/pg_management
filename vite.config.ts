@@ -1,4 +1,4 @@
-import { defineConfig } from "vite"; // redeploy trigger
+import { defineConfig } from "vite"; // redeploy trigger v2
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
