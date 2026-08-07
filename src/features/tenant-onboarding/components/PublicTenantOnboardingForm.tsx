@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-import { Home } from "lucide-react";
-// import your actual form field components / hooks here
+import { Home, User, Shield, Phone, Briefcase, CreditCard, Utensils, ScrollText } from "lucide-react";
+import { useOnboardingProfile } from "../hooks/useOnboarding";
+import { ONBOARDING_FORM_STEPS, OnboardingFormStep } from "../types";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = ONBOARDING_FORM_STEPS.length + 2; // 1 welcome + steps + 1 success
 
-export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
+interface PublicTenantOnboardingFormProps {
+  tenantId: string;
+  tenantName?: string;
+}
+
+export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProps> = ({
+  tenantId,
   tenantName,
 }) => {
   const [step, setStep] = useState(1);
+  const { data: profile } = useOnboardingProfile(tenantId);
 
   const goNext = () => {
     setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
@@ -15,6 +23,78 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
 
   const goBack = () => {
     setStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const renderStepIcon = (icon: string) => {
+    switch (icon) {
+      case "User":
+        return <User className="h-5 w-5" />;
+      case "Shield":
+        return <Shield className="h-5 w-5" />;
+      case "Phone":
+        return <Phone className="h-5 w-5" />;
+      case "Briefcase":
+        return <Briefcase className="h-5 w-5" />;
+      case "CreditCard":
+        return <CreditCard className="h-5 w-5" />;
+      case "Utensils":
+        return <Utensils className="h-5 w-5" />;
+      case "ScrollText":
+        return <ScrollText className="h-5 w-5" />;
+      default:
+        return <User className="h-5 w-5" />;
+    }
+  };
+
+  const renderFormStep = (stepConfig: OnboardingFormStep) => {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-violet-500/10 text-violet-400">
+            {renderStepIcon(stepConfig.icon)}
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold">{stepConfig.title}</h2>
+            <p className="text-sm text-slate-300">{stepConfig.description}</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {stepConfig.fields.map((fieldKey) => {
+            const value = (profile as any)?.[fieldKey] ?? "";
+            return (
+              <div key={fieldKey} className="space-y-1">
+                <label className="text-xs font-medium text-slate-300">
+                  {fieldKey.replace(/_/g, " ")}
+                </label>
+                <input
+                  type="text"
+                  defaultValue={value}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+          <button
+            type="button"
+            className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            onClick={goBack}
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            className="px-4 py-2 min-h-[44px] rounded-lg bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+            onClick={goNext}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -36,7 +116,6 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
 
       <main className="flex-1 flex justify-center px-4 py-6 sm:py-8">
         <div className="w-full max-w-5xl">
-          {/* Replace this switch with your real step components */}
           {step === 1 && (
             <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
               <div className="space-y-3 sm:space-y-4 text-center md:text-left">
@@ -71,36 +150,12 @@ export const PublicTenantOnboardingForm: React.FC<{ tenantName?: string }> = ({
           )}
 
           {step > 1 && step < TOTAL_STEPS && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6">
-              <p className="text-sm text-slate-300 mb-4">
-                This is a placeholder for steps 2–7 (personal details, ID, contact, stay, payment, rules).
-                Wire your existing form fields and validation here.
-              </p>
-              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
-                <button
-                  type="button"
-                  className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                  onClick={goBack}
-                  aria-label="Go back to previous step"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-2 min-h-[44px] rounded-lg bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-                  onClick={goNext}
-                  aria-label="Continue to next step"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
+            renderFormStep(ONBOARDING_FORM_STEPS[step - 2])
           )}
 
           {step === TOTAL_STEPS && (
             <div className="min-h-[50vh] sm:min-h-[60vh] flex flex-col items-center justify-center text-center space-y-5 sm:space-y-6 px-2">
               <div className="relative">
-                {/* Use the green badge asset here if available */}
                 <img
                   src="/assets/badges/green-profile-badge.png"
                   alt="Profile complete badge"
