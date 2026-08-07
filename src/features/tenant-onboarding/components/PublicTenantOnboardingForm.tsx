@@ -285,7 +285,7 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
     );
   }
 
-  if (!valid) return null;
+  
 
   const currentStepData = ONBOARDING_FORM_STEPS[currentStep];
   const StepIcon = STEP_ICONS[currentStepData.icon] || User;
