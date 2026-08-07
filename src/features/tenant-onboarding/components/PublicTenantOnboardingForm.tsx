@@ -1,21 +1,70 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Home, User, Shield, Phone, Briefcase, CreditCard, Utensils, ScrollText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/proxyClient";
 import { useOnboardingProfile, useUpsertOnboardingProfile } from "../hooks/useOnboarding";
 import { ONBOARDING_FORM_STEPS, OnboardingFormStep } from "../types";
 
 const TOTAL_STEPS = ONBOARDING_FORM_STEPS.length + 2; // 1 welcome + steps + 1 success
 
 interface PublicTenantOnboardingFormProps {
-  tenantId: string;
-  tenantName?: string;
+  token: string;
 }
 
-export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProps> = ({
-  tenantId,
-  tenantName,
-}) => {
+export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProps> = ({ token }) => {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [tenantName, setTenantName] = useState<string | undefined>(undefined);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Validate token and resolve tenant context
+  useEffect(() => {
+    let isMounted = true;
+
+    const validateToken = async () => {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
+        p_token: token,
+      });
+
+      if (!isMounted) return;
+
+      if (rpcError) {
+        console.error("[Onboarding Form] Token validation failed", rpcError);
+        setError("Failed to validate onboarding link. Please contact your PG owner.");
+        setLoading(false);
+        return;
+      }
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        setError("This onboarding link is invalid or expired. Please contact your PG owner.");
+        setLoading(false);
+        return;
+      }
+
+      const record = data[0] as any;
+      const resolvedTenantId = record.tenant_id as string | undefined;
+      if (!resolvedTenantId) {
+        setError("Could not resolve tenant for this link. Please contact your PG owner.");
+        setLoading(false);
+        return;
+      }
+
+      setTenantId(resolvedTenantId);
+      setTenantName((record.tenant_name as string | undefined) ?? (record.full_name as string | undefined));
+      setLoading(false);
+    };
+
+    void validateToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
+
   const { data: profile } = useOnboardingProfile(tenantId);
   const upsertProfile = useUpsertOnboardingProfile();
 
@@ -32,6 +81,11 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
     formData: Record<string, string>,
     isFinalStep = false,
   ) => {
+    if (!tenantId) {
+      setError("Missing tenant context. Please refresh the page or contact your PG owner.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const progress = isFinalStep
@@ -149,6 +203,27 @@ export const PublicTenantOnboardingForm: React.FC<PublicTenantOnboardingFormProp
   const currentFormIndex = step - 2;
   const currentFormStep = ONBOARDING_FORM_STEPS[currentFormIndex];
   const isLastFormStep = currentFormIndex === ONBOARDING_FORM_STEPS.length - 1;
+
+  if (loading) {
+    return (
+      <div className="min-h-[100dvh] bg-slate-950 text-slate-50 flex items-center justify-center">
+        <div className="text-sm text-slate-300">Validating your onboarding link...</div>
+      </div>
+    );
+  }
+
+  if (error || !tenantId) {
+    return (
+      <div className="min-h-[100dvh] bg-gradient-to-br from-red-50 to-orange-50 dark:from-slate-950 dark:to-red-950/30 flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-xl font-bold mb-2">Invalid or Expired Link</h1>
+          <p className="text-sm text-muted-foreground mb-3">
+            {error ?? "This onboarding link is invalid or has expired. Please contact your PG owner for a new link."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-50 flex flex-col overflow-x-hidden">
