@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import type { Room } from "@/types";
 import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import {
   User,
+  Crown,
   Moon,
   Sun,
   Shield,
@@ -115,7 +117,7 @@ const SectionHeader = ({ title }: { title: string }) => (
 
 export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const { user, isAdmin, isOwner, role, signOut } = useAuth();
-  const { currentPG } = usePG();
+  const { currentPG, subscription } = usePG();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [subscriptionSheetOpen, setSubscriptionSheetOpen] = useState(false);
@@ -303,6 +305,35 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           </Card>
         </motion.div>
 
+        {/* Subscription Expiry Banner */}
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent shadow-xs">
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
+                  <p className="truncate text-sm font-bold">
+                    {subscription?.billingCycle === 'trial' ? 'Free Trial' : (subscription?.status === 'active' ? 'Pro Plan' : 'Free Plan')}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground mt-0.5">
+                    {subscription?.expiresAt ? (
+                      <>Expires on <strong className="font-bold text-foreground">{format(new Date(subscription.expiresAt), 'dd MMM yyyy')}</strong></>
+                    ) : (
+                      'No active expiration date'
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold shrink-0 border-violet-500/30 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10" onClick={() => navigate('/subscription')}>
+                Manage
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2">
           <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
             <Building className="mx-auto h-5 w-5 text-blue-600" /><span className="mt-2 block text-[10px] font-bold">Properties</span>
@@ -410,18 +441,8 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
             <CardContent className="p-2">
               <SettingItem
                 icon={<ShieldCheck className="h-4 w-4 text-primary" />}
-                label="Privacy Policy"
-                onClick={() => navigate("/legal#privacy")}
-              />
-              <SettingItem
-                icon={<FileText className="h-4 w-4 text-primary" />}
-                label="Terms & Conditions"
-                onClick={() => navigate("/legal#terms")}
-              />
-              <SettingItem
-                icon={<FileText className="h-4 w-4 text-primary" />}
-                label="Refund Policy"
-                onClick={() => navigate("/legal#refunds")}
+                label="Privacy & Legal Policies"
+                onClick={() => navigate("/legal")}
               />
             </CardContent>
           </Card>

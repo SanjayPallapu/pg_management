@@ -180,7 +180,6 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="truncate text-sm font-semibold">{tenant.name}</p>
-            <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
             {tenant.phone && tenant.phone !== '••••••••••' && (
               <a
                 href={`tel:${tenant.phone}`}

@@ -106,12 +106,12 @@ export default function ReferralPage() {
         </header>
 
         {/* Illustration */}
-        <div className="relative z-10 px-2 pb-6 pt-2">
-          <div className="mx-auto h-[205px] w-full max-w-[420px] overflow-hidden rounded-[32px] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-sm">
+        <div className="relative z-10 px-2 pb-4 pt-2">
+          <div className="mx-auto w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/20 shadow-2xl">
             <img
               src="/refer-hero.png"
-              alt="Two PG owners sharing a referral reward"
-              className="h-full w-full object-cover object-center"
+              alt="Refer & Earn"
+              className="w-full h-auto max-h-[220px] object-cover object-center"
             />
           </div>
           <div className="text-center mt-2">

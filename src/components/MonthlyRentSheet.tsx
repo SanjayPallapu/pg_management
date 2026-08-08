@@ -1837,7 +1837,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <div className="font-semibold text-sm">
                         {tenant.name}
                       </div>
-                      <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
 
                       {/* Call badge */}
                       {tenant.phone && tenant.phone !== "••••••••••" && (

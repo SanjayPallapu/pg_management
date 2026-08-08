@@ -152,20 +152,22 @@ export default function SubscriptionPage() {
       {/* Main Full-Screen Body */}
       <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-1.5 py-4 pb-10">
         
-        {/* Active Trial Notification Banner */}
-        {isTrialActive && (
-          <div className="rounded-2xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 p-4 flex items-center gap-3 text-amber-900 dark:text-amber-200 shadow-xs">
-            <div className="bg-amber-500/20 p-2 rounded-xl text-amber-600 dark:text-amber-400 shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-extrabold">30-Day Free Trial Active</p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                {daysLeft !== null ? `${daysLeft} days remaining.` : ""} Choose a plan to auto-renew seamlessly when your trial ends.
-              </p>
-            </div>
+        {/* Subscription Expiry Status Banner */}
+        <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-blue-500/10 p-4 flex items-center gap-3 text-foreground shadow-xs">
+          <div className="bg-violet-500/20 p-2.5 rounded-xl text-violet-600 dark:text-violet-300 shrink-0">
+            <Clock className="h-5 w-5" />
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-extrabold uppercase tracking-wide text-violet-600 dark:text-violet-300">Subscription Status</p>
+            <p className="text-sm font-black">
+              {subscription?.expiresAt ? (
+                <>Expires on <span className="text-primary">{format(new Date(subscription.expiresAt), 'dd MMMM yyyy')}</span> {daysLeft !== null && `(${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining)`}</>
+              ) : (
+                'Free Plan (No active expiration date)'
+              )}
+            </p>
+          </div>
+        </div>
 
         {/* Universal checkout & billing cycle */}
         <div className="flex flex-col items-stretch justify-between gap-3 border-b border-border/70 bg-background py-3 sm:flex-row sm:items-center">

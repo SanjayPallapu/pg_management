@@ -57,14 +57,8 @@ const Legal = () => {
   const navigate = useNavigate();
 
   return (
-    <AppLayout title="Legal & Support">
+    <AppLayout title="Legal">
       <main className="mx-auto max-w-3xl space-y-4 px-1.5 py-4">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Legal & Support</h1>
-          <p className="text-sm text-muted-foreground">
-            Privacy, terms, refunds, and account deletion information for PG Management.
-          </p>
-        </div>
 
         {sections.map(({ id, title, icon: Icon, content }) => (
           <Card key={id} id={id} className="scroll-mt-20">

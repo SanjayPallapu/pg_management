@@ -145,7 +145,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
       <div className="min-h-[100dvh] bg-background text-foreground">
         <header className="sticky top-0 z-40 border-b bg-background/95 px-2 py-3 backdrop-blur-xl">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
-            <button onClick={() => navigate(-1)} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+            <button onClick={() => navigate('/')} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-black">Tenant Profile</h1><p className="text-[11px] text-muted-foreground">Verified tenant details and payments</p></div>
             <ProfileStatusBadge status="verified" showLabel={false} size="md" />
           </div>
@@ -197,7 +197,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => navigate('/')} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
           <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
@@ -216,10 +216,6 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
             <button onClick={() => goToView("share")} className="flex flex-col items-center gap-1.5 rounded-2xl bg-violet-500/15 py-3 text-xs font-semibold text-violet-600 hover:bg-violet-500/25 dark:text-violet-300"><Send className="h-4 w-4" />Invite</button>
           </div>
         </section>
-
-        <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {views.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => goToView(id)} className={cn("flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all", view === id ? "bg-violet-600 text-white shadow-lg shadow-violet-950/20" : "bg-muted text-muted-foreground hover:bg-muted/70")}><Icon className="h-3.5 w-3.5" />{label}</button>)}
-        </div>
 
         <AnimatePresence mode="wait">
           <motion.section key={view} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="mt-4">
