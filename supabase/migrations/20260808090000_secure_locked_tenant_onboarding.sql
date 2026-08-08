@@ -1,6 +1,8 @@
 -- Public onboarding contract: return resumable data and owner-controlled stay details,
 -- while never allowing the public form payload to overwrite stay information.
-CREATE OR REPLACE FUNCTION validate_onboarding_link(p_token TEXT)
+-- PostgreSQL cannot CREATE OR REPLACE a function when its OUT row changes.
+DROP FUNCTION IF EXISTS validate_onboarding_link(TEXT);
+CREATE FUNCTION validate_onboarding_link(p_token TEXT)
 RETURNS TABLE (
   link_id UUID, tenant_id UUID, pg_id UUID, link_status TEXT, is_expired BOOLEAN,
   onboarding_status TEXT, verification_status TEXT, form_progress INTEGER,
@@ -14,7 +16,7 @@ DECLARE v_link RECORD; v_profile RECORD; v_tenant RECORD;
 BEGIN
   SELECT * INTO v_link FROM tenant_onboarding_links
   WHERE token = p_token AND status <> 'revoked' LIMIT 1;
-  IF v_link IS NOT FOUND THEN RETURN; END IF;
+  IF NOT FOUND THEN RETURN; END IF;
 
   IF v_link.expires_at < now() AND v_link.status <> 'completed' THEN
     UPDATE tenant_onboarding_links SET status = 'expired' WHERE id = v_link.id;
@@ -26,15 +28,15 @@ BEGIN
 
   IF v_link.status = 'sent' THEN
     UPDATE tenant_onboarding_links SET status = 'viewed', viewed_at = now() WHERE id = v_link.id;
-    UPDATE tenant_onboarding_profiles SET status = 'link_viewed'
-      WHERE tenant_id = v_link.tenant_id AND status = 'link_sent';
+    UPDATE tenant_onboarding_profiles p SET status = 'link_viewed'
+      WHERE p.tenant_id = v_link.tenant_id AND p.status = 'link_sent';
     INSERT INTO tenant_onboarding_timeline (tenant_id, pg_id, event_type, event_description)
       VALUES (v_link.tenant_id, v_link.pg_id, 'link_viewed', 'Tenant viewed the onboarding link');
     INSERT INTO tenant_onboarding_notifications (owner_id, tenant_id, pg_id, notification_type, title, message)
       VALUES (v_link.owner_id, v_link.tenant_id, v_link.pg_id, 'link_viewed', 'Onboarding Link Viewed', 'Your tenant viewed the onboarding link.');
   END IF;
 
-  SELECT * INTO v_profile FROM tenant_onboarding_profiles WHERE tenant_id = v_link.tenant_id;
+  SELECT p.* INTO v_profile FROM tenant_onboarding_profiles p WHERE p.tenant_id = v_link.tenant_id;
   SELECT t.*, r.room_no INTO v_tenant FROM tenants t JOIN rooms r ON r.id = t.room_id WHERE t.id = v_link.tenant_id;
 
   RETURN QUERY SELECT v_link.id, v_link.tenant_id, v_link.pg_id,
@@ -49,10 +51,16 @@ $$;
 
 -- Wrap the existing save RPC and strip owner-controlled keys before the original
 -- implementation sees them. This protects against hand-crafted browser requests.
-ALTER FUNCTION save_onboarding_form_data(TEXT, JSONB, TEXT, INTEGER, BOOLEAN)
-  RENAME TO save_onboarding_form_data_internal;
+DO $$
+BEGIN
+  IF to_regprocedure('public.save_onboarding_form_data_internal(text,jsonb,text,integer,boolean)') IS NULL THEN
+    ALTER FUNCTION save_onboarding_form_data(TEXT, JSONB, TEXT, INTEGER, BOOLEAN)
+      RENAME TO save_onboarding_form_data_internal;
+  END IF;
+END;
+$$;
 
-CREATE FUNCTION save_onboarding_form_data(
+CREATE OR REPLACE FUNCTION save_onboarding_form_data(
   p_token TEXT, p_form_data JSONB, p_step TEXT DEFAULT NULL,
   p_progress INTEGER DEFAULT NULL, p_submit BOOLEAN DEFAULT FALSE
 )
@@ -93,21 +101,35 @@ VALUES ('tenant-onboarding-docs', 'tenant-onboarding-docs', false, 8388608,
 ON CONFLICT (id) DO UPDATE SET public = false, file_size_limit = 8388608,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+CREATE OR REPLACE FUNCTION is_valid_onboarding_upload_token(p_token TEXT)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM tenant_onboarding_links l
+    WHERE l.token = p_token AND l.status NOT IN ('expired','revoked','completed')
+      AND l.expires_at > now());
+$$;
+
+CREATE OR REPLACE FUNCTION owns_onboarding_upload_token(p_token TEXT)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM tenant_onboarding_links l
+    WHERE l.token = p_token AND l.owner_id = auth.uid());
+$$;
+
+GRANT EXECUTE ON FUNCTION is_valid_onboarding_upload_token(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION owns_onboarding_upload_token(TEXT) TO authenticated;
+
 DROP POLICY IF EXISTS "Public token-scoped onboarding uploads" ON storage.objects;
 CREATE POLICY "Public token-scoped onboarding uploads" ON storage.objects FOR INSERT TO anon
 WITH CHECK (
   bucket_id = 'tenant-onboarding-docs'
-  AND EXISTS (SELECT 1 FROM tenant_onboarding_links l
-    WHERE l.token = (storage.foldername(name))[1]
-      AND l.status NOT IN ('expired','revoked','completed') AND l.expires_at > now())
+  AND is_valid_onboarding_upload_token((storage.foldername(name))[1])
 );
 
 DROP POLICY IF EXISTS "Owners read their tenant onboarding documents" ON storage.objects;
 CREATE POLICY "Owners read their tenant onboarding documents" ON storage.objects FOR SELECT TO authenticated
-USING (bucket_id = 'tenant-onboarding-docs' AND EXISTS (
-  SELECT 1 FROM tenant_onboarding_links l
-  WHERE l.token = (storage.foldername(name))[1] AND l.owner_id = auth.uid()
-));
+USING (bucket_id = 'tenant-onboarding-docs'
+  AND owns_onboarding_upload_token((storage.foldername(name))[1]));
 
 GRANT EXECUTE ON FUNCTION validate_onboarding_link(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION save_onboarding_form_data(TEXT, JSONB, TEXT, INTEGER, BOOLEAN) TO anon, authenticated;
