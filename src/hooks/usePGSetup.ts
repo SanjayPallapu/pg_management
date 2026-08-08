@@ -308,13 +308,13 @@ export const usePGSetup = () => {
       const filePath = `pg-logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('receipts')
+        .from('pg-logos')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from('receipts')
+        .from('pg-logos')
         .getPublicUrl(filePath);
 
       return urlData.publicUrl;

@@ -3,11 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Shield,
-  Phone,
-  Briefcase,
   Home,
-  CreditCard,
-  Utensils,
   ScrollText,
   Check,
   ChevronRight,
@@ -24,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -42,11 +37,7 @@ import onboardingBuilding from "@/assets/pg-hub/hub-building-hero.png";
 const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   User,
   Shield,
-  Phone,
-  Briefcase,
   Home,
-  CreditCard,
-  Utensils,
   ScrollText,
 };
 
@@ -76,6 +67,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   const [existingStatus, setExistingStatus] = useState<string>("");
   const [lockedStay, setLockedStay] = useState<LockedStayDetails | null>(null);
   const [pgName, setPgName] = useState("Your PG");
+  const [pgLogoUrl, setPgLogoUrl] = useState<string | null>(null);
   const [pgRules, setPgRules] = useState<Rule[]>(DEFAULT_RULES);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -91,9 +83,9 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   // Per-step required fields — used to guard Next/Submit
   const STEP_REQUIRED: Record<number, string[]> = {
-    0: ["full_name", "emergency_contact_phone"],
+    0: ["full_name", "alternate_phone", "emergency_contact_phone"],
     1: ["id_proof_type", "id_proof_number", "id_proof_url"],
-    5: ["rules_acknowledged", "agreement_accepted"],
+    3: ["rules_acknowledged", "agreement_accepted"],
   };
 
   const validateToken = useCallback(async () => {
@@ -104,7 +96,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       setValid(true);
       setTenantName("Aman Verma");
       setTenantPhone("9876543210");
-      setFormData({ full_name: "Aman Verma", id_proof_type: "aadhaar", id_proof_number: "123456789012", id_proof_url: "preview/aadhaar.png" });
+      setFormData({ full_name: "Aman Verma", alternate_phone: "9876543210", id_proof_type: "aadhaar", id_proof_number: "123456789012", id_proof_url: "preview/aadhaar.png" });
       setLockedStay({ roomNumber: "205", bedLabel: "Bed 1", moveInDate: "2026-08-05", monthlyRent: 6000, securityDeposit: 6000 });
       setLoading(false);
       return;
@@ -148,6 +140,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       securityDeposit: result.security_deposit_amount ?? null,
     });
     setPgName(result.pg_name || "Your PG");
+    setPgLogoUrl(result.pg_logo_url || null);
     setPgRules(Array.isArray(result.pg_rules) && result.pg_rules.length > 0 ? result.pg_rules : DEFAULT_RULES);
 
     // If form was already completed, show completion screen
@@ -157,7 +150,11 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
     // Restore saved form data if the RPC returns it
     if (result.form_data && typeof result.form_data === "object") {
-      setFormData(result.form_data as FormData);
+      const restored = result.form_data as FormData;
+      setFormData({
+        ...restored,
+        alternate_phone: restored.alternate_phone || result.tenant_phone || "",
+      });
     }
 
     // Restore progress — go to the last saved step
@@ -266,8 +263,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       toast.error("Emergency contact phone must be exactly 10 digits");
       return false;
     }
-    if (currentStep === 2 && formData.alternate_phone && String(formData.alternate_phone).length !== 10) {
-      toast.error("Alternate phone must be exactly 10 digits");
+    if (currentStep === 0 && String(formData.alternate_phone || "").length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
       return false;
     }
     return true;
@@ -406,19 +403,21 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
           animate={{ opacity: 1, y: 0 }}
           className="flex min-h-[min(760px,calc(100vh-40px))] w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-violet-100 bg-white p-6 shadow-2xl shadow-violet-200/40 dark:border-white/10 dark:bg-[#121824] dark:shadow-black/30"
         >
-          <div className="flex items-center gap-2 text-sm font-black text-violet-700">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white"><Home className="h-4 w-4" /></span>
-            PGHub
+          <div className="flex items-center gap-2 text-sm font-black text-violet-700 dark:text-violet-300">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-violet-600 text-white">
+              {pgLogoUrl ? <img src={pgLogoUrl} alt="" className="h-full w-full object-cover" /> : <Home className="h-4 w-4" />}
+            </span>
+            {pgName}
           </div>
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <motion.img
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 120 }}
-              src={onboardingBuilding}
-              alt="Your PG building"
-              className="mb-7 h-52 w-full object-contain drop-shadow-2xl"
-            />
+            <div className="relative mb-7 flex h-56 w-full items-center justify-center overflow-hidden rounded-[28px] bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-violet-950/40 dark:via-slate-900 dark:to-indigo-950/40">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} className="absolute h-40 w-40 rounded-full border border-dashed border-violet-300/70 dark:border-violet-500/30" />
+              <motion.img initial={{ opacity: 0, y: 18, scale: 0.92 }} animate={{ opacity: 0.28, y: 0, scale: 1 }} transition={{ duration: 0.8 }} src={onboardingBuilding} alt="" className="absolute inset-x-0 bottom-0 mx-auto h-44 w-full object-contain dark:opacity-20" />
+              <motion.div initial={{ opacity: 0, scale: 0.5, rotate: -10 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ delay: 0.15, type: "spring", stiffness: 140, damping: 14 }} className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-[30px] border-4 border-white bg-gradient-to-br from-violet-600 to-indigo-700 shadow-2xl shadow-violet-300/60 dark:border-slate-800 dark:shadow-black/50">
+                {pgLogoUrl ? <img src={pgLogoUrl} alt={`${pgName} logo`} className="h-full w-full object-cover" /> : <Home className="h-12 w-12 text-white" />}
+              </motion.div>
+              <motion.span initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="absolute bottom-3 rounded-full border border-white/80 bg-white/85 px-3 py-1 text-[10px] font-extrabold text-violet-700 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:text-violet-300">{pgName}</motion.span>
+            </div>
             <span className="mb-3 rounded-full bg-violet-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600">Secure tenant onboarding</span>
             <h1 className="text-3xl font-black tracking-tight">Welcome to PGHub</h1>
             <p className="mt-3 max-w-xs text-sm leading-6 text-slate-500 dark:text-slate-400">Hi {tenantName}, complete your verified profile so your stay is smooth from day one.</p>
@@ -569,10 +568,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
               <div className="space-y-4">
                 {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
                 {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} />}
-                {currentStep === 2 && <ContactStep formData={formData} updateField={updateField} />}
-                {currentStep === 3 && <StayStep lockedStay={lockedStay} />}
-                {currentStep === 4 && <PaymentStep formData={formData} updateField={updateField} />}
-                {currentStep === 5 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} />}
+                {currentStep === 2 && <StayStep lockedStay={lockedStay} />}
+                {currentStep === 3 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} />}
               </div>
             </div>
           </motion.div>
@@ -679,6 +676,16 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
           </SelectContent>
         </Select>
       </Field>
+      <Field label="Phone Number" required>
+        <Input
+          type="tel"
+          inputMode="numeric"
+          maxLength={10}
+          value={(formData.alternate_phone as string) || ""}
+          onChange={(e) => updateField("alternate_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+          placeholder="10-digit phone number"
+        />
+      </Field>
       <Field label="Emergency Contact Name">
         <Input
           value={(formData.emergency_contact_name as string) || ""}
@@ -729,33 +736,8 @@ function IdentityStep({ token, formData, updateField }: StepProps & { token: str
         updateField={updateField}
       />
       <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-muted-foreground dark:bg-white/5">
-        Upload one clear Aadhaar image or PDF. No separate address-proof file is required.
+        Upload one clear Aadhaar image or PDF. We read the QR code first, then look for the printed 12-digit Aadhaar number and auto-fill it. No separate address-proof file is required.
       </p>
-    </div>
-  );
-}
-
-function ContactStep({ formData, updateField }: StepProps) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label="Email Address — optional">
-        <Input
-          type="email"
-          value={(formData.email as string) || ""}
-          onChange={(e) => updateField("email", e.target.value)}
-          placeholder="your@email.com"
-        />
-      </Field>
-      <Field label="Alternate Phone">
-        <Input
-          type="tel"
-          inputMode="numeric"
-          maxLength={10}
-          value={(formData.alternate_phone as string) || ""}
-          onChange={(e) => updateField("alternate_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
-          placeholder="10-digit phone number"
-        />
-      </Field>
     </div>
   );
 }
@@ -770,72 +752,13 @@ function StayStep({ lockedStay }: { lockedStay: LockedStayDetails | null }) {
   ];
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-violet-950">
-        <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
-        <div><p className="text-sm font-semibold">Stay details are locked</p><p className="mt-1 text-xs text-violet-700">These details were confirmed by your PG owner. Contact them if anything is incorrect.</p></div>
+      <div className="flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-violet-950 dark:border-violet-500/25 dark:bg-violet-500/10 dark:text-violet-100">
+        <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-300" />
+        <div><p className="text-sm font-semibold">Stay details are locked</p><p className="mt-1 text-xs text-violet-700 dark:text-violet-300">These details were confirmed by your PG owner. Contact them if anything is incorrect.</p></div>
       </div>
-      <div className="overflow-hidden rounded-2xl border bg-slate-50/80">
-        {values.map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-0"><span className="text-xs text-muted-foreground">{label}</span><span className="flex items-center gap-2 text-sm font-semibold text-right"><LockKeyhole className="h-3.5 w-3.5 text-slate-400" />{value}</span></div>)}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+        {values.map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5 last:border-0 dark:border-white/10"><span className="text-xs text-slate-500 dark:text-slate-400">{label}</span><span className="flex items-center gap-2 text-right text-sm font-semibold text-slate-900 dark:text-slate-100"><LockKeyhole className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />{value}</span></div>)}
       </div>
-    </div>
-  );
-}
-
-function PaymentStep({ formData, updateField }: StepProps) {
-  return (
-    <div className="space-y-4">
-      <Field label="Preferred Payment Mode">
-        <Select
-          value={(formData.payment_mode as string) || ""}
-          onValueChange={(v) => updateField("payment_mode", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select payment mode" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="upi">UPI</SelectItem>
-            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="card">Card</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      {(formData.payment_mode === "upi") && (
-        <Field label="UPI ID">
-          <Input
-            value={(formData.upi_id as string) || ""}
-            onChange={(e) => updateField("upi_id", e.target.value)}
-            placeholder="yourname@upi"
-          />
-        </Field>
-      )}
-      {(formData.payment_mode === "bank_transfer") && (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Bank Account Number">
-              <Input
-                value={(formData.bank_account_number as string) || ""}
-                onChange={(e) => updateField("bank_account_number", e.target.value)}
-                placeholder="Account number"
-              />
-            </Field>
-            <Field label="IFSC Code">
-              <Input
-                value={(formData.ifsc_code as string) || ""}
-                onChange={(e) => updateField("ifsc_code", e.target.value)}
-                placeholder="IFSC code"
-              />
-            </Field>
-          </div>
-          <Field label="Bank Name">
-            <Input
-              value={(formData.bank_name as string) || ""}
-              onChange={(e) => updateField("bank_name", e.target.value)}
-              placeholder="Bank name"
-            />
-          </Field>
-        </>
-      )}
     </div>
   );
 }
@@ -968,13 +891,16 @@ function FileUploadField({
       if (uploadError) throw uploadError;
 
       updateField(field, uploadData.path);
+      if (field === "id_proof_url") updateField("id_proof_type", "aadhaar");
       if (onAadhaarDetected && file.type.startsWith("image/")) {
+        const scanningToast = toast.loading("Reading the 12-digit Aadhaar number...");
         const detected = await detectAadhaarNumber(file);
+        toast.dismiss(scanningToast);
         if (detected) {
           onAadhaarDetected(detected);
-          toast.success("Aadhaar uploaded and number filled automatically");
+          toast.success("Aadhaar uploaded and 12-digit number filled automatically");
         } else {
-          toast.info("Aadhaar uploaded. Enter the number if the QR is not visible.");
+          toast.info("Aadhaar uploaded. We could not read the printed number clearly—please enter the 12 digits manually.");
         }
       } else {
       toast.success(`${label} uploaded successfully`);
@@ -1026,16 +952,52 @@ function FileUploadField({
 async function detectAadhaarNumber(file: File): Promise<string | null> {
   try {
     const Detector = (window as unknown as { BarcodeDetector?: new (options: { formats: string[] }) => { detect(source: ImageBitmap): Promise<Array<{ rawValue: string }>> } }).BarcodeDetector;
-    if (!Detector) return null;
-    const bitmap = await createImageBitmap(file);
-    const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap);
-    bitmap.close();
-    for (const code of codes) {
-      const match = code.rawValue.match(/(?:uid\s*=\s*["']|\b)(\d{4}\s?\d{4}\s?\d{4})(?:["']|\b)/i);
-      if (match) return match[1].replace(/\D/g, "");
+    if (Detector) {
+      const bitmap = await createImageBitmap(file);
+      const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap);
+      bitmap.close();
+      for (const code of codes) {
+        const match = code.rawValue.match(/(?:uid\s*=\s*["']|\b)(\d{4}[\s-]?\d{4}[\s-]?\d{4})(?:["']|\b)/i);
+        if (match) return match[1].replace(/\D/g, "");
+      }
     }
-  } catch (error) {
-    console.warn("Aadhaar QR scan unavailable", error);
+  } catch (qrError) {
+    console.warn("Aadhaar QR scan unavailable; trying printed text", qrError);
+  }
+
+  try {
+    const { recognize } = await import("tesseract.js");
+    const { data } = await recognize(file, "eng");
+    const normalizedText = data.text
+      .replace(/[Oo]/g, "0")
+      .replace(/[Il|]/g, "1");
+    const candidates = normalizedText.match(/\b\d{4}[\s-]+\d{4}[\s-]+\d{4}\b|\b\d{12}\b/g) || [];
+    const numbers = candidates.map((candidate) => candidate.replace(/\D/g, ""));
+    return numbers.find(isLikelyAadhaarNumber) || numbers[0] || null;
+  } catch (ocrError) {
+    console.warn("Printed Aadhaar number OCR unavailable", ocrError);
   }
   return null;
+}
+
+function isLikelyAadhaarNumber(value: string): boolean {
+  if (!/^[2-9]\d{11}$/.test(value)) return false;
+  const multiplication = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+    [2, 3, 4, 0, 1, 7, 8, 9, 5, 6], [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+    [4, 0, 1, 2, 3, 9, 5, 6, 7, 8], [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+    [6, 5, 9, 8, 7, 1, 0, 4, 3, 2], [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+    [8, 7, 6, 5, 9, 3, 2, 1, 0, 4], [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+  ];
+  const permutation = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+    [5, 8, 0, 3, 7, 9, 6, 1, 4, 2], [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+    [9, 4, 5, 3, 1, 2, 6, 8, 7, 0], [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+    [2, 7, 9, 3, 8, 0, 6, 4, 1, 5], [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
+  ];
+  let checksum = 0;
+  [...value].reverse().forEach((digit, index) => {
+    checksum = multiplication[checksum][permutation[index % 8][Number(digit)]];
+  });
+  return checksum === 0;
 }
