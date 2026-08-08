@@ -233,7 +233,7 @@ export const ACElectricitySheet = ({
               <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
               <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
 
-              <SheetHeader className="relative z-10 px-3 pt-4 pb-4">
+              <SheetHeader className="relative z-10 px-2 pt-4 pb-4">
                 {/* Top bar */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -277,14 +277,9 @@ export const ACElectricitySheet = ({
                   </div>
                 </div>
 
-                {/* Illustration + Stats */}
-                <div className="mt-3 flex items-center gap-3">
-                  <img
-                    src="/ac-bill-hero.png"
-                    alt="AC electricity billing illustration"
-                    className="h-[80px] w-[120px] rounded-2xl object-cover shrink-0 shadow-lg"
-                  />
-                  <div className="flex-1 grid grid-cols-3 gap-2">
+                {/* Collection summary above a full-width curved illustration */}
+                <div className="mt-3 space-y-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
                       <span className="block text-xs font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
@@ -297,6 +292,13 @@ export const ACElectricitySheet = ({
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
                       <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
                     </div>
+                  </div>
+                  <div className="h-[145px] w-full overflow-hidden rounded-[24px] border border-white/15 bg-white/10 shadow-lg">
+                    <img
+                      src="/ac-bill-hero.png"
+                      alt="AC electricity billing illustration"
+                      className="h-full w-full object-cover object-center"
+                    />
                   </div>
                 </div>
 
@@ -339,7 +341,7 @@ export const ACElectricitySheet = ({
             </div>
 
             {/* Main content */}
-            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
               {/* ── ROOMS TAB ── */}
               {activeTab === 'ac-bill' && (
                 <>
@@ -712,7 +714,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
       >
         <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
 
-        <SheetHeader className="relative z-10 px-3 pt-4 pb-4">
+        <SheetHeader className="relative z-10 px-2 pt-4 pb-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Button
@@ -775,7 +777,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
       </div>
 
       {/* Scrollable detail body */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3.5">
+      <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3.5">
         {/* Meter Readings */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
           <div className="flex items-center justify-between">

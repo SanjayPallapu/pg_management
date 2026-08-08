@@ -203,10 +203,12 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     return { prevMonth: pMonth, prevYear: pYear };
   }, [selectedMonth, selectedYear]);
 
-  // Combine overdue + advance-not-paid for "Overdue" tab (excluding left tenants), sorted by joining date
+  // Combine every tenant who still owes money for the selected month.
   const overdueCombined = useMemo(() => {
-    return [...overdueTenants, ...advanceNotPaidTenants].filter(t => !t.isLocked && !isLeftTenant(t)).sort(sortByJoiningDate);
-  }, [overdueTenants, advanceNotPaidTenants]);
+    return [...overdueTenants, ...advanceNotPaidTenants, ...partialTenants]
+      .filter(t => !t.isLocked && !isLeftTenant(t))
+      .sort(sortByJoiningDate);
+  }, [overdueTenants, advanceNotPaidTenants, partialTenants]);
 
   // Previous month pending tenants
   const stillPendingTenants = useMemo(() => {
@@ -260,7 +262,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
     return notDueTenants.filter(t => !t.isLocked && !isLeftTenant(t)).sort(sortByJoiningDate);
   }, [notDueTenants]);
 
-  const overdueTotal = overdueCombined.reduce((sum, t) => sum + t.monthlyRent, 0);
+  const overdueTotal = overdueCombined.reduce((sum, t) => sum + Math.max(0, (t.effectiveRent || t.monthlyRent) - (t.amountPaid || 0)), 0);
   const stillPendingTotal = stillPendingTenants.reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
   const notYetDueTotal = notYetDue.reduce((sum, t) => sum + t.monthlyRent, 0);
 
@@ -283,7 +285,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const selectedTotal = useMemo(() => {
     return currentTenants
       .filter(t => selectedTenants.has(t.id))
-      .reduce((sum, t) => sum + (t.monthlyRent - (t.amountPaid || 0)), 0);
+      .reduce((sum, t) => sum + Math.max(0, (t.effectiveRent || t.monthlyRent) - (t.amountPaid || 0)), 0);
   }, [currentTenants, selectedTenants]);
 
   const handleTabChange = (tab: string) => {
@@ -425,7 +427,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
         >
           <div className="flex flex-col h-full bg-background">
-            <SheetHeader className="mx-auto w-full max-w-screen-2xl px-3 pb-2 pt-4 sm:px-4 border-b bg-background shrink-0">
+            <SheetHeader className="mx-auto w-full max-w-screen-2xl px-2 pb-2 pt-4 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -455,7 +457,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-3 py-1 sm:px-4 bg-background">
+            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-1.5 py-1 bg-background">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
                 <TabsList className="grid w-full grid-cols-3 shrink-0">
                   <TabsTrigger value="overdue" className="gap-1 text-[11px] px-1 truncate">
@@ -680,6 +682,9 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate text-sm font-bold">{tenant.name}</span>
             <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
+            {(tenant.amountPaid || 0) > 0 && (
+              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">Partially paid</span>
+            )}
             {isSelected && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
             )}

@@ -26,10 +26,11 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({ status, siz
       disabled={!onClick}
       title={label}
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full border font-bold transition-transform",
+        "inline-flex shrink-0 items-center font-bold transition-transform",
         onClick && "cursor-pointer hover:scale-[1.03] active:scale-95",
-        verified || complete ? "border-emerald-500/25 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "border-slate-400/20 bg-slate-500/10 text-slate-500",
-        size === "sm" ? "gap-1 px-1.5 py-0.5 text-[9px]" : size === "md" ? "gap-1.5 px-2.5 py-1 text-[10px]" : "gap-2 px-3 py-1.5 text-xs",
+        compact ? "border-0 bg-transparent p-0" : "rounded-full border",
+        !compact && (verified || complete ? "border-emerald-500/25 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "border-slate-400/20 bg-slate-500/10 text-slate-500"),
+        !compact && (size === "sm" ? "gap-1 px-1.5 py-0.5 text-[9px]" : size === "md" ? "gap-1.5 px-2.5 py-1 text-[10px]" : "gap-2 px-3 py-1.5 text-xs"),
         className,
       )}
     >
@@ -37,7 +38,7 @@ export const ProfileStatusBadge = memo(function ProfileStatusBadge({ status, siz
         src={badgeImage}
         alt=""
         aria-hidden="true"
-        className={cn("shrink-0 object-contain", size === "lg" ? "h-5 w-5" : size === "md" ? "h-4 w-4" : "h-3.5 w-3.5")}
+        className={cn("shrink-0 object-contain", size === "lg" ? "h-6 w-6" : size === "md" ? "h-5 w-5" : "h-[18px] w-[18px]")}
       />
       {!compact && label}
     </button>

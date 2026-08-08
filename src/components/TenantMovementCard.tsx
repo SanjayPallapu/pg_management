@@ -130,7 +130,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
           className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
         >
           <div className="flex flex-col h-full bg-background">
-            <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-3 pb-3 pt-4 sm:px-4">
+            <SheetHeader className="mx-auto w-full max-w-screen-2xl shrink-0 border-b bg-background px-2 pb-3 pt-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setSheetOpen(false); onClose?.(); }} aria-label="Back">
@@ -182,7 +182,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                 </Popover>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+            <div className="flex-1 overflow-y-auto px-1.5 py-4 bg-background">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
                 <TabsList className="grid w-full grid-cols-2 shrink-0">
                   <TabsTrigger value="joined" className="gap-1">

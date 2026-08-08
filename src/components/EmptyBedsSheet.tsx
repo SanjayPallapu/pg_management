@@ -94,7 +94,7 @@ export const EmptyBedsSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl p-0">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-          <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
+          <SheetHeader className="px-2 pt-4 pb-2 border-b bg-background shrink-0">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
                 <ArrowLeft className="h-5 w-5" />
@@ -108,7 +108,7 @@ export const EmptyBedsSheet = ({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+          <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-primary/10 rounded-lg p-3">

@@ -58,7 +58,7 @@ const Legal = () => {
 
   return (
     <AppLayout title="Legal & Support">
-      <main className="mx-auto max-w-3xl space-y-4 px-4 py-4">
+      <main className="mx-auto max-w-3xl space-y-4 px-1.5 py-4">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Legal & Support</h1>
           <p className="text-sm text-muted-foreground">

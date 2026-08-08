@@ -614,7 +614,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
         >
           {detailCategory && (
             <>
-              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-border dark:bg-card sm:px-4">
+              <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-2 py-2 dark:border-border dark:bg-card">
                 <div className="flex min-h-[58px] items-center gap-2">
                   <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:hover:bg-accent/50" onClick={() => setDetailCategory(null)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
                   <div className="min-w-0 flex-1 text-center">
@@ -631,7 +631,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                 </div>
               </SheetHeader>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
+              <div className="min-h-0 flex-1 overflow-y-auto px-1.5" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
                 <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
                   {(["utility", "other", "family"] as ExpenseCategory[]).map((category) => {
                     const catTotal = totalFor(category);
@@ -994,14 +994,14 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
       <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
         <SheetContent side="right" className="flex w-full max-w-full flex-col bg-[#f8f9fd] p-0 dark:bg-background [&>button]:hidden [&>div:last-child]:px-0 [&>div:last-child]:pb-0 sm:max-w-xl">
-          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-3 py-2 dark:border-border dark:bg-card sm:px-4">
+          <SheetHeader className="shrink-0 border-b border-[#e4e6ee] bg-white px-2 py-2 dark:border-border dark:bg-card">
             <div className="flex min-h-[58px] items-center gap-2">
               <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-[#f0f1f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:hover:bg-accent/50" onClick={() => setAnalyticsOpen(false)} aria-label="Back to bills and budget"><ArrowLeft className="h-6 w-6" /></button>
               <div className="min-w-0 flex-1 text-center"><SheetTitle className="text-lg font-black">Spending analytics</SheetTitle><p className="text-xs font-medium text-muted-foreground">{monthLabel}</p></div>
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1efff] text-[#4936ef] dark:bg-[#302858] dark:text-[#b6a2ff]"><BarChart3 className="h-5 w-5" /></div>
             </div>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-4"><BillsAnalytics /></div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-4"><BillsAnalytics /></div>
         </SheetContent>
       </Sheet>
     </>

@@ -9,6 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRooms } from "@/hooks/useRooms";
+import { useTenantPayments } from "@/hooks/useTenantPayments";
+import { useMonthContext } from "@/contexts/MonthContext";
+import { PaymentReminderDialog } from "@/components/PaymentReminderDialog";
 import {
   ActivityTimeline, OwnerSharePanel, ProfileStatusBadge, VerificationPanel,
   useOnboardingLink, useOnboardingProfile,
@@ -83,11 +86,14 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
   const { rooms, isLoading: roomsLoading } = useRooms();
   const { data: profile, isLoading: profileLoading } = useOnboardingProfile(isPreview ? null : tenantId || null);
   const { data: link } = useOnboardingLink(isPreview ? null : tenantId || null);
+  const { payments } = useTenantPayments();
+  const { selectedMonth, selectedYear } = useMonthContext();
   const [shareOpen, setShareOpen] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
   const goToView = (nextView: TenantProfileView) => navigate(`/tenant-profile/${tenantId}/${nextView}`);
   const displayedProfile: Partial<OnboardingProfile> | null = isPreview ? {
-    status: "profile_completed",
-    verification_status: "pending",
+    status: "verified",
+    verification_status: "verified",
     full_name: "Aman Verma",
     alternate_phone: "9876543210",
     date_of_birth: "2001-08-12",
@@ -125,8 +131,67 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
   const { tenant, room } = info;
   const complete = ["profile_completed", "pending_verification", "verified"].includes(displayedProfile?.status || "");
+  const verified = displayedProfile?.status === "verified" || displayedProfile?.verification_status === "verified";
   const phoneDigits = tenant.phone.replace(/\D/g, "");
   const currentView = views.find((item) => item.id === view)!;
+  const tenantPayments = payments
+    .filter((payment) => payment.tenantId === tenant.id)
+    .sort((a, b) => b.year - a.year || b.month - a.month);
+  const currentPayment = tenantPayments.find((payment) => payment.month === selectedMonth && payment.year === selectedYear);
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  if (verified) {
+    return (
+      <div className="min-h-[100dvh] bg-background text-foreground">
+        <header className="sticky top-0 z-40 border-b bg-background/95 px-2 py-3 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-2xl items-center gap-3">
+            <button onClick={() => navigate(-1)} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+            <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-black">Tenant Profile</h1><p className="text-[11px] text-muted-foreground">Verified tenant details and payments</p></div>
+            <ProfileStatusBadge status="verified" showLabel={false} size="md" />
+          </div>
+        </header>
+        <main className="mx-auto max-w-2xl space-y-3 px-2 py-3 pb-10">
+          <section className="overflow-hidden rounded-[26px] bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700 p-4 text-white shadow-lg">
+            <div className="flex items-center gap-3"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-lg font-black ring-1 ring-white/20">{tenant.name.slice(0, 2).toUpperCase()}</div><div className="min-w-0 flex-1"><h2 className="truncate text-xl font-black">{tenant.name}</h2><p className="text-xs text-white/75">Room {room.roomNo} · {room.capacity} sharing</p><span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-200"><BadgeCheck className="h-3.5 w-3.5" />Profile verified</span></div></div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <a href={`tel:${tenant.phone}`} className="rounded-xl bg-white/10 py-2.5 text-center text-[11px] font-bold"><Phone className="mx-auto mb-1 h-4 w-4" />Call</a>
+              <button onClick={() => window.open(`https://wa.me/91${phoneDigits}`, "_blank", "noopener,noreferrer")} className="rounded-xl bg-white/10 py-2.5 text-[11px] font-bold"><MessageCircle className="mx-auto mb-1 h-4 w-4" />WhatsApp</button>
+              <button onClick={() => setReminderOpen(true)} className="rounded-xl bg-white text-violet-700 py-2.5 text-[11px] font-black"><Bell className="mx-auto mb-1 h-4 w-4" />Reminder</button>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border bg-card px-3">
+            <DetailSection title="Personal information" icon={UserRound}>
+              <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
+              <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+              <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
+              <DetailRow label="Gender" value={displayedProfile?.gender} />
+              <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
+              <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+              <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+            </DetailSection>
+            <DetailSection title="Identity and stay" icon={ShieldCheck}>
+              <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+              <DetailRow label="Room" value={room.roomNo} />
+              <DetailRow label="Move-in date" value={tenant.startDate} />
+              <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+              <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+              <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
+            </DetailSection>
+          </section>
+
+          <section className="rounded-2xl border bg-card px-3">
+            <div className="flex items-center justify-between border-b py-3"><div><h3 className="text-sm font-black">Monthly payment history</h3><p className="text-[10px] text-muted-foreground">All recorded tenant payments</p></div><ReceiptText className="h-5 w-5 text-violet-500" /></div>
+            {tenantPayments.length ? <div className="divide-y divide-border/70">{tenantPayments.map((payment) => {
+              const balance = Math.max(0, payment.amount - payment.amountPaid);
+              return <div key={payment.id} className="flex items-center gap-3 py-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-muted"><CalendarDays className="h-4 w-4 text-violet-500" /></div><div className="min-w-0 flex-1"><p className="text-xs font-bold">{monthNames[payment.month - 1]} {payment.year}</p><p className="text-[10px] text-muted-foreground">Paid ₹{payment.amountPaid.toLocaleString("en-IN")} of ₹{payment.amount.toLocaleString("en-IN")}</p></div><div className="text-right"><span className={cn("text-[10px] font-black", balance === 0 ? "text-emerald-500" : "text-amber-500")}>{balance === 0 ? "Paid" : `₹${balance.toLocaleString("en-IN")} due`}</span>{payment.paymentDate && <p className="text-[9px] text-muted-foreground">{payment.paymentDate}</p>}</div></div>;
+            })}</div> : <div className="py-8 text-center"><CircleDollarSign className="mx-auto h-7 w-7 text-muted-foreground/50" /><p className="mt-2 text-xs text-muted-foreground">No payment history recorded yet</p></div>}
+          </section>
+        </main>
+        <PaymentReminderDialog open={reminderOpen} onOpenChange={setReminderOpen} reminderData={{ tenantName: tenant.name, tenantPhone: tenant.phone, joiningDate: tenant.startDate, forMonth: `${monthNames[selectedMonth - 1]} ${selectedYear}`, roomNo: room.roomNo, sharingType: `${room.capacity} Sharing`, amount: currentPayment?.amount || tenant.monthlyRent, amountPaid: currentPayment?.amountPaid || 0, balance: Math.max(0, (currentPayment?.amount || tenant.monthlyRent) - (currentPayment?.amountPaid || 0)) }} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
