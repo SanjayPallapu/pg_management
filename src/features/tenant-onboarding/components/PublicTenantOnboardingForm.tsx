@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
 import { MedalBadgeIcon } from "./MedalBadgeIcon";
+import onboardingBuilding from "@/assets/pg-hub/hub-building-hero.png";
 
 const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   User,
@@ -80,20 +81,42 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const restoreDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+    return () => {
+      if (restoreDark) root.classList.add("dark");
+      root.style.colorScheme = "";
+    };
+  }, []);
 
   // Per-step required fields — used to guard Next/Submit
   const STEP_REQUIRED: Record<number, string[]> = {
     0: ["full_name"],         // Personal: Full Name required
     1: ["id_proof_type", "id_proof_number", "id_proof_url"],
-    7: ["rules_acknowledged", "agreement_accepted"], // Rules: both checkboxes
+    5: ["rules_acknowledged", "agreement_accepted"],
   };
 
   const validateToken = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    if (import.meta.env.DEV && token === "preview") {
+      setValid(true);
+      setTenantName("Aman Verma");
+      setTenantPhone("9876543210");
+      setFormData({ full_name: "Aman Verma", id_proof_type: "aadhaar", id_proof_number: "123456789012", id_proof_url: "preview/aadhaar.png" });
+      setLockedStay({ roomNumber: "205", bedLabel: "Bed 1", moveInDate: "2026-08-05", monthlyRent: 6000, securityDeposit: 6000 });
+      setLoading(false);
+      return;
+    }
 
     const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
       p_token: token,
@@ -148,10 +171,16 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       const stepIndex = ONBOARDING_FORM_STEPS.findIndex((s) => s.id === result.last_saved_step);
       if (stepIndex >= 0) {
         setCurrentStep(stepIndex);
+        setHasStarted(true);
+      } else if (result.form_progress > 0) {
+        const progressIndex = Math.floor((result.form_progress / 100) * ONBOARDING_FORM_STEPS.length);
+        setCurrentStep(Math.min(progressIndex, ONBOARDING_FORM_STEPS.length - 1));
+        setHasStarted(true);
       }
     } else if (result.form_progress > 0) {
       const stepIndex = Math.floor((result.form_progress / 100) * ONBOARDING_FORM_STEPS.length);
       setCurrentStep(Math.min(stepIndex, ONBOARDING_FORM_STEPS.length - 1));
+      setHasStarted(true);
     }
 
     setLoading(false);
@@ -166,6 +195,11 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   const autoSave = useCallback(
     async (data: FormData, step: string, progress: number) => {
       if (!valid || completed) return;
+
+      if (import.meta.env.DEV && token === "preview") {
+        setLastSaved(new Date());
+        return;
+      }
 
       setSaving(true);
       try {
@@ -361,6 +395,45 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   if (!valid) return null;
 
+  if (!hasStarted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fbfaff] p-5 text-slate-950">
+        <motion.main
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex min-h-[min(760px,calc(100vh-40px))] w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-violet-100 bg-white p-6 shadow-2xl shadow-violet-200/40"
+        >
+          <div className="flex items-center gap-2 text-sm font-black text-violet-700">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white"><Home className="h-4 w-4" /></span>
+            PGHub
+          </div>
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <motion.img
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 120 }}
+              src={onboardingBuilding}
+              alt="Your PG building"
+              className="mb-7 h-52 w-full object-contain drop-shadow-2xl"
+            />
+            <span className="mb-3 rounded-full bg-violet-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600">Secure tenant onboarding</span>
+            <h1 className="text-3xl font-black tracking-tight">Welcome to PGHub</h1>
+            <p className="mt-3 max-w-xs text-sm leading-6 text-slate-500">Hi {tenantName}, complete your verified profile so your stay is smooth from day one.</p>
+            <div className="mt-7 grid w-full grid-cols-3 gap-2 text-[10px] font-semibold text-slate-600">
+              <div className="rounded-2xl bg-slate-50 p-3"><Shield className="mx-auto mb-2 h-4 w-4 text-violet-600" />Secure</div>
+              <div className="rounded-2xl bg-slate-50 p-3"><Save className="mx-auto mb-2 h-4 w-4 text-violet-600" />Auto-saved</div>
+              <div className="rounded-2xl bg-slate-50 p-3"><CheckCircle2 className="mx-auto mb-2 h-4 w-4 text-violet-600" />Easy</div>
+            </div>
+          </div>
+          <Button onClick={() => setHasStarted(true)} className="h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-sm font-bold text-white shadow-lg shadow-violet-200 hover:from-violet-700 hover:to-indigo-700">
+            Get started <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+          <p className="mt-3 text-center text-[10px] text-slate-400">Your documents are encrypted and visible only to your PG owner.</p>
+        </motion.main>
+      </div>
+    );
+  }
+
   const currentStepData = ONBOARDING_FORM_STEPS[currentStep];
   const StepIcon = STEP_ICONS[currentStepData.icon] || User;
   const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
@@ -494,11 +567,9 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
                 {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
                 {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} />}
                 {currentStep === 2 && <ContactStep formData={formData} updateField={updateField} />}
-                {currentStep === 3 && <OccupationStep formData={formData} updateField={updateField} />}
-                {currentStep === 4 && <StayStep lockedStay={lockedStay} />}
-                {currentStep === 5 && <PaymentStep formData={formData} updateField={updateField} />}
-                {currentStep === 6 && <FoodStep formData={formData} updateField={updateField} />}
-                {currentStep === 7 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} />}
+                {currentStep === 3 && <StayStep lockedStay={lockedStay} />}
+                {currentStep === 4 && <PaymentStep formData={formData} updateField={updateField} />}
+                {currentStep === 5 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} />}
               </div>
             </div>
           </motion.div>
@@ -696,47 +767,6 @@ function ContactStep({ formData, updateField }: StepProps) {
   );
 }
 
-function OccupationStep({ formData, updateField }: StepProps) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label="Occupation">
-        <Select
-          value={(formData.occupation as string) || ""}
-          onValueChange={(v) => updateField("occupation", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select occupation" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="employed">Employed</SelectItem>
-            <SelectItem value="self_employed">Self Employed</SelectItem>
-            <SelectItem value="business">Business</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Company Name">
-        <Input
-          value={(formData.company_name as string) || ""}
-          onChange={(e) => updateField("company_name", e.target.value)}
-          placeholder="Company / Institution name"
-        />
-      </Field>
-      <div className="sm:col-span-2">
-        <Field label="Office Address">
-          <Textarea
-            value={(formData.office_address as string) || ""}
-            onChange={(e) => updateField("office_address", e.target.value)}
-            placeholder="Office / College address"
-            rows={2}
-          />
-        </Field>
-      </div>
-    </div>
-  );
-}
-
 function StayStep({ lockedStay }: { lockedStay: LockedStayDetails | null }) {
   const values = [
     ["Room", lockedStay?.roomNumber || "Assigned by owner"],
@@ -813,37 +843,6 @@ function PaymentStep({ formData, updateField }: StepProps) {
           </Field>
         </>
       )}
-    </div>
-  );
-}
-
-function FoodStep({ formData, updateField }: StepProps) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label="Food Preference">
-        <Select
-          value={(formData.food_preference as string) || ""}
-          onValueChange={(v) => updateField("food_preference", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select preference" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="veg">Vegetarian</SelectItem>
-            <SelectItem value="non_veg">Non-Vegetarian</SelectItem>
-            <SelectItem value="egg">Eggetarian</SelectItem>
-            <SelectItem value="vegan">Vegan</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Dietary Restrictions">
-        <Textarea
-          value={(formData.dietary_restrictions as string) || ""}
-          onChange={(e) => updateField("dietary_restrictions", e.target.value)}
-          placeholder="Any allergies or restrictions"
-          rows={3}
-        />
-      </Field>
     </div>
   );
 }

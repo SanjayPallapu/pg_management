@@ -1,6 +1,5 @@
 // Barrel exports for the Tenant Onboarding module
 export { ProfileStatusBadge } from "./components/ProfileStatusBadge";
-export { CompleteTenantProfileDialog } from "./components/CompleteTenantProfileDialog";
 export { OwnerSharePanel } from "./components/OwnerSharePanel";
 export { VerificationPanel } from "./components/VerificationPanel";
 export { ActivityTimeline } from "./components/ActivityTimeline";
