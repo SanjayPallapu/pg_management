@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   PartyPopper,
   AlertCircle,
+  LockKeyhole,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,14 @@ interface FormData {
   [key: string]: string | boolean | undefined;
 }
 
+interface LockedStayDetails {
+  roomNumber: string;
+  bedLabel: string;
+  moveInDate: string;
+  monthlyRent: number | null;
+  securityDeposit: number | null;
+}
+
 export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingFormProps) {
   const [loading, setLoading] = useState(true);
   const [valid, setValid] = useState(false);
@@ -63,6 +72,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   const [tenantPhone, setTenantPhone] = useState("");
   const [existingProgress, setExistingProgress] = useState(0);
   const [existingStatus, setExistingStatus] = useState<string>("");
+  const [lockedStay, setLockedStay] = useState<LockedStayDetails | null>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({});
@@ -77,7 +87,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   // Per-step required fields — used to guard Next/Submit
   const STEP_REQUIRED: Record<number, string[]> = {
     0: ["full_name"],         // Personal: Full Name required
-    1: ["id_proof_type", "id_proof_number"], // Identity: type + number required
+    1: ["id_proof_type", "id_proof_number", "id_proof_url"],
     7: ["rules_acknowledged", "agreement_accepted"], // Rules: both checkboxes
   };
 
@@ -115,6 +125,13 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
     setTenantPhone(result.tenant_phone || "");
     setExistingProgress(result.form_progress || 0);
     setExistingStatus(result.onboarding_status || "");
+    setLockedStay({
+      roomNumber: result.room_number || "Assigned room",
+      bedLabel: result.bed_label || "Assigned bed",
+      moveInDate: result.move_in_date || "",
+      monthlyRent: result.monthly_rent ?? null,
+      securityDeposit: result.security_deposit_amount ?? null,
+    });
 
     // If form was already completed, show completion screen
     if (result.onboarding_status === "profile_completed" || result.onboarding_status === "pending_verification" || result.onboarding_status === "verified") {
@@ -211,6 +228,10 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
       toast.error(`${stepLabel}: "${fieldLabel}" is required`, { duration: 3000 });
+      return false;
+    }
+    if (currentStep === 1 && String(formData.id_proof_number || "").replace(/\D/g, "").length !== 12) {
+      toast.error("Enter a valid 12-digit Aadhaar number");
       return false;
     }
     return true;
@@ -471,10 +492,10 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
               {/* Render fields based on step */}
               <div className="space-y-4">
                 {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
-                {currentStep === 1 && <IdentityStep formData={formData} updateField={updateField} />}
+                {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} />}
                 {currentStep === 2 && <ContactStep formData={formData} updateField={updateField} />}
                 {currentStep === 3 && <OccupationStep formData={formData} updateField={updateField} />}
-                {currentStep === 4 && <StayStep formData={formData} updateField={updateField} />}
+                {currentStep === 4 && <StayStep lockedStay={lockedStay} />}
                 {currentStep === 5 && <PaymentStep formData={formData} updateField={updateField} />}
                 {currentStep === 6 && <FoodStep formData={formData} updateField={updateField} />}
                 {currentStep === 7 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} />}
@@ -603,42 +624,38 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
   );
 }
 
-function IdentityStep({ formData, updateField }: StepProps) {
+function IdentityStep({ token, formData, updateField }: StepProps & { token: string }) {
   return (
     <div className="space-y-4">
-      <Field label="ID Proof Type" required>
-        <Select
-          value={(formData.id_proof_type as string) || ""}
-          onValueChange={(v) => updateField("id_proof_type", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select ID type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
-            <SelectItem value="pan">PAN Card</SelectItem>
-            <SelectItem value="driving_license">Driving License</SelectItem>
-            <SelectItem value="passport">Passport</SelectItem>
-            <SelectItem value="voter_id">Voter ID</SelectItem>
-          </SelectContent>
-        </Select>
+      <Field label="Identity document" required>
+        <div className="flex h-11 items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-sm text-emerald-800">
+          <Shield className="h-4 w-4" /> Aadhaar card
+        </div>
       </Field>
       <Field label="ID Proof Number" required>
         <Input
-          value={(formData.id_proof_number as string) || ""}
-          onChange={(e) => updateField("id_proof_number", e.target.value)}
-          placeholder="Enter ID number"
+          inputMode="numeric"
+          maxLength={14}
+          value={String(formData.id_proof_number || "").replace(/(\d{4})(?=\d)/g, "$1 ")}
+          onChange={(e) => updateField("id_proof_number", e.target.value.replace(/\D/g, "").slice(0, 12))}
+          placeholder="Auto-filled after upload"
         />
       </Field>
       <FileUploadField
-        label="Upload ID Proof"
+        label="Upload Aadhaar (front or QR side)"
         field="id_proof_url"
+        token={token}
+        onAadhaarDetected={(number) => {
+          updateField("id_proof_type", "aadhaar");
+          updateField("id_proof_number", number);
+        }}
         formData={formData}
         updateField={updateField}
       />
       <FileUploadField
         label="Upload Address Proof"
         field="address_proof_url"
+        token={token}
         formData={formData}
         updateField={updateField}
       />
@@ -720,48 +737,23 @@ function OccupationStep({ formData, updateField }: StepProps) {
   );
 }
 
-function StayStep({ formData, updateField }: StepProps) {
+function StayStep({ lockedStay }: { lockedStay: LockedStayDetails | null }) {
+  const values = [
+    ["Room", lockedStay?.roomNumber || "Assigned by owner"],
+    ["Bed", lockedStay?.bedLabel || "Assigned by owner"],
+    ["Move-in date", lockedStay?.moveInDate || "Set by owner"],
+    ["Monthly rent", lockedStay?.monthlyRent != null ? `₹${lockedStay.monthlyRent.toLocaleString("en-IN")}` : "Set by owner"],
+    ["Security deposit", lockedStay?.securityDeposit != null ? `₹${lockedStay.securityDeposit.toLocaleString("en-IN")}` : "Set by owner"],
+  ];
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label="Stay Purpose">
-        <Select
-          value={(formData.stay_purpose as string) || ""}
-          onValueChange={(v) => updateField("stay_purpose", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select purpose" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="work">Work</SelectItem>
-            <SelectItem value="study">Study</SelectItem>
-            <SelectItem value="business">Business</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Expected Stay Duration">
-        <Select
-          value={(formData.expected_stay_duration as string) || ""}
-          onValueChange={(v) => updateField("expected_stay_duration", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select duration" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1-3">1-3 months</SelectItem>
-            <SelectItem value="3-6">3-6 months</SelectItem>
-            <SelectItem value="6-12">6-12 months</SelectItem>
-            <SelectItem value="12+">12+ months</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="Move-in Date">
-        <Input
-          type="date"
-          value={(formData.move_in_date as string) || ""}
-          onChange={(e) => updateField("move_in_date", e.target.value)}
-        />
-      </Field>
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-violet-950">
+        <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
+        <div><p className="text-sm font-semibold">Stay details are locked</p><p className="mt-1 text-xs text-violet-700">These details were confirmed by your PG owner. Contact them if anything is incorrect.</p></div>
+      </div>
+      <div className="overflow-hidden rounded-2xl border bg-slate-50/80">
+        {values.map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-0"><span className="text-xs text-muted-foreground">{label}</span><span className="flex items-center gap-2 text-sm font-semibold text-right"><LockKeyhole className="h-3.5 w-3.5 text-slate-400" />{value}</span></div>)}
+      </div>
     </div>
   );
 }
@@ -934,11 +926,15 @@ function FileUploadField({
   field,
   formData,
   updateField,
+  token,
+  onAadhaarDetected,
 }: {
   label: string;
   field: string;
   formData: FormData;
   updateField: (field: string, value: string) => void;
+  token: string;
+  onAadhaarDetected?: (number: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -949,8 +945,10 @@ function FileUploadField({
 
     setUploading(true);
     try {
+      if (file.size > 8 * 1024 * 1024) throw new Error("File must be smaller than 8 MB");
+      if (!file.type.startsWith("image/") && file.type !== "application/pdf") throw new Error("Use an image or PDF file");
       const fileExt = file.name.split(".").pop();
-      const fileName = `onboarding/${Date.now()}_${field}.${fileExt}`;
+      const fileName = `${token}/${Date.now()}_${field}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("tenant-onboarding-docs")
@@ -958,15 +956,21 @@ function FileUploadField({
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("tenant-onboarding-docs")
-        .getPublicUrl(uploadData.path);
-
-      updateField(field, urlData.publicUrl);
+      updateField(field, uploadData.path);
+      if (onAadhaarDetected && file.type.startsWith("image/")) {
+        const detected = await detectAadhaarNumber(file);
+        if (detected) {
+          onAadhaarDetected(detected);
+          toast.success("Aadhaar uploaded and number filled automatically");
+        } else {
+          toast.info("Aadhaar uploaded. Enter the number if the QR is not visible.");
+        }
+      } else {
       toast.success(`${label} uploaded successfully`);
+      }
     } catch (err) {
       console.error("File upload failed", err);
-      toast.error(`Failed to upload ${label}`);
+      toast.error(err instanceof Error ? err.message : `Failed to upload ${label}`);
     } finally {
       setUploading(false);
     }
@@ -1006,4 +1010,21 @@ function FileUploadField({
       </div>
     </Field>
   );
+}
+
+async function detectAadhaarNumber(file: File): Promise<string | null> {
+  try {
+    const Detector = (window as unknown as { BarcodeDetector?: new (options: { formats: string[] }) => { detect(source: ImageBitmap): Promise<Array<{ rawValue: string }>> } }).BarcodeDetector;
+    if (!Detector) return null;
+    const bitmap = await createImageBitmap(file);
+    const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap);
+    bitmap.close();
+    for (const code of codes) {
+      const match = code.rawValue.match(/(?:uid\s*=\s*["']|\b)(\d{4}\s?\d{4}\s?\d{4})(?:["']|\b)/i);
+      if (match) return match[1].replace(/\D/g, "");
+    }
+  } catch (error) {
+    console.warn("Aadhaar QR scan unavailable", error);
+  }
+  return null;
 }

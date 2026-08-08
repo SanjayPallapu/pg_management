@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useVerifyOnboarding, useOnboardingDocuments } from "../hooks/useOnboarding";
 import { getVerificationStatusLabel, type VerificationStatus } from "../types";
+import { supabase } from "@/integrations/supabase/proxyClient";
 
 interface VerificationPanelProps {
   tenantId: string;
@@ -50,6 +51,13 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
     verify.mutate({ tenantId, action: "request_reupload", rejectionReason });
     setShowRejectForm(false);
     setRejectionReason("");
+  };
+
+  const openDocument = async (path: string) => {
+    if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener,noreferrer"); return; }
+    const { data, error } = await supabase.storage.from("tenant-onboarding-docs").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) { toast.error("Could not open this document"); return; }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const statusConfig: Record<VerificationStatus, { color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -118,15 +126,13 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
                   {doc.status}
                 </Badge>
                 {doc.file_url && (
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => openDocument(doc.file_url)}
                     className="text-muted-foreground hover:text-primary transition-colors"
                     title="View document"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  </button>
                 )}
               </div>
             </div>

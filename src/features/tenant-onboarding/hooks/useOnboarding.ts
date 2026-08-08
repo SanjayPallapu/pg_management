@@ -143,7 +143,7 @@ export const useGenerateOnboardingLink = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["onboarding-profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-links"] });
+      queryClient.invalidateQueries({ queryKey: ["onboarding-link"] });
       queryClient.invalidateQueries({ queryKey: ["onboarding-timeline"] });
       toast.success("Onboarding link generated successfully");
     },
