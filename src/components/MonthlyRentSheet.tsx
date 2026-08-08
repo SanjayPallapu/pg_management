@@ -68,7 +68,7 @@ import {
 } from "@/hooks/useElectricityReadings";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from "@/utils/excelStyles";
+import { applyStyledExport, saveAndShareExcel } from "@/utils/excelStyles";
 import { toast } from "@/hooks/use-toast";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";

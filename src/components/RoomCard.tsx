@@ -46,7 +46,7 @@ import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { ProfileStatusBadge, useOnboardingProfileMap } from "@/features/tenant-onboarding";
 import { format, differenceInDays } from "date-fns";
-import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill } from "@/hooks/useElectricityReadings";
+import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill, type ElectricityReading } from "@/hooks/useElectricityReadings";
 import {
   isTenantActiveInMonth,
   isTenantActiveNow,
@@ -72,8 +72,8 @@ interface RoomCardProps {
 
 interface ACRoomPricingEditorProps {
   roomId: string;
-  reading: any;
-  setReading: any;
+  reading?: ElectricityReading;
+  setReading: ReturnType<typeof useElectricityReadings>["setReading"];
 }
 
 const ACRoomPricingEditor = ({ roomId, reading, setReading }: ACRoomPricingEditorProps) => {
@@ -244,6 +244,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
       monthLabel: string;
       pgName?: string;
       pgLogoUrl?: string;
+      calcMode?: "commercial" | "custom";
     };
   } | null>(null);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
@@ -398,7 +399,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     occupiedCount === room.capacity ? "Occupied" : occupiedCount === 0 ? "Vacant" : "Partially Occupied";
   return (
     <Card id={`room-card-${room.roomNo}`} className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
-      <CardHeader className="pb-3">
+      <CardHeader className="p-3 pb-2">
 
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -423,7 +424,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2.5 p-3 pt-0">
         {/* Occupancy Info */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
@@ -540,7 +541,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       pgName: currentPG?.name,
                       pgLogoUrl: currentPG?.logoUrl,
                       calcMode: isCustom ? ("custom" as const) : ("commercial" as const),
-                    } as any;
+                    };
                   }
                 }
                 const balance = tenant.monthlyRent - amountPaid;
@@ -554,7 +555,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   amount: tenant.monthlyRent,
                   amountPaid: amountPaid > 0 ? amountPaid : undefined,
                   balance: balance,
-                } as any);
+                });
                 setTimeout(() => {
                   setReminderDialogOpen(true);
                 }, 100);
@@ -591,6 +592,8 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 <div
                   key={tenant.id}
                   onClick={handleTenantTap}
+                  onDoubleClick={() => navigate(`/tenant-profile/${tenant.id}/details`)}
+                  title="Double-click to open full tenant details"
                   className={`flex items-center justify-between gap-2 pb-2 border-b last:border-b-0 cursor-pointer select-none ${leftThisMonth ? "opacity-60" : ""} ${getTenantBgClass()}`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">

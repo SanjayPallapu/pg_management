@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, BadgeCheck, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign,
   Clock3, Copy, FileCheck2, FileText, Home, Link2, Loader2, MessageCircle,
-  MoreHorizontal, Phone, QrCode, ReceiptText, Send, ShieldCheck, UserRound,
+  MoreHorizontal, Phone, QrCode, ReceiptText, Send, ShieldCheck, UserRound, ContactRound,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,12 @@ import {
   ActivityTimeline, OwnerSharePanel, ProfileStatusBadge, VerificationPanel,
   useOnboardingLink, useOnboardingProfile,
 } from "@/features/tenant-onboarding";
-import type { OnboardingStatus } from "@/features/tenant-onboarding/types";
+import type { OnboardingProfile, OnboardingStatus } from "@/features/tenant-onboarding/types";
 
-export type TenantProfileView = "actions" | "share" | "timeline" | "verify";
+export type TenantProfileView = "details" | "actions" | "share" | "timeline" | "verify";
 
 const views: Array<{ id: TenantProfileView; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "details", label: "Details", icon: ContactRound },
   { id: "actions", label: "Actions", icon: MoreHorizontal },
   { id: "share", label: "Share", icon: Link2 },
   { id: "timeline", label: "Timeline", icon: Clock3 },
@@ -56,7 +57,26 @@ function ActionRow({ icon: Icon, title, hint, onClick, accent = false }: {
   );
 }
 
-export default function TenantProfilePage({ view = "actions" }: { view?: TenantProfileView }) {
+function DetailRow({ label, value, sensitive = false }: { label: string; value?: string | number | null; sensitive?: boolean }) {
+  const display = value === null || value === undefined || value === "" ? "Not provided" : String(value);
+  return (
+    <div className="flex min-w-0 items-start justify-between gap-4 border-b border-border/70 py-3 last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className={cn("max-w-[65%] break-words text-right text-sm font-semibold text-foreground", sensitive && "font-mono tracking-wide")}>{display}</span>
+    </div>
+  );
+}
+
+function DetailSection({ title, icon: Icon, children }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+  return (
+    <section className="border-b border-border py-4 last:border-0">
+      <div className="mb-1 flex items-center gap-2 text-sm font-bold"><Icon className="h-4 w-4 text-violet-500" />{title}</div>
+      <div className="pl-6">{children}</div>
+    </section>
+  );
+}
+
+export default function TenantProfilePage({ view = "details" }: { view?: TenantProfileView }) {
   const { tenantId } = useParams<{ tenantId: string }>();
   const navigate = useNavigate();
   const isPreview = import.meta.env.DEV && tenantId === "preview";
@@ -65,6 +85,23 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
   const { data: link } = useOnboardingLink(isPreview ? null : tenantId || null);
   const [shareOpen, setShareOpen] = useState(false);
   const goToView = (nextView: TenantProfileView) => navigate(`/tenant-profile/${tenantId}/${nextView}`);
+  const displayedProfile: Partial<OnboardingProfile> | null = isPreview ? {
+    status: "profile_completed",
+    verification_status: "pending",
+    full_name: "Aman Verma",
+    alternate_phone: "9876543210",
+    date_of_birth: "2001-08-12",
+    gender: "male",
+    blood_group: "B+",
+    emergency_contact_name: "Ramesh Verma",
+    emergency_contact_phone: "9876543211",
+    id_proof_type: "aadhaar",
+    id_proof_number: "123456789012",
+    id_proof_url: "preview/aadhaar.png",
+    rules_acknowledged: true,
+    agreement_accepted: true,
+    completed_at: "2026-08-08T12:00:00Z",
+  } : profile;
 
   const info = useMemo(() => {
     if (isPreview) {
@@ -87,7 +124,7 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
   }
 
   const { tenant, room } = info;
-  const complete = ["profile_completed", "pending_verification", "verified"].includes(profile?.status || "");
+  const complete = ["profile_completed", "pending_verification", "verified"].includes(displayedProfile?.status || "");
   const phoneDigits = tenant.phone.replace(/\D/g, "");
   const currentView = views.find((item) => item.id === view)!;
 
@@ -97,7 +134,7 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
-          <ProfileStatusBadge status={profile?.status} size="md" />
+          <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
       </header>
 
@@ -106,7 +143,7 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
           <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xl font-black shadow-lg shadow-violet-950/40">{tenant.name.slice(0, 2).toUpperCase()}</div>
-            <div className="min-w-0 flex-1"><h2 className="truncate text-xl font-bold">{tenant.name}</h2><p className="mt-1 text-sm text-muted-foreground">Room {room.roomNo} · Bed assigned</p><div className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", complete ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/15 text-amber-600 dark:text-amber-400")}><span className={cn("h-1.5 w-1.5 rounded-full", complete ? "bg-emerald-400" : "bg-amber-400")} />{statusLabel(profile?.status)}</div></div>
+            <div className="min-w-0 flex-1"><h2 className="truncate text-xl font-bold">{tenant.name}</h2><p className="mt-1 text-sm text-muted-foreground">Room {room.roomNo} · Bed assigned</p><div className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", complete ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/15 text-amber-600 dark:text-amber-400")}><span className={cn("h-1.5 w-1.5 rounded-full", complete ? "bg-emerald-400" : "bg-amber-400")} />{statusLabel(displayedProfile?.status)}</div></div>
           </div>
           <div className="relative mt-5 grid grid-cols-3 gap-2">
             <a href={`tel:${tenant.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-muted py-3 text-xs font-semibold hover:bg-muted/70"><Phone className="h-4 w-4" />Call</a>
@@ -122,6 +159,39 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
         <AnimatePresence mode="wait">
           <motion.section key={view} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="mt-4">
             <div className="mb-2 flex items-center justify-between px-1"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-500">Tenant onboarding</p><h3 className="mt-0.5 text-lg font-bold">{currentView.label}</h3></div>{link && <span className="text-[10px] text-muted-foreground">Link active</span>}</div>
+
+            {view === "details" && (
+              <div className="rounded-2xl border border-border bg-card px-4">
+                <DetailSection title="Personal information" icon={UserRound}>
+                  <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
+                  <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+                  <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
+                  <DetailRow label="Gender" value={displayedProfile?.gender} />
+                  <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
+                  <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+                  <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+                </DetailSection>
+                <DetailSection title="Identity verification" icon={ShieldCheck}>
+                  <DetailRow label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
+                  <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+                  <DetailRow label="Submission status" value={statusLabel(displayedProfile?.status)} />
+                </DetailSection>
+                <DetailSection title="Stay and rent" icon={Home}>
+                  <DetailRow label="Room" value={room.roomNo} />
+                  <DetailRow label="Move-in date" value={tenant.startDate} />
+                  <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+                  <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+                  <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
+                  <DetailRow label="Collected by" value={tenant.securityDepositCollectedBy} />
+                </DetailSection>
+                <DetailSection title="Agreement" icon={FileCheck2}>
+                  <DetailRow label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
+                  <DetailRow label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
+                  <DetailRow label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
+                </DetailSection>
+                {complete && <Button onClick={() => goToView("verify")} className="mb-4 w-full bg-violet-600 text-white hover:bg-violet-700"><ShieldCheck className="mr-2 h-4 w-4" />Review Aadhaar and verify</Button>}
+              </div>
+            )}
 
             {view === "actions" && <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <ActionRow icon={Bell} title="Send payment reminder" hint="Notify tenant about pending rent" onClick={() => window.open(`https://wa.me/91${phoneDigits}`, "_blank", "noopener,noreferrer")} />
@@ -146,7 +216,7 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
             {view === "timeline" && <div className="rounded-2xl border border-border bg-card p-4"><ActivityTimeline tenantId={tenantId} /></div>}
             {view === "verify" && <div className="rounded-2xl border border-border bg-card p-4">
               {complete ? (
-                <VerificationPanel tenantId={tenantId} verificationStatus={profile?.verification_status || "pending"} />
+                <VerificationPanel tenantId={tenantId} verificationStatus={displayedProfile?.verification_status || "pending"} idProofUrl={displayedProfile?.id_proof_url} />
               ) : (
                 <div className="flex flex-col items-center px-4 py-10 text-center">
                   <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500"><ShieldCheck className="h-7 w-7" /></span>
@@ -160,7 +230,7 @@ export default function TenantProfilePage({ view = "actions" }: { view?: TenantP
         </AnimatePresence>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl"><div className="mx-auto grid max-w-lg grid-cols-4 gap-1">{views.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => goToView(id)} className={cn("flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold", view === id ? "bg-violet-500/15 text-violet-600 dark:text-violet-300" : "text-muted-foreground")}><Icon className="h-4 w-4" />{label}</button>)}</div></nav>
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl"><div className="mx-auto grid max-w-lg grid-cols-5 gap-1">{views.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => goToView(id)} className={cn("flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold", view === id ? "bg-violet-500/15 text-violet-600 dark:text-violet-300" : "text-muted-foreground")}><Icon className="h-4 w-4" />{label}</button>)}</div></nav>
 
       <OwnerSharePanel tenantId={tenant.id} tenantName={tenant.name} tenantPhone={tenant.phone} open={shareOpen} onOpenChange={setShareOpen} />
     </div>

@@ -31,7 +31,7 @@ import { useRentCalculations, TenantWithPayment } from '@/hooks/useRentCalculati
 import { useExpenseEntries } from '@/hooks/useExpenseEntries';
 import { isTenantActiveInMonth } from '@/utils/dateOnly';
 import { toast } from 'sonner';
-import { applyStyledExport, XLSX as styledXLSX, saveAndShareExcel } from "@/utils/excelStyles";
+import { addStyledSheet, applyStyledExport, saveAndShareExcel } from "@/utils/excelStyles";
 import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 interface ReportsProps {
@@ -166,7 +166,7 @@ export const Reports = ({ rooms }: ReportsProps) => {
     });
 
     // 3. Room & Floor Occupancy Table
-    const occupancyRows: any[] = [];
+    const occupancyRows: Array<Record<string, string | number>> = [];
     Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b).forEach((floor) => {
       const floorRooms = roomsByFloor[floor];
       floorRooms.sort((a,b) => a.roomNo.localeCompare(b.roomNo)).forEach((room) => {
@@ -184,21 +184,6 @@ export const Reports = ({ rooms }: ReportsProps) => {
       });
     });
 
-    // Generate Excel File with sheets!
-    const wb = styledXLSX.utils.book_new();
-
-    // Summary Sheet
-    const wsSummary = styledXLSX.utils.json_to_sheet(summaryRows);
-    styledXLSX.utils.book_append_sheet(wb, wsSummary, "Executive Summary");
-
-    // Outstanding Sheet
-    const wsOutstanding = styledXLSX.utils.json_to_sheet(outstandingRows.length > 0 ? outstandingRows : [{ "Status": "No outstanding rents" }]);
-    styledXLSX.utils.book_append_sheet(wb, wsOutstanding, "Outstanding Rent");
-
-    // Occupancy Sheet
-    const wsOccupancy = styledXLSX.utils.json_to_sheet(occupancyRows);
-    styledXLSX.utils.book_append_sheet(wb, wsOccupancy, "Occupancy & Rooms");
-
     // Columns styling widths
     const colWidths = [
       { wch: 25 },
@@ -215,9 +200,8 @@ export const Reports = ({ rooms }: ReportsProps) => {
       fileName: `${activeMonthName} ${selectedYear} Executive Report`,
     });
 
-    // Re-append the other sheets to finalWb
-    styledXLSX.utils.book_append_sheet(finalWb, wsOutstanding, "Outstanding Rent");
-    styledXLSX.utils.book_append_sheet(finalWb, wsOccupancy, "Occupancy & Rooms");
+    addStyledSheet(finalWb, outstandingRows.length > 0 ? outstandingRows : [{ "Status": "No outstanding rents" }], "Outstanding Rent", colWidths);
+    addStyledSheet(finalWb, occupancyRows, "Occupancy & Rooms", colWidths, { statusColumns: [5] });
 
     const fileName = `PG_Manager_Report_${activeMonthName}_${selectedYear}.xlsx`;
     await saveAndShareExcel(finalWb, fileName);

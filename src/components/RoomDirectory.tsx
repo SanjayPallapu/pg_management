@@ -137,6 +137,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
 
   // Dynamically determine floors from actual room data
   const floorData = useMemo(() => {
+    void floorNamesVersion;
     const floorsFromRooms = [...new Set(rooms.map(r => r.floor))].sort((a, b) => a - b);
     const hasGroundFloor = floorsFromRooms.includes(0);
     const pgFloors = currentPG?.floors || 3;
@@ -159,7 +160,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
         name: displayName,
       };
     });
-  }, [rooms, currentPG?.floors, currentPG?.id, acFilter, floorNamesVersion]);
+  }, [rooms, currentPG, acFilter, floorNamesVersion]);
 
   const openAddRoomsDialog = useCallback((floor: number) => {
     setSelectedFloorForRooms(floor);
@@ -298,7 +299,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             
             <div className="pt-1">
               {roomsOnFloor.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {roomsOnFloor.map(room => (
                     <RoomCard 
                       key={room.roomNo} 

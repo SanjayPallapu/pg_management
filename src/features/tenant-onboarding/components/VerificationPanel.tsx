@@ -21,9 +21,10 @@ import { supabase } from "@/integrations/supabase/proxyClient";
 interface VerificationPanelProps {
   tenantId: string;
   verificationStatus: VerificationStatus;
+  idProofUrl?: string;
 }
 
-export function VerificationPanel({ tenantId, verificationStatus }: VerificationPanelProps) {
+export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: VerificationPanelProps) {
   const verify = useVerifyOnboarding();
   const { data: documents = [] } = useOnboardingDocuments(tenantId);
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -69,6 +70,8 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
 
   const config = statusConfig[verificationStatus];
   const StatusIcon = config.icon;
+  const aadhaarDocument = documents.find((document) => document.document_type === "aadhaar" || document.document_type === "id_proof") || documents[0];
+  const documentPath = aadhaarDocument?.file_url || idProofUrl;
 
   return (
     <div className="space-y-4">
@@ -87,57 +90,33 @@ export function VerificationPanel({ tenantId, verificationStatus }: Verification
         </div>
       </div>
 
-      {/* Documents List */}
-      {documents.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-muted-foreground">Uploaded Documents ({documents.length})</div>
-          {documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex items-center justify-between p-3 rounded-lg border border-border bg-slate-50 dark:bg-slate-900/50"
-            >
+      {/* Exactly one Aadhaar document is required for onboarding. */}
+      {documentPath ? (
+        <div className="border-y border-border py-3">
+          <div className="mb-2 text-xs font-medium text-muted-foreground">Aadhaar document</div>
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {doc.document_name || doc.document_type}
-                  </div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {doc.document_type.replace(/_/g, " ")}
-                  </div>
-                  {doc.rejection_reason && (
+                  <div className="text-sm font-medium truncate">{aadhaarDocument?.document_name || "Uploaded Aadhaar"}</div>
+                  <div className="text-xs text-muted-foreground">One identity document</div>
+                  {aadhaarDocument?.rejection_reason && (
                     <div className="text-xs text-red-500 mt-0.5 italic">
-                      {doc.rejection_reason}
+                      {aadhaarDocument.rejection_reason}
                     </div>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs",
-                    doc.status === "approved" && "bg-green-500/10 text-green-600 border-green-500/30",
-                    doc.status === "rejected" && "bg-red-500/10 text-red-600 border-red-500/30",
-                    doc.status === "pending" && "bg-amber-500/10 text-amber-600 border-amber-500/30",
-                    doc.status === "re_upload_requested" && "bg-blue-500/10 text-blue-600 border-blue-500/30",
-                  )}
-                >
-                  {doc.status}
-                </Badge>
-                {doc.file_url && (
-                  <button
-                    onClick={() => openDocument(doc.file_url)}
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    title="View document"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                {aadhaarDocument?.status && <Badge variant="outline" className="text-xs capitalize">{aadhaarDocument.status.replaceAll("_", " ")}</Badge>}
+                <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="gap-1.5">
+                  <ExternalLink className="h-3.5 w-3.5" />View
+                </Button>
               </div>
             </div>
-          ))}
         </div>
+      ) : (
+        <div className="border-y border-border py-4 text-center text-xs text-muted-foreground">No Aadhaar document was attached to this submission.</div>
       )}
 
       {/* Verified success banner */}

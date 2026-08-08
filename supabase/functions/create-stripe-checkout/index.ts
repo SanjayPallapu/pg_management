@@ -8,6 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PLAN_CONFIG = {
+  manual: { amount: 499, label: "Manual" },
+  automatic: { amount: 999, label: "Automatic" },
+} as const;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -44,10 +49,10 @@ serve(async (req) => {
       });
     }
 
-    const { plan, amount, returnUrl } = await req.json();
+    const { plan, returnUrl } = await req.json();
 
-    if (!plan || !amount) {
-      return new Response(JSON.stringify({ error: "Missing plan or amount" }), {
+    if (!plan || !(plan in PLAN_CONFIG)) {
+      return new Response(JSON.stringify({ error: "Invalid plan" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -57,7 +62,15 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const origin = returnUrl || req.headers.get("origin") || "https://pg-managementt.lovable.app";
+    const planConfig = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG];
+    const allowedOrigins = new Set(["https://pgmanagee.vercel.app", Deno.env.get("APP_URL")].filter(Boolean));
+    let origin = "https://pgmanagee.vercel.app";
+    try {
+      const requestedOrigin = new URL(returnUrl || req.headers.get("origin") || origin).origin;
+      if (allowedOrigins.has(requestedOrigin) || requestedOrigin.startsWith("http://localhost:")) origin = requestedOrigin;
+    } catch {
+      // Keep the production origin for malformed or untrusted return URLs.
+    }
 
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
@@ -66,10 +79,10 @@ serve(async (req) => {
           price_data: {
             currency: "inr",
             product_data: {
-              name: `PG HUB - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
-              description: `Monthly subscription - ${plan === "automatic" ? "Automatic" : "Manual"} Plan`,
+              name: `PG HUB - ${planConfig.label} Plan`,
+              description: `Monthly subscription - ${planConfig.label} Plan`,
             },
-            unit_amount: amount * 100,
+            unit_amount: planConfig.amount * 100,
           },
           quantity: 1,
         },
@@ -86,7 +99,7 @@ serve(async (req) => {
     // Store payment request
     await supabaseAdmin.from("payment_requests").insert({
       user_id: user.id,
-      amount: amount,
+      amount: planConfig.amount,
       payment_method: "stripe",
       status: "pending",
       notes: JSON.stringify({ stripe_session_id: session.id, plan }),
