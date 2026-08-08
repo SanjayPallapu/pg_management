@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import type { Room } from "@/types";
 import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
@@ -320,7 +320,14 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                   </p>
                   <p className="truncate text-xs text-muted-foreground mt-0.5">
                     {subscription?.expiresAt ? (
-                      <>Expires on <strong className="font-bold text-foreground">{format(new Date(subscription.expiresAt), 'dd MMM yyyy')}</strong></>
+                      <>
+                        {subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Expires'} on{' '}
+                        <strong className="font-bold text-foreground">{format(new Date(subscription.expiresAt), 'dd MMM yyyy')}</strong>
+                        {(() => {
+                          const daysLeft = Math.max(0, differenceInDays(new Date(subscription.expiresAt), new Date()));
+                          return ` (${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left)`;
+                        })()}
+                      </>
                     ) : (
                       'No active expiration date'
                     )}

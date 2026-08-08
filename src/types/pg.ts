@@ -72,7 +72,7 @@ export const SUBSCRIPTION_PLANS = {
   trial: {
     name: 'Free Trial',
     price: 0,
-    periodLabel: '30 days',
+    periodLabel: '7 days',
     billingCycle: 'trial',
     maxPgs: -1,
     maxTenantsPerPg: -1,
@@ -81,7 +81,7 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Start with a full-featured 30-day free trial.',
+    description: 'Start with a full-featured 7-day free trial.',
   },
   free: {
     name: 'Free Plan',

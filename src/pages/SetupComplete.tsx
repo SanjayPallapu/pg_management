@@ -10,7 +10,7 @@ export default function SetupComplete() {
   const navigate = useNavigate();
   const { creationResult, reset } = usePGSetupDraft();
   const selectedPlanKey = sessionStorage.getItem("pgh_selected_plan") || "trial";
-  const planLabel = selectedPlanKey === "trial" ? "30-Day Free Trial Active" : selectedPlanKey === "pro" ? "Plus Pro Plan Active" : "Pro Ultimate Plan Active";
+  const planLabel = selectedPlanKey === "trial" ? "7-Day Free Trial Active" : selectedPlanKey === "pro" ? "Plus Pro Plan Active" : "Pro Ultimate Plan Active";
 
   useEffect(() => {
     if (!creationResult) navigate("/", { replace: true });

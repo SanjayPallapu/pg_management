@@ -203,7 +203,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                   ₹{(activePlanKey === 'trial' ? 0 : SUBSCRIPTION_PLANS[activePlanKey]?.price || 0).toLocaleString()}
                 </span>
                 <span className="text-xs text-muted-foreground dark:text-slate-400 ml-1">
-                  {activePlanKey === 'trial' ? '/30 days' : SUBSCRIPTION_PLANS[activePlanKey]?.periodLabel || ''}
+                  {activePlanKey === 'trial' ? '/7 days' : SUBSCRIPTION_PLANS[activePlanKey]?.periodLabel || ''}
                 </span>
                 <div className="mt-1.5">
                   <Button 

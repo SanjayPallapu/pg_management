@@ -21,7 +21,7 @@ export default function PGSetupSubscription() {
       sessionStorage.setItem("pgh_selected_plan", selectedPlan);
       toast.success(
         selectedPlan === "trial"
-          ? "30-Day Free Trial activated!"
+          ? "7-Day Free Trial activated!"
           : `${SUBSCRIPTION_PLANS[selectedPlan]?.name || "Plan"} selected!`
       );
       navigate("/setup/complete", { replace: true });
@@ -36,10 +36,10 @@ export default function PGSetupSubscription() {
   const planCards = [
     {
       key: "trial" as SubscriptionPlanKey,
-      name: "30-Day Free Trial",
+      name: "7-Day Free Trial",
       tag: "Recommended for New Users",
       price: "₹0",
-      period: "for 30 days",
+      period: "for 7 days",
       badgeStyle: "bg-emerald-500 text-white font-extrabold",
       cardStyle: "border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/30",
       icon: <Clock className="h-5 w-5 text-emerald-600 shrink-0" />,
@@ -99,7 +99,7 @@ export default function PGSetupSubscription() {
         {/* Scrollable Plan Selection Cards Area */}
         <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-3 my-2 pr-0.5">
           <div className="text-center pt-1 pb-1">
-            <h2 className="text-lg font-black text-slate-900 leading-tight">Start with 30 Days Free</h2>
+            <h2 className="text-lg font-black text-slate-900 leading-tight">Start with 7 Days Free</h2>
             <p className="text-xs text-slate-500 font-medium">Select a plan to start managing your PG seamlessly.</p>
           </div>
 

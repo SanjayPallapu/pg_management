@@ -161,7 +161,11 @@ export default function SubscriptionPage() {
             <p className="text-xs font-extrabold uppercase tracking-wide text-violet-600 dark:text-violet-300">Subscription Status</p>
             <p className="text-sm font-black">
               {subscription?.expiresAt ? (
-                <>Expires on <span className="text-primary">{format(new Date(subscription.expiresAt), 'dd MMMM yyyy')}</span> {daysLeft !== null && `(${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining)`}</>
+                <>
+                  {subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Expires'} on{' '}
+                  <span className="text-primary">{format(new Date(subscription.expiresAt), 'dd MMMM yyyy')}</span>{' '}
+                  {daysLeft !== null && `(${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining)`}
+                </>
               ) : (
                 'Free Plan (No active expiration date)'
               )}

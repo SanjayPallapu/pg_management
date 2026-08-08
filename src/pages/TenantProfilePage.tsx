@@ -74,7 +74,7 @@ function DetailSection({ title, icon: Icon, children }: { title: string; icon: R
   return (
     <section className="border-b border-border py-4 last:border-0">
       <div className="mb-1 flex items-center gap-2 text-sm font-bold"><Icon className="h-4 w-4 text-violet-500" />{title}</div>
-      <div className="pl-6">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
@@ -219,7 +219,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
         <AnimatePresence mode="wait">
           <motion.section key={view} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="mt-4">
-            <div className="mb-2 flex items-center justify-between px-1"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-500">Tenant onboarding</p><h3 className="mt-0.5 text-lg font-bold">{currentView.label}</h3></div>{link && <span className="text-[10px] text-muted-foreground">Link active</span>}</div>
+
 
             {view === "details" && (
               <div className="rounded-2xl border border-border bg-card px-4">
