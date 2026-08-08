@@ -22,7 +22,7 @@ import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 import { WelcomeDialog } from '@/components/WelcomeDialog';
 import { RulesShareDialog } from '@/components/RulesShareDialog';
 import { useBackGesture } from '@/hooks/useBackGesture';
-import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
+import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -663,7 +663,10 @@ interface TenantSelectItemProps {
 
 const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false, rooms, onWelcome, onRules }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const onboardingProfileMap = useOnboardingProfileMap();
-  const bgClass = categoryColor === 'pending' 
+  const isPartiallyPaid = (tenant.amountPaid || 0) > 0;
+  const bgClass = isPartiallyPaid
+    ? 'bg-amber-500/10 border-amber-500/30 border-l-amber-500'
+    : categoryColor === 'pending' 
     ? 'bg-red-500/10 border-red-500/20 border-l-red-500'
     : categoryColor === 'amber'
     ? 'bg-amber-500/10 border-amber-500/20 border-l-amber-500'
@@ -681,9 +684,10 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate text-sm font-bold">{tenant.name}</span>
-            <ProfileStatusBadge status={onboardingProfileMap.get(tenant.id)?.status} size="sm" />
-            {(tenant.amountPaid || 0) > 0 && (
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">Partially paid</span>
+            {isPartiallyPaid && (
+              <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 shadow-xs">
+                Partially paid
+              </span>
             )}
             {isSelected && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
@@ -764,7 +768,9 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-8">
-          <span className="text-sm font-extrabold text-foreground">₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}</span>
+          <span className={isPartiallyPaid ? "text-sm font-extrabold text-amber-600 dark:text-amber-400" : "text-sm font-extrabold text-foreground"}>
+            ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
+          </span>
           <Button
             type="button"
             variant="outline"
