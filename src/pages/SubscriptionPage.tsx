@@ -120,7 +120,7 @@ export default function SubscriptionPage() {
   return (
     <div className="flex min-h-screen flex-col bg-muted/20 text-foreground">
       {/* Top Full Screen Header Bar */}
-      <header className="sticky top-0 z-30 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-3 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur sm:px-4">
+      <header className="sticky top-0 z-30 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-2 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur">
         <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Button
@@ -150,7 +150,7 @@ export default function SubscriptionPage() {
       </header>
 
       {/* Main Full-Screen Body */}
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-3 py-4 pb-10 sm:px-4">
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-1.5 py-4 pb-10">
         
         {/* Active Trial Notification Banner */}
         {isTrialActive && (

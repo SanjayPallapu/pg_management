@@ -42,6 +42,7 @@ import {
   Loader2,
   ArrowLeft,
   FileBarChart,
+  ContactRound,
 } from "lucide-react";
 import {
   Sheet,
@@ -333,6 +334,12 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 }
               />
               <SettingItem
+                icon={<ContactRound className="h-4 w-4 text-primary" />}
+                label="Tenant Profiles"
+                description="Completed and incomplete tenant profiles"
+                onClick={() => navigate('/tenant-profiles')}
+              />
+              <SettingItem
                 icon={<Bell className="h-4 w-4 text-primary" />}
                 label="Notifications"
                 description="Manage push notification preferences"
@@ -575,7 +582,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 </SheetTitle>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-2.5 py-3 bg-background">
+            <div className="flex-1 overflow-y-auto px-1 py-3 bg-background">
               <Reports rooms={rooms} />
             </div>
           </div>

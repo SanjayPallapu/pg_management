@@ -1053,6 +1053,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 <ProfileStatusBadge
                                   status={onboardingProfileMap.get(tenant.id)?.status}
                                   size="sm"
+                                  showLabel={false}
                                   onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
                                 />
                                 {isNewTenant(tenant.startDate) && !tenant.endDate && (
@@ -1210,6 +1211,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                       >
                                         <MessageSquare className="h-4 w-4" />
                                         Chat with Tenant
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
+                                        className="gap-2"
+                                      >
+                                        <ClipboardList className="h-4 w-4" />
+                                        {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
                                       </DropdownMenuItem>
                                       {!isPaid && (
                                         <DropdownMenuItem

@@ -23,6 +23,7 @@ import SubscriptionPage from "./pages/SubscriptionPage";
 import AppMenuPage from "./pages/AppMenuPage";
 import ReferralPage from "./pages/ReferralPage";
 import TenantProfilePage from "./pages/TenantProfilePage";
+import TenantProfilesPage from "./pages/TenantProfilesPage";
 import { lazy, Suspense } from "react";
 const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
@@ -130,6 +131,7 @@ const AppContent = () => {
           <Route path="/tenant-profile/:tenantId/share" element={<ProtectedRoute><TenantProfilePage view="share" /></ProtectedRoute>} />
           <Route path="/tenant-profile/:tenantId/timeline" element={<ProtectedRoute><TenantProfilePage view="timeline" /></ProtectedRoute>} />
           <Route path="/tenant-profile/:tenantId/verify" element={<ProtectedRoute><TenantProfilePage view="verify" /></ProtectedRoute>} />
+          <Route path="/tenant-profiles" element={<ProtectedRoute><TenantProfilesPage /></ProtectedRoute>} />
           <Route path="/tenant-onboarding/:token" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <TenantOnboardingFormPage />

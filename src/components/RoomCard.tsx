@@ -399,7 +399,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     occupiedCount === room.capacity ? "Occupied" : occupiedCount === 0 ? "Vacant" : "Partially Occupied";
   return (
     <Card id={`room-card-${room.roomNo}`} className="transition-all hover:shadow-md overflow-hidden w-full min-w-0 rounded-sm">
-      <CardHeader className="p-3 pb-2">
+      <CardHeader className="p-2 pb-1.5">
 
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -424,7 +424,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-2.5 p-3 pt-0">
+      <CardContent className="space-y-2 p-2 pt-0">
         {/* Occupancy Info */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
@@ -606,6 +606,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                         <ProfileStatusBadge
                           status={onboardingProfileMap.get(tenant.id)?.status}
                           size="sm"
+                          showLabel={false}
                           onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
                         />
                         {isNew && !leftThisMonth && (
@@ -651,11 +652,11 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                          onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
                           className="gap-2"
                         >
-                          <User className="h-4 w-4" />
-                          Open Profile
+                          <FileText className="h-4 w-4" />
+                          {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
                         </DropdownMenuItem>
                         {(isPaid || isPartial) && (
                           <DropdownMenuItem onClick={handlePaidClick} className="gap-2">

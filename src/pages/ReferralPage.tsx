@@ -90,7 +90,7 @@ export default function ReferralPage() {
         <span className="pointer-events-none absolute left-1/3 -bottom-10 h-32 w-32 rounded-full bg-purple-400/20" aria-hidden="true" />
 
         {/* Header bar */}
-        <header className="relative z-10 flex items-center gap-3 px-4 pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-2">
+        <header className="relative z-10 flex items-center gap-3 px-2 pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-2">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -106,12 +106,14 @@ export default function ReferralPage() {
         </header>
 
         {/* Illustration */}
-        <div className="relative z-10 px-6 pb-6 pt-2">
-          <img
-            src="/refer-hero.png"
-            alt="Two PG owners sharing a referral reward"
-            className="mx-auto h-[200px] w-full max-w-[360px] object-contain drop-shadow-2xl"
-          />
+        <div className="relative z-10 px-2 pb-6 pt-2">
+          <div className="mx-auto h-[205px] w-full max-w-[420px] overflow-hidden rounded-[32px] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-sm">
+            <img
+              src="/refer-hero.png"
+              alt="Two PG owners sharing a referral reward"
+              className="h-full w-full object-cover object-center"
+            />
+          </div>
           <div className="text-center mt-2">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur border border-white/20 px-3 py-1 mb-3">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -129,7 +131,7 @@ export default function ReferralPage() {
       </div>
 
       {/* Stats strip */}
-      <div className="mx-4 -mt-4 relative z-20 grid grid-cols-3 gap-2.5">
+      <div className="mx-2 -mt-4 relative z-20 grid grid-cols-3 gap-2">
         {[
           { icon: Users, value: stats.totalInvited, label: "Invited", color: "text-blue-600 dark:text-blue-300", bg: "bg-blue-500/10" },
           { icon: UserPlus, value: stats.activePaidReferrals, label: "Joined", color: "text-emerald-600 dark:text-emerald-300", bg: "bg-emerald-500/10" },
@@ -152,7 +154,7 @@ export default function ReferralPage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-10 space-y-3">
+      <div className="flex-1 overflow-y-auto px-2 pt-4 pb-10 space-y-3">
         {/* Invite code card */}
         <section className="rounded-3xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">

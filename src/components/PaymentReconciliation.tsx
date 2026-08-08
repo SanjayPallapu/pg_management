@@ -519,7 +519,7 @@ export const PaymentReconciliation = ({
   const renderContent = () => (
     <>
       {!standalone && (
-        <SheetHeader className="pb-2 px-4 pt-4 border-b bg-background">
+        <SheetHeader className="pb-2 px-2 pt-4 border-b bg-background">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">
               Payment Reconciliation
@@ -531,7 +531,7 @@ export const PaymentReconciliation = ({
         </SheetHeader>
       )}
 
-      <div className={standalone ? "" : "px-4 pb-4 mt-2"}>
+      <div className={standalone ? "" : "px-1.5 pb-4 mt-2"}>
         <div>
           <div className="space-y-4">
             {/* Date Range Filter */}
