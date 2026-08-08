@@ -5,7 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "./", // KEEP this for Vercel
+  // Root-relative assets keep direct SPA routes working on Vercel. Capacitor
+  // also serves the bundle from its local origin, so `/assets/*` remains valid.
+  base: "/",
   // Vercel/Supabase variables use NEXT_PUBLIC_, while local Vite setups use VITE_.
   envPrefix: ["VITE_", "NEXT_PUBLIC_"],
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
