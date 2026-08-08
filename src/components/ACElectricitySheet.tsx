@@ -295,7 +295,7 @@ export const ACElectricitySheet = ({
                   </div>
                   <div className="w-full overflow-hidden rounded-2xl shadow-lg border border-white/20">
                     <img
-                      src="/ac-bill-hero.png"
+                      src="/ac-bill-banner.png"
                       alt="AC Electricity Billing"
                       className="w-full h-auto max-h-[160px] object-cover object-center"
                     />
