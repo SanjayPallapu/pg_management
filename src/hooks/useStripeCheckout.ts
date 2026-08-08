@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 interface StripeCheckoutOptions {
   plan: "manual" | "automatic";
-  amount: number;
   onSuccess?: () => void;
   onFailure?: () => void;
 }
@@ -13,7 +12,7 @@ export const useStripeCheckout = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const initiateCheckout = useCallback(
-    async ({ plan, amount, onSuccess, onFailure }: StripeCheckoutOptions) => {
+    async ({ plan, onSuccess, onFailure }: StripeCheckoutOptions) => {
       setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -26,7 +25,6 @@ export const useStripeCheckout = () => {
         const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
           body: {
             plan,
-            amount,
             returnUrl: window.location.origin,
           },
         });

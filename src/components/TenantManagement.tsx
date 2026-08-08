@@ -347,8 +347,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       if (contact) {
         handleContactSelected(contact.name, contact.phones);
       }
-    } catch (err: any) {
-      const errStr = String(err?.message || err?.name || '').toLowerCase();
+    } catch (err: unknown) {
+      const caughtError = err instanceof Error ? err : null;
+      const errStr = String(caughtError?.message || caughtError?.name || '').toLowerCase();
       if (errStr.includes('cancel') || errStr.includes('abort') || errStr.includes('dismiss')) {
         return; // User cancelled native picker, do nothing
       }
@@ -361,11 +362,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       try {
         const list = await getDeviceContacts();
         setDeviceContacts(list);
-      } catch (listErr: any) {
+      } catch (listErr: unknown) {
         console.error("Failed to load device contacts list:", listErr);
         toast({
           title: "Failed to access contacts",
-          description: listErr?.message || "Please check your contacts permissions in device Settings.",
+          description: listErr instanceof Error ? listErr.message : "Please check your contacts permissions in device Settings.",
           variant: "destructive",
         });
         setCustomContactPickerOpen(false);
@@ -433,10 +434,10 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
     try {
       await addTenant.mutateAsync({ roomId: room.id, roomNo: room.roomNo, tenant });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Failed to add tenant",
-        description: err?.message || "Please try again",
+        description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       });
       return;
@@ -450,7 +451,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
       await updateRoom.mutateAsync({
         ...room,
-        status: newStatus as any,
+        status: newStatus,
       });
     } catch {
       // Ignore: rooms query refetch will recompute status in UI anyway.
@@ -504,7 +505,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
     await updateRoom.mutateAsync({
       ...room,
       tenants: updatedTenants,
-      status: newStatus as any,
+      status: newStatus,
     });
 
 
@@ -987,8 +988,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   return (
                     <div
                       key={tenant.id}
+                      onDoubleClick={() => {
+                        if (!isEditing) navigate(`/tenant-profile/${tenant.id}/details`);
+                      }}
+                      title={isEditing ? undefined : "Double-click to open full tenant details"}
                       className={cn(
-                        "p-4 border rounded-xl space-y-3 transition-all duration-200",
+                        "p-3 border rounded-xl space-y-3 transition-all duration-200",
+                        !isEditing && "cursor-pointer",
                         getTenantStyles(tenant).card,
                         isEditing && "ring-2 ring-primary scale-[1.02]",
                       )}

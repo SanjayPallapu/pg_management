@@ -122,9 +122,10 @@ const AppContent = () => {
           <Route path="/auth/email" element={<EmailAuth />} />
           <Route path="/tenant-profile/:tenantId" element={
             <ProtectedRoute>
-              <TenantProfilePage view="actions" />
+              <TenantProfilePage view="details" />
             </ProtectedRoute>
           } />
+          <Route path="/tenant-profile/:tenantId/details" element={<ProtectedRoute><TenantProfilePage view="details" /></ProtectedRoute>} />
           <Route path="/tenant-profile/:tenantId/actions" element={<ProtectedRoute><TenantProfilePage view="actions" /></ProtectedRoute>} />
           <Route path="/tenant-profile/:tenantId/share" element={<ProtectedRoute><TenantProfilePage view="share" /></ProtectedRoute>} />
           <Route path="/tenant-profile/:tenantId/timeline" element={<ProtectedRoute><TenantProfilePage view="timeline" /></ProtectedRoute>} />

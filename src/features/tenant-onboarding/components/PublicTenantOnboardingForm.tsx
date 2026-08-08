@@ -569,7 +569,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
                 {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
                 {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} />}
                 {currentStep === 2 && <StayStep lockedStay={lockedStay} />}
-                {currentStep === 3 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} />}
+                {currentStep === 3 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} lockedStay={lockedStay} />}
               </div>
             </div>
           </motion.div>
@@ -748,7 +748,7 @@ function StayStep({ lockedStay }: { lockedStay: LockedStayDetails | null }) {
     ["Bed", lockedStay?.bedLabel || "Assigned by owner"],
     ["Move-in date", lockedStay?.moveInDate || "Set by owner"],
     ["Monthly rent", lockedStay?.monthlyRent != null ? `₹${lockedStay.monthlyRent.toLocaleString("en-IN")}` : "Set by owner"],
-    ["Security deposit", lockedStay?.securityDeposit != null ? `₹${lockedStay.securityDeposit.toLocaleString("en-IN")}` : "Set by owner"],
+    ["Security deposit", `₹${Number(lockedStay?.securityDeposit ?? 0).toLocaleString("en-IN")}`],
   ];
   return (
     <div className="space-y-4">
@@ -756,14 +756,14 @@ function StayStep({ lockedStay }: { lockedStay: LockedStayDetails | null }) {
         <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-300" />
         <div><p className="text-sm font-semibold">Stay details are locked</p><p className="mt-1 text-xs text-violet-700 dark:text-violet-300">These details were confirmed by your PG owner. Contact them if anything is incorrect.</p></div>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+      <div className="border-y border-slate-200 dark:border-white/10">
         {values.map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5 last:border-0 dark:border-white/10"><span className="text-xs text-slate-500 dark:text-slate-400">{label}</span><span className="flex items-center gap-2 text-right text-sm font-semibold text-slate-900 dark:text-slate-100"><LockKeyhole className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />{value}</span></div>)}
       </div>
     </div>
   );
 }
 
-function RulesStep({ formData, updateField, tenantName, pgName, rules }: StepProps & { tenantName: string; pgName: string; rules: Rule[] }) {
+function RulesStep({ formData, updateField, tenantName, pgName, rules, lockedStay }: StepProps & { tenantName: string; pgName: string; rules: Rule[]; lockedStay: LockedStayDetails | null }) {
   return (
     <div className="space-y-6">
       <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
@@ -796,6 +796,30 @@ function RulesStep({ formData, updateField, tenantName, pgName, rules }: StepPro
           </article>
         ))}
       </div>
+
+      <section aria-labelledby="review-heading">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div><h3 id="review-heading" className="text-sm font-bold">Review before submitting</h3><p className="text-xs text-muted-foreground">Confirm these details are correct. Use Back to make changes.</p></div>
+          <User className="h-5 w-5 shrink-0 text-violet-500" />
+        </div>
+        <div className="border-y border-border">
+          {[
+            ["Full name", formData.full_name || "Not provided"],
+            ["Phone number", formData.alternate_phone || "Not provided"],
+            ["Emergency phone", formData.emergency_contact_phone || "Not provided"],
+            ["Aadhaar number", formData.id_proof_number ? String(formData.id_proof_number).replace(/(\d{4})(?=\d)/g, "$1 ") : "Not provided"],
+            ["Aadhaar file", formData.id_proof_url ? "Uploaded" : "Not uploaded"],
+            ["Room", lockedStay?.roomNumber || "Assigned by owner"],
+            ["Monthly rent", lockedStay?.monthlyRent == null ? "Set by owner" : `₹${lockedStay.monthlyRent.toLocaleString("en-IN")}`],
+            ["Security deposit", `₹${Number(lockedStay?.securityDeposit ?? 0).toLocaleString("en-IN")}`],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="flex items-start justify-between gap-4 border-b border-border py-2.5 last:border-0">
+              <span className="text-xs text-muted-foreground">{String(label)}</span>
+              <span className="max-w-[65%] break-words text-right text-sm font-semibold">{String(value)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="space-y-4">
         <label className="flex items-start gap-3 cursor-pointer">

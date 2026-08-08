@@ -153,15 +153,50 @@ Deno.serve(async (req) => {
 
     // Check if this is a Tenant Rent Order creation vs SaaS Subscription
     if (body.payment_type === "tenant_rent" || body.tenant_id) {
-      const { amount, tenant_id, month, year, tenant_payment_id } = body;
-      if (!amount || amount <= 0 || !tenant_id) {
+      const { tenant_id, month, year, tenant_payment_id } = body;
+      if (!tenant_id) {
         return new Response(JSON.stringify({ error: "Invalid tenant rent payment details" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const amountPaise = Math.round(amount * 100);
+      const { data: ownedTenant, error: tenantError } = await supabase
+        .from("tenants")
+        .select("id, monthly_rent")
+        .eq("id", tenant_id)
+        .maybeSingle();
+      if (tenantError || !ownedTenant) {
+        return new Response(JSON.stringify({ error: "Tenant does not belong to this user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let authoritativeAmount = Number(ownedTenant.monthly_rent);
+      if (tenant_payment_id) {
+        const { data: paymentRecord, error: paymentError } = await supabase
+          .from("tenant_payments")
+          .select("id, tenant_id, amount, amount_paid")
+          .eq("id", tenant_payment_id)
+          .eq("tenant_id", tenant_id)
+          .maybeSingle();
+        if (paymentError || !paymentRecord) {
+          return new Response(JSON.stringify({ error: "Invalid tenant payment record" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        authoritativeAmount = Math.max(0, Number(paymentRecord.amount) - Number(paymentRecord.amount_paid || 0));
+      }
+      if (!Number.isFinite(authoritativeAmount) || authoritativeAmount <= 0) {
+        return new Response(JSON.stringify({ error: "No outstanding rent amount" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const amountPaise = Math.round(authoritativeAmount * 100);
       const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
         method: "POST",
         headers: {
