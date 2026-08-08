@@ -26,6 +26,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/hooks/use-toast';
 import { usePG } from '@/contexts/PGContext';
 import { DEFAULT_RULES, getStoredPGRules, getStoredRulesLanguage, saveStoredPGRules, saveStoredRulesLanguage, type Rule, type RulesLanguage } from '@/lib/pgRules';
+import { supabase as typedSupabase } from '@/integrations/supabase/proxyClient';
+
+// The onboarding_rules column is deployed ahead of generated database types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
 
 interface PGRulesCardProps {
   defaultOpen?: boolean;
@@ -64,15 +69,53 @@ export const PGRulesCard = ({ onEditableTemplate, defaultOpen = false, onClose, 
   const getRuleDetails = (rule: Rule) => language === 'te' && rule.detailsTe ? rule.detailsTe : rule.details;
 
   useEffect(() => {
-    setRules(getStoredPGRules(currentPG?.id));
+    let cancelled = false;
+    const loadPropertyRules = async () => {
+      const localRules = getStoredPGRules(currentPG?.id);
+      if (!currentPG?.id) {
+        setRules(localRules);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('pgs')
+        .select('onboarding_rules')
+        .eq('id', currentPG.id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      const remoteRules = Array.isArray(data?.onboarding_rules) ? data.onboarding_rules as Rule[] : [];
+      if (!error && remoteRules.length > 0) {
+        setRules(remoteRules);
+        saveStoredPGRules(currentPG.id, remoteRules);
+        return;
+      }
+
+      setRules(localRules);
+      if (!error) {
+        await supabase.from('pgs').update({ onboarding_rules: localRules }).eq('id', currentPG.id);
+      }
+    };
+
+    void loadPropertyRules();
     setLanguage(getStoredRulesLanguage(currentPG?.id));
     setEditingRule(null);
     setEditMode(false);
+    return () => { cancelled = true; };
   }, [currentPG?.id]);
 
   const persistRules = (nextRules: Rule[]) => {
     setRules(nextRules);
     saveStoredPGRules(currentPG?.id, nextRules);
+    if (currentPG?.id) {
+      void supabase
+        .from('pgs')
+        .update({ onboarding_rules: nextRules })
+        .eq('id', currentPG.id)
+        .then(({ error }: { error: { message?: string } | null }) => {
+          if (error) toast({ title: 'Could not sync property rules', description: error.message || 'Please try again.' });
+        });
+    }
   };
 
   const handleLanguageChange = (nextLanguage: RulesLanguage) => {

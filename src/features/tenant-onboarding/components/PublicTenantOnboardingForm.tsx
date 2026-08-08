@@ -35,6 +35,7 @@ const supabase = typedSupabase as any;
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
+import { DEFAULT_RULES, type Rule } from "@/lib/pgRules";
 import { MedalBadgeIcon } from "./MedalBadgeIcon";
 import onboardingBuilding from "@/assets/pg-hub/hub-building-hero.png";
 
@@ -74,6 +75,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
   const [existingProgress, setExistingProgress] = useState(0);
   const [existingStatus, setExistingStatus] = useState<string>("");
   const [lockedStay, setLockedStay] = useState<LockedStayDetails | null>(null);
+  const [pgName, setPgName] = useState("Your PG");
+  const [pgRules, setPgRules] = useState<Rule[]>(DEFAULT_RULES);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({});
@@ -88,7 +91,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   // Per-step required fields — used to guard Next/Submit
   const STEP_REQUIRED: Record<number, string[]> = {
-    0: ["full_name"],         // Personal: Full Name required
+    0: ["full_name", "emergency_contact_phone"],
     1: ["id_proof_type", "id_proof_number", "id_proof_url"],
     5: ["rules_acknowledged", "agreement_accepted"],
   };
@@ -120,7 +123,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
     if (!data || data.length === 0) {
       setValid(false);
-      setError("Invalid or expired onboarding link.");
+      setError("This onboarding link does not exist or was revoked. Please ask your PG owner for a new link.");
       setLoading(false);
       return;
     }
@@ -144,6 +147,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       monthlyRent: result.monthly_rent ?? null,
       securityDeposit: result.security_deposit_amount ?? null,
     });
+    setPgName(result.pg_name || "Your PG");
+    setPgRules(Array.isArray(result.pg_rules) && result.pg_rules.length > 0 ? result.pg_rules : DEFAULT_RULES);
 
     // If form was already completed, show completion screen
     if (result.onboarding_status === "profile_completed" || result.onboarding_status === "pending_verification" || result.onboarding_status === "verified") {
@@ -257,6 +262,14 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       toast.error("Enter a valid 12-digit Aadhaar number");
       return false;
     }
+    if (currentStep === 0 && String(formData.emergency_contact_phone || "").length !== 10) {
+      toast.error("Emergency contact phone must be exactly 10 digits");
+      return false;
+    }
+    if (currentStep === 2 && formData.alternate_phone && String(formData.alternate_phone).length !== 10) {
+      toast.error("Alternate phone must be exactly 10 digits");
+      return false;
+    }
     return true;
   };
 
@@ -326,6 +339,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
           </div>
           <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <Button type="button" variant="outline" onClick={validateToken}>Try again</Button>
         </div>
       </div>
     );
@@ -558,7 +572,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
                 {currentStep === 2 && <ContactStep formData={formData} updateField={updateField} />}
                 {currentStep === 3 && <StayStep lockedStay={lockedStay} />}
                 {currentStep === 4 && <PaymentStep formData={formData} updateField={updateField} />}
-                {currentStep === 5 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} />}
+                {currentStep === 5 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} />}
               </div>
             </div>
           </motion.div>
@@ -672,12 +686,14 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
           placeholder="Emergency contact person"
         />
       </Field>
-      <Field label="Emergency Contact Phone">
+      <Field label="Emergency Contact Phone" required>
         <Input
           type="tel"
+          inputMode="numeric"
+          maxLength={10}
           value={(formData.emergency_contact_phone as string) || ""}
-          onChange={(e) => updateField("emergency_contact_phone", e.target.value)}
-          placeholder="Emergency contact number"
+          onChange={(e) => updateField("emergency_contact_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+          placeholder="10-digit phone number"
         />
       </Field>
     </div>
@@ -712,13 +728,9 @@ function IdentityStep({ token, formData, updateField }: StepProps & { token: str
         formData={formData}
         updateField={updateField}
       />
-      <FileUploadField
-        label="Upload Address Proof"
-        field="address_proof_url"
-        token={token}
-        formData={formData}
-        updateField={updateField}
-      />
+      <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-muted-foreground dark:bg-white/5">
+        Upload one clear Aadhaar image or PDF. No separate address-proof file is required.
+      </p>
     </div>
   );
 }
@@ -726,7 +738,7 @@ function IdentityStep({ token, formData, updateField }: StepProps & { token: str
 function ContactStep({ formData, updateField }: StepProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label="Email Address">
+      <Field label="Email Address — optional">
         <Input
           type="email"
           value={(formData.email as string) || ""}
@@ -737,21 +749,13 @@ function ContactStep({ formData, updateField }: StepProps) {
       <Field label="Alternate Phone">
         <Input
           type="tel"
+          inputMode="numeric"
+          maxLength={10}
           value={(formData.alternate_phone as string) || ""}
-          onChange={(e) => updateField("alternate_phone", e.target.value)}
-          placeholder="Alternate phone number"
+          onChange={(e) => updateField("alternate_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+          placeholder="10-digit phone number"
         />
       </Field>
-      <div className="sm:col-span-2">
-        <Field label="Permanent Address">
-          <Textarea
-            value={(formData.permanent_address as string) || ""}
-            onChange={(e) => updateField("permanent_address", e.target.value)}
-            placeholder="Enter your permanent address"
-            rows={3}
-          />
-        </Field>
-      </div>
     </div>
   );
 }
@@ -836,19 +840,38 @@ function PaymentStep({ formData, updateField }: StepProps) {
   );
 }
 
-function RulesStep({ formData, updateField, tenantName }: StepProps & { tenantName: string }) {
+function RulesStep({ formData, updateField, tenantName, pgName, rules }: StepProps & { tenantName: string; pgName: string; rules: Rule[] }) {
   return (
     <div className="space-y-6">
       <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
         <div className="flex items-start gap-3">
           <ScrollText className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-bold mb-1">PG Rules & Agreement</h3>
+            <h3 className="text-sm font-bold mb-1">{pgName} Rules & Regulations</h3>
             <p className="text-xs text-muted-foreground">
-              Please review and accept the following terms to complete your onboarding.
+              These rules are maintained by your PG property. Review them before accepting.
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="max-h-80 space-y-3 overflow-y-auto rounded-2xl border bg-slate-50/70 p-3 dark:bg-white/[0.03]">
+        {rules.map((rule, index) => (
+          <article key={rule.id || String(index)} className="rounded-xl border bg-background p-3 shadow-sm">
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xs font-bold text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">{index + 1}</span>
+              <div className="min-w-0">
+                <h4 className="text-sm font-semibold">{rule.title}</h4>
+                {rule.description && <p className="mt-0.5 text-xs text-muted-foreground">{rule.description}</p>}
+                {rule.details.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-foreground/80">
+                    {rule.details.map((detail, detailIndex) => <li key={detailIndex} className="flex gap-2"><Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" /><span>{detail}</span></li>)}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
       </div>
 
       <div className="space-y-4">
