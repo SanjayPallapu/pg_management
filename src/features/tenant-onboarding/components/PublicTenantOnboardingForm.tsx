@@ -86,17 +86,6 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const restoreDark = root.classList.contains("dark");
-    root.classList.remove("dark");
-    root.style.colorScheme = "light";
-    return () => {
-      if (restoreDark) root.classList.add("dark");
-      root.style.colorScheme = "";
-    };
-  }, []);
-
   // Per-step required fields — used to guard Next/Submit
   const STEP_REQUIRED: Record<number, string[]> = {
     0: ["full_name"],         // Personal: Full Name required
@@ -397,11 +386,11 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
   if (!hasStarted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fbfaff] p-5 text-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-[#fbfaff] p-5 text-slate-950 dark:bg-[#090d16] dark:text-slate-100">
         <motion.main
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex min-h-[min(760px,calc(100vh-40px))] w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-violet-100 bg-white p-6 shadow-2xl shadow-violet-200/40"
+          className="flex min-h-[min(760px,calc(100vh-40px))] w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-violet-100 bg-white p-6 shadow-2xl shadow-violet-200/40 dark:border-white/10 dark:bg-[#121824] dark:shadow-black/30"
         >
           <div className="flex items-center gap-2 text-sm font-black text-violet-700">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white"><Home className="h-4 w-4" /></span>
@@ -418,17 +407,17 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
             />
             <span className="mb-3 rounded-full bg-violet-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600">Secure tenant onboarding</span>
             <h1 className="text-3xl font-black tracking-tight">Welcome to PGHub</h1>
-            <p className="mt-3 max-w-xs text-sm leading-6 text-slate-500">Hi {tenantName}, complete your verified profile so your stay is smooth from day one.</p>
-            <div className="mt-7 grid w-full grid-cols-3 gap-2 text-[10px] font-semibold text-slate-600">
-              <div className="rounded-2xl bg-slate-50 p-3"><Shield className="mx-auto mb-2 h-4 w-4 text-violet-600" />Secure</div>
-              <div className="rounded-2xl bg-slate-50 p-3"><Save className="mx-auto mb-2 h-4 w-4 text-violet-600" />Auto-saved</div>
-              <div className="rounded-2xl bg-slate-50 p-3"><CheckCircle2 className="mx-auto mb-2 h-4 w-4 text-violet-600" />Easy</div>
+            <p className="mt-3 max-w-xs text-sm leading-6 text-slate-500 dark:text-slate-400">Hi {tenantName}, complete your verified profile so your stay is smooth from day one.</p>
+            <div className="mt-7 grid w-full grid-cols-3 gap-2 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/5"><Shield className="mx-auto mb-2 h-4 w-4 text-violet-600 dark:text-violet-400" />Secure</div>
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/5"><Save className="mx-auto mb-2 h-4 w-4 text-violet-600 dark:text-violet-400" />Auto-saved</div>
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/5"><CheckCircle2 className="mx-auto mb-2 h-4 w-4 text-violet-600 dark:text-violet-400" />Easy</div>
             </div>
           </div>
           <Button onClick={() => setHasStarted(true)} className="h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-sm font-bold text-white shadow-lg shadow-violet-200 hover:from-violet-700 hover:to-indigo-700">
             Get started <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
-          <p className="mt-3 text-center text-[10px] text-slate-400">Your documents are encrypted and visible only to your PG owner.</p>
+          <p className="mt-3 text-center text-[10px] text-slate-400 dark:text-slate-500">Your documents are encrypted and visible only to your PG owner.</p>
         </motion.main>
       </div>
     );
