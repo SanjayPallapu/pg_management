@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   getReferralShareContent,
+  getPublicAppUrl,
   isReferralCodeFormatValid,
   validateAndApplyReferralCode,
 } from "./referralHelper";
 
 describe("referral helpers", () => {
+  it("uses the live public host when no browser origin is available", () => {
+    expect(getPublicAppUrl()).toBe("https://pgmanagee.vercel.app");
+  });
   it("accepts only PG HUB referral-code format", () => {
     expect(isReferralCodeFormatValid("PGHUB-OWNER1234")).toBe(true);
     expect(isReferralCodeFormatValid("owner1234")).toBe(false);

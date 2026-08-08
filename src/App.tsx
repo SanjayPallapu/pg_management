@@ -122,9 +122,13 @@ const AppContent = () => {
           <Route path="/auth/email" element={<EmailAuth />} />
           <Route path="/tenant-profile/:tenantId" element={
             <ProtectedRoute>
-              <TenantProfilePage />
+              <TenantProfilePage view="actions" />
             </ProtectedRoute>
           } />
+          <Route path="/tenant-profile/:tenantId/actions" element={<ProtectedRoute><TenantProfilePage view="actions" /></ProtectedRoute>} />
+          <Route path="/tenant-profile/:tenantId/share" element={<ProtectedRoute><TenantProfilePage view="share" /></ProtectedRoute>} />
+          <Route path="/tenant-profile/:tenantId/timeline" element={<ProtectedRoute><TenantProfilePage view="timeline" /></ProtectedRoute>} />
+          <Route path="/tenant-profile/:tenantId/verify" element={<ProtectedRoute><TenantProfilePage view="verify" /></ProtectedRoute>} />
           <Route path="/tenant-onboarding/:token" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <TenantOnboardingFormPage />

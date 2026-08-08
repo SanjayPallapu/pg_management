@@ -28,7 +28,7 @@ export type ReferralShareResult = "shared" | "copied" | "cancelled";
 
 const REFERRAL_CODE_PATTERN = /^PGHUB-[A-Z0-9]{5,24}$/;
 
-const getPublicAppUrl = () => {
+export const getPublicAppUrl = () => {
   if (import.meta.env.VITE_PUBLIC_APP_URL) return import.meta.env.VITE_PUBLIC_APP_URL;
   if (
     typeof window !== "undefined" &&
@@ -37,7 +37,7 @@ const getPublicAppUrl = () => {
   ) {
     return window.location.origin;
   }
-  return "https://pgmanager.app";
+  return "https://pgmanagee.vercel.app";
 };
 
 export const isReferralCodeFormatValid = (code: string) =>

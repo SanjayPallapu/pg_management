@@ -33,6 +33,7 @@ import { supabase as typedSupabase } from "@/integrations/supabase/proxyClient";
 const supabase = typedSupabase as any;
 import { usePG } from "@/contexts/PGContext";
 import { getCommunicationStatusLabel, type OnboardingLink as OnboardingLinkType } from "../types";
+import { getPublicAppUrl } from "@/utils/referralHelper";
 
 interface OwnerSharePanelProps {
   tenantId: string;
@@ -58,8 +59,9 @@ export function OwnerSharePanel({
 
   const link = existingLink as OnboardingLinkType | null;
   const activeToken = link?.token || generatedToken;
+  const publicAppUrl = getPublicAppUrl().replace(/\/$/, "");
   const onboardingUrl = activeToken
-    ? `${window.location.origin}/tenant-onboarding/${activeToken}`
+    ? `${publicAppUrl}/tenant-onboarding/${activeToken}`
     : "";
 
   // Records a link_shared timeline event after sending/copying the link
@@ -94,7 +96,7 @@ export function OwnerSharePanel({
   const handleShareWhatsApp = async () => {
     const token = await ensureToken("whatsapp");
     if (!token) { toast.error("Failed to generate onboarding link"); return; }
-    const url = `${window.location.origin}/tenant-onboarding/${token}`;
+    const url = `${publicAppUrl}/tenant-onboarding/${token}`;
     const phone = tenantPhone.replace(/\D/g, "");
     const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
     const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nLink expires on ${link ? new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "in 7 days"}.`;
@@ -105,7 +107,7 @@ export function OwnerSharePanel({
   const handleShareSMS = async () => {
     const token = await ensureToken("sms");
     if (!token) { toast.error("Failed to generate onboarding link"); return; }
-    const url = `${window.location.origin}/tenant-onboarding/${token}`;
+    const url = `${publicAppUrl}/tenant-onboarding/${token}`;
     const message = `Hi ${tenantName}, please complete your tenant onboarding: ${url}`;
     await recordLinkShared("SMS");
     window.location.href = `sms:${tenantPhone}?body=${encodeURIComponent(message)}`;
@@ -114,7 +116,7 @@ export function OwnerSharePanel({
   const handleCopyLink = async () => {
     const token = await ensureToken("copy");
     if (!token) { toast.error("Failed to generate onboarding link"); return; }
-    const url = `${window.location.origin}/tenant-onboarding/${token}`;
+    const url = `${publicAppUrl}/tenant-onboarding/${token}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
