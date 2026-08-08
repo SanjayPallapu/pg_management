@@ -196,14 +196,14 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-lg items-center gap-3 px-2 py-3">
           <button onClick={() => navigate('/')} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
           <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pb-28 pt-5">
+      <main className="mx-auto max-w-lg px-2 pb-28 pt-4">
         <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-card to-muted/50 p-5 shadow-xl">
           <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
@@ -222,7 +222,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
 
             {view === "details" && (
-              <div className="rounded-2xl border border-border bg-card px-4">
+              <div className="rounded-2xl border border-border bg-card px-2">
                 <DetailSection title="Personal information" icon={UserRound}>
                   <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
                   <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />

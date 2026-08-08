@@ -233,7 +233,7 @@ export const ACElectricitySheet = ({
               <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
               <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
 
-              <SheetHeader className="relative z-10 px-2 pt-4 pb-4">
+              <SheetHeader className="relative z-10 px-1.5 pt-3 pb-3">
                 {/* Top bar */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -295,7 +295,7 @@ export const ACElectricitySheet = ({
                   </div>
                   <div className="w-full overflow-hidden rounded-2xl shadow-lg border border-white/20">
                     <img
-                      src="/ac-bill-banner.png"
+                      src="/ac-bill-banner-v5.png"
                       alt="AC Electricity Billing"
                       className="w-full h-auto max-h-[160px] object-cover object-center"
                     />

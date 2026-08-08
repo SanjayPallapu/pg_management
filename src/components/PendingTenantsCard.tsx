@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, MessageSquare, Bell, ArrowLeft, CalendarClock, Wallet, Receipt, PartyPopper, BookOpen, X as XIcon } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, MessageSquare, Bell, ArrowLeft, CalendarClock, Wallet, Receipt, PartyPopper, BookOpen, X as XIcon, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaymentEntry, Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
@@ -701,24 +701,41 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 >
                   <Phone className="h-3 w-3" />
                 </a>
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const phone = tenant.phone.replace(/\D/g, '');
+                    const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                    const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
+                    const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                  }}
+                  className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors"
+                  title="Share payment reminder on WhatsApp"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <button className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors">
-                      <MessageCircle className="h-3 w-3" />
+                    <button className="h-7 w-7 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+                      <MoreVertical className="h-3.5 w-3.5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="min-w-[200px] rounded-xl border border-border/60 bg-popover p-1.5 shadow-xl dark:border-border dark:bg-card" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenuItem 
                       onClick={(e) => { 
                         e.stopPropagation(); 
-                        setTimeout(() => {
-                          onReminder?.(tenant); 
-                        }, 100);
+                        const phone = tenant.phone.replace(/\D/g, '');
+                        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                        const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
+                        const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                       }}
                       className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
                     >
                       <Bell className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                      Payment Reminder
+                      Send Payment Reminder
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={(e) => {

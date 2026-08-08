@@ -109,7 +109,7 @@ export default function ReferralPage() {
         <div className="relative z-10 px-2 pb-4 pt-2">
           <div className="mx-auto w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/20 shadow-2xl">
             <img
-              src="/refer-banner.png"
+              src="/refer-banner-v5.png"
               alt="Refer & Earn"
               className="w-full h-auto max-h-[220px] object-cover object-center"
             />
