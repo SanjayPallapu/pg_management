@@ -276,13 +276,6 @@ export const ONBOARDING_FORM_STEPS: OnboardingFormStep[] = [
     fields: ['email', 'alternate_phone', 'permanent_address'],
   },
   {
-    id: 'occupation',
-    title: 'Occupation',
-    description: 'Your work details',
-    icon: 'Briefcase',
-    fields: ['occupation', 'company_name', 'office_address'],
-  },
-  {
     id: 'stay',
     title: 'Stay Details',
     description: 'About your stay',
@@ -295,13 +288,6 @@ export const ONBOARDING_FORM_STEPS: OnboardingFormStep[] = [
     description: 'Payment preferences',
     icon: 'CreditCard',
     fields: ['payment_mode', 'upi_id', 'bank_account_number', 'ifsc_code', 'bank_name'],
-  },
-  {
-    id: 'food',
-    title: 'Food Preferences',
-    description: 'Your dietary needs',
-    icon: 'Utensils',
-    fields: ['food_preference', 'dietary_restrictions'],
   },
   {
     id: 'rules',
