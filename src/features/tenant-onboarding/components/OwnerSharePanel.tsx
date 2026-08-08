@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -53,10 +54,12 @@ export function OwnerSharePanel({
   const { currentPG } = usePG();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
 
   const link = existingLink as OnboardingLinkType | null;
-  const onboardingUrl = link
-    ? `${window.location.origin}/tenant-onboarding/${link.token}`
+  const activeToken = link?.token || generatedToken;
+  const onboardingUrl = activeToken
+    ? `${window.location.origin}/tenant-onboarding/${activeToken}`
     : "";
 
   // Records a link_shared timeline event after sending/copying the link
@@ -77,11 +80,13 @@ export function OwnerSharePanel({
 
   // Returns the current token, generating one if needed
   const ensureToken = async (sentVia: string): Promise<string | null> => {
-    if (link?.token) return link.token;
+    if (activeToken) return activeToken;
     const result = await generateLink.mutateAsync({ tenantId, tenantName, sentVia });
     // RPC returns an array of rows; extract token from first row
     const rows = result as Array<{ token?: string }> | null;
-    return rows?.[0]?.token ?? null;
+    const token = rows?.[0]?.token ?? null;
+    setGeneratedToken(token);
+    return token;
   };
 
   const isLinkExpired = link ? new Date(link.expires_at) < new Date() : false;
@@ -117,12 +122,22 @@ export function OwnerSharePanel({
       await recordLinkShared("Copy");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy link");
+      const input = document.createElement("textarea");
+      input.value = url;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      const copiedFallback = document.execCommand("copy");
+      input.remove();
+      if (copiedFallback) { setCopied(true); toast.success("Link copied to clipboard"); }
+      else toast.error("Copy failed. Please use WhatsApp or SMS.");
     }
   };
 
   const handleShowQR = async () => {
-    if (!link) await ensureToken("qr");
+    const token = await ensureToken("qr");
+    if (!token) { toast.error("Failed to generate onboarding link"); return; }
     setShowQR(true);
     await recordLinkShared("QR Code");
   };
@@ -272,7 +287,7 @@ export function OwnerSharePanel({
 
         {/* QR Code Display */}
         <AnimatePresence>
-          {showQR && link && (
+          {showQR && activeToken && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -344,10 +359,15 @@ function ShareButton({
 
 // Simple QR code placeholder - uses an external QR code service
 function QRCodePlaceholder({ url }: { url: string }) {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+  const [qrUrl, setQrUrl] = useState("");
+  useEffect(() => {
+    QRCode.toDataURL(url, { width: 240, margin: 1, color: { dark: "#111827", light: "#ffffff" } })
+      .then(setQrUrl)
+      .catch(() => setQrUrl(""));
+  }, [url]);
   return (
     <div className="p-3 bg-white rounded-lg">
-      <img src={qrUrl} alt="QR Code" className="w-36 h-36" />
+      {qrUrl ? <img src={qrUrl} alt="Scan to open tenant onboarding" className="w-44 h-44" /> : <Loader2 className="h-8 w-8 animate-spin text-primary" />}
     </div>
   );
 }
