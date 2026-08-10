@@ -100,10 +100,6 @@ export const TenantRentCard = ({
             ? "Advance Due"
             : "Pending";
 
-  const cardDesignClass = tenant.paymentCategory === 'paid' ? 'tenant-card-paid' : 
-    (tenant.paymentCategory === 'partial' || tenant.paymentCategory === 'overdue' || tenant.paymentCategory === 'advance-not-paid') ? 'tenant-card-pending' : bgClass;
-
-  return (
 export const TenantRentCard = ({
   tenant,
   selectedMonth,
@@ -135,9 +131,9 @@ export const TenantRentCard = ({
     : '';
 
   return (
-    <div className={cn("transition-all duration-200 shadow-sm", cardDesignClass)}>
-      {/* Top Row: Name • Room No | Price (Red badge for pending, dark font for paid) */}
-      <div className="flex items-start justify-between gap-2">
+    <div className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
+      {/* Top Row: Name • Room No | Price for Paid, Action icons for Pending */}
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
@@ -147,34 +143,18 @@ export const TenantRentCard = ({
           <span className="text-lg font-extrabold text-foreground shrink-0">
             ₹{displayAmount.toLocaleString()}
           </span>
-        ) : (
-          <span className="price-badge-red shrink-0">
-            ₹{displayAmount.toLocaleString()}
-          </span>
-        )}
-      </div>
-
-      {/* Second Row: Joined: Date | Action icons (WhatsApp & Call) */}
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-          Joined: {formattedJoinedDate}
-        </span>
-        {tenant.phone && tenant.phone !== "••••••••••" && (
-          <div className="flex items-center gap-2.5 ml-auto shrink-0">
+        ) : tenant.phone && tenant.phone !== "••••••••••" ? (
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 const phone = tenant.phone.replace(/\D/g, "");
                 const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                if (isPaid) {
-                  window.open(`https://wa.me/${cleanPhone}`, "_blank");
-                } else {
-                  const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmount.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
-                }
+                const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmount.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
               title="Share on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -182,7 +162,39 @@ export const TenantRentCard = ({
             <a
               href={`tel:${tenant.phone}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+              title={`Call ${tenant.name}`}
+            >
+              <Phone className="h-5 w-5 stroke-[1.75]" />
+            </a>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Second Row: Joined: Date | Action icons for Paid */}
+      <div className="mt-1 flex items-center justify-between gap-3">
+        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+          Joined: {formattedJoinedDate}
+        </span>
+        {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
+          <div className="flex items-center gap-3 ml-auto shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const phone = tenant.phone.replace(/\D/g, "");
+                const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                window.open(`https://wa.me/${cleanPhone}`, "_blank");
+              }}
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+              title="Share on WhatsApp"
+            >
+              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+            </button>
+            <a
+              href={`tel:${tenant.phone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
               title={`Call ${tenant.name}`}
             >
               <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -225,9 +237,9 @@ export const TenantRentCard = ({
         </Collapsible>
       )}
 
-      {/* Third Row: Payments breakdown + Action (Pay button / Paid badge) */}
-      <div className="mt-2.5 flex items-end justify-between gap-2">
-        <div className="space-y-1 min-w-0 flex-1">
+      {/* Third Row: Payments breakdown */}
+      {((tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0) || isPaid) && (
+        <div className="mt-2 space-y-1">
           <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
             Payments:
           </div>
@@ -246,9 +258,19 @@ export const TenantRentCard = ({
             </div>
           ) : null}
         </div>
+      )}
 
-        {/* Action Button / Badge */}
-        <div className="shrink-0">
+      {/* Bottom Row: Red price badge (left) | Action Button / Badge (right) */}
+      <div className="mt-3 flex items-center justify-between gap-3 pt-1">
+        {!isPaid ? (
+          <span className="price-badge-red shrink-0">
+            ₹{displayAmount.toLocaleString()}
+          </span>
+        ) : (
+          <div className="flex-1" />
+        )}
+
+        <div className="shrink-0 ml-auto">
           {isPaid ? (
             <span className="badge-paid-periwinkle">Paid</span>
           ) : isPartial ? (
@@ -271,7 +293,5 @@ export const TenantRentCard = ({
         </div>
       </div>
     </div>
-  );
-};
   );
 };

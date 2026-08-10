@@ -681,7 +681,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      {/* Top row: Name • Room No | Red Price Badge */}
+      {/* Top row: Name • Room No | Action icons (WhatsApp & Phone) */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
@@ -691,19 +691,8 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
           )}
         </div>
-        {/* Red price badge */}
-        <span className="price-badge-red shrink-0 ml-2">
-          ₹{dueAmount.toLocaleString()}
-        </span>
-      </div>
-
-      {/* Second row: Joined: Date | Action icons (WhatsApp & Phone) */}
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-          Joined: {formattedJoinedDate}
-        </span>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-3 ml-auto shrink-0">
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
             <button 
               type="button"
               onClick={(e) => {
@@ -731,9 +720,16 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         )}
       </div>
 
-      {/* Third row: Payments section + Pay button */}
-      <div className="mt-3 flex items-end justify-between gap-3 pt-1">
-        <div className="space-y-1 min-w-0 flex-1">
+      {/* Second row: Joined: Date */}
+      <div className="mt-1">
+        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+          Joined: {formattedJoinedDate}
+        </span>
+      </div>
+
+      {/* Third section: Payments breakdown (if partial payment) */}
+      {isPartiallyPaid && (
+        <div className="mt-2 space-y-1">
           <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
             Payments:
           </div>
@@ -746,17 +742,23 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 </span>
               </div>
             ))
-          ) : isPartiallyPaid && tenant.amountPaid > 0 ? (
+          ) : (
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <span>₹{tenant.amountPaid.toLocaleString()}</span>
             </div>
-          ) : null}
+          )}
         </div>
+      )}
 
-        {/* Pay button */}
+      {/* Bottom row: Red price badge (left) | Pay button (right) */}
+      <div className="mt-3 flex items-center justify-between gap-3 pt-1">
+        <span className="price-badge-red shrink-0">
+          ₹{dueAmount.toLocaleString()}
+        </span>
+
         <button
           type="button"
-          className="btn-pay-black shrink-0 ml-2"
+          className="btn-pay-black shrink-0 ml-auto"
           onClick={(event) => {
             event.stopPropagation();
             onMarkPaid?.(tenant);

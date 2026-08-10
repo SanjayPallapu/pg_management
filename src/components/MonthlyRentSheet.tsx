@@ -1837,7 +1837,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
               return (
                 <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
-                  {/* Top Row: Name • Room No | Price (Red badge for pending, dark font for paid) */}
+                  {/* Top Row: Name • Room No | Price for Paid, Action icons for Pending */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
@@ -1848,19 +1848,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       <span className="text-lg font-extrabold text-foreground shrink-0">
                         ₹{displayAmount.toLocaleString()}
                       </span>
-                    ) : (
-                      <span className="price-badge-red shrink-0">
-                        ₹{displayAmount.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Second Row: Joined: Date | Action icons (WhatsApp & Call) */}
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                      Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
-                    </span>
-                    {tenant.phone && tenant.phone !== "••••••••••" && (
+                    ) : tenant.phone && tenant.phone !== "••••••••••" ? (
                       <div className="flex items-center gap-3 ml-auto shrink-0">
                         <button
                           type="button"
@@ -1868,12 +1856,40 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             e.stopPropagation();
                             const phone = tenant.phone.replace(/\D/g, "");
                             const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                            if (isPaid) {
-                              window.open(`https://wa.me/${cleanPhone}`, "_blank");
-                            } else {
-                              const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                              window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
-                            }
+                            const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                            window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+                          }}
+                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                        </button>
+                        <a
+                          href={`tel:${tenant.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                          title={`Call ${tenant.name}`}
+                        >
+                          <Phone className="h-5 w-5 stroke-[1.75]" />
+                        </a>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Second Row: Joined: Date | Action icons for Paid */}
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                      Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
+                    </span>
+                    {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
+                      <div className="flex items-center gap-3 ml-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const phone = tenant.phone.replace(/\D/g, "");
+                            const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                            window.open(`https://wa.me/${cleanPhone}`, "_blank");
                           }}
                           className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
                           title="WhatsApp"
@@ -1927,9 +1943,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </Collapsible>
                   )}
 
-                  {/* Third Row: Payments breakdown + Action Button (Pay / Paid) */}
-                  <div className="mt-2.5 flex items-end justify-between gap-3 pt-1">
-                    <div className="space-y-1 min-w-0 flex-1">
+                  {/* Third Row: Payments breakdown */}
+                  {((tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0) || isPaid) && (
+                    <div className="mt-2 space-y-1">
                       <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
                         Payments:
                       </div>
@@ -1955,9 +1971,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* Action Button / Badge */}
-                    <div className="shrink-0 ml-2">
+                  {/* Bottom Row: Red badge (for pending) | Action Button / Badge (right) */}
+                  <div className="mt-3 flex items-center justify-between gap-3 pt-1">
+                    {!isPaid ? (
+                      <span className="price-badge-red shrink-0">
+                        ₹{displayAmount.toLocaleString()}
+                      </span>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
+
+                    <div className="shrink-0 ml-auto">
                       {isPaid ? (
                         <button
                           type="button"
