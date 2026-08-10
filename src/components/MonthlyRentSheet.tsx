@@ -1836,10 +1836,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 
               return (
-                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
+                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm py-3 pl-3.5 pr-2 rounded-2xl", cardDesignClass)}>
                   {/* Top Row: Name • Room No | Price for Paid, Action icons for Pending */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                       <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
                       <span className="text-slate-400 font-medium text-sm">•</span>
                       <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
@@ -1849,7 +1849,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         ₹{displayAmount.toLocaleString()}
                       </span>
                     ) : tenant.phone && tenant.phone !== "••••••••••" ? (
-                      <div className="flex items-center gap-3 ml-auto shrink-0">
+                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1859,7 +1859,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
                             window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
                           }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
                           title="WhatsApp"
                         >
                           <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -1867,7 +1867,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         <a
                           href={`tel:${tenant.phone}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
                           title={`Call ${tenant.name}`}
                         >
                           <Phone className="h-5 w-5 stroke-[1.75]" />
