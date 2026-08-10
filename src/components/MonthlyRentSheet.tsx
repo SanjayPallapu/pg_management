@@ -1876,36 +1876,51 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     ) : null}
                   </div>
 
-                  {/* Second Row: Joined: Date | Action icons for Paid */}
+                  {/* Second Row: Joined: Date | Action icons + Paid badge for Paid */}
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                       Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
                     </span>
-                    {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
-                      <div className="flex items-center gap-4.5 ml-auto shrink-0">
+                    <div className="flex items-center gap-3 ml-auto shrink-0">
+                      {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const phone = tenant.phone.replace(/\D/g, "");
+                              const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                              window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                            }}
+                            className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                          </button>
+                          <a
+                            href={`tel:${tenant.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                            title={`Call ${tenant.name}`}
+                          >
+                            <Phone className="h-5 w-5 stroke-[1.75]" />
+                          </a>
+                        </>
+                      )}
+                      {isPaid && (
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const phone = tenant.phone.replace(/\D/g, "");
-                            const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                            window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                          className="badge-paid-periwinkle cursor-pointer"
+                          onClick={() => {
+                            if (editModeEnabled) {
+                              handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
+                            }
                           }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                          title="WhatsApp"
                         >
-                          <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                          {editModeEnabled ? "Undo Paid" : "Paid"}
                         </button>
-                        <a
-                          href={`tel:${tenant.phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-                          title={`Call ${tenant.name}`}
-                        >
-                          <Phone className="h-5 w-5 stroke-[1.75]" />
-                        </a>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* Pro-rata visual indicator for mid-month leavers */}
@@ -1973,48 +1988,33 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </div>
                   )}
 
-                  {/* Bottom Row: Red badge (for pending) | Action Button / Badge (right) */}
-                  <div className="mt-3 flex items-center justify-between gap-3 pt-1">
-                    {!isPaid ? (
+                  {/* Bottom Row: Red badge + Pay button (only for pending) */}
+                  {!isPaid && (
+                    <div className="mt-3 flex items-center justify-between gap-3 pt-1">
                       <span className="price-badge-red shrink-0">
                         ₹{displayAmount.toLocaleString()}
                       </span>
-                    ) : (
-                      <div className="flex-1" />
-                    )}
-
-                    <div className="shrink-0 ml-auto">
-                      {isPaid ? (
-                        <button
-                          type="button"
-                          className="badge-paid-periwinkle cursor-pointer"
-                          onClick={() => {
-                            if (editModeEnabled) {
-                              handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
-                            }
-                          }}
-                        >
-                          {editModeEnabled ? "Undo Paid" : "Paid"}
-                        </button>
-                      ) : isPartial ? (
-                        <button
-                          type="button"
-                          onClick={() => handlePayRemaining(tenant.id)}
-                          className="btn-pay-black"
-                        >
-                          Pay
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn-pay-black"
-                          onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
-                        >
-                          Pay
-                        </button>
-                      )}
+                      <div className="shrink-0 ml-auto">
+                        {isPartial ? (
+                          <button
+                            type="button"
+                            onClick={() => handlePayRemaining(tenant.id)}
+                            className="btn-pay-black"
+                          >
+                            Pay
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-pay-black"
+                            onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
