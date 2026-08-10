@@ -131,10 +131,10 @@ export const TenantRentCard = ({
     : '';
 
   return (
-    <div className={cn("transition-all duration-200 shadow-sm py-3 pl-3.5 pr-2 rounded-2xl", cardDesignClass)}>
+    <div className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
       {/* Top Row: Name • Room No | Price for Paid, Action icons for Pending */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
           <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
@@ -144,7 +144,7 @@ export const TenantRentCard = ({
             ₹{displayAmount.toLocaleString()}
           </span>
         ) : tenant.phone && tenant.phone !== "••••••••••" ? (
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          <div className="flex items-center gap-3.5 shrink-0 ml-auto">
             <button
               type="button"
               onClick={(e) => {
@@ -177,7 +177,7 @@ export const TenantRentCard = ({
           Joined: {formattedJoinedDate}
         </span>
         {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
-          <div className="flex items-center gap-3 ml-auto shrink-0">
+          <div className="flex items-center gap-3.5 ml-auto shrink-0">
             <button
               type="button"
               onClick={(e) => {
@@ -186,7 +186,7 @@ export const TenantRentCard = ({
                 const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
                 window.open(`https://wa.me/${cleanPhone}`, "_blank");
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
               title="Share on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -194,7 +194,7 @@ export const TenantRentCard = ({
             <a
               href={`tel:${tenant.phone}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
               title={`Call ${tenant.name}`}
             >
               <Phone className="h-5 w-5 stroke-[1.75]" />

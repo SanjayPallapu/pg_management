@@ -172,9 +172,9 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
   };
 
   const TenantRow = ({ tenant, period }: { tenant: PaidTenantRow; period: { month: number; year: number } }) => (
-    <div className="tenant-card-paid shadow-sm">
+    <div className="tenant-card-paid shadow-sm p-4 rounded-2xl">
       {/* Top row: Name • Room No | Price Amount */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
@@ -186,12 +186,12 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
       </div>
 
       {/* Second row: Joined: Date | Action icons (WhatsApp & Phone) */}
-      <div className="mt-1 flex items-center justify-between gap-2">
+      <div className="mt-1 flex items-center justify-between gap-3">
         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
         </span>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-2.5 ml-auto shrink-0">
+          <div className="flex items-center gap-3.5 ml-auto shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -199,14 +199,14 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                 const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
                 window.open(`https://wa.me/${cleanPhone}`, '_blank');
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
               title="Chat on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
             </button>
             <a
               href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
               aria-label={`Call ${tenant.name}`}
             >
               <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -216,7 +216,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
       </div>
 
       {/* Third row: Payments section + Paid badge */}
-      <div className="mt-2.5 flex items-end justify-between gap-2">
+      <div className="mt-3 flex items-end justify-between gap-3 pt-0.5">
         <div className="space-y-1 min-w-0 flex-1">
           <div className="font-normal text-slate-500 dark:text-slate-400 text-sm">
             Payments:
@@ -238,7 +238,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         </div>
 
         {/* Paid badge */}
-        <span className="badge-paid-periwinkle shrink-0">Paid</span>
+        <span className="badge-paid-periwinkle shrink-0 ml-auto">Paid</span>
       </div>
     </div>
   );

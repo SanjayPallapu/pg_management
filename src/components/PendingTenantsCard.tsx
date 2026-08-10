@@ -674,16 +674,16 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
     ? 'bg-[#FFF9EE] border-amber-200 border-l-amber-500 dark:bg-[#251C14] dark:border-amber-900/50'
     : categoryColor === 'blue'
     ? 'bg-[#F0F7FF] border-blue-200 border-l-blue-500 dark:bg-[#142032] dark:border-blue-900/50'
-    : 'bg-[#FFF5EA] border-[#FCE4C8] border-l-[#FF8A00] dark:bg-[#251B14] dark:border-[#3D2B1F]';
+    : 'bg-[#FFF5F5] border-red-200 border-l-red-500 dark:bg-[#2B1717] dark:border-red-900/50';
 
   return (
     <div 
-      className={`rounded-2xl border border-l-[5px] py-3 pl-3.5 pr-2 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
+      className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      {/* Top row: Name • Room No | Action icons (WhatsApp & Phone) */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      {/* Top row: Name • Room No | Action icons (WhatsApp & Phone with generous gap) */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
           <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
@@ -692,7 +692,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           )}
         </div>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          <div className="flex items-center gap-3.5 shrink-0 ml-auto">
             <button 
               type="button"
               onClick={(e) => {
@@ -751,7 +751,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       )}
 
       {/* Bottom row: Red price badge (left) | Pay button (right) */}
-      <div className="mt-2.5 flex items-center justify-between gap-2 pt-0.5">
+      <div className="mt-3 flex items-center justify-between gap-3 pt-1">
         <span className="price-badge-red shrink-0">
           ₹{dueAmount.toLocaleString()}
         </span>
