@@ -1830,7 +1830,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   setReminderDialogOpen(true);
                 }, 100);
               };
-              return (
+
               const isPaid = tenant.payment.paymentStatus === "Paid";
               const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
