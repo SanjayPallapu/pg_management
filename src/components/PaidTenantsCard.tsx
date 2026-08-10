@@ -172,63 +172,70 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
   };
 
   const TenantRow = ({ tenant, period }: { tenant: PaidTenantRow; period: { month: number; year: number } }) => (
-    <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-        </div>
+    <div className="tenant-card-paid shadow-sm">
+      {/* Top row: Name | Amount */}
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-semibold">{tenant.name}</p>
-            {tenant.phone && tenant.phone !== '••••••••••' && (
-              <a
-                href={`tel:${tenant.phone}`}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600"
-                aria-label={`Call ${tenant.name}`}
-              >
-                <Phone className="h-3 w-3" />
-              </a>
-            )}
-            {tenant.phone && tenant.phone !== '••••••••••' && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
-                    aria-label={`Chat and receipt options for ${tenant.name}`}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem className="gap-2" onClick={() => setTimeout(() => openReceipt(tenant, period), 100)}>
-                    <Receipt className="h-4 w-4" />
-                    Generate Receipt
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="gap-2"
-                    onClick={() => {
-                      const phone = tenant.phone.replace(/\D/g, '');
-                      window.location.href = `https://wa.me/${phone}`;
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Chat with Tenant
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Room {tenant.roomNo}
-            {tenant.paymentDate && (
-              <span className="ml-2">Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}</span>
-            )}
-          </p>
+          <p className="truncate text-sm font-bold text-foreground">{tenant.name}</p>
+          <p className="mt-0.5 text-xs font-medium text-muted-foreground">Room {tenant.roomNo}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+        <span className="text-base font-extrabold text-foreground shrink-0">
           ₹{tenant.amountPaid.toLocaleString()}
         </span>
+      </div>
+
+      {/* Joined date + WhatsApp/Call buttons */}
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
+        </span>
+        {tenant.phone && tenant.phone !== '••••••••••' && (
+          <div className="flex items-center gap-1 ml-auto">
+            <button
+              type="button"
+              onClick={() => {
+                const phone = tenant.phone.replace(/\D/g, '');
+                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                window.open(`https://wa.me/${cleanPhone}`, '_blank');
+              }}
+              className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors"
+              title="Chat on WhatsApp"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </button>
+            <a
+              href={`tel:${tenant.phone}`}
+              className="h-7 w-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-900/60 transition-colors"
+              aria-label={`Call ${tenant.name}`}
+            >
+              <Phone className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Payments breakdown */}
+      {tenant.paymentEntries.length > 0 && (
+        <div className="mt-2 space-y-0.5">
+          <span className="payments-breakdown">Payments:</span>
+          <div className="flex flex-wrap gap-1 mt-0.5">
+            {tenant.paymentEntries.map((entry, idx) => (
+              <span key={idx} className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                {entry.mode === 'upi' ? 'UPI' : 'Cash'} ₹{entry.amount.toLocaleString()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Paid badge + payment date */}
+      <div className="mt-3 flex items-center justify-between">
+        {tenant.paymentDate && (
+          <span className="text-[11px] text-muted-foreground">
+            Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}
+          </span>
+        )}
+        <span className="badge-paid-periwinkle ml-auto">Paid</span>
       </div>
     </div>
   );

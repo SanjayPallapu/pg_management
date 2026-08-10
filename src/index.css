@@ -338,3 +338,150 @@ All colors MUST be HSL.
 .ease-premium {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
+/* ===== Redesigned Tenant Cards ===== */
+
+/* Pending tenant card — warm cream/peach with orange left accent */
+.tenant-card-pending {
+  background: linear-gradient(135deg, #fef3e2 0%, #fef9f0 100%);
+  border: 1px solid #f5d6a8;
+  border-left: 4px solid #e8720c;
+  border-radius: 1rem;
+  padding: 0.875rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.tenant-card-pending:active {
+  transform: scale(0.985);
+}
+.dark .tenant-card-pending {
+  background: linear-gradient(135deg, hsl(30 40% 16%) 0%, hsl(30 30% 13%) 100%);
+  border-color: hsl(30 50% 30%);
+  border-left-color: #e8720c;
+}
+
+/* Paid tenant card — light mint green with green left accent */
+.tenant-card-paid {
+  background: linear-gradient(135deg, #e8f8ef 0%, #f2fcf5 100%);
+  border: 1px solid #b5e6c8;
+  border-left: 4px solid #22a85a;
+  border-radius: 1rem;
+  padding: 0.875rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.tenant-card-paid:active {
+  transform: scale(0.985);
+}
+.dark .tenant-card-paid {
+  background: linear-gradient(135deg, hsl(142 30% 14%) 0%, hsl(142 25% 11%) 100%);
+  border-color: hsl(142 40% 28%);
+  border-left-color: #22a85a;
+}
+
+/* Red price badge (top-right on pending cards) */
+.price-badge-red {
+  background: #dc2626;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+/* Black Pay button pill */
+.btn-pay-black {
+  background: #18181b;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.btn-pay-black:hover {
+  background: #27272a;
+}
+.btn-pay-black:active {
+  transform: scale(0.95);
+}
+.btn-pay-black:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.dark .btn-pay-black {
+  background: #f4f4f5;
+  color: #18181b;
+}
+.dark .btn-pay-black:hover {
+  background: #e4e4e7;
+}
+
+/* Periwinkle Paid badge */
+.badge-paid-periwinkle {
+  background: #c7d2fe;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+.dark .badge-paid-periwinkle {
+  background: hsl(236 50% 30%);
+  color: hsl(236 80% 85%);
+}
+
+/* Blue UPI tag pill */
+.tag-upi {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 0.625rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+.dark .tag-upi {
+  background: hsl(217 40% 22%);
+  color: hsl(217 85% 70%);
+}
+
+/* Green Cash tag pill */
+.tag-cash {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.625rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+.dark .tag-cash {
+  background: hsl(142 40% 18%);
+  color: hsl(142 70% 55%);
+}
+
+/* Payments breakdown section */
+.payments-breakdown {
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.dark .payments-breakdown {
+  color: #4ade80;
+}
+
+/* Quick Room Access collapsible strip */
+.quick-room-strip {
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+.quick-room-strip.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+.quick-room-strip.expanded {
+  max-height: 500px;
+  opacity: 1;
+}

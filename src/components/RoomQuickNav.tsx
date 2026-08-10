@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Room, TenantPayment } from "@/types";
 import { cn } from "@/lib/utils";
 import { isTenantActiveInMonth, hasTenantLeftNow } from "@/utils/dateOnly";
+import { ChevronDown } from "lucide-react";
 
 interface Props {
   rooms: Room[];
@@ -23,6 +24,8 @@ const colorFor: Record<Status, string> = {
 };
 
 export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const items = useMemo(() => {
     const today = new Date();
     const isCurrent = today.getMonth() + 1 === month && today.getFullYear() === year;
@@ -70,27 +73,36 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
   return (
     <Card className="mb-3">
       <CardContent className="p-3">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">Quick Room Access</div>
-        <div className="flex flex-wrap gap-1.5">
-          {items.map((item) => (
-            <button
-              key={item.roomNo}
-              onClick={() => onSelect(item.roomNo)}
-              className={cn(
-                "min-w-[44px] px-2 py-1.5 text-xs font-semibold rounded-md border transition-all hover:scale-105 active:scale-95",
-                colorFor[item.status],
-              )}
-              title={`Room ${item.roomNo} • ${item.status}`}
-            >
-              {item.roomNo}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-paid" />Paid</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-partial" />Partial</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-overdue" />Overdue</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-not-due" />Not due</span>
+        <button
+          type="button"
+          className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground mb-0 cursor-pointer hover:text-foreground transition-colors"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <span>Quick Room Access</span>
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isExpanded && "rotate-180")} />
+        </button>
+        <div className={cn("quick-room-strip", isExpanded ? "expanded mt-2" : "collapsed")}>
+          <div className="flex flex-wrap gap-1.5">
+            {items.map((item) => (
+              <button
+                key={item.roomNo}
+                onClick={() => onSelect(item.roomNo)}
+                className={cn(
+                  "min-w-[44px] px-2 py-1.5 text-xs font-semibold rounded-md border transition-all hover:scale-105 active:scale-95",
+                  colorFor[item.status],
+                )}
+                title={`Room ${item.roomNo} • ${item.status}`}
+              >
+                {item.roomNo}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-paid" />Paid</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-partial" />Partial</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-overdue" />Overdue</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-not-due" />Not due</span>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -5,8 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Clock, Plus, Phone, MessageCircle, MessageSquare, Bell, ArrowLeft, CalendarClock, Wallet, Receipt, PartyPopper, BookOpen, X as XIcon, MoreVertical } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertTriangle, Clock, Plus, Phone, MessageCircle, MessageSquare, Bell, ArrowLeft, CalendarClock, Wallet, Receipt, PartyPopper, BookOpen, X as XIcon } from 'lucide-react';
+
 import { PaymentEntry, Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
 import { useTenantPayments } from '@/hooks/useTenantPayments';
@@ -664,26 +664,18 @@ interface TenantSelectItemProps {
 const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onReminder, onMarkPaid, isMarkingPaid = false, rooms, onWelcome, onRules }: TenantSelectItemProps & { onReminder?: (tenant: TenantWithPayment) => void }) => {
   const onboardingProfileMap = useOnboardingProfileMap();
   const isPartiallyPaid = (tenant.amountPaid || 0) > 0;
-  const bgClass = isPartiallyPaid
-    ? 'bg-amber-500/10 border-amber-500/30 border-l-amber-500'
-    : categoryColor === 'pending' 
-    ? 'bg-red-500/10 border-red-500/20 border-l-red-500'
-    : categoryColor === 'amber'
-    ? 'bg-amber-500/10 border-amber-500/20 border-l-amber-500'
-    : 'bg-blue-500/10 border-blue-500/20 border-l-blue-500';
-  const cardClass = isSelected
-    ? 'border-primary/50 border-l-primary bg-primary/[0.08] shadow-none'
-    : bgClass;
+  const dueAmount = Math.max(0, tenant.monthlyRent - (tenant.amountPaid || 0));
 
   return (
     <div 
-      className={`rounded-2xl border border-l-4 p-3.5 shadow-sm transition-colors ${cardClass}`}
+      className={`tenant-card-pending shadow-sm ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      <div className="flex items-start justify-between gap-3">
+      {/* Top row: Name + action buttons | Price badge */}
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="truncate text-sm font-bold">{tenant.name}</span>
+            <span className="truncate text-sm font-bold text-foreground">{tenant.name}</span>
             {isPartiallyPaid && (
               <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 shadow-xs">
                 Partially paid
@@ -692,116 +684,70 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             {isSelected && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
             )}
-            {tenant.phone && tenant.phone !== '••••••••••' && (
-              <>
-                <a
-                  href={`tel:${tenant.phone}`}
-                  className="h-7 w-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-900/60 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Phone className="h-3 w-3" />
-                </a>
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const phone = tenant.phone.replace(/\D/g, '');
-                    const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                    const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
-                    const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-                  }}
-                  className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors"
-                  title="Share payment reminder on WhatsApp"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                </button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <button className="h-7 w-7 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
-                      <MoreVertical className="h-3.5 w-3.5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[200px] rounded-xl border border-border/60 bg-popover p-1.5 shadow-xl dark:border-border dark:bg-card" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        const phone = tenant.phone.replace(/\D/g, '');
-                        const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                        const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
-                        const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-                      }}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
-                    >
-                      <Bell className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                      Send Payment Reminder
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const phone = tenant.phone.replace(/\D/g, '');
-                        window.location.href = `https://wa.me/${phone}`;
-                      }}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-green-50 dark:hover:bg-green-950/40 cursor-pointer"
-                    >
-                      <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      Chat with Tenant
-                    </DropdownMenuItem>
-                    {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) ? (
-                      <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" onClick={(e) => {
-                        e.stopPropagation();
-                        const room = rooms.find((item) => item.roomNo === tenant.roomNo);
-                        setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDeposit', { detail: { tenantId: tenant.id, tenantName: tenant.name, tenantPhone: tenant.phone, roomNo: tenant.roomNo, roomCapacity: room?.capacity } })), 100);
-                      }}>
-                        <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Security Deposit
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => window.dispatchEvent(new CustomEvent('openSecurityDepositReceipt', { detail: { tenantId: tenant.id } })), 100); }}>
-                        <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Security Deposit Receipt
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-purple-50 dark:hover:bg-purple-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => onWelcome(tenant), 100); }}>
-                      <PartyPopper className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Welcome
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTimeout(() => onRules(tenant), 100); }}>
-                      <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Rules &amp; Regulations
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
           </div>
-          <p className="mt-1.5 text-xs font-medium text-muted-foreground">Room {tenant.roomNo}</p>
-          <p className="mt-4 text-xs text-muted-foreground">
-            {tenant.startDate && (
-              <span>Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-            )}
-            {tenant.amountPaid > 0 && (
-              <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">
-                Paid: ₹{tenant.amountPaid.toLocaleString()}
-              </span>
-            )}
-          </p>
+          <p className="mt-0.5 text-xs font-medium text-muted-foreground">Room {tenant.roomNo}</p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-8">
-          <span className={isPartiallyPaid ? "text-sm font-extrabold text-amber-600 dark:text-amber-400" : "text-sm font-extrabold text-foreground"}>
-            ₹{(tenant.monthlyRent - (tenant.amountPaid || 0)).toLocaleString()}
+        {/* Red price badge */}
+        <span className="price-badge-red shrink-0">
+          ₹{dueAmount.toLocaleString()}
+        </span>
+      </div>
+
+      {/* Joined date + WhatsApp/Call buttons */}
+      <div className="mt-2 flex items-center gap-2">
+        {tenant.startDate && (
+          <span className="text-xs text-muted-foreground">
+            Joined: {new Date(tenant.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-xl border-border/70 bg-background px-3 text-[11px] font-semibold text-foreground shadow-sm hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400"
-            onClick={(event) => {
-              event.stopPropagation();
-              onMarkPaid?.(tenant);
-            }}
-            disabled={isMarkingPaid}
-          >
-            Mark Paid
-          </Button>
+        )}
+        {tenant.phone && tenant.phone !== '••••••••••' && (
+          <div className="flex items-center gap-1 ml-auto">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const phone = tenant.phone.replace(/\D/g, '');
+                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
+                const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+              }}
+              className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors"
+              title="Share payment reminder on WhatsApp"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </button>
+            <a
+              href={`tel:${tenant.phone}`}
+              className="h-7 w-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-900/60 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Phone className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Payments breakdown */}
+      {isPartiallyPaid && tenant.amountPaid > 0 && (
+        <div className="mt-2 payments-breakdown">
+          <span>Payments: ₹{tenant.amountPaid.toLocaleString()}</span>
         </div>
+      )}
+
+      {/* Pay button */}
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          className="btn-pay-black"
+          onClick={(event) => {
+            event.stopPropagation();
+            onMarkPaid?.(tenant);
+          }}
+          disabled={isMarkingPaid}
+        >
+          Pay
+        </button>
       </div>
     </div>
   );

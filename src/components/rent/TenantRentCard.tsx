@@ -100,8 +100,11 @@ export const TenantRentCard = ({
             ? "Advance Due"
             : "Pending";
 
+  const cardDesignClass = tenant.paymentCategory === 'paid' ? 'tenant-card-paid' : 
+    (tenant.paymentCategory === 'partial' || tenant.paymentCategory === 'overdue' || tenant.paymentCategory === 'advance-not-paid') ? 'tenant-card-pending' : bgClass;
+
   return (
-    <div className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
+    <div className={cn("transition-all duration-200", cardDesignClass)}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <div className="font-semibold text-sm">
@@ -255,22 +258,21 @@ export const TenantRentCard = ({
           )}
         </div>
         {isPartial ? (
-          <Button
+          <button
             onClick={() => onPayRemaining(tenant.id)}
-            size="sm"
-            className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90"
+            className="btn-pay-black"
           >
             Pay
-          </Button>
+          </button>
+        ) : tenant.payment.paymentStatus === "Paid" ? (
+          <span className="badge-paid-periwinkle">Paid</span>
         ) : (
-          <Button
-            variant={tenant.payment.paymentStatus === "Paid" ? "default" : "outline"}
-            size="sm"
-            className="text-xs h-7 px-3"
+          <button
+            className="btn-pay-black"
             onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
           >
-            {tenant.payment.paymentStatus === "Paid" ? "Paid" : "Mark Paid"}
-          </Button>
+            Mark Paid
+          </button>
         )}
       </div>
     </div>
