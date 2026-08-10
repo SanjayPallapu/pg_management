@@ -1837,204 +1837,176 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
               return (
                 <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
-                  {/* Top Row: Name • Room No | Price for Paid, Action icons for Pending */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
-                      <span className="text-slate-400 font-medium text-sm">•</span>
-                      <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
-                    </div>
-                    {isPaid ? (
-                      <span className="text-lg font-extrabold text-foreground shrink-0">
-                        ₹{displayAmount.toLocaleString()}
-                      </span>
-                    ) : tenant.phone && tenant.phone !== "••••••••••" ? (
-                      <div className="flex items-center gap-4.5 ml-auto shrink-0">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const phone = tenant.phone.replace(/\D/g, "");
-                            const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                            const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                            window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
-                          }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-                        </button>
-                        <a
-                          href={`tel:${tenant.phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-                          title={`Call ${tenant.name}`}
-                        >
-                          <Phone className="h-5 w-5 stroke-[1.75]" />
-                        </a>
-                      </div>
-                    ) : null}
-                  </div>
+                  <div className="flex items-stretch justify-between gap-3">
+                    {/* Left Div */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        {/* Name • Room No */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+                          <span className="text-slate-400 font-medium text-sm">•</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
+                        </div>
 
-                  {/* Second Row: Joined: Date | Action icons for Paid */}
-                  <div className="mt-1 flex items-center justify-between gap-3">
-                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                      Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
-                    </span>
-                    {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
-                      <div className="flex items-center gap-4.5 ml-auto shrink-0">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const phone = tenant.phone.replace(/\D/g, "");
-                            const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                            window.open(`https://wa.me/${cleanPhone}`, "_blank");
-                          }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-                        </button>
-                        <a
-                          href={`tel:${tenant.phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-                          title={`Call ${tenant.name}`}
-                        >
-                          <Phone className="h-5 w-5 stroke-[1.75]" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Pro-rata visual indicator for mid-month leavers */}
-                  {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
-                    <Collapsible className="mt-2">
-                      <CollapsibleTrigger asChild>
-                        <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 flex items-center justify-between hover:bg-muted/70 transition-colors">
-                          <div className="flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3 text-primary" />
-                            <span className="text-muted-foreground">Pro-rata:</span>
-                            <span className="font-medium">
-                              {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹
-                              {tenant.effectiveRent.toLocaleString()}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">▼</span>
-                        </button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
+                        {/* Joined Date */}
                         <div className="mt-1">
-                          <StayPeriodIndicator
-                            startDate={tenant.startDate}
-                            endDate={tenant.endDate}
-                            year={selectedYear}
-                            month={selectedMonth}
-                            daysStayed={tenant.daysStayed}
-                            dailyRate={Math.round(tenant.monthlyRent / 30)}
-                            effectiveRent={tenant.effectiveRent}
-                            paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
-                            allowCustomStart
-                            compact
-                          />
+                          <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                            Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
+                          </span>
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
 
-                  {/* Third Row: Payments breakdown + Paid badge (for Paid cards) */}
-                  {isPaid ? (
-                    <div className="mt-3 flex items-end justify-between gap-3 pt-0.5">
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <div className="font-normal text-slate-500 dark:text-slate-400 text-sm">
-                          Payments:
-                        </div>
-                        {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
-                          tenant.payment.paymentEntries.map((entry, idx) => (
-                            <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                              <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
-                              <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
-                                {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                              </span>
+                        {/* Pro-rata visual indicator for mid-month leavers */}
+                        {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger asChild>
+                              <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 flex items-center justify-between hover:bg-muted/70 transition-colors">
+                                <div className="flex items-center gap-1">
+                                  <CalendarIcon className="h-3 w-3 text-primary" />
+                                  <span className="text-muted-foreground">Pro-rata:</span>
+                                  <span className="font-medium">
+                                    {tenant.daysStayed} days × ₹{Math.round(tenant.monthlyRent / 30).toLocaleString()}/day = ₹
+                                    {tenant.effectiveRent.toLocaleString()}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground">▼</span>
+                              </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-1">
+                                <StayPeriodIndicator
+                                  startDate={tenant.startDate}
+                                  endDate={tenant.endDate}
+                                  year={selectedYear}
+                                  month={selectedMonth}
+                                  daysStayed={tenant.daysStayed}
+                                  dailyRate={Math.round(tenant.monthlyRent / 30)}
+                                  effectiveRent={tenant.effectiveRent}
+                                  paymentEntries={tenant.payment.paymentEntries as PaymentEntry[]}
+                                  allowCustomStart
+                                  compact
+                                />
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+
+                        {/* Payments breakdown */}
+                        {((tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0) || isPaid) && (
+                          <div className="mt-2 space-y-1">
+                            <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
+                              {isPaid ? "Payments:" : "Payment:"}
                             </div>
-                          ))
-                        ) : (tenant.payment.amountPaid || 0) > 0 ? (
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                            <span>₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
-                          </div>
-                        ) : null}
+                            {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
+                              tenant.payment.paymentEntries.map((entry, idx) => (
+                                <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                  <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                                  <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                                    {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (tenant.payment.amountPaid || 0) > 0 ? (
+                              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                <span>₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
+                              </div>
+                            ) : null}
 
-                        {(tenant.payment as PaymentDisplayExtras).notes && (
-                          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                            📝 {(tenant.payment as PaymentDisplayExtras).notes}
+                            {(tenant.payment as PaymentDisplayExtras).notes && (
+                              <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                                📝 {(tenant.payment as PaymentDisplayExtras).notes}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        className="badge-paid-periwinkle cursor-pointer shrink-0 ml-auto"
-                        onClick={() => {
-                          if (editModeEnabled) {
-                            handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
-                          }
-                        }}
-                      >
-                        {editModeEnabled ? "Undo Paid" : "Paid"}
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Third Row for Pending: Payments breakdown */}
-                      {(tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0) && (
-                        <div className="mt-2 space-y-1">
-                          <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                            Payment:
-                          </div>
-                          {tenant.payment.paymentEntries.map((entry, idx) => (
-                            <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                              <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
-                              <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
-                                {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                              </span>
-                            </div>
-                          ))}
-                          {(tenant.payment as PaymentDisplayExtras).notes && (
-                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                              📝 {(tenant.payment as PaymentDisplayExtras).notes}
-                            </div>
-                          )}
+                      {/* Red Price Badge on bottom of Left Div (for Pending) */}
+                      {!isPaid && (
+                        <div className="mt-3 pt-1">
+                          <span className="price-badge-red shrink-0">
+                            ₹{displayAmount.toLocaleString()}
+                          </span>
                         </div>
                       )}
+                    </div>
 
-                      {/* Bottom Row for Pending: Red badge + Pay button */}
-                      <div className="mt-3 flex items-center justify-between gap-3 pt-1">
-                        <span className="price-badge-red shrink-0">
-                          ₹{displayAmount.toLocaleString()}
-                        </span>
-                        <div className="shrink-0 ml-auto">
-                          {isPartial ? (
-                            <button
-                              type="button"
-                              onClick={() => handlePayRemaining(tenant.id)}
-                              className="btn-pay-black"
-                            >
-                              Pay
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn-pay-black"
-                              onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
-                            >
-                              Pay
-                            </button>
-                          )}
-                        </div>
+                    {/* Right Div */}
+                    <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+                      {/* Top: Price for Paid */}
+                      <div>
+                        {isPaid && (
+                          <span className="text-lg font-extrabold text-foreground">
+                            ₹{displayAmount.toLocaleString()}
+                          </span>
+                        )}
                       </div>
-                    </>
-                  )}
+
+                      {/* Middle: Action icons */}
+                      {tenant.phone && tenant.phone !== "••••••••••" ? (
+                        <div className="flex items-center gap-4.5 my-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const phone = tenant.phone.replace(/\D/g, "");
+                              const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                              const msg = !isPaid
+                                ? encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`)
+                                : "";
+                              window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
+                            }}
+                            className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                          </button>
+                          <a
+                            href={`tel:${tenant.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                            title={`Call ${tenant.name}`}
+                          >
+                            <Phone className="h-5 w-5 stroke-[1.75]" />
+                          </a>
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      {/* Bottom: Paid badge or Pay button */}
+                      <div>
+                        {isPaid ? (
+                          <button
+                            type="button"
+                            className="badge-paid-periwinkle cursor-pointer"
+                            onClick={() => {
+                              if (editModeEnabled) {
+                                handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
+                              }
+                            }}
+                          >
+                            {editModeEnabled ? "Undo Paid" : "Paid"}
+                          </button>
+                        ) : isPartial ? (
+                          <button
+                            type="button"
+                            onClick={() => handlePayRemaining(tenant.id)}
+                            className="btn-pay-black"
+                          >
+                            Pay
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-pay-black"
+                            onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}

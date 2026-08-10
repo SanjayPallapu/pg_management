@@ -682,92 +682,110 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      {/* Top row: Name • Room No | Action icons (WhatsApp & Phone) */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
-          <span className="text-slate-400 font-medium text-sm">•</span>
-          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
-          {isSelected && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
-          )}
-        </div>
-        {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-4.5 shrink-0 ml-auto">
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                const phone = tenant.phone.replace(/\D/g, '');
-                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
-                const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-              }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-              title="Share payment reminder on WhatsApp"
-            >
-              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-            </button>
-            <a
-              href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-              onClick={(e) => e.stopPropagation()}
-              title={`Call ${tenant.name}`}
-            >
-              <Phone className="h-5 w-5 stroke-[1.75]" />
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Second row: Joined: Date */}
-      <div className="mt-1 flex items-center justify-between gap-3">
-        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-          Joined: {formattedJoinedDate}
-        </span>
-      </div>
-
-      {/* Third section: Payments breakdown (if partial payment) */}
-      {isPartiallyPaid && (
-        <div className="mt-2 space-y-1">
-          <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-            Payment:
-          </div>
-          {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
-            tenant.paymentEntries.map((entry, idx) => (
-              <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${fmtDate(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
-                <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
-                  {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <span>₹{tenant.amountPaid.toLocaleString()}</span>
+      <div className="flex items-stretch justify-between gap-3">
+        {/* Left Div */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            {/* Top row: Name • Room No */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+              <span className="text-slate-400 font-medium text-sm">•</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
+              {isSelected && (
+                <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
+              )}
             </div>
-          )}
+
+            {/* Second row: Joined Date */}
+            <div className="mt-1">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                Joined: {formattedJoinedDate}
+              </span>
+            </div>
+
+            {/* Third section: Payments breakdown (if partial payment) */}
+            {isPartiallyPaid && (
+              <div className="mt-2 space-y-1">
+                <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                  Payment:
+                </div>
+                {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
+                  tenant.paymentEntries.map((entry, idx) => (
+                    <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${fmtDate(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                      <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                        {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <span>₹{tenant.amountPaid.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Red price badge on bottom of Left Div */}
+          <div className="mt-3 pt-1">
+            <span className="price-badge-red shrink-0">
+              ₹{dueAmount.toLocaleString()}
+            </span>
+          </div>
         </div>
-      )}
 
-      {/* Bottom row: Red price badge (left) | Pay button (right) */}
-      <div className="mt-3 flex items-center justify-between gap-3 pt-1">
-        <span className="price-badge-red shrink-0">
-          ₹{dueAmount.toLocaleString()}
-        </span>
+        {/* Right Div */}
+        <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+          {/* Top placeholder */}
+          <div />
 
-        <button
-          type="button"
-          className="btn-pay-black shrink-0 ml-auto"
-          onClick={(event) => {
-            event.stopPropagation();
-            onMarkPaid?.(tenant);
-          }}
-          disabled={isMarkingPaid}
-        >
-          Pay
-        </button>
+          {/* Middle: Action icons (WhatsApp & Phone) */}
+          {tenant.phone && tenant.phone !== '••••••••••' ? (
+            <div className="flex items-center gap-4.5 my-2">
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const phone = tenant.phone.replace(/\D/g, '');
+                  const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                  const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
+                  const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                }}
+                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                title="Share payment reminder on WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+              </button>
+              <a
+                href={`tel:${tenant.phone}`}
+                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                onClick={(e) => e.stopPropagation()}
+                title={`Call ${tenant.name}`}
+              >
+                <Phone className="h-5 w-5 stroke-[1.75]" />
+              </a>
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {/* Bottom: Pay button */}
+          <div>
+            <button
+              type="button"
+              className="btn-pay-black shrink-0"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMarkPaid?.(tenant);
+              }}
+              disabled={isMarkingPaid}
+            >
+              Pay
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

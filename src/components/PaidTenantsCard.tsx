@@ -173,72 +173,88 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
 
   const TenantRow = ({ tenant, period }: { tenant: PaidTenantRow; period: { month: number; year: number } }) => (
     <div className="tenant-card-paid shadow-sm p-4 rounded-2xl">
-      {/* Top row: Name • Room No | Price Amount */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
-          <span className="text-slate-400 font-medium text-sm">•</span>
-          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
-        </div>
-        <span className="text-lg font-extrabold text-foreground shrink-0">
-          ₹{tenant.amountPaid.toLocaleString()}
-        </span>
-      </div>
-
-      {/* Second row: Joined: Date | Action icons (WhatsApp & Phone) */}
-      <div className="mt-1 flex items-center justify-between gap-3">
-        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-          Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
-        </span>
-        {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-4.5 ml-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                const phone = tenant.phone.replace(/\D/g, '');
-                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                window.open(`https://wa.me/${cleanPhone}`, '_blank');
-              }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-              title="Chat on WhatsApp"
-            >
-              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-            </button>
-            <a
-              href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-              aria-label={`Call ${tenant.name}`}
-            >
-              <Phone className="h-5 w-5 stroke-[1.75]" />
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Third row: Payments section + Paid badge */}
-      <div className="mt-3 flex items-end justify-between gap-3 pt-0.5">
-        <div className="space-y-1 min-w-0 flex-1">
-          <div className="font-normal text-slate-500 dark:text-slate-400 text-sm">
-            Payments:
-          </div>
-          {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
-            tenant.paymentEntries.map((entry, idx) => (
-              <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
-                <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
-                  {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <span>₹{tenant.amountPaid.toLocaleString()}</span>
+      <div className="flex items-stretch justify-between gap-3">
+        {/* Left Div */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            {/* Top row: Name • Room No */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+              <span className="text-slate-400 font-medium text-sm">•</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
             </div>
-          )}
+
+            {/* Joined Date */}
+            <div className="mt-1">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
+              </span>
+            </div>
+
+            {/* Payments section */}
+            <div className="mt-2 space-y-1">
+              <div className="font-normal text-slate-500 dark:text-slate-400 text-sm">
+                Payments:
+              </div>
+              {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
+                tenant.paymentEntries.map((entry, idx) => (
+                  <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                    <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                      {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <span>₹{tenant.amountPaid.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Paid badge */}
-        <span className="badge-paid-periwinkle shrink-0 ml-auto">Paid</span>
+        {/* Right Div */}
+        <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+          {/* Top: Price Amount */}
+          <div>
+            <span className="text-lg font-extrabold text-foreground">
+              ₹{tenant.amountPaid.toLocaleString()}
+            </span>
+          </div>
+
+          {/* Middle: Action icons */}
+          {tenant.phone && tenant.phone !== '••••••••••' ? (
+            <div className="flex items-center gap-4.5 my-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const phone = tenant.phone.replace(/\D/g, '');
+                  const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                  window.open(`https://wa.me/${cleanPhone}`, '_blank');
+                }}
+                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                title="Chat on WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+              </button>
+              <a
+                href={`tel:${tenant.phone}`}
+                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                aria-label={`Call ${tenant.name}`}
+              >
+                <Phone className="h-5 w-5 stroke-[1.75]" />
+              </a>
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {/* Bottom: Paid badge */}
+          <div>
+            <span className="badge-paid-periwinkle shrink-0">Paid</span>
+          </div>
+        </div>
       </div>
     </div>
   );
