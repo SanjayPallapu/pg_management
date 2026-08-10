@@ -104,96 +104,98 @@ export const TenantRentCard = ({
     (tenant.paymentCategory === 'partial' || tenant.paymentCategory === 'overdue' || tenant.paymentCategory === 'advance-not-paid') ? 'tenant-card-pending' : bgClass;
 
   return (
-    <div className={cn("transition-all duration-200", cardDesignClass)}>
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center gap-2">
-          <div className="font-semibold text-sm">
-            {tenant.name}
-          </div>
-          {/* Call badge */}
-          {tenant.phone && tenant.phone !== "••••••••••" && (
-            <a
-              href={`tel:${tenant.phone}`}
-              className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-upi hover:bg-upi-muted"
-              title={`Call ${tenant.name}`}
-            >
-              <Phone className="h-4 w-4" />
-            </a>
-          )}
-          {/* WhatsApp dropdown menu */}
-          {tenant.phone && tenant.phone !== "••••••••••" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    "h-6 w-6 flex items-center justify-center rounded-full transition-colors",
-                    whatsappSent
-                      ? "text-cash bg-cash-muted"
-                      : "text-muted-foreground hover:text-cash hover:bg-cash-muted"
-                  )}
-                  title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {(tenant.payment.paymentStatus === "Paid" || tenant.payment.paymentStatus === "Partial") && (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setTimeout(() => {
-                        onGenerateReceipt?.();
-                      }, 100);
-                    }}
-                    className="gap-2"
-                  >
-                    <Receipt className="h-4 w-4" />
-                    Generate Receipt
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => {
-                    const phone = tenant.phone.replace(/\D/g, "");
-                    window.location.href = `https://wa.me/${phone}`;
-                  }}
-                  className="gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Chat with Tenant
-                </DropdownMenuItem>
-                {tenant.payment.paymentStatus !== "Paid" && (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setTimeout(() => {
-                        onPaymentReminder?.();
-                      }, 100);
-                    }}
-                    className="gap-2"
-                  >
-                    <Bell className="h-4 w-4" />
-                    Payment Reminder
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+export const TenantRentCard = ({
+  tenant,
+  selectedMonth,
+  selectedYear,
+  whatsappSent = false,
+  editModeEnabled = false,
+  onMarkPaid,
+  onPayRemaining,
+  onGenerateReceipt,
+  onPaymentReminder,
+}: TenantRentCardProps) => {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const isPaid = tenant.payment.paymentStatus === "Paid";
+  const isPartial = tenant.paymentCategory === "partial";
+  const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
+    ? tenant.effectiveRent 
+    : tenant.monthlyRent;
+  const dueAmount = isPartial 
+    ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0))
+    : isPaid 
+      ? 0 
+      : targetRent;
+
+  const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+  const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : dueAmount;
+
+  const formattedJoinedDate = tenant.startDate
+    ? format(new Date(tenant.startDate), 'dd MMM yyyy')
+    : '';
+
+  return (
+    <div className={cn("transition-all duration-200 shadow-sm", cardDesignClass)}>
+      {/* Top Row: Name • Room No | Price (Red badge for pending, dark font for paid) */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+          <span className="text-slate-400 font-medium text-sm">•</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
         </div>
-      {isPartial ? (
-          <Badge className="bg-overdue text-overdue-foreground">₹{remaining.toLocaleString()}</Badge>
+        {isPaid ? (
+          <span className="text-lg font-extrabold text-foreground shrink-0">
+            ₹{displayAmount.toLocaleString()}
+          </span>
         ) : (
-          <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>
+          <span className="price-badge-red shrink-0">
+            ₹{displayAmount.toLocaleString()}
+          </span>
         )}
       </div>
-      
-      <div className="text-xs text-muted-foreground mb-2">
-        Room {tenant.roomNo}
+
+      {/* Second Row: Joined: Date | Action icons (WhatsApp & Call) */}
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+          Joined: {formattedJoinedDate}
+        </span>
+        {tenant.phone && tenant.phone !== "••••••••••" && (
+          <div className="flex items-center gap-2.5 ml-auto shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const phone = tenant.phone.replace(/\D/g, "");
+                const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                if (isPaid) {
+                  window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                } else {
+                  const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmount.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+                }
+              }}
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors"
+              title="Share on WhatsApp"
+            >
+              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+            </button>
+            <a
+              href={`tel:${tenant.phone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors"
+              title={`Call ${tenant.name}`}
+            >
+              <Phone className="h-5 w-5 stroke-[1.75]" />
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Pro-rata visual indicator for mid-month leavers */}
       {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
-        <Collapsible open={showCalendar} onOpenChange={setShowCalendar}>
+        <Collapsible open={showCalendar} onOpenChange={setShowCalendar} className="mt-2">
           <CollapsibleTrigger asChild>
-            <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 mb-2 flex items-center justify-between hover:bg-muted/70 transition-colors">
+            <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 flex items-center justify-between hover:bg-muted/70 transition-colors">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-primary" />
                 <span className="text-muted-foreground">Pro-rata:</span>
@@ -205,7 +207,7 @@ export const TenantRentCard = ({
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mb-2">
+            <div className="mt-1">
               <StayPeriodIndicator
                 startDate={tenant.startDate}
                 endDate={tenant.endDate}
@@ -223,58 +225,53 @@ export const TenantRentCard = ({
         </Collapsible>
       )}
 
-      {isPartial && (
-        <div className="text-sm font-medium mb-2">
-          <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
-          <span className="mx-2">•</span>
-          <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
-          {tenant.isProRata && tenant.daysStayed && (
-            <span className="text-xs text-muted-foreground ml-2">({tenant.daysStayed} days)</span>
-          )}
-        </div>
-      )}
-
-      <div className="flex justify-between items-end">
-        <div className="space-y-0.5">
-          <div className="text-xs text-muted-foreground">
-            Joined: {format(new Date(tenant.startDate), "dd MMM yyyy")}
+      {/* Third Row: Payments breakdown + Action (Pay button / Paid badge) */}
+      <div className="mt-2.5 flex items-end justify-between gap-2">
+        <div className="space-y-1 min-w-0 flex-1">
+          <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
+            Payments:
           </div>
-          {/* Display payment entries using shared component */}
-          <PaymentEntryDisplay entries={tenant.payment.paymentEntries} />
-          {/* Display discount and extra amounts if present */}
-          {(discount > 0 || extra > 0) && (
-            <div className="flex flex-wrap gap-2 mt-1">
-              {discount > 0 && (
-                <span className="text-xs font-medium text-primary">
-                  📋 Discount: ₹{discount.toLocaleString()}
+          {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
+            tenant.payment.paymentEntries.map((entry, idx) => (
+              <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(new Date(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                  {entry.mode === 'upi' ? 'UPI' : 'Cash'}
                 </span>
-              )}
-              {extra > 0 && (
-                <span className="text-xs font-medium text-upi">
-                  ➕ Extra: ₹{extra.toLocaleString()}{extraReason ? ` (${extraReason})` : ''}
-                </span>
-              )}
+              </div>
+            ))
+          ) : (tenant.payment.amountPaid || 0) > 0 ? (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <span>₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
             </div>
+          ) : null}
+        </div>
+
+        {/* Action Button / Badge */}
+        <div className="shrink-0">
+          {isPaid ? (
+            <span className="badge-paid-periwinkle">Paid</span>
+          ) : isPartial ? (
+            <button
+              type="button"
+              onClick={() => onPayRemaining(tenant.id)}
+              className="btn-pay-black"
+            >
+              Pay
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn-pay-black"
+              onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
+            >
+              Pay
+            </button>
           )}
         </div>
-        {isPartial ? (
-          <button
-            onClick={() => onPayRemaining(tenant.id)}
-            className="btn-pay-black"
-          >
-            Pay
-          </button>
-        ) : tenant.payment.paymentStatus === "Paid" ? (
-          <span className="badge-paid-periwinkle">Paid</span>
-        ) : (
-          <button
-            className="btn-pay-black"
-            onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
-          >
-            Mark Paid
-          </button>
-        )}
       </div>
     </div>
+  );
+};
   );
 };

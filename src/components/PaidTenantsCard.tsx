@@ -173,24 +173,25 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
 
   const TenantRow = ({ tenant, period }: { tenant: PaidTenantRow; period: { month: number; year: number } }) => (
     <div className="tenant-card-paid shadow-sm">
-      {/* Top row: Name | Amount */}
+      {/* Top row: Name • Room No | Price Amount */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-foreground">{tenant.name}</p>
-          <p className="mt-0.5 text-xs font-medium text-muted-foreground">Room {tenant.roomNo}</p>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+          <span className="text-slate-400 font-medium text-sm">•</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
         </div>
-        <span className="text-base font-extrabold text-foreground shrink-0">
+        <span className="text-lg font-extrabold text-foreground shrink-0">
           ₹{tenant.amountPaid.toLocaleString()}
         </span>
       </div>
 
-      {/* Joined date + WhatsApp/Call buttons */}
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">
+      {/* Second row: Joined: Date | Action icons (WhatsApp & Phone) */}
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
         </span>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="flex items-center gap-2.5 ml-auto shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -198,44 +199,46 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                 const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
                 window.open(`https://wa.me/${cleanPhone}`, '_blank');
               }}
-              className="h-7 w-7 flex items-center justify-center rounded-full bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/60 transition-colors"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors"
               title="Chat on WhatsApp"
             >
-              <MessageCircle className="h-3.5 w-3.5" />
+              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
             </button>
             <a
               href={`tel:${tenant.phone}`}
-              className="h-7 w-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-900/60 transition-colors"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors"
               aria-label={`Call ${tenant.name}`}
             >
-              <Phone className="h-3 w-3" />
+              <Phone className="h-5 w-5 stroke-[1.75]" />
             </a>
           </div>
         )}
       </div>
 
-      {/* Payments breakdown */}
-      {tenant.paymentEntries.length > 0 && (
-        <div className="mt-2 space-y-0.5">
-          <span className="payments-breakdown">Payments:</span>
-          <div className="flex flex-wrap gap-1 mt-0.5">
-            {tenant.paymentEntries.map((entry, idx) => (
-              <span key={idx} className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
-                {entry.mode === 'upi' ? 'UPI' : 'Cash'} ₹{entry.amount.toLocaleString()}
-              </span>
-            ))}
+      {/* Third row: Payments section + Paid badge */}
+      <div className="mt-2.5 flex items-end justify-between gap-2">
+        <div className="space-y-1 min-w-0 flex-1">
+          <div className="font-normal text-slate-500 dark:text-slate-400 text-sm">
+            Payments:
           </div>
+          {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
+            tenant.paymentEntries.map((entry, idx) => (
+              <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                  {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <span>₹{tenant.amountPaid.toLocaleString()}</span>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Paid badge + payment date */}
-      <div className="mt-3 flex items-center justify-between">
-        {tenant.paymentDate && (
-          <span className="text-[11px] text-muted-foreground">
-            Paid {format(parseDateOnly(tenant.paymentDate), 'dd MMM yy')}
-          </span>
-        )}
-        <span className="badge-paid-periwinkle ml-auto">Paid</span>
+        {/* Paid badge */}
+        <span className="badge-paid-periwinkle shrink-0">Paid</span>
       </div>
     </div>
   );
