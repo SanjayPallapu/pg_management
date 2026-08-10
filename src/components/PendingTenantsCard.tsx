@@ -682,7 +682,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      {/* Top row: Name • Room No */}
+      {/* Top row: Name • Room No | Action icons (WhatsApp & Phone) */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
@@ -692,53 +692,40 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
             <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
           )}
         </div>
+        {tenant.phone && tenant.phone !== '••••••••••' && (
+          <div className="flex items-center gap-4.5 shrink-0 ml-auto">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const phone = tenant.phone.replace(/\D/g, '');
+                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
+                const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
+                const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+              }}
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+              title="Share payment reminder on WhatsApp"
+            >
+              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+            </button>
+            <a
+              href={`tel:${tenant.phone}`}
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+              onClick={(e) => e.stopPropagation()}
+              title={`Call ${tenant.name}`}
+            >
+              <Phone className="h-5 w-5 stroke-[1.75]" />
+            </a>
+          </div>
+        )}
       </div>
 
-      {/* Second row: Joined: Date | Action icons + Pay button */}
+      {/* Second row: Joined: Date */}
       <div className="mt-1 flex items-center justify-between gap-3">
         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           Joined: {formattedJoinedDate}
         </span>
-        <div className="flex items-center gap-3 shrink-0 ml-auto">
-          {tenant.phone && tenant.phone !== '••••••••••' && (
-            <>
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const phone = tenant.phone.replace(/\D/g, '');
-                  const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                  const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
-                  const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-                }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                title="Share payment reminder on WhatsApp"
-              >
-                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-              </button>
-              <a
-                href={`tel:${tenant.phone}`}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
-                onClick={(e) => e.stopPropagation()}
-                title={`Call ${tenant.name}`}
-              >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
-              </a>
-            </>
-          )}
-          <button
-            type="button"
-            className="btn-pay-black shrink-0"
-            onClick={(event) => {
-              event.stopPropagation();
-              onMarkPaid?.(tenant);
-            }}
-            disabled={isMarkingPaid}
-          >
-            Pay
-          </button>
-        </div>
       </div>
 
       {/* Third section: Payments breakdown (if partial payment) */}
@@ -764,11 +751,23 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         </div>
       )}
 
-      {/* Bottom row: Red price badge */}
+      {/* Bottom row: Red price badge (left) | Pay button (right) */}
       <div className="mt-3 flex items-center justify-between gap-3 pt-1">
         <span className="price-badge-red shrink-0">
           ₹{dueAmount.toLocaleString()}
         </span>
+
+        <button
+          type="button"
+          className="btn-pay-black shrink-0 ml-auto"
+          onClick={(event) => {
+            event.stopPropagation();
+            onMarkPaid?.(tenant);
+          }}
+          disabled={isMarkingPaid}
+        >
+          Pay
+        </button>
       </div>
     </div>
   );
