@@ -217,7 +217,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price Amount */}
-          <div>
+          <div className="w-[72px] text-center">
             <span className="text-lg font-extrabold text-foreground">
               ₹{tenant.amountPaid.toLocaleString()}
             </span>

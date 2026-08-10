@@ -221,7 +221,7 @@ export const TenantRentCard = ({
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price for Paid */}
-          <div>
+          <div className="w-[72px] text-center">
             {isPaid && (
               <span className="text-lg font-extrabold text-foreground">
                 ₹{displayAmount.toLocaleString()}
