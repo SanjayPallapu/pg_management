@@ -1831,155 +1831,72 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                 }, 100);
               };
               return (
-                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("p-3 rounded-xl transition-all duration-200", bgClass)}>
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="font-semibold text-sm">
-                        {tenant.name}
-                      </div>
+              const isPaid = tenant.payment.paymentStatus === "Paid";
+              const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+              const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 
-                      {/* Call badge */}
-                      {tenant.phone && tenant.phone !== "••••••••••" && (
-                        <a
-                          href={`tel:${tenant.phone}`}
-                          className="h-6 w-6 flex items-center justify-center rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                          title={`Call ${tenant.name}`}
-                        >
-                          <Phone className="h-4 w-4" />
-                        </a>
-                      )}
-                      {/* WhatsApp dropdown menu - shows for paid/partial, or dropdown for others */}
-                      {tenant.phone && tenant.phone !== "••••••••••" && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className={`h-6 w-6 flex items-center justify-center rounded-full transition-colors ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
-                              title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            {(tenant.payment.paymentStatus === "Paid" ||
-                              tenant.payment.paymentStatus === "Partial") && (
-                              <DropdownMenuItem 
-                                onClick={handleResendReceipt}
-                                className="gap-2"
-                              >
-                                <Receipt className="h-4 w-4" />
-                                Generate Receipt
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const phone = tenant.phone.replace(/\D/g, "");
-                                window.location.href = `https://wa.me/${phone}`;
-                              }}
-                              className="gap-2"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                              Chat with Tenant
-                            </DropdownMenuItem>
-                            {tenant.payment.paymentStatus !== "Paid" && (
-                              <DropdownMenuItem 
-                                onClick={openPaymentReminder}
-                                className="gap-2"
-                              >
-                                <Bell className="h-4 w-4" />
-                                Payment Reminder
-                              </DropdownMenuItem>
-                            )}
-                            {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
-                                  const event = new CustomEvent("openSecurityDeposit", {
-                                    detail: {
-                                      tenantId: tenant.id,
-                                      tenantName: tenant.name,
-                                      tenantPhone: tenant.phone,
-                                      roomNo: tenant.roomNo,
-                                      roomCapacity: room?.capacity,
-                                    },
-                                  });
-                                  setTimeout(() => window.dispatchEvent(event), 100);
-                                }}
-                                className="gap-2"
-                              >
-                                <Wallet className="h-4 w-4" />
-                                Security Deposit
-                              </DropdownMenuItem>
-                            )}
-                            {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const event = new CustomEvent("openSecurityDepositReceipt", {
-                                    detail: {
-                                      tenantId: tenant.id
-                                    },
-                                  });
-                                  setTimeout(() => window.dispatchEvent(event), 100);
-                                }}
-                                className="gap-2"
-                              >
-                                <Receipt className="h-4 w-4" />
-                                Security Deposit Receipt
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const room = rooms.find((r) => r.tenants.some((t) => t.id === tenant.id));
-                                setWelcomeData({
-                                  tenantName: tenant.name,
-                                  tenantPhone: tenant.phone,
-                                  joiningDate: tenant.startDate,
-                                  roomNo: tenant.roomNo,
-                                  sharingType: room ? `${room.capacity} Sharing` : "",
-                                  monthlyRent: tenant.monthlyRent,
-                                });
-                                setTimeout(() => setWelcomeDialogOpen(true), 100);
-                              }}
-                              className="gap-2"
-                            >
-                              <PartyPopper className="h-4 w-4" />
-                              Welcome
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setTimeout(() => openRulesDialog(tenant.name, tenant.phone), 100);
-                              }}
-                              className="gap-2"
-                            >
-                              <BookOpen className="h-4 w-4" />
-                              Rules & Regulations
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+              return (
+                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
+                  {/* Top Row: Name • Room No | Price (Red badge for pending, dark font for paid) */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+                      <span className="text-slate-400 font-medium text-sm">•</span>
+                      <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
                     </div>
-                    {isPartial ? (
-                      <Badge className="bg-overdue text-overdue-foreground">₹{remaining.toLocaleString()}</Badge>
+                    {isPaid ? (
+                      <span className="text-lg font-extrabold text-foreground shrink-0">
+                        ₹{displayAmount.toLocaleString()}
+                      </span>
                     ) : (
-                      <div className="font-semibold text-sm">₹{tenant.monthlyRent.toLocaleString()}</div>
+                      <span className="price-badge-red shrink-0">
+                        ₹{displayAmount.toLocaleString()}
+                      </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-muted-foreground">
-                      Room {tenant.roomNo}
-                    </div>
 
+                  {/* Second Row: Joined: Date | Action icons (WhatsApp & Call) */}
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                      Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
+                    </span>
+                    {tenant.phone && tenant.phone !== "••••••••••" && (
+                      <div className="flex items-center gap-3 ml-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const phone = tenant.phone.replace(/\D/g, "");
+                            const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                            if (isPaid) {
+                              window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                            } else {
+                              const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
+                              window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+                            }
+                          }}
+                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                        </button>
+                        <a
+                          href={`tel:${tenant.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                          title={`Call ${tenant.name}`}
+                        >
+                          <Phone className="h-5 w-5 stroke-[1.75]" />
+                        </a>
+                      </div>
+                    )}
                   </div>
+
                   {/* Pro-rata visual indicator for mid-month leavers */}
                   {tenant.isProRata && tenant.daysStayed && tenant.effectiveRent !== undefined && (
-                    <Collapsible>
+                    <Collapsible className="mt-2">
                       <CollapsibleTrigger asChild>
-                        <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 mb-2 flex items-center justify-between hover:bg-muted/70 transition-colors">
+                        <button className="w-full text-xs bg-muted/50 rounded px-2 py-1.5 flex items-center justify-between hover:bg-muted/70 transition-colors">
                           <div className="flex items-center gap-1">
                             <CalendarIcon className="h-3 w-3 text-primary" />
                             <span className="text-muted-foreground">Pro-rata:</span>
@@ -1992,7 +1909,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="mb-2">
+                        <div className="mt-1">
                           <StayPeriodIndicator
                             startDate={tenant.startDate}
                             endDate={tenant.endDate}
@@ -2010,77 +1927,67 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     </Collapsible>
                   )}
 
-                  {isPartial && (
-                    <div className="text-sm font-medium mb-2">
-                      <span className="text-paid">Paid: ₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
-                      <span className="mx-2">•</span>
-                      <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
-                      {tenant.isProRata && tenant.daysStayed && (
-                        <span className="text-xs text-muted-foreground ml-2">({tenant.daysStayed} days)</span>
-                      )}
-                    </div>
-                  )}
-
-
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-0.5">
-                      <div className="text-xs text-muted-foreground">
-                        Joined: {format(new Date(tenant.startDate), "dd MMM yyyy")}
+                  {/* Third Row: Payments breakdown + Action Button (Pay / Paid) */}
+                  <div className="mt-2.5 flex items-end justify-between gap-3 pt-1">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
+                        Payments:
                       </div>
-                      {/* Display payment entries */}
-                      {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0
-                        ? tenant.payment.paymentEntries.map((entry, idx) => (
-                            <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
-                              <span>
-                                {entry.type === "partial"
-                                  ? "Partial"
-                                  : entry.type === "remaining"
-                                    ? "Remaining"
-                                    : "Paid"}
-                                : ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), "dd MMM yyyy")}
-                              </span>
-                              {entry.mode && (
-                                <span
-                                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === "upi" ? "bg-upi-muted text-upi" : "bg-cash-muted text-cash"}`}
-                                >
-                                  {entry.mode === "upi" ? "UPI" : "Cash"}
-                                </span>
-                              )}
-                            </div>
-                          ))
-                        : tenant.payment.paymentDate && (
-                            <div className="text-xs text-muted-foreground">
-                              Paid on: {format(new Date(tenant.payment.paymentDate), "dd MMM yyyy")}
-                            </div>
-                          )}
-                      {/* Display overpayment notes */}
+                      {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
+                        tenant.payment.paymentEntries.map((entry, idx) => (
+                          <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                            <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(parseDateOnly(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                            <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                              {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                            </span>
+                          </div>
+                        ))
+                      ) : (tenant.payment.amountPaid || 0) > 0 ? (
+                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                          <span>₹{(tenant.payment.amountPaid || 0).toLocaleString()}</span>
+                        </div>
+                      ) : null}
+
+                      {/* Display notes if present */}
                       {(tenant.payment as PaymentDisplayExtras).notes && (
                         <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
                           📝 {(tenant.payment as PaymentDisplayExtras).notes}
                         </div>
                       )}
                     </div>
-                    {isPartial ? (
-                      <Button
-                        onClick={() => handlePayRemaining(tenant.id)}
-                        size="sm"
-                        className="text-xs h-7 px-3 bg-foreground text-background hover:bg-foreground/90"
-                      >
-                        Pay
-                      </Button>
-                    ) : (
-                      <Button
-                        variant={tenant.payment.paymentStatus === "Paid" ? "default" : "outline"}
-                        size="sm"
-                        className="text-xs h-7 px-3"
-                        disabled={tenant.payment.paymentStatus === "Paid" && !editModeEnabled}
-                        onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
-                      >
-                        {tenant.payment.paymentStatus === "Paid"
-                          ? (editModeEnabled ? "Undo Paid" : "Paid")
-                          : "Mark Paid"}
-                      </Button>
-                    )}
+
+                    {/* Action Button / Badge */}
+                    <div className="shrink-0 ml-2">
+                      {isPaid ? (
+                        <button
+                          type="button"
+                          className="badge-paid-periwinkle cursor-pointer"
+                          onClick={() => {
+                            if (editModeEnabled) {
+                              handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
+                            }
+                          }}
+                        >
+                          {editModeEnabled ? "Undo Paid" : "Paid"}
+                        </button>
+                      ) : isPartial ? (
+                        <button
+                          type="button"
+                          onClick={() => handlePayRemaining(tenant.id)}
+                          className="btn-pay-black"
+                        >
+                          Pay
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-pay-black"
+                          onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
+                        >
+                          Pay
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
