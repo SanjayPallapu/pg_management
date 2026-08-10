@@ -670,13 +670,19 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
     ? fmtDate(parseDateOnly(tenant.startDate), 'dd MMM yyyy')
     : '';
 
+  const cardColorStyle = isPartiallyPaid || categoryColor === 'amber'
+    ? 'bg-[#FFF9EE] border-amber-200 border-l-amber-500 dark:bg-[#251C14] dark:border-amber-900/50'
+    : categoryColor === 'blue'
+    ? 'bg-[#F0F7FF] border-blue-200 border-l-blue-500 dark:bg-[#142032] dark:border-blue-900/50'
+    : 'bg-[#FFF5EA] border-[#FCE4C8] border-l-[#FF8A00] dark:bg-[#251B14] dark:border-[#3D2B1F]';
+
   return (
     <div 
-      className={`tenant-card-pending shadow-sm ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
+      className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
       {/* Top row: Name • Room No | Red Price Badge */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
@@ -686,18 +692,18 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           )}
         </div>
         {/* Red price badge */}
-        <span className="price-badge-red shrink-0">
+        <span className="price-badge-red shrink-0 ml-2">
           ₹{dueAmount.toLocaleString()}
         </span>
       </div>
 
       {/* Second row: Joined: Date | Action icons (WhatsApp & Phone) */}
-      <div className="mt-1 flex items-center justify-between gap-2">
+      <div className="mt-2 flex items-center justify-between gap-3">
         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           Joined: {formattedJoinedDate}
         </span>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-2.5 ml-auto shrink-0">
+          <div className="flex items-center gap-3 ml-auto shrink-0">
             <button 
               type="button"
               onClick={(e) => {
@@ -708,14 +714,14 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
                 window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
               title="Share payment reminder on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
             </button>
             <a
               href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
               onClick={(e) => e.stopPropagation()}
               title={`Call ${tenant.name}`}
             >
@@ -726,7 +732,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       </div>
 
       {/* Third row: Payments section + Pay button */}
-      <div className="mt-2.5 flex items-end justify-between gap-2">
+      <div className="mt-3 flex items-end justify-between gap-3 pt-1">
         <div className="space-y-1 min-w-0 flex-1">
           <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
             Payments:
@@ -750,7 +756,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         {/* Pay button */}
         <button
           type="button"
-          className="btn-pay-black shrink-0"
+          className="btn-pay-black shrink-0 ml-2"
           onClick={(event) => {
             event.stopPropagation();
             onMarkPaid?.(tenant);

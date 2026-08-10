@@ -184,22 +184,23 @@ export const TenantsByDueDaySheet = ({
                         </div>
                         <div className="flex-1" />
                         {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <>
-                            <a
-                              href={`tel:${tenant.phone}`}
-                              className="p-2 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                              title={`Call ${tenant.name}`}
-                            >
-                              <Phone className="h-4 w-4" />
-                            </a>
+                          <div className="flex items-center gap-3">
                             <button
+                              type="button"
                               onClick={() => openWhatsAppChat(tenant.phone)}
-                              className="p-2 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
                               title={`WhatsApp ${tenant.name}`}
                             >
-                              <MessageCircle className="h-4 w-4" />
+                              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
                             </button>
-                          </>
+                            <a
+                              href={`tel:${tenant.phone}`}
+                              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                              title={`Call ${tenant.name}`}
+                            >
+                              <Phone className="h-5 w-5 stroke-[1.75]" />
+                            </a>
+                          </div>
                         )}
                       </div>
                     </div>

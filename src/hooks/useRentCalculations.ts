@@ -97,10 +97,13 @@ export const useRentCalculations = ({
           
           let paymentCategory: PaymentCategory;
           
-          // For pro-rata: check if paid amount meets effective rent (not full monthly rent)
-          const targetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+          // Helper to parse discount from notes
+          const discount = payment?.notes ? (payment.notes.match(/Discount:\s*₹?(\d+)/i) ? parseInt(payment.notes.match(/Discount:\s*₹?(\d+)/i)![1], 10) : 0) : 0;
+
+          const baseTargetRent = isProRata ? effectiveRent : tenant.monthlyRent;
+          const targetRent = Math.max(0, baseTargetRent - discount);
           
-          if (payment?.paymentStatus === 'Paid' || (amountPaid >= targetRent && targetRent > 0)) {
+          if (payment?.paymentStatus === 'Paid' || (amountPaid + discount >= baseTargetRent && baseTargetRent > 0) || (amountPaid >= targetRent && targetRent >= 0)) {
             paymentCategory = 'paid';
           }
           else if (payment?.paymentStatus === 'Partial' || (amountPaid > 0 && amountPaid < targetRent)) {
@@ -170,7 +173,9 @@ export const useRentCalculations = ({
     const totalPending = unlockedTenants
       .filter(t => t.paymentCategory !== 'paid' && t.paymentCategory !== 'not-due')
       .reduce((sum, t) => {
-        const targetRent = t.effectiveRent || t.monthlyRent;
+        const payment = payments.find(p => p.tenantId === t.id && p.month === selectedMonth && p.year === selectedYear);
+        const discount = payment?.notes ? (payment.notes.match(/Discount:\s*₹?(\d+)/i) ? parseInt(payment.notes.match(/Discount:\s*₹?(\d+)/i)![1], 10) : 0) : 0;
+        const targetRent = Math.max(0, (t.effectiveRent || t.monthlyRent) - discount);
         if (t.paymentCategory === 'partial') {
           return sum + Math.max(0, targetRent - (t.amountPaid || 0));
         }

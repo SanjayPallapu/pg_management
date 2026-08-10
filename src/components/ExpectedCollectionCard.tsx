@@ -309,23 +309,25 @@ export const ExpectedCollectionCard = ({
                               </div>
                             </div>
                             {tenant.phone && tenant.phone !== '••••••••••' && (
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <a
-                                  href={`tel:${tenant.phone}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                                  aria-label={`Call ${tenant.name}`}
-                                >
-                                  <Phone className="h-3.5 w-3.5" />
-                                </a>
+                              <div className="flex items-center gap-2.5 shrink-0 ml-auto">
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); openWhatsAppChat(tenant.phone); }}
-                                  className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                  className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
                                   aria-label={`WhatsApp ${tenant.name}`}
+                                  title={`WhatsApp ${tenant.name}`}
                                 >
-                                  <MessageCircle className="h-3.5 w-3.5" />
+                                  <MessageCircle className="h-5 w-5 stroke-[1.75]" />
                                 </button>
+                                <a
+                                  href={`tel:${tenant.phone}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                                  aria-label={`Call ${tenant.name}`}
+                                  title={`Call ${tenant.name}`}
+                                >
+                                  <Phone className="h-5 w-5 stroke-[1.75]" />
+                                </a>
                               </div>
                             )}
                           </div>
