@@ -231,7 +231,7 @@ export const TenantRentCard = ({
 
           {/* Middle: Action icons */}
           {tenant.phone && tenant.phone !== "••••••••••" ? (
-            <div className="flex items-center gap-5.5 my-2">
+            <div className="w-[72px] flex items-center justify-between my-2">
               <button
                 type="button"
                 onClick={(e) => {
@@ -243,7 +243,7 @@ export const TenantRentCard = ({
                     : "";
                   window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
                 }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
                 title="Share on WhatsApp"
               >
                 <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -251,7 +251,7 @@ export const TenantRentCard = ({
               <a
                 href={`tel:${tenant.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
                 title={`Call ${tenant.name}`}
               >
                 <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -264,19 +264,19 @@ export const TenantRentCard = ({
           {/* Bottom: Paid badge or Pay button */}
           <div>
             {isPaid ? (
-              <span className="badge-paid-periwinkle shrink-0">Paid</span>
+              <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
             ) : isPartial ? (
               <button
                 type="button"
                 onClick={() => onPayRemaining(tenant.id)}
-                className="btn-pay-black"
+                className="btn-pay-black w-[72px] px-0 text-center"
               >
                 Pay
               </button>
             ) : (
               <button
                 type="button"
-                className="btn-pay-black"
+                className="btn-pay-black w-[72px] px-0 text-center"
                 onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
               >
                 Pay

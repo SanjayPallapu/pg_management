@@ -225,7 +225,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
 
           {/* Middle: Action icons */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
-            <div className="flex items-center gap-5.5 my-2">
+            <div className="w-[72px] flex items-center justify-between my-2">
               <button
                 type="button"
                 onClick={() => {
@@ -233,14 +233,14 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                   const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
                   window.open(`https://wa.me/${cleanPhone}`, '_blank');
                 }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
                 title="Chat on WhatsApp"
               >
                 <MessageCircle className="h-5 w-5 stroke-[1.75]" />
               </button>
               <a
                 href={`tel:${tenant.phone}`}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
                 aria-label={`Call ${tenant.name}`}
               >
                 <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -252,7 +252,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
 
           {/* Bottom: Paid badge */}
           <div>
-            <span className="badge-paid-periwinkle shrink-0">Paid</span>
+            <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
           </div>
         </div>
       </div>

@@ -1943,7 +1943,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
                       {/* Middle: Action icons */}
                       {tenant.phone && tenant.phone !== "••••••••••" ? (
-                        <div className="flex items-center gap-5.5 my-2">
+                        <div className="w-[72px] flex items-center justify-between my-2">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1955,7 +1955,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                                 : "";
                               window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
                             }}
-                            className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                            className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
                             title="WhatsApp"
                           >
                             <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -1963,7 +1963,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <a
                             href={`tel:${tenant.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                            className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
                             title={`Call ${tenant.name}`}
                           >
                             <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -1978,7 +1978,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         {isPaid ? (
                           <button
                             type="button"
-                            className="badge-paid-periwinkle cursor-pointer"
+                            className="badge-paid-periwinkle min-w-[72px] px-2 text-center cursor-pointer"
                             onClick={() => {
                               if (editModeEnabled) {
                                 handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
@@ -1991,14 +1991,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <button
                             type="button"
                             onClick={() => handlePayRemaining(tenant.id)}
-                            className="btn-pay-black"
+                            className="btn-pay-black w-[72px] px-0 text-center"
                           >
                             Pay
                           </button>
                         ) : (
                           <button
                             type="button"
-                            className="btn-pay-black"
+                            className="btn-pay-black w-[72px] px-0 text-center"
                             onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                           >
                             Pay

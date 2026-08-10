@@ -739,7 +739,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Action icons (WhatsApp & Phone) */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
-            <div className="flex items-center gap-5.5">
+            <div className="w-[72px] flex items-center justify-between">
               <button 
                 type="button"
                 onClick={(e) => {
@@ -750,14 +750,14 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                   const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
                   window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                 }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
                 title="Share payment reminder on WhatsApp"
               >
                 <MessageCircle className="h-5 w-5 stroke-[1.75]" />
               </button>
               <a
                 href={`tel:${tenant.phone}`}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
                 onClick={(e) => e.stopPropagation()}
                 title={`Call ${tenant.name}`}
               >
@@ -772,7 +772,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           <div>
             <button
               type="button"
-              className="btn-pay-black shrink-0"
+              className="btn-pay-black w-[72px] px-0 text-center shrink-0"
               onClick={(event) => {
                 event.stopPropagation();
                 onMarkPaid?.(tenant);
