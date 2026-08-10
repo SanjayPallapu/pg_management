@@ -1849,7 +1849,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         ₹{displayAmount.toLocaleString()}
                       </span>
                     ) : tenant.phone && tenant.phone !== "••••••••••" ? (
-                      <div className="flex items-center gap-3.5 ml-auto shrink-0">
+                      <div className="flex items-center gap-4.5 ml-auto shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1859,7 +1859,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
                             window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
                           }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
+                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
                           title="WhatsApp"
                         >
                           <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -1867,7 +1867,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         <a
                           href={`tel:${tenant.phone}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
+                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
                           title={`Call ${tenant.name}`}
                         >
                           <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -1882,7 +1882,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                       Joined: {tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd MMM yyyy") : ""}
                     </span>
                     {isPaid && tenant.phone && tenant.phone !== "••••••••••" && (
-                      <div className="flex items-center gap-3.5 ml-auto shrink-0">
+                      <div className="flex items-center gap-4.5 ml-auto shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1891,7 +1891,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
                             window.open(`https://wa.me/${cleanPhone}`, "_blank");
                           }}
-                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
+                          className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
                           title="WhatsApp"
                         >
                           <MessageCircle className="h-5 w-5 stroke-[1.75]" />
@@ -1899,7 +1899,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         <a
                           href={`tel:${tenant.phone}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
+                          className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
                           title={`Call ${tenant.name}`}
                         >
                           <Phone className="h-5 w-5 stroke-[1.75]" />
@@ -1947,7 +1947,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                   {((tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0) || isPaid) && (
                     <div className="mt-2 space-y-1">
                       <div className={cn("text-sm font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400")}>
-                        Payments:
+                        {isPaid ? "Payments:" : "Payment:"}
                       </div>
                       {tenant.payment.paymentEntries && tenant.payment.paymentEntries.length > 0 ? (
                         tenant.payment.paymentEntries.map((entry, idx) => (

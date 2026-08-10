@@ -191,7 +191,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
           Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
         </span>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-3.5 ml-auto shrink-0">
+          <div className="flex items-center gap-4.5 ml-auto shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -199,14 +199,14 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
                 const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
                 window.open(`https://wa.me/${cleanPhone}`, '_blank');
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
               title="Chat on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
             </button>
             <a
               href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
               aria-label={`Call ${tenant.name}`}
             >
               <Phone className="h-5 w-5 stroke-[1.75]" />

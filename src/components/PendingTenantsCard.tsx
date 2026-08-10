@@ -670,6 +670,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
     ? fmtDate(parseDateOnly(tenant.startDate), 'dd MMM yyyy')
     : '';
 
+  // Red for pending/overdue (0 paid), Orange for partial payment, Blue for not-yet-due
   const cardColorStyle = isPartiallyPaid || categoryColor === 'amber'
     ? 'bg-[#FFF9EE] border-amber-200 border-l-amber-500 dark:bg-[#251C14] dark:border-amber-900/50'
     : categoryColor === 'blue'
@@ -682,7 +683,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       onClick={() => onToggle(tenant.id)}
     >
       {/* Top row: Name • Room No | Action icons (WhatsApp & Phone with generous gap) */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
           <span className="text-slate-400 font-medium text-sm">•</span>
@@ -692,7 +693,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
           )}
         </div>
         {tenant.phone && tenant.phone !== '••••••••••' && (
-          <div className="flex items-center gap-3.5 shrink-0 ml-auto">
+          <div className="flex items-center gap-4.5 shrink-0 ml-auto">
             <button 
               type="button"
               onClick={(e) => {
@@ -703,14 +704,14 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
                 window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
               }}
-              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0.5"
+              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
               title="Share payment reminder on WhatsApp"
             >
               <MessageCircle className="h-5 w-5 stroke-[1.75]" />
             </button>
             <a
               href={`tel:${tenant.phone}`}
-              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0.5"
+              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
               onClick={(e) => e.stopPropagation()}
               title={`Call ${tenant.name}`}
             >
@@ -731,7 +732,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
       {isPartiallyPaid && (
         <div className="mt-2 space-y-1">
           <div className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-            Payments:
+            Payment:
           </div>
           {tenant.paymentEntries && tenant.paymentEntries.length > 0 ? (
             tenant.paymentEntries.map((entry, idx) => (
