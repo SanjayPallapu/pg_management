@@ -739,7 +739,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Action icons (WhatsApp & Phone) */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
-            <div className="flex items-center gap-7">
+            <div className="flex items-center gap-5.5">
               <button 
                 type="button"
                 onClick={(e) => {

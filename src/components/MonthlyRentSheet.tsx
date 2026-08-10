@@ -1943,7 +1943,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
                       {/* Middle: Action icons */}
                       {tenant.phone && tenant.phone !== "••••••••••" ? (
-                        <div className="flex items-center gap-7 my-2">
+                        <div className="flex items-center gap-5.5 my-2">
                           <button
                             type="button"
                             onClick={(e) => {
