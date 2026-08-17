@@ -192,7 +192,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
           <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
 
         {/* Filters */}
-        <div className="space-y-3 py-3 border-b">
+        <div className="space-y-3 rounded-2xl border border-border/60 bg-card p-3 shadow-sm">
           <div className="flex gap-2">
             <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as DateFilter)}>
               <SelectTrigger className="w-full">
@@ -239,17 +239,17 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
         </div>
 
         {/* Summary */}
-        <div className="py-3 border-b">
+        <div className="py-3">
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="p-2 bg-muted/50 rounded-lg">
+            <div className="rounded-xl border border-border/50 bg-muted/40 p-2.5">
               <div className="text-xs text-muted-foreground">Total</div>
               <div className="font-semibold text-sm">₹{totalAmount.toLocaleString()}</div>
             </div>
-            <div className="p-2 bg-blue-500/10 rounded-lg">
+            <div className="rounded-xl border border-blue-500/15 bg-blue-500/10 p-2.5">
               <div className="text-xs text-muted-foreground">UPI</div>
               <div className="font-semibold text-sm text-blue-600">₹{upiTotal.toLocaleString()}</div>
             </div>
-            <div className="p-2 bg-green-500/10 rounded-lg">
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/10 p-2.5">
               <div className="text-xs text-muted-foreground">Cash</div>
               <div className="font-semibold text-sm text-green-600">₹{cashTotal.toLocaleString()}</div>
             </div>
@@ -270,7 +270,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
               return (
                 <div
                   key={key}
-                  className="p-3 rounded-lg border bg-card">
+                  className="rounded-2xl border border-border/60 bg-card p-3 shadow-sm">
 
                   {/* Header */}
                   <div className="flex justify-between items-start mb-2">
@@ -278,7 +278,7 @@ export const PaymentHistorySheet = ({ open, onOpenChange }: PaymentHistorySheetP
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{group.tenantName}</span>
                         <Badge variant="outline" className="text-xs">
-                          Room {group.roomNo}
+                          R{group.roomNo}
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">

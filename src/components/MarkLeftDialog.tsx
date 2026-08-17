@@ -219,7 +219,10 @@ export const MarkLeftDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="inset-0 left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 p-0 gap-0 flex flex-col data-[state=open]:slide-in-from-bottom-4">
+      <AlertDialogContent
+        className="inset-0 left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 p-0 gap-0 flex flex-col data-[state=open]:slide-in-from-bottom-4"
+        style={{ paddingBottom: "var(--bottom-nav-offset, 0px)" }}
+      >
         <AlertDialogHeader className="shrink-0 space-y-0 text-left border-b border-border bg-background px-3 py-3">
           <div className="flex items-center gap-2">
             <Button
@@ -254,7 +257,7 @@ export const MarkLeftDialog = ({
                 mode="single"
                 selected={leaveDate}
                 onSelect={(date) => date && setLeaveDate(date)}
-                className={cn("rounded-md border pointer-events-auto mx-auto")}
+                className={cn("mx-auto w-fit rounded-xl border p-3 pointer-events-auto [&_.rdp-table]:mx-auto [&_.rdp-month]:mx-auto")}
               />
             </div>
           </div>
@@ -524,7 +527,7 @@ export const MarkLeftDialog = ({
 
         </div>
 
-        <AlertDialogFooter className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <AlertDialogFooter className="sticky bottom-0 z-10 shrink-0 border-t border-border bg-background/95 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {step === "date" && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -628,15 +628,15 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex flex-shrink-0 items-center gap-1.5">
                     {/* Call badge */}
                     {tenant.phone && tenant.phone !== "••••••••••" && (
                       <a
                         href={`tel:${tenant.phone}`}
-                        className="p-1 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                         title={`Call ${tenant.name}`}
                       >
-                        <Phone className="h-3 w-3" />
+                        <Phone className="h-4 w-4" />
                       </a>
                     )}
                     {/* WhatsApp dropdown menu - Always visible */}
@@ -644,10 +644,10 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className={`p-1 rounded-full transition-colors ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
+                          className={`grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 transition-colors ${whatsappSent ? "bg-emerald-500/20 text-emerald-600" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"}`}
                           title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
                         >
-                          <MessageCircle className="h-3.5 w-3.5" />
+                          <MessageCircle className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -740,11 +740,11 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
-                            onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                            onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
                             className="gap-2"
                           >
                             <ClipboardList className="h-4 w-4" />
-                            Complete Tenant Profile
+                            {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
