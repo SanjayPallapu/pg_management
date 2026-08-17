@@ -71,8 +71,8 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
   if (rooms.length === 0) return null;
 
   return (
-    <Card className="mb-3">
-      <CardContent className="p-3">
+    <Card className="mb-3 rounded-xl border-border/60">
+      <CardContent className="p-2.5">
         <button
           type="button"
           className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground mb-0 cursor-pointer hover:text-foreground transition-colors"
@@ -82,13 +82,13 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isExpanded && "rotate-180")} />
         </button>
         <div className={cn("quick-room-strip", isExpanded ? "expanded mt-2" : "collapsed")}>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-7 gap-1">
             {items.map((item) => (
               <button
                 key={item.roomNo}
                 onClick={() => onSelect(item.roomNo)}
                 className={cn(
-                  "min-w-[44px] px-2 py-1.5 text-xs font-semibold rounded-md border transition-all hover:scale-105 active:scale-95",
+                  "min-w-0 px-0.5 py-1.5 text-[11px] font-semibold rounded-md border transition-all hover:scale-105 active:scale-95",
                   colorFor[item.status],
                 )}
                 title={`Room ${item.roomNo} • ${item.status}`}

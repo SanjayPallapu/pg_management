@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Trash2, Edit2, Plus, Settings2, ArrowLeft, Check, X } from 'lucide-react';
+import { Building2, DoorOpen, Loader2, Trash2, Edit2, Plus, Settings2, ArrowLeft, Check, X, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/proxyClient';
 import { usePG } from '@/contexts/PGContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -198,23 +198,28 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="px-1.5 w-full max-w-md sm:max-w-lg flex flex-col h-full overflow-hidden">
-          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 pb-4 border-b border-border/40 px-1.5">
+        <SheetContent className="w-full max-w-md overflow-hidden bg-muted/25 px-0 sm:max-w-lg flex flex-col h-full">
+          <SheetHeader className="flex flex-row items-center gap-2 space-y-0 border-b border-white/10 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 px-3 pb-4 pt-4 text-white">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
+              className="h-9 w-9 rounded-xl bg-white/10 text-white hover:bg-white/20 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <SheetTitle className="flex items-center justify-between text-base font-semibold flex-1">
-              <span>Manage Floors</span>
-              <Settings2 className="h-4 w-4 text-primary" />
+            <SheetTitle className="flex items-center justify-between text-base font-bold text-white flex-1">
+              <span><span className="block">Manage Floors</span><span className="block text-[10px] font-medium text-blue-100">Organize floors and rooms</span></span>
+              <Building2 className="h-5 w-5 text-cyan-200" />
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 flex-1 space-y-4 overflow-y-auto px-1.5 pb-6">
+          <div className="flex-1 space-y-3 overflow-y-auto px-3 pb-8 pt-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border bg-card p-3 text-center shadow-sm"><Building2 className="mx-auto h-4 w-4 text-indigo-500" /><strong className="mt-1 block text-lg leading-none">{allFloors.length}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Floors</span></div>
+              <div className="rounded-2xl border bg-card p-3 text-center shadow-sm"><DoorOpen className="mx-auto h-4 w-4 text-blue-500" /><strong className="mt-1 block text-lg leading-none">{rooms.length}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Rooms</span></div>
+              <div className="rounded-2xl border bg-card p-3 text-center shadow-sm"><Users className="mx-auto h-4 w-4 text-emerald-500" /><strong className="mt-1 block text-lg leading-none">{rooms.reduce((sum, room) => sum + room.tenants.length, 0)}</strong><span className="text-[9px] font-bold uppercase text-muted-foreground">Tenants</span></div>
+            </div>
             {allFloors.map(floor => {
               const stats = getFloorStats(floor);
               const roomsOnFloor = rooms.filter(r => r.floor === floor).sort((a, b) => a.roomNo.localeCompare(b.roomNo));
@@ -230,7 +235,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                 return (
                   <div
                     key={floor}
-                    className="flex flex-col gap-3 p-3.5 border rounded-xl bg-card border-primary/20 shadow-sm transition-all duration-300"
+                    className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-card p-4 shadow-md transition-all duration-300"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <Input
@@ -360,11 +365,15 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
               return (
                 <div
                   key={floor}
-                  className="flex items-center justify-between p-3.5 border rounded-xl bg-card border-border/40 shadow-sm hover:border-primary/20 transition-all duration-300"
+                  className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                 >
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-500/10 text-xs font-black text-indigo-600 dark:text-indigo-300">{floor === 0 ? "G" : floor}</span>
+                      <div>
                       <h4 className="font-semibold text-sm sm:text-base text-foreground">{displayName}</h4>
+                      <p className="text-[10px] text-muted-foreground">{roomRange}</p>
+                      </div>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -377,10 +386,9 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
                         <Settings2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="ml-11 text-xs text-muted-foreground mt-1">
                       {stats.rooms} rooms • {stats.tenants} tenants
                     </p>
-                    <p className="text-[10px] text-muted-foreground/80 mt-0.5">{roomRange}</p>
                   </div>
                   
                   <div className="flex items-center gap-2">

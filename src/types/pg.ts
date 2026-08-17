@@ -99,7 +99,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   monthly: {
     name: 'Basic',
-    price: 499,
+    price: 199,
     periodLabel: '/month',
     billingCycle: 'monthly',
     maxPgs: -1,
@@ -113,7 +113,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   yearly: {
     name: 'Basic Plan (Yearly)',
-    price: 4999,
+    price: 1999,
     periodLabel: '/year',
     billingCycle: 'yearly',
     maxPgs: -1,
@@ -127,7 +127,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   pro: {
     name: 'Plus',
-    price: 999,
+    price: 299,
     periodLabel: '/month',
     billingCycle: 'pro',
     maxPgs: -1,
@@ -141,7 +141,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   pro_yearly: {
     name: 'Plus Plan (Yearly)',
-    price: 9999,
+    price: 2999,
     periodLabel: '/year',
     billingCycle: 'pro_yearly',
     maxPgs: -1,
@@ -155,7 +155,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   promax: {
     name: 'Pro Max',
-    price: 1999,
+    price: 499,
     periodLabel: '/month',
     billingCycle: 'promax',
     maxPgs: -1,
@@ -169,7 +169,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   promax_yearly: {
     name: 'Pro Max (Yearly)',
-    price: 19999,
+    price: 4999,
     periodLabel: '/year',
     billingCycle: 'promax_yearly',
     maxPgs: -1,
@@ -229,27 +229,27 @@ export const REGIONAL_PRICING: Record<SubscriptionPlanKey, Record<string, Region
     US: { currency: 'USD', symbol: '$', price: 0 },
   },
   monthly: {
-    IN: { currency: 'INR', symbol: '₹', price: 499 },
+    IN: { currency: 'INR', symbol: '₹', price: 199 },
     US: { currency: 'USD', symbol: '$', price: 6.99 },
   },
   yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 4999 },
+    IN: { currency: 'INR', symbol: '₹', price: 1999 },
     US: { currency: 'USD', symbol: '$', price: 69.99 },
   },
   pro: {
-    IN: { currency: 'INR', symbol: '₹', price: 999 },
+    IN: { currency: 'INR', symbol: '₹', price: 299 },
     US: { currency: 'USD', symbol: '$', price: 14.99 },
   },
   pro_yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 9999 },
+    IN: { currency: 'INR', symbol: '₹', price: 2999 },
     US: { currency: 'USD', symbol: '$', price: 149.99 },
   },
   promax: {
-    IN: { currency: 'INR', symbol: '₹', price: 1999 },
+    IN: { currency: 'INR', symbol: '₹', price: 499 },
     US: { currency: 'USD', symbol: '$', price: 29.99 },
   },
   promax_yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 19999 },
+    IN: { currency: 'INR', symbol: '₹', price: 4999 },
     US: { currency: 'USD', symbol: '$', price: 289.99 },
   },
   lifetime: {

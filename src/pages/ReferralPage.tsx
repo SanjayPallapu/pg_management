@@ -80,7 +80,7 @@ export default function ReferralPage() {
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(160deg, #3730a3 0%, #4f46e5 40%, #7c3aed 100%)",
+            background: "linear-gradient(145deg, #020617 0%, #071b46 50%, #312e81 76%, #6d28d9 100%)",
           }}
           aria-hidden="true"
         />
@@ -106,15 +106,15 @@ export default function ReferralPage() {
         </header>
 
         {/* Illustration */}
-        <div className="relative z-10 px-2 pb-4 pt-2">
-          <div className="mx-auto w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/20 shadow-2xl">
+        <div className="relative z-10 pb-4 pt-2">
+          <div className="mx-auto w-full max-w-[520px] overflow-hidden border-y border-white/15 shadow-2xl">
             <img
               src="/refer-banner-v5.png"
               alt="Refer & Earn"
               className="w-full h-auto max-h-[220px] object-cover object-center"
             />
           </div>
-          <div className="text-center mt-2">
+          <div className="px-3 text-center mt-3">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur border border-white/20 px-3 py-1 mb-3">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
               <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Limited Campaign</span>
@@ -131,7 +131,7 @@ export default function ReferralPage() {
       </div>
 
       {/* Stats strip */}
-      <div className="mx-2 -mt-4 relative z-20 grid grid-cols-3 gap-2">
+      <div className="mx-1.5 -mt-4 relative z-20 grid grid-cols-3 gap-1.5">
         {[
           { icon: Users, value: stats.totalInvited, label: "Invited", color: "text-blue-600 dark:text-blue-300", bg: "bg-blue-500/10" },
           { icon: UserPlus, value: stats.activePaidReferrals, label: "Joined", color: "text-emerald-600 dark:text-emerald-300", bg: "bg-emerald-500/10" },
@@ -154,7 +154,7 @@ export default function ReferralPage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-2 pt-4 pb-10 space-y-3">
+      <div className="flex-1 overflow-y-auto px-1.5 pt-4 pb-10 space-y-3">
         {/* Invite code card */}
         <section className="rounded-3xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">

@@ -226,16 +226,16 @@ export const ACElectricitySheet = ({
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Illustrated Hero Header */}
-            <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(160deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)" }}>
+            <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(145deg, #020617 0%, #071b46 48%, #312e81 76%, #6d28d9 100%)" }}>
               {/* Decorative blobs */}
               <span className="pointer-events-none absolute -left-12 -top-12 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
               <span className="pointer-events-none absolute -right-8 top-4 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
               <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
               <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
 
-              <SheetHeader className="relative z-10 px-1.5 pt-3 pb-3">
+              <SheetHeader className="relative z-10 px-0 pt-3 pb-3">
                 {/* Top bar */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 px-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <Button
                       variant="ghost"
@@ -262,7 +262,7 @@ export const ACElectricitySheet = ({
                       className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {months.map((m) => (
-                        <option key={m.value} value={m.value} className="bg-[#0e7490] text-white">{m.label}</option>
+                        <option key={m.value} value={m.value} className="bg-[#071b46] text-white">{m.label}</option>
                       ))}
                     </select>
                     <select
@@ -271,7 +271,7 @@ export const ACElectricitySheet = ({
                       className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {years.map((y) => (
-                        <option key={y} value={y} className="bg-[#0e7490] text-white">{y}</option>
+                        <option key={y} value={y} className="bg-[#071b46] text-white">{y}</option>
                       ))}
                     </select>
                   </div>
@@ -279,7 +279,7 @@ export const ACElectricitySheet = ({
 
                 {/* Collection summary above a full-width curved illustration */}
                 <div className="mt-3 space-y-2">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 px-2">
                     <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
                       <span className="block text-xs font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
@@ -293,7 +293,7 @@ export const ACElectricitySheet = ({
                       <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="w-full overflow-hidden rounded-2xl shadow-lg border border-white/20">
+                  <div className="w-full overflow-hidden border-y border-white/15 shadow-lg">
                     <img
                       src="/ac-bill-banner-v5.png"
                       alt="AC Electricity Billing"
@@ -303,7 +303,7 @@ export const ACElectricitySheet = ({
                 </div>
 
                 {/* Progress bar */}
-                <div className="mt-3 space-y-1">
+                <div className="mt-3 space-y-1 px-2">
                   <div className="flex items-center justify-between text-[10px] text-cyan-200">
                     <span className="font-semibold">Collection Progress</span>
                     <span className="font-black text-white">{overallPct}% Collected</span>

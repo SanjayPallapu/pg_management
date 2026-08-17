@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, differenceInDays } from "date-fns";
+import { addDays, format, differenceInDays } from "date-fns";
 import type { Room } from "@/types";
 import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
@@ -244,6 +244,11 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   };
 
   const roleBadge = getRoleBadge();
+  const subscriptionEndDate = subscription?.expiresAt
+    ? new Date(subscription.expiresAt)
+    : subscription?.billingCycle === "trial" && subscription.createdAt
+      ? addDays(new Date(subscription.createdAt), 7)
+      : null;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -319,12 +324,12 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                     {subscription?.billingCycle === 'trial' ? 'Free Trial' : (subscription?.status === 'active' ? 'Pro Plan' : 'Free Plan')}
                   </p>
                   <p className="truncate text-xs text-muted-foreground mt-0.5">
-                    {subscription?.expiresAt ? (
+                    {subscriptionEndDate ? (
                       <>
                         {subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Expires'} on{' '}
-                        <strong className="font-bold text-foreground">{format(new Date(subscription.expiresAt), 'dd MMM yyyy')}</strong>
+                        <strong className="font-bold text-foreground">{format(subscriptionEndDate, 'dd MMM yyyy')}</strong>
                         {(() => {
-                          const daysLeft = Math.max(0, differenceInDays(new Date(subscription.expiresAt), new Date()));
+                          const daysLeft = Math.max(0, differenceInDays(subscriptionEndDate, new Date()));
                           return ` (${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left)`;
                         })()}
                       </>

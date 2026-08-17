@@ -721,11 +721,14 @@ export const PaymentReconciliation = ({
 
 
             {/* Individual Payment Details */}
-            <div className="space-y-2.5">
-              <div className="flex flex-col gap-3">
+            <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-border/50 pb-3">
                 {/* Top row: Title and Search */}
                 <div className="flex items-center justify-between w-full gap-3">
-                  <h3 className="font-semibold text-sm">Payment Details ({filteredPaymentDetails.length})</h3>
+                  <div>
+                    <h3 className="text-sm font-bold">Payment Details</h3>
+                    <p className="text-[10px] text-muted-foreground">{filteredPaymentDetails.length} tenant records</p>
+                  </div>
                   <div className="relative shrink-0">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                     <Input
@@ -733,13 +736,13 @@ export const PaymentReconciliation = ({
                       placeholder="Search tenant"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-7 w-32 pl-6 text-xs"
+                      className="h-8 w-36 rounded-xl pl-7 text-xs"
                     />
                   </div>
                 </div>
                 {/* Bottom row: Filter and Expand/Collapse */}
                 <div className="flex items-center justify-between w-full gap-3">
-                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm">
+                  <ToggleGroup type="single" value={paymentFilter} onValueChange={v => v && setPaymentFilter(v)} size="sm" className="rounded-xl bg-muted/50 p-0.5">
                     <ToggleGroupItem value="all" className="text-xs px-2 h-7">All</ToggleGroupItem>
                     <ToggleGroupItem value="upi" className="text-xs px-2 h-7">UPI</ToggleGroupItem>
                     <ToggleGroupItem value="cash" className="text-xs px-2 h-7">Cash</ToggleGroupItem>
@@ -759,7 +762,7 @@ export const PaymentReconciliation = ({
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
                     <Collapsible key={detailKey} open={expandedTenants.has(detailKey)} onOpenChange={() => toggleTenantExpanded(detailKey)}>
-                      <div className={`border border-border/60 bg-card rounded-xl overflow-hidden shadow-sm transition-all hover:shadow border-l-4 ${
+                      <div className={`overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm transition-all hover:shadow-md border-l-4 ${
                         detail.status === 'Paid' 
                           ? 'border-l-emerald-500 dark:border-l-emerald-600' 
                           : 'border-l-amber-500 dark:border-l-amber-600'
@@ -785,7 +788,7 @@ export const PaymentReconciliation = ({
                                   ) : (
                                     <ChevronRight className="h-3 w-3 shrink-0" />
                                   )}
-                                  <span>Room {detail.roomNo}</span>
+                                  <span>R{detail.roomNo}</span>
                                 </div>
                               </div>
                             </div>

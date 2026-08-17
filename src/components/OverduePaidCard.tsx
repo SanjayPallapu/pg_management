@@ -14,6 +14,8 @@ import { format } from 'date-fns';
 import { WhatsAppReceiptDialog } from './WhatsAppReceiptDialog';
 import { PreviousOverdueSheet } from './PreviousOverdueSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
+import { TenantChatMenu } from '@/components/TenantChatMenu';
 
 interface OverduePaidCardProps {
   showSummaryCard?: boolean;
@@ -68,6 +70,7 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
   const { selectedMonth, selectedYear } = useMonthContext();
   const { payments } = useTenantPayments();
   const isMobile = useIsMobile();
+  const onboardingProfileMap = useOnboardingProfileMap();
   const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<OverduePaidReceiptData | null>(null);
@@ -328,32 +331,14 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
                             >
                               <Phone className="h-4 w-4" />
                             </a>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                                >
-                                  <MessageCircle className="h-4 w-4" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start">
-                                <DropdownMenuItem onClick={() => handleGenerateReceipt(tenant)} className="gap-2">
-                                  <Receipt className="h-4 w-4" />
-                                  Generate Receipt
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    const phone = tenant.phone.replace(/\D/g, '');
-                                    window.location.href = `https://wa.me/${phone}`;
-                                  }} 
-                                  className="gap-2"
-                                >
-                                  <MessageSquare className="h-4 w-4" />
-                                  Chat with Tenant
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <TenantChatMenu
+                              tenantId={tenant.id}
+                              tenantName={tenant.name}
+                              phone={tenant.phone}
+                              profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                              onReceipt={() => handleGenerateReceipt(tenant)}
+                              className="h-7 w-7 rounded-lg"
+                            />
                           </>
                         )}
                       </div>
@@ -436,14 +421,14 @@ export const OverduePaidCard = ({ showSummaryCard = true,  rooms, defaultOpen = 
                             >
                               <Phone className="h-4 w-4" />
                             </a>
-                            <a
-                              href={`https://wa.me/91${tenant.phone}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </a>
+                            <TenantChatMenu
+                              tenantId={tenant.id}
+                              tenantName={tenant.name}
+                              phone={tenant.phone}
+                              profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                              message={`Hi ${tenant.name}, your previous rent balance of ₹${tenant.remaining.toLocaleString()} for Room ${tenant.roomNo} is pending.`}
+                              className="h-7 w-7 rounded-lg"
+                            />
                           </>
                         )}
                       </div>
