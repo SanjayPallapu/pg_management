@@ -145,7 +145,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
       <div className="min-h-[100dvh] bg-background text-foreground">
         <header className="sticky top-0 z-40 border-b bg-background/95 px-2 py-3 backdrop-blur-xl">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
-            <button onClick={() => navigate('/')} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+            <button onClick={() => navigate(-1)} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-black">Tenant Profile</h1><p className="text-[11px] text-muted-foreground">Verified tenant details and payments</p></div>
             <ProfileStatusBadge status="verified" showLabel={false} size="md" />
           </div>
@@ -153,7 +153,12 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
         <main className="mx-auto max-w-2xl space-y-3 px-2 py-3 pb-10">
           <section className="overflow-hidden rounded-[26px] bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700 p-4 text-white shadow-lg">
             <div className="flex items-center gap-3"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-lg font-black ring-1 ring-white/20">{tenant.name.slice(0, 2).toUpperCase()}</div><div className="min-w-0 flex-1"><h2 className="truncate text-xl font-black">{tenant.name}</h2><p className="text-xs text-white/75">Room {room.roomNo} · {room.capacity} sharing</p><span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-200"><BadgeCheck className="h-3.5 w-3.5" />Profile verified</span></div></div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-black/10 p-2 ring-1 ring-white/10">
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">Room</span><strong className="text-sm">R{room.roomNo}</strong></div>
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">Monthly rent</span><strong className="text-sm">₹{tenant.monthlyRent.toLocaleString("en-IN")}</strong></div>
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">This month</span><strong className="text-sm">{currentPayment?.paymentStatus || tenant.paymentStatus}</strong></div>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <a href={`tel:${tenant.phone}`} className="rounded-xl bg-white/10 py-2.5 text-center text-[11px] font-bold"><Phone className="mx-auto mb-1 h-4 w-4" />Call</a>
               <button onClick={() => window.open(`https://wa.me/91${phoneDigits}`, "_blank", "noopener,noreferrer")} className="rounded-xl bg-white/10 py-2.5 text-[11px] font-bold"><MessageCircle className="mx-auto mb-1 h-4 w-4" />WhatsApp</button>
               <button onClick={() => setReminderOpen(true)} className="rounded-xl bg-white text-violet-700 py-2.5 text-[11px] font-black"><Bell className="mx-auto mb-1 h-4 w-4" />Reminder</button>
@@ -197,7 +202,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-2 py-3">
-          <button onClick={() => navigate('/')} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
           <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
@@ -209,6 +214,11 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
           <div className="relative flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xl font-black shadow-lg shadow-violet-950/40">{tenant.name.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0 flex-1"><h2 className="truncate text-xl font-bold">{tenant.name}</h2><p className="mt-1 text-sm text-muted-foreground">Room {room.roomNo} · Bed assigned</p><div className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", complete ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/15 text-amber-600 dark:text-amber-400")}><span className={cn("h-1.5 w-1.5 rounded-full", complete ? "bg-emerald-400" : "bg-amber-400")} />{statusLabel(displayedProfile?.status)}</div></div>
+          </div>
+          <div className="relative mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-border/60 bg-background/65 p-2.5 backdrop-blur">
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Room</span><strong className="text-sm">R{room.roomNo}</strong></div>
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Rent</span><strong className="text-sm">₹{tenant.monthlyRent.toLocaleString("en-IN")}</strong></div>
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Payment</span><strong className={cn("text-sm", currentPayment?.paymentStatus === "Paid" ? "text-emerald-600" : "text-amber-600")}>{currentPayment?.paymentStatus || tenant.paymentStatus}</strong></div>
           </div>
           <div className="relative mt-5 grid grid-cols-3 gap-2">
             <a href={`tel:${tenant.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-muted py-3 text-xs font-semibold hover:bg-muted/70"><Phone className="h-4 w-4" />Call</a>
