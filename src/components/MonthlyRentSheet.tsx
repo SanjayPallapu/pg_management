@@ -1952,7 +1952,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                             profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
                             message={!isPaid ? `Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!` : undefined}
                             onReceipt={(isPaid || isPartial) ? handleResendReceipt : undefined}
-                            onReminder={!isPaid ? openReminder : undefined}
+                            onReminder={!isPaid ? openPaymentReminder : undefined}
                           />
                           <a
                             href={`tel:${tenant.phone}`}
