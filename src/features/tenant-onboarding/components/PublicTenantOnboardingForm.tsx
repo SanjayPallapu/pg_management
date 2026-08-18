@@ -301,7 +301,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       );
 
       const progress = 100;
-      const { error } = await supabase.rpc("save_onboarding_form_data", {
+      const { data, error } = await supabase.rpc("save_onboarding_form_data", {
         p_token: (token || "").trim(),
         p_form_data: jsonData,
         p_step: "completed",
@@ -310,12 +310,15 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       });
 
       if (error) throw error;
+      if (data && data.length > 0 && data[0].success === false) {
+        throw new Error("Form submission could not be processed. The link may have expired or been revoked.");
+      }
 
       setCompleted(true);
       toast.success("Profile submitted successfully!");
     } catch (err) {
       console.error("[Onboarding Form] Submit failed", err);
-      toast.error("Failed to submit form. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to submit form. Please try again.");
     } finally {
       setSubmitting(false);
     }

@@ -1,4 +1,22 @@
--- Fix onboarding link validation and generation to handle whitespace, missing rooms, and proper token refresh
+-- Fix onboarding link validation, generation, and token expiration trigger functions
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
+CREATE OR REPLACE FUNCTION public.expire_completed_onboarding_token()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF NEW.status = 'completed' AND OLD.status IS DISTINCT FROM 'completed' THEN
+    NEW.completed_at := COALESCE(NEW.completed_at, now());
+    NEW.expires_at := LEAST(NEW.expires_at, now());
+    -- Rotate the bearer token atomically so the submitted URL can never be replayed.
+    NEW.token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.validate_onboarding_link(p_token text)
  RETURNS TABLE(
    link_id uuid,
