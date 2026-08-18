@@ -206,7 +206,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
         );
 
         const { error } = await supabase.rpc("save_onboarding_form_data", {
-          p_token: token,
+          p_token: (token || "").trim(),
           p_form_data: jsonData,
           p_step: step,
           p_progress: progress,
@@ -302,7 +302,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
       const progress = 100;
       const { error } = await supabase.rpc("save_onboarding_form_data", {
-        p_token: token,
+        p_token: (token || "").trim(),
         p_form_data: jsonData,
         p_step: "completed",
         p_progress: progress,
