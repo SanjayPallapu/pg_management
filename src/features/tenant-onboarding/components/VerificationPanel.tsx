@@ -60,25 +60,16 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
     setRejectionReason("");
   };
 
-  const openDocument = async (path: string) => {
+  const openDocument = (path: string) => {
     if (!path) return;
     if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener,noreferrer"); return; }
     
-    // 1. Try signed URL first
-    const { data, error } = await supabase.storage.from("tenant-onboarding-docs").createSignedUrl(path, 3600);
-    if (!error && data?.signedUrl) {
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-    
-    // 2. Fallback to getPublicUrl
     const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
     if (pubData?.publicUrl) {
       window.open(pubData.publicUrl, "_blank", "noopener,noreferrer");
-      return;
+    } else {
+      toast.error("Could not open this document");
     }
-    
-    toast.error("Could not open this document");
   };
 
   const statusConfig: Record<VerificationStatus, { color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -102,21 +93,10 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
       setSignedDocUrl(documentPath);
       return;
     }
-    supabase.storage
-      .from("tenant-onboarding-docs")
-      .createSignedUrl(documentPath, 3600)
-      .then(({ data }: { data: { signedUrl?: string } | null }) => {
-        if (data?.signedUrl) {
-          setSignedDocUrl(data.signedUrl);
-        } else {
-          const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(documentPath);
-          if (pubData?.publicUrl) setSignedDocUrl(pubData.publicUrl);
-        }
-      })
-      .catch(() => {
-        const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(documentPath);
-        if (pubData?.publicUrl) setSignedDocUrl(pubData.publicUrl);
-      });
+    const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(documentPath);
+    if (pubData?.publicUrl) {
+      setSignedDocUrl(pubData.publicUrl);
+    }
   }, [documentPath]);
 
   return (

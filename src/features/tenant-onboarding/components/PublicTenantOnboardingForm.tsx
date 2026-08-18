@@ -978,21 +978,10 @@ function FileUploadField({
       setLocalPreviewUrl(path);
       return;
     }
-    supabase.storage
-      .from("tenant-onboarding-docs")
-      .createSignedUrl(path, 3600)
-      .then(({ data }: { data: { signedUrl?: string } | null }) => {
-        if (data?.signedUrl) {
-          setLocalPreviewUrl(data.signedUrl);
-        } else {
-          const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
-          if (pubData?.publicUrl) setLocalPreviewUrl(pubData.publicUrl);
-        }
-      })
-      .catch(() => {
-        const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
-        if (pubData?.publicUrl) setLocalPreviewUrl(pubData.publicUrl);
-      });
+    const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
+    if (pubData?.publicUrl) {
+      setLocalPreviewUrl(pubData.publicUrl);
+    }
   }, [formData[field]]);
 
   return (
