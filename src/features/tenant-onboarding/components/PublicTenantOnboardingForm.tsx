@@ -982,9 +982,17 @@ function FileUploadField({
       .from("tenant-onboarding-docs")
       .createSignedUrl(path, 3600)
       .then(({ data }: { data: { signedUrl?: string } | null }) => {
-        if (data?.signedUrl) setLocalPreviewUrl(data.signedUrl);
+        if (data?.signedUrl) {
+          setLocalPreviewUrl(data.signedUrl);
+        } else {
+          const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
+          if (pubData?.publicUrl) setLocalPreviewUrl(pubData.publicUrl);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
+        if (pubData?.publicUrl) setLocalPreviewUrl(pubData.publicUrl);
+      });
   }, [formData[field]]);
 
   return (
