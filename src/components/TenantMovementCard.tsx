@@ -200,7 +200,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                     {(activeTab === 'joined' ? joinedTenants : leftTenants).map(tenant => (
                       <div 
                         key={tenant.id} 
-                        className={`p-4 rounded-2xl border shadow-sm ${
+                        className={`p-3 rounded-2xl border shadow-sm ${
                           activeTab === 'joined' 
                             ? 'bg-paid/5 border-paid/20 text-foreground' 
                             : 'bg-pending/5 border-pending/20 text-foreground'
@@ -210,13 +210,10 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                           {/* Left Div */}
                           <div className="flex-1 min-w-0 flex flex-col justify-between">
                             <div>
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
-                                <span className="text-slate-400 font-medium text-sm">•</span>
-                                <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
-                              </div>
+                              <span className="truncate text-base font-bold text-foreground block">{tenant.name}</span>
+                              <span className="text-slate-500 dark:text-slate-400 font-medium text-xs">R{tenant.roomNo}</span>
                             </div>
-                            <div className="mt-2 flex items-center">
+                            <div className="mt-1.5 flex items-center">
                               <span className="text-xs text-muted-foreground font-medium">
                                 {activeTab === 'joined' 
                                   ? `Joined: ${format(new Date(tenant.startDate), 'dd MMM yyyy')}`
@@ -233,9 +230,9 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                               <p className="text-base font-extrabold text-foreground">₹{tenant.monthlyRent.toLocaleString()}</p>
                             </div>
 
-                            {/* Middle: Action icons */}
+                            {/* Action icons */}
                             {tenant.phone && tenant.phone !== '••••••••••' ? (
-                              <div className="w-[84px] flex items-center justify-between my-2">
+                              <div className="w-[84px] flex items-center justify-between my-1">
                                 <a 
                                   href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
                                   target="_blank"
@@ -254,18 +251,7 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                                 </a>
                               </div>
                             ) : (
-                              <div className="w-[84px] my-2" />
-                            )}
-
-                            {/* Bottom: Status Badge (only for Left tab) */}
-                            {activeTab === 'left' ? (
-                              <div className="w-[84px]">
-                                <span className="w-full px-0 text-center block text-xs font-semibold py-1 rounded-lg shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-                                  Left
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="w-[84px]" />
+                              <div className="w-[84px] my-1" />
                             )}
                           </div>
                         </div>
