@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => ({
 
   server: {
     port: 8080,
+    watch: {
+      ignored: ["**/android/**", "**/dist/**", "**/supabase/.temp/**"],
+    },
   },
 
   resolve: {
