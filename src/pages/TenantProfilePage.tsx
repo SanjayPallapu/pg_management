@@ -75,11 +75,42 @@ function DetailRow({ label, value, sensitive = false, icon: Icon }: { label: str
   );
 }
 
-function DetailSection({ title, icon: Icon, children }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+function DetailSection({
+  title,
+  icon: Icon,
+  children,
+  badgeColor = "violet",
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  badgeColor?: "violet" | "indigo" | "emerald" | "amber" | "blue";
+}) {
+  const colorStyles = {
+    violet: "bg-violet-500/10 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 border-violet-500/20",
+    indigo: "bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-500/20",
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-500/20",
+    amber: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-500/20",
+    blue: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-500/20",
+  }[badgeColor];
+
+  const iconStyles = {
+    violet: "bg-violet-600 text-white shadow-violet-500/30",
+    indigo: "bg-indigo-600 text-white shadow-indigo-500/30",
+    emerald: "bg-emerald-600 text-white shadow-emerald-500/30",
+    amber: "bg-amber-600 text-white shadow-amber-500/30",
+    blue: "bg-blue-600 text-white shadow-blue-500/30",
+  }[badgeColor];
+
   return (
     <section className="border-b border-border py-4 last:border-0">
-      <div className="mb-1 flex items-center gap-2 text-sm font-bold"><Icon className="h-4 w-4 text-violet-500" />{title}</div>
-      <div>{children}</div>
+      <div className={cn("mb-3.5 flex items-center gap-2.5 rounded-xl border px-3 py-2 text-xs sm:text-sm font-black shadow-sm", colorStyles)}>
+        <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg shadow-sm shrink-0", iconStyles)}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="tracking-tight">{title}</span>
+      </div>
+      <div className="px-1">{children}</div>
     </section>
   );
 }
@@ -171,7 +202,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
           </section>
 
           <section className="rounded-2xl border bg-card px-3">
-            <DetailSection title="Personal information" icon={UserRound}>
+            <DetailSection title="Personal information" icon={UserRound} badgeColor="violet">
               <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
               <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
               <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
@@ -180,7 +211,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
               <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
               <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
             </DetailSection>
-            <DetailSection title="Identity and stay" icon={ShieldCheck}>
+            <DetailSection title="Identity and stay" icon={ShieldCheck} badgeColor="indigo">
               <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
               <DetailRow icon={Home} label="Room" value={room.roomNo} />
               <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
@@ -238,7 +269,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
             {view === "details" && (
               <div className="rounded-2xl border border-border bg-card px-2">
-                <DetailSection title="Personal information" icon={UserRound}>
+                <DetailSection title="Personal information" icon={UserRound} badgeColor="violet">
                   <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
                   <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
                   <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
@@ -247,12 +278,12 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
                   <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
                   <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
                 </DetailSection>
-                <DetailSection title="Identity verification" icon={ShieldCheck}>
+                <DetailSection title="Identity verification" icon={ShieldCheck} badgeColor="indigo">
                   <DetailRow icon={FileText} label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
                   <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
                   <DetailRow icon={BadgeCheck} label="Submission status" value={statusLabel(displayedProfile?.status)} />
                 </DetailSection>
-                <DetailSection title="Stay and rent" icon={Home}>
+                <DetailSection title="Stay and rent" icon={Home} badgeColor="emerald">
                   <DetailRow icon={Home} label="Room" value={room.roomNo} />
                   <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
                   <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
@@ -260,7 +291,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
                   <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
                   <DetailRow icon={UserCheck} label="Collected by" value={tenant.securityDepositCollectedBy} />
                 </DetailSection>
-                <DetailSection title="Agreement" icon={FileCheck2}>
+                <DetailSection title="Agreement" icon={FileCheck2} badgeColor="blue">
                   <DetailRow icon={CheckSquare} label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
                   <DetailRow icon={FileCheck2} label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
                   <DetailRow icon={Clock3} label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
