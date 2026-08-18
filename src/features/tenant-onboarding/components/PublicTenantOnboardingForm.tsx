@@ -102,25 +102,72 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       return;
     }
 
-    const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
-      p_token: token,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
 
-    if (rpcError) {
-      console.error("[Onboarding Form] Token validation failed", rpcError);
-      setError("Failed to validate onboarding link. Please try again.");
-      setLoading(false);
-      return;
+    try {
+      const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
+        p_token: token,
+      });
+
+      if (!rpcError && data && data.length > 0) {
+        result = data[0];
+      } else if (rpcError) {
+        console.warn("[Onboarding Form] RPC validate_onboarding_link failed, trying fallback...", rpcError);
+      }
+    } catch (e) {
+      console.warn("[Onboarding Form] RPC exception caught", e);
     }
 
-    if (!data || data.length === 0) {
-      setValid(false);
-      setError("This onboarding link does not exist or was revoked. Please ask your PG owner for a new link.");
-      setLoading(false);
-      return;
+    // Direct fallback query if RPC failed or returned no rows
+    if (!result) {
+      try {
+        const { data: linkRecord, error: linkError } = await supabase
+          .from("tenant_onboarding_links")
+          .select("*, tenants(*), tenant_onboarding_profiles(*)")
+          .eq("token", token)
+          .maybeSingle();
+
+        if (linkError || !linkRecord) {
+          console.error("[Onboarding Form] Direct fallback query failed", linkError);
+          setValid(false);
+          setError("This onboarding link does not exist or was revoked. Please ask your PG owner for a new link.");
+          setLoading(false);
+          return;
+        }
+
+        const isExpired = linkRecord.expires_at ? new Date(linkRecord.expires_at) < new Date() : false;
+        const tenantObj = linkRecord.tenants || {};
+        const profileObj = Array.isArray(linkRecord.tenant_onboarding_profiles)
+          ? linkRecord.tenant_onboarding_profiles[0]
+          : linkRecord.tenant_onboarding_profiles;
+
+        result = {
+          is_expired: isExpired,
+          tenant_name: tenantObj.name || "",
+          tenant_phone: tenantObj.phone || "",
+          form_progress: profileObj?.form_progress || 0,
+          onboarding_status: profileObj?.status || linkRecord.status || "not_started",
+          room_number: tenantObj.roomNo || "Assigned room",
+          bed_label: "Assigned bed",
+          move_in_date: tenantObj.startDate || "",
+          monthly_rent: tenantObj.monthlyRent ?? null,
+          security_deposit_amount: tenantObj.securityDepositAmount ?? null,
+          pg_name: "Your PG",
+          pg_logo_url: null,
+          pg_rules: DEFAULT_RULES,
+          form_data: profileObj?.form_data || null,
+          last_saved_step: profileObj?.last_saved_step || null,
+        };
+      } catch (fallbackErr) {
+        console.error("[Onboarding Form] Fallback processing error", fallbackErr);
+        setValid(false);
+        setError("This onboarding link does not exist or was revoked. Please ask your PG owner for a new link.");
+        setLoading(false);
+        return;
+      }
     }
 
-    const result = data[0];
     if (result.is_expired) {
       setExpired(true);
       setLoading(false);
@@ -148,7 +195,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       setCompleted(true);
     }
 
-    // Restore saved form data if the RPC returns it
+    // Restore saved form data if available
     if (result.form_data && typeof result.form_data === "object") {
       const restored = result.form_data as FormData;
       setFormData({
