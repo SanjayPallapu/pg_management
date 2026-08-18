@@ -1,14 +1,5 @@
-import { Resend } from "resend";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { toast } from "sonner";
-
-// Initialize Resend client (used server-side or via backend API)
-const RESEND_API_KEY =
-  (typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_RESEND_API_KEY : undefined) ||
-  (typeof process !== "undefined" && process.env ? process.env.RESEND_API_KEY : undefined) ||
-  "";
-
-export const resend = new Resend(RESEND_API_KEY);
 
 export interface AccountAuthEmailOptions {
   to: string;
@@ -19,7 +10,8 @@ export interface AccountAuthEmailOptions {
 }
 
 /**
- * Sends Login / Sign Up / Password Reset emails via Resend backend function
+ * Sends Login / Sign Up / Password Reset emails via Supabase Edge Function securely
+ * without dragging Node.js dependencies into the client browser bundle.
  */
 export async function sendAccountAuthEmail(options: AccountAuthEmailOptions, showToast = false) {
   try {
@@ -38,18 +30,30 @@ export async function sendAccountAuthEmail(options: AccountAuthEmailOptions, sho
     });
 
     if (error) {
-      console.warn("[Resend Auth Email Note]", error.message || error);
-      if (RESEND_API_KEY) {
-        const from = "PG HUB <onboarding@resend.dev>";
-        const fallback = await resend.emails.send({
-          from,
-          to: options.to,
-          subject: "PG HUB Authentication Notification",
-          html: `<p>Hello ${options.userName || "User"}, your PG HUB account authentication email has been processed.</p>`,
+      console.warn("[Resend Auth Email Edge Function Note]", error.message || error);
+      
+      // Client-side fetch fallback if Edge Function is unreachable
+      const apiKey =
+        (typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_RESEND_API_KEY : undefined) || "";
+      
+      if (apiKey) {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            from: "PG HUB <onboarding@resend.dev>",
+            to: [options.to],
+            subject: "PG HUB Authentication Notification",
+            html: `<p>Hello ${options.userName || "User"}, your PG HUB account authentication email has been processed.</p>`,
+          }),
         });
 
-        if (fallback.error) {
-          throw new Error(fallback.error.message);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${res.status}`);
         }
       }
     }
