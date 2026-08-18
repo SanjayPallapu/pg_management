@@ -628,25 +628,25 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     {/* Call badge - fixed position */}
                     {tenant.phone && tenant.phone !== "••••••••••" ? (
                       <a
                         href={`tel:${tenant.phone}`}
-                        className="p-1 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
+                        className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400 shrink-0"
                         title={`Call ${tenant.name}`}
                       >
-                        <Phone className="h-3.5 w-3.5" />
+                        <Phone className="h-4 w-4" />
                       </a>
                     ) : (
-                      <div className="w-5.5 h-5.5 shrink-0" aria-hidden="true" />
+                      <div className="h-8 w-8 shrink-0" aria-hidden="true" />
                     )}
                     {/* WhatsApp dropdown menu - Always visible */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className={`p-1 rounded-full transition-colors shrink-0 ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
+                          className={`grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 transition-colors shrink-0 ${whatsappSent ? "bg-emerald-500/20 text-emerald-600" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"}`}
                           title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
                         >
                           <MessageCircle className="h-4 w-4" />

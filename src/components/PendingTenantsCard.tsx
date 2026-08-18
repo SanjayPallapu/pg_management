@@ -751,11 +751,11 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
               />
               <a
                 href={`tel:${tenant.phone}`}
-                className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 hover:bg-blue-100 transition-colors"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                 onClick={(e) => e.stopPropagation()}
                 title={`Call ${tenant.name}`}
               >
-                <Phone className="h-4 w-4 stroke-[1.75]" />
+                <Phone className="h-4 w-4" />
               </a>
             </div>
           ) : (
