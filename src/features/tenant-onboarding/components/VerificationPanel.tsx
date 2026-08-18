@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useVerifyOnboarding, useOnboardingDocuments } from "../hooks/useOnboarding";
 import { getVerificationStatusLabel, type VerificationStatus } from "../types";
+import { resolveOnboardingDocumentUrl } from "../utils/documentUrl";
 import { supabase } from "@/integrations/supabase/proxyClient";
 
 interface VerificationPanelProps {
@@ -60,13 +61,11 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
     setRejectionReason("");
   };
 
-  const openDocument = (path: string) => {
+  const openDocument = async (path: string) => {
     if (!path) return;
-    if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener,noreferrer"); return; }
-    
-    const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
-    if (pubData?.publicUrl) {
-      window.open(pubData.publicUrl, "_blank", "noopener,noreferrer");
+    const url = await resolveOnboardingDocumentUrl(path);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
     } else {
       toast.error("Could not open this document");
     }
@@ -85,18 +84,17 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const documentPath = aadhaarDocument?.file_url || idProofUrl;
 
   useEffect(() => {
+    let active = true;
     if (!documentPath) {
       setSignedDocUrl(null);
       return;
     }
-    if (/^https?:\/\//.test(documentPath)) {
-      setSignedDocUrl(documentPath);
-      return;
-    }
-    const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(documentPath);
-    if (pubData?.publicUrl) {
-      setSignedDocUrl(pubData.publicUrl);
-    }
+    resolveOnboardingDocumentUrl(documentPath).then((url) => {
+      if (active) setSignedDocUrl(url);
+    });
+    return () => {
+      active = false;
+    };
   }, [documentPath]);
 
   return (

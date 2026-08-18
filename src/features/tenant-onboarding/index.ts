@@ -4,6 +4,7 @@ export { OwnerSharePanel } from "./components/OwnerSharePanel";
 export { VerificationPanel } from "./components/VerificationPanel";
 export { ActivityTimeline } from "./components/ActivityTimeline";
 export { PublicTenantOnboardingForm } from "./components/PublicTenantOnboardingForm";
+export { resolveOnboardingDocumentUrl } from "./utils/documentUrl";
 
 // Hooks
 export {

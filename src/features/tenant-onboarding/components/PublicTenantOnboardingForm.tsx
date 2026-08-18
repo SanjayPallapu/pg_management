@@ -30,6 +30,7 @@ const supabase = typedSupabase as any;
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
+import { resolveOnboardingDocumentUrl } from "../utils/documentUrl";
 import { DEFAULT_RULES, type Rule } from "@/lib/pgRules";
 import { MedalBadgeIcon } from "./MedalBadgeIcon";
 import onboardingBuilding from "@/assets/pg-hub/hub-building-hero.png";
@@ -969,19 +970,17 @@ function FileUploadField({
 
   // Generate local preview URL when file is uploaded
   useEffect(() => {
+    let active = true;
     if (!formData[field]) {
       setLocalPreviewUrl(null);
       return;
     }
-    const path = String(formData[field]);
-    if (/^https?:\/\//.test(path)) {
-      setLocalPreviewUrl(path);
-      return;
-    }
-    const { data: pubData } = supabase.storage.from("tenant-onboarding-docs").getPublicUrl(path);
-    if (pubData?.publicUrl) {
-      setLocalPreviewUrl(pubData.publicUrl);
-    }
+    resolveOnboardingDocumentUrl(String(formData[field])).then((url) => {
+      if (active) setLocalPreviewUrl(url);
+    });
+    return () => {
+      active = false;
+    };
   }, [formData[field]]);
 
   return (
