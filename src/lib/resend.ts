@@ -44,7 +44,7 @@ export async function sendAccountAuthEmail(options: AccountAuthEmailOptions, sho
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            from: "PG HUB <onboarding@resend.dev>",
+            from: "PG HUB <no-reply@pghub.in>",
             to: [options.to],
             subject: "PG HUB Authentication Notification",
             html: `<p>Hello ${options.userName || "User"}, your PG HUB account authentication email has been processed.</p>`,

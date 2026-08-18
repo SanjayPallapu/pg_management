@@ -53,7 +53,7 @@ serve(async (req) => {
         : "Verify your PG HUB account");
 
     const html = getAccountAuthEmailHtml(data);
-    const from = Deno.env.get("RESEND_FROM_EMAIL") || "PG HUB <onboarding@resend.dev>";
+    const from = Deno.env.get("RESEND_FROM_EMAIL") || "PG HUB <no-reply@pghub.in>";
 
     const resendResponse = await resend.emails.send({
       from,
