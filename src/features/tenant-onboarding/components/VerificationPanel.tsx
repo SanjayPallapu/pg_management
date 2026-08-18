@@ -91,22 +91,7 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
 
   return (
     <div className="space-y-4">
-      {/* Status Badge */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className={cn("p-2 rounded-lg border", config.bg)}>
-            <StatusIcon className={cn("h-4 w-4", config.color)} />
-          </div>
-          <div>
-            <div className="text-sm font-medium">Verification Status</div>
-            <Badge variant="outline" className={cn("text-xs", config.bg, config.color)}>
-              {getVerificationStatusLabel(verificationStatus)}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* In-app Aadhaar Document Crop & Preview */}
+      {/* 1. Aadhaar Document Crop & Preview FIRST */}
       {documentPath ? (
         <div className="rounded-2xl border border-border bg-card p-3 shadow-sm space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -129,10 +114,10 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
           </div>
 
           {/* In-app cropped image box */}
-          {signedDocUrl && (
+          {signedDocUrl ? (
             <div
               onClick={() => openDocument(documentPath)}
-              className="relative w-full h-44 rounded-xl overflow-hidden border border-border/80 bg-muted cursor-pointer group shadow-inner"
+              className="relative w-full h-48 rounded-xl overflow-hidden border border-border/80 bg-slate-950/20 cursor-pointer group shadow-inner"
               title="Click to view full document"
             >
               <img
@@ -146,6 +131,10 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
                 </span>
               </div>
             </div>
+          ) : (
+            <div className="w-full h-24 rounded-xl border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground">
+              Loading Aadhaar Preview...
+            </div>
           )}
 
           {aadhaarDocument?.rejection_reason && (
@@ -155,8 +144,25 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
           )}
         </div>
       ) : (
-        <div className="border-y border-border py-4 text-center text-xs text-muted-foreground">No Aadhaar document was attached to this submission.</div>
+        <div className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+          No Aadhaar document was attached to this submission.
+        </div>
       )}
+
+      {/* 2. Verification Status Badge & Actions */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2">
+          <div className={cn("p-2 rounded-lg border", config.bg)}>
+            <StatusIcon className={cn("h-4 w-4", config.color)} />
+          </div>
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Status</div>
+            <Badge variant="outline" className={cn("text-xs font-bold", config.bg, config.color)}>
+              {getVerificationStatusLabel(verificationStatus)}
+            </Badge>
+          </div>
+        </div>
+      </div>
 
       {/* Verified success banner */}
       {verificationStatus === "verified" && (

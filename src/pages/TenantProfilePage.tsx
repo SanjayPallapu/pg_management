@@ -145,7 +145,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
       <div className="min-h-[100dvh] bg-background text-foreground">
         <header className="sticky top-0 z-40 border-b bg-background/95 px-2 py-3 backdrop-blur-xl">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
-            <button onClick={() => navigate(-1)} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+            <button onClick={() => navigate("/tenant-profiles")} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-black">Tenant Profile</h1><p className="text-[11px] text-muted-foreground">Verified tenant details and payments</p></div>
             <ProfileStatusBadge status="verified" showLabel={false} size="md" />
           </div>
@@ -202,7 +202,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-2 py-3">
-          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => navigate("/tenant-profiles")} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
           <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
