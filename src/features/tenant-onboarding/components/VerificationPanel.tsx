@@ -8,6 +8,10 @@ import {
   FileText,
   AlertCircle,
   ExternalLink,
+  Eye,
+  ZoomIn,
+  X,
+  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +34,7 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [signedDocUrl, setSignedDocUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleApprove = () => {
     verify.mutate({ tenantId, action: "approve" });
@@ -107,8 +112,11 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
                   {aadhaarDocument.status.replaceAll("_", " ")}
                 </Badge>
               )}
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="h-7 text-[11px] gap-1 px-2">
+                <Eye className="h-3 w-3" /> Preview
+              </Button>
               <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="h-7 text-[11px] gap-1 px-2">
-                <ExternalLink className="h-3 w-3" /> Full View
+                <ExternalLink className="h-3 w-3" /> Open
               </Button>
             </div>
           </div>
@@ -116,7 +124,7 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
           {/* In-app cropped image box */}
           {signedDocUrl ? (
             <div
-              onClick={() => openDocument(documentPath)}
+              onClick={() => setPreviewOpen(true)}
               className="relative w-full h-48 rounded-xl overflow-hidden border border-border/80 bg-slate-950/20 cursor-pointer group shadow-inner"
               title="Click to view full document"
             >
@@ -253,6 +261,45 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
               </div>
             </motion.div>
           )}
+        </div>
+      )}
+
+      {/* Full-screen document preview modal */}
+      {previewOpen && signedDocUrl && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[92vh] w-full bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="text-sm font-bold">{aadhaarDocument?.document_name || "Aadhaar Card"}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath!)} className="h-8 text-xs gap-1">
+                  <ExternalLink className="h-3.5 w-3.5" /> Open in Tab
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPreviewOpen(false)} className="h-8 w-8 p-0">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-center overflow-auto max-h-[82vh] bg-slate-50 dark:bg-slate-950">
+              {signedDocUrl.toLowerCase().endsWith(".pdf") ? (
+                <iframe src={signedDocUrl} className="w-full h-[78vh] rounded-lg border" title="Document Preview" />
+              ) : (
+                <img
+                  src={signedDocUrl}
+                  alt="Aadhaar Card Full Preview"
+                  className="max-w-full max-h-[78vh] object-contain rounded-lg shadow-lg"
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
