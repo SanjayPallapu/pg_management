@@ -200,47 +200,76 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                     {(activeTab === 'joined' ? joinedTenants : leftTenants).map(tenant => (
                       <div 
                         key={tenant.id} 
-                        className={`p-4 rounded-lg border ${
+                        className={`p-4 rounded-2xl border shadow-sm ${
                           activeTab === 'joined' 
                             ? 'bg-paid/5 border-paid/20 text-foreground' 
                             : 'bg-pending/5 border-pending/20 text-foreground'
                         }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{tenant.name}</span>
-                              {tenant.phone && tenant.phone !== '••••••••••' && (
-                                <>
-                                  <a 
-                                    href={`tel:${tenant.phone}`}
-                                    className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                                  >
-                                    <Phone className="h-4 w-4" />
-                                  </a>
-                                  <a 
-                                    href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                                  >
-                                    <MessageCircle className="h-4 w-4" />
-                                  </a>
-                                </>
-                              )}
+                        <div className="flex items-stretch justify-between gap-3">
+                          {/* Left Div */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
+                                <span className="text-slate-400 font-medium text-sm">•</span>
+                                <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Floor {tenant.floor}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              Room {tenant.roomNo} • Floor {tenant.floor}
-                            </p>
+                            <div className="mt-2 flex items-center">
+                              <span className="text-xs text-muted-foreground font-medium">
+                                {activeTab === 'joined' 
+                                  ? `Joined: ${format(new Date(tenant.startDate), 'dd MMM yyyy')}`
+                                  : `Left: ${format(new Date(tenant.endDate!), 'dd MMM yyyy')}`
+                                }
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-foreground">₹{tenant.monthlyRent.toLocaleString()}/mo</p>
-                            <p className="text-xs text-muted-foreground">
-                              {activeTab === 'joined' 
-                                ? `Joined: ${format(new Date(tenant.startDate), 'dd MMM yyyy')}`
-                                : `Left: ${format(new Date(tenant.endDate!), 'dd MMM yyyy')}`
-                              }
-                            </p>
+
+                          {/* Right Div */}
+                          <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+                            {/* Rent amount */}
+                            <div className="w-[84px] text-center">
+                              <p className="text-base font-extrabold text-foreground">₹{tenant.monthlyRent.toLocaleString()}</p>
+                            </div>
+
+                            {/* Middle: Action icons */}
+                            {tenant.phone && tenant.phone !== '••••••••••' ? (
+                              <div className="w-[84px] flex items-center justify-between my-2">
+                                <a 
+                                  href={`https://wa.me/${tenant.phone.replace(/\D/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 hover:bg-emerald-100 transition-colors"
+                                  title="WhatsApp"
+                                >
+                                  <MessageCircle className="h-4 w-4 stroke-[1.75]" />
+                                </a>
+                                <a 
+                                  href={`tel:${tenant.phone}`}
+                                  className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 hover:bg-blue-100 transition-colors"
+                                  title={`Call ${tenant.name}`}
+                                >
+                                  <Phone className="h-4 w-4 stroke-[1.75]" />
+                                </a>
+                              </div>
+                            ) : (
+                              <div className="w-[84px] my-2" />
+                            )}
+
+                            {/* Bottom: Status Badge */}
+                            <div className="w-[84px]">
+                              <span className={`w-full px-0 text-center block text-xs font-semibold py-1 rounded-lg shrink-0 ${
+                                activeTab === 'joined'
+                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                  : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                              }`}>
+                                {activeTab === 'joined' ? 'Joined' : 'Left'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -1934,7 +1934,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     {/* Right Div */}
                     <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
                       {/* Top: Price for Paid */}
-                      <div className="w-[72px] text-center">
+                      <div className="w-[84px] text-center">
                         {isPaid && (
                           <span className="text-lg font-extrabold text-foreground">
                             ₹{displayAmount.toLocaleString()}
@@ -1957,22 +1957,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <a
                             href={`tel:${tenant.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                            className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 hover:bg-blue-100 transition-colors"
                             title={`Call ${tenant.name}`}
                           >
-                            <Phone className="h-5 w-5 stroke-[1.75]" />
+                            <Phone className="h-4 w-4 stroke-[1.75]" />
                           </a>
                         </div>
                       ) : (
-                        <div />
+                        <div className="w-[84px] my-2" />
                       )}
 
                       {/* Bottom: Paid badge or Pay button */}
-                      <div>
+                      <div className="w-[84px]">
                         {isPaid ? (
                           <button
                             type="button"
-                            className="badge-paid-periwinkle min-w-[72px] px-2 text-center cursor-pointer"
+                            className="badge-paid-periwinkle w-full px-0 text-center block cursor-pointer"
                             onClick={() => {
                               if (editModeEnabled) {
                                 handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
@@ -1985,14 +1985,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <button
                             type="button"
                             onClick={() => handlePayRemaining(tenant.id)}
-                            className="btn-pay-black w-[72px] px-0 text-center"
+                            className="btn-pay-black w-full px-0 text-center"
                           >
                             Pay
                           </button>
                         ) : (
                           <button
                             type="button"
-                            className="btn-pay-black w-[72px] px-0 text-center"
+                            className="btn-pay-black w-full px-0 text-center"
                             onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                           >
                             Pay

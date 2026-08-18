@@ -206,7 +206,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background text-foreground flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-[#0c4a6e] text-foreground flex flex-col h-full overflow-hidden border-0">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -224,7 +224,7 @@ export const ACElectricitySheet = ({
             }}
           />
         ) : (
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col h-full overflow-hidden bg-[#0c4a6e]">
             {/* Illustrated Hero Header */}
             <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(145deg, #020617 0%, #071b46 48%, #312e81 76%, #6d28d9 100%)" }}>
               {/* Decorative blobs */}
@@ -233,7 +233,7 @@ export const ACElectricitySheet = ({
               <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
               <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
 
-              <SheetHeader className="relative z-10 px-0 pt-3 pb-3">
+              <SheetHeader className="relative z-10 px-3 pt-3 pb-3">
                 {/* Top bar */}
                 <div className="flex items-center justify-between gap-2 px-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -341,7 +341,7 @@ export const ACElectricitySheet = ({
             </div>
 
             {/* Main content */}
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-background text-foreground">
               {/* ── ROOMS TAB ── */}
               {activeTab === 'ac-bill' && (
                 <>

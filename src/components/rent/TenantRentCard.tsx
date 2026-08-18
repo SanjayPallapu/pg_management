@@ -221,7 +221,7 @@ export const TenantRentCard = ({
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price for Paid */}
-          <div className="w-[72px] text-center">
+          <div className="w-[84px] text-center">
             {isPaid && (
               <span className="text-lg font-extrabold text-foreground">
                 ₹{displayAmount.toLocaleString()}
@@ -231,7 +231,7 @@ export const TenantRentCard = ({
 
           {/* Middle: Action icons */}
           {tenant.phone && tenant.phone !== "••••••••••" ? (
-            <div className="w-[72px] flex items-center justify-between my-2">
+            <div className="w-[84px] flex items-center justify-between my-2">
               <button
                 type="button"
                 onClick={(e) => {
@@ -243,40 +243,40 @@ export const TenantRentCard = ({
                     : "";
                   window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
                 }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
+                className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 hover:bg-emerald-100 transition-colors"
                 title="Share on WhatsApp"
               >
-                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                <MessageCircle className="h-4 w-4 stroke-[1.75]" />
               </button>
               <a
                 href={`tel:${tenant.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
+                className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 hover:bg-blue-100 transition-colors"
                 title={`Call ${tenant.name}`}
               >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
+                <Phone className="h-4 w-4 stroke-[1.75]" />
               </a>
             </div>
           ) : (
-            <div />
+            <div className="w-[84px] my-2" />
           )}
 
           {/* Bottom: Paid badge or Pay button */}
-          <div>
+          <div className="w-[84px]">
             {isPaid ? (
-              <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
+              <span className="badge-paid-periwinkle w-full px-0 text-center block shrink-0">Paid</span>
             ) : isPartial ? (
               <button
                 type="button"
                 onClick={() => onPayRemaining(tenant.id)}
-                className="btn-pay-black w-[72px] px-0 text-center"
+                className="btn-pay-black w-full px-0 text-center"
               >
                 Pay
               </button>
             ) : (
               <button
                 type="button"
-                className="btn-pay-black w-[72px] px-0 text-center"
+                className="btn-pay-black w-full px-0 text-center"
                 onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
               >
                 Pay

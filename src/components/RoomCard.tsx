@@ -628,23 +628,25 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-1.5">
-                    {/* Call badge */}
-                    {tenant.phone && tenant.phone !== "••••••••••" && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Call badge - fixed position */}
+                    {tenant.phone && tenant.phone !== "••••••••••" ? (
                       <a
                         href={`tel:${tenant.phone}`}
-                        className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                        className="p-1 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
                         title={`Call ${tenant.name}`}
                       >
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-3.5 w-3.5" />
                       </a>
+                    ) : (
+                      <div className="w-5.5 h-5.5 shrink-0" aria-hidden="true" />
                     )}
                     {/* WhatsApp dropdown menu - Always visible */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className={`grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 transition-colors ${whatsappSent ? "bg-emerald-500/20 text-emerald-600" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"}`}
+                          className={`p-1 rounded-full transition-colors shrink-0 ${whatsappSent ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}`}
                           title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
                         >
                           <MessageCircle className="h-4 w-4" />
@@ -748,19 +750,24 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Badge
-                      variant="outline"
-                      className={
-                        isPaid
-                          ? "bg-paid text-paid-foreground text-xs cursor-pointer hover:opacity-80"
-                          : isPartial
-                            ? "bg-partial text-partial-foreground text-xs cursor-pointer hover:opacity-80"
-                            : "bg-pending text-pending-foreground text-xs"
-                      }
-                      onClick={isPaid || isPartial ? handlePaidClick : undefined}
-                    >
-                      {isPaid ? "Paid" : isPartial ? "Partial" : "Not Paid"}
-                    </Badge>
+                    {/* Fixed status area container equal to width needed by Not Paid */}
+                    <div className="w-[68px] flex justify-center shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={
+                          `w-full justify-center text-center text-xs px-1 py-0.5 ${
+                            isPaid
+                              ? "bg-paid text-paid-foreground cursor-pointer hover:opacity-80"
+                              : isPartial
+                                ? "bg-partial text-partial-foreground cursor-pointer hover:opacity-80"
+                                : "bg-pending text-pending-foreground"
+                          }`
+                        }
+                        onClick={isPaid || isPartial ? handlePaidClick : undefined}
+                      >
+                        {isPaid ? "Paid" : isPartial ? "Partial" : "Not Paid"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               );

@@ -218,7 +218,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price Amount */}
-          <div className="w-[72px] text-center">
+          <div className="w-[84px] text-center">
             <span className="text-lg font-extrabold text-foreground">
               ₹{tenant.amountPaid.toLocaleString()}
             </span>
@@ -236,19 +236,19 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
               />
               <a
                 href={`tel:${tenant.phone}`}
-                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 hover:bg-blue-100 transition-colors"
                 aria-label={`Call ${tenant.name}`}
               >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
+                <Phone className="h-4 w-4 stroke-[1.75]" />
               </a>
             </div>
           ) : (
-            <div />
+            <div className="w-[84px] my-2" />
           )}
 
           {/* Bottom: Paid badge */}
-          <div>
-            <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
+          <div className="w-[84px]">
+            <span className="badge-paid-periwinkle w-full px-0 text-center block shrink-0">Paid</span>
           </div>
         </div>
       </div>
