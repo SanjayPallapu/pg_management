@@ -9,6 +9,7 @@ import {
   hasPhoneOtpTestChallenge,
 } from '@/lib/phoneOtpTestMode';
 import { restartOnboardingAfterLogout } from '@/lib/onboardingState';
+import { getPublicAppUrl } from '@/utils/referralHelper';
 
 export type AppRole = 'admin' | 'owner';
 
@@ -283,7 +284,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const redirectTo = `${window.location.origin}/`;
+    const origin = getPublicAppUrl().replace(/\/$/, "");
+    const redirectTo = `${origin}/`;
     sessionStorage.setItem('isNewSignup', 'true');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
