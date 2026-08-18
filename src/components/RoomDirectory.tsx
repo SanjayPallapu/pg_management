@@ -243,7 +243,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           className="overflow-hidden h-0 opacity-0"
         >
           <div className="pt-3 pb-1">
-            <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-muted/20 border border-border/40">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 p-3 rounded-xl bg-muted/20 border border-border/40">
               {[...rooms]
                 .sort((a, b) => a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true }))
                 .map((room) => {
@@ -253,7 +253,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
                       key={room.roomNo}
                       onClick={() => handleSelectRoom(room.roomNo)}
                       type="button"
-                      className={`min-w-[44px] h-9 px-2.5 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer ${
+                      className={`w-full h-9 px-1 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer ${
                         isOccupied
                           ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary"
                           : "bg-muted text-muted-foreground border-border hover:bg-muted/80"

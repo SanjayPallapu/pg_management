@@ -4,6 +4,8 @@ import {
   ArrowLeft, BadgeCheck, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign,
   Clock3, Copy, FileCheck2, FileText, Home, Link2, Loader2, MessageCircle,
   MoreHorizontal, Phone, QrCode, ReceiptText, Send, ShieldCheck, UserRound, ContactRound,
+  User, Calendar, Users, Droplet, Contact, PhoneCall, IdCard, IndianRupee, CreditCard,
+  UserCheck, CheckSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -60,11 +62,14 @@ function ActionRow({ icon: Icon, title, hint, onClick, accent = false }: {
   );
 }
 
-function DetailRow({ label, value, sensitive = false }: { label: string; value?: string | number | null; sensitive?: boolean }) {
+function DetailRow({ label, value, sensitive = false, icon: Icon }: { label: string; value?: string | number | null; sensitive?: boolean; icon?: React.ComponentType<{ className?: string }> }) {
   const display = value === null || value === undefined || value === "" ? "Not provided" : String(value);
   return (
-    <div className="flex min-w-0 items-start justify-between gap-4 border-b border-border/70 py-3 last:border-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex min-w-0 items-center justify-between gap-4 border-b border-border/70 py-3 last:border-0">
+      <div className="flex items-center gap-2.5 min-w-0">
+        {Icon && <Icon className="h-4 w-4 shrink-0 text-violet-500" />}
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </div>
       <span className={cn("max-w-[65%] break-words text-right text-sm font-semibold text-foreground", sensitive && "font-mono tracking-wide")}>{display}</span>
     </div>
   );
@@ -167,21 +172,21 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
           <section className="rounded-2xl border bg-card px-3">
             <DetailSection title="Personal information" icon={UserRound}>
-              <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
-              <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
-              <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
-              <DetailRow label="Gender" value={displayedProfile?.gender} />
-              <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
-              <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
-              <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+              <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
+              <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+              <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
+              <DetailRow icon={Users} label="Gender" value={displayedProfile?.gender} />
+              <DetailRow icon={Droplet} label="Blood group" value={displayedProfile?.blood_group} />
+              <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+              <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
             </DetailSection>
             <DetailSection title="Identity and stay" icon={ShieldCheck}>
-              <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
-              <DetailRow label="Room" value={room.roomNo} />
-              <DetailRow label="Move-in date" value={tenant.startDate} />
-              <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
-              <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
-              <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
+              <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+              <DetailRow icon={Home} label="Room" value={room.roomNo} />
+              <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
+              <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+              <DetailRow icon={ShieldCheck} label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+              <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
             </DetailSection>
           </section>
 
@@ -234,31 +239,31 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
             {view === "details" && (
               <div className="rounded-2xl border border-border bg-card px-2">
                 <DetailSection title="Personal information" icon={UserRound}>
-                  <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
-                  <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
-                  <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
-                  <DetailRow label="Gender" value={displayedProfile?.gender} />
-                  <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
-                  <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
-                  <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+                  <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
+                  <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+                  <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
+                  <DetailRow icon={Users} label="Gender" value={displayedProfile?.gender} />
+                  <DetailRow icon={Droplet} label="Blood group" value={displayedProfile?.blood_group} />
+                  <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+                  <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
                 </DetailSection>
                 <DetailSection title="Identity verification" icon={ShieldCheck}>
-                  <DetailRow label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
-                  <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
-                  <DetailRow label="Submission status" value={statusLabel(displayedProfile?.status)} />
+                  <DetailRow icon={FileText} label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
+                  <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+                  <DetailRow icon={BadgeCheck} label="Submission status" value={statusLabel(displayedProfile?.status)} />
                 </DetailSection>
                 <DetailSection title="Stay and rent" icon={Home}>
-                  <DetailRow label="Room" value={room.roomNo} />
-                  <DetailRow label="Move-in date" value={tenant.startDate} />
-                  <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
-                  <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
-                  <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
-                  <DetailRow label="Collected by" value={tenant.securityDepositCollectedBy} />
+                  <DetailRow icon={Home} label="Room" value={room.roomNo} />
+                  <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
+                  <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+                  <DetailRow icon={ShieldCheck} label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+                  <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
+                  <DetailRow icon={UserCheck} label="Collected by" value={tenant.securityDepositCollectedBy} />
                 </DetailSection>
                 <DetailSection title="Agreement" icon={FileCheck2}>
-                  <DetailRow label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
-                  <DetailRow label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
-                  <DetailRow label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
+                  <DetailRow icon={CheckSquare} label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
+                  <DetailRow icon={FileCheck2} label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
+                  <DetailRow icon={Clock3} label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
                 </DetailSection>
                 {complete && <Button onClick={() => goToView("verify")} className="mb-4 w-full bg-violet-600 text-white hover:bg-violet-700"><ShieldCheck className="mr-2 h-4 w-4" />Review Aadhaar and verify</Button>}
               </div>

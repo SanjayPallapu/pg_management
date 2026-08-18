@@ -744,7 +744,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Financials</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               
               { key: "total-collected", icon: "/icons/total-collected-update.png", label: "Total Collected" },
@@ -788,7 +788,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Tenants</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "pending-tenants", icon: "/icons/pending-updte.jpg", label: "Pending" },
               { key: "expected-collection", icon: "/icons/expected-updte.png", label: "Expected" },
@@ -820,7 +820,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Tools & Admin</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "key-numbers", icon: "/icons/key-numbers-3d.png", label: "Key Numbers" },
               { key: "pg-rules", icon: "/icons/pg-rules-3d.png", label: "PG Rules" },
@@ -850,7 +850,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           <SheetHeader className="mb-5">
             <SheetTitle className="text-left">Bills & Budget</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-2 sm:gap-x-4 gap-y-5 justify-items-center">
             {[
               { key: "building-rent", icon: "/icons/rent-update.png", label: "Building Rent" },
               { key: "bills-budget", icon: "/icons/budget-update.png", label: "Overview" },
