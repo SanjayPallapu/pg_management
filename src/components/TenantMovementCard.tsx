@@ -215,9 +215,6 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                                 <span className="text-slate-400 font-medium text-sm">•</span>
                                 <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Floor {tenant.floor}
-                              </p>
                             </div>
                             <div className="mt-2 flex items-center">
                               <span className="text-xs text-muted-foreground font-medium">
@@ -260,16 +257,16 @@ export const TenantMovementCard = ({ rooms, defaultOpen = false, onClose, showSu
                               <div className="w-[84px] my-2" />
                             )}
 
-                            {/* Bottom: Status Badge */}
-                            <div className="w-[84px]">
-                              <span className={`w-full px-0 text-center block text-xs font-semibold py-1 rounded-lg shrink-0 ${
-                                activeTab === 'joined'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                                  : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-                              }`}>
-                                {activeTab === 'joined' ? 'Joined' : 'Left'}
-                              </span>
-                            </div>
+                            {/* Bottom: Status Badge (only for Left tab) */}
+                            {activeTab === 'left' ? (
+                              <div className="w-[84px]">
+                                <span className="w-full px-0 text-center block text-xs font-semibold py-1 rounded-lg shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                                  Left
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="w-[84px]" />
+                            )}
                           </div>
                         </div>
                       </div>

@@ -160,13 +160,10 @@ export function OwnerSharePanel({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-primary" />
-            Share Onboarding Link
+          <DialogTitle className="text-base font-bold flex items-start gap-2 text-foreground leading-snug">
+            <Link2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <span>Send a secure onboarding link to <span className="text-primary font-extrabold">{tenantName}</span> to complete their profile.</span>
           </DialogTitle>
-          <DialogDescription>
-            Send a secure onboarding link to {tenantName} to complete their profile.
-          </DialogDescription>
         </DialogHeader>
 
         {/* Expired link warning */}

@@ -29,6 +29,7 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const { data: documents = [] } = useOnboardingDocuments(tenantId);
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [signedDocUrl, setSignedDocUrl] = useState<string | null>(null);
 
   const handleApprove = () => {
     verify.mutate({ tenantId, action: "approve" });
@@ -73,6 +74,21 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const aadhaarDocument = documents.find((document) => document.document_type === "aadhaar" || document.document_type === "id_proof") || documents[0];
   const documentPath = aadhaarDocument?.file_url || idProofUrl;
 
+  useEffect(() => {
+    if (!documentPath) return;
+    if (/^https?:\/\//.test(documentPath)) {
+      setSignedDocUrl(documentPath);
+      return;
+    }
+    supabase.storage
+      .from("tenant-onboarding-docs")
+      .createSignedUrl(documentPath, 3600)
+      .then(({ data }: { data: { signedUrl?: string } | null }) => {
+        if (data?.signedUrl) setSignedDocUrl(data.signedUrl);
+      })
+      .catch(() => {});
+  }, [documentPath]);
+
   return (
     <div className="space-y-4">
       {/* Status Badge */}
@@ -90,30 +106,53 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
         </div>
       </div>
 
-      {/* Exactly one Aadhaar document is required for onboarding. */}
+      {/* In-app Aadhaar Document Crop & Preview */}
       {documentPath ? (
-        <div className="border-y border-border py-3">
-          <div className="mb-2 text-xs font-medium text-muted-foreground">Aadhaar document</div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{aadhaarDocument?.document_name || "Uploaded Aadhaar"}</div>
-                  <div className="text-xs text-muted-foreground">One identity document</div>
-                  {aadhaarDocument?.rejection_reason && (
-                    <div className="text-xs text-red-500 mt-0.5 italic">
-                      {aadhaarDocument.rejection_reason}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                {aadhaarDocument?.status && <Badge variant="outline" className="text-xs capitalize">{aadhaarDocument.status.replaceAll("_", " ")}</Badge>}
-                <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="gap-1.5">
-                  <ExternalLink className="h-3.5 w-3.5" />View
-                </Button>
+        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-xs font-bold text-foreground truncate">
+                {aadhaarDocument?.document_name || "Uploaded Aadhaar Card"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {aadhaarDocument?.status && (
+                <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0.2">
+                  {aadhaarDocument.status.replaceAll("_", " ")}
+                </Badge>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="h-7 text-[11px] gap-1 px-2">
+                <ExternalLink className="h-3 w-3" /> Full View
+              </Button>
+            </div>
+          </div>
+
+          {/* In-app cropped image box */}
+          {signedDocUrl && (
+            <div
+              onClick={() => openDocument(documentPath)}
+              className="relative w-full h-44 rounded-xl overflow-hidden border border-border/80 bg-muted cursor-pointer group shadow-inner"
+              title="Click to view full document"
+            >
+              <img
+                src={signedDocUrl}
+                alt="Aadhaar Card Preview"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg">
+                  Click to Expand
+                </span>
               </div>
             </div>
+          )}
+
+          {aadhaarDocument?.rejection_reason && (
+            <div className="text-xs text-red-500 mt-1 italic">
+              Reason: {aadhaarDocument.rejection_reason}
+            </div>
+          )}
         </div>
       ) : (
         <div className="border-y border-border py-4 text-center text-xs text-muted-foreground">No Aadhaar document was attached to this submission.</div>
@@ -132,36 +171,36 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons with non-overflowing responsive layout */}
       {verificationStatus !== "verified" && (
         <div className="space-y-3">
           {!showRejectForm ? (
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={handleApprove}
                 disabled={verify.isPending}
-                className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 bg-green-600 hover:bg-green-700 text-white shrink-0"
               >
-                <CheckCircle2 className="h-4 w-4" />
-                Approve
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                <span>Approve</span>
               </Button>
               <Button
                 onClick={() => setShowRejectForm(true)}
                 disabled={verify.isPending}
                 variant="outline"
-                className="flex-1 gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
               >
-                <XCircle className="h-4 w-4" />
-                Reject
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Reject</span>
               </Button>
               <Button
                 onClick={() => setShowRejectForm(true)}
                 disabled={verify.isPending}
                 variant="outline"
-                className="flex-1 gap-2 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 shrink-0"
               >
-                <RefreshCw className="h-4 w-4" />
-                Re-upload
+                <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                <span>Re-upload</span>
               </Button>
             </div>
           ) : (
@@ -180,27 +219,28 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
               {!rejectionReason.trim() && (
                 <p className="text-xs text-red-500">A reason is required before confirming.</p>
               )}
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <Button
                   onClick={handleReject}
                   disabled={verify.isPending}
-                  className="flex-1 gap-2 bg-red-600 hover:bg-red-700 text-white"
+                  className="h-10 text-xs font-semibold gap-1.5 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  <XCircle className="h-4 w-4" />
+                  <XCircle className="h-3.5 w-3.5" />
                   Confirm Reject
                 </Button>
                 <Button
                   onClick={handleRequestReupload}
                   disabled={verify.isPending}
                   variant="outline"
-                  className="flex-1 gap-2"
+                  className="h-10 text-xs font-semibold gap-1.5"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  Request Re-upload
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Re-upload
                 </Button>
                 <Button
                   onClick={() => setShowRejectForm(false)}
                   variant="ghost"
+                  className="h-10 text-xs font-semibold"
                 >
                   Cancel
                 </Button>
