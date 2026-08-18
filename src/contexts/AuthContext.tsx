@@ -286,7 +286,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = useCallback(async () => {
     const origin = getPublicAppUrl().replace(/\/$/, "");
     const redirectTo = `${origin}/`;
-    sessionStorage.setItem('isNewSignup', 'true');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -298,9 +297,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
-    if (error) {
-      sessionStorage.removeItem('isNewSignup');
-    }
     return { error };
   }, []);
 
