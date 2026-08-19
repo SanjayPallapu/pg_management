@@ -179,24 +179,6 @@ export const ACElectricitySheet = ({
     });
   };
 
-  const handleBulkReminders = () => {
-    let pendingCount = 0;
-    acRooms.forEach(item => {
-      (item.tenantShares || []).forEach((share: any) => {
-        if (share.acPaymentStatus !== 'Paid' && share.share > 0) pendingCount++;
-      });
-    });
-    if (pendingCount === 0) { toast.info("All tenants have paid their AC bills!"); return; }
-    toast.info(`Sending reminders to ${pendingCount} tenants...`);
-    acRooms.forEach(item => {
-      (item.tenantShares || []).forEach((share: any) => {
-        if (share.acPaymentStatus !== 'Paid' && share.share > 0) {
-          onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount, share.name);
-        }
-      });
-    });
-  };
-
   const tabs: { key: typeof activeTab; label: string }[] = [
     { key: 'ac-bill', label: 'Rooms' },
     { key: 'pendings', label: 'Pending' },
@@ -440,14 +422,6 @@ export const ACElectricitySheet = ({
                         <p className="text-sm font-black text-foreground">{pendingTenantsList.length} Pending</p>
                         <p className="text-xs text-muted-foreground">₹{pendingTotal.toLocaleString()} outstanding</p>
                       </div>
-                      <Button
-                        size="sm"
-                        className="ml-auto h-9 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shrink-0"
-                        onClick={handleBulkReminders}
-                      >
-                        <Bell className="h-3.5 w-3.5 mr-1.5" />
-                        Remind All
-                      </Button>
                     </div>
                   )}
 

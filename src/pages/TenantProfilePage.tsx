@@ -289,7 +289,6 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
                   <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
                   <DetailRow icon={ShieldCheck} label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
                   <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
-                  <DetailRow icon={UserCheck} label="Collected by" value={tenant.securityDepositCollectedBy} />
                 </DetailSection>
                 <DetailSection title="Agreement" icon={FileCheck2} badgeColor="blue">
                   <DetailRow icon={CheckSquare} label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />

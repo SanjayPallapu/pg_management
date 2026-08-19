@@ -78,7 +78,7 @@ import { ACElectricitySheet } from "./ACElectricitySheet";
 import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
-import { BulkReminderDialog } from "./BulkReminderDialog";
+import { PendingTenantsCard } from "./PendingTenantsCard";
 import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
@@ -170,7 +170,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
+  const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
   const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
@@ -1627,13 +1627,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         {/* Action buttons on the right side */}
         <div className="flex gap-1.5 items-center">
           <Button
-            onClick={() => setBulkReminderOpen(true)}
+            onClick={() => setPendingSheetOpen(true)}
             variant="outline"
             size="icon"
-            title="Bulk WhatsApp Reminders"
-            className="text-cash hover:text-cash hover:bg-cash-muted h-8 w-8 shrink-0"
+            title="Select Pending Tenants"
+            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30 h-8 w-8 shrink-0 border-amber-300/40"
           >
-            <Users className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" />
           </Button>
           <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History" className="h-8 w-8 shrink-0">
             <History className="h-4 w-4" />
@@ -1695,7 +1695,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               // Use pro-rata effective rent if applicable
               const targetRent =
                 tenant.isProRata && tenant.effectiveRent !== undefined ? tenant.effectiveRent : tenant.monthlyRent;
-              const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
+              const remaining = Math.max(0, targetRent - (tenant.payment.amountPaid || 0));
               const bgClass =
                 tenant.paymentCategory === "paid"
                   ? "bg-paid-muted border-l-4 border-paid"
@@ -2460,8 +2460,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Payment History Sheet */}
       <PaymentHistorySheet open={historyOpen} onOpenChange={setHistoryOpen} />
 
-      {/* Bulk Reminder Dialog */}
-      <BulkReminderDialog open={bulkReminderOpen} onOpenChange={setBulkReminderOpen} rooms={rooms} />
+      {/* Select Pending Tenants Sheet */}
+      <PendingTenantsCard open={pendingSheetOpen} onClose={() => setPendingSheetOpen(false)} rooms={rooms} showSummaryCard={false} />
 
       {/* Left Tenants Cleanup Sheet */}
       <LeftTenantsCleanupSheet open={cleanupSheetOpen} onOpenChange={setCleanupSheetOpen} rooms={rooms} />

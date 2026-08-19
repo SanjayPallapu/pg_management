@@ -1698,22 +1698,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 </div>
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={collectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>
@@ -1809,22 +1794,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 </div>
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={remainingCollectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setRemainingCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>

@@ -211,12 +211,6 @@ export const SecurityDepositReceiptDialog = ({
                   <span className="text-muted-foreground">Mode:</span>
                   <span className="font-medium">{data.deposit.mode === 'upi' ? 'UPI/Online' : 'Cash'}</span>
                 </div>
-                {data.deposit.collectedBy && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Collected By:</span>
-                    <span className="font-medium">{data.deposit.collectedBy}</span>
-                  </div>
-                )}
               </div>
 
               {generatedImage && (
