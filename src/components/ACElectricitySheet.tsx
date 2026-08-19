@@ -608,18 +608,6 @@ export const ACElectricitySheet = ({
                 </div>
               )}
             </div>
-
-            {/* Bottom summary bar */}
-            <div className="border-t border-border bg-muted/60 backdrop-blur px-4 py-3 flex items-center justify-between shrink-0 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground font-bold">COLLECTED</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-black">₹{collectedTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground font-bold">PENDING</span>
-                <span className="text-orange-500 font-black">₹{pendingTotal.toLocaleString()}</span>
-              </div>
-            </div>
           </div>
         )}
         <BillUnitPricesCard
