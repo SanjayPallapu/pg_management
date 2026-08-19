@@ -34,6 +34,7 @@ import {
   Snowflake,
   ArrowLeft,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
