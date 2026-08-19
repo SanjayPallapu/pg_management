@@ -17,7 +17,7 @@ const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly
   promax_yearly: { amount: 1999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Max Yearly" },
 };
 
-const TRIAL_DAYS = 30;
+const TRIAL_DAYS = 7;
 
 async function createOrFetchPlan(credentials: string, plan: PlanKey) {
   const cfg = PLAN_CONFIG[plan];

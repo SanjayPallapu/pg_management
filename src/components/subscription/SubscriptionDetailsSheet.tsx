@@ -266,7 +266,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           {/* CHOOSE THE RIGHT PLAN TOGGLE */}
           <div className="text-center pt-2">
             <h3 className="text-base font-extrabold text-foreground dark:text-white">Choose the right plan</h3>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 mt-0.5">Start with a 1 month free trial. Cancel anytime.</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-400 mt-0.5">Start with a 7-day free trial. Cancel anytime.</p>
             
             {/* Segmented control toggle */}
             <div className="inline-flex p-1 bg-muted dark:bg-slate-950 rounded-xl border border-border dark:border-slate-900 mt-3.5 w-full max-w-xs">
@@ -580,7 +580,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1 truncate">
-              ₹{selectedPlanInfo.price.toLocaleString()} {selectedPlanKey === 'lifetime' ? 'one-time billing' : `${selectedPlanInfo.periodLabel} after 1-month trial`}
+              ₹{selectedPlanInfo.price.toLocaleString()} {selectedPlanKey === 'lifetime' ? 'one-time billing' : `${selectedPlanInfo.periodLabel} after 7-day trial`}
             </p>
           </div>
 

@@ -8,7 +8,7 @@ import {
 const faqs = [
   {
     q: "Is there a free trial?",
-    a: "Yes. Every PG owner gets a 1 month free trial with all features enabled before recurring billing starts.",
+    a: "Yes. Every PG owner gets a 7-day free trial with all features enabled before recurring billing starts.",
   },
   {
     q: "Can I manage multiple PG properties?",

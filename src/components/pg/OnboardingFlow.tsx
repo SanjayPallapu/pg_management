@@ -143,7 +143,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             <div>
               <h1 className="text-3xl font-bold mb-2 text-white">Welcome to PG HUB</h1>
               <p className="text-gray-400">
-                Multi-owner PG management with 1 month free trial and auto-renewing subscriptions.
+                Multi-owner PG management with 7-day free trial and auto-renewing subscriptions.
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 <Crown className="h-3 w-3 mr-1" /> Pricing
               </Badge>
               <h2 className="text-2xl font-bold text-white">Start free, then choose your billing cycle</h2>
-              <p className="text-gray-400 mt-2">Every owner gets 1 month free trial. Paid plans auto-renew through Razorpay.</p>
+              <p className="text-gray-400 mt-2">Every owner gets 7-day free trial. Paid plans auto-renew through Razorpay.</p>
             </div>
 
             <Card className="border-primary ring-2 ring-primary/20 bg-primary/5">
@@ -300,13 +300,13 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               </Badge>
               <h2 className="text-2xl font-bold text-white">{currentPlan.name} - ₹{currentPlan.price}</h2>
               <p className="text-sm text-gray-400 mt-2">
-                {hasActiveTrial ? 'Your free trial is already active. Authorize auto-renewal for later billing.' : 'You will start with a 1 month free trial, then billing begins automatically.'}
+                {hasActiveTrial ? 'Your free trial is already active. Authorize auto-renewal for later billing.' : 'You will start with a 7-day free trial, then billing begins automatically.'}
               </p>
             </div>
 
             <Card className="border-border">
               <CardContent className="pt-4 space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Trial</span><span>1 month free</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Trial</span><span>7 days free</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">After trial</span><span>{currentPlan.periodLabel === '/month' ? `₹${currentPlan.price} every month` : `₹${currentPlan.price} every year`}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Billing</span><span>Auto-renewing</span></div>
               </CardContent>
