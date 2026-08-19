@@ -293,12 +293,14 @@ export const ACElectricitySheet = ({
                       <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="w-full overflow-hidden border-y border-white/15 shadow-lg">
-                    <img
-                      src="/ac-bill-banner-v5.png"
-                      alt="AC Electricity Billing"
-                      className="w-full h-auto max-h-[160px] object-cover object-center"
-                    />
+                  <div className="px-2">
+                    <div className="w-full overflow-hidden rounded-2xl border border-white/20 shadow-lg">
+                      <img
+                        src="/ac-bill-banner-v5.png"
+                        alt="AC Electricity Billing"
+                        className="w-full h-auto max-h-[160px] object-cover object-center rounded-2xl"
+                      />
+                    </div>
                   </div>
                 </div>
 
