@@ -277,8 +277,8 @@ export const ACElectricitySheet = ({
                   </div>
                 </div>
 
-                {/* Collection summary above a full-width curved illustration */}
-                <div className="mt-3 space-y-2">
+                {/* Collection summary */}
+                <div className="mt-3">
                   <div className="grid grid-cols-3 gap-2 px-2">
                     <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
@@ -291,15 +291,6 @@ export const ACElectricitySheet = ({
                     <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
                       <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="px-2">
-                    <div className="w-full overflow-hidden rounded-2xl border border-white/20 shadow-lg">
-                      <img
-                        src="/ac-bill-banner-v5.png"
-                        alt="AC Electricity Billing"
-                        className="w-full h-auto max-h-[160px] object-cover object-center rounded-2xl"
-                      />
                     </div>
                   </div>
                 </div>

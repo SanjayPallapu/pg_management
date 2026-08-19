@@ -243,7 +243,7 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
           className="overflow-hidden h-0 opacity-0"
         >
           <div className="pt-3 pb-1">
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 p-3 rounded-xl bg-muted/20 border border-border/40">
+            <div className="grid grid-cols-7 gap-1.5 p-3 rounded-xl bg-muted/20 border border-border/40">
               {[...rooms]
                 .sort((a, b) => a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true }))
                 .map((room) => {

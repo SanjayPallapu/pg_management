@@ -123,7 +123,13 @@ export const TenantRentCard = ({
       ? 0 
       : targetRent;
 
-  const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+  const cardDesignClass = isPaid
+    ? "tenant-card-paid"
+    : isPartial
+    ? "rounded-2xl border border-amber-200 border-l-[5px] border-l-amber-500 bg-[#FFF9EE] dark:bg-[#251C14] dark:border-amber-900/50"
+    : tenant.paymentCategory === "overdue"
+    ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-[#FFF5F5] dark:bg-[#2B1717] dark:border-red-900/50"
+    : "rounded-2xl border border-blue-200 border-l-[5px] border-l-blue-500 bg-[#F0F7FF] dark:bg-[#142032] dark:border-blue-900/50";
   const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : dueAmount;
 
   const formattedJoinedDate = tenant.startDate

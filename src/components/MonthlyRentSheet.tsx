@@ -1596,6 +1596,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         />
       </div>
 
+      {/* AC Electricity Banner — Tap to open AC Bills directly */}
+      <div
+        onClick={() => setAcSheetOpen(true)}
+        className="mt-1 mb-3 cursor-pointer overflow-hidden rounded-2xl border border-white/20 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
+        title="Open AC Electricity Bills"
+      >
+        <img
+          src="/ac-bill-banner-v5.png"
+          alt="AC Electricity Billing - Tap to open"
+          className="w-full h-auto max-h-[140px] object-cover object-center rounded-2xl"
+        />
+      </div>
+
       {/* Header/Action Row */}
       <div className="flex items-center justify-between w-full">
         {/* Edit Mode Toggle on the leftmost side */}
@@ -1833,7 +1846,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               };
 
               const isPaid = tenant.payment.paymentStatus === "Paid";
-              const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+              const cardDesignClass = isPaid
+                ? "tenant-card-paid"
+                : isPartial
+                ? "rounded-2xl border border-amber-200 border-l-[5px] border-l-amber-500 bg-[#FFF9EE] dark:bg-[#251C14] dark:border-amber-900/50"
+                : tenant.paymentCategory === "overdue"
+                ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-[#FFF5F5] dark:bg-[#2B1717] dark:border-red-900/50"
+                : "rounded-2xl border border-blue-200 border-l-[5px] border-l-blue-500 bg-[#F0F7FF] dark:bg-[#142032] dark:border-blue-900/50";
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 
               return (
