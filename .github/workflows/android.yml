@@ -205,7 +205,7 @@ jobs:
 
       - name: Prepare Release Notes
         run: |
-          mkdir -p whatsnew/en-US
+          mkdir -p whatsnew
           if [ -f release/release_notes.txt ]; then
             # Play Store limits release notes to 500 characters
             head -c 500 release/release_notes.txt > whatsnew/en-US
