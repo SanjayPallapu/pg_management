@@ -30,6 +30,7 @@ import {
   Settings,
   Wallet,
   Menu,
+  Mic,
 } from "lucide-react";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
@@ -276,7 +277,19 @@ const Index = () => {
 
           {/* Right: subscription status and full-page app menu */}
           <div className="flex items-center gap-2">
-            <SubscriptionBadge />
+            <div className="hidden min-[390px]:block">
+              <SubscriptionBadge />
+            </div>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 rounded-xl border-violet-500/30 bg-violet-500/10 text-violet-600 shadow-sm hover:bg-violet-500/20 dark:text-violet-300"
+              title="Open Voice Assistant"
+              aria-label="Open Voice Assistant"
+              onClick={() => navigate("/voice")}
+            >
+              <Mic className="h-5 w-5" />
+            </Button>
             <Button
               size="icon"
               className="relative h-9 w-9 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"

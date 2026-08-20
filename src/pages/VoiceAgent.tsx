@@ -70,6 +70,21 @@ const SpeechRecognitionImpl: SpeechRecognitionConstructor | null =
   null;
 const isNativePlatform = Capacitor.isNativePlatform();
 
+async function functionErrorMessage(error: unknown, fallback: string): Promise<string> {
+  const context = error && typeof error === "object" && "context" in error
+    ? (error as { context?: Response }).context
+    : undefined;
+  if (context) {
+    try {
+      const payload = await context.json() as { error?: string; message?: string };
+      if (payload.error || payload.message) return payload.error || payload.message || fallback;
+    } catch {
+      // Fall through to the SDK error when the response is not JSON.
+    }
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 /* ───── Animated Waveform Bars ───── */
 const WaveformBars = ({ active, color = "bg-white" }: { active: boolean; color?: string }) => (
   <div className="flex items-center gap-[3px] h-8">
@@ -100,7 +115,7 @@ export default function VoiceAgent() {
   const [muted, setMuted] = useState(false);
   const [supported, setSupported] = useState(true);
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("va_lang") as Lang) || "en-IN");
-  const [autoListen, setAutoListen] = useState(true); // Always-active by default
+  const [autoListen, setAutoListen] = useState(() => localStorage.getItem("va_auto_listen") === "true");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [lastCompletedAction, setLastCompletedAction] = useState<{ id: string; summary: string } | null>(null);
   const [typedText, setTypedText] = useState("");
@@ -142,6 +157,7 @@ export default function VoiceAgent() {
   }, []);
 
   useEffect(() => { localStorage.setItem("va_lang", lang); }, [lang]);
+  useEffect(() => { localStorage.setItem("va_auto_listen", String(autoListen)); }, [autoListen]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -244,7 +260,7 @@ export default function VoiceAgent() {
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
       speak(reply);
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Action failed");
+      toast.error(await functionErrorMessage(e, "Action failed"));
       transitionPhase("idle");
       maybeAutoListen();
     }
@@ -287,7 +303,7 @@ export default function VoiceAgent() {
       speak(reply);
     } catch (e: unknown) {
       console.error(e);
-      toast.error(e instanceof Error ? e.message : "Voice agent error");
+      toast.error(await functionErrorMessage(e, "Voice agent error"));
       if (requestId !== requestIdRef.current) return;
       transitionPhase("idle");
       maybeAutoListen();
