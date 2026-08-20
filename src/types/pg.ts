@@ -17,7 +17,7 @@ export interface Subscription {
   userId: string;
   plan: 'free' | 'pro';
   status: 'free' | 'pending' | 'active' | 'expired';
-  billingCycle?: 'trial' | 'monthly' | 'pro' | 'promax' | 'quarterly' | 'yearly' | 'lifetime';
+  billingCycle?: 'trial' | 'monthly' | 'pro' | 'promax' | 'quarterly' | 'yearly' | 'pro_yearly' | 'promax_yearly' | 'lifetime';
   maxPgs: number;
   maxTenantsPerPg: number;
   features: SubscriptionFeatures;

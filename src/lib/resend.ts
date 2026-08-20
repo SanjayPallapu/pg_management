@@ -30,32 +30,7 @@ export async function sendAccountAuthEmail(options: AccountAuthEmailOptions, sho
     });
 
     if (error) {
-      console.warn("[Resend Auth Email Edge Function Note]", error.message || error);
-      
-      // Client-side fetch fallback if Edge Function is unreachable
-      const apiKey =
-        (typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_RESEND_API_KEY : undefined) || "";
-      
-      if (apiKey) {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            from: "PG HUB <no-reply@pghub.in>",
-            to: [options.to],
-            subject: "PG HUB Authentication Notification",
-            html: `<p>Hello ${options.userName || "User"}, your PG HUB account authentication email has been processed.</p>`,
-          }),
-        });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `HTTP ${res.status}`);
-        }
-      }
+      throw new Error(error.message || "Authentication email service is unavailable");
     }
 
     if (showToast) {

@@ -97,7 +97,6 @@ export default function EmailAuth() {
     setSubmitting(false);
     if (error) toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
     else {
-      sendAccountAuthEmail({ to: targetEmail, action: "verification" }).catch(err => console.warn("[Auth Email Error]", err));
       completeOnboarding();
       window.location.replace("/");
     }

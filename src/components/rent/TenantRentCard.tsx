@@ -1,35 +1,12 @@
 import { format } from "date-fns";
-import { Phone, MessageCircle, Receipt, MessageSquare, Bell, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Phone, MessageCircle, Calendar } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PaymentEntry } from "@/types";
-import { PaymentEntryDisplay, getPaymentCardClass } from "@/components/payment";
 import { cn } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { StayPeriodIndicator } from "@/components/StayPeriodIndicator";
 
 type PaymentCategory = "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
-
-// Helper to parse discount and extra from notes
-const parseNotesInfo = (notes?: string) => {
-  if (!notes) return { discount: 0, extra: 0, extraReason: '' };
-  
-  const discountMatch = notes.match(/Discount:\s*₹?(\d+)/i);
-  const extraMatch = notes.match(/Extra\s*₹?(\d+):\s*([^|]+)/i);
-  
-  return {
-    discount: discountMatch ? parseInt(discountMatch[1]) : 0,
-    extra: extraMatch ? parseInt(extraMatch[1]) : 0,
-    extraReason: extraMatch ? extraMatch[2].trim() : ''
-  };
-};
 
 interface TenantRentCardProps {
   tenant: {
@@ -67,49 +44,8 @@ export const TenantRentCard = ({
   tenant,
   selectedMonth,
   selectedYear,
-  whatsappSent = false,
-  editModeEnabled = false,
   onMarkPaid,
   onPayRemaining,
-  onGenerateReceipt,
-  onPaymentReminder,
-}: TenantRentCardProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const isPartial = tenant.paymentCategory === "partial";
-  // Use pro-rata effective rent if applicable
-  const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
-    ? tenant.effectiveRent 
-    : tenant.monthlyRent;
-  const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
-  const bgClass = getPaymentCardClass(tenant.paymentCategory);
-
-  // Parse discount and extra from notes
-  const { discount, extra, extraReason } = useMemo(
-    () => parseNotesInfo(tenant.payment.notes),
-    [tenant.payment.notes]
-  );
-
-  const statusLabel =
-    tenant.paymentCategory === "paid"
-      ? "Paid"
-      : tenant.paymentCategory === "partial"
-        ? "Due"
-        : tenant.paymentCategory === "overdue"
-          ? "Overdue"
-          : tenant.paymentCategory === "advance-not-paid"
-            ? "Advance Due"
-            : "Pending";
-
-export const TenantRentCard = ({
-  tenant,
-  selectedMonth,
-  selectedYear,
-  whatsappSent = false,
-  editModeEnabled = false,
-  onMarkPaid,
-  onPayRemaining,
-  onGenerateReceipt,
-  onPaymentReminder,
 }: TenantRentCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const isPaid = tenant.payment.paymentStatus === "Paid";

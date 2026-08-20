@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.sync-razorpay-subscription]
 verify_jwt = false
 
+[functions.google-email-verification]
+verify_jwt = true
+
 [functions.create-stripe-checkout]
 verify_jwt = false
 

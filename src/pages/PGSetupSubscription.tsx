@@ -7,23 +7,34 @@ import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePG } from "@/contexts/PGContext";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey } from "@/types/pg";
 import { toast } from "sonner";
+import { useRazorpay } from "@/hooks/useRazorpay";
 
 export default function PGSetupSubscription() {
   const navigate = useNavigate();
   const { refreshSubscription } = usePG();
+  const { initiatePayment, isLoading: paymentLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("trial");
   const [submitting, setSubmitting] = useState(false);
 
   const confirmPlan = async () => {
+    if (selectedPlan !== "trial") {
+      initiatePayment({
+        plan: selectedPlan,
+        onSuccess: async () => {
+          await refreshSubscription();
+          sessionStorage.setItem("pgh_selected_plan", selectedPlan);
+          toast.success(`${SUBSCRIPTION_PLANS[selectedPlan].name} activated!`);
+          navigate("/setup/complete", { replace: true });
+        },
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await refreshSubscription();
       sessionStorage.setItem("pgh_selected_plan", selectedPlan);
-      toast.success(
-        selectedPlan === "trial"
-          ? "7-Day Free Trial activated!"
-          : `${SUBSCRIPTION_PLANS[selectedPlan]?.name || "Plan"} selected!`
-      );
+      toast.success("7-Day Free Trial activated!");
       navigate("/setup/complete", { replace: true });
     } catch {
       toast.error("Proceeding with default free trial");
@@ -153,10 +164,10 @@ export default function PGSetupSubscription() {
           <div className="max-w-xl mx-auto">
             <PGHubButton
               onClick={confirmPlan}
-              loading={submitting}
+              loading={submitting || paymentLoading}
               className="w-full h-12 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white rounded-2xl font-extrabold text-sm shadow-lg shadow-purple-500/25 active:scale-98 transition-all flex items-center justify-center gap-2"
             >
-              Finish Setup & Go to Ready Page <ArrowRight size={18} />
+              {selectedPlan === "trial" ? "Start 7-Day Free Trial" : `Continue to secure payment`} <ArrowRight size={18} />
             </PGHubButton>
           </div>
         </div>
