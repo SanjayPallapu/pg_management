@@ -277,19 +277,7 @@ const Index = () => {
 
           {/* Right: subscription status and full-page app menu */}
           <div className="flex items-center gap-2">
-            <div className="hidden min-[390px]:block">
-              <SubscriptionBadge />
-            </div>
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-9 w-9 rounded-xl border-violet-500/30 bg-violet-500/10 text-violet-600 shadow-sm hover:bg-violet-500/20 dark:text-violet-300"
-              title="Open Voice Assistant"
-              aria-label="Open Voice Assistant"
-              onClick={() => navigate("/voice")}
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
+            <SubscriptionBadge />
             <Button
               size="icon"
               className="relative h-9 w-9 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
@@ -395,6 +383,19 @@ const Index = () => {
 
       </div>
       </div>
+
+      {activeTab === "dashboard" && (
+        <Button
+          size="icon"
+          className="fixed right-4 z-[54] h-14 w-14 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:from-violet-600 hover:to-indigo-700"
+          style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom, 0px))" }}
+          title="Open Voice Assistant"
+          aria-label="Open Voice Assistant"
+          onClick={() => navigate("/voice")}
+        >
+          <Mic className="h-6 w-6" />
+        </Button>
+      )}
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>

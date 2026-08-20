@@ -36,7 +36,7 @@ const LOGO_COLORS = [
 ];
 
 export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizardProps) => {
-  const { subscription, canCreatePG } = usePG();
+  const { subscription, canCreatePG, pgs: existingPGs } = usePG();
   const { createPG, generateAILogo, uploadLogo, isGeneratingLogo, checkExistingData, migrateExistingRooms, isMigrating } = usePGSetup();
   
   const [step, setStep] = useState<Step>(isAddingNew ? 'branding' : 'migrate');
@@ -74,8 +74,9 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
     }
   }, [isAddingNew]);
 
-  const maxPgs = subscription?.maxPgs ?? 1;
-  const canAddMore = maxPgs === -1 || pgCount < maxPgs;
+  const maxPgs = Math.min(4, subscription?.maxPgs === -1 ? 4 : (subscription?.maxPgs ?? 1));
+  const remainingPgs = Math.max(0, maxPgs - existingPGs.length);
+  const canAddMore = pgCount < remainingPgs;
 
   const handlePgCountChange = (count: number) => {
     setPgCount(count);
@@ -145,6 +146,10 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
   };
 
   const handleComplete = async () => {
+    if (!canCreatePG || pgs.length > remainingPgs) {
+      toast.error(`Your plan has space for ${remainingPgs} more PG ${remainingPgs === 1 ? "property" : "properties"}.`);
+      return;
+    }
     setIsCreating(true);
     try {
       for (const pg of pgs) {
@@ -264,7 +269,7 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
               <Building className="h-16 w-16 mx-auto text-primary mb-4" />
               <h2 className="text-2xl font-bold">How many PGs do you manage?</h2>
               <p className="text-muted-foreground mt-2">
-                {maxPgs === -1 ? 'Your plan allows unlimited PGs' : `Your current plan allows ${maxPgs} PG${maxPgs === 1 ? '' : 's'}`}
+                {`Your current plan allows ${maxPgs} PG${maxPgs === 1 ? '' : 's'} (${remainingPgs} available)`}
               </p>
             </div>
 
@@ -292,7 +297,7 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
               </Button>
             </div>
 
-            {!canAddMore && maxPgs !== -1 && (
+            {!canAddMore && (
               <p className="text-center text-amber-600 text-sm">
                 Choose a higher plan for more PG properties
               </p>

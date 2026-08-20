@@ -9,6 +9,7 @@ import {
   ArrowLeft, 
   Building, 
   Plus, 
+  Minus,
   Check, 
   Settings, 
   Trash2, 
@@ -55,7 +56,7 @@ interface RoomBlueprint {
 }
 
 export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSheetProps) => {
-  const { pgs, currentPG, selectPG, refreshPGs, isProUser } = usePG();
+  const { pgs, currentPG, selectPG, refreshPGs, isProUser, canCreatePG, subscription } = usePG();
   const { user } = useAuth();
   
   const [isAdding, setIsAdding] = useState(false);
@@ -212,6 +213,10 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
   };
 
   const handleAddProperty = async () => {
+    if (!canCreatePG) {
+      toast.error(`Your plan allows up to ${Math.min(4, subscription?.maxPgs ?? 1)} PG properties.`);
+      return;
+    }
     if (!nameInput.trim()) {
       toast.error("Please enter a property name");
       return;
@@ -423,7 +428,14 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
               </div>
               {!isAdding && !isEditing && (
                 <Button 
-                  onClick={() => setIsAdding(true)} 
+                  onClick={() => {
+                    if (!canCreatePG) {
+                      toast.error(`PG limit reached. Your plan allows ${Math.min(4, subscription?.maxPgs ?? 1)} properties.`);
+                      return;
+                    }
+                    setIsAdding(true);
+                  }}
+                  disabled={!canCreatePG}
                   size="sm" 
                   className="h-8 gap-1 rounded-lg text-xs"
                 >
@@ -573,34 +585,19 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <Label htmlFor="minSharing" className="text-xs font-semibold">Min Bed Sharing</Label>
-                        <Input 
-                          id="minSharing"
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={minSharingInput}
-                          onChange={(e) => {
-                            const val = Math.min(10, Math.max(1, parseInt(e.target.value) || 1));
-                            setMinSharingInput(val);
-                            if (val > maxSharingInput) setMaxSharingInput(val);
-                          }}
-                          className="h-9 text-xs rounded-lg"
-                        />
+                        <div className="flex h-9 items-center justify-between rounded-lg border bg-background px-1">
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={minSharingInput <= 1} onClick={() => setMinSharingInput(value => Math.max(1, value - 1))}><Minus className="h-3.5 w-3.5" /></Button>
+                          <strong className="text-xs">{minSharingInput}</strong>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={minSharingInput >= 10} onClick={() => setMinSharingInput(value => { const next = Math.min(10, value + 1); if (next > maxSharingInput) setMaxSharingInput(next); return next; })}><Plus className="h-3.5 w-3.5" /></Button>
+                        </div>
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor="maxSharing" className="text-xs font-semibold">Max Bed Sharing</Label>
-                        <Input 
-                          id="maxSharing"
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={maxSharingInput}
-                          onChange={(e) => {
-                            const val = Math.min(10, Math.max(minSharingInput, parseInt(e.target.value) || minSharingInput));
-                            setMaxSharingInput(val);
-                          }}
-                          className="h-9 text-xs rounded-lg"
-                        />
+                        <div className="flex h-9 items-center justify-between rounded-lg border bg-background px-1">
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={maxSharingInput <= minSharingInput} onClick={() => setMaxSharingInput(value => Math.max(minSharingInput, value - 1))}><Minus className="h-3.5 w-3.5" /></Button>
+                          <strong className="text-xs">{maxSharingInput}</strong>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" disabled={maxSharingInput >= 10} onClick={() => setMaxSharingInput(value => Math.min(10, value + 1))}><Plus className="h-3.5 w-3.5" /></Button>
+                        </div>
                       </div>
                     </div>
 
@@ -697,20 +694,11 @@ export const ManagePropertiesSheet = ({ open, onOpenChange }: ManagePropertiesSh
                                     {/* Capacity Selector */}
                                     <div className="space-y-0.5">
                                       <span className="text-[8px] text-muted-foreground uppercase">Beds</span>
-                                      <select 
-                                        value={room.capacity}
-                                        onChange={(e) => handleUpdateRoomCapacity(room.roomNo, parseInt(e.target.value))}
-                                        className="w-full text-[10px] h-6 border rounded bg-transparent px-1 py-0"
-                                      >
-                                        {sharingTypesList
-                                          .filter(k => enabledSharings[k])
-                                          .map(sharingType => (
-                                            <option key={sharingType} value={sharingType}>
-                                              {sharingType} Bed
-                                            </option>
-                                          ))
-                                        }
-                                      </select>
+                                      <div className="flex h-7 items-center justify-between rounded border bg-background">
+                                        <button type="button" className="h-full px-1.5 disabled:opacity-30" disabled={room.capacity <= minSharingInput} onClick={() => handleUpdateRoomCapacity(room.roomNo, Math.max(minSharingInput, room.capacity - 1))}><Minus className="h-3 w-3" /></button>
+                                        <strong className="text-[10px]">{room.capacity}</strong>
+                                        <button type="button" className="h-full px-1.5 disabled:opacity-30" disabled={room.capacity >= maxSharingInput} onClick={() => handleUpdateRoomCapacity(room.roomNo, Math.min(maxSharingInput, room.capacity + 1))}><Plus className="h-3 w-3" /></button>
+                                      </div>
                                     </div>
 
                                     {/* Custom Rent Input */}

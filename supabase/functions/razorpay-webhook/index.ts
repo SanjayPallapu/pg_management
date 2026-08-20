@@ -421,6 +421,15 @@ Deno.serve(async (req) => {
 
         if (subError) throw subError;
 
+        const { error: referralError } = await supabase.rpc("reward_referral_conversion", {
+          p_referee_id: userId,
+        });
+        if (referralError) {
+          // Do not fail or retry a genuine payment because an optional reward failed.
+          // The verified webhook event remains available for operational replay.
+          console.error(`Referral reward failed for user ${userId}: ${referralError.message}`);
+        }
+
         console.log(`Subscription updated for user ${userId} to plan ${planKey} for ${durationDays} days`);
       } else if (eventType === "subscription.cancelled" || eventType === "subscription.halted") {
         const subscription = payload.payload?.subscription?.entity || {};

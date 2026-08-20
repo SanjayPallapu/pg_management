@@ -57,7 +57,7 @@ export default function PGSetupCapacity() {
   const navigate = useNavigate();
   const { property, floors, startingRoom, creationResult, setStartingRoom, updateFloor, addFloor, setCreationResult } = usePGSetupDraft();
   const { createPGFromFloorPlan } = usePGSetup();
-  const { refreshPGs } = usePG();
+  const { refreshPGs, canCreatePG, subscription } = usePG();
   const totals = useMemo(() => floors.reduce((sum, floor) => ({ rooms: sum.rooms + floor.rooms, beds: sum.beds + floor.rooms * floor.bedsPerRoom }), { rooms: 0, beds: 0 }), [floors]);
   const startingPrice = useMemo(() => Math.min(...floors.map((floor) => floor.pricePerBed)), [floors]);
 
@@ -68,6 +68,11 @@ export default function PGSetupCapacity() {
     }
     if (!property.name.trim()) {
       navigate("/setup/property", { replace: true });
+      return;
+    }
+    if (!canCreatePG) {
+      toast.error(`Your plan allows up to ${Math.min(4, subscription?.maxPgs ?? 1)} PG properties.`);
+      navigate("/subscription", { replace: true });
       return;
     }
     if (floors.some((floor) => floor.pricePerBed < 1)) {

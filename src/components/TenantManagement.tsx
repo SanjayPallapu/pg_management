@@ -905,7 +905,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               <span className="font-semibold text-foreground">
                 {activeTenants.length}/{room.capacity} occupied
               </span>
-              {isAdmin && (
+              {(isAdmin || isOwner) && (
                 <div className="flex gap-1 ml-1">
                   <Button
                     variant="outline"
@@ -921,7 +921,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                     size="icon"
                     className="h-5 w-5"
                     onClick={() => handleCapacityChange(false)}
-                    disabled={room.capacity <= (room.tenants || []).length}
+                    disabled={room.capacity <= activeTenants.length}
                   >
                     <ChevronDown className="h-3 w-3" />
                   </Button>

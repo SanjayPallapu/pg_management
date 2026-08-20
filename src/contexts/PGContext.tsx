@@ -182,9 +182,8 @@ export const PGProvider = ({ children }: PGProviderProps) => {
     }
   }, [authLoading, isAuthenticated, fetchPGs, fetchSubscription]);
 
-  const canCreatePG = subscription 
-    ? (subscription.maxPgs === -1 || pgs.length < subscription.maxPgs)
-    : pgs.length < 1;
+  const allowedPgs = Math.min(4, subscription?.maxPgs === -1 ? 4 : (subscription?.maxPgs ?? 1));
+  const canCreatePG = pgs.length < allowedPgs;
 
   const isProUser = subscription?.status === 'active' && subscription?.plan !== 'free';
   

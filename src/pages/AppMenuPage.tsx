@@ -110,7 +110,7 @@ export default function AppMenuPage() {
           <h2 className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Management</h2>
           <div className="space-y-2">
             <MenuItem icon={<FileClock className="h-5 w-5" />} title="Audit History" description="Review tenant, room, and payment changes" onClick={() => setAuditOpen(true)} accent="violet" />
-            <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & Earn" description="Give 30% off and earn free months" onClick={() => navigate("/referrals")} accent="emerald" />
+            <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & Earn" description="Invite an owner; both get 30 bonus days" onClick={() => navigate("/referrals")} accent="emerald" />
             <MenuItem icon={<CreditCard className="h-5 w-5" />} title="Plans & Billing" description="Subscription, cards, and secure checkout" onClick={() => navigate("/subscription")} accent="amber" />
           </div>
         </section>

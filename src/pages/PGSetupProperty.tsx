@@ -9,12 +9,14 @@ import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePGSetupDraft } from "@/features/pg-hub/PGSetupDraftContext";
 import { useAuth } from "@/hooks/useAuth";
+import { usePG } from "@/contexts/PGContext";
 
 type Errors = Partial<Record<"name" | "city" | "floors", string>>;
 
 export default function PGSetupProperty() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { canCreatePG, subscription } = usePG();
   const { property, updateProperty, setPropertyImage, setFloorCount } = usePGSetupDraft();
   const [errors, setErrors] = useState<Errors>({});
 
@@ -29,6 +31,11 @@ export default function PGSetupProperty() {
   };
 
   const validate = () => {
+    if (!canCreatePG) {
+      toast.error(`Your plan allows up to ${Math.min(4, subscription?.maxPgs ?? 1)} PG properties.`);
+      navigate("/subscription", { replace: true });
+      return;
+    }
     const next: Errors = {};
     if (!property.name.trim()) next.name = "Enter your PG name.";
     if (!property.city.trim()) next.city = "Enter the city or area.";
