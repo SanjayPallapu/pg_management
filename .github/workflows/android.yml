@@ -136,13 +136,19 @@ jobs:
           echo "--- Release notes ---"
           cat release_notes.txt
 
+      - name: Stage Artifacts
+        run: |
+          mkdir -p staging
+          cp android/app/build/outputs/bundle/release/app-release.aab staging/app-release.aab
+          cp release_notes.txt staging/release_notes.txt
+          echo "Staged artifacts:"
+          ls -lh staging/
+
       - name: Upload Release AAB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
-          path: |
-            android/app/build/outputs/bundle/release/app-release.aab
-            release_notes.txt
+          path: staging/
           if-no-files-found: error
           retention-days: 14
 
@@ -192,6 +198,16 @@ jobs:
         with:
           name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
           path: release
+
+      - name: Verify AAB Exists
+        run: |
+          echo "Downloaded artifact contents:"
+          find release -type f
+          if [ ! -f release/app-release.aab ]; then
+            echo "::error::app-release.aab not found in downloaded artifact"
+            exit 1
+          fi
+          echo "AAB found: $(ls -lh release/app-release.aab)"
 
       - name: Validate Google Play Secret
         env:
@@ -269,6 +285,16 @@ jobs:
         with:
           name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
           path: release
+
+      - name: Verify AAB Exists
+        run: |
+          echo "Downloaded artifact contents:"
+          find release -type f
+          if [ ! -f release/app-release.aab ]; then
+            echo "::error::app-release.aab not found in downloaded artifact"
+            exit 1
+          fi
+          echo "AAB found: $(ls -lh release/app-release.aab)"
 
       - name: Validate Google Play Secret
         env:
