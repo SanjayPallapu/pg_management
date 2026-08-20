@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -10,15 +10,14 @@ import {
   Trophy,
   Tag,
   Sparkles,
-  Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
 import {
+  EMPTY_REFERRAL_STATS,
   getReferralStats,
   shareReferralInvite,
   validateAndApplyReferralCode,
@@ -26,13 +25,23 @@ import {
 
 export default function ReferralPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const stats = useMemo(() => getReferralStats(user?.id, user?.email), [user?.email, user?.id]);
+  const [stats, setStats] = useState(EMPTY_REFERRAL_STATS);
   const [copied, setCopied] = useState(false);
   const [inputCode, setInputCode] = useState("");
   const [appliedCode, setAppliedCode] = useState(stats.appliedReferralCode);
   const [sharing, setSharing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getReferralStats().then(data => {
+      if (active) {
+        setStats(data);
+        setAppliedCode(data.appliedReferralCode);
+      }
+    }).catch(() => toast.error("Could not load referral rewards."));
+    return () => { active = false; };
+  }, []);
 
   const copyCode = async () => {
     try {
@@ -57,19 +66,25 @@ export default function ReferralPage() {
     }
   };
 
-  const applyCode = () => {
+  const applyCode = async () => {
     if (!inputCode.trim()) return;
     setIsApplying(true);
-    const result = validateAndApplyReferralCode(inputCode, stats.referralCode);
-    setIsApplying(false);
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+    try {
+      const result = await validateAndApplyReferralCode(inputCode, stats.referralCode);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      const normalizedCode = inputCode.trim().toUpperCase();
+      setAppliedCode(normalizedCode);
+      setInputCode("");
+      setStats(await getReferralStats());
+      toast.success(result.message);
+    } catch {
+      toast.error("Could not apply this referral code. Please try again.");
+    } finally {
+      setIsApplying(false);
     }
-    const normalizedCode = inputCode.trim().toUpperCase();
-    setAppliedCode(normalizedCode);
-    setInputCode("");
-    toast.success(result.message);
   };
 
   return (
@@ -123,8 +138,7 @@ export default function ReferralPage() {
               Invite an owner,<br />earn a free month.
             </h2>
             <p className="mx-auto mt-2 max-w-[300px] text-[12px] leading-relaxed text-white/75">
-              Your friend gets <strong className="text-amber-300 font-extrabold">30% off</strong> their first month.
-              You get <strong className="text-amber-300 font-extrabold">1 month free</strong> once they subscribe.
+              After your friend's first successful payment, <strong className="text-amber-300 font-extrabold">both of you get 30 bonus days</strong> automatically.
             </p>
           </div>
         </div>
@@ -135,7 +149,7 @@ export default function ReferralPage() {
         {[
           { icon: Users, value: stats.totalInvited, label: "Invited", color: "text-blue-600 dark:text-blue-300", bg: "bg-blue-500/10" },
           { icon: UserPlus, value: stats.activePaidReferrals, label: "Joined", color: "text-emerald-600 dark:text-emerald-300", bg: "bg-emerald-500/10" },
-          { icon: Trophy, value: `${stats.freeMonthsEarned}/${stats.maxMonthsPerYear}`, label: "Earned", color: "text-violet-600 dark:text-violet-300", bg: "bg-violet-500/10" },
+          { icon: Trophy, value: stats.freeMonthsEarned, label: "Months earned", color: "text-violet-600 dark:text-violet-300", bg: "bg-violet-500/10" },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -200,8 +214,8 @@ export default function ReferralPage() {
           <ol className="space-y-3">
             {[
               { icon: Share2, title: "Share your code", copy: "Send the invite to any PG owner.", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
-              { icon: UserPlus, title: "They subscribe", copy: "Your friend gets 30% off month one.", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
-              { icon: Trophy, title: "You get rewarded", copy: "One free month lands on your plan.", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+              { icon: UserPlus, title: "They subscribe", copy: "The first real paid charge confirms the referral.", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+              { icon: Trophy, title: "Both get rewarded", copy: "Thirty bonus days are added to both subscriptions.", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
             ].map((step, index, list) => {
               const Icon = step.icon;
               return (
@@ -228,7 +242,7 @@ export default function ReferralPage() {
             <Tag className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-black">Have a referral code?</h3>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-3">Apply it before your first paid subscription to get 30% off.</p>
+          <p className="text-[11px] text-muted-foreground mb-3">Apply it before your first paid subscription. Both accounts receive 30 bonus days after payment.</p>
 
           {appliedCode ? (
             <div className="flex items-center gap-2 rounded-2xl bg-emerald-500/10 px-3 py-3 text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -240,7 +254,7 @@ export default function ReferralPage() {
               <Input
                 value={inputCode}
                 onChange={(event) => setInputCode(event.target.value.toUpperCase())}
-                placeholder="PGHUB-OWNER1234"
+                placeholder="PGHUB-A1B2C3D4E5"
                 autoCapitalize="characters"
                 className="h-12 rounded-2xl font-mono text-xs"
               />
@@ -257,7 +271,7 @@ export default function ReferralPage() {
 
           <p className="mt-3 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-            Maximum {stats.maxMonthsPerYear} free months yearly. Self-referrals and duplicate accounts are excluded.
+            Rewards require a successful paid charge. Self-referrals and duplicate attribution are excluded.
           </p>
         </section>
       </div>

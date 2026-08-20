@@ -363,12 +363,19 @@ async function executeTool(
   if (name === "get_vacant_beds") {
     const { data: rooms } = await supabase
       .from("rooms").select("id, room_no, floor, capacity, rent_amount").eq("pg_id", pgId);
+    const roomIds = (rooms || []).map((room: any) => room.id);
+    const { data: tenants } = roomIds.length
+      ? await supabase.from("tenants").select("room_id, end_date, is_locked").in("room_id", roomIds)
+      : { data: [] as any[] };
+    const activeByRoom = new Map<string, number>();
+    for (const tenant of tenants || []) {
+      if (!tenant.is_locked && (!tenant.end_date || tenant.end_date > today)) {
+        activeByRoom.set(tenant.room_id, (activeByRoom.get(tenant.room_id) || 0) + 1);
+      }
+    }
     const result: any[] = [];
     for (const r of rooms || []) {
-      const { data: tenants } = await supabase
-        .from("tenants").select("id, end_date, is_locked").eq("room_id", r.id);
-      const active = (tenants || []).filter((t: any) => !t.is_locked && (!t.end_date || t.end_date > today));
-      const vacant = (r.capacity || 0) - active.length;
+      const vacant = (r.capacity || 0) - (activeByRoom.get(r.id) || 0);
       if (vacant > 0) result.push({ room_no: r.room_no, floor: r.floor, vacant_beds: vacant, rent: r.rent_amount });
     }
     return { vacant_rooms: result, total_vacant_beds: result.reduce((s, r) => s + r.vacant_beds, 0) };
@@ -534,6 +541,27 @@ function deterministicReply(toolName: string, result: any, isTelugu: boolean): s
   return isTelugu ? "ఆ అభ్యర్థనను పూర్తి చేయలేకపోయాను." : "I couldn't complete that request.";
 }
 
+function conversationalFallback(text: string, isTelugu: boolean, pgName: string): string {
+  const clean = normalizeVoiceText(text).replace(/\s*\|.*$/, "").trim();
+  const lower = clean.toLowerCase();
+  if (/^(hi|hello|hey|namaste|నమస్తే|హలో)\b/u.test(lower)) {
+    return isTelugu
+      ? `నమస్తే! ${pgName} కోసం నేను సిద్ధంగా ఉన్నాను. ఈ నెల కలెక్షన్, పెండింగ్ అద్దె, ఖాళీ బెడ్లు లేదా టెనెంట్ గురించి అడగండి.`
+      : `Hi! I'm ready to help with ${pgName}. Ask naturally about this month's collection, pending rent, vacant beds, a room, or a tenant.`;
+  }
+  if (/thank|thanks|ధన్యవాద/u.test(lower)) {
+    return isTelugu ? "సంతోషం. ఇంకేమైనా చూసి చెప్పాలా?" : "You're welcome. What would you like me to check next?";
+  }
+  if (/what can you do|help|commands?|ఏమి చేయగల/u.test(lower)) {
+    return isTelugu
+      ? "నేను కలెక్షన్ చెప్పగలను, పెండింగ్ టెనెంట్లను చూపగలను, ఖాళీ బెడ్లు లేదా రూమ్ వివరాలు చూడగలను. అద్దె చెల్లింపును సేవ్ చేసే ముందు మీ నిర్ధారణ తీసుకుంటాను."
+      : "I can check collections, pending tenants, vacancies, rooms and tenant details. I can also prepare a rent payment, read it back, and save it only after you confirm.";
+  }
+  return isTelugu
+    ? `“${clean.slice(0, 90)}” అని విన్నాను. దానికి సరైన రికార్డు దొరకలేదు. టెనెంట్ పేరు లేదా రూమ్ నంబర్‌తో మళ్లీ చెప్పండి.`
+    : `I heard “${clean.slice(0, 90)}”. I couldn't match that to a safe PG action yet. Try again with the tenant name or room number, and what you want to check.`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -697,9 +725,7 @@ Deno.serve(async (req) => {
     }
 
     if (!LOVABLE_API_KEY) {
-      const reply = isTelugu
-        ? "ప్రస్తుతం నేను అద్దె వసూళ్లు, పెండింగ్ టెనెంట్లు, ఖాళీ బెడ్లు, రూమ్ వివరాలు మరియు అద్దె చెల్లింపులు నమోదు చేయడంలో సహాయం చేయగలను. దయచేసి వాటిలో ఒకటి అడగండి."
-        : "I can currently help with rent collection, pending tenants, vacant beds, room details and recording rent payments. Please ask one of those commands.";
+      const reply = conversationalFallback(latestUserText, isTelugu, pg.name);
       return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

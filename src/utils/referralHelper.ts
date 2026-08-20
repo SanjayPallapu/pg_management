@@ -1,11 +1,8 @@
 /**
  * PG HUB Referral & Rewards Helper
  * 
- * Rules:
- * 1. Referrer gets 1 Month Free PG HUB when their referred friend subscribes to a paid plan.
- * 2. New referred owner gets 30% OFF their first month subscription.
- * 3. Max: 12 free months per year for referrer.
- * 4. Anti-abuse: Cannot refer own account/email/device.
+ * Referral attribution and rewards are stored server-side. Browser storage is
+ * used only to carry an invite code from the public link until sign-in.
  */
 
 export interface ReferralStats {
@@ -15,7 +12,7 @@ export interface ReferralStats {
   freeMonthsEarned: number;
   maxMonthsPerYear: number;
   appliedReferralCode?: string;
-  discountPercentage: number; // 30% for referee
+  appliedStatus?: "applied" | "rewarded" | "cancelled";
 }
 
 export interface ReferralShareContent {
@@ -26,7 +23,7 @@ export interface ReferralShareContent {
 
 export type ReferralShareResult = "shared" | "copied" | "cancelled";
 
-const REFERRAL_CODE_PATTERN = /^PGHUB-[A-Z0-9]{5,24}$/;
+const REFERRAL_CODE_PATTERN = /^PGHUB-[A-Z0-9]{10}$/;
 
 export const getPublicAppUrl = () => {
   if (import.meta.env.VITE_PUBLIC_APP_URL) return import.meta.env.VITE_PUBLIC_APP_URL;
@@ -43,67 +40,32 @@ export const getPublicAppUrl = () => {
 export const isReferralCodeFormatValid = (code: string) =>
   REFERRAL_CODE_PATTERN.test(code.trim().toUpperCase());
 
-export const getOrCreateReferralCode = (userId?: string, userEmail?: string): string => {
-  if (typeof window === "undefined") return "PGHUB-WELCOME";
-
-  const storageKey = `pg_referral_code_${userId || "default"}`;
-  const existing = localStorage.getItem(storageKey);
-  if (existing) return existing;
-
-  const prefix = userEmail ? userEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5) : "OWNER";
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  const newCode = `PGHUB-${prefix}${randomSuffix}`;
-
-  localStorage.setItem(storageKey, newCode);
-  return newCode;
+export const EMPTY_REFERRAL_STATS: ReferralStats = {
+  referralCode: "Loading…",
+  totalInvited: 0,
+  activePaidReferrals: 0,
+  freeMonthsEarned: 0,
+  maxMonthsPerYear: 12,
 };
 
-export const getReferralStats = (userId?: string, userEmail?: string): ReferralStats => {
-  const code = getOrCreateReferralCode(userId, userEmail);
-
-  if (typeof window === "undefined") {
-    return {
-      referralCode: code,
-      totalInvited: 0,
-      activePaidReferrals: 0,
-      freeMonthsEarned: 0,
-      maxMonthsPerYear: 12,
-      discountPercentage: 30,
-    };
-  }
-
-  const rawStats = localStorage.getItem(`pg_referral_stats_${code}`);
-  let statsData = {
-    totalInvited: 0,
-    activePaidReferrals: 0,
-    freeMonthsEarned: 0,
-  };
-
-  if (rawStats) {
-    try {
-      statsData = JSON.parse(rawStats);
-    } catch (e) {
-      console.error("Error reading referral stats", e);
-    }
-  }
-
-  const appliedCode = localStorage.getItem("applied_referral_code") || undefined;
-
-  return {
-    referralCode: code,
-    totalInvited: statsData.totalInvited,
-    activePaidReferrals: statsData.activePaidReferrals,
-    freeMonthsEarned: Math.min(statsData.freeMonthsEarned, 12),
-    maxMonthsPerYear: 12,
-    appliedReferralCode: appliedCode,
-    discountPercentage: 30,
-  };
+type ReferralRpcClient = {
+  rpc: (name: string, args?: Record<string, unknown>) => Promise<{
+    data: unknown;
+    error: { message?: string } | null;
+  }>;
 };
 
-export const validateAndApplyReferralCode = (
+export const getReferralStats = async (): Promise<ReferralStats> => {
+  const { supabase } = await import("@/integrations/supabase/proxyClient");
+  const { data, error } = await (supabase as unknown as ReferralRpcClient).rpc("get_referral_dashboard");
+  if (error) throw error;
+  return { ...EMPTY_REFERRAL_STATS, ...(data || {}) } as ReferralStats;
+};
+
+export const validateAndApplyReferralCode = async (
   inputCode: string,
-  myCode: string
-): { success: boolean; message: string; discountPercent?: number } => {
+  myCode: string,
+): Promise<{ success: boolean; message: string }> => {
   const cleanInput = inputCode.trim().toUpperCase();
   const cleanMyCode = myCode.trim().toUpperCase();
 
@@ -119,15 +81,14 @@ export const validateAndApplyReferralCode = (
     return { success: false, message: "Enter a valid PG HUB referral code." };
   }
 
-  // Save valid applied code
-  if (typeof window !== "undefined") {
-    localStorage.setItem("applied_referral_code", cleanInput);
-  }
+  const { supabase } = await import("@/integrations/supabase/proxyClient");
+  const { error } = await (supabase as unknown as ReferralRpcClient).rpc("apply_referral_code", { p_code: cleanInput });
+  if (error) return { success: false, message: error.message || "Could not apply this referral code." };
+  if (typeof window !== "undefined") localStorage.removeItem("applied_referral_code");
 
   return {
     success: true,
-    message: "Referral code applied! You get 30% OFF your first month subscription.",
-    discountPercent: 30,
+    message: "Referral linked. You both receive 30 bonus days after your first successful payment.",
   };
 };
 
@@ -144,7 +105,7 @@ export const getReferralShareContent = (referralCode: string): ReferralShareCont
   const url = `${getPublicAppUrl().replace(/\/$/, "")}/onboarding?ref=${encodeURIComponent(code)}`;
   return {
     title: "Join me on PG HUB",
-    text: `Manage your PG smarter with PG HUB. Use my referral code ${code} to get 30% off your first month.`,
+    text: `Manage your PG smarter with PG HUB. Use my referral code ${code}. After your first successful payment, we both receive 30 bonus days.`,
     url,
   };
 };

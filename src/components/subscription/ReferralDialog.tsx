@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Copy, Check, Share2, Sparkles, ShieldCheck, Users, Zap, Tag } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { getReferralStats, shareReferralInvite, validateAndApplyReferralCode } from "@/utils/referralHelper";
+import { EMPTY_REFERRAL_STATS, getReferralStats, shareReferralInvite, validateAndApplyReferralCode } from "@/utils/referralHelper";
 import { toast } from "sonner";
 import { useBackGesture } from "@/hooks/useBackGesture";
 
@@ -15,13 +14,17 @@ interface ReferralDialogProps {
 }
 
 export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
-  const { user } = useAuth();
   useBackGesture(open, () => onOpenChange(false));
 
-  const stats = getReferralStats(user?.id, user?.email);
+  const [stats, setStats] = useState(EMPTY_REFERRAL_STATS);
   const [copied, setCopied] = useState(false);
   const [inputCode, setInputCode] = useState("");
   const [isApplying, setIsApplying] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    getReferralStats().then(setStats).catch(() => toast.error("Could not load referral rewards."));
+  }, [open]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(stats.referralCode);
@@ -39,15 +42,16 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
     }
   };
 
-  const handleApplyCode = () => {
+  const handleApplyCode = async () => {
     if (!inputCode.trim()) return;
     setIsApplying(true);
-    const res = validateAndApplyReferralCode(inputCode, stats.referralCode);
+    const res = await validateAndApplyReferralCode(inputCode, stats.referralCode);
     setIsApplying(false);
 
     if (res.success) {
       toast.success(res.message);
       setInputCode("");
+      getReferralStats().then(setStats).catch(() => undefined);
     } else {
       toast.error(res.message);
     }
@@ -65,11 +69,11 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
               <DialogTitle className="text-lg font-black text-foreground flex items-center gap-1.5">
                 Refer PG Owners & Earn
                 <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] px-2 font-bold">
-                  30% OFF
+                  30 DAYS
                 </Badge>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Get 1 Month Free for every PG owner who subscribes!
+                Both accounts earn 30 bonus days after the first payment.
               </DialogDescription>
             </div>
           </div>
@@ -85,9 +89,9 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
               <Zap className="h-3 w-3 fill-yellow-300 text-yellow-300" />
               Limited Campaign
             </div>
-            <h3 className="text-base font-black">Give 30% OFF, Get 1 Month Free!</h3>
+            <h3 className="text-base font-black">Invite an owner. Both get 30 days.</h3>
             <p className="text-xs text-purple-100 font-medium">
-              Your friend gets <strong className="text-yellow-300 font-extrabold">30% OFF</strong> their first month. You get <strong className="text-yellow-300 font-extrabold">1 Month Free</strong> once they subscribe.
+              After their first successful paid charge, <strong className="text-yellow-300 font-extrabold">30 bonus days</strong> are added automatically to both subscriptions.
             </p>
           </div>
         </div>
@@ -132,7 +136,7 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
           </div>
           <div className="bg-muted/40 p-2.5 rounded-2xl border border-border/40">
             <p className="text-[10px] text-muted-foreground font-bold uppercase">Free Months</p>
-            <p className="text-lg font-black text-primary">{stats.freeMonthsEarned} / {stats.maxMonthsPerYear}</p>
+            <p className="text-lg font-black text-primary">{stats.freeMonthsEarned}</p>
           </div>
         </div>
 
@@ -140,11 +144,11 @@ export const ReferralDialog = ({ open, onOpenChange }: ReferralDialogProps) => {
         <div className="border-t border-border/60 pt-3 mt-1 space-y-2">
           <label className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
             <Tag className="h-3.5 w-3.5 text-primary" />
-            Have a Referral Code? (Get 30% OFF)
+            Have a Referral Code?
           </label>
           <div className="flex gap-2">
             <Input
-              placeholder="e.g. PGHUB-OWNER123"
+              placeholder="e.g. PGHUB-A1B2C3D4E5"
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
               className="rounded-2xl text-xs uppercase"
