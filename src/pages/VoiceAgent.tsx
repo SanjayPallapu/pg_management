@@ -1,15 +1,36 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, Loader2, Volume2, Languages, Wand2 } from "lucide-react";
+import { ArrowLeft, Mic, Loader2, Volume2, Languages, Wand2, Send, History, Undo2, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeechRecognition } from "@capacitor-community/speech-recognition";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Phase = "idle" | "listening" | "thinking" | "speaking";
 type Lang = "en-IN" | "te-IN";
+type InputSource = "voice" | "typed";
+type PendingAction = { id: string; action_name: string; summary: string; expires_at: string };
+type AuditItem = {
+  id: string;
+  action_name: string;
+  status: string;
+  source: InputSource;
+  summary: string;
+  created_at: string;
+};
+type AgentResponse = {
+  error?: string;
+  reply?: string;
+  pendingAction?: PendingAction | null;
+  completedAction?: { id: string; summary: string };
+  undoneAction?: { id: string };
+  audit?: AuditItem[];
+};
 
 type SpeechAlternativeLike = { transcript: string; confidence?: number };
 type SpeechResultLike = {
@@ -47,6 +68,7 @@ const SpeechRecognitionImpl: SpeechRecognitionConstructor | null =
   (typeof window !== "undefined" &&
     (speechWindow?.SpeechRecognition || speechWindow?.webkitSpeechRecognition)) ||
   null;
+const isNativePlatform = Capacitor.isNativePlatform();
 
 /* ───── Animated Waveform Bars ───── */
 const WaveformBars = ({ active, color = "bg-white" }: { active: boolean; color?: string }) => (
@@ -79,6 +101,11 @@ export default function VoiceAgent() {
   const [supported, setSupported] = useState(true);
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("va_lang") as Lang) || "en-IN");
   const [autoListen, setAutoListen] = useState(true); // Always-active by default
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [lastCompletedAction, setLastCompletedAction] = useState<{ id: string; summary: string } | null>(null);
+  const [typedText, setTypedText] = useState("");
+  const [audit, setAudit] = useState<AuditItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -94,6 +121,11 @@ export default function VoiceAgent() {
   const restartTimerRef = useRef<number | null>(null);
   const requestIdRef = useRef(0);
   const startListeningRef = useRef<() => void>(() => undefined);
+  const nativeHandlesRef = useRef<Array<{ remove: () => Promise<void> }>>([]);
+  const nativeSilenceTimerRef = useRef<number | null>(null);
+  const nativeLatestRef = useRef<string[]>([]);
+  const pendingActionRef = useRef<PendingAction | null>(null);
+  pendingActionRef.current = pendingAction;
 
   const transitionPhase = useCallback((next: Phase) => {
     phaseRef.current = next;
@@ -115,16 +147,31 @@ export default function VoiceAgent() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, partial]);
 
+  const clearNativeSession = useCallback(() => {
+    if (nativeSilenceTimerRef.current !== null) window.clearTimeout(nativeSilenceTimerRef.current);
+    nativeSilenceTimerRef.current = null;
+    const handles = nativeHandlesRef.current.splice(0);
+    handles.forEach(handle => void handle.remove().catch(() => undefined));
+  }, []);
+
   useEffect(() => {
-    if (!SpeechRecognitionImpl || typeof window.speechSynthesis === "undefined") {
+    let active = true;
+    if (isNativePlatform) {
+      void NativeSpeechRecognition.available().then(({ available }) => {
+        if (active) setSupported(available && typeof window.speechSynthesis !== "undefined");
+      }).catch(() => { if (active) setSupported(false); });
+    } else if (!SpeechRecognitionImpl || typeof window.speechSynthesis === "undefined") {
       setSupported(false);
     }
     return () => {
+      active = false;
       if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
       try { recogRef.current?.stop(); } catch { /* already stopped */ }
+      if (isNativePlatform) void NativeSpeechRecognition.stop().catch(() => undefined);
+      clearNativeSession();
       try { window.speechSynthesis?.cancel(); } catch { /* unavailable during teardown */ }
     };
-  }, []);
+  }, [clearNativeSession]);
 
   // Auto-start listening when page loads (always-active mode)
   useEffect(() => {
@@ -167,21 +214,75 @@ export default function VoiceAgent() {
     }
   }, [maybeAutoListen, transitionPhase]);
 
-  const sendToAgent = useCallback(async (userText: string) => {
+  const runActionOperation = useCallback(async (
+    operation: "confirm" | "cancel" | "undo" | "history",
+    actionId?: string,
+    spokenUserText?: string,
+  ) => {
+    if (!currentPG?.id) return;
+    const requestId = ++requestIdRef.current;
+    transitionPhase("thinking");
+    if (spokenUserText) setMessages(prev => [...prev, { role: "user", content: spokenUserText }]);
+    try {
+      const { data, error } = await supabase.functions.invoke("pg-voice-agent", {
+        body: { operation, actionId, pgId: currentPG.id, lang: langRef.current },
+      });
+      if (error) throw error;
+      const response = data as AgentResponse | null;
+      if (response?.error) throw new Error(response.error);
+      if (requestId !== requestIdRef.current) return;
+      if (operation === "history") {
+        setAudit(response?.audit || []);
+        setShowHistory(true);
+        transitionPhase("idle");
+        return;
+      }
+      const reply = response?.reply || "Done.";
+      if (operation === "confirm" || operation === "cancel") setPendingAction(null);
+      if (response?.completedAction) setLastCompletedAction(response.completedAction);
+      if (response?.undoneAction) setLastCompletedAction(null);
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+      speak(reply);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Action failed");
+      transitionPhase("idle");
+      maybeAutoListen();
+    }
+  }, [currentPG?.id, maybeAutoListen, speak, transitionPhase]);
+
+  const sendToAgent = useCallback(async (userText: string, source: InputSource = "voice") => {
     if (!currentPG?.id) { toast.error("No PG selected"); return; }
+    const cleanText = userText.split(" | ")[0].trim();
+    const normalized = cleanText.toLocaleLowerCase();
+    const isConfirm = /^(yes|yeah|yep|confirm|confirmed|ok|okay|sure|do it|అవును|సరే|ఓకే)$/.test(normalized);
+    const isCancel = /^(no|nope|cancel|stop|don't|do not|వద్దు|కాదు|రద్దు)$/.test(normalized);
+    const isUndo = /^(undo|undo that|reverse it|revert|వెనక్కి తీసుకో|రద్దు చేయి)$/.test(normalized);
+    if (pendingActionRef.current && isConfirm) {
+      await runActionOperation("confirm", pendingActionRef.current.id, cleanText);
+      return;
+    }
+    if (pendingActionRef.current && isCancel) {
+      await runActionOperation("cancel", pendingActionRef.current.id, cleanText);
+      return;
+    }
+    if (isUndo) {
+      await runActionOperation("undo", lastCompletedAction?.id, cleanText);
+      return;
+    }
     const requestId = ++requestIdRef.current;
     transitionPhase("thinking");
     const next: Msg[] = [...messagesRef.current, { role: "user", content: userText }];
     setMessages(next);
     try {
       const { data, error } = await supabase.functions.invoke("pg-voice-agent", {
-        body: { messages: next, pgId: currentPG.id, lang: langRef.current },
+        body: { messages: next, pgId: currentPG.id, lang: langRef.current, source },
       });
       if (error) throw error;
-      const response = data as { error?: string; reply?: string } | null;
+      const response = data as AgentResponse | null;
       if (response?.error) throw new Error(response.error);
       if (requestId !== requestIdRef.current) return;
       const reply = response?.reply || "Sorry, no response.";
+      if (response?.pendingAction) setPendingAction(response.pendingAction);
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
       speak(reply);
     } catch (e: unknown) {
@@ -191,10 +292,19 @@ export default function VoiceAgent() {
       transitionPhase("idle");
       maybeAutoListen();
     }
-  }, [currentPG?.id, maybeAutoListen, speak, transitionPhase]);
+  }, [currentPG?.id, lastCompletedAction?.id, maybeAutoListen, runActionOperation, speak, transitionPhase]);
+
+  const submitTyped = (event: React.FormEvent) => {
+    event.preventDefault();
+    const value = typedText.trim();
+    if (!value || phase === "thinking") return;
+    setTypedText("");
+    stopAll();
+    void sendToAgent(value, "typed");
+  };
 
   const startListening = useCallback(() => {
-    if (!SpeechRecognitionImpl) { toast.error("Voice not supported on this browser. Try Chrome."); return; }
+    if (!isNativePlatform && !SpeechRecognitionImpl) { toast.error("Voice not supported on this browser. Try Chrome."); return; }
     if (startingRef.current || phaseRef.current === "listening" || phaseRef.current === "thinking") return;
     startingRef.current = true;
     finalSentRef.current = false;
@@ -203,6 +313,66 @@ export default function VoiceAgent() {
       restartTimerRef.current = null;
     }
     try { window.speechSynthesis?.cancel(); } catch { /* speech may be unavailable */ }
+    if (isNativePlatform) {
+      void (async () => {
+        try {
+          clearNativeSession();
+          nativeLatestRef.current = [];
+          const permission = await NativeSpeechRecognition.checkPermissions();
+          if (permission.speechRecognition !== "granted") {
+            const requested = await NativeSpeechRecognition.requestPermissions();
+            if (requested.speechRecognition !== "granted") throw new Error("Microphone permission denied.");
+          }
+
+          const finish = () => {
+            if (finalSentRef.current) return;
+            const matches = nativeLatestRef.current.filter(Boolean);
+            if (!matches.length) {
+              startingRef.current = false;
+              transitionPhase("idle");
+              clearNativeSession();
+              maybeAutoListen();
+              return;
+            }
+            finalSentRef.current = true;
+            setPartial("");
+            startingRef.current = false;
+            clearNativeSession();
+            void NativeSpeechRecognition.stop().catch(() => undefined);
+            const combined = matches.length > 1
+              ? `${matches[0].trim()} | ${matches.slice(1, 4).join(" | ")}`
+              : matches[0].trim();
+            void sendToAgent(combined, "voice");
+          };
+
+          nativeHandlesRef.current.push(await NativeSpeechRecognition.addListener("partialResults", ({ matches }) => {
+            if (!matches?.length) return;
+            nativeLatestRef.current = matches;
+            setPartial(matches[0]);
+            if (nativeSilenceTimerRef.current !== null) window.clearTimeout(nativeSilenceTimerRef.current);
+            nativeSilenceTimerRef.current = window.setTimeout(finish, 1100);
+          }));
+          nativeHandlesRef.current.push(await NativeSpeechRecognition.addListener("listeningState", ({ status }) => {
+            if (status === "started") {
+              startingRef.current = false;
+              transitionPhase("listening");
+            } else finish();
+          }));
+          await NativeSpeechRecognition.start({
+            language: langRef.current,
+            maxResults: 5,
+            partialResults: true,
+            popup: false,
+          });
+        } catch (error) {
+          clearNativeSession();
+          startingRef.current = false;
+          transitionPhase("idle");
+          toast.error(error instanceof Error ? error.message : "Could not start voice recognition.");
+        }
+      })();
+      return;
+    }
     const recog = new SpeechRecognitionImpl();
     recog.lang = langRef.current;
     recog.interimResults = true;
@@ -258,17 +428,19 @@ export default function VoiceAgent() {
       startingRef.current = false;
       transitionPhase("idle");
     }
-  }, [maybeAutoListen, sendToAgent, transitionPhase]);
+  }, [clearNativeSession, maybeAutoListen, sendToAgent, transitionPhase]);
   startListeningRef.current = startListening;
 
   const stopAll = useCallback(() => {
     try { recogRef.current?.stop(); } catch { /* already stopped */ }
+    if (isNativePlatform) void NativeSpeechRecognition.stop().catch(() => undefined);
+    clearNativeSession();
     try { window.speechSynthesis?.cancel(); } catch { /* speech may be unavailable */ }
     requestIdRef.current += 1;
     startingRef.current = false;
     if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
     transitionPhase("idle");
-  }, [transitionPhase]);
+  }, [clearNativeSession, transitionPhase]);
 
   const onOrbClick = () => {
     if (phase === "listening") { stopAll(); return; }
@@ -329,6 +501,9 @@ export default function VoiceAgent() {
         <Button variant="ghost" size="icon" onClick={() => setMuted(m => !m)}>
           <Volume2 className={`h-5 w-5 ${muted ? "opacity-30" : ""}`} />
         </Button>
+        <Button variant="ghost" size="icon" onClick={() => void runActionOperation("history")} title="Action history">
+          <History className="h-5 w-5" />
+        </Button>
       </header>
 
       {/* Conversation */}
@@ -380,6 +555,51 @@ export default function VoiceAgent() {
             </motion.div>
           ))}
         </AnimatePresence>
+        {pendingAction && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3"
+          >
+            <div className="flex items-start gap-2">
+              <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold">Confirm before saving</p>
+                <p className="text-sm text-muted-foreground">{pendingAction.summary}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => void runActionOperation("confirm", pendingAction.id, "Confirm")}>
+                Confirm
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void runActionOperation("cancel", pendingAction.id, "Cancel")}>
+                <X className="h-4 w-4 mr-1" /> Cancel
+              </Button>
+            </div>
+          </motion.div>
+        )}
+        {lastCompletedAction && !pendingAction && (
+          <div className="flex justify-center">
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => void runActionOperation("undo", lastCompletedAction.id, "Undo that")}>
+              <Undo2 className="h-4 w-4 mr-1" /> Undo last action
+            </Button>
+          </div>
+        )}
+        {showHistory && (
+          <div className="rounded-2xl border bg-card p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">Assistant action history</p>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setShowHistory(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            {audit.length === 0 ? <p className="text-xs text-muted-foreground">No write actions yet.</p> : audit.map(item => (
+              <div key={item.id} className="rounded-xl bg-muted/60 p-2.5">
+                <p className="text-xs font-medium">{item.summary}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {item.status} · {item.source} · {new Date(item.created_at).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
         {partial && (
           <motion.div className="flex justify-end"
             initial={{ opacity: 0 }}
@@ -392,6 +612,20 @@ export default function VoiceAgent() {
         )}
         <div ref={chatEndRef} />
       </div>
+
+      {/* Typed input is always available when speech recognition is unavailable or noisy. */}
+      <form onSubmit={submitTyped} className="px-4 py-2 flex gap-2 border-t border-border/40 bg-background/80 backdrop-blur">
+        <Input
+          value={typedText}
+          onChange={(event) => setTypedText(event.target.value)}
+          placeholder={lang === "te-IN" ? "కమాండ్ టైప్ చేయండి…" : "Type a command…"}
+          aria-label="Type an assistant command"
+          disabled={!currentPG?.id || phase === "thinking"}
+        />
+        <Button type="submit" size="icon" disabled={!typedText.trim() || phase === "thinking"} aria-label="Send command">
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
 
       {/* Orb + status */}
       <div className="flex flex-col items-center gap-3 pb-8 pt-4">
