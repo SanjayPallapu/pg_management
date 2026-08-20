@@ -20,7 +20,7 @@ const TenantManagement = lazy(() => import("@/components/TenantManagement").then
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 const PaymentReconciliation = lazy(() => import("@/components/PaymentReconciliation").then(m => ({ default: m.PaymentReconciliation })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
-import { PGSwitcher, OnboardingFlow } from "@/components/pg";
+import { PGSwitcher } from "@/components/pg";
 import { Room } from "@/types";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
@@ -47,7 +47,7 @@ import { SubscriptionBadge } from "@/components/subscription";
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
-  const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG, canCreatePG } = usePG();
+  const { needsSetup, isLoading: pgLoading, currentPG, canCreatePG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
   const { isLoading: paymentsLoading } = useTenantPayments();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -247,7 +247,7 @@ const Index = () => {
   // Only force automatic setup redirect for explicit new signups (isNewSignup)
   if (needsSetup && isNewSignup) {
     if (canCreatePG) return <Navigate to="/setup/property" replace />;
-    return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
+    return <Navigate to="/subscription" replace />;
   }
 
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
@@ -387,13 +387,13 @@ const Index = () => {
       {activeTab === "dashboard" && (
         <Button
           size="icon"
-          className="fixed right-4 z-[54] h-14 w-14 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:from-violet-600 hover:to-indigo-700"
-          style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom, 0px))" }}
+          className="fixed right-3 z-[54] h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:from-violet-600 hover:to-indigo-700"
+          style={{ bottom: "calc(4.9rem + env(safe-area-inset-bottom, 0px))" }}
           title="Open Voice Assistant"
           aria-label="Open Voice Assistant"
           onClick={() => navigate("/voice")}
         >
-          <Mic className="h-6 w-6" />
+          <Mic className="h-5 w-5" />
         </Button>
       )}
 

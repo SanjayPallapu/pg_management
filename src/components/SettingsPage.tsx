@@ -46,7 +46,6 @@ import {
   ArrowLeft,
   FileBarChart,
   ContactRound,
-  Mic,
 } from "lucide-react";
 import {
   Sheet,
@@ -184,7 +183,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
     setIsDeleting(true);
     try {
-      const { error } = await (supabase as any).rpc('delete_user_account');
+      const { error } = await supabase.rpc('delete_user_account' as never);
       if (error) {
         console.warn("RPC account deletion failed, attempting client-side data wipe fallback:", error.message);
         
@@ -198,9 +197,9 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       
       await signOut();
       window.location.replace("/onboarding");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Account deletion failed:", err);
-      toast.error(err?.message || "Failed to delete account. Please contact support.");
+      toast.error(err instanceof Error ? err.message : "Failed to delete account. Please contact support.");
     } finally {
       setIsDeleting(false);
       setDeleteConfirmOpen(false);
@@ -375,12 +374,6 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Preferences" />
             <CardContent className="p-2">
-              <SettingItem
-                icon={<Mic className="h-4 w-4 text-violet-600 dark:text-violet-300" />}
-                label="Voice Assistant"
-                description="English and Telugu PG operations"
-                onClick={() => navigate('/voice')}
-              />
               <SettingItem
                 icon={isDark ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
                 label="Dark Mode"
