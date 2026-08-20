@@ -46,6 +46,7 @@ import {
   ArrowLeft,
   FileBarChart,
   ContactRound,
+  Mic,
 } from "lucide-react";
 import {
   Sheet,
@@ -374,6 +375,12 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           <Card className="rounded-2xl border-border/70 shadow-sm">
             <SectionHeader title="Preferences" />
             <CardContent className="p-2">
+              <SettingItem
+                icon={<Mic className="h-4 w-4 text-violet-600 dark:text-violet-300" />}
+                label="Voice Assistant"
+                description="English and Telugu PG operations"
+                onClick={() => navigate('/voice')}
+              />
               <SettingItem
                 icon={isDark ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
                 label="Dark Mode"

@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { crushJSON, compressSystemPrompt, trimConversation, estimateConversationTokens } from "./compress.ts";
+import { classifyVoiceCommand } from "./intent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -470,6 +471,69 @@ async function executeTool(
   return { error: `Unknown tool: ${name}` };
 }
 
+function formatRupees(value: number | null | undefined): string {
+  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
+}
+
+function deterministicReply(toolName: string, result: any, isTelugu: boolean): string {
+  if (toolName === "get_pg_overview") {
+    return isTelugu
+      ? `${result.total_rooms || 0} గదులు, ${result.active_tenants || 0} యాక్టివ్ టెనెంట్లు, ${result.vacant_beds || 0} ఖాళీ బెడ్లు ఉన్నాయి. నెలకు అంచనా అద్దె ${formatRupees(result.expected_monthly_rent)}.`
+      : `${result.total_rooms || 0} rooms, ${result.active_tenants || 0} active tenants and ${result.vacant_beds || 0} vacant beds. Expected monthly rent is ${formatRupees(result.expected_monthly_rent)}.`;
+  }
+  if (toolName === "get_collection_summary") {
+    return isTelugu
+      ? `${result.month}/${result.year}లో ${formatRupees(result.collected)} వసూలైంది. ఇంకా ${formatRupees(result.pending)} పెండింగ్‌లో ఉంది.`
+      : `For ${result.month}/${result.year}, ${formatRupees(result.collected)} is collected and ${formatRupees(result.pending)} is pending.`;
+  }
+  if (toolName === "list_pending_tenants") {
+    const list = (result.pending_tenants || []).slice(0, 6)
+      .map((tenant: any) => `${tenant.name}, room ${tenant.room}, ${formatRupees(tenant.due)}`)
+      .join("; ");
+    if (!result.count) return isTelugu ? "ఈ నెల పెండింగ్ అద్దె లేదు." : "There is no pending rent for this month.";
+    const more = result.count > 6 ? ` ${result.count - 6} more.` : "";
+    return isTelugu
+      ? `${result.count} మంది టెనెంట్ల అద్దె పెండింగ్‌లో ఉంది: ${list}.${more}`
+      : `${result.count} tenants have pending rent: ${list}.${more}`;
+  }
+  if (toolName === "get_vacant_beds") {
+    const rooms = (result.vacant_rooms || []).slice(0, 6)
+      .map((room: any) => `room ${room.room_no}: ${room.vacant_beds}`)
+      .join(", ");
+    if (!result.total_vacant_beds) return isTelugu ? "ప్రస్తుతం ఖాళీ బెడ్లు లేవు." : "There are no vacant beds right now.";
+    return isTelugu
+      ? `మొత్తం ${result.total_vacant_beds} ఖాళీ బెడ్లు ఉన్నాయి. ${rooms}.`
+      : `There are ${result.total_vacant_beds} vacant beds. ${rooms}.`;
+  }
+  if (toolName === "get_room_details") {
+    if (!result.found) return isTelugu ? "ఆ గది కనబడలేదు." : "I couldn't find that room.";
+    const names = (result.active_tenants || []).map((tenant: any) => tenant.name).join(", ");
+    return isTelugu
+      ? `రూమ్ ${result.room.room_no}లో ${result.active_tenants?.length || 0} మంది యాక్టివ్ టెనెంట్లు ఉన్నారు${names ? `: ${names}` : ""}.`
+      : `Room ${result.room.room_no} has ${result.active_tenants?.length || 0} active tenants${names ? `: ${names}` : ""}.`;
+  }
+  if (toolName === "find_tenant") {
+    if (!result.found) return isTelugu ? "ఆ టెనెంట్ కనబడలేదు." : "I couldn't find that tenant.";
+    return (result.tenants || []).slice(0, 3).map((tenant: any) =>
+      `${tenant.name}, room ${tenant.room}, rent ${formatRupees(tenant.monthly_rent)}, status ${tenant.current_month_status?.payment_status || "Pending"}`
+    ).join(". ");
+  }
+  if (toolName === "mark_payment") {
+    if (result.reason === "needs_confirmation") {
+      const preview = result.preview;
+      return isTelugu
+        ? `${preview.tenant}, రూమ్ ${preview.room} కోసం ${formatRupees(preview.entry_amount)} ${preview.mode} అద్దె నమోదు చేయాలా? సేవ్ చేయడానికి అవును అని చెప్పండి.`
+        : `Confirm: record ${formatRupees(preview.entry_amount)} ${preview.mode} rent for ${preview.tenant} in room ${preview.room}? Say yes to save.`;
+    }
+    if (result.reason === "ambiguous") {
+      const choices = (result.candidates || []).map((candidate: any) => `${candidate.name}, room ${candidate.room}`).join("; ");
+      return `I found multiple matching tenants. Please specify one: ${choices}.`;
+    }
+    if (result.reason === "no_tenant_match") return isTelugu ? "టెనెంట్ కనబడలేదు. పేరు లేదా రూమ్ నంబర్ మళ్లీ చెప్పండి." : "I couldn't identify the tenant. Please say the name or room number again.";
+  }
+  return isTelugu ? "ఆ అభ్యర్థనను పూర్తి చేయలేకపోయాను." : "I couldn't complete that request.";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -607,6 +671,39 @@ Deno.serve(async (req) => {
     if (operation !== "chat") throw new Error("Unsupported operation");
 
     const isTelugu = lang === "te-IN";
+    const latestUserText = [...messages].reverse().find((message: any) => message?.role === "user")?.content || "";
+    const deterministicIntent = classifyVoiceCommand(latestUserText);
+    if (deterministicIntent) {
+      const result = await executeTool(deterministicIntent.tool, deterministicIntent.args, supabase, pgId);
+      let deterministicPendingAction: any = null;
+      if (WRITE_ACTIONS.has(deterministicIntent.tool) && result?.reason === "needs_confirmation") {
+        deterministicPendingAction = await createPendingAction(
+          auditAdmin,
+          userData.user.id,
+          pgId,
+          deterministicIntent.tool,
+          deterministicIntent.args,
+          result.preview,
+          latestUserText,
+          lang,
+          source,
+        );
+      }
+      return new Response(JSON.stringify({
+        reply: deterministicReply(deterministicIntent.tool, result, isTelugu),
+        pendingAction: deterministicPendingAction,
+        processingMode: "fast",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (!LOVABLE_API_KEY) {
+      const reply = isTelugu
+        ? "ప్రస్తుతం నేను అద్దె వసూళ్లు, పెండింగ్ టెనెంట్లు, ఖాళీ బెడ్లు, రూమ్ వివరాలు మరియు అద్దె చెల్లింపులు నమోదు చేయడంలో సహాయం చేయగలను. దయచేసి వాటిలో ఒకటి అడగండి."
+        : "I can currently help with rent collection, pending tenants, vacant beds, room details and recording rent payments. Please ask one of those commands.";
+      return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Pre-fetch a tiny snapshot so the model can resolve pronouns/short refs without extra round-trips
     const [snapshot, collection] = await Promise.all([
