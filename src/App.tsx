@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import EmailAuth from "./pages/EmailAuth";
 import PhoneLogin from "./pages/PhoneLogin";
 import OTPVerification from "./pages/OTPVerification";
-import EmailConfirmation from "./pages/EmailConfirmation";
 import PGSetupProperty from "./pages/PGSetupProperty";
 import PGSetupCapacity from "./pages/PGSetupCapacity";
 import PGSetupSubscription from "./pages/PGSetupSubscription";
@@ -45,7 +44,6 @@ import { useMonthContext } from "./contexts/MonthContext";
 import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 import { captureReferralCodeFromUrl } from "@/utils/referralHelper";
 import { PlayStoreUpdateManager } from "@/components/PlayStoreUpdateManager";
-import { GoogleEmailVerificationGate } from "@/components/GoogleEmailVerificationGate";
 import { SubscriptionAccessGate } from "@/components/SubscriptionAccessGate";
 
 // Protected route component that wraps children with PGProvider and RentProvider
@@ -70,15 +68,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <GoogleEmailVerificationGate>
-      <PGProvider>
-        <SubscriptionAccessGate>
-          <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
-            {children}
-          </RentProvider>
-        </SubscriptionAccessGate>
-      </PGProvider>
-    </GoogleEmailVerificationGate>
+    <PGProvider>
+      <SubscriptionAccessGate>
+        <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
+          {children}
+        </RentProvider>
+      </SubscriptionAccessGate>
+    </PGProvider>
   );
 };
 
@@ -128,7 +124,6 @@ const AppContent = () => {
           <Route path="/auth" element={<PhoneLogin />} />
           <Route path="/auth/otp" element={<OTPVerification />} />
           <Route path="/auth/email" element={<EmailAuth />} />
-          <Route path="/auth/confirm-email" element={<EmailConfirmation />} />
           <Route path="/tenant-profile/:tenantId" element={
             <ProtectedRoute>
               <TenantProfilePage view="details" />

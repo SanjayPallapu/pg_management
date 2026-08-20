@@ -10,6 +10,9 @@ import {
 } from '@/lib/phoneOtpTestMode';
 import { restartOnboardingAfterLogout } from '@/lib/onboardingState';
 import { getPublicAppUrl } from '@/utils/referralHelper';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App as CapacitorApp } from '@capacitor/app';
 
 export type AppRole = 'admin' | 'owner';
 
@@ -248,6 +251,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const listener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.startsWith('com.pgmanager.app://auth/callback')) return;
+      const normalized = url.replace('#', '?');
+      const callbackUrl = new URL(normalized);
+      const accessToken = callbackUrl.searchParams.get('access_token');
+      const refreshToken = callbackUrl.searchParams.get('refresh_token');
+      if (!accessToken || !refreshToken) return;
+
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      await Browser.close().catch(() => undefined);
+      if (!error) window.location.assign('/');
+    });
+
+    return () => { void listener.then((handle) => handle.remove()); };
+  }, []);
+
   const signIn = useCallback(async (email: string, password: string) => {
     clearPhoneOtpTestMode();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -265,7 +290,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = Capacitor.isNativePlatform()
+      ? 'com.pgmanager.app://auth/callback'
+      : `${window.location.origin}/`;
     // Set flag BEFORE signUp so onAuthStateChange handler picks it up
     sessionStorage.setItem('isNewSignup', 'true');
     const { data, error } = await supabase.auth.signUp({
@@ -284,12 +311,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    const isNative = Capacitor.isNativePlatform();
     const origin = getPublicAppUrl().replace(/\/$/, "");
-    const redirectTo = `${origin}/auth/confirm-email`;
-    const { error } = await supabase.auth.signInWithOAuth({
+    const redirectTo = isNative
+      ? 'com.pgmanager.app://auth/callback'
+      : `${origin}/`;
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
+        skipBrowserRedirect: isNative,
         scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
         queryParams: {
           access_type: 'offline',
@@ -297,6 +328,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
+    if (!error && isNative && data.url) {
+      await Browser.open({ url: data.url, presentationStyle: 'popover' });
+    }
     return { error };
   }, []);
 
