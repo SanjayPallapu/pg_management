@@ -116,6 +116,12 @@ export const useRazorpay = () => {
           throw new Error("Failed to start subscription checkout. Please try again");
         }
 
+        if (data.checkout_mode === "trial_authorization") {
+          toast.info("Razorpay may temporarily charge ₹5 to verify the recurring mandate. It is automatically refunded; plan billing begins when your current trial ends.", { duration: 8000 });
+        } else {
+          toast.info(`₹${Number(data.amount || 0) / 100} will be charged now to activate this plan.`, { duration: 6000 });
+        }
+
         // Open Razorpay checkout
         const options = {
           key: data.key_id,

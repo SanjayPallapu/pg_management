@@ -176,6 +176,12 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
+        <div className={`rounded-2xl border p-3 text-xs font-semibold ${isTrialActive ? "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100" : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"}`}>
+          {isTrialActive
+            ? "Upgrading during your active trial: Razorpay may temporarily debit ₹5 to verify the recurring mandate and automatically refund it. Your plan is billed only when the current trial ends."
+            : "Your free trial has ended. The full selected plan price is charged immediately and access activates after payment confirmation."}
+        </div>
+
         {/* Universal checkout & billing cycle */}
         <div className="flex flex-col items-stretch justify-between gap-3 border-b border-border/70 bg-background py-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2.5 text-xs">
