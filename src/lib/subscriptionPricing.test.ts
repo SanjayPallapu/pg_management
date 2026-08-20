@@ -6,6 +6,8 @@ describe("Razorpay subscription pricing", () => {
   it("matches every paid price displayed in the app", () => {
     (Object.keys(PLAN_CONFIG) as PlanKey[]).forEach((plan) => {
       expect(PLAN_CONFIG[plan].amount).toBe(SUBSCRIPTION_PLANS[plan as SubscriptionPlanKey].price * 100);
+      expect(PLAN_CONFIG[plan].maxPgs).toBe(SUBSCRIPTION_PLANS[plan as SubscriptionPlanKey].maxPgs);
+      expect(PLAN_CONFIG[plan].includedTenants).toBe(SUBSCRIPTION_PLANS[plan as SubscriptionPlanKey].includedTenants);
     });
   });
 });

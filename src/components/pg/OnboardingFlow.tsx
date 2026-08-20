@@ -26,7 +26,7 @@ import { PGSetupWizard } from './PGSetupWizard';
 import { usePG } from '@/contexts/PGContext';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useAuth } from '@/hooks/useAuth';
-import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_ORDER, type SubscriptionPlanKey } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_MARKETING, getPaidPlanFamily, type SubscriptionPlanKey } from '@/types/pg';
 import { toast } from 'sonner';
 
 interface OnboardingFlowProps {
@@ -87,7 +87,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       .catch((err) => console.debug('Lottie welcome load deferred to fallback:', err));
   }, []);
 
-  const paidPlans = useMemo(() => SUBSCRIPTION_PLAN_ORDER.filter((key) => key !== 'trial'), []);
+  const paidPlans = useMemo<SubscriptionPlanKey[]>(() => ['monthly', 'pro', 'promax'], []);
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlan];
   const hasActiveTrial = subscription?.billingCycle === 'trial' && subscription?.status === 'active';
   const isSubscriptionActive = subscription?.status === 'active' || subscription?.status === 'free';
@@ -234,7 +234,7 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                   </div>
                 </div>
                 <ul className="space-y-2 mt-4 text-sm">
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PGs, rooms, and tenants during trial</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Up to 4 PGs and 500 active tenants during trial</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> All reminder, AC bill, analytics, and receipt features unlocked</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Upgrade anytime to keep auto-renewal active</li>
                 </ul>
@@ -244,6 +244,8 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             <div className="grid md:grid-cols-3 gap-4">
               {paidPlans.map((planKey) => {
                 const plan = SUBSCRIPTION_PLANS[planKey];
+                const family = getPaidPlanFamily(planKey)!;
+                const marketing = SUBSCRIPTION_PLAN_MARKETING[family];
                 const isSelected = selectedPlan === planKey;
                 return (
                   <Card
@@ -251,10 +253,10 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                     className={`relative cursor-pointer transition-all ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}
                     onClick={() => setSelectedPlan(planKey)}
                   >
-                    {planKey === 'yearly' && (
+                    {family === 'plus' && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                          Best Value
+                          Most Popular
                         </Badge>
                       </div>
                     )}
@@ -263,11 +265,11 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                       <div className="text-3xl font-bold mb-4">
                         ₹{plan.price} <span className="text-sm font-normal text-muted-foreground">{plan.periodLabel}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                      <p className="text-sm text-muted-foreground mb-4">{marketing.audience}</p>
                       <ul className="space-y-2 text-sm">
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited PG owners</li>
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Auto-renewing billing</li>
-                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Full Pro feature access</li>
+                        {marketing.features.slice(0, 4).map((feature) => (
+                          <li key={feature} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-primary" /> {feature}</li>
+                        ))}
                       </ul>
                     </CardContent>
                   </Card>

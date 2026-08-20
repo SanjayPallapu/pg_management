@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePG } from "@/contexts/PGContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
-import { type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
+import { SUBSCRIPTION_PLAN_MARKETING, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { format } from "date-fns";
 import { getSubscriptionAccess } from "@/lib/subscriptionAccess";
@@ -59,17 +59,12 @@ export default function SubscriptionPage() {
         monthlyKey: "monthly" as SubscriptionPlanKey,
         yearlyKey: "yearly" as SubscriptionPlanKey,
         title: "Basic",
-        tag: billingCycle === "yearly" ? "Save 20%" : "Starter",
+        tag: billingCycle === "yearly" ? "Save 16%" : "Starter",
         badgeStyle: billingCycle === "yearly" ? "bg-emerald-500 text-white font-bold" : "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
         cardStyle: "border-slate-200 dark:border-slate-800 bg-card",
         icon: <Zap className="h-6 w-6 text-indigo-500" />,
-        features: [
-          "Unlimited PGs & Rooms",
-          "Unlimited Tenants",
-          "Rent Collection Sheet",
-          "Smart PDF Receipts",
-          "Basic Reports",
-        ],
+        audience: SUBSCRIPTION_PLAN_MARKETING.basic.audience,
+        features: SUBSCRIPTION_PLAN_MARKETING.basic.features,
       },
       {
         monthlyKey: "pro" as SubscriptionPlanKey,
@@ -79,29 +74,19 @@ export default function SubscriptionPage() {
         badgeStyle: "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold shadow-sm",
         cardStyle: "border-purple-500 dark:border-purple-400 bg-purple-500/5 dark:bg-purple-500/10 ring-2 ring-purple-500/40 shadow-xl",
         icon: <Star className="h-6 w-6 text-purple-500 fill-purple-500" />,
-        features: [
-          "Everything in Basic",
-          "Auto WhatsApp Rent Reminders",
-          "AC Unit Billing & Calculation",
-          "Occupancy & Revenue Analytics",
-          "Priority 24/7 Support",
-        ],
+        audience: SUBSCRIPTION_PLAN_MARKETING.plus.audience,
+        features: SUBSCRIPTION_PLAN_MARKETING.plus.features,
       },
       {
         monthlyKey: "promax" as SubscriptionPlanKey,
         yearlyKey: "promax_yearly" as SubscriptionPlanKey,
-        title: "Pro Ultimate",
+        title: "Pro",
         tag: billingCycle === "yearly" ? "Best Deal" : "Ultimate",
         badgeStyle: "bg-amber-500 text-white font-extrabold shadow-sm",
         cardStyle: "border-amber-500/80 dark:border-amber-400/80 bg-amber-500/5 dark:bg-amber-500/10",
         icon: <Crown className="h-6 w-6 text-amber-500 fill-amber-500" />,
-        features: [
-          "Everything in Plus",
-          "Multi-owner Management",
-          "Dedicated Account Manager",
-          "Custom API & Backup Export",
-          "99.9% Uptime Guarantee",
-        ],
+        audience: SUBSCRIPTION_PLAN_MARKETING.pro.audience,
+        features: SUBSCRIPTION_PLAN_MARKETING.pro.features,
       },
     ];
   }, [billingCycle]);
@@ -213,7 +198,7 @@ export default function SubscriptionPage() {
             >
               Yearly
               <span className="bg-emerald-500 text-[9px] text-white px-1.5 py-0.2 rounded-full font-black uppercase animate-pulse">
-                Save 20%
+                Save 16%
               </span>
             </button>
           </div>
@@ -263,6 +248,7 @@ export default function SubscriptionPage() {
                   </div>
 
                   <div className="mb-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">{c.audience}</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-2xl font-black tracking-tight text-foreground">
                         {actualPriceLocal.symbol}{displayMonthlyPrice.toLocaleString()}
@@ -318,6 +304,11 @@ export default function SubscriptionPage() {
               </div>
             );
           })}
+        </div>
+
+        <div className="rounded-2xl border border-border/70 bg-card p-4 text-center">
+          <p className="text-sm font-extrabold">Need more than 4 PGs or 500 active tenants?</p>
+          <p className="mt-1 text-xs text-muted-foreground">Contact support for a Business plan. Capacity add-ons will be offered only after metered billing is available.</p>
         </div>
 
         {/* Provider-neutral secure checkout */}

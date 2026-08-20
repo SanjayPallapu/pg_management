@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PAID_PLANS, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
+import { PAID_PLANS, PLAN_CONFIG, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const encoder = new TextEncoder();
@@ -242,6 +242,7 @@ Deno.serve(async (req) => {
         }
 
         const planKey = plan || "monthly";
+        const planConfig = PLAN_CONFIG[planKey];
         const now = new Date().toISOString();
 
         const checkoutMode = String(subscription?.notes?.checkout_mode || "");
@@ -264,13 +265,15 @@ Deno.serve(async (req) => {
                 user_id: userId,
                 plan: planKey,
                 status: "active",
-                max_pgs: -1,
-                max_tenants_per_pg: -1,
+                max_pgs: planConfig.maxPgs,
+                max_tenants_per_pg: planConfig.includedTenants,
                 features: {
                   auto_reminders: true,
                   daily_reports: true,
                   ai_logo: true,
                   billing_cycle: billingCycle,
+                  included_tenants: planConfig.includedTenants,
+                  tenant_limit_scope: "account",
                   ...(isTrialAuthorization ? { next_billing_cycle: planKey } : {}),
                   razorpay_subscription_id: subscriptionId,
                   razorpay_status: status || eventType.replace("subscription.", ""),
@@ -316,6 +319,7 @@ Deno.serve(async (req) => {
 
         const userId = context.userId;
         const planKey = context.plan || "monthly";
+        const planConfig = PLAN_CONFIG[planKey];
 
         if (!userId) {
           console.error("Missing user_id in payment/subscription notes");
@@ -397,13 +401,15 @@ Deno.serve(async (req) => {
               user_id: userId,
               plan: planKey, // EXACT plan preserved
               status: "active",
-              max_pgs: -1,
-              max_tenants_per_pg: -1,
+              max_pgs: planConfig.maxPgs,
+              max_tenants_per_pg: planConfig.includedTenants,
               features: {
                 auto_reminders: true,
                 daily_reports: true,
                 ai_logo: true,
                 billing_cycle: planKey,
+                included_tenants: planConfig.includedTenants,
+                tenant_limit_scope: "account",
                 razorpay_subscription_id: context.subscriptionId,
                 razorpay_payment_id: payment.id,
               },

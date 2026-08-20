@@ -264,7 +264,7 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
               <Building className="h-16 w-16 mx-auto text-primary mb-4" />
               <h2 className="text-2xl font-bold">How many PGs do you manage?</h2>
               <p className="text-muted-foreground mt-2">
-                {maxPgs === -1 ? 'You can add unlimited PGs with Pro plan' : `Free plan allows ${maxPgs} PG`}
+                {maxPgs === -1 ? 'Your plan allows unlimited PGs' : `Your current plan allows ${maxPgs} PG${maxPgs === 1 ? '' : 's'}`}
               </p>
             </div>
 
@@ -294,7 +294,7 @@ export const PGSetupWizard = ({ onComplete, isAddingNew = false }: PGSetupWizard
 
             {!canAddMore && maxPgs !== -1 && (
               <p className="text-center text-amber-600 text-sm">
-                Upgrade to Pro for unlimited PGs
+                Choose a higher plan for more PG properties
               </p>
             )}
 

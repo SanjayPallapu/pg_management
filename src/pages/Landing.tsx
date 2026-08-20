@@ -226,29 +226,24 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-lg text-muted-foreground">Start with a full-featured free trial, then switch to recurring billing anytime.</p>
+            <p className="text-lg text-muted-foreground">Start with 7 days free, then choose the plan that matches your operation.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="relative border-primary ring-2 ring-primary/20">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground border-0 px-4 py-1">
-                  Start Here
-                </Badge>
-              </div>
+            <Card className="relative border-border hover:border-primary/50 transition-all">
               <CardContent className="pt-8 pb-8">
-                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.trial.name}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.trial.description}</p>
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.monthly.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">For individual PG owners</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">Free</span>
-                  <span className="text-muted-foreground"> · {SUBSCRIPTION_PLANS.trial.periodLabel}</span>
+                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.monthly.price}</span>
+                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.monthly.periodLabel}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {[
-                    'Unlimited PGs during trial',
-                    'Unlimited tenants and rooms',
-                    'All reminders, AC bills, reports',
-                    'No setup fee',
+                    '1 PG property',
+                    '100 active tenants',
+                    'Rent tracking and PDF receipts',
+                    'Bills, onboarding and analytics',
                   ].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
@@ -256,56 +251,28 @@ const Landing = () => {
                   ))}
                 </ul>
                 <Button className="w-full" onClick={() => navigate('/auth')}>
-                  Start Free Trial <ArrowRight className="h-4 w-4 ml-1" />
+                  Choose Basic <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="relative border-border hover:border-primary/50 transition-all">
-              <CardContent className="pt-8 pb-8">
-                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.monthly.name}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.monthly.description}</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.monthly.price}</span>
-                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.monthly.periodLabel}</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Unlimited PG owners',
-                    'Auto-renew monthly',
-                    'WhatsApp reminders and receipts',
-                    'Analytics dashboard included',
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
-                  Choose Monthly
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="relative border-border hover:border-primary/50 transition-all">
+            <Card className="relative border-primary ring-2 ring-primary/20">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-4 py-1">
-                  Best Value
-                </Badge>
+                <Badge className="bg-primary text-primary-foreground border-0 px-4 py-1">Most Popular</Badge>
               </div>
               <CardContent className="pt-8 pb-8">
-                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.yearly.name}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{SUBSCRIPTION_PLANS.yearly.description}</p>
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.pro.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">For growing PG businesses</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.yearly.price}</span>
-                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.yearly.periodLabel}</span>
+                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.pro.price}</span>
+                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.pro.periodLabel}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {[
-                    'Lowest effective monthly price',
-                    'Auto-renew yearly',
-                    'All premium features included',
-                    'Best for serious operators',
+                    '2 PG properties',
+                    '200 active tenants',
+                    'Multi-property analytics',
+                    'Voice assistant and priority support',
                   ].map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
@@ -313,7 +280,33 @@ const Landing = () => {
                   ))}
                 </ul>
                 <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
-                  Choose Yearly
+                  Choose Plus
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="relative border-border hover:border-primary/50 transition-all">
+              <CardContent className="pt-8 pb-8">
+                <h3 className="text-xl font-semibold mb-2">{SUBSCRIPTION_PLANS.promax.name}</h3>
+                <p className="text-muted-foreground text-sm mb-4">For multi-property PG businesses</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">₹{SUBSCRIPTION_PLANS.promax.price}</span>
+                  <span className="text-muted-foreground">{SUBSCRIPTION_PLANS.promax.periodLabel}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    '4 PG properties',
+                    '500 active tenants',
+                    'Advanced reports and exports',
+                    'Faster priority support',
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
+                  Choose Pro
                 </Button>
               </CardContent>
             </Card>
