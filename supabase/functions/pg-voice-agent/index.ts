@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { crushJSON, compressSystemPrompt, trimConversation, estimateConversationTokens } from "./compress.ts";
-import { classifyVoiceCommand } from "./intent.ts";
+import { classifyVoiceCommand, normalizeVoiceText } from "./intent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

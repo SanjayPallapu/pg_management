@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, BadgeCheck, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign,
@@ -16,7 +16,7 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { PaymentReminderDialog } from "@/components/PaymentReminderDialog";
 import {
   ActivityTimeline, OwnerSharePanel, ProfileStatusBadge, VerificationPanel,
-  useOnboardingLink, useOnboardingProfile,
+  resolveOnboardingDocumentUrl, useOnboardingDocuments, useOnboardingLink, useOnboardingProfile,
 } from "@/features/tenant-onboarding";
 import type { OnboardingProfile, OnboardingStatus } from "@/features/tenant-onboarding/types";
 
@@ -112,6 +112,47 @@ function DetailSection({
       </div>
       <div className="px-1">{children}</div>
     </section>
+  );
+}
+
+function AadhaarImage({ tenantId, fallbackPath }: { tenantId: string | null; fallbackPath?: string }) {
+  const { data: documents = [] } = useOnboardingDocuments(tenantId);
+  const aadhaar = documents.find(document => document.document_type === "aadhaar" || document.document_type === "id_proof") || documents[0];
+  const documentPath = aadhaar?.file_url || fallbackPath;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setImageUrl(null);
+    if (documentPath) {
+      void resolveOnboardingDocumentUrl(documentPath).then(url => {
+        if (active) setImageUrl(url);
+      });
+    }
+    return () => { active = false; };
+  }, [documentPath]);
+
+  if (!documentPath) {
+    return <p className="py-3 text-xs text-muted-foreground">No Aadhaar image was uploaded.</p>;
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!imageUrl}
+      onClick={() => imageUrl && window.open(imageUrl, "_blank", "noopener,noreferrer")}
+      className="mt-3 block w-full overflow-hidden rounded-2xl border bg-muted/30 text-left disabled:cursor-wait"
+      aria-label="Open Aadhaar image"
+    >
+      {imageUrl ? (
+        <img src={imageUrl} alt="Uploaded Aadhaar card" className="h-44 w-full object-contain bg-slate-950/5" />
+      ) : (
+        <span className="flex h-28 items-center justify-center text-xs text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading Aadhaar image…</span>
+      )}
+      <span className="flex items-center justify-between border-t px-3 py-2 text-[11px] font-bold">
+        Aadhaar image <span className="text-violet-600">Tap to open</span>
+      </span>
+    </button>
   );
 }
 
@@ -213,6 +254,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
             </DetailSection>
             <DetailSection title="Identity and stay" icon={ShieldCheck} badgeColor="indigo">
               <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+              <AadhaarImage tenantId={isPreview ? null : tenantId} fallbackPath={displayedProfile?.id_proof_url} />
               <DetailRow icon={Home} label="Room" value={room.roomNo} />
               <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
               <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
