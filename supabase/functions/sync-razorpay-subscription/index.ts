@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PAID_PLANS, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
+import { PAID_PLANS, PLAN_CONFIG, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const planKey = plan as PlanKey;
+    const planConfig = PLAN_CONFIG[planKey];
     const checkoutMode = String(subscription?.notes?.checkout_mode || "");
     const startAtMs = Number(subscription?.start_at || 0) * 1000;
     const isTrialAuthorization = checkoutMode === "trial_authorization" &&
@@ -134,13 +135,15 @@ Deno.serve(async (req) => {
           user_id: userId,
           plan: planKey, // EXACT plan saved
           status: "active",
-          max_pgs: -1,
-          max_tenants_per_pg: -1,
+          max_pgs: planConfig.maxPgs,
+          max_tenants_per_pg: planConfig.includedTenants,
           features: {
             auto_reminders: true,
             daily_reports: true,
             ai_logo: true,
             billing_cycle: billingCycle,
+            included_tenants: planConfig.includedTenants,
+            tenant_limit_scope: "account",
             ...(isTrialAuthorization ? { next_billing_cycle: planKey } : {}),
             razorpay_subscription_id,
             razorpay_status: status,

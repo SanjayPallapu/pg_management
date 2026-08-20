@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { addDays, format, differenceInDays } from "date-fns";
 import type { Room } from "@/types";
+import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey } from "@/types/pg";
 import { HelpFAQ } from "@/components/HelpFAQ";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -249,6 +250,14 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
     : subscription?.billingCycle === "trial" && subscription.createdAt
       ? addDays(new Date(subscription.createdAt), 7)
       : null;
+  const subscriptionPlanKey = subscription?.billingCycle && subscription.billingCycle in SUBSCRIPTION_PLANS
+    ? subscription.billingCycle as SubscriptionPlanKey
+    : null;
+  const subscriptionPlanName = subscriptionPlanKey
+    ? SUBSCRIPTION_PLANS[subscriptionPlanKey].name
+    : "No active subscription";
+  const subscriptionHasEnded = subscription?.status === "expired"
+    || Boolean(subscriptionEndDate && subscriptionEndDate.getTime() <= Date.now());
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -321,20 +330,22 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                 <div className="min-w-0">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
                   <p className="truncate text-sm font-bold">
-                    {subscription?.billingCycle === 'trial' ? 'Free Trial' : (subscription?.status === 'active' ? 'Pro Plan' : 'Free Plan')}
+                    {subscriptionPlanName}
                   </p>
                   <p className="truncate text-xs text-muted-foreground mt-0.5">
                     {subscriptionEndDate ? (
                       <>
-                        {subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Expires'} on{' '}
+                        {subscriptionHasEnded
+                          ? 'Expired'
+                          : subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Renews'} on{' '}
                         <strong className="font-bold text-foreground">{format(subscriptionEndDate, 'dd MMM yyyy')}</strong>
-                        {(() => {
+                        {!subscriptionHasEnded && (() => {
                           const daysLeft = Math.max(0, differenceInDays(subscriptionEndDate, new Date()));
                           return ` (${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left)`;
                         })()}
                       </>
                     ) : (
-                      'No active expiration date'
+                      subscription?.status === 'active' ? 'Active subscription' : 'Upgrade required to continue'
                     )}
                   </p>
                 </div>
