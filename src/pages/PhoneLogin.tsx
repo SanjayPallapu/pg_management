@@ -89,7 +89,6 @@ export default function PhoneLogin() {
       toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
       return;
     }
-    sendAccountAuthEmail({ to: cleanEmail, action: "verification" }).catch(err => console.warn("[Auth Email Error]", err));
     completeOnboarding();
     window.location.replace("/");
   };

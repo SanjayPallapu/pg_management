@@ -285,7 +285,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = useCallback(async () => {
     const origin = getPublicAppUrl().replace(/\/$/, "");
-    const redirectTo = `${origin}/`;
+    const redirectTo = `${origin}/auth/confirm-email`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

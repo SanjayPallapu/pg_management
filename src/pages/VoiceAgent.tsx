@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, MicOff, Loader2, Volume2, Languages, Repeat, Wand2 } from "lucide-react";
+import { ArrowLeft, Mic, Loader2, Volume2, Languages, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/proxyClient";
 import { usePG } from "@/contexts/PGContext";
@@ -11,9 +11,41 @@ type Msg = { role: "user" | "assistant"; content: string };
 type Phase = "idle" | "listening" | "thinking" | "speaking";
 type Lang = "en-IN" | "te-IN";
 
-const SpeechRecognitionImpl: any =
+type SpeechAlternativeLike = { transcript: string; confidence?: number };
+type SpeechResultLike = {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechAlternativeLike;
+};
+type SpeechResultEventLike = {
+  resultIndex: number;
+  results: { length: number; [index: number]: SpeechResultLike };
+};
+type SpeechErrorEventLike = { error?: string };
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechResultEventLike) => void) | null;
+  onerror: ((event: SpeechErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+const speechWindow = typeof window !== "undefined"
+  ? window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    }
+  : undefined;
+
+const SpeechRecognitionImpl: SpeechRecognitionConstructor | null =
   (typeof window !== "undefined" &&
-    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) ||
+    (speechWindow?.SpeechRecognition || speechWindow?.webkitSpeechRecognition)) ||
   null;
 
 /* ───── Animated Waveform Bars ───── */
@@ -41,7 +73,6 @@ export default function VoiceAgent() {
   const navigate = useNavigate();
   const { currentPG } = usePG();
   const [phase, setPhase] = useState<Phase>("idle");
-  const [transcript, setTranscript] = useState("");
   const [partial, setPartial] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [muted, setMuted] = useState(false);
@@ -49,7 +80,7 @@ export default function VoiceAgent() {
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("va_lang") as Lang) || "en-IN");
   const [autoListen, setAutoListen] = useState(true); // Always-active by default
 
-  const recogRef = useRef<any>(null);
+  const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
   const messagesRef = useRef<Msg[]>([]);
   messagesRef.current = messages;
@@ -58,6 +89,25 @@ export default function VoiceAgent() {
   const mutedRef = useRef(muted); mutedRef.current = muted;
   const phaseRef = useRef<Phase>("idle");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const startingRef = useRef(false);
+  const finalSentRef = useRef(false);
+  const restartTimerRef = useRef<number | null>(null);
+  const requestIdRef = useRef(0);
+  const startListeningRef = useRef<() => void>(() => undefined);
+
+  const transitionPhase = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
+
+  const maybeAutoListen = useCallback(() => {
+    if (!autoListenRef.current) return;
+    if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
+    restartTimerRef.current = window.setTimeout(() => {
+      restartTimerRef.current = null;
+      if (phaseRef.current === "idle") startListeningRef.current();
+    }, 180);
+  }, []);
 
   useEffect(() => { localStorage.setItem("va_lang", lang); }, [lang]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -70,8 +120,9 @@ export default function VoiceAgent() {
       setSupported(false);
     }
     return () => {
-      try { recogRef.current?.stop(); } catch {}
-      try { window.speechSynthesis?.cancel(); } catch {}
+      if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
+      try { recogRef.current?.stop(); } catch { /* already stopped */ }
+      try { window.speechSynthesis?.cancel(); } catch { /* unavailable during teardown */ }
     };
   }, []);
 
@@ -79,14 +130,14 @@ export default function VoiceAgent() {
   useEffect(() => {
     if (supported && currentPG?.id && autoListen) {
       const timer = setTimeout(() => {
-        if (phaseRef.current === "idle") startListening();
+        if (phaseRef.current === "idle") startListeningRef.current();
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [supported, currentPG?.id]);
+  }, [supported, currentPG?.id, autoListen]);
 
   const speak = useCallback((text: string) => {
-    if (mutedRef.current || !text) { setPhase("idle"); maybeAutoListen(); return; }
+    if (mutedRef.current || !text) { transitionPhase("idle"); maybeAutoListen(); return; }
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
@@ -105,20 +156,21 @@ export default function VoiceAgent() {
            voices.find(v => /en-US/i.test(v.lang)) ||
            voices.find(v => /^en/i.test(v.lang)));
       if (preferred) u.voice = preferred;
-      u.onstart = () => { setPhase("speaking"); startBargeInListener(); };
-      u.onend = () => { setPhase("idle"); maybeAutoListen(); };
-      u.onerror = () => { setPhase("idle"); maybeAutoListen(); };
+      u.onstart = () => transitionPhase("speaking");
+      u.onend = () => { transitionPhase("idle"); maybeAutoListen(); };
+      u.onerror = () => { transitionPhase("idle"); maybeAutoListen(); };
       utterRef.current = u;
       window.speechSynthesis.speak(u);
     } catch {
-      setPhase("idle");
+      transitionPhase("idle");
       maybeAutoListen();
     }
-  }, []);
+  }, [maybeAutoListen, transitionPhase]);
 
   const sendToAgent = useCallback(async (userText: string) => {
     if (!currentPG?.id) { toast.error("No PG selected"); return; }
-    setPhase("thinking");
+    const requestId = ++requestIdRef.current;
+    transitionPhase("thinking");
     const next: Msg[] = [...messagesRef.current, { role: "user", content: userText }];
     setMessages(next);
     try {
@@ -126,30 +178,40 @@ export default function VoiceAgent() {
         body: { messages: next, pgId: currentPG.id, lang: langRef.current },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const reply = (data as any)?.reply || "Sorry, no response.";
+      const response = data as { error?: string; reply?: string } | null;
+      if (response?.error) throw new Error(response.error);
+      if (requestId !== requestIdRef.current) return;
+      const reply = response?.reply || "Sorry, no response.";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
       speak(reply);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      toast.error(e.message || "Voice agent error");
-      setPhase("idle");
+      toast.error(e instanceof Error ? e.message : "Voice agent error");
+      if (requestId !== requestIdRef.current) return;
+      transitionPhase("idle");
       maybeAutoListen();
     }
-  }, [currentPG?.id, speak]);
+  }, [currentPG?.id, maybeAutoListen, speak, transitionPhase]);
 
   const startListening = useCallback(() => {
     if (!SpeechRecognitionImpl) { toast.error("Voice not supported on this browser. Try Chrome."); return; }
-    try { window.speechSynthesis?.cancel(); } catch {}
+    if (startingRef.current || phaseRef.current === "listening" || phaseRef.current === "thinking") return;
+    startingRef.current = true;
+    finalSentRef.current = false;
+    if (restartTimerRef.current !== null) {
+      window.clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
+    try { window.speechSynthesis?.cancel(); } catch { /* speech may be unavailable */ }
     const recog = new SpeechRecognitionImpl();
     recog.lang = langRef.current;
     recog.interimResults = true;
-    recog.continuous = true; // Keep listening continuously
-    recog.maxAlternatives = langRef.current === "te-IN" ? 5 : 3;
-    recog.onstart = () => { setPhase("listening"); setPartial(""); };
-    recog.onresult = (e: any) => {
+    recog.continuous = false;
+    recog.maxAlternatives = 5;
+    recog.onstart = () => { startingRef.current = false; transitionPhase("listening"); setPartial(""); };
+    recog.onresult = (e: SpeechResultEventLike) => {
       let interim = "", finalText = "";
-      let alternates: string[] = [];
+      const alternates: string[] = [];
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
         const t = r[0].transcript;
@@ -162,9 +224,9 @@ export default function VoiceAgent() {
         } else interim += t;
       }
       if (interim) setPartial(interim);
-      if (finalText) {
+      if (finalText && !finalSentRef.current) {
+        finalSentRef.current = true;
         setPartial("");
-        setTranscript(finalText);
         recog.stop();
         const combined = alternates.length
           ? `${finalText.trim()} | ${alternates.slice(0, 3).join(" | ")}`
@@ -172,85 +234,50 @@ export default function VoiceAgent() {
         sendToAgent(combined);
       }
     };
-    recog.onerror = (e: any) => {
+    recog.onerror = (e: SpeechErrorEventLike) => {
       console.warn("speech err", e?.error);
       if (e?.error === "no-speech") {
-        // Silently restart if in auto-listen mode
-        if (autoListenRef.current) {
-          setTimeout(() => {
-            if (phaseRef.current === "idle") startListening();
-          }, 300);
-        }
+        // Silence is normal in hands-free mode; restart without showing an error.
       } else if (e?.error === "not-allowed") {
         toast.error("Microphone permission denied.");
+        autoListenRef.current = false;
       }
-      setPhase("idle");
+      startingRef.current = false;
+      if (phaseRef.current === "listening") transitionPhase("idle");
+      if (e?.error === "no-speech") maybeAutoListen();
     };
     recog.onend = () => {
-      setPhase(p => (p === "listening" ? "idle" : p));
-      // Auto-restart in always-active mode
-      if (autoListenRef.current && phaseRef.current === "idle") {
-        setTimeout(() => {
-          if (phaseRef.current === "idle") startListening();
-        }, 300);
+      startingRef.current = false;
+      if (phaseRef.current === "listening") {
+        transitionPhase("idle");
+        if (!finalSentRef.current) maybeAutoListen();
       }
     };
     recogRef.current = recog;
-    try { recog.start(); } catch {}
-  }, [sendToAgent]);
-
-  // Barge-in: while assistant is speaking, detect user talking & cancel TTS
-  const bargeRef = useRef<any>(null);
-  const startBargeInListener = useCallback(() => {
-    if (!SpeechRecognitionImpl) return;
-    try { bargeRef.current?.stop(); } catch {}
-    const recog = new SpeechRecognitionImpl();
-    recog.lang = langRef.current;
-    recog.interimResults = true;
-    recog.continuous = false;
-    recog.maxAlternatives = langRef.current === "te-IN" ? 5 : 3;
-    let interrupted = false;
-    recog.onresult = (e: any) => {
-      const txt = e.results?.[0]?.[0]?.transcript?.trim();
-      if (!txt) return;
-      if (!interrupted) {
-        interrupted = true;
-        try { window.speechSynthesis.cancel(); } catch {}
-      }
-      const last = e.results[e.results.length - 1];
-      if (last?.isFinal) {
-        const alts: string[] = [];
-        for (let k = 1; k < last.length && k < 5; k++) if (last[k]?.transcript) alts.push(last[k].transcript);
-        try { recog.stop(); } catch {}
-        const combined = alts.length ? `${txt} | ${alts.slice(0, 3).join(" | ")}` : txt;
-        sendToAgent(combined);
-      } else {
-        setPartial(txt);
-      }
-    };
-    recog.onerror = () => {};
-    recog.onend = () => {};
-    bargeRef.current = recog;
-    try { recog.start(); } catch {}
-  }, [sendToAgent]);
-
-  const maybeAutoListen = useCallback(() => {
-    if (!autoListenRef.current) return;
-    setTimeout(() => {
-      if (phaseRef.current === "idle") startListening();
-    }, 250);
-  }, [startListening]);
+    try { recog.start(); } catch {
+      startingRef.current = false;
+      transitionPhase("idle");
+    }
+  }, [maybeAutoListen, sendToAgent, transitionPhase]);
+  startListeningRef.current = startListening;
 
   const stopAll = useCallback(() => {
-    try { recogRef.current?.stop(); } catch {}
-    try { bargeRef.current?.stop(); } catch {}
-    try { window.speechSynthesis?.cancel(); } catch {}
-    setPhase("idle");
-  }, []);
+    try { recogRef.current?.stop(); } catch { /* already stopped */ }
+    try { window.speechSynthesis?.cancel(); } catch { /* speech may be unavailable */ }
+    requestIdRef.current += 1;
+    startingRef.current = false;
+    if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
+    transitionPhase("idle");
+  }, [transitionPhase]);
 
   const onOrbClick = () => {
     if (phase === "listening") { stopAll(); return; }
-    if (phase === "speaking") { try { window.speechSynthesis.cancel(); } catch {} setPhase("idle"); return; }
+    if (phase === "speaking") {
+      try { window.speechSynthesis.cancel(); } catch { /* speech may be unavailable */ }
+      transitionPhase("idle");
+      window.setTimeout(startListening, 50);
+      return;
+    }
     if (phase === "thinking") return;
     startListening();
   };

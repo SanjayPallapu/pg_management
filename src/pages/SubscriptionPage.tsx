@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
   Crown, 
@@ -20,14 +20,14 @@ import { usePG } from "@/contexts/PGContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
 import { useBackGesture } from "@/hooks/useBackGesture";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
+import { getSubscriptionAccess } from "@/lib/subscriptionAccess";
 
 export default function SubscriptionPage() {
   const navigate = useNavigate();
-  const { subscription, refreshSubscription, pgs } = usePG();
+  const location = useLocation();
+  const { subscription, refreshSubscription } = usePG();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
-  
-  useBackGesture(true, () => navigate(-1));
 
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
@@ -46,13 +46,12 @@ export default function SubscriptionPage() {
   // Checkout plans are currently settled in INR. Keep one universal checkout
   // rather than exposing country switches that can disagree with the provider.
   const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, "IN");
-  const isTrialActive = subscription?.billingCycle === "trial" && subscription?.status === "active";
+  const access = useMemo(() => getSubscriptionAccess(subscription), [subscription]);
+  const daysLeft = access.daysRemaining;
+  const accessLocked = !access.allowed || Boolean((location.state as { accessLocked?: boolean } | null)?.accessLocked);
+  const isTrialActive = subscription?.billingCycle === "trial" && subscription?.status === "active" && access.allowed;
   const activePlanKeyOnSubscription = subscription?.status === "active" ? subscription?.billingCycle : undefined;
-
-  const daysLeft = useMemo(() => {
-    if (!subscription?.expiresAt) return null;
-    return Math.max(0, differenceInDays(new Date(subscription.expiresAt), new Date()));
-  }, [subscription?.expiresAt]);
+  useBackGesture(!accessLocked, () => navigate(-1));
 
   const cards = useMemo(() => {
     return [
@@ -112,7 +111,8 @@ export default function SubscriptionPage() {
       plan: activePlanKey,
       onSuccess: async () => {
         await refreshSubscription();
-        navigate(-1);
+        if (accessLocked) navigate("/", { replace: true });
+        else navigate(-1);
       },
     });
   };
@@ -126,7 +126,8 @@ export default function SubscriptionPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => accessLocked ? undefined : navigate(-1)}
+            disabled={accessLocked}
             className="h-9 w-9 rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-white"
             aria-label="Back"
           >
@@ -141,9 +142,9 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        {subscription?.status !== "active" && (
+        {isTrialActive && (
           <Badge className="border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
-            Free Trial
+            {daysLeft ?? 0} {daysLeft === 1 ? "day" : "days"} free
           </Badge>
         )}
         </div>
@@ -162,12 +163,14 @@ export default function SubscriptionPage() {
             <p className="text-sm font-black">
               {subscription?.expiresAt ? (
                 <>
-                  {subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Expires'} on{' '}
+                  {subscription?.billingCycle === 'trial' && access.allowed
+                    ? `${daysLeft ?? 0} ${daysLeft === 1 ? 'day' : 'days'} free remaining · Trial expires`
+                    : access.allowed ? 'Subscription expires' : 'Access expired'} on{' '}
                   <span className="text-primary">{format(new Date(subscription.expiresAt), 'dd MMMM yyyy')}</span>{' '}
-                  {daysLeft !== null && `(${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining)`}
+                  {access.allowed && subscription?.billingCycle !== 'trial' && daysLeft !== null && `(${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining)`}
                 </>
               ) : (
-                'Free Plan (No active expiration date)'
+                'Upgrade required — no active subscription'
               )}
             </p>
           </div>

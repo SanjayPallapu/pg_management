@@ -412,8 +412,10 @@ Deno.serve(async (req) => {
     const isTelugu = lang === "te-IN";
 
     // Pre-fetch a tiny snapshot so the model can resolve pronouns/short refs without extra round-trips
-    const snapshot = await executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null);
-    const collection = await executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null);
+    const [snapshot, collection] = await Promise.all([
+      executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null),
+      executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null),
+    ]);
 
     // ── Context Compression (Headroom-style) ──────────────────────
     // 1. Compressed system prompt (~40% fewer tokens)
@@ -429,7 +431,7 @@ Deno.serve(async (req) => {
     console.log(`[compress] convo tokens (est): ${tokensBefore} | msgs: ${convo.length} | trimmed: ${messages.length - trimmedMessages.length} old msgs`);
 
     // Tool-calling loop
-    for (let step = 0; step < 5; step++) {
+    for (let step = 0; step < 3; step++) {
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -440,6 +442,7 @@ Deno.serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: convo,
           tools,
+          temperature: 0.1,
         }),
       });
 
