@@ -36,7 +36,15 @@ try {
 }
 
 // Register Service Worker for offline support & Play Store PWA
-if ('serviceWorker' in navigator) {
+// Skip SW inside Capacitor native app – the WebView serves assets from the
+// local filesystem, and a service worker caching stale HTML/JS causes blank
+// white screens after app updates (old index.html references old chunk hashes).
+const isCapacitorNative =
+  typeof window !== 'undefined' &&
+  window.location.protocol === 'https:' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '');
+
+if ('serviceWorker' in navigator && !isCapacitorNative) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/serviceWorker.js')
@@ -47,4 +55,15 @@ if ('serviceWorker' in navigator) {
         console.log('SW registration failed:', error);
       });
   });
+} else if ('serviceWorker' in navigator && isCapacitorNative) {
+  // Unregister any previously registered SW inside native app
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((r) => r.unregister());
+  });
+  // Clear all SW caches to prevent stale content
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      names.forEach((name) => caches.delete(name));
+    });
+  }
 }
