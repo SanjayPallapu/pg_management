@@ -178,8 +178,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return sessionStorage.getItem('isNewSignup') === 'true';
     };
 
+    // Safety timeout: Never keep the app stuck in loading state for more than 800ms
+    const authTimeoutTimer = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }, 800);
+
     // Get initial session and resolve loading state
     supabase.auth.getSession().then(({ data: { session: initSession } }) => {
+      clearTimeout(authTimeoutTimer);
       if (!isMounted) return;
       console.log('[Auth] Initial getSession:', !!initSession);
       if (initSession) {
@@ -200,6 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLoading(false);
     }).catch(err => {
+      clearTimeout(authTimeoutTimer);
       console.error('[Auth] Initial getSession error:', err);
       if (isMounted) {
         setSession(null);

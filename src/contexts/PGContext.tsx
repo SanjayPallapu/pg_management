@@ -173,13 +173,21 @@ export const PGProvider = ({ children }: PGProviderProps) => {
   }, [pgs]);
 
   useEffect(() => {
+    const pgTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
     if (!authLoading && isAuthenticated) {
       Promise.all([fetchPGs(), fetchSubscription()]).finally(() => {
+        clearTimeout(pgTimeout);
         setIsLoading(false);
       });
     } else if (!authLoading) {
+      clearTimeout(pgTimeout);
       setIsLoading(false);
     }
+
+    return () => clearTimeout(pgTimeout);
   }, [authLoading, isAuthenticated, fetchPGs, fetchSubscription]);
 
   const allowedPgs = Math.min(4, subscription?.maxPgs === -1 ? 4 : (subscription?.maxPgs ?? 1));

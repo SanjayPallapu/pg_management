@@ -114,8 +114,8 @@ const AppContent = () => {
   }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
-    // Configure native status bar behaviour at startup
-    const initStatusBar = async () => {
+    // Configure native status bar & hide splash screen at startup
+    const initNativeUI = async () => {
       try {
         const { Capacitor } = await import("@capacitor/core");
         if (Capacitor.isNativePlatform()) {
@@ -123,12 +123,15 @@ const AppContent = () => {
           await StatusBar.setOverlaysWebView({ overlay: false });
           await StatusBar.setBackgroundColor({ color: "#1769ff" });
           await StatusBar.setStyle({ style: Style.Dark });
+
+          const { SplashScreen } = await import("@capacitor/splash-screen");
+          await SplashScreen.hide();
         }
       } catch (e) {
-        console.warn("[StatusBar] Failed to configure status bar:", e);
+        console.warn("[NativeUI] Failed to configure status bar/splash:", e);
       }
     };
-    initStatusBar();
+    initNativeUI();
   }, []);
 
   return (
