@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { finishChunkRecoveryBoot, recoverFromStaleChunk } from './lib/chunkRecovery';
+import { Capacitor } from '@capacitor/core';
 
 window.addEventListener('vite:preloadError', (event) => {
   const preloadEvent = event as Event & { payload?: unknown };
@@ -13,57 +14,73 @@ window.addEventListener('unhandledrejection', (event) => {
   if (recoverFromStaleChunk(event.reason)) event.preventDefault();
 });
 
-console.log('main.tsx loaded');
+console.log('main.tsx loaded, platform:', Capacitor.getPlatform());
+
+// Native Capacitor WebView asset recovery & SW cleanup
+const isNativeApp = Capacitor.isNativePlatform();
+
+if ('serviceWorker' in navigator) {
+  if (isNativeApp) {
+    const hasActiveController = !!navigator.serviceWorker.controller;
+
+    // Unregister all service workers on native platform
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((r) => r.unregister());
+    });
+
+    // Clear all Cache Storage to ensure fresh local assets
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => caches.delete(name));
+      });
+    }
+
+    // If an active SW was controlling the native WebView on launch, force 1-time clean reload
+    if (hasActiveController) {
+      const SW_CLEARED_KEY = 'pg_native_sw_reloaded';
+      if (!sessionStorage.getItem(SW_CLEARED_KEY)) {
+        sessionStorage.setItem(SW_CLEARED_KEY, 'true');
+        console.warn('[NativeBoot] Service worker detected on native app. Reloading to clear...');
+        window.location.reload();
+      }
+    }
+  } else {
+    // Web / PWA only
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/serviceWorker.js')
+        .then((registration) => {
+          console.log('SW registered:', registration.scope);
+        })
+        .catch((error) => {
+          console.log('SW registration failed:', error);
+        });
+    });
+  }
+}
 
 try {
   const root = document.getElementById('root');
   console.log('Root element found:', root);
-  
-  createRoot(root!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
-  finishChunkRecoveryBoot();
-  console.log('App rendered');
+
+  if (root) {
+    createRoot(root).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    finishChunkRecoveryBoot();
+    console.log('App rendered');
+  }
 } catch (error) {
   console.error('Error rendering app:', error);
   const errorDiv = document.createElement('div');
-  errorDiv.style.cssText = 'color: red; padding: 20px;';
-  errorDiv.textContent = 'Error: ' + (error instanceof Error ? error.message : String(error));
+  errorDiv.style.cssText = 'color: #ef4444; padding: 24px; font-family: system-ui, sans-serif; text-align: center; background: #0f172a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;';
+  errorDiv.innerHTML = `
+    <h2 style="margin:0 0 10px 0; color: #ffffff;">App Startup Failed</h2>
+    <p style="font-size: 14px; color: #94a3b8; max-width: 320px;">${error instanceof Error ? error.message : String(error)}</p>
+    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 14px;">Reload App</button>
+  `;
   document.body.innerHTML = '';
   document.body.appendChild(errorDiv);
-}
-
-// Register Service Worker for offline support & Play Store PWA
-// Skip SW inside Capacitor native app – the WebView serves assets from the
-// local filesystem, and a service worker caching stale HTML/JS causes blank
-// white screens after app updates (old index.html references old chunk hashes).
-const isCapacitorNative =
-  typeof window !== 'undefined' &&
-  window.location.protocol === 'https:' &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '');
-
-if ('serviceWorker' in navigator && !isCapacitorNative) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/serviceWorker.js')
-      .then((registration) => {
-        console.log('SW registered:', registration.scope);
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
-  });
-} else if ('serviceWorker' in navigator && isCapacitorNative) {
-  // Unregister any previously registered SW inside native app
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((r) => r.unregister());
-  });
-  // Clear all SW caches to prevent stale content
-  if ('caches' in window) {
-    caches.keys().then((names) => {
-      names.forEach((name) => caches.delete(name));
-    });
-  }
 }
