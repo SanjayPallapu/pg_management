@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { SecurityDepositReceiptDialog } from './SecurityDepositReceiptDialog';
 import { SecurityDepositReceiptData } from './SecurityDepositReceiptTemplate';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
+import { TenantChatMenu } from './TenantChatMenu';
+import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 import { isTenantActiveNow } from '@/utils/dateOnly';
 
@@ -73,6 +75,7 @@ export const SecurityDepositCard = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { currentPG } = usePG();
+  const onboardingProfileMap = useOnboardingProfileMap();
   const [sheetOpen, setSheetOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -599,28 +602,23 @@ export const SecurityDepositCard = ({
                           </Badge>
                           <div className="flex items-center gap-2.5 shrink-0 mt-0.5">
                           {tenant.phone && tenant.phone !== '••••••••••' && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const phone = tenant.phone.replace(/\D/g, '');
-                                const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                                window.open(`https://wa.me/${cleanPhone}`, '_blank');
-                              }}
-                              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                              title="Chat on WhatsApp"
-                            >
-                              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-                            </button>
+                            <TenantChatMenu
+                              tenantId={tenant.id}
+                              tenantName={tenant.name}
+                              phone={tenant.phone}
+                              profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                              onReceipt={openReceiptDialog}
+                              className="h-8 w-8 rounded-xl"
+                            />
                           )}
                           {tenant.phone && tenant.phone !== '••••••••••' && (
                             <a 
                               href={`tel:${tenant.phone}`}
-                              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                              className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400 shrink-0"
                               title={`Call ${tenant.name}`}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Phone className="h-5 w-5 stroke-[1.75]" />
+                              <Phone className="h-4 w-4" />
                             </a>
                           )}
                           {canManageDeposits && showEditActions && (

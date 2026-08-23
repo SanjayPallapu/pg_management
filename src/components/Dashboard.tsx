@@ -68,7 +68,7 @@ import { BalanceCard } from "./BalanceCard";
 import { BillsBudgetDashboard } from "./BillsBudgetDashboard";
 import { ExpectedCollectionCard } from "./ExpectedCollectionCard";
 import { TenantPricingOverviewCard } from "./TenantPricingOverviewCard";
-import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, isTenantUpcoming } from "@/utils/dateOnly";
 import { useBackGesture } from "@/hooks/useBackGesture";
 import { ReferralDialog } from "./subscription/ReferralDialog";
 
@@ -267,11 +267,16 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     const perBedRent = Math.round(room.rentAmount / Math.max(1, room.capacity));
     const potentialAdditionalRent = emptyBeds * perBedRent;
 
+    const reservedCount = isCurrentMonth
+      ? room.tenants.filter((t) => isTenantUpcoming(t.startDate, t.endDate)).length
+      : 0;
+
     return {
       roomNo: room.roomNo,
       capacity: room.capacity,
       occupied,
       emptyBeds,
+      reservedBeds: reservedCount,
       perBedRent,
       potentialAdditionalRent,
       floor: room.floor,
