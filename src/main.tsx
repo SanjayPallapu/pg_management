@@ -21,9 +21,7 @@ const isNativeApp = Capacitor.isNativePlatform();
 
 if ('serviceWorker' in navigator) {
   if (isNativeApp) {
-    const hasActiveController = !!navigator.serviceWorker.controller;
-
-    // Unregister all service workers on native platform
+    // Unregister all service workers on native platform asynchronously without blocking
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((r) => r.unregister());
     });
@@ -33,16 +31,6 @@ if ('serviceWorker' in navigator) {
       caches.keys().then((names) => {
         names.forEach((name) => caches.delete(name));
       });
-    }
-
-    // If an active SW was controlling the native WebView on launch, force 1-time clean reload
-    if (hasActiveController) {
-      const SW_CLEARED_KEY = 'pg_native_sw_reloaded';
-      if (!sessionStorage.getItem(SW_CLEARED_KEY)) {
-        sessionStorage.setItem(SW_CLEARED_KEY, 'true');
-        console.warn('[NativeBoot] Service worker detected on native app. Reloading to clear...');
-        window.location.reload();
-      }
     }
   } else {
     // Web / PWA only
