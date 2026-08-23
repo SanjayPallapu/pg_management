@@ -15,6 +15,7 @@ import PGSetupSubscription from "./pages/PGSetupSubscription";
 import SetupComplete from "./pages/SetupComplete";
 import PGOverview from "./pages/PGOverview";
 import Landing from "./pages/Landing";
+import PayFlowDemo from "./pages/PayFlowDemo";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
@@ -139,6 +140,7 @@ const AppContent = () => {
           } />
           <Route path="/legal" element={<Legal />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/payflow" element={<PayFlowDemo />} />
           <Route path="/onboarding" element={
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#070913]"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>}>
               <Onboarding />
