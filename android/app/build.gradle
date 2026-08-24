@@ -17,7 +17,15 @@ android {
         def gitHubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
         versionCode gitHubRunNumber ? (gitHubRunNumber.toInteger() + 200) : 200
         
-        versionName "1.5.1"
+        // Auto-sync versionName with package.json and GitHub run number
+        def packageJsonFile = file('../../package.json')
+        def parsedVersion = "1.5.2" // fallback
+        if (packageJsonFile.exists()) {
+            def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text)
+            parsedVersion = packageJson.version
+        }
+        versionName gitHubRunNumber ? "${parsedVersion}.${gitHubRunNumber}" : parsedVersion
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
