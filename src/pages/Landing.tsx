@@ -471,7 +471,7 @@ export default function Landing() {
               <a href={playStoreUrl} target="_blank" rel="noreferrer">Download App</a>
             </Button>
             <Button onClick={() => navigate("/payflow")} variant="outline" className="h-14 rounded-2xl border-white/25 bg-transparent px-7 text-white hover:bg-white hover:text-[#111315]">Book a Demo</Button>
-          </div>
+          </div> 
         </motion.div>
       </section>
 
