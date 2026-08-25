@@ -1,7 +1,7 @@
 {
   "name": "pg-manager",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.5.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,9 +17,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor-mlkit/barcode-scanning": "^7.5.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
     "@capacitor/filesystem": "^7.1.8",
@@ -86,6 +88,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^7.18.2",
     "recharts": "^2.15.4",
+    "resend": "^6.20.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

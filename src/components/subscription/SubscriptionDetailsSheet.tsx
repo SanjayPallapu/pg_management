@@ -266,7 +266,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           {/* CHOOSE THE RIGHT PLAN TOGGLE */}
           <div className="text-center pt-2">
             <h3 className="text-base font-extrabold text-foreground dark:text-white">Choose the right plan</h3>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 mt-0.5">Start with a 1 month free trial. Cancel anytime.</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-400 mt-0.5">Start with a 7-day free trial. Cancel anytime.</p>
             
             {/* Segmented control toggle */}
             <div className="inline-flex p-1 bg-muted dark:bg-slate-950 rounded-xl border border-border dark:border-slate-900 mt-3.5 w-full max-w-xs">
@@ -318,7 +318,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                       </div>
                       <div>
                         <h4 className="font-extrabold text-sm text-foreground dark:text-white">Basic</h4>
-                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For growing PGs</p>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For individual PG owners</p>
                       </div>
                     </div>
                     
@@ -341,10 +341,10 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     </div>
 
                     <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited PGs</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Unlimited tenants</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Rent reminders</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Reports & receipts</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> 1 PG property</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> 100 active tenants</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> One-tap WhatsApp sharing</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" /> Rent reports & PDF receipts</li>
                     </ul>
                   </div>
 
@@ -394,8 +394,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                         <Crown className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro</h4>
-                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For serious operators</p>
+                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Plus</h4>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For growing PG businesses</p>
                       </div>
                     </div>
                     
@@ -419,8 +419,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
 
                     <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
                       <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Everything in Basic</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Advanced statistics</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Premium WhatsApp templates</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> 2 PGs and 200 tenants</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Voice assistant and bulk actions</li>
                       <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Priority support</li>
                     </ul>
                   </div>
@@ -434,14 +434,14 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                           : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
                       }`}
                     >
-                      {activePlanKey === proPlanKey ? 'Current Plan' : 'Choose Pro'}
+                      {activePlanKey === proPlanKey ? 'Current Plan' : 'Choose Plus'}
                     </Button>
                   </div>
                 </div>
               );
             })()}
 
-            {/* PRO MAX PLAN CARD */}
+            {/* PRO PLAN CARD */}
             {(() => {
               const originalPrice = SUBSCRIPTION_PLANS.promax.price;
               const actualPrice = SUBSCRIPTION_PLANS[proMaxPlanKey].price;
@@ -465,8 +465,8 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                         <Zap className="h-4 w-4 text-orange-400" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro Max</h4>
-                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For large operations</p>
+                        <h4 className="font-extrabold text-sm text-foreground dark:text-white">Pro</h4>
+                        <p className="text-[10px] text-muted-foreground dark:text-slate-400">For multi-property businesses</p>
                       </div>
                     </div>
                     
@@ -489,10 +489,10 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     </div>
 
                     <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Everything in Pro</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Dedicated manager</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Custom API access</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Priority infra</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Everything in Plus</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> 4 PGs and 500 tenants</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Advanced reports and exports</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-orange-400 shrink-0" /> Faster priority support</li>
                     </ul>
                   </div>
 
@@ -505,7 +505,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                           : 'border-border dark:border-slate-800 hover:bg-muted dark:hover:bg-slate-900 text-foreground dark:text-slate-300'
                       }`}
                     >
-                      {activePlanKey === proMaxPlanKey ? 'Current Plan' : 'Choose Pro Max'}
+                      {activePlanKey === proMaxPlanKey ? 'Current Plan' : 'Choose Pro'}
                     </Button>
                   </div>
                 </div>
@@ -518,7 +518,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
           <div className="rounded-xl border border-border dark:border-slate-900 bg-muted dark:bg-muted/40 dark:bg-slate-950/40 p-3.5">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-slate-400 mb-2">Included in every plan:</h4>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-foreground dark:text-slate-300">
-              <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Unlimited PGs & tenants</div>
+              <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Plan-based PG and tenant capacity</div>
               <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Rooms & rent</div>
               <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp reminders</div>
               <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> AC billing</div>
@@ -580,7 +580,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1 truncate">
-              ₹{selectedPlanInfo.price.toLocaleString()} {selectedPlanKey === 'lifetime' ? 'one-time billing' : `${selectedPlanInfo.periodLabel} after 1-month trial`}
+              ₹{selectedPlanInfo.price.toLocaleString()} {selectedPlanKey === 'lifetime' ? 'one-time billing' : `${selectedPlanInfo.periodLabel} after 7-day trial`}
             </p>
           </div>
 

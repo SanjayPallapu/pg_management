@@ -90,3 +90,24 @@ export const hasTenantLeftNow = (endDate: string | undefined) => {
   const leaveDate = parseDateOnly(endDate);
   return leaveDate <= todayOnly;
 };
+
+// Upcoming (Advance Booked) means: joinDate > today AND (has NOT left OR leaves after joinDate).
+export const isTenantUpcoming = (startDate: string, endDate: string | undefined) => {
+  const todayOnly = getISTTodayOnly();
+  const joinDate = parseDateOnly(startDate);
+  
+  if (joinDate <= todayOnly) return false; // already joined or past
+  
+  if (!endDate) return true;
+  const leaveDate = parseDateOnly(endDate);
+  return leaveDate > joinDate;
+};
+
+// Calculates days remaining until tenant's future joining date.
+export const getDaysUntilJoining = (startDate: string): number => {
+  const todayOnly = getISTTodayOnly();
+  const joinDate = parseDateOnly(startDate);
+  const diffTime = joinDate.getTime() - todayOnly.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+

@@ -23,6 +23,7 @@ import { WelcomeDialog } from '@/components/WelcomeDialog';
 import { RulesShareDialog } from '@/components/RulesShareDialog';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
+import { TenantChatMenu } from '@/components/TenantChatMenu';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -739,40 +740,33 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Action icons (WhatsApp & Phone) */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
-            <div className="w-[72px] flex items-center justify-between">
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const phone = tenant.phone.replace(/\D/g, '');
-                  const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                  const dueAmt = tenant.monthlyRent - (tenant.amountPaid || 0);
-                  const msg = encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${dueAmt.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`);
-                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-                }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
-                title="Share payment reminder on WhatsApp"
-              >
-                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-              </button>
+            <div className="flex w-[84px] items-center justify-between my-2">
+              <TenantChatMenu
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+                phone={tenant.phone}
+                profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                message={`Hi ${tenant.name}, your rent payment of ₹${dueAmount.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`}
+                onReminder={onReminder ? () => onReminder(tenant) : undefined}
+              />
               <a
                 href={`tel:${tenant.phone}`}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                 onClick={(e) => e.stopPropagation()}
                 title={`Call ${tenant.name}`}
               >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
+                <Phone className="h-4 w-4" />
               </a>
             </div>
           ) : (
-            <div />
+            <div className="w-[84px] my-2" />
           )}
 
           {/* Bottom: Pay button */}
-          <div>
+          <div className="w-[84px]">
             <button
               type="button"
-              className="btn-pay-black w-[72px] px-0 text-center shrink-0"
+              className="btn-pay-black w-full px-0 text-center shrink-0"
               onClick={(event) => {
                 event.stopPropagation();
                 onMarkPaid?.(tenant);

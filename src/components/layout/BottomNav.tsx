@@ -170,7 +170,7 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
             : 'translate-y-full'
         }`}
       >
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5 rounded-2xl bg-muted/40 p-1">
+        <div className="mx-auto grid w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-3xl grid-cols-5 gap-1 rounded-2xl bg-muted/50 dark:bg-slate-900/80 p-1 md:p-1.5 border border-border/40 backdrop-blur-md">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.value;
@@ -179,13 +179,13 @@ export const BottomNav = ({ activeTab: propActiveTab, onTabChange, visible = tru
               key={item.value}
               type="button"
               onClick={() => handleClick(item)}
-              className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium transition-all active:scale-95 duration-100 ${
+              className={`flex min-h-12 md:min-h-13 flex-col items-center justify-center gap-0.5 md:gap-1 rounded-xl px-1 sm:px-2 text-[10px] sm:text-xs font-medium transition-all active:scale-95 duration-100 ${
                 isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground active:bg-background/80'
+                  ? 'bg-primary text-primary-foreground shadow-sm font-bold'
+                  : 'text-muted-foreground hover:text-foreground active:bg-background/80'
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5 md:h-5.5 md:w-5.5" />
               <span>{item.label}</span>
             </button>
           );

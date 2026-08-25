@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -8,6 +8,10 @@ import {
   FileText,
   AlertCircle,
   ExternalLink,
+  Eye,
+  ZoomIn,
+  X,
+  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useVerifyOnboarding, useOnboardingDocuments } from "../hooks/useOnboarding";
 import { getVerificationStatusLabel, type VerificationStatus } from "../types";
+import { resolveOnboardingDocumentUrl } from "../utils/documentUrl";
 import { supabase } from "@/integrations/supabase/proxyClient";
 
 interface VerificationPanelProps {
@@ -29,6 +34,8 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const { data: documents = [] } = useOnboardingDocuments(tenantId);
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [signedDocUrl, setSignedDocUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleApprove = () => {
     verify.mutate({ tenantId, action: "approve" });
@@ -55,10 +62,13 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   };
 
   const openDocument = async (path: string) => {
-    if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener,noreferrer"); return; }
-    const { data, error } = await supabase.storage.from("tenant-onboarding-docs").createSignedUrl(path, 300);
-    if (error || !data?.signedUrl) { toast.error("Could not open this document"); return; }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    if (!path) return;
+    const url = await resolveOnboardingDocumentUrl(path);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Could not open this document");
+    }
   };
 
   const statusConfig: Record<VerificationStatus, { color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -73,51 +83,97 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
   const aadhaarDocument = documents.find((document) => document.document_type === "aadhaar" || document.document_type === "id_proof") || documents[0];
   const documentPath = aadhaarDocument?.file_url || idProofUrl;
 
+  useEffect(() => {
+    let active = true;
+    if (!documentPath) {
+      setSignedDocUrl(null);
+      return;
+    }
+    resolveOnboardingDocumentUrl(documentPath).then((url) => {
+      if (active) setSignedDocUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [documentPath]);
+
   return (
     <div className="space-y-4">
-      {/* Status Badge */}
-      <div className="flex items-center justify-between">
+      {/* 1. Aadhaar Document Crop & Preview FIRST */}
+      {documentPath ? (
+        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-xs font-bold text-foreground truncate">
+                {aadhaarDocument?.document_name || "Uploaded Aadhaar Card"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {aadhaarDocument?.status && (
+                <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0.2">
+                  {aadhaarDocument.status.replaceAll("_", " ")}
+                </Badge>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="h-7 text-[11px] gap-1 px-2">
+                <Eye className="h-3 w-3" /> Preview
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="h-7 text-[11px] gap-1 px-2">
+                <ExternalLink className="h-3 w-3" /> Open
+              </Button>
+            </div>
+          </div>
+
+          {/* In-app cropped image box */}
+          {signedDocUrl ? (
+            <div
+              onClick={() => setPreviewOpen(true)}
+              className="relative w-full h-48 rounded-xl overflow-hidden border border-border/80 bg-slate-950/20 cursor-pointer group shadow-inner"
+              title="Click to view full document"
+            >
+              <img
+                src={signedDocUrl}
+                alt="Aadhaar Card Preview"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg">
+                  Click to Expand
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-24 rounded-xl border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground">
+              Loading Aadhaar Preview...
+            </div>
+          )}
+
+          {aadhaarDocument?.rejection_reason && (
+            <div className="text-xs text-red-500 mt-1 italic">
+              Reason: {aadhaarDocument.rejection_reason}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+          No Aadhaar document was attached to this submission.
+        </div>
+      )}
+
+      {/* 2. Verification Status Badge & Actions */}
+      <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
           <div className={cn("p-2 rounded-lg border", config.bg)}>
             <StatusIcon className={cn("h-4 w-4", config.color)} />
           </div>
           <div>
-            <div className="text-sm font-medium">Verification Status</div>
-            <Badge variant="outline" className={cn("text-xs", config.bg, config.color)}>
+            <div className="text-xs font-medium text-muted-foreground">Status</div>
+            <Badge variant="outline" className={cn("text-xs font-bold", config.bg, config.color)}>
               {getVerificationStatusLabel(verificationStatus)}
             </Badge>
           </div>
         </div>
       </div>
-
-      {/* Exactly one Aadhaar document is required for onboarding. */}
-      {documentPath ? (
-        <div className="border-y border-border py-3">
-          <div className="mb-2 text-xs font-medium text-muted-foreground">Aadhaar document</div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{aadhaarDocument?.document_name || "Uploaded Aadhaar"}</div>
-                  <div className="text-xs text-muted-foreground">One identity document</div>
-                  {aadhaarDocument?.rejection_reason && (
-                    <div className="text-xs text-red-500 mt-0.5 italic">
-                      {aadhaarDocument.rejection_reason}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                {aadhaarDocument?.status && <Badge variant="outline" className="text-xs capitalize">{aadhaarDocument.status.replaceAll("_", " ")}</Badge>}
-                <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath)} className="gap-1.5">
-                  <ExternalLink className="h-3.5 w-3.5" />View
-                </Button>
-              </div>
-            </div>
-        </div>
-      ) : (
-        <div className="border-y border-border py-4 text-center text-xs text-muted-foreground">No Aadhaar document was attached to this submission.</div>
-      )}
 
       {/* Verified success banner */}
       {verificationStatus === "verified" && (
@@ -132,36 +188,36 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons with non-overflowing responsive layout */}
       {verificationStatus !== "verified" && (
         <div className="space-y-3">
           {!showRejectForm ? (
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={handleApprove}
                 disabled={verify.isPending}
-                className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 bg-green-600 hover:bg-green-700 text-white shrink-0"
               >
-                <CheckCircle2 className="h-4 w-4" />
-                Approve
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                <span>Approve</span>
               </Button>
               <Button
                 onClick={() => setShowRejectForm(true)}
                 disabled={verify.isPending}
                 variant="outline"
-                className="flex-1 gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
               >
-                <XCircle className="h-4 w-4" />
-                Reject
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Reject</span>
               </Button>
               <Button
                 onClick={() => setShowRejectForm(true)}
                 disabled={verify.isPending}
                 variant="outline"
-                className="flex-1 gap-2 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="h-10 text-xs font-semibold px-1 py-2 gap-1 border-blue-300 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 shrink-0"
               >
-                <RefreshCw className="h-4 w-4" />
-                Re-upload
+                <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                <span>Re-upload</span>
               </Button>
             </div>
           ) : (
@@ -180,33 +236,73 @@ export function VerificationPanel({ tenantId, verificationStatus, idProofUrl }: 
               {!rejectionReason.trim() && (
                 <p className="text-xs text-red-500">A reason is required before confirming.</p>
               )}
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <Button
                   onClick={handleReject}
                   disabled={verify.isPending}
-                  className="flex-1 gap-2 bg-red-600 hover:bg-red-700 text-white"
+                  className="h-10 text-xs font-semibold gap-1.5 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  <XCircle className="h-4 w-4" />
+                  <XCircle className="h-3.5 w-3.5" />
                   Confirm Reject
                 </Button>
                 <Button
                   onClick={handleRequestReupload}
                   disabled={verify.isPending}
                   variant="outline"
-                  className="flex-1 gap-2"
+                  className="h-10 text-xs font-semibold gap-1.5"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  Request Re-upload
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Re-upload
                 </Button>
                 <Button
                   onClick={() => setShowRejectForm(false)}
                   variant="ghost"
+                  className="h-10 text-xs font-semibold"
                 >
                   Cancel
                 </Button>
               </div>
             </motion.div>
           )}
+        </div>
+      )}
+
+      {/* Full-screen document preview modal */}
+      {previewOpen && signedDocUrl && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[92vh] w-full bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="text-sm font-bold">{aadhaarDocument?.document_name || "Aadhaar Card"}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => openDocument(documentPath!)} className="h-8 text-xs gap-1">
+                  <ExternalLink className="h-3.5 w-3.5" /> Open in Tab
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPreviewOpen(false)} className="h-8 w-8 p-0">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-center overflow-auto max-h-[82vh] bg-slate-50 dark:bg-slate-950">
+              {signedDocUrl.toLowerCase().endsWith(".pdf") ? (
+                <iframe src={signedDocUrl} className="w-full h-[78vh] rounded-lg border" title="Document Preview" />
+              ) : (
+                <img
+                  src={signedDocUrl}
+                  alt="Aadhaar Card Full Preview"
+                  className="max-w-full max-h-[78vh] object-contain rounded-lg shadow-lg"
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

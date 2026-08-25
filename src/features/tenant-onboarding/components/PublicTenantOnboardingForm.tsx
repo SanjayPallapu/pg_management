@@ -30,6 +30,7 @@ const supabase = typedSupabase as any;
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ONBOARDING_FORM_STEPS } from "../types";
+import { resolveOnboardingDocumentUrl } from "../utils/documentUrl";
 import { DEFAULT_RULES, type Rule } from "@/lib/pgRules";
 import { MedalBadgeIcon } from "./MedalBadgeIcon";
 import onboardingBuilding from "@/assets/pg-hub/hub-building-hero.png";
@@ -92,7 +93,9 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
     setLoading(true);
     setError(null);
 
-    if (import.meta.env.DEV && token === "preview") {
+    const cleanToken = (token || "").trim();
+
+    if (import.meta.env.DEV && cleanToken === "preview") {
       setValid(true);
       setTenantName("Aman Verma");
       setTenantPhone("9876543210");
@@ -102,25 +105,30 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       return;
     }
 
-    const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
-      p_token: token,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
 
-    if (rpcError) {
-      console.error("[Onboarding Form] Token validation failed", rpcError);
-      setError("Failed to validate onboarding link. Please try again.");
-      setLoading(false);
-      return;
+    try {
+      const { data, error: rpcError } = await supabase.rpc("validate_onboarding_link", {
+        p_token: cleanToken,
+      });
+
+      if (!rpcError && data && data.length > 0) {
+        result = data[0];
+      } else if (rpcError) {
+        console.error("[Onboarding Form] RPC validate_onboarding_link failed:", rpcError);
+      }
+    } catch (e) {
+      console.error("[Onboarding Form] RPC exception caught:", e);
     }
 
-    if (!data || data.length === 0) {
+    if (!result) {
       setValid(false);
       setError("This onboarding link does not exist or was revoked. Please ask your PG owner for a new link.");
       setLoading(false);
       return;
     }
 
-    const result = data[0];
     if (result.is_expired) {
       setExpired(true);
       setLoading(false);
@@ -148,7 +156,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       setCompleted(true);
     }
 
-    // Restore saved form data if the RPC returns it
+    // Restore saved form data if available
     if (result.form_data && typeof result.form_data === "object") {
       const restored = result.form_data as FormData;
       setFormData({
@@ -199,7 +207,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
         );
 
         const { error } = await supabase.rpc("save_onboarding_form_data", {
-          p_token: token,
+          p_token: (token || "").trim(),
           p_form_data: jsonData,
           p_step: step,
           p_progress: progress,
@@ -231,13 +239,24 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
     [autoSave],
   );
 
-  const updateField = (field: string, value: string | boolean) => {
-    const newData = { ...formData, [field]: value };
-    setFormData(newData);
+  const updateFields = useCallback(
+    (fields: Record<string, string | boolean>) => {
+      setFormData((prevData) => {
+        const newData = { ...prevData, ...fields };
+        const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
+        debouncedAutoSave(newData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
+        return newData;
+      });
+    },
+    [currentStep, debouncedAutoSave],
+  );
 
-    const progress = Math.round(((currentStep + 1) / ONBOARDING_FORM_STEPS.length) * 100);
-    debouncedAutoSave(newData, ONBOARDING_FORM_STEPS[currentStep].id, progress);
-  };
+  const updateField = useCallback(
+    (field: string, value: string | boolean) => {
+      updateFields({ [field]: value });
+    },
+    [updateFields],
+  );
 
   // Validate required fields for the current step before proceeding
   const validateCurrentStep = (): boolean => {
@@ -294,8 +313,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       );
 
       const progress = 100;
-      const { error } = await supabase.rpc("save_onboarding_form_data", {
-        p_token: token,
+      const { data, error } = await supabase.rpc("save_onboarding_form_data", {
+        p_token: (token || "").trim(),
         p_form_data: jsonData,
         p_step: "completed",
         p_progress: progress,
@@ -303,12 +322,15 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
       });
 
       if (error) throw error;
+      if (data && data.length > 0 && data[0].success === false) {
+        throw new Error("Form submission could not be processed. The link may have expired or been revoked.");
+      }
 
       setCompleted(true);
       toast.success("Profile submitted successfully!");
     } catch (err) {
       console.error("[Onboarding Form] Submit failed", err);
-      toast.error("Failed to submit form. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to submit form. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -566,8 +588,8 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 
               {/* Render fields based on step */}
               <div className="space-y-4">
-                {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} />}
-                {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} />}
+                {currentStep === 0 && <PersonalInfoStep formData={formData} updateField={updateField} updateFields={updateFields} />}
+                {currentStep === 1 && <IdentityStep token={token} formData={formData} updateField={updateField} updateFields={updateFields} />}
                 {currentStep === 2 && <StayStep lockedStay={lockedStay} />}
                 {currentStep === 3 && <RulesStep formData={formData} updateField={updateField} tenantName={tenantName} pgName={pgName} rules={pgRules} lockedStay={lockedStay} />}
               </div>
@@ -627,6 +649,7 @@ export function PublicTenantOnboardingForm({ token }: PublicTenantOnboardingForm
 type StepProps = {
   formData: FormData;
   updateField: (field: string, value: string | boolean) => void;
+  updateFields?: (fields: Record<string, string | boolean>) => void;
 };
 
 function PersonalInfoStep({ formData, updateField }: StepProps) {
@@ -634,26 +657,21 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label="Full Name" required>
         <Input
-          value={(formData.full_name as string) || ""}
+          value={String(formData.full_name || "")}
           onChange={(e) => updateField("full_name", e.target.value)}
-          placeholder="Enter your full name"
+          placeholder="Enter full name"
         />
       </Field>
-      <Field label="Date of Birth">
+      <Field label="Date of birth">
         <Input
           type="date"
-          value={(formData.date_of_birth as string) || ""}
+          value={String(formData.date_of_birth || "")}
           onChange={(e) => updateField("date_of_birth", e.target.value)}
         />
       </Field>
       <Field label="Gender">
-        <Select
-          value={(formData.gender as string) || ""}
-          onValueChange={(v) => updateField("gender", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select gender" />
-          </SelectTrigger>
+        <Select value={String(formData.gender || "")} onValueChange={(v) => updateField("gender", v)}>
+          <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="male">Male</SelectItem>
             <SelectItem value="female">Female</SelectItem>
@@ -661,14 +679,9 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Blood Group">
-        <Select
-          value={(formData.blood_group as string) || ""}
-          onValueChange={(v) => updateField("blood_group", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select blood group" />
-          </SelectTrigger>
+      <Field label="Blood group">
+        <Select value={String(formData.blood_group || "")} onValueChange={(v) => updateField("blood_group", v)}>
+          <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
           <SelectContent>
             {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
               <SelectItem key={bg} value={bg}>{bg}</SelectItem>
@@ -676,38 +689,38 @@ function PersonalInfoStep({ formData, updateField }: StepProps) {
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Phone Number" required>
+      <Field label="Alternate Phone Number (10 digits)" required>
         <Input
           type="tel"
           inputMode="numeric"
           maxLength={10}
-          value={(formData.alternate_phone as string) || ""}
+          value={String(formData.alternate_phone || "")}
           onChange={(e) => updateField("alternate_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
-          placeholder="10-digit phone number"
+          placeholder="Contact phone"
         />
       </Field>
       <Field label="Emergency Contact Name">
         <Input
-          value={(formData.emergency_contact_name as string) || ""}
+          value={String(formData.emergency_contact_name || "")}
           onChange={(e) => updateField("emergency_contact_name", e.target.value)}
-          placeholder="Emergency contact person"
+          placeholder="Parent / Guardian name"
         />
       </Field>
-      <Field label="Emergency Contact Phone" required>
+      <Field label="Emergency Contact Phone (10 digits)" required>
         <Input
           type="tel"
           inputMode="numeric"
           maxLength={10}
-          value={(formData.emergency_contact_phone as string) || ""}
+          value={String(formData.emergency_contact_phone || "")}
           onChange={(e) => updateField("emergency_contact_phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
-          placeholder="10-digit phone number"
+          placeholder="Emergency phone"
         />
       </Field>
     </div>
   );
 }
 
-function IdentityStep({ token, formData, updateField }: StepProps & { token: string }) {
+function IdentityStep({ token, formData, updateField, updateFields }: StepProps & { token: string }) {
   return (
     <div className="space-y-4">
       <Field label="Identity document" required>
@@ -729,11 +742,16 @@ function IdentityStep({ token, formData, updateField }: StepProps & { token: str
         field="id_proof_url"
         token={token}
         onAadhaarDetected={(number) => {
-          updateField("id_proof_type", "aadhaar");
-          updateField("id_proof_number", number);
+          if (updateFields) {
+            updateFields({ id_proof_type: "aadhaar", id_proof_number: number });
+          } else {
+            updateField("id_proof_type", "aadhaar");
+            updateField("id_proof_number", number);
+          }
         }}
         formData={formData}
         updateField={updateField}
+        updateFields={updateFields}
       />
       <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-muted-foreground dark:bg-white/5">
         Upload one clear Aadhaar image or PDF. We read the QR code first, then look for the printed 12-digit Aadhaar number and auto-fill it. No separate address-proof file is required.
@@ -884,6 +902,7 @@ function FileUploadField({
   field,
   formData,
   updateField,
+  updateFields,
   token,
   onAadhaarDetected,
 }: {
@@ -891,6 +910,7 @@ function FileUploadField({
   field: string;
   formData: FormData;
   updateField: (field: string, value: string) => void;
+  updateFields?: (fields: Record<string, string | boolean>) => void;
   token: string;
   onAadhaarDetected?: (number: string) => void;
 }) {
@@ -914,8 +934,16 @@ function FileUploadField({
 
       if (uploadError) throw uploadError;
 
-      updateField(field, uploadData.path);
-      if (field === "id_proof_url") updateField("id_proof_type", "aadhaar");
+      if (updateFields) {
+        updateFields({
+          [field]: uploadData.path,
+          ...(field === "id_proof_url" ? { id_proof_type: "aadhaar" } : {}),
+        });
+      } else {
+        updateField(field, uploadData.path);
+        if (field === "id_proof_url") updateField("id_proof_type", "aadhaar");
+      }
+
       if (onAadhaarDetected && file.type.startsWith("image/")) {
         const scanningToast = toast.loading("Reading the 12-digit Aadhaar number...");
         const detected = await detectAadhaarNumber(file);
@@ -927,7 +955,7 @@ function FileUploadField({
           toast.info("Aadhaar uploaded. We could not read the printed number clearly—please enter the 12 digits manually.");
         }
       } else {
-      toast.success(`${label} uploaded successfully`);
+        toast.success(`${label} uploaded successfully`);
       }
     } catch (err) {
       console.error("File upload failed", err);
@@ -937,37 +965,110 @@ function FileUploadField({
     }
   };
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  // Generate local preview URL when file is uploaded
+  useEffect(() => {
+    let active = true;
+    if (!formData[field]) {
+      setLocalPreviewUrl(null);
+      return;
+    }
+    resolveOnboardingDocumentUrl(String(formData[field])).then((url) => {
+      if (active) setLocalPreviewUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [formData[field]]);
+
   return (
     <Field label={label}>
-      <div className="flex items-center gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileChange}
-          accept="image/*,.pdf"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => fileInputRef?.current?.click()}
-          disabled={uploading}
-          className="gap-2 w-full"
-        >
-          {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : formData[field] ? (
-            <>
-              <FileText className="h-4 w-4 text-green-500" />
-              <span className="text-green-600">Uploaded</span>
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4" />
-              <span>Upload File</span>
-            </>
-          )}
-        </Button>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+            accept="image/*,.pdf"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef?.current?.click()}
+            disabled={uploading}
+            className="gap-2 w-full"
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : formData[field] ? (
+              <>
+                <FileText className="h-4 w-4 text-green-500" />
+                <span className="text-green-600">Uploaded — tap to replace</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                <span>Upload File</span>
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* In-app preview thumbnail */}
+        {localPreviewUrl && (
+          <div className="space-y-1.5">
+            <div
+              onClick={() => setPreviewOpen(true)}
+              className="relative w-full h-40 rounded-xl overflow-hidden border border-border/80 bg-slate-950/10 cursor-pointer group shadow-sm"
+              title="Click to preview full document"
+            >
+              <img
+                src={localPreviewUrl}
+                alt="Document Preview"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg">
+                  Click to Preview
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Full-screen preview modal */}
+        {previewOpen && localPreviewUrl && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setPreviewOpen(false)}
+          >
+            <div
+              className="relative max-w-4xl max-h-[90vh] w-full bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 border-b border-border">
+                <span className="text-sm font-bold">Document Preview</span>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPreviewOpen(false)} className="h-8 w-8 p-0">
+                  ✕
+                </Button>
+              </div>
+              <div className="p-2 flex items-center justify-center overflow-auto max-h-[80vh]">
+                {localPreviewUrl.toLowerCase().endsWith(".pdf") ? (
+                  <iframe src={localPreviewUrl} className="w-full h-[75vh] rounded-lg" title="PDF Preview" />
+                ) : (
+                  <img
+                    src={localPreviewUrl}
+                    alt="Full Document"
+                    className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Field>
   );

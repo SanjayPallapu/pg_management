@@ -300,27 +300,101 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Attention Engine */}
       <section className="bg-[#4938ff] px-4 py-24 text-white md:px-8">
         <div className="mx-auto grid max-w-[min(1500px,100vw)] gap-8 lg:grid-cols-[1fr_0.9fr]">
           <div>
             <p className="text-sm font-black uppercase text-lime-300">Attention engine</p>
-            <h2 className="mt-4 text-[clamp(46px,9vw,118px)] font-black leading-none tracking-normal">7 tenants need your attention today.</h2>
-            <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/70">The landing now sells the exact owner outcome: see what happened, understand what is pending, and act immediately.</p>
+            <h2 className="mt-4 text-[clamp(46px,9vw,118px)] font-black leading-none tracking-normal">
+              7 tenants need your attention today.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/70">
+              The landing now sells the exact owner outcome: see what happened,
+              understand what is pending, and act immediately.
+            </p>
           </div>
+
           <div className="grid gap-4">
             {[
               ["₹26,000 overdue", "Send reminders"],
               ["₹82.5K still to collect", "View pending"],
               ["Room 204 partial", "Record balance"],
             ].map(([title, action], index) => (
-              <div key={title} className="payflow-float-card rounded-[30px] bg-white p-5 text-[#111315] shadow-[0_28px_80px_rgba(0,0,0,0.22)]">
+              <div
+                key={title}
+                className="payflow-float-card rounded-[30px] bg-white p-5 text-[#111315] shadow-[0_28px_80px_rgba(0,0,0,0.22)]"
+              >
                 <p className="text-3xl font-black">{title}</p>
                 <p className="mt-3 text-sm font-black uppercase text-slate-500">{action}</p>
                 <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
-                  <span className={`block h-full rounded-full ${index === 0 ? "w-[38%] bg-red-400" : index === 1 ? "w-[64%] bg-yellow-300" : "w-[70%] bg-lime-300"}`} />
+                  <span
+                    className={`block h-full rounded-full ${
+                      index === 0
+                        ? "w-[38%] bg-red-400"
+                        : index === 1
+                          ? "w-[64%] bg-yellow-300"
+                          : "w-[70%] bg-lime-300"
+                    }`}
+                  />
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* App showcase, how-it-works and comparison sections from the main branch
+          are intentionally omitted here because this file does not contain their
+          component definitions/imports. Keeping them would create new build errors. */}
+
+      {/* Testimonials */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Loved by PG Owners
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              See what our users have to say
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.name}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+              >
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <div className="flex gap-1 mb-3">
+                      {Array.from({ length: t.rating }).map((_, idx) => (
+                        <Star
+                          key={idx}
+                          className="h-4 w-4 fill-amber-400 text-amber-400"
+                        />
+                      ))}
+                    </div>
+
+                    <p className="text-foreground mb-4 text-sm leading-relaxed">
+                      "{t.text}"
+                    </p>
+
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                      <p className="text-muted-foreground text-xs">{t.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
           </div>
         </div>
       </section>

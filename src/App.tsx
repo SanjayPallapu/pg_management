@@ -43,8 +43,9 @@ import { PGSetupDraftProvider } from "@/features/pg-hub/PGSetupDraftContext";
 import { RentProvider } from "./contexts/RentContext";
 import { useMonthContext } from "./contexts/MonthContext";
 import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
-import { captureReferralCodeFromUrl } from "@/utils/referralHelper";
+import { captureReferralCodeFromUrl, getReferralStats, validateAndApplyReferralCode } from "@/utils/referralHelper";
 import { PlayStoreUpdateManager } from "@/components/PlayStoreUpdateManager";
+import { SubscriptionAccessGate } from "@/components/SubscriptionAccessGate";
 
 // Protected route component that wraps children with PGProvider and RentProvider
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,9 +70,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <PGProvider>
-      <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
-        {children}
-      </RentProvider>
+      <SubscriptionAccessGate>
+        <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
+          {children}
+        </RentProvider>
+      </SubscriptionAccessGate>
     </PGProvider>
   );
 };
@@ -90,13 +93,30 @@ const queryClient = new QueryClient({
 
 // Inner app component that handles startup behaviours
 const AppContent = () => {
+  const { isAuthenticated, user } = useAuth();
+
   useEffect(() => {
     captureReferralCodeFromUrl();
   }, []);
 
   useEffect(() => {
-    // Configure native status bar behaviour at startup
-    const initStatusBar = async () => {
+    if (!isAuthenticated || !user?.id) return;
+    const pendingCode = localStorage.getItem("applied_referral_code");
+    if (!pendingCode) return;
+    const attemptKey = `referral-attempted-${user.id}-${pendingCode}`;
+    if (sessionStorage.getItem(attemptKey)) return;
+    sessionStorage.setItem(attemptKey, "true");
+    void getReferralStats()
+      .then(stats => validateAndApplyReferralCode(pendingCode, stats.referralCode))
+      .then(result => {
+        if (!result.success) localStorage.removeItem("applied_referral_code");
+      })
+      .catch(() => sessionStorage.removeItem(attemptKey));
+  }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    // Configure native status bar & hide splash screen at startup
+    const initNativeUI = async () => {
       try {
         const { Capacitor } = await import("@capacitor/core");
         if (Capacitor.isNativePlatform()) {
@@ -104,12 +124,15 @@ const AppContent = () => {
           await StatusBar.setOverlaysWebView({ overlay: false });
           await StatusBar.setBackgroundColor({ color: "#1769ff" });
           await StatusBar.setStyle({ style: Style.Dark });
+
+          const { SplashScreen } = await import("@capacitor/splash-screen");
+          await SplashScreen.hide();
         }
       } catch (e) {
-        console.warn("[StatusBar] Failed to configure status bar:", e);
+        console.warn("[NativeUI] Failed to configure status bar/splash:", e);
       }
     };
-    initStatusBar();
+    initNativeUI();
   }, []);
 
   return (

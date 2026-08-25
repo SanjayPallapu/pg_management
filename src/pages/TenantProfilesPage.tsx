@@ -36,22 +36,24 @@ export default function TenantProfilesPage() {
 
   return (
     <main className="min-h-[100dvh] bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b bg-background/95 px-2 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center gap-2">
-          <button onClick={() => navigate(-1)} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Back"><ArrowLeft className="h-5 w-5" /></button>
-          <div><h1 className="text-base font-black">Tenant Profiles</h1><p className="text-[11px] text-muted-foreground">Completed and incomplete onboarding</p></div>
+      <header className="sticky top-0 z-30 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
+          <button onClick={() => navigate("/?tab=settings")} className="grid h-9 w-9 place-items-center rounded-xl bg-muted hover:bg-muted/80 transition-colors" aria-label="Back"><ArrowLeft className="h-5 w-5" /></button>
+          <div><h1 className="text-base sm:text-lg font-black">Tenant Profiles</h1><p className="text-[11px] sm:text-xs text-muted-foreground">Completed and incomplete onboarding</p></div>
         </div>
       </header>
-      <div className="mx-auto max-w-2xl space-y-3 px-2 py-3 pb-10">
-        <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tenant, phone or room" className="h-11 rounded-2xl pl-9" /></div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-emerald-500/10 p-3"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><strong className="mt-2 block text-xl">{completed.length}</strong><span className="text-[10px] text-muted-foreground">Completed</span></div>
-          <div className="rounded-2xl bg-amber-500/10 p-3"><UsersRound className="h-4 w-4 text-amber-500" /><strong className="mt-2 block text-xl">{incomplete.length}</strong><span className="text-[10px] text-muted-foreground">Incomplete</span></div>
+      <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-4 pb-12">
+        <div className="relative"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tenant, phone or room" className="h-11 rounded-2xl pl-10" /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-emerald-500/10 p-4"><CheckCircle2 className="h-5 w-5 text-emerald-500" /><strong className="mt-2 block text-2xl font-black">{completed.length}</strong><span className="text-xs font-semibold text-muted-foreground">Completed Profiles</span></div>
+          <div className="rounded-2xl bg-amber-500/10 p-4"><UsersRound className="h-5 w-5 text-amber-500" /><strong className="mt-2 block text-2xl font-black">{incomplete.length}</strong><span className="text-xs font-semibold text-muted-foreground">Incomplete Profiles</span></div>
         </div>
-        {isLoading ? <div className="py-16 text-center text-sm text-muted-foreground">Loading profiles…</div> : <>
-          <section className="rounded-2xl border bg-card px-3"><div className="flex items-center gap-2 border-b py-3"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><h2 className="text-sm font-black">Completed profiles</h2></div>{list(completed, "No completed profiles")}</section>
-          <section className="rounded-2xl border bg-card px-3"><div className="flex items-center gap-2 border-b py-3"><UserRound className="h-4 w-4 text-amber-500" /><h2 className="text-sm font-black">Incomplete profiles</h2></div>{list(incomplete, "No incomplete profiles")}</section>
-        </>}
+        {isLoading ? <div className="py-16 text-center text-sm text-muted-foreground">Loading profiles…</div> : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <section className="rounded-2xl border bg-card p-4 shadow-sm"><div className="flex items-center gap-2 border-b pb-3"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><h2 className="text-sm font-black">Completed profiles</h2></div>{list(completed, "No completed profiles")}</section>
+            <section className="rounded-2xl border bg-card p-4 shadow-sm"><div className="flex items-center gap-2 border-b pb-3"><UserRound className="h-4 w-4 text-amber-500" /><h2 className="text-sm font-black">Incomplete profiles</h2></div>{list(incomplete, "No incomplete profiles")}</section>
+          </div>
+        )}
       </div>
     </main>
   );

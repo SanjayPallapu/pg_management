@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PAID_PLANS, PLAN_CONFIG, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const encoder = new TextEncoder();
@@ -25,16 +26,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-razorpay-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-type PlanKey = "monthly" | "yearly" | "pro" | "pro_yearly" | "promax" | "promax_yearly";
-
-const TRIAL_DAYS = 30;
-const PAID_PLANS = new Set<PlanKey>(["monthly", "yearly", "pro", "pro_yearly", "promax", "promax_yearly"]);
-
-const getPlanDurationDays = (plan: PlanKey): number => {
-  if (plan === "yearly" || plan === "pro_yearly" || plan === "promax_yearly") return 365;
-  return 30;
 };
 
 const getFutureIso = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -251,51 +242,69 @@ Deno.serve(async (req) => {
         }
 
         const planKey = plan || "monthly";
+        const planConfig = PLAN_CONFIG[planKey];
         const now = new Date().toISOString();
 
-        // 30-Day Free Trial initialization on authentication/activation
-        const { error: subError } = await supabase
-          .from("subscriptions")
-          .upsert(
-            {
-              user_id: userId,
-              plan: planKey,
-              status: "active",
-              max_pgs: -1,
-              max_tenants_per_pg: -1,
-              features: {
-                auto_reminders: true,
-                daily_reports: true,
-                ai_logo: true,
-                billing_cycle: "trial",
-                next_billing_cycle: planKey,
-                razorpay_subscription_id: subscriptionId,
-                razorpay_status: status || eventType.replace("subscription.", ""),
-              },
-              payment_approved_at: now,
-              expires_at: getFutureIso(TRIAL_DAYS),
-            },
-            { onConflict: "user_id" },
-          );
+        const checkoutMode = String(subscription?.notes?.checkout_mode || "");
+        const startAtMs = Number(subscription?.start_at || 0) * 1000;
+        const isTrialAuthorization = eventType === "subscription.authenticated" &&
+          checkoutMode === "trial_authorization" &&
+          startAtMs > Date.now();
 
-        if (subError) throw subError;
+        if (isTrialAuthorization || eventType === "subscription.activated") {
+          const billingCycle = isTrialAuthorization ? "trial" : planKey;
+          const expiresAt = isTrialAuthorization
+            ? new Date(startAtMs).toISOString()
+            : subscription?.current_end
+              ? new Date(Number(subscription.current_end) * 1000).toISOString()
+              : getFutureIso(getPlanDurationDays(planKey));
+          const { error: subError } = await supabase
+            .from("subscriptions")
+            .upsert(
+              {
+                user_id: userId,
+                plan: planKey,
+                status: "active",
+                max_pgs: planConfig.maxPgs,
+                max_tenants_per_pg: planConfig.includedTenants,
+                features: {
+                  auto_reminders: true,
+                  daily_reports: true,
+                  ai_logo: true,
+                  billing_cycle: billingCycle,
+                  included_tenants: planConfig.includedTenants,
+                  tenant_limit_scope: "account",
+                  ...(isTrialAuthorization ? { next_billing_cycle: planKey } : {}),
+                  razorpay_subscription_id: subscriptionId,
+                  razorpay_status: status || eventType.replace("subscription.", ""),
+                  checkout_mode: checkoutMode || (isTrialAuthorization ? "trial_authorization" : "immediate_charge"),
+                },
+                payment_approved_at: now,
+                expires_at: expiresAt,
+              },
+              { onConflict: "user_id" },
+            );
+
+          if (subError) throw subError;
+        }
 
         await supabase
           .from("payment_requests")
           .update({
-            status: "authenticated",
+            status: isTrialAuthorization ? "authenticated" : eventType === "subscription.activated" ? "approved" : "pending",
             reviewed_at: now,
             notes: JSON.stringify({
               razorpay_subscription_id: subscriptionId,
               billing_cycle: planKey,
-              trial_days: TRIAL_DAYS,
+              checkout_mode: checkoutMode || (isTrialAuthorization ? "trial_authorization" : "immediate_charge"),
+              trial_ends_at: isTrialAuthorization ? new Date(startAtMs).toISOString() : null,
               razorpay_status: status || eventType.replace("subscription.", ""),
             }),
           })
           .eq("user_id", userId)
           .eq("status", "pending");
 
-        console.log(`Trial activated for user ${userId}, next billing cycle: ${planKey}`);
+        console.log(`${isTrialAuthorization ? "Trial mandate authenticated" : eventType} for user ${userId}, plan: ${planKey}`);
       } else if (eventType === "subscription.charged" || eventType === "payment.captured") {
         const payment = payload.payload?.payment?.entity || {};
         const subscriptionEntity = payload.payload?.subscription?.entity;
@@ -310,12 +319,44 @@ Deno.serve(async (req) => {
 
         const userId = context.userId;
         const planKey = context.plan || "monthly";
+        const planConfig = PLAN_CONFIG[planKey];
 
         if (!userId) {
           console.error("Missing user_id in payment/subscription notes");
           await supabase.from("razorpay_webhook_events").update({ status: "failed", error_message: "Missing user_id", processed_at: new Date().toISOString() }).eq("event_id", eventId);
           return new Response(JSON.stringify({ error: "Missing billing context" }), {
             status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const isTrialMandatePayment = eventType === "payment.captured" &&
+          subscription?.notes?.checkout_mode === "trial_authorization" &&
+          subscription?.status === "authenticated" &&
+          Number(subscription?.start_at || 0) * 1000 > Date.now();
+        if (isTrialMandatePayment) {
+          await supabase
+            .from("payment_requests")
+            .update({
+              status: "authenticated",
+              reviewed_at: new Date().toISOString(),
+              notes: JSON.stringify({
+                razorpay_subscription_id: context.subscriptionId,
+                authorization_payment_id: payment.id,
+                plan: planKey,
+                checkout_mode: "trial_authorization",
+                trial_ends_at: new Date(Number(subscription.start_at) * 1000).toISOString(),
+              }),
+            })
+            .eq("user_id", userId)
+            .eq("status", "pending");
+          await supabase
+            .from("razorpay_webhook_events")
+            .update({ status: "processed", processed_at: new Date().toISOString() })
+            .eq("event_id", eventId);
+          console.log(`Mandate authentication payment recorded for user ${userId}; paid billing remains scheduled.`);
+          return new Response(JSON.stringify({ status: "ok", kind: "trial_mandate" }), {
+            status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
@@ -350,6 +391,9 @@ Deno.serve(async (req) => {
 
         // Activate subscription with EXACT purchased plan key (no forced "pro" override)
         const durationDays = getPlanDurationDays(planKey);
+        const paidExpiresAt = subscription?.current_end
+          ? new Date(Number(subscription.current_end) * 1000).toISOString()
+          : getFutureIso(durationDays);
         const { error: subError } = await supabase
           .from("subscriptions")
           .upsert(
@@ -357,23 +401,34 @@ Deno.serve(async (req) => {
               user_id: userId,
               plan: planKey, // EXACT plan preserved
               status: "active",
-              max_pgs: -1,
-              max_tenants_per_pg: -1,
+              max_pgs: planConfig.maxPgs,
+              max_tenants_per_pg: planConfig.includedTenants,
               features: {
                 auto_reminders: true,
                 daily_reports: true,
                 ai_logo: true,
                 billing_cycle: planKey,
+                included_tenants: planConfig.includedTenants,
+                tenant_limit_scope: "account",
                 razorpay_subscription_id: context.subscriptionId,
                 razorpay_payment_id: payment.id,
               },
               payment_approved_at: new Date().toISOString(),
-              expires_at: getFutureIso(durationDays),
+              expires_at: paidExpiresAt,
             },
             { onConflict: "user_id" },
           );
 
         if (subError) throw subError;
+
+        const { error: referralError } = await supabase.rpc("reward_referral_conversion", {
+          p_referee_id: userId,
+        });
+        if (referralError) {
+          // Do not fail or retry a genuine payment because an optional reward failed.
+          // The verified webhook event remains available for operational replay.
+          console.error(`Referral reward failed for user ${userId}: ${referralError.message}`);
+        }
 
         console.log(`Subscription updated for user ${userId} to plan ${planKey} for ${durationDays} days`);
       } else if (eventType === "subscription.cancelled" || eventType === "subscription.halted") {

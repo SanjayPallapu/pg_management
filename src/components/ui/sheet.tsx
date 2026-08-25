@@ -81,7 +81,7 @@ const SheetContent = React.forwardRef<
         <div className="w-12 h-1 bg-muted-foreground/20 rounded-full mx-auto my-3 shrink-0" />
       )}
 
-      <div className="flex-1 flex flex-col min-h-0 w-full overflow-y-auto px-1.5 pb-4">
+      <div className="flex-1 flex flex-col min-h-0 w-full overflow-y-auto pb-4">
         {children}
       </div>
     </SheetPrimitive.Content>

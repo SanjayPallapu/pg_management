@@ -102,12 +102,12 @@ const FAQ_DATA: FAQItem[] = [
   {
     category: "Billing & Subscription",
     question: "Is there a free trial?",
-    answer: "Yes, you can register and manage up to 5 rooms completely free of charge. To unlock unlimited rooms and premium features, you can upgrade to our Pro plan.",
+    answer: "Yes. New accounts receive a 7-day trial with capacity for up to 4 PG properties and 500 active tenants. After the trial, choose a paid plan to keep using the app.",
   },
   {
     category: "Billing & Subscription",
     question: "What are the subscription plans?",
-    answer: "The basic plan with essential features is available for all users. Premium features like bulk reminders, advanced reports, and multi-PG support require a subscription starting at ₹499/month.",
+    answer: "Basic is ₹199/month for 1 PG and 100 active tenants, Plus is ₹299/month for 2 PGs and 200 active tenants, and Pro is ₹499/month for 4 PGs and 500 active tenants. Annual billing is also available.",
   },
   {
     category: "Billing & Subscription",

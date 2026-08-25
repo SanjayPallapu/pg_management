@@ -1,19 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PAID_PLANS, PLAN_CONFIG, getPlanDurationDays, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-type PlanKey = "monthly" | "yearly" | "pro" | "pro_yearly" | "promax" | "promax_yearly";
-
-const PAID_PLANS = new Set<PlanKey>(["monthly", "yearly", "pro", "pro_yearly", "promax", "promax_yearly"]);
-const TRIAL_DAYS = 30;
-
-const getPlanDurationDays = (plan: PlanKey) => {
-  if (plan === "yearly" || plan === "pro_yearly" || plan === "promax_yearly") return 365;
-  return 30;
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -113,9 +104,29 @@ Deno.serve(async (req) => {
     );
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
-
     const planKey = plan as PlanKey;
+    const planConfig = PLAN_CONFIG[planKey];
+    const checkoutMode = String(subscription?.notes?.checkout_mode || "");
+    const startAtMs = Number(subscription?.start_at || 0) * 1000;
+    const isTrialAuthorization = checkoutMode === "trial_authorization" &&
+      status === "authenticated" &&
+      startAtMs > now.getTime();
+
+    if (!isTrialAuthorization && status !== "active") {
+      return new Response(JSON.stringify({
+        error: "Payment is still being confirmed. Your plan will activate automatically once Razorpay confirms the charge.",
+      }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const billingCycle = isTrialAuthorization ? "trial" : planKey;
+    const expiresAt = isTrialAuthorization
+      ? new Date(startAtMs).toISOString()
+      : subscription?.current_end
+        ? new Date(Number(subscription.current_end) * 1000).toISOString()
+        : new Date(now.getTime() + getPlanDurationDays(planKey) * 24 * 60 * 60 * 1000).toISOString();
 
     const { error: subError } = await adminSupabase
       .from("subscriptions")
@@ -124,16 +135,19 @@ Deno.serve(async (req) => {
           user_id: userId,
           plan: planKey, // EXACT plan saved
           status: "active",
-          max_pgs: -1,
-          max_tenants_per_pg: -1,
+          max_pgs: planConfig.maxPgs,
+          max_tenants_per_pg: planConfig.includedTenants,
           features: {
             auto_reminders: true,
             daily_reports: true,
             ai_logo: true,
-            billing_cycle: "trial",
-            next_billing_cycle: planKey,
+            billing_cycle: billingCycle,
+            included_tenants: planConfig.includedTenants,
+            tenant_limit_scope: "account",
+            ...(isTrialAuthorization ? { next_billing_cycle: planKey } : {}),
             razorpay_subscription_id,
             razorpay_status: status,
+            checkout_mode: checkoutMode || (isTrialAuthorization ? "trial_authorization" : "immediate_charge"),
           },
           payment_approved_at: now.toISOString(),
           expires_at: expiresAt,
@@ -146,12 +160,13 @@ Deno.serve(async (req) => {
     await adminSupabase
       .from("payment_requests")
       .update({
-        status: "authenticated",
+        status: isTrialAuthorization ? "authenticated" : "approved",
         reviewed_at: now.toISOString(),
         notes: JSON.stringify({
           razorpay_subscription_id,
           billing_cycle: planKey,
-          trial_days: TRIAL_DAYS,
+          checkout_mode: checkoutMode || (isTrialAuthorization ? "trial_authorization" : "immediate_charge"),
+          trial_ends_at: isTrialAuthorization ? expiresAt : null,
           razorpay_status: status,
         }),
       })
@@ -162,9 +177,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         status,
-        billing_cycle: "trial",
-        next_billing_cycle: planKey,
-        trial_days: TRIAL_DAYS,
+        billing_cycle: billingCycle,
+        next_billing_cycle: isTrialAuthorization ? planKey : null,
+        trial_ends_at: isTrialAuthorization ? expiresAt : null,
         paid_cycle_days: getPlanDurationDays(planKey),
       }),
       {

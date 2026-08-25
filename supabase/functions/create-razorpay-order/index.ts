@@ -1,23 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PLAN_CONFIG, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-type PlanKey = "monthly" | "yearly" | "pro" | "pro_yearly" | "promax" | "promax_yearly";
-
-const PLAN_CONFIG: Record<PlanKey, { amount: number; period: "monthly" | "yearly"; interval: number; totalCount: number; label: string }> = {
-  monthly: { amount: 49900, period: "monthly", interval: 1, totalCount: 120, label: "Basic" },
-  yearly: { amount: 499900, period: "yearly", interval: 1, totalCount: 10, label: "Basic Yearly" },
-  pro: { amount: 99900, period: "monthly", interval: 1, totalCount: 120, label: "Plus" },
-  pro_yearly: { amount: 999900, period: "yearly", interval: 1, totalCount: 10, label: "Plus Yearly" },
-  promax: { amount: 199900, period: "monthly", interval: 1, totalCount: 120, label: "Pro Max" },
-  promax_yearly: { amount: 1999900, period: "yearly", interval: 1, totalCount: 10, label: "Pro Max Yearly" },
-};
-
-const TRIAL_DAYS = 30;
 
 async function createOrFetchPlan(credentials: string, plan: PlanKey) {
   const cfg = PLAN_CONFIG[plan];
@@ -74,8 +62,9 @@ async function createSubscription(
   cfg: (typeof PLAN_CONFIG)[PlanKey],
   planKey: PlanKey,
   userId: string,
-  options: { useTrialStart: boolean },
+  options: { trialEndsAt?: string },
 ) {
+  const checkoutMode = options.trialEndsAt ? "trial_authorization" : "immediate_charge";
   const body: Record<string, unknown> = {
     plan_id: planId,
     total_count: cfg.totalCount,
@@ -85,14 +74,13 @@ async function createSubscription(
       payment_type: "pghub_subscription",
       user_id: userId,
       plan_key: planKey,
-      trial_days: String(TRIAL_DAYS),
+      checkout_mode: checkoutMode,
+      trial_ends_at: options.trialEndsAt || "",
     },
   };
 
-  if (options.useTrialStart) {
-    const startAt = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 24 * 60 * 60;
-    body.start_at = startAt;
-    body.expire_by = startAt + 7 * 24 * 60 * 60;
+  if (options.trialEndsAt) {
+    body.start_at = Math.floor(new Date(options.trialEndsAt).getTime() / 1000);
   }
 
   const res = await fetch("https://api.razorpay.com/v1/subscriptions", {
@@ -251,13 +239,32 @@ Deno.serve(async (req) => {
     const planId = await createOrFetchPlan(credentials, planKey);
     const cfg = PLAN_CONFIG[planKey];
 
+    const { data: currentSubscription } = await supabase
+      .from("subscriptions")
+      .select("status, expires_at, features")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const features = currentSubscription?.features &&
+      typeof currentSubscription.features === "object" &&
+      !Array.isArray(currentSubscription.features)
+      ? currentSubscription.features as Record<string, unknown>
+      : {};
+    const expiryMs = currentSubscription?.expires_at
+      ? new Date(currentSubscription.expires_at).getTime()
+      : Number.NaN;
+    const hasActiveTrial = currentSubscription?.status === "active" &&
+      features.billing_cycle === "trial" &&
+      Number.isFinite(expiryMs) &&
+      expiryMs > Date.now() + 60_000;
+    const trialEndsAt = hasActiveTrial ? new Date(expiryMs).toISOString() : undefined;
+
     const { res: subscriptionRes, json: subscriptionJson } = await createSubscription(
       credentials,
       planId,
       cfg,
       planKey,
       userId,
-      { useTrialStart: true },
+      { trialEndsAt },
     );
 
     if (!subscriptionRes.ok || !subscriptionJson?.id) {
@@ -279,7 +286,8 @@ Deno.serve(async (req) => {
         razorpay_plan_id: planId,
         razorpay_subscription_id: subscriptionJson.id,
         billing_cycle: planKey,
-        trial_days: TRIAL_DAYS,
+        checkout_mode: hasActiveTrial ? "trial_authorization" : "immediate_charge",
+        trial_ends_at: trialEndsAt || null,
       }),
     });
 
@@ -287,7 +295,13 @@ Deno.serve(async (req) => {
       JSON.stringify({
         subscription_id: subscriptionJson.id,
         key_id: RAZORPAY_KEY_ID,
-        description: `PG HUB ${cfg.label} subscription`,
+        amount: cfg.amount,
+        currency: "INR",
+        checkout_mode: hasActiveTrial ? "trial_authorization" : "immediate_charge",
+        trial_ends_at: trialEndsAt || null,
+        description: hasActiveTrial
+          ? `₹${cfg.amount / 100} ${cfg.period === "yearly" ? "yearly" : "monthly"} after your current trial`
+          : `₹${cfg.amount / 100} ${cfg.period === "yearly" ? "yearly" : "monthly"}, charged now`,
       }),
       {
         status: 200,

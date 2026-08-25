@@ -34,6 +34,7 @@ import {
   Snowflake,
   ArrowLeft,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -78,7 +79,7 @@ import { ACElectricitySheet } from "./ACElectricitySheet";
 import { PaymentHistorySheet } from "./PaymentHistorySheet";
 import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { OverduePaidCard } from "./OverduePaidCard";
-import { BulkReminderDialog } from "./BulkReminderDialog";
+import { PendingTenantsCard } from "./PendingTenantsCard";
 import { LeftTenantsCleanupSheet } from "./LeftTenantsCleanupSheet";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { RulesShareDialog } from "./RulesShareDialog";
@@ -93,6 +94,7 @@ import { RoomQuickNav } from "./RoomQuickNav";
 import { CalendarClock, X as XIcon } from "lucide-react";
 import { generateReceiptImage, dataURLtoBlob } from "@/utils/generateReceiptImage";
 import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
+import { TenantChatMenu } from "./TenantChatMenu";
 interface MonthlyRentSheetProps {
   rooms: Room[];
 }
@@ -169,7 +171,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [previousOverdueOpen, setPreviousOverdueOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [bulkReminderOpen, setBulkReminderOpen] = useState(false);
+  const [pendingSheetOpen, setPendingSheetOpen] = useState(false);
   const [cleanupSheetOpen, setCleanupSheetOpen] = useState(false);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
@@ -1595,6 +1597,19 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         />
       </div>
 
+      {/* AC Electricity Banner — Tap to open AC Bills directly */}
+      <div
+        onClick={() => setAcSheetOpen(true)}
+        className="mt-1 mb-3 cursor-pointer overflow-hidden rounded-2xl border border-white/20 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
+        title="Open AC Electricity Bills"
+      >
+        <img
+          src="/ac-bill-banner-v5.png"
+          alt="AC Electricity Billing - Tap to open"
+          className="w-full h-auto max-h-[140px] object-cover object-center rounded-2xl"
+        />
+      </div>
+
       {/* Header/Action Row */}
       <div className="flex items-center justify-between w-full">
         {/* Edit Mode Toggle on the leftmost side */}
@@ -1613,13 +1628,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         {/* Action buttons on the right side */}
         <div className="flex gap-1.5 items-center">
           <Button
-            onClick={() => setBulkReminderOpen(true)}
+            onClick={() => setPendingSheetOpen(true)}
             variant="outline"
             size="icon"
-            title="Bulk WhatsApp Reminders"
-            className="text-cash hover:text-cash hover:bg-cash-muted h-8 w-8 shrink-0"
+            title="Select Pending Tenants"
+            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30 h-8 w-8 shrink-0 border-amber-300/40"
           >
-            <Users className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" />
           </Button>
           <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History" className="h-8 w-8 shrink-0">
             <History className="h-4 w-4" />
@@ -1655,9 +1670,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
             {filteredTenants.length === 0 && (
-              <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
+              <div className="col-span-full rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <Search className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -1681,7 +1696,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               // Use pro-rata effective rent if applicable
               const targetRent =
                 tenant.isProRata && tenant.effectiveRent !== undefined ? tenant.effectiveRent : tenant.monthlyRent;
-              const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
+              const remaining = Math.max(0, targetRent - (tenant.payment.amountPaid || 0));
               const bgClass =
                 tenant.paymentCategory === "paid"
                   ? "bg-paid-muted border-l-4 border-paid"
@@ -1832,7 +1847,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               };
 
               const isPaid = tenant.payment.paymentStatus === "Paid";
-              const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+              const cardDesignClass = isPaid
+                ? "tenant-card-paid"
+                : isPartial
+                ? "rounded-2xl border border-amber-200 border-l-[5px] border-l-amber-500 bg-[#FFF9EE] dark:bg-[#251C14] dark:border-amber-900/50"
+                : tenant.paymentCategory === "overdue"
+                ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-[#FFF5F5] dark:bg-[#2B1717] dark:border-red-900/50"
+                : "rounded-2xl border border-blue-200 border-l-[5px] border-l-blue-500 bg-[#F0F7FF] dark:bg-[#142032] dark:border-blue-900/50";
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 
               return (
@@ -1933,7 +1954,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                     {/* Right Div */}
                     <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
                       {/* Top: Price for Paid */}
-                      <div className="w-[72px] text-center">
+                      <div className="w-[84px] text-center">
                         {isPaid && (
                           <span className="text-lg font-extrabold text-foreground">
                             ₹{displayAmount.toLocaleString()}
@@ -1943,42 +1964,35 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
                       {/* Middle: Action icons */}
                       {tenant.phone && tenant.phone !== "••••••••••" ? (
-                        <div className="w-[72px] flex items-center justify-between my-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const phone = tenant.phone.replace(/\D/g, "");
-                              const cleanPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                              const msg = !isPaid
-                                ? encodeURIComponent(`Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!`)
-                                : "";
-                              window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
-                            }}
-                            className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
-                            title="WhatsApp"
-                          >
-                            <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-                          </button>
+                        <div className="flex w-[84px] items-center justify-between my-2">
+                          <TenantChatMenu
+                            tenantId={tenant.id}
+                            tenantName={tenant.name}
+                            phone={tenant.phone}
+                            profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                            message={!isPaid ? `Hi ${tenant.name}, your rent payment of ₹${remaining.toLocaleString()} for Room ${tenant.roomNo} is pending. Please pay at your earliest convenience. Thank you!` : undefined}
+                            onReceipt={(isPaid || isPartial) ? handleResendReceipt : undefined}
+                            onReminder={!isPaid ? openPaymentReminder : undefined}
+                          />
                           <a
                             href={`tel:${tenant.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
+                            className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                             title={`Call ${tenant.name}`}
                           >
-                            <Phone className="h-5 w-5 stroke-[1.75]" />
+                            <Phone className="h-4 w-4" />
                           </a>
                         </div>
                       ) : (
-                        <div />
+                        <div className="w-[84px] my-2" />
                       )}
 
                       {/* Bottom: Paid badge or Pay button */}
-                      <div>
+                      <div className="w-[84px]">
                         {isPaid ? (
                           <button
                             type="button"
-                            className="badge-paid-periwinkle min-w-[72px] px-2 text-center cursor-pointer"
+                            className="badge-paid-periwinkle w-full px-0 text-center block cursor-pointer"
                             onClick={() => {
                               if (editModeEnabled) {
                                 handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
@@ -1991,14 +2005,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                           <button
                             type="button"
                             onClick={() => handlePayRemaining(tenant.id)}
-                            className="btn-pay-black w-[72px] px-0 text-center"
+                            className="btn-pay-black w-full px-0 text-center"
                           >
                             Pay
                           </button>
                         ) : (
                           <button
                             type="button"
-                            className="btn-pay-black w-[72px] px-0 text-center"
+                            className="btn-pay-black w-full px-0 text-center"
                             onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
                           >
                             Pay
@@ -2447,8 +2461,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Payment History Sheet */}
       <PaymentHistorySheet open={historyOpen} onOpenChange={setHistoryOpen} />
 
-      {/* Bulk Reminder Dialog */}
-      <BulkReminderDialog open={bulkReminderOpen} onOpenChange={setBulkReminderOpen} rooms={rooms} />
+      {/* Select Pending Tenants Sheet */}
+      <PendingTenantsCard open={pendingSheetOpen} onClose={() => setPendingSheetOpen(false)} rooms={rooms} showSummaryCard={false} />
 
       {/* Left Tenants Cleanup Sheet */}
       <LeftTenantsCleanupSheet open={cleanupSheetOpen} onOpenChange={setCleanupSheetOpen} rooms={rooms} />

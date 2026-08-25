@@ -74,13 +74,15 @@ export const useSubscription = () => {
         .update({
           plan: 'pro',
           status: 'active',
-          max_pgs: -1,
-          max_tenants_per_pg: -1,
+          max_pgs: 2,
+          max_tenants_per_pg: 200,
           features: {
             auto_reminders: true,
             daily_reports: true,
             ai_logo: true,
             billing_cycle: 'monthly',
+            included_tenants: 200,
+            tenant_limit_scope: 'account',
           },
           payment_approved_at: new Date().toISOString(),
           approved_by: user.id,

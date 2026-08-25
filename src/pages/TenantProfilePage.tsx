@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, BadgeCheck, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign,
   Clock3, Copy, FileCheck2, FileText, Home, Link2, Loader2, MessageCircle,
   MoreHorizontal, Phone, QrCode, ReceiptText, Send, ShieldCheck, UserRound, ContactRound,
+  User, Calendar, Users, Droplet, Contact, PhoneCall, IdCard, IndianRupee, CreditCard,
+  UserCheck, CheckSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,7 @@ import { useMonthContext } from "@/contexts/MonthContext";
 import { PaymentReminderDialog } from "@/components/PaymentReminderDialog";
 import {
   ActivityTimeline, OwnerSharePanel, ProfileStatusBadge, VerificationPanel,
-  useOnboardingLink, useOnboardingProfile,
+  resolveOnboardingDocumentUrl, useOnboardingDocuments, useOnboardingLink, useOnboardingProfile,
 } from "@/features/tenant-onboarding";
 import type { OnboardingProfile, OnboardingStatus } from "@/features/tenant-onboarding/types";
 
@@ -60,22 +62,97 @@ function ActionRow({ icon: Icon, title, hint, onClick, accent = false }: {
   );
 }
 
-function DetailRow({ label, value, sensitive = false }: { label: string; value?: string | number | null; sensitive?: boolean }) {
+function DetailRow({ label, value, sensitive = false, icon: Icon }: { label: string; value?: string | number | null; sensitive?: boolean; icon?: React.ComponentType<{ className?: string }> }) {
   const display = value === null || value === undefined || value === "" ? "Not provided" : String(value);
   return (
-    <div className="flex min-w-0 items-start justify-between gap-4 border-b border-border/70 py-3 last:border-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex min-w-0 items-center justify-between gap-4 border-b border-border/70 py-3 last:border-0">
+      <div className="flex items-center gap-2.5 min-w-0">
+        {Icon && <Icon className="h-4 w-4 shrink-0 text-violet-500" />}
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </div>
       <span className={cn("max-w-[65%] break-words text-right text-sm font-semibold text-foreground", sensitive && "font-mono tracking-wide")}>{display}</span>
     </div>
   );
 }
 
-function DetailSection({ title, icon: Icon, children }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+function DetailSection({
+  title,
+  icon: Icon,
+  children,
+  badgeColor = "violet",
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  badgeColor?: "violet" | "indigo" | "emerald" | "amber" | "blue";
+}) {
+  const colorStyles = {
+    violet: "bg-violet-500/10 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 border-violet-500/20",
+    indigo: "bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-500/20",
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-500/20",
+    amber: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-500/20",
+    blue: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-500/20",
+  }[badgeColor];
+
+  const iconStyles = {
+    violet: "bg-violet-600 text-white shadow-violet-500/30",
+    indigo: "bg-indigo-600 text-white shadow-indigo-500/30",
+    emerald: "bg-emerald-600 text-white shadow-emerald-500/30",
+    amber: "bg-amber-600 text-white shadow-amber-500/30",
+    blue: "bg-blue-600 text-white shadow-blue-500/30",
+  }[badgeColor];
+
   return (
     <section className="border-b border-border py-4 last:border-0">
-      <div className="mb-1 flex items-center gap-2 text-sm font-bold"><Icon className="h-4 w-4 text-violet-500" />{title}</div>
-      <div>{children}</div>
+      <div className={cn("mb-3.5 flex items-center gap-2.5 rounded-xl border px-3 py-2 text-xs sm:text-sm font-black shadow-sm", colorStyles)}>
+        <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg shadow-sm shrink-0", iconStyles)}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="tracking-tight">{title}</span>
+      </div>
+      <div className="px-1">{children}</div>
     </section>
+  );
+}
+
+function AadhaarImage({ tenantId, fallbackPath }: { tenantId: string | null; fallbackPath?: string }) {
+  const { data: documents = [] } = useOnboardingDocuments(tenantId);
+  const aadhaar = documents.find(document => document.document_type === "aadhaar" || document.document_type === "id_proof") || documents[0];
+  const documentPath = aadhaar?.file_url || fallbackPath;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setImageUrl(null);
+    if (documentPath) {
+      void resolveOnboardingDocumentUrl(documentPath).then(url => {
+        if (active) setImageUrl(url);
+      });
+    }
+    return () => { active = false; };
+  }, [documentPath]);
+
+  if (!documentPath) {
+    return <p className="py-3 text-xs text-muted-foreground">No Aadhaar image was uploaded.</p>;
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!imageUrl}
+      onClick={() => imageUrl && window.open(imageUrl, "_blank", "noopener,noreferrer")}
+      className="mt-3 block w-full overflow-hidden rounded-2xl border bg-muted/30 text-left disabled:cursor-wait"
+      aria-label="Open Aadhaar image"
+    >
+      {imageUrl ? (
+        <img src={imageUrl} alt="Uploaded Aadhaar card" className="h-44 w-full object-contain bg-slate-950/5" />
+      ) : (
+        <span className="flex h-28 items-center justify-center text-xs text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading Aadhaar image…</span>
+      )}
+      <span className="flex items-center justify-between border-t px-3 py-2 text-[11px] font-bold">
+        Aadhaar image <span className="text-violet-600">Tap to open</span>
+      </span>
+    </button>
   );
 }
 
@@ -126,7 +203,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
   }
 
   if (!info || !tenantId) {
-    return <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4 p-6 text-center"><UserRound className="h-10 w-10 text-muted-foreground" /><div><h1 className="font-bold">Tenant not found</h1><p className="text-sm text-muted-foreground">This tenant may have been removed or moved.</p></div><Button onClick={() => navigate(-1)}>Go back</Button></div>;
+    return <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4 p-6 text-center"><UserRound className="h-10 w-10 text-muted-foreground" /><div><h1 className="font-bold">Tenant not found</h1><p className="text-sm text-muted-foreground">This tenant may have been removed or moved.</p></div><Button onClick={() => navigate("/?tab=settings")}>Go back</Button></div>;
   }
 
   const { tenant, room } = info;
@@ -145,7 +222,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
       <div className="min-h-[100dvh] bg-background text-foreground">
         <header className="sticky top-0 z-40 border-b bg-background/95 px-2 py-3 backdrop-blur-xl">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
-            <button onClick={() => navigate('/')} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+            <button onClick={() => navigate("/?tab=settings")} className="grid h-9 w-9 place-items-center rounded-xl bg-muted" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
             <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-black">Tenant Profile</h1><p className="text-[11px] text-muted-foreground">Verified tenant details and payments</p></div>
             <ProfileStatusBadge status="verified" showLabel={false} size="md" />
           </div>
@@ -153,7 +230,12 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
         <main className="mx-auto max-w-2xl space-y-3 px-2 py-3 pb-10">
           <section className="overflow-hidden rounded-[26px] bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700 p-4 text-white shadow-lg">
             <div className="flex items-center gap-3"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-lg font-black ring-1 ring-white/20">{tenant.name.slice(0, 2).toUpperCase()}</div><div className="min-w-0 flex-1"><h2 className="truncate text-xl font-black">{tenant.name}</h2><p className="text-xs text-white/75">Room {room.roomNo} · {room.capacity} sharing</p><span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-200"><BadgeCheck className="h-3.5 w-3.5" />Profile verified</span></div></div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-black/10 p-2 ring-1 ring-white/10">
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">Room</span><strong className="text-sm">R{room.roomNo}</strong></div>
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">Monthly rent</span><strong className="text-sm">₹{tenant.monthlyRent.toLocaleString("en-IN")}</strong></div>
+              <div className="text-center"><span className="block text-[9px] font-bold uppercase text-white/60">This month</span><strong className="text-sm">{currentPayment?.paymentStatus || tenant.paymentStatus}</strong></div>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <a href={`tel:${tenant.phone}`} className="rounded-xl bg-white/10 py-2.5 text-center text-[11px] font-bold"><Phone className="mx-auto mb-1 h-4 w-4" />Call</a>
               <button onClick={() => window.open(`https://wa.me/91${phoneDigits}`, "_blank", "noopener,noreferrer")} className="rounded-xl bg-white/10 py-2.5 text-[11px] font-bold"><MessageCircle className="mx-auto mb-1 h-4 w-4" />WhatsApp</button>
               <button onClick={() => setReminderOpen(true)} className="rounded-xl bg-white text-violet-700 py-2.5 text-[11px] font-black"><Bell className="mx-auto mb-1 h-4 w-4" />Reminder</button>
@@ -161,22 +243,23 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
           </section>
 
           <section className="rounded-2xl border bg-card px-3">
-            <DetailSection title="Personal information" icon={UserRound}>
-              <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
-              <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
-              <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
-              <DetailRow label="Gender" value={displayedProfile?.gender} />
-              <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
-              <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
-              <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+            <DetailSection title="Personal information" icon={UserRound} badgeColor="violet">
+              <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
+              <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+              <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
+              <DetailRow icon={Users} label="Gender" value={displayedProfile?.gender} />
+              <DetailRow icon={Droplet} label="Blood group" value={displayedProfile?.blood_group} />
+              <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+              <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
             </DetailSection>
-            <DetailSection title="Identity and stay" icon={ShieldCheck}>
-              <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
-              <DetailRow label="Room" value={room.roomNo} />
-              <DetailRow label="Move-in date" value={tenant.startDate} />
-              <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
-              <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
-              <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
+            <DetailSection title="Identity and stay" icon={ShieldCheck} badgeColor="indigo">
+              <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+              <AadhaarImage tenantId={isPreview ? null : tenantId} fallbackPath={displayedProfile?.id_proof_url} />
+              <DetailRow icon={Home} label="Room" value={room.roomNo} />
+              <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
+              <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+              <DetailRow icon={ShieldCheck} label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+              <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
             </DetailSection>
           </section>
 
@@ -197,7 +280,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
     <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-2 py-3">
-          <button onClick={() => navigate('/')} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => navigate("/?tab=settings")} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted hover:bg-muted/70" aria-label="Go back"><ArrowLeft className="h-5 w-5" /></button>
           <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{tenant.name}</h1><p className="text-[11px] text-muted-foreground">Room {room.roomNo} · {room.capacity} sharing</p></div>
           <ProfileStatusBadge status={displayedProfile?.status} size="md" />
         </div>
@@ -209,6 +292,11 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
           <div className="relative flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xl font-black shadow-lg shadow-violet-950/40">{tenant.name.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0 flex-1"><h2 className="truncate text-xl font-bold">{tenant.name}</h2><p className="mt-1 text-sm text-muted-foreground">Room {room.roomNo} · Bed assigned</p><div className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", complete ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/15 text-amber-600 dark:text-amber-400")}><span className={cn("h-1.5 w-1.5 rounded-full", complete ? "bg-emerald-400" : "bg-amber-400")} />{statusLabel(displayedProfile?.status)}</div></div>
+          </div>
+          <div className="relative mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-border/60 bg-background/65 p-2.5 backdrop-blur">
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Room</span><strong className="text-sm">R{room.roomNo}</strong></div>
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Rent</span><strong className="text-sm">₹{tenant.monthlyRent.toLocaleString("en-IN")}</strong></div>
+            <div className="text-center"><span className="block text-[9px] font-bold uppercase text-muted-foreground">Payment</span><strong className={cn("text-sm", currentPayment?.paymentStatus === "Paid" ? "text-emerald-600" : "text-amber-600")}>{currentPayment?.paymentStatus || tenant.paymentStatus}</strong></div>
           </div>
           <div className="relative mt-5 grid grid-cols-3 gap-2">
             <a href={`tel:${tenant.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-muted py-3 text-xs font-semibold hover:bg-muted/70"><Phone className="h-4 w-4" />Call</a>
@@ -223,32 +311,31 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
             {view === "details" && (
               <div className="rounded-2xl border border-border bg-card px-2">
-                <DetailSection title="Personal information" icon={UserRound}>
-                  <DetailRow label="Full name" value={displayedProfile?.full_name || tenant.name} />
-                  <DetailRow label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
-                  <DetailRow label="Date of birth" value={displayedProfile?.date_of_birth} />
-                  <DetailRow label="Gender" value={displayedProfile?.gender} />
-                  <DetailRow label="Blood group" value={displayedProfile?.blood_group} />
-                  <DetailRow label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
-                  <DetailRow label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
+                <DetailSection title="Personal information" icon={UserRound} badgeColor="violet">
+                  <DetailRow icon={User} label="Full name" value={displayedProfile?.full_name || tenant.name} />
+                  <DetailRow icon={Phone} label="Phone number" value={displayedProfile?.alternate_phone || tenant.phone} />
+                  <DetailRow icon={Calendar} label="Date of birth" value={displayedProfile?.date_of_birth} />
+                  <DetailRow icon={Users} label="Gender" value={displayedProfile?.gender} />
+                  <DetailRow icon={Droplet} label="Blood group" value={displayedProfile?.blood_group} />
+                  <DetailRow icon={Contact} label="Emergency contact" value={displayedProfile?.emergency_contact_name} />
+                  <DetailRow icon={PhoneCall} label="Emergency phone" value={displayedProfile?.emergency_contact_phone} />
                 </DetailSection>
-                <DetailSection title="Identity verification" icon={ShieldCheck}>
-                  <DetailRow label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
-                  <DetailRow label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
-                  <DetailRow label="Submission status" value={statusLabel(displayedProfile?.status)} />
+                <DetailSection title="Identity verification" icon={ShieldCheck} badgeColor="indigo">
+                  <DetailRow icon={FileText} label="Document" value={displayedProfile?.id_proof_type === "aadhaar" ? "Aadhaar card" : displayedProfile?.id_proof_type} />
+                  <DetailRow icon={IdCard} label="Aadhaar number" value={displayedProfile?.id_proof_number ? displayedProfile.id_proof_number.replace(/(\d{4})(?=\d)/g, "$1 ") : null} sensitive />
+                  <DetailRow icon={BadgeCheck} label="Submission status" value={statusLabel(displayedProfile?.status)} />
                 </DetailSection>
-                <DetailSection title="Stay and rent" icon={Home}>
-                  <DetailRow label="Room" value={room.roomNo} />
-                  <DetailRow label="Move-in date" value={tenant.startDate} />
-                  <DetailRow label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
-                  <DetailRow label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
-                  <DetailRow label="Deposit mode" value={tenant.securityDepositMode} />
-                  <DetailRow label="Collected by" value={tenant.securityDepositCollectedBy} />
+                <DetailSection title="Stay and rent" icon={Home} badgeColor="emerald">
+                  <DetailRow icon={Home} label="Room" value={room.roomNo} />
+                  <DetailRow icon={CalendarDays} label="Move-in date" value={tenant.startDate} />
+                  <DetailRow icon={IndianRupee} label="Monthly rent" value={`₹${tenant.monthlyRent.toLocaleString("en-IN")}`} />
+                  <DetailRow icon={ShieldCheck} label="Security deposit" value={`₹${Number(tenant.securityDepositAmount ?? 0).toLocaleString("en-IN")}`} />
+                  <DetailRow icon={CreditCard} label="Deposit mode" value={tenant.securityDepositMode} />
                 </DetailSection>
-                <DetailSection title="Agreement" icon={FileCheck2}>
-                  <DetailRow label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
-                  <DetailRow label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
-                  <DetailRow label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
+                <DetailSection title="Agreement" icon={FileCheck2} badgeColor="blue">
+                  <DetailRow icon={CheckSquare} label="PG rules acknowledged" value={displayedProfile?.rules_acknowledged ? "Yes" : "No"} />
+                  <DetailRow icon={FileCheck2} label="Rental agreement accepted" value={displayedProfile?.agreement_accepted ? "Yes" : "No"} />
+                  <DetailRow icon={Clock3} label="Submitted at" value={displayedProfile?.completed_at ? new Date(displayedProfile.completed_at).toLocaleString("en-IN") : null} />
                 </DetailSection>
                 {complete && <Button onClick={() => goToView("verify")} className="mb-4 w-full bg-violet-600 text-white hover:bg-violet-700"><ShieldCheck className="mr-2 h-4 w-4" />Review Aadhaar and verify</Button>}
               </div>

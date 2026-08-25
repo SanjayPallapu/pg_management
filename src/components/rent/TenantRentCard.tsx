@@ -1,35 +1,12 @@
 import { format } from "date-fns";
-import { Phone, MessageCircle, Receipt, MessageSquare, Bell, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Phone, MessageCircle, Calendar } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PaymentEntry } from "@/types";
-import { PaymentEntryDisplay, getPaymentCardClass } from "@/components/payment";
 import { cn } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { StayPeriodIndicator } from "@/components/StayPeriodIndicator";
 
 type PaymentCategory = "paid" | "partial" | "overdue" | "not-due" | "advance-not-paid";
-
-// Helper to parse discount and extra from notes
-const parseNotesInfo = (notes?: string) => {
-  if (!notes) return { discount: 0, extra: 0, extraReason: '' };
-  
-  const discountMatch = notes.match(/Discount:\s*₹?(\d+)/i);
-  const extraMatch = notes.match(/Extra\s*₹?(\d+):\s*([^|]+)/i);
-  
-  return {
-    discount: discountMatch ? parseInt(discountMatch[1]) : 0,
-    extra: extraMatch ? parseInt(extraMatch[1]) : 0,
-    extraReason: extraMatch ? extraMatch[2].trim() : ''
-  };
-};
 
 interface TenantRentCardProps {
   tenant: {
@@ -67,49 +44,8 @@ export const TenantRentCard = ({
   tenant,
   selectedMonth,
   selectedYear,
-  whatsappSent = false,
-  editModeEnabled = false,
   onMarkPaid,
   onPayRemaining,
-  onGenerateReceipt,
-  onPaymentReminder,
-}: TenantRentCardProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const isPartial = tenant.paymentCategory === "partial";
-  // Use pro-rata effective rent if applicable
-  const targetRent = tenant.isProRata && tenant.effectiveRent !== undefined 
-    ? tenant.effectiveRent 
-    : tenant.monthlyRent;
-  const remaining = isPartial ? Math.max(0, targetRent - (tenant.payment.amountPaid || 0)) : 0;
-  const bgClass = getPaymentCardClass(tenant.paymentCategory);
-
-  // Parse discount and extra from notes
-  const { discount, extra, extraReason } = useMemo(
-    () => parseNotesInfo(tenant.payment.notes),
-    [tenant.payment.notes]
-  );
-
-  const statusLabel =
-    tenant.paymentCategory === "paid"
-      ? "Paid"
-      : tenant.paymentCategory === "partial"
-        ? "Due"
-        : tenant.paymentCategory === "overdue"
-          ? "Overdue"
-          : tenant.paymentCategory === "advance-not-paid"
-            ? "Advance Due"
-            : "Pending";
-
-export const TenantRentCard = ({
-  tenant,
-  selectedMonth,
-  selectedYear,
-  whatsappSent = false,
-  editModeEnabled = false,
-  onMarkPaid,
-  onPayRemaining,
-  onGenerateReceipt,
-  onPaymentReminder,
 }: TenantRentCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const isPaid = tenant.payment.paymentStatus === "Paid";
@@ -123,7 +59,13 @@ export const TenantRentCard = ({
       ? 0 
       : targetRent;
 
-  const cardDesignClass = isPaid ? 'tenant-card-paid' : 'tenant-card-pending';
+  const cardDesignClass = isPaid
+    ? "tenant-card-paid"
+    : isPartial
+    ? "rounded-2xl border border-amber-200 border-l-[5px] border-l-amber-500 bg-[#FFF9EE] dark:bg-[#251C14] dark:border-amber-900/50"
+    : tenant.paymentCategory === "overdue"
+    ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-[#FFF5F5] dark:bg-[#2B1717] dark:border-red-900/50"
+    : "rounded-2xl border border-blue-200 border-l-[5px] border-l-blue-500 bg-[#F0F7FF] dark:bg-[#142032] dark:border-blue-900/50";
   const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : dueAmount;
 
   const formattedJoinedDate = tenant.startDate
@@ -221,7 +163,7 @@ export const TenantRentCard = ({
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price for Paid */}
-          <div className="w-[72px] text-center">
+          <div className="w-[84px] text-center">
             {isPaid && (
               <span className="text-lg font-extrabold text-foreground">
                 ₹{displayAmount.toLocaleString()}
@@ -231,7 +173,7 @@ export const TenantRentCard = ({
 
           {/* Middle: Action icons */}
           {tenant.phone && tenant.phone !== "••••••••••" ? (
-            <div className="w-[72px] flex items-center justify-between my-2">
+            <div className="w-[84px] flex items-center justify-between my-2">
               <button
                 type="button"
                 onClick={(e) => {
@@ -243,40 +185,40 @@ export const TenantRentCard = ({
                     : "";
                   window.open(msg ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://wa.me/${cleanPhone}`, "_blank");
                 }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                 title="Share on WhatsApp"
               >
-                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                <MessageCircle className="h-4 w-4" />
               </button>
               <a
                 href={`tel:${tenant.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                 title={`Call ${tenant.name}`}
               >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
+                <Phone className="h-4 w-4" />
               </a>
             </div>
           ) : (
-            <div />
+            <div className="w-[84px] my-2" />
           )}
 
           {/* Bottom: Paid badge or Pay button */}
-          <div>
+          <div className="w-[84px]">
             {isPaid ? (
-              <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
+              <span className="badge-paid-periwinkle w-full px-0 text-center block shrink-0">Paid</span>
             ) : isPartial ? (
               <button
                 type="button"
                 onClick={() => onPayRemaining(tenant.id)}
-                className="btn-pay-black w-[72px] px-0 text-center"
+                className="btn-pay-black w-full px-0 text-center"
               >
                 Pay
               </button>
             ) : (
               <button
                 type="button"
-                className="btn-pay-black w-[72px] px-0 text-center"
+                className="btn-pay-black w-full px-0 text-center"
                 onClick={() => onMarkPaid(tenant.id, tenant.name, tenant.payment.paymentStatus)}
               >
                 Pay

@@ -8,6 +8,7 @@ import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { useAuth } from "@/hooks/useAuth";
 import { completeOnboarding, hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
+import { sendAccountAuthEmail } from "@/lib/resend";
 
 const credentialsSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
@@ -91,7 +92,8 @@ export default function EmailAuth() {
     event.preventDefault();
     if (!validateCredentials()) return;
     setSubmitting(true);
-    const { error } = await signIn(email.trim(), password);
+    const targetEmail = email.trim();
+    const { error } = await signIn(targetEmail, password);
     setSubmitting(false);
     if (error) toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
     else {
@@ -104,13 +106,15 @@ export default function EmailAuth() {
     event.preventDefault();
     if (!validateCredentials()) return;
     setSubmitting(true);
-    const { data, error } = await signUp(email.trim(), password);
+    const targetEmail = email.trim();
+    const { data, error } = await signUp(targetEmail, password);
     setSubmitting(false);
     if (error || !data.user) {
       toast.error(error?.message || "Could not create your account.");
       return;
     }
-    toast.success("Account created. You can now sign in.");
+    sendAccountAuthEmail({ to: targetEmail, action: "signup_welcome" }).catch(err => console.warn("[Auth Email Error]", err));
+    toast.success("Account created! Confirmation email sent.");
     setEmail("");
     setPassword("");
     setMode("signin");

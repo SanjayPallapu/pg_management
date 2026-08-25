@@ -179,24 +179,6 @@ export const ACElectricitySheet = ({
     });
   };
 
-  const handleBulkReminders = () => {
-    let pendingCount = 0;
-    acRooms.forEach(item => {
-      (item.tenantShares || []).forEach((share: any) => {
-        if (share.acPaymentStatus !== 'Paid' && share.share > 0) pendingCount++;
-      });
-    });
-    if (pendingCount === 0) { toast.info("All tenants have paid their AC bills!"); return; }
-    toast.info(`Sending reminders to ${pendingCount} tenants...`);
-    acRooms.forEach(item => {
-      (item.tenantShares || []).forEach((share: any) => {
-        if (share.acPaymentStatus !== 'Paid' && share.share > 0) {
-          onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount, share.name);
-        }
-      });
-    });
-  };
-
   const tabs: { key: typeof activeTab; label: string }[] = [
     { key: 'ac-bill', label: 'Rooms' },
     { key: 'pendings', label: 'Pending' },
@@ -206,7 +188,7 @@ export const ACElectricitySheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-background text-foreground flex flex-col h-full overflow-hidden">
+      <SheetContent className="w-full sm:max-w-xl p-0 [&>button]:hidden bg-[#0c4a6e] text-foreground flex flex-col h-full overflow-hidden border-0">
         {selectedRoomItem ? (
           <ACRoomDetailView
             item={selectedRoomItem}
@@ -224,18 +206,18 @@ export const ACElectricitySheet = ({
             }}
           />
         ) : (
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col h-full overflow-hidden bg-[#0c4a6e]">
             {/* Illustrated Hero Header */}
-            <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(160deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)" }}>
+            <div className="relative overflow-hidden shrink-0" style={{ background: "linear-gradient(145deg, #020617 0%, #071b46 48%, #312e81 76%, #6d28d9 100%)" }}>
               {/* Decorative blobs */}
               <span className="pointer-events-none absolute -left-12 -top-12 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
               <span className="pointer-events-none absolute -right-8 top-4 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
               <span className="pointer-events-none absolute right-20 bottom-6 h-3 w-3 rounded-full bg-cyan-300/60" aria-hidden="true" />
               <span className="pointer-events-none absolute left-16 bottom-8 h-2 w-2 rounded-full bg-white/40" aria-hidden="true" />
 
-              <SheetHeader className="relative z-10 px-1.5 pt-3 pb-3">
+              <SheetHeader className="relative z-10 px-3 pt-3 pb-3">
                 {/* Top bar */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 px-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <Button
                       variant="ghost"
@@ -262,7 +244,7 @@ export const ACElectricitySheet = ({
                       className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {months.map((m) => (
-                        <option key={m.value} value={m.value} className="bg-[#0e7490] text-white">{m.label}</option>
+                        <option key={m.value} value={m.value} className="bg-[#071b46] text-white">{m.label}</option>
                       ))}
                     </select>
                     <select
@@ -271,15 +253,15 @@ export const ACElectricitySheet = ({
                       className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {years.map((y) => (
-                        <option key={y} value={y} className="bg-[#0e7490] text-white">{y}</option>
+                        <option key={y} value={y} className="bg-[#071b46] text-white">{y}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* Collection summary above a full-width curved illustration */}
-                <div className="mt-3 space-y-2">
-                  <div className="grid grid-cols-3 gap-2">
+                {/* Collection summary */}
+                <div className="mt-3">
+                  <div className="grid grid-cols-3 gap-2 px-2">
                     <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
                       <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
                       <span className="block text-xs font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
@@ -293,17 +275,10 @@ export const ACElectricitySheet = ({
                       <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="w-full overflow-hidden rounded-2xl shadow-lg border border-white/20">
-                    <img
-                      src="/ac-bill-banner-v5.png"
-                      alt="AC Electricity Billing"
-                      className="w-full h-auto max-h-[160px] object-cover object-center"
-                    />
-                  </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="mt-3 space-y-1">
+                <div className="mt-3 space-y-1 px-2">
                   <div className="flex items-center justify-between text-[10px] text-cyan-200">
                     <span className="font-semibold">Collection Progress</span>
                     <span className="font-black text-white">{overallPct}% Collected</span>
@@ -341,7 +316,7 @@ export const ACElectricitySheet = ({
             </div>
 
             {/* Main content */}
-            <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-background text-foreground">
               {/* ── ROOMS TAB ── */}
               {activeTab === 'ac-bill' && (
                 <>
@@ -447,14 +422,6 @@ export const ACElectricitySheet = ({
                         <p className="text-sm font-black text-foreground">{pendingTenantsList.length} Pending</p>
                         <p className="text-xs text-muted-foreground">₹{pendingTotal.toLocaleString()} outstanding</p>
                       </div>
-                      <Button
-                        size="sm"
-                        className="ml-auto h-9 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shrink-0"
-                        onClick={handleBulkReminders}
-                      >
-                        <Bell className="h-3.5 w-3.5 mr-1.5" />
-                        Remind All
-                      </Button>
                     </div>
                   )}
 
@@ -607,18 +574,6 @@ export const ACElectricitySheet = ({
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Bottom summary bar */}
-            <div className="border-t border-border bg-muted/60 backdrop-blur px-4 py-3 flex items-center justify-between shrink-0 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground font-bold">COLLECTED</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-black">₹{collectedTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground font-bold">PENDING</span>
-                <span className="text-orange-500 font-black">₹{pendingTotal.toLocaleString()}</span>
-              </div>
             </div>
           </div>
         )}

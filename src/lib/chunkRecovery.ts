@@ -27,9 +27,14 @@ export const isChunkLoadError = (reason: unknown) => {
 };
 
 const clearAppCaches = async () => {
-  if (!("caches" in window)) return;
-  const names = await window.caches.keys();
-  await Promise.all(names.filter((name) => name.startsWith("pg-")).map((name) => window.caches.delete(name)));
+  if ("caches" in window) {
+    const names = await window.caches.keys();
+    await Promise.all(names.map((name) => window.caches.delete(name)));
+  }
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((r) => r.unregister()));
+  }
 };
 
 export const reloadLatestApp = async (target = window.location.href) => {

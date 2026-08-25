@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Clock, Crown, Loader2, Zap, Sparkles, Globe, Star, ShieldCheck } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { usePG } from '@/contexts/PGContext';
-import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_MARKETING, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from '@/types/pg';
 import { Capacitor } from '@capacitor/core';
 
 import { useNavigate } from 'react-router-dom';
@@ -58,11 +58,11 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
         monthlyKey: 'monthly' as SubscriptionPlanKey,
         yearlyKey: 'yearly' as SubscriptionPlanKey,
         title: 'Basic',
-        tag: billingCycle === 'yearly' ? 'Save 20%' : 'Entry Level',
+        tag: billingCycle === 'yearly' ? 'Save 16%' : 'Entry Level',
         badgeStyle: billingCycle === 'yearly' ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
         cardStyle: 'border-slate-200 dark:border-slate-800 bg-card',
         icon: <Zap className="h-5 w-5 text-indigo-500" />,
-        features: ['Unlimited PGs & Tenants', 'Rent Collection Sheet', 'Smart PDF Receipts'],
+        features: SUBSCRIPTION_PLAN_MARKETING.basic.features.slice(0, 4),
       },
       {
         monthlyKey: 'pro' as SubscriptionPlanKey,
@@ -72,17 +72,17 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
         badgeStyle: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs',
         cardStyle: 'border-purple-500 dark:border-purple-400 bg-purple-500/5 dark:bg-purple-500/10 ring-2 ring-purple-500/40 shadow-md',
         icon: <Star className="h-5 w-5 text-purple-500 fill-purple-500" />,
-        features: ['Everything in Basic', 'Auto WhatsApp Reminders', 'Occupancy Analytics', 'Priority Support'],
+        features: SUBSCRIPTION_PLAN_MARKETING.plus.features.slice(0, 4),
       },
       {
         monthlyKey: 'promax' as SubscriptionPlanKey,
         yearlyKey: 'promax_yearly' as SubscriptionPlanKey,
         title: 'Pro',
-        tag: billingCycle === 'yearly' ? 'Ultimate Save' : 'Ultimate',
+        tag: billingCycle === 'yearly' ? 'Save 16%' : 'Advanced',
         badgeStyle: 'bg-amber-500 text-white shadow-xs',
         cardStyle: 'border-amber-500/80 dark:border-amber-400/80 bg-amber-500/5 dark:bg-amber-500/10',
         icon: <Crown className="h-5 w-5 text-amber-500 fill-amber-500" />,
-        features: ['Everything in Plus', 'Dedicated Account Manager', 'Custom API Access', '99.9% Uptime SLA'],
+        features: SUBSCRIPTION_PLAN_MARKETING.pro.features.slice(0, 4),
       },
     ];
   }, [billingCycle]);
@@ -152,7 +152,7 @@ export const UpgradeDialog = ({ open, onOpenChange }: UpgradeDialogProps) => {
             >
               Yearly
               <span className="bg-emerald-500 text-[8px] text-white px-1.5 py-0.2 rounded-full font-black animate-pulse uppercase">
-                Save 20%
+                Save 16%
               </span>
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,16 +8,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building, ChevronDown, Plus, Check, Crown, ImageIcon } from 'lucide-react';
+import { Building, Check, Crown, ImageIcon } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { PGSetupWizard } from './PGSetupWizard';
 import { Badge } from '@/components/ui/badge';
 import { LogoUpdateDialog } from './LogoUpdateDialog';
 
 export const PGSwitcher = () => {
-  const { pgs, currentPG, selectPG, canCreatePG, isProUser } = usePG();
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const { pgs, currentPG, selectPG, isProUser } = usePG();
   const [showLogoDialog, setShowLogoDialog] = useState(false);
   const [selectedPGForLogo, setSelectedPGForLogo] = useState<string | null>(null);
 
@@ -91,26 +88,8 @@ export const PGSwitcher = () => {
             </div>
           ))}
           
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem
-            onClick={() => setShowAddDialog(true)}
-            className="cursor-pointer"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New PG
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="p-0 overflow-hidden">
-          <PGSetupWizard 
-            isAddingNew 
-            onComplete={() => setShowAddDialog(false)} 
-          />
-        </DialogContent>
-      </Dialog>
 
       <LogoUpdateDialog 
         open={showLogoDialog} 

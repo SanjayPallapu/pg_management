@@ -13,6 +13,7 @@ interface RoomStat {
   capacity: number;
   occupied: number;
   emptyBeds: number;
+  reservedBeds?: number;
   perBedRent: number;
   potentialAdditionalRent: number;
   floor: number;
@@ -282,6 +283,11 @@ export const EmptyBedsSheet = ({
                       <Badge variant="secondary" className="text-xs">
                         {room.capacity}-sharing
                       </Badge>
+                      {room.reservedBeds && room.reservedBeds > 0 ? (
+                        <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-[10px] py-0 px-1.5 font-bold">
+                          {room.reservedBeds} Reserved
+                        </Badge>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="h-3 w-3" />

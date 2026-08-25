@@ -8,15 +8,15 @@ import {
 const faqs = [
   {
     q: "Is there a free trial?",
-    a: "Yes. Every PG owner gets a 1 month free trial with all features enabled before recurring billing starts.",
+    a: "Yes. Every PG owner gets a 7-day free trial with all features enabled before recurring billing starts.",
   },
   {
     q: "Can I manage multiple PG properties?",
-    a: "Absolutely. Trial and paid plans support multi-PG owners from a single dashboard.",
+    a: "Yes. Plus supports up to 2 PG properties and Pro supports up to 4 from one dashboard. Basic supports 1 property.",
   },
   {
     q: "How do WhatsApp reminders work?",
-    a: "You can send rent reminders directly to tenants via WhatsApp with one tap. The Automatic plan supports image-based automated reminders.",
+    a: "You can prepare and share rent reminders with tenants through WhatsApp in one tap. Bulk reminder actions are included with Plus and Pro.",
   },
   {
     q: "Is my data safe?",

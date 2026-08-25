@@ -491,24 +491,29 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   };
 
   const confirmRemoveTenant = async (tenantId: string) => {
-    const tenant = (room.tenants || []).find((t) => t.id === tenantId);
-    await removeTenant.mutateAsync({ tenantId, tenantName: tenant?.name });
+    const tenant = (room.tenants || []).find((item) => item.id === tenantId);
+    try {
+      await removeTenant.mutateAsync({ tenantId, tenantName: tenant?.name });
 
-    const updatedTenants = (room.tenants || []).filter((tenant) => tenant.id !== tenantId);
-    const newStatus =
-      updatedTenants.length === room.capacity
-        ? "Occupied"
-        : updatedTenants.length === 0
-          ? "Vacant"
-          : "Partially Occupied";
+      const updatedTenants = (room.tenants || []).filter((item) => item.id !== tenantId);
+      const newStatus =
+        updatedTenants.length === room.capacity
+          ? "Occupied"
+          : updatedTenants.length === 0
+            ? "Vacant"
+            : "Partially Occupied";
 
-    await updateRoom.mutateAsync({
-      ...room,
-      tenants: updatedTenants,
-      status: newStatus,
-    });
-
-
+      await updateRoom.mutateAsync({ ...room, tenants: updatedTenants, status: newStatus });
+      setConfirmAction(null);
+      exitEditMode();
+      toast({ title: "Tenant deleted", description: `${tenant?.name || "Tenant"} was removed successfully.` });
+    } catch (error) {
+      toast({
+        title: "Could not delete tenant",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isSelectedCurrentMonth = (() => {
@@ -900,7 +905,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               <span className="font-semibold text-foreground">
                 {activeTenants.length}/{room.capacity} occupied
               </span>
-              {isAdmin && (
+              {(isAdmin || isOwner) && (
                 <div className="flex gap-1 ml-1">
                   <Button
                     variant="outline"
@@ -916,7 +921,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                     size="icon"
                     className="h-5 w-5"
                     onClick={() => handleCapacityChange(false)}
-                    disabled={room.capacity <= (room.tenants || []).length}
+                    disabled={room.capacity <= activeTenants.length}
                   >
                     <ChevronDown className="h-3 w-3" />
                   </Button>
@@ -1306,11 +1311,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                         Welcome
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
-                                        onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                                        onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
                                         className="gap-2"
                                       >
                                         <ClipboardList className="h-4 w-4" />
-                                        Complete Tenant Profile
+                                        {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -1693,22 +1698,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 </div>
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={collectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>
@@ -1804,22 +1794,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 </div>
               </div>
 
-              <div>
-                <Label>Collected By</Label>
-                <div className="flex gap-2 mt-2">
-                  {collectors.map((collector) => (
-                    <Button
-                      key={collector.id}
-                      type="button"
-                      variant={remainingCollectedBy === collector.id ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setRemainingCollectedBy(collector.id)}
-                    >
-                      {collector.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+
 
               <div>
                 <Label>Payment Date</Label>
@@ -1916,6 +1891,35 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       </Dialog>
 
       {/* Mark Left Dialog with Settlement */}
+      <AlertDialog
+        open={confirmAction?.type === "delete"}
+        onOpenChange={(nextOpen) => !nextOpen && !removeTenant.isPending && setConfirmAction(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete tenant?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {(room.tenants || []).find((item) => item.id === confirmAction?.tenantId)?.name || "this tenant"}
+              {` from Room ${room.roomNo}`}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeTenant.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!confirmAction?.tenantId || removeTenant.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                if (confirmAction?.tenantId) void confirmRemoveTenant(confirmAction.tenantId);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removeTenant.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              {removeTenant.isPending ? "Deleting…" : "Delete Tenant"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <MarkLeftDialog
         open={!!markLeftTenant}
         onOpenChange={(open) => !open && setMarkLeftTenant(null)}

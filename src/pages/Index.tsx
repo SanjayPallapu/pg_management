@@ -20,7 +20,7 @@ const TenantManagement = lazy(() => import("@/components/TenantManagement").then
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 const PaymentReconciliation = lazy(() => import("@/components/PaymentReconciliation").then(m => ({ default: m.PaymentReconciliation })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
-import { PGSwitcher, OnboardingFlow } from "@/components/pg";
+import { PGSwitcher } from "@/components/pg";
 import { Room } from "@/types";
 import { useRentCalculations } from "@/hooks/useRentCalculations";
 import {
@@ -30,6 +30,7 @@ import {
   Settings,
   Wallet,
   Menu,
+  Mic,
 } from "lucide-react";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
@@ -46,7 +47,7 @@ import { SubscriptionBadge } from "@/components/subscription";
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
-  const { needsSetup, isLoading: pgLoading, refreshPGs, currentPG, canCreatePG } = usePG();
+  const { needsSetup, isLoading: pgLoading, currentPG, canCreatePG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
   const { isLoading: paymentsLoading } = useTenantPayments();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -246,7 +247,7 @@ const Index = () => {
   // Only force automatic setup redirect for explicit new signups (isNewSignup)
   if (needsSetup && isNewSignup) {
     if (canCreatePG) return <Navigate to="/setup/property" replace />;
-    return <OnboardingFlow onComplete={() => { sessionStorage.removeItem('isNewSignup'); refreshPGs(); }} />;
+    return <Navigate to="/subscription" replace />;
   }
 
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
@@ -258,9 +259,9 @@ const Index = () => {
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-3 py-1 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1700px] items-center justify-between px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2">
           {/* Left: Hostel logo / Switcher, Month Picker, and PG details */}
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <PGSwitcher />
             <MonthYearPicker />
             <div className="min-w-0 hidden sm:block">
@@ -275,11 +276,11 @@ const Index = () => {
           </div>
 
           {/* Right: subscription status and full-page app menu */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <SubscriptionBadge />
             <Button
               size="icon"
-              className="relative h-9 w-9 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
+              className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
               title="Open app menu"
               aria-label="Open app menu"
               onClick={() => navigate("/menu")}
@@ -292,7 +293,7 @@ const Index = () => {
       </div>
 
       {apiErrorMessage && (
-        <div className="mx-auto w-full max-w-screen-2xl px-3 pt-4 sm:px-4">
+        <div className="mx-auto w-full max-w-[1700px] px-3 sm:px-6 lg:px-8 pt-4">
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             Failed to load data: {apiErrorMessage}
           </div>
@@ -301,7 +302,7 @@ const Index = () => {
 
 
 
-      <div className="mx-auto w-full max-w-screen-2xl px-1.5 py-1 sm:px-2">
+      <div className="mx-auto w-full max-w-[1700px] px-2 sm:px-4 md:px-6 lg:px-8 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
@@ -382,6 +383,19 @@ const Index = () => {
 
       </div>
       </div>
+
+      {activeTab === "dashboard" && (
+        <Button
+          size="icon"
+          className="fixed right-3 z-[54] h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:from-violet-600 hover:to-indigo-700"
+          style={{ bottom: "calc(4.9rem + env(safe-area-inset-bottom, 0px))" }}
+          title="Open Voice Assistant"
+          aria-label="Open Voice Assistant"
+          onClick={() => navigate("/voice")}
+        >
+          <Mic className="h-5 w-5" />
+        </Button>
+      )}
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>

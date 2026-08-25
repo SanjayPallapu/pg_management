@@ -5,25 +5,36 @@ import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePG } from "@/contexts/PGContext";
-import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey } from "@/types/pg";
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_MARKETING, type SubscriptionPlanKey } from "@/types/pg";
 import { toast } from "sonner";
+import { useRazorpay } from "@/hooks/useRazorpay";
 
 export default function PGSetupSubscription() {
   const navigate = useNavigate();
   const { refreshSubscription } = usePG();
+  const { initiatePayment, isLoading: paymentLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("trial");
   const [submitting, setSubmitting] = useState(false);
 
   const confirmPlan = async () => {
+    if (selectedPlan !== "trial") {
+      initiatePayment({
+        plan: selectedPlan,
+        onSuccess: async () => {
+          await refreshSubscription();
+          sessionStorage.setItem("pgh_selected_plan", selectedPlan);
+          toast.success(`${SUBSCRIPTION_PLANS[selectedPlan].name} activated!`);
+          navigate("/setup/complete", { replace: true });
+        },
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await refreshSubscription();
       sessionStorage.setItem("pgh_selected_plan", selectedPlan);
-      toast.success(
-        selectedPlan === "trial"
-          ? "7-Day Free Trial activated!"
-          : `${SUBSCRIPTION_PLANS[selectedPlan]?.name || "Plan"} selected!`
-      );
+      toast.success("7-Day Free Trial activated!");
       navigate("/setup/complete", { replace: true });
     } catch {
       toast.error("Proceeding with default free trial");
@@ -45,42 +56,43 @@ export default function PGSetupSubscription() {
       icon: <Clock className="h-5 w-5 text-emerald-600 shrink-0" />,
       features: [
         "Full access to all Pro features",
-        "Unlimited PGs, Rooms & Tenants",
-        "Smart PDF Receipts & Whatsapp Reminders",
+        "Up to 4 PGs and 500 active tenants",
+        "Smart PDF receipts and WhatsApp sharing",
         "No credit card required",
       ],
     },
     {
+      key: "monthly" as SubscriptionPlanKey,
+      name: "Basic",
+      tag: "For individual PG owners",
+      price: "₹199",
+      period: "/month",
+      badgeStyle: "bg-indigo-500 text-white font-extrabold",
+      cardStyle: "border-indigo-500 bg-indigo-500/5 ring-2 ring-indigo-500/30",
+      icon: <Zap className="h-5 w-5 text-indigo-600 shrink-0" />,
+      features: SUBSCRIPTION_PLAN_MARKETING.basic.features.slice(0, 4),
+    },
+    {
       key: "pro" as SubscriptionPlanKey,
-      name: "Plus Pro",
+      name: "Plus",
       tag: "Most Popular",
-      price: "₹499",
+      price: "₹299",
       period: "/month",
       badgeStyle: "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold",
       cardStyle: "border-purple-500 bg-purple-500/5 ring-2 ring-purple-500/30",
       icon: <Star className="h-5 w-5 text-purple-600 fill-purple-600 shrink-0" />,
-      features: [
-        "Everything in Trial",
-        "Auto-renewing subscriptions",
-        "Occupancy & Profit Analytics",
-        "Priority Support",
-      ],
+      features: SUBSCRIPTION_PLAN_MARKETING.plus.features.slice(0, 4),
     },
     {
       key: "promax" as SubscriptionPlanKey,
-      name: "Pro Ultimate",
-      tag: "Ultimate",
-      price: "₹999",
+      name: "Pro",
+      tag: "For multi-property businesses",
+      price: "₹499",
       period: "/month",
       badgeStyle: "bg-amber-500 text-white font-extrabold",
       cardStyle: "border-amber-500 bg-amber-500/5 ring-2 ring-amber-500/30",
       icon: <Crown className="h-5 w-5 text-amber-500 fill-amber-500 shrink-0" />,
-      features: [
-        "Everything in Pro",
-        "Multi-owner PG Management",
-        "Dedicated Account Manager",
-        "99.9% Uptime SLA",
-      ],
+      features: SUBSCRIPTION_PLAN_MARKETING.pro.features.slice(0, 4),
     },
   ];
 
@@ -153,10 +165,10 @@ export default function PGSetupSubscription() {
           <div className="max-w-xl mx-auto">
             <PGHubButton
               onClick={confirmPlan}
-              loading={submitting}
+              loading={submitting || paymentLoading}
               className="w-full h-12 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white rounded-2xl font-extrabold text-sm shadow-lg shadow-purple-500/25 active:scale-98 transition-all flex items-center justify-center gap-2"
             >
-              Finish Setup & Go to Ready Page <ArrowRight size={18} />
+              {selectedPlan === "trial" ? "Start 7-Day Free Trial" : `Continue to secure payment`} <ArrowRight size={18} />
             </PGHubButton>
           </div>
         </div>

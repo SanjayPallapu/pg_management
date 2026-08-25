@@ -31,9 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
+    outputs:
+      version_code: ${{ steps.version.outputs.version_code }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,6 +104,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Compute Version Code
+        id: version
+        run: |
+          version_code=$((GITHUB_RUN_NUMBER + 200))
+          echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
+          echo "Version code: ${version_code}"
+
       - name: Build AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -109,11 +121,34 @@ jobs:
           chmod +x gradlew
           ./gradlew bundleRelease
 
+      - name: Generate Release Notes
+        run: |
+          {
+            echo "PG HUB Release — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "Version code: $((GITHUB_RUN_NUMBER + 200))"
+            echo "Branch: ${GITHUB_REF_NAME}"
+            echo "Commit: ${GITHUB_SHA:0:8}"
+            echo ""
+            echo "Recent changes:"
+            git log --oneline -10 --no-decorate
+          } > release_notes.txt
+          echo "--- Release notes ---"
+          cat release_notes.txt
+
+      - name: Stage Artifacts
+        run: |
+          mkdir -p staging
+          cp android/app/build/outputs/bundle/release/app-release.aab staging/app-release.aab
+          cp release_notes.txt staging/release_notes.txt
+          echo "Staged artifacts:"
+          ls -lh staging/
+
       - name: Upload Release AAB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          path: staging/
           if-no-files-found: error
           retention-days: 14
 
@@ -129,13 +164,100 @@ jobs:
             echo "- Branch: \`${GITHUB_REF_NAME}\`"
             echo "- Run number: \`${GITHUB_RUN_NUMBER}\`"
             echo "- Version code: \`${version_code}\`"
-            if [ "${{ github.event_name }}" = "push" ] && [[ "${GITHUB_REF}" == refs/tags/play-release-* ]]; then
+            if [ "${{ github.event_name }}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ] && [[ "${GITHUB_REF}" != refs/tags/* ]]; then
+              echo "- Requested action: build + publish to Google Play **production** track"
+            elif [ "${{ github.event_name }}" = "push" ] && [[ "${GITHUB_REF}" == refs/tags/play-release-* ]]; then
               echo "- Requested action: publish tagged release to Google Play closed testing"
             elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.release_action }}" = "upload-closed-testing" ]; then
               echo "- Requested action: publish to Google Play closed testing"
             else
               echo "- Requested action: build only"
             fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  upload-production:
+    name: Publish to Google Play Production
+    if: >-
+      ${{
+        github.repository == 'SanjayPallapu/pg_management' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main'
+      }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: google-play-production
+    concurrency:
+      group: google-play-production-upload
+      cancel-in-progress: false
+
+    steps:
+      - name: Download Signed AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
+          path: release
+
+      - name: Verify AAB Exists
+        run: |
+          echo "Downloaded artifact contents:"
+          find release -type f
+          if [ ! -f release/app-release.aab ]; then
+            echo "::error::app-release.aab not found in downloaded artifact"
+            exit 1
+          fi
+          echo "AAB found: $(ls -lh release/app-release.aab)"
+
+      - name: Validate Google Play Secret
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing GitHub secret: GOOGLE_PLAY_SERVICE_ACCOUNT_JSON — add it to the 'google-play-production' environment or as a repository secret."
+            exit 1
+          fi
+          echo "Google Play service account secret is present."
+
+      - name: Prepare Release Notes
+        run: |
+          mkdir -p whatsnew
+          if [ -f release/release_notes.txt ]; then
+            # Play Store limits release notes to 500 characters
+            head -c 500 release/release_notes.txt > whatsnew/en-US
+            echo "Release notes prepared from build artifact."
+          else
+            echo "PG HUB release — version code ${{ needs.build.outputs.version_code }}" > whatsnew/en-US
+            echo "Using default release notes."
+          fi
+          echo "--- What's New (en-US) ---"
+          cat whatsnew/en-US
+
+      - name: Upload to Google Play Production
+        id: google_play_upload
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.sanjay.pgmanagement
+          releaseFiles: release/app-release.aab
+          track: production
+          status: completed
+          releaseName: "PG HUB v${{ needs.build.outputs.version_code }}"
+          whatsNewDirectory: whatsnew
+
+      - name: Write Upload Summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "## Google Play production release"
+            echo ""
+            echo "- Branch: \`${GITHUB_REF_NAME}\`"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Run number: \`${GITHUB_RUN_NUMBER}\`"
+            echo "- Version code: \`${{ needs.build.outputs.version_code }}\`"
+            echo "- Track: \`production\`"
+            echo "- Release status: \`completed\`"
+            echo "- Upload result: \`${{ steps.google_play_upload.outcome }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
   upload-closed-testing:
@@ -164,6 +286,16 @@ jobs:
           name: PG-HUB-AAB-${{ github.run_number }}-${{ github.sha }}
           path: release
 
+      - name: Verify AAB Exists
+        run: |
+          echo "Downloaded artifact contents:"
+          find release -type f
+          if [ ! -f release/app-release.aab ]; then
+            echo "::error::app-release.aab not found in downloaded artifact"
+            exit 1
+          fi
+          echo "AAB found: $(ls -lh release/app-release.aab)"
+
       - name: Validate Google Play Secret
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -180,7 +312,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.sanjay.pgmanagement
           releaseFiles: release/app-release.aab
-          tracks: alpha
+          track: alpha
           status: completed
           releaseName: PG HUB ${{ github.sha }}
 

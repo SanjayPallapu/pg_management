@@ -58,7 +58,9 @@ export function OwnerSharePanel({
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
 
   const link = existingLink as OnboardingLinkType | null;
-  const activeToken = link?.token || generatedToken;
+  const isLinkExpired = link ? new Date(link.expires_at) < new Date() : false;
+  const isLinkRevoked = link?.status === "revoked";
+  const activeToken = link && !isLinkExpired && !isLinkRevoked ? link.token : generatedToken;
   const publicAppUrl = getPublicAppUrl().replace(/\/$/, "");
   const onboardingUrl = activeToken
     ? `${publicAppUrl}/tenant-onboarding/${activeToken}`
@@ -80,7 +82,7 @@ export function OwnerSharePanel({
     }
   };
 
-  // Returns the current token, generating one if needed
+  // Returns the current valid token, generating a fresh one if needed
   const ensureToken = async (sentVia: string): Promise<string | null> => {
     if (activeToken) return activeToken;
     const result = await generateLink.mutateAsync({ tenantId, tenantName, sentVia });
@@ -91,7 +93,24 @@ export function OwnerSharePanel({
     return token;
   };
 
-  const isLinkExpired = link ? new Date(link.expires_at) < new Date() : false;
+  const handleRegenerateLink = async () => {
+    setGeneratedToken(null);
+    try {
+      const result = await generateLink.mutateAsync({ tenantId, tenantName, sentVia: "regenerate" });
+      const rows = result as Array<{ token?: string }> | null;
+      const newToken = rows?.[0]?.token ?? null;
+      setGeneratedToken(newToken);
+      if (newToken) {
+        toast.success("New onboarding link generated!");
+        await recordLinkShared("Regenerate");
+      } else {
+        toast.error("Failed to generate link");
+      }
+    } catch (e) {
+      console.error("[OwnerSharePanel] Regenerate link error", e);
+      toast.error("Failed to generate new onboarding link");
+    }
+  };
 
   const handleShareWhatsApp = async () => {
     const token = await ensureToken("whatsapp");
@@ -99,7 +118,7 @@ export function OwnerSharePanel({
     const url = `${publicAppUrl}/tenant-onboarding/${token}`;
     const phone = tenantPhone.replace(/\D/g, "");
     const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nLink expires on ${link ? new Date(link.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "in 7 days"}.`;
+    const message = `Hi ${tenantName},\n\nPlease complete your tenant onboarding:\n\n${url}\n\nLink expires in 7 days.`;
     await recordLinkShared("WhatsApp");
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
@@ -160,20 +179,22 @@ export function OwnerSharePanel({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-primary" />
-            Share Onboarding Link
+          <DialogTitle className="text-base font-bold flex items-start gap-2 text-foreground leading-snug">
+            <Link2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <span>Send a secure onboarding link to <span className="text-primary font-extrabold">{tenantName}</span> to complete their profile.</span>
           </DialogTitle>
-          <DialogDescription>
-            Send a secure onboarding link to {tenantName} to complete their profile.
-          </DialogDescription>
         </DialogHeader>
 
         {/* Expired link warning */}
-        {link && isLinkExpired && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <span>This link has expired. Generate a new link to share with {tenantName}.</span>
+        {link && (isLinkExpired || isLinkRevoked) && (
+          <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+              <span>This link has {isLinkExpired ? "expired" : "been revoked"}. Generate a new link for {tenantName}.</span>
+            </div>
+            <Button size="sm" variant="outline" className="h-7 text-xs font-semibold shrink-0" onClick={handleRegenerateLink} disabled={generateLink.isPending}>
+              {generateLink.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "New Link"}
+            </Button>
           </div>
         )}
 

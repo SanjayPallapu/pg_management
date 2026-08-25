@@ -1,17 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { PLAN_CONFIG, type PlanKey } from "../_shared/subscriptionPlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const PLAN_CONFIG = {
-  manual: { amount: 499, label: "Manual" },
-  automatic: { amount: 999, label: "Automatic" },
-} as const;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -62,7 +58,8 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const planConfig = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG];
+    const planKey = plan as PlanKey;
+    const planConfig = PLAN_CONFIG[planKey];
     const allowedOrigins = new Set(["https://pgmanagee.vercel.app", Deno.env.get("APP_URL")].filter(Boolean));
     let origin = "https://pgmanagee.vercel.app";
     try {
@@ -82,7 +79,7 @@ serve(async (req) => {
               name: `PG HUB - ${planConfig.label} Plan`,
               description: `Monthly subscription - ${planConfig.label} Plan`,
             },
-            unit_amount: planConfig.amount * 100,
+            unit_amount: planConfig.amount,
           },
           quantity: 1,
         },
@@ -90,7 +87,7 @@ serve(async (req) => {
       mode: "payment",
       metadata: {
         user_id: user.id,
-        plan: plan,
+        plan: planKey,
       },
       success_url: `${origin}?payment=success&plan=${plan}`,
       cancel_url: `${origin}?payment=cancelled`,
@@ -99,10 +96,10 @@ serve(async (req) => {
     // Store payment request
     await supabaseAdmin.from("payment_requests").insert({
       user_id: user.id,
-      amount: planConfig.amount,
+      amount: planConfig.amount / 100,
       payment_method: "stripe",
       status: "pending",
-      notes: JSON.stringify({ stripe_session_id: session.id, plan }),
+      notes: JSON.stringify({ stripe_session_id: session.id, plan: planKey }),
     });
 
     return new Response(

@@ -15,6 +15,7 @@ import { PaymentEntry, Room } from '@/types';
 import { WhatsAppReceiptDialog } from '@/components/WhatsAppReceiptDialog';
 import { AllCollectedCard } from '@/components/AllCollectedCard';
 import { ProfileStatusBadge, useOnboardingProfileMap } from '@/features/tenant-onboarding';
+import { TenantChatMenu } from '@/components/TenantChatMenu';
 
 interface PaidTenantsCardProps {
   rooms: Room[];
@@ -217,7 +218,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
         {/* Right Div */}
         <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
           {/* Top: Price Amount */}
-          <div className="w-[72px] text-center">
+          <div className="w-[84px] text-center">
             <span className="text-lg font-extrabold text-foreground">
               ₹{tenant.amountPaid.toLocaleString()}
             </span>
@@ -225,34 +226,29 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
 
           {/* Middle: Action icons */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
-            <div className="w-[72px] flex items-center justify-between my-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const phone = tenant.phone.replace(/\D/g, '');
-                  const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-                  window.open(`https://wa.me/${cleanPhone}`, '_blank');
-                }}
-                className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-0"
-                title="Chat on WhatsApp"
-              >
-                <MessageCircle className="h-5 w-5 stroke-[1.75]" />
-              </button>
+            <div className="flex w-[84px] items-center justify-between my-2">
+              <TenantChatMenu
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+                phone={tenant.phone}
+                profileComplete={["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "")}
+                onReceipt={() => openReceipt(tenant, period)}
+              />
               <a
                 href={`tel:${tenant.phone}`}
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-0"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                 aria-label={`Call ${tenant.name}`}
               >
-                <Phone className="h-5 w-5 stroke-[1.75]" />
+                <Phone className="h-4 w-4" />
               </a>
             </div>
           ) : (
-            <div />
+            <div className="w-[84px] my-2" />
           )}
 
           {/* Bottom: Paid badge */}
-          <div>
-            <span className="badge-paid-periwinkle min-w-[72px] px-2 text-center shrink-0">Paid</span>
+          <div className="w-[84px]">
+            <span className="badge-paid-periwinkle w-full px-0 text-center block shrink-0">Paid</span>
           </div>
         </div>
       </div>
