@@ -395,9 +395,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-          </div>
-        </div>
-      </section>
 
       <section id="payments" className="mx-auto grid max-w-7xl gap-8 px-4 py-20 md:grid-cols-2 md:px-8">
         <motion.div {...reveal} className="rounded-[36px] bg-lime-300 p-7">
