@@ -267,16 +267,24 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     const perBedRent = Math.round(room.rentAmount / Math.max(1, room.capacity));
     const potentialAdditionalRent = emptyBeds * perBedRent;
 
-    const reservedCount = isCurrentMonth
-      ? room.tenants.filter((t) => isTenantUpcoming(t.startDate, t.endDate)).length
-      : 0;
+    const reservedTenants = isCurrentMonth
+      ? room.tenants.filter((t) => isTenantUpcoming(t.startDate, t.endDate))
+      : [];
 
     return {
       roomNo: room.roomNo,
       capacity: room.capacity,
       occupied,
       emptyBeds,
-      reservedBeds: reservedCount,
+      reservedBeds: reservedTenants.length,
+      upcomingTenants: reservedTenants.map((t) => ({
+        id: t.id,
+        name: t.name,
+        phone: t.phone,
+        startDate: t.startDate,
+        deposit: t.securityDepositAmount || 0,
+        rent: t.monthlyRent,
+      })),
       perBedRent,
       potentialAdditionalRent,
       floor: room.floor,

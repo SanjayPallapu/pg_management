@@ -133,30 +133,62 @@ export const PGProvider = ({ children }: PGProviderProps) => {
 
       if (fetchError) throw fetchError;
 
-      if (data) {
-        const features = getFeatureMap(data.features);
-        const billingCycle = features.billing_cycle as Subscription['billingCycle'];
+      let subData = data;
+      if (!subData) {
+        // Automatically grant a 7-day free trial so user is never locked out
+        const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: createdSub, error: insertError } = await supabase
+          .from('subscriptions')
+          .upsert(
+            {
+              user_id: user.id,
+              plan: 'pro',
+              status: 'active',
+              max_pgs: 4,
+              max_tenants_per_pg: 500,
+              features: {
+                auto_reminders: true,
+                daily_reports: true,
+                ai_logo: true,
+                billing_cycle: 'trial',
+                included_tenants: 500,
+              },
+              expires_at: trialExpiry,
+            },
+            { onConflict: 'user_id' }
+          )
+          .select()
+          .maybeSingle();
+
+        if (!insertError && createdSub) {
+          subData = createdSub;
+        }
+      }
+
+      if (subData) {
+        const features = getFeatureMap(subData.features);
+        const billingCycle = (features.billing_cycle as Subscription['billingCycle']) || (subData.plan === 'free' ? 'free' : 'trial');
 
         setSubscription({
-          id: data.id,
-          userId: data.user_id,
-          plan: data.plan as 'free' | 'pro',
-          status: data.status as 'free' | 'pending' | 'active' | 'expired',
+          id: subData.id,
+          userId: subData.user_id,
+          plan: subData.plan as 'free' | 'pro',
+          status: subData.status as 'free' | 'pending' | 'active' | 'expired',
           billingCycle,
-          maxPgs: data.max_pgs,
-          maxTenantsPerPg: data.max_tenants_per_pg,
+          maxPgs: subData.max_pgs,
+          maxTenantsPerPg: subData.max_tenants_per_pg,
           features: {
             autoReminders: features.auto_reminders === true,
             dailyReports: features.daily_reports === true,
             aiLogo: features.ai_logo === true,
           },
-          paymentProofUrl: data.payment_proof_url || undefined,
-          paymentRequestedAt: data.payment_requested_at || undefined,
-          paymentApprovedAt: data.payment_approved_at || undefined,
-          approvedBy: data.approved_by || undefined,
-          expiresAt: data.expires_at || undefined,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
+          paymentProofUrl: subData.payment_proof_url || undefined,
+          paymentRequestedAt: subData.payment_requested_at || undefined,
+          paymentApprovedAt: subData.payment_approved_at || undefined,
+          approvedBy: subData.approved_by || undefined,
+          expiresAt: subData.expires_at || undefined,
+          createdAt: subData.created_at,
+          updatedAt: subData.updated_at,
         });
       }
     } catch (err) {

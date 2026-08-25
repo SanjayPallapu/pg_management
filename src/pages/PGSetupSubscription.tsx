@@ -5,6 +5,8 @@ import { PGHubButton } from "@/features/pg-hub/PGHubButton";
 import { PGHubSetupHeader } from "@/features/pg-hub/PGHubSetupHeader";
 import { PGHubShell } from "@/features/pg-hub/PGHubShell";
 import { usePG } from "@/contexts/PGContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/proxyClient";
 import { SUBSCRIPTION_PLANS, SUBSCRIPTION_PLAN_MARKETING, type SubscriptionPlanKey } from "@/types/pg";
 import { toast } from "sonner";
 import { useRazorpay } from "@/hooks/useRazorpay";
@@ -12,6 +14,7 @@ import { useRazorpay } from "@/hooks/useRazorpay";
 export default function PGSetupSubscription() {
   const navigate = useNavigate();
   const { refreshSubscription } = usePG();
+  const { user } = useAuth();
   const { initiatePayment, isLoading: paymentLoading } = useRazorpay();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("trial");
   const [submitting, setSubmitting] = useState(false);
@@ -32,6 +35,27 @@ export default function PGSetupSubscription() {
 
     setSubmitting(true);
     try {
+      if (user?.id) {
+        const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from("subscriptions").upsert(
+          {
+            user_id: user.id,
+            plan: "pro",
+            status: "active",
+            max_pgs: 4,
+            max_tenants_per_pg: 500,
+            features: {
+              auto_reminders: true,
+              daily_reports: true,
+              ai_logo: true,
+              billing_cycle: "trial",
+              included_tenants: 500,
+            },
+            expires_at: trialExpiry,
+          },
+          { onConflict: "user_id" }
+        );
+      }
       await refreshSubscription();
       sessionStorage.setItem("pgh_selected_plan", selectedPlan);
       toast.success("7-Day Free Trial activated!");

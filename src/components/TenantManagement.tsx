@@ -44,6 +44,7 @@ import {
   ArrowLeft,
   Contact,
   ClipboardList,
+  CalendarClock,
 } from "lucide-react";
 import {
   pickContactFromDevice,
@@ -77,7 +78,7 @@ import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { ShiftRoomDialog } from "./ShiftRoomDialog";
 import { ProfileStatusBadge, useOnboardingProfileMap } from "@/features/tenant-onboarding";
-import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, parseDateOnly } from "@/utils/dateOnly";
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, isTenantUpcoming, getDaysUntilJoining, parseDateOnly } from "@/utils/dateOnly";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
 
 // Helper to check if tenant joined within last 5 days
@@ -533,6 +534,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
     : tenantsInSelectedMonth
   ).filter((t) => !hasTenantLeftNow(t.endDate));
 
+  const upcomingTenants = (isSelectedCurrentMonth
+    ? (room.tenants || []).filter((t) => t && isTenantUpcoming(t.startDate, t.endDate))
+    : []
+  ).filter((t) => !hasTenantLeftNow(t.endDate));
+
   const beginEditingTenant = (tenant: Tenant) => {
     setIsEditMode(true);
     setEditingTenantId(tenant.id);
@@ -557,8 +563,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       return;
     }
 
-    if (activeTenants.length === 1) {
+    if (activeTenants.length === 1 && upcomingTenants.length === 0) {
       beginEditingTenant(activeTenants[0]);
+      return;
+    }
+
+    if (activeTenants.length === 0 && upcomingTenants.length === 1) {
+      beginEditingTenant(upcomingTenants[0]);
       return;
     }
 
@@ -572,7 +583,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   const leftTenantsCount = (room.tenants || []).filter((t) => t && hasTenantLeftNow(t.endDate)).length;
 
-  const availableBeds = room.capacity - activeTenants.length;
+  const availableBeds = Math.max(0, room.capacity - activeTenants.length - upcomingTenants.length);
 
   const handleCapacityChange = (increment: boolean) => {
     const newCapacity = increment ? room.capacity + 1 : room.capacity - 1;
@@ -1440,6 +1451,250 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 })
               )}
             </div>
+
+            {/* Reserved / Upcoming Tenants */}
+            {upcomingTenants.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                    <CalendarClock className="h-4 w-4" />
+                    Reserved Tenants ({upcomingTenants.length})
+                  </h3>
+                </div>
+
+                {upcomingTenants.map((tenant) => {
+                  const isEditing = editingTenantId === tenant.id;
+                  const daysLeft = getDaysUntilJoining(tenant.startDate);
+                  const handleCheckInNow = async () => {
+                    const todayStr = format(new Date(), 'yyyy-MM-dd');
+                    await handleUpdateTenant(tenant.id, { startDate: todayStr });
+                    toast({ title: "Checked in", description: `${tenant.name} checked in successfully!` });
+                  };
+
+                  return (
+                    <div
+                      key={tenant.id}
+                      onDoubleClick={() => {
+                        if (!isEditing) navigate(`/tenant-profile/${tenant.id}/details`);
+                      }}
+                      title={isEditing ? undefined : "Double-click to open full tenant details"}
+                      className={cn(
+                        "p-3 border rounded-xl space-y-3 transition-all duration-200 border-amber-300/80 bg-amber-50/70 dark:bg-amber-950/30 dark:border-amber-800/60",
+                        !isEditing && "cursor-pointer",
+                        isEditing && "ring-2 ring-primary scale-[1.02]",
+                      )}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editingValues?.name ?? tenant.name}
+                                onChange={(e) => {
+                                  setEditingValues(prev => prev ? { ...prev, name: e.target.value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { name: editingValues.name });
+                                  }
+                                }}
+                                placeholder="Name"
+                                className="font-medium"
+                              />
+                              <Input
+                                value={editingValues?.phone ?? tenant.phone}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                  setEditingValues(prev => prev ? { ...prev, phone: value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { phone: editingValues.phone });
+                                  }
+                                }}
+                                placeholder="Phone"
+                                maxLength={10}
+                              />
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editingValues?.startDate ?? tenant.startDate}
+                                  onChange={(e) => {
+                                    setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                  }}
+                                  onBlur={async () => {
+                                    if (editingValues) {
+                                      await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="font-semibold text-base text-amber-950 dark:text-amber-100">{tenant.name}</div>
+                                <ProfileStatusBadge
+                                  status={onboardingProfileMap.get(tenant.id)?.status}
+                                  size="sm"
+                                  showLabel={false}
+                                  onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                                />
+                                <Badge className="h-4 px-1.5 text-[9px] font-bold bg-amber-600 text-white border-0">
+                                  RESERVED
+                                </Badge>
+                              </div>
+                              {tenant.phone && tenant.phone !== "••••••••••" && (
+                                <div className="text-sm text-muted-foreground">{tenant.phone}</div>
+                              )}
+                              <div className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                                Joining Date: {format(parseDateOnly(tenant.startDate), "d MMM yyyy")} ({daysLeft > 0 ? `in ${daysLeft} days` : 'Today'})
+                              </div>
+                              <div className="text-xs text-muted-foreground font-semibold">
+                                Rent: ₹{tenant.monthlyRent.toLocaleString()}/month
+                              </div>
+                              {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 ? (
+                                <div className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                                  Advance Paid: ₹{tenant.securityDepositAmount.toLocaleString()}
+                                </div>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2 ml-2 shrink-0">
+                          {isEditMode && !isEditing && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => beginEditingTenant(tenant)}
+                            >
+                              Edit details
+                            </Button>
+                          )}
+
+                          {!isEditing && (
+                            <div className="flex items-center gap-1">
+                              {canManageTenants && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="h-7 text-xs px-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                                  onClick={handleCheckInNow}
+                                >
+                                  Check In
+                                </Button>
+                              )}
+                              {tenant.phone && tenant.phone !== "••••••••••" && (
+                                <a
+                                  href={`tel:${tenant.phone}`}
+                                  className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                                  title={`Call ${tenant.name}`}
+                                >
+                                  <Phone className="h-4 w-4" />
+                                </a>
+                              )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                    title="WhatsApp options"
+                                  >
+                                    <MessageCircle className="h-4 w-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                                    className="gap-2"
+                                  >
+                                    <User className="h-4 w-4" />
+                                    Open Profile
+                                  </DropdownMenuItem>
+                                  {tenant.phone && tenant.phone !== "••••••••••" && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        const phone = tenant.phone.replace(/\D/g, "");
+                                        const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                                        window.location.href = `https://wa.me/${formattedPhone}`;
+                                      }}
+                                      className="gap-2"
+                                    >
+                                      <MessageSquare className="h-4 w-4" />
+                                      Chat with Tenant
+                                    </DropdownMenuItem>
+                                  )}
+                                  {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                          detail: { tenantId: tenant.id } 
+                                        });
+                                        setTimeout(() => { window.dispatchEvent(event); }, 100);
+                                      }}
+                                      className="gap-2"
+                                    >
+                                      <Receipt className="h-4 w-4" />
+                                      Advance / Deposit Receipt
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          )}
+
+                          {isEditing && (
+                            <div className="space-y-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                onClick={() => setShiftTenant(tenant)}
+                              >
+                                <ArrowRightLeft className="h-4 w-4 mr-1" />
+                                Shift Room
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveTenant(tenant.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {isEditing && (
+                        <div className="space-y-3 pt-2 border-t">
+                          <div>
+                            <Label>Monthly Rent</Label>
+                            <Input
+                              type="number"
+                              value={editingValues?.monthlyRent ?? tenant.monthlyRent}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseInt(e.target.value) || 0);
+                                setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
+                              }}
+                              onBlur={async () => {
+                                if (editingValues) {
+                                  await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
           {/* Add New Tenant - Admin Only */}
           {canManageTenants && availableBeds > 0 && (

@@ -225,7 +225,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const { currentPG } = usePG();
   const { byRoom: acByRoom, setReading } = useElectricityReadings(selectedMonth, selectedYear);
   const canManageTenants = isOwner;
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
@@ -429,12 +429,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 AC
               </Badge>
             )}
-            {reservedCount > 0 && (
-              <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 gap-1 px-1.5 py-0.5">
-                <CalendarClock className="h-3 w-3" />
-                {reservedCount} Reserved
-              </Badge>
-            )}
             <Badge className={getStatusColor(currentStatus)}>{currentStatus}</Badge>
           </div>
         </div>
@@ -447,11 +441,6 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">
               {occupiedCount}/{room.capacity} occupied
-              {reservedCount > 0 && (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold ml-1 text-xs">
-                  ({reservedCount} Reserved)
-                </span>
-              )}
             </span>
           </div>
 
@@ -805,31 +794,71 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
           <div className="mt-2 space-y-2 border-t pt-2 border-amber-200 dark:border-amber-900/40">
             <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5" />
-              Advance Booked / Reserved ({upcomingTenants.length})
+              Reserved Tenants ({upcomingTenants.length})
             </div>
             {upcomingTenants.map((tenant) => {
               const daysLeft = getDaysUntilJoining(tenant.startDate);
-              const handleCheckInNow = () => {
+              const handleCheckInNow = (e: React.MouseEvent) => {
+                e.stopPropagation();
                 const todayStr = format(new Date(), 'yyyy-MM-dd');
                 updateTenant(tenant.id, { startDate: todayStr });
                 toast.success(`${tenant.name} checked in successfully!`);
               };
 
+              const openWhatsAppChat = (e: React.MouseEvent) => {
+                e.stopPropagation();
+                const phone = tenant.phone.replace(/\D/g, "");
+                const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                window.location.href = `https://wa.me/${formattedPhone}`;
+              };
+
               return (
-                <div key={tenant.id} className="p-2.5 rounded-xl border border-amber-300/70 bg-amber-50/80 dark:bg-amber-950/30 dark:border-amber-800/50 text-xs">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-bold text-amber-950 dark:text-amber-100">{tenant.name}</div>
-                      <div className="text-[11px] text-amber-800 dark:text-amber-300 font-medium mt-0.5">
-                        Joining {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')} ({daysLeft > 0 ? `in ${daysLeft} days` : 'Today'})
+                <div
+                  key={tenant.id}
+                  onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                  onDoubleClick={() => navigate(`/tenant-profile/${tenant.id}/details`)}
+                  title="Click to view tenant details"
+                  className="p-2.5 rounded-xl border border-amber-300/80 bg-amber-50/90 dark:bg-amber-950/40 dark:border-amber-800/60 text-xs hover:shadow-sm transition-all cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-amber-950 dark:text-amber-100 text-sm truncate">
+                          {tenant.name}
+                        </span>
+                        <ProfileStatusBadge
+                          status={onboardingProfileMap.get(tenant.id)?.status}
+                          size="sm"
+                          showLabel={false}
+                          onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                        />
+                        <Badge className="h-4 px-1.5 text-[9px] font-bold bg-amber-600 text-white border-0">
+                          RESERVED
+                        </Badge>
                       </div>
+
+                      {tenant.phone && tenant.phone !== '••••••••••' && (
+                        <div className="text-[11px] text-amber-900/80 dark:text-amber-300 font-medium">
+                          {tenant.phone}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                        <span>
+                          Joining {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')} ({daysLeft > 0 ? `in ${daysLeft} days` : 'Today'})
+                        </span>
+                        <span>•</span>
+                        <span className="font-bold text-foreground">₹{tenant.monthlyRent.toLocaleString()}/mo</span>
+                      </div>
+
                       {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 ? (
-                        <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
+                        <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded w-fit border border-emerald-300/50">
                           Advance Paid: ₹{tenant.securityDepositAmount.toLocaleString()}
                         </div>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+
+                    <div className="flex items-center gap-1.5 shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
                       {canManageTenants && (
                         <Button
                           variant="default"
@@ -842,6 +871,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           Check In
                         </Button>
                       )}
+
                       {tenant.phone && tenant.phone !== '••••••••••' && (
                         <a
                           href={`tel:${tenant.phone}`}
@@ -852,6 +882,72 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           <Phone className="h-3.5 w-3.5" />
                         </a>
                       )}
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="grid h-7 w-7 place-items-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400 shrink-0"
+                            title="WhatsApp & Tenant options"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                            className="gap-2"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Open Tenant Profile
+                          </DropdownMenuItem>
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                              <MessageSquare className="h-4 w-4" />
+                              Chat with Tenant
+                            </DropdownMenuItem>
+                          )}
+                          {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                  detail: { 
+                                    tenantId: tenant.id
+                                  } 
+                                });
+                                setTimeout(() => {
+                                  window.dispatchEvent(event);
+                                }, 100);
+                              }}
+                              className="gap-2"
+                            >
+                              <Receipt className="h-4 w-4" />
+                              Advance / Deposit Receipt
+                            </DropdownMenuItem>
+                          )}
+                          {tenant.phone && tenant.phone !== '••••••••••' && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setWelcomeData({
+                                  tenantName: tenant.name,
+                                  tenantPhone: tenant.phone,
+                                  joiningDate: tenant.startDate,
+                                  roomNo: room.roomNo,
+                                  sharingType: `${room.capacity} Sharing`,
+                                  monthlyRent: tenant.monthlyRent,
+                                });
+                                setTimeout(() => {
+                                  setWelcomeDialogOpen(true);
+                                }, 100);
+                              }}
+                              className="gap-2"
+                            >
+                              <PartyPopper className="h-4 w-4" />
+                              Welcome
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>

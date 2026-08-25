@@ -22,8 +22,8 @@ describe("getSubscriptionAccess", () => {
     expect(result.expired).toBe(true);
   });
 
-  it("blocks legacy free records without expiration", () => {
-    expect(getSubscriptionAccess({ ...base, plan: "free", status: "free", billingCycle: undefined }).allowed).toBe(false);
+  it("allows free records without expiration", () => {
+    expect(getSubscriptionAccess({ ...base, plan: "free", status: "free", billingCycle: undefined }).allowed).toBe(true);
   });
 
   it("allows an active lifetime subscription without expiration", () => {

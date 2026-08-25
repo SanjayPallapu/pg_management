@@ -60,15 +60,10 @@ export default function SubscriptionPage() {
   const activePlanKeyOnSubscription = isSubscribedAndActive ? subscription?.billingCycle : undefined;
 
   const handleBack = async () => {
-    if (accessLocked) {
-      await signOut();
-      navigate("/auth", { replace: true });
+    if (window.history.length > 1) {
+      navigate(-1);
     } else {
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate("/", { replace: true });
-      }
+      navigate("/", { replace: true });
     }
   };
 
