@@ -3,20 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Crown, AlertTriangle } from "lucide-react";
 import { usePG } from "@/contexts/PGContext";
 import { useNavigate } from "react-router-dom";
-import { differenceInDays } from "date-fns";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey } from "@/types/pg";
+import { getSubscriptionAccess } from "@/lib/subscriptionAccess";
 
 export const SubscriptionBadge = () => {
   const { subscription, isProUser } = usePG();
   const navigate = useNavigate();
 
-  // Calculate days until expiry
-  const daysUntilExpiry = subscription?.expiresAt 
-    ? differenceInDays(new Date(subscription.expiresAt), new Date())
-    : null;
-  
-  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0;
-  const isExpired = daysUntilExpiry !== null && daysUntilExpiry <= 0;
+  const access = getSubscriptionAccess(subscription);
+  const daysUntilExpiry = access.daysRemaining;
+  const isExpiringSoon = access.allowed && daysUntilExpiry !== null && daysUntilExpiry <= 7;
+  const isExpired = !access.allowed;
 
   if (isExpired || subscription?.status === "expired") {
     return (
@@ -26,7 +23,7 @@ export const SubscriptionBadge = () => {
     );
   }
 
-  if (subscription?.billingCycle === "trial" && subscription?.status === "active") {
+  if (subscription?.billingCycle === "trial" && access.allowed) {
     return (
       <Badge variant="outline" onClick={() => navigate("/subscription")} className="cursor-pointer border-violet-300 text-violet-600 dark:text-violet-300">
         <Crown className="mr-1 h-3 w-3" />

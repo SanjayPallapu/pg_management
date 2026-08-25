@@ -459,12 +459,12 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className={`relative w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.55rem)] xl:w-[calc(25%-0.6rem)] shrink-0 snap-start rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[16/9] md:h-[220px] lg:h-[230px] xl:h-[240px] shadow-sm hover:shadow-md transition-all duration-200 bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center ${banner.action ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+                className={`relative w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.55rem)] xl:w-[calc(25%-0.6rem)] shrink-0 snap-start rounded-2xl overflow-hidden aspect-[16/9] shadow-sm hover:shadow-md transition-all duration-200 bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center ${banner.action ? 'cursor-pointer active:scale-[0.99]' : ''}`}
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                  className="w-full h-full object-cover"
                 />
                 {banner.badge && (
                   <div className="absolute top-2.5 right-2.5 z-10">
