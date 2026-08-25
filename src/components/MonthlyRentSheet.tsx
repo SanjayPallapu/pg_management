@@ -1670,9 +1670,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
             {filteredTenants.length === 0 && (
-              <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
+              <div className="col-span-full rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center">
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <Search className="h-5 w-5 text-muted-foreground" />
                 </div>

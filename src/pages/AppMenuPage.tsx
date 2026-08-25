@@ -78,53 +78,55 @@ export default function AppMenuPage() {
     <main className="min-h-screen bg-muted/25 text-foreground">
       <div className="bg-gradient-to-br from-[#0e6ce7] via-[#1158c7] to-[#183d91] text-white">
         <header className="px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <div className="mx-auto flex w-full max-w-2xl items-center gap-3">
-            <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-5xl items-center gap-3">
+            <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div><h1 className="text-lg font-black tracking-tight">PG HUB Menu</h1><p className="text-xs text-blue-100">Everything you need, in one place</p></div>
+            <div><h1 className="text-lg sm:text-xl font-black tracking-tight">PG HUB Menu</h1><p className="text-xs text-blue-100">Everything you need, in one place</p></div>
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-2xl px-4 pb-5 pt-2">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-[#1158c7] shadow-lg"><UserRound className="h-6 w-6" /></div>
+        <div className="mx-auto w-full max-w-5xl px-4 pb-6 pt-2">
+          <div className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 p-4 sm:p-5 backdrop-blur-sm">
+            <div className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-2xl bg-white text-[#1158c7] shadow-lg"><UserRound className="h-6 w-6 sm:h-7 sm:w-7" /></div>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-sm font-black">{user?.user_metadata?.full_name || "PG HUB Owner"}</h2>
-              <p className="truncate text-[11px] text-blue-100">{currentPG?.name || user?.email || user?.phone || "Signed-in account"}</p>
+              <h2 className="truncate text-base sm:text-lg font-black">{user?.user_metadata?.full_name || "PG HUB Owner"}</h2>
+              <p className="truncate text-xs text-blue-100">{currentPG?.name || user?.email || user?.phone || "Signed-in account"}</p>
             </div>
-            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wide">{role || "owner"}</span>
+            <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide">{role || "owner"}</span>
           </div>
 
-          <div className="mt-4 grid grid-cols-4 gap-2">
-            <QuickAction icon={<Home className="h-4 w-4" />} label="Home" onClick={() => goToTab("dashboard")} />
-            <QuickAction icon={<BedDouble className="h-4 w-4" />} label="Rooms" onClick={() => goToTab("rooms")} />
-            <QuickAction icon={<WalletCards className="h-4 w-4" />} label="Payments" onClick={() => goToTab("reconciliation")} />
-            <QuickAction icon={<Settings className="h-4 w-4" />} label="Settings" onClick={() => goToTab("settings")} />
+          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+            <QuickAction icon={<Home className="h-4 w-4 sm:h-5 sm:w-5" />} label="Home" onClick={() => goToTab("dashboard")} />
+            <QuickAction icon={<BedDouble className="h-4 w-4 sm:h-5 sm:w-5" />} label="Rooms" onClick={() => goToTab("rooms")} />
+            <QuickAction icon={<WalletCards className="h-4 w-4 sm:h-5 sm:w-5" />} label="Payments" onClick={() => goToTab("reconciliation")} />
+            <QuickAction icon={<Settings className="h-4 w-4 sm:h-5 sm:w-5" />} label="Settings" onClick={() => goToTab("settings")} />
           </div>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-2xl space-y-5 px-3 py-5 pb-10">
-        <section>
-          <h2 className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Management</h2>
-          <div className="space-y-2">
-            <MenuItem icon={<FileClock className="h-5 w-5" />} title="Audit History" description="Review tenant, room, and payment changes" onClick={() => setAuditOpen(true)} accent="violet" />
-            <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & Earn" description="Invite an owner; both get 30 bonus days" onClick={() => navigate("/referrals")} accent="emerald" />
-            <MenuItem icon={<CreditCard className="h-5 w-5" />} title="Plans & Billing" description="Subscription, cards, and secure checkout" onClick={() => navigate("/subscription")} accent="amber" />
-          </div>
-        </section>
+      <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section>
+            <h2 className="mb-2.5 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Management</h2>
+            <div className="space-y-2.5">
+              <MenuItem icon={<FileClock className="h-5 w-5" />} title="Audit History" description="Review tenant, room, and payment changes" onClick={() => setAuditOpen(true)} accent="violet" />
+              <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & Earn" description="Invite an owner; both get 30 bonus days" onClick={() => navigate("/referrals")} accent="emerald" />
+              <MenuItem icon={<CreditCard className="h-5 w-5" />} title="Plans & Billing" description="Subscription, cards, and secure checkout" onClick={() => navigate("/subscription")} accent="amber" />
+            </div>
+          </section>
 
-        <section>
-          <h2 className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">App & Account</h2>
-          <div className="space-y-2">
-            <MenuItem icon={isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} title="Appearance" description={`Switch to ${isDark ? "light" : "dark"} mode`} onClick={() => setTheme(isDark ? "light" : "dark")} accent="blue" />
-            <MenuItem icon={<FileText className="h-5 w-5" />} title="Privacy & Legal" description="Terms, privacy, and refund policies" onClick={() => navigate("/legal")} accent="violet" />
-            <MenuItem icon={<LogOut className="h-5 w-5" />} title="Sign Out" description="Sign out of this account" onClick={handleSignOut} destructive />
-          </div>
-        </section>
+          <section>
+            <h2 className="mb-2.5 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">App & Account</h2>
+            <div className="space-y-2.5">
+              <MenuItem icon={isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} title="Appearance" description={`Switch to ${isDark ? "light" : "dark"} mode`} onClick={() => setTheme(isDark ? "light" : "dark")} accent="blue" />
+              <MenuItem icon={<FileText className="h-5 w-5" />} title="Privacy & Legal" description="Terms, privacy, and refund policies" onClick={() => navigate("/legal")} accent="violet" />
+              <MenuItem icon={<LogOut className="h-5 w-5" />} title="Sign Out" description="Sign out of this account" onClick={handleSignOut} destructive />
+            </div>
+          </section>
+        </div>
 
-        <p className="flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Your workspace activity is securely tracked.</p>
+        <p className="flex items-center justify-center gap-1.5 py-3 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Your workspace activity is securely tracked.</p>
       </div>
 
       <AuditHistorySheet open={auditOpen} onOpenChange={setAuditOpen} />

@@ -259,9 +259,9 @@ const Index = () => {
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
       <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-3 py-1 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1700px] items-center justify-between px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2">
           {/* Left: Hostel logo / Switcher, Month Picker, and PG details */}
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <PGSwitcher />
             <MonthYearPicker />
             <div className="min-w-0 hidden sm:block">
@@ -276,11 +276,11 @@ const Index = () => {
           </div>
 
           {/* Right: subscription status and full-page app menu */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <SubscriptionBadge />
             <Button
               size="icon"
-              className="relative h-9 w-9 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
+              className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
               title="Open app menu"
               aria-label="Open app menu"
               onClick={() => navigate("/menu")}
@@ -293,7 +293,7 @@ const Index = () => {
       </div>
 
       {apiErrorMessage && (
-        <div className="mx-auto w-full max-w-screen-2xl px-3 pt-4 sm:px-4">
+        <div className="mx-auto w-full max-w-[1700px] px-3 sm:px-6 lg:px-8 pt-4">
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             Failed to load data: {apiErrorMessage}
           </div>
@@ -302,7 +302,7 @@ const Index = () => {
 
 
 
-      <div className="mx-auto w-full max-w-screen-2xl px-1.5 py-1 sm:px-2">
+      <div className="mx-auto w-full max-w-[1700px] px-2 sm:px-4 md:px-6 lg:px-8 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}

@@ -325,9 +325,23 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const slideWidth = container.offsetWidth;
-    const index = Math.round(container.scrollLeft / (slideWidth + 8));
-    setActiveSlide(index);
+    const firstChild = container.firstElementChild as HTMLElement | null;
+    const itemWidth = firstChild ? firstChild.offsetWidth + 8 : container.offsetWidth;
+    const index = Math.round(container.scrollLeft / itemWidth);
+    setActiveSlide(Math.min(index, banners.length - 1));
+  };
+
+  const scrollCarousel = (direction: 'next' | 'prev') => {
+    pauseBannerAutoAdvance();
+    const container = carouselRef.current;
+    if (!container) return;
+    const firstChild = container.firstElementChild as HTMLElement | null;
+    const itemWidth = firstChild ? firstChild.offsetWidth + 8 : container.offsetWidth;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    let targetScroll = direction === 'next' ? container.scrollLeft + itemWidth : container.scrollLeft - itemWidth;
+    if (targetScroll > maxScroll + 10) targetScroll = 0;
+    if (targetScroll < 0) targetScroll = maxScroll;
+    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
   };
 
   const stats: DashboardStats = {
@@ -396,12 +410,15 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
       if (bannerAutoPausedRef.current || document.visibilityState !== "visible") return;
       const container = carouselRef.current;
       if (!container) return;
-      const nextSlide = (activeSlide + 1) % banners.length;
-      container.scrollTo({ left: nextSlide * (container.offsetWidth + 8), behavior: "smooth" });
-      setActiveSlide(nextSlide);
-    }, 3000);
+      const firstChild = container.firstElementChild as HTMLElement | null;
+      const itemWidth = firstChild ? firstChild.offsetWidth + 8 : container.offsetWidth;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      let targetScroll = container.scrollLeft + itemWidth;
+      if (targetScroll > maxScroll + 10) targetScroll = 0;
+      container.scrollTo({ left: targetScroll, behavior: "smooth" });
+    }, 3500);
     return () => window.clearInterval(interval);
-  }, [activeSlide, banners.length]);
+  }, []);
 
   useEffect(() => () => {
     if (bannerResumeTimerRef.current) clearTimeout(bannerResumeTimerRef.current);
@@ -409,34 +426,59 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   return (
     <>
-      <div ref={dashboardRef} className="mx-auto flex max-w-[1200px] flex-col gap-4 md:gap-6">
-        {/* Banner Carousel */}
-        <div className="group relative order-1 mx-auto w-full max-w-[850px]">
+      <div ref={dashboardRef} className="w-full flex flex-col gap-4 md:gap-6">
+        {/* Banner Carousel — Responsive Multi-Card Display: 1 on Mobile, 2 on Tablet, 3 on Laptop, 4 on XL */}
+        <div className="group relative order-1 w-full">
+          {/* Left / Right Chevron Controls for Desktop */}
+          <button
+            type="button"
+            onClick={() => scrollCarousel('prev')}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-background/85 border border-border/70 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100"
+            aria-label="Previous banner"
+          >
+            <ChevronRight className="h-5 w-5 rotate-180" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollCarousel('next')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-background/85 border border-border/70 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100"
+            aria-label="Next banner"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
           <div 
             ref={carouselRef}
             onScroll={handleScroll}
             onPointerDown={pauseBannerAutoAdvance}
             onWheel={pauseBannerAutoAdvance}
-            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-2 pb-2"
+            className="flex w-full overflow-x-auto scrollbar-none snap-x snap-mandatory gap-2 md:gap-3 pb-1"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {banners.map((banner) => (
               <div 
                 key={banner.id}
                 onClick={banner.action}
-                className={`relative w-full shrink-0 snap-center rounded-2xl overflow-hidden aspect-[16/9] md:h-[260px] md:aspect-auto shadow-sm hover:shadow-md transition-all duration-200 bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center ${banner.action ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+                className={`relative w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.55rem)] xl:w-[calc(25%-0.6rem)] shrink-0 snap-start rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[16/9] md:h-[220px] lg:h-[230px] xl:h-[240px] shadow-sm hover:shadow-md transition-all duration-200 bg-slate-50 dark:bg-slate-900/40 flex justify-center items-center ${banner.action ? 'cursor-pointer active:scale-[0.99]' : ''}`}
               >
                 <img 
                   src={banner.image} 
                   alt={banner.id}
-                  className="w-full h-full object-cover md:object-contain transition-transform duration-500 hover:scale-[1.02]"
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
                 />
+                {banner.badge && (
+                  <div className="absolute top-2.5 right-2.5 z-10">
+                    <span className={`px-2.5 py-1 text-[10px] sm:text-xs font-bold text-white rounded-full shadow-sm ${banner.badgeColor}`}>
+                      {banner.badge}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-1.5 mt-1">
+          <div className="flex justify-center gap-1.5 mt-2">
             {banners.map((_, idx) => (
               <button
                 key={idx}
@@ -445,16 +487,17 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   pauseBannerAutoAdvance();
                   const container = carouselRef.current;
                   if (container) {
-                    const slideWidth = container.offsetWidth;
+                    const firstChild = container.firstElementChild as HTMLElement | null;
+                    const itemWidth = firstChild ? firstChild.offsetWidth + 8 : container.offsetWidth;
                     container.scrollTo({
-                      left: idx * (slideWidth + 8),
+                      left: idx * itemWidth,
                       behavior: 'smooth'
                     });
                     setActiveSlide(idx);
                   }
                 }}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  activeSlide === idx ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  activeSlide === idx ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
@@ -462,139 +505,153 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </div>
         </div>
 
-        {/* Split KPI Cards */}
-        <div className="order-3 grid gap-2 md:grid-cols-2">
+        {/* ═══════════════════════════════════════════════
+            Quick Actions — 5 cols on mobile, 10 cols on Desktop/Tablet
+           ═══════════════════════════════════════════════ */}
+        <div className="order-2 grid grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-1.5 sm:gap-2.5 lg:gap-3">
+          <div onClick={() => setAddTenantRoomSelectOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-blue-500/10 p-2 sm:p-2.5 rounded-full"><UserPlus className="w-5 h-5 text-blue-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Add<br/>Tenant</span>
+          </div>
+
+          <div onClick={() => setActiveSheet("expected-collection")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full"><TrendingUp className="w-5 h-5 text-amber-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Expected<br/>Rent</span>
+          </div>
+
+          <div onClick={openPendingTenants} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-pending/10 p-2 sm:p-2.5 rounded-full"><AlertTriangle className="w-5 h-5 text-pending" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Pending<br/>Tenants</span>
+          </div>
+
+          <div onClick={() => setActiveSheet("security-deposit")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-indigo-500/10 p-2 sm:p-2.5 rounded-full"><ShieldCheck className="w-5 h-5 text-indigo-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Security<br/>Deposit</span>
+          </div>
+
+          <div onClick={() => navigate("/referrals")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
+          </div>
+
+          <div onClick={() => setActiveSheet("tenant-pricing")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-cyan-500/10 p-2 sm:p-2.5 rounded-full"><Tag className="w-5 h-5 text-cyan-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Room<br/>Pricing</span>
+          </div>
+
+          <div onClick={() => navigate('/?tab=rent-sheet&openAc=true')} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full"><Zap className="w-5 h-5 text-amber-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">AC<br/>Bill</span>
+          </div>
+
+          <div onClick={() => { setMovementKey(k => k + 1); setActiveSheet("tenant-movement"); }} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-purple-500/10 p-2 sm:p-2.5 rounded-full"><DoorOpen className="w-5 h-5 text-purple-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">In/Out</span>
+          </div>
+
+          <div onClick={() => setBillsBudgetOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-orange-500/10 p-2 sm:p-2.5 rounded-full"><Receipt className="w-5 h-5 text-orange-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Record<br/>Expense</span>
+          </div>
+
+          <div data-testid="paid-tenants-action" onClick={() => setActiveSheet("paid-tenants")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-emerald-500/10 p-2 sm:p-2.5 rounded-full"><CircleCheckBig className="w-5 h-5 text-emerald-600" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Paid<br/>Tenants</span>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════
+            KPI & Stats Section — Multi-column Grid on Tablets/Desktop
+           ═══════════════════════════════════════════════ */}
+        <div className="order-3 grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {/* Capacity & Occupancy Split Card */}
-          <Card>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-0">
               <div className="grid grid-cols-2 divide-x divide-border">
                 {/* Left: Capacity */}
-                <div className="p-4">
+                <div className="p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Capacity</span>
-                    <Building
-                      className="h-4 w-4 text-muted-foreground"
-                    />
+                    <Building className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl sm:text-3xl font-bold">
                     {totalOccupied}/{totalCapacity}
                   </div>
-                  <p className="text-xs text-muted-foreground">{stats.totalRooms} rooms across 3 floors</p>
+                  <p className="text-xs text-muted-foreground mt-1">{stats.totalRooms} rooms total</p>
                 </div>
                 {/* Right: Occupancy */}
-                <div className="p-4">
+                <div className="p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Occupancy</span>
                     <UserCheck className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="text-2xl font-bold">{stats.occupiedCount} rooms</div>
-                  <p className="text-xs text-muted-foreground">{occupancyPercent.toFixed(1)}% total occupancy</p>
+                  <div className="text-2xl sm:text-3xl font-bold">{stats.occupiedCount} rooms</div>
+                  <p className="text-xs text-muted-foreground mt-1">{occupancyPercent.toFixed(1)}% occupied</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Rent Collected & Pending Split Card */}
-          <Card>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-0">
               <div className="grid grid-cols-2 divide-x divide-border">
                 {/* Left: Collected */}
-                <div className="p-4">
+                <div className="p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Collected</span>
                     <CreditCard className="h-4 w-4 text-paid" />
                   </div>
-                  <div className="text-2xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">This month</p>
+                  <div className="text-2xl sm:text-3xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground mt-1">This month</p>
                 </div>
                 {/* Right: Pending */}
-                <div className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={openPendingTenants}>
+                <div className="p-4 sm:p-5 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={openPendingTenants}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Pending</span>
                     <AlertTriangle className="h-4 w-4 text-pending" />
                   </div>
-                  <div className="text-2xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Needs collection</p>
+                  <div className="text-2xl sm:text-3xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Tap to collect</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Potential Revenue Card */}
+          <Card
+            className="cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent transition-all hover:shadow-md col-span-1 md:col-span-2 xl:col-span-1"
+            onClick={() => setEmptyBedsSheetOpen(true)}
+          >
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-muted-foreground">Full Capacity Potential</span>
+                  </div>
+                  <span className="text-xs font-semibold text-primary">{totalEmptyBeds} empty beds</span>
+                </div>
+                <div className="mb-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xl sm:text-2xl font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">Max monthly revenue</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-2">
+                <div className="text-sm font-semibold text-pending">+₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible</div>
+                <span className="text-xs text-primary font-medium flex items-center gap-1">
+                  View breakdown <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-                {/* ═══════════════════════════════════════════════
-            Quick Actions
-           ═══════════════════════════════════════════════ */}
-        <div className="order-2 grid grid-cols-5 gap-1.5 sm:gap-2">
-          <div onClick={() => setAddTenantRoomSelectOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-blue-500/10 p-2 rounded-full"><UserPlus className="w-5 h-5 text-blue-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Add<br/>Tenant</span>
-          </div>
-
-          <div onClick={() => setActiveSheet("expected-collection")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-amber-500/10 p-2 rounded-full"><TrendingUp className="w-5 h-5 text-amber-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Expected<br/>Rent</span>
-          </div>
-
-          <div onClick={openPendingTenants} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-pending/10 p-2 rounded-full"><AlertTriangle className="w-5 h-5 text-pending" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Pending<br/>Tenants</span>
-          </div>
-
-          <div onClick={() => setActiveSheet("security-deposit")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-indigo-500/10 p-2 rounded-full"><ShieldCheck className="w-5 h-5 text-indigo-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Security<br/>Deposit</span>
-          </div>
-
-          <div onClick={() => navigate("/referrals")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-amber-500/10 p-2 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
-          </div>
-
-          <div onClick={() => setActiveSheet("tenant-pricing")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-cyan-500/10 p-2 rounded-full"><Tag className="w-5 h-5 text-cyan-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Room<br/>Pricing</span>
-          </div>
-
-          <div onClick={() => navigate('/?tab=rent-sheet&openAc=true')} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-amber-500/10 p-2 rounded-full"><Zap className="w-5 h-5 text-amber-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">AC<br/>Bill</span>
-          </div>
-
-          <div onClick={() => { setMovementKey(k => k + 1); setActiveSheet("tenant-movement"); }} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-purple-500/10 p-2 rounded-full"><DoorOpen className="w-5 h-5 text-purple-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">In/Out</span>
-          </div>
-
-          <div onClick={() => setBillsBudgetOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-orange-500/10 p-2 rounded-full"><Receipt className="w-5 h-5 text-orange-500" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Record<br/>Expense</span>
-          </div>
-
-          <div data-testid="paid-tenants-action" onClick={() => setActiveSheet("paid-tenants")} className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 active:scale-95 transition-all">
-            <div className="bg-emerald-500/10 p-2 rounded-full"><CircleCheckBig className="w-5 h-5 text-emerald-600" /></div>
-            <span className="text-[9px] sm:text-[10px] font-medium text-center leading-tight">Paid<br/>Tenants</span>
-          </div>
-        </div>
-
-        {/* Potential revenue belongs at the end of the Home summary. */}
-        <Card
-          className="order-4 cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 transition-all hover:shadow-md"
-          onClick={() => setEmptyBedsSheetOpen(true)}
-        >
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /><span className="text-sm font-medium text-muted-foreground">If PG Gets Full</span></div>
-            <div className="mb-2 grid grid-cols-2 gap-2">
-              <div><div className="text-lg font-bold text-paid">₹{currentMonthlyRevenue.toLocaleString()}</div><p className="text-xs text-muted-foreground">{totalOccupied} tenants now</p></div>
-              <div className="text-right"><div className="text-lg font-bold text-primary">₹{maxMonthlyRevenue.toLocaleString()}</div><p className="text-xs text-muted-foreground">Max capacity</p></div>
-            </div>
-            <div className="flex items-center justify-between border-t pt-2"><div className="text-sm font-semibold text-pending">+₹{Math.round(maxMonthlyRevenue - currentMonthlyRevenue).toLocaleString()} possible</div><div className="text-xs text-muted-foreground">{totalEmptyBeds} beds empty</div></div>
-            <p className="mt-2 text-center text-xs text-muted-foreground">Tap to view breakdown</p>
-          </CardContent>
-        </Card>
-
-        {/* Category List Sections Removed */}
-        {/* ── Financials ── */}
-        {/* (Categories replaced with List Cards) */}
       </div>
 
       {/* ═══════════════════════════════════════════════

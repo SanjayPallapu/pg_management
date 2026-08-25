@@ -289,187 +289,193 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           <p className="text-xs text-muted-foreground">Manage your property, account, and preferences</p>
         </motion.div>
 
-        {/* Profile Card */}
-        <motion.div variants={itemVariants}>
-          <Card className="relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-lg shadow-blue-900/15">
-            <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
-            <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-cyan-300/10" />
-            <CardContent className="relative z-10 p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
-                  <User className="h-7 w-7 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
-                  {user?.email && <p className="truncate text-xs text-blue-100">{user.email}</p>}
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
-                      <Shield className="h-3 w-3" />
-                      {roleBadge.label}
-                    </span>
-                    {currentPG && (
-                      <span className="truncate text-xs text-blue-100">
-                        · {currentPG.name}
+        {/* Profile Card & Subscription Banner — 2 cols on Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <motion.div variants={itemVariants}>
+            <Card className="relative h-full overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-lg shadow-blue-900/15">
+              <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
+              <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-cyan-300/10" />
+              <CardContent className="relative z-10 p-5 flex items-center h-full">
+                <div className="flex items-center gap-4 w-full">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+                    <User className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
+                    {user?.email && <p className="truncate text-xs text-blue-100">{user.email}</p>}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        <Shield className="h-3 w-3" />
+                        {roleBadge.label}
                       </span>
-                    )}
+                      {currentPG && (
+                        <span className="truncate text-xs text-blue-100">
+                          · {currentPG.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Subscription Expiry Banner */}
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent shadow-xs">
-            <CardContent className="p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
-                  <Crown className="h-5 w-5" />
+          {/* Subscription Expiry Banner */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent shadow-xs">
+              <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-3 h-full">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
+                    <Crown className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
+                    <p className="truncate text-sm font-bold">
+                      {subscriptionPlanName}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground mt-0.5">
+                      {subscriptionEndDate ? (
+                        <>
+                          {subscriptionHasEnded
+                            ? 'Expired'
+                            : subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Renews'} on{' '}
+                          <strong className="font-bold text-foreground">{format(subscriptionEndDate, 'dd MMM yyyy')}</strong>
+                          {!subscriptionHasEnded && (() => {
+                            const daysLeft = Math.max(0, differenceInDays(subscriptionEndDate, new Date()));
+                            return ` (${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left)`;
+                          })()}
+                        </>
+                      ) : (
+                        subscription?.status === 'active' ? 'Active subscription' : 'Upgrade required to continue'
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
-                  <p className="truncate text-sm font-bold">
-                    {subscriptionPlanName}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground mt-0.5">
-                    {subscriptionEndDate ? (
-                      <>
-                        {subscriptionHasEnded
-                          ? 'Expired'
-                          : subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Renews'} on{' '}
-                        <strong className="font-bold text-foreground">{format(subscriptionEndDate, 'dd MMM yyyy')}</strong>
-                        {!subscriptionHasEnded && (() => {
-                          const daysLeft = Math.max(0, differenceInDays(subscriptionEndDate, new Date()));
-                          return ` (${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left)`;
-                        })()}
-                      </>
-                    ) : (
-                      subscription?.status === 'active' ? 'Active subscription' : 'Upgrade required to continue'
-                    )}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold shrink-0 border-violet-500/30 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10" onClick={() => navigate('/subscription')}>
-                Manage
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold shrink-0 border-violet-500/30 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10" onClick={() => navigate('/subscription')}>
+                  Manage
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2">
-          <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
-            <Building className="mx-auto h-5 w-5 text-blue-600" /><span className="mt-2 block text-[10px] font-bold">Properties</span>
+        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2.5 sm:gap-4">
+          <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <Building className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-blue-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Properties</span>
           </button>
-          <button type="button" onClick={() => setReportsOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
-            <FileBarChart className="mx-auto h-5 w-5 text-emerald-600" /><span className="mt-2 block text-[10px] font-bold">Reports</span>
+          <button type="button" onClick={() => setReportsOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <FileBarChart className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Reports</span>
           </button>
-          <button type="button" onClick={() => navigate('/subscription')} className="rounded-2xl border border-border/70 bg-card p-3 text-center shadow-sm transition-all active:scale-95">
-            <CreditCard className="mx-auto h-5 w-5 text-violet-600" /><span className="mt-2 block text-[10px] font-bold">Billing</span>
+          <button type="button" onClick={() => navigate('/subscription')} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <CreditCard className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-violet-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Billing</span>
           </button>
         </motion.div>
 
-        {/* Preferences */}
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-2xl border-border/70 shadow-sm">
-            <SectionHeader title="Preferences" />
-            <CardContent className="p-2">
-              <SettingItem
-                icon={isDark ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
-                label="Dark Mode"
-                description={isDark ? "Dark theme is active" : "Light theme is active"}
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-                trailing={
-                  <Switch
-                    checked={isDark}
-                    onCheckedChange={() => setTheme(isDark ? "light" : "dark")}
-                    className="pointer-events-none"
-                  />
-                }
-              />
-              <SettingItem
-                icon={<ContactRound className="h-4 w-4 text-primary" />}
-                label="Tenant Profiles"
-                description="Completed and incomplete tenant profiles"
-                onClick={() => navigate('/tenant-profiles')}
-              />
-              <SettingItem
-                icon={<Bell className="h-4 w-4 text-primary" />}
-                label="Notifications"
-                description="Manage push notification preferences"
-                onClick={() => setNotificationsOpen(true)}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Settings Sections Grid — 1 col on mobile, 2 on tablet, 3 on wide desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {/* Preferences */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+              <SectionHeader title="Preferences" />
+              <CardContent className="p-2">
+                <SettingItem
+                  icon={isDark ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
+                  label="Dark Mode"
+                  description={isDark ? "Dark theme is active" : "Light theme is active"}
+                  onClick={() => setTheme(isDark ? "light" : "dark")}
+                  trailing={
+                    <Switch
+                      checked={isDark}
+                      onCheckedChange={() => setTheme(isDark ? "light" : "dark")}
+                      className="pointer-events-none"
+                    />
+                  }
+                />
+                <SettingItem
+                  icon={<ContactRound className="h-4 w-4 text-primary" />}
+                  label="Tenant Profiles"
+                  description="Completed and incomplete tenant profiles"
+                  onClick={() => navigate('/tenant-profiles')}
+                />
+                <SettingItem
+                  icon={<Bell className="h-4 w-4 text-primary" />}
+                  label="Notifications"
+                  description="Manage push notification preferences"
+                  onClick={() => setNotificationsOpen(true)}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Security */}
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-2xl border-border/70 shadow-sm">
-            <SectionHeader title="Security" />
-            <CardContent className="p-2">
-              <SettingItem
-                icon={<Lock className="h-4 w-4 text-primary" />}
-                label="Change Password"
-                description="Update your account password"
-                onClick={() => setChangePasswordOpen(true)}
-              />
-              <SettingItem
-                icon={<ShieldCheck className="h-4 w-4 text-primary" />}
-                label="Login Activity"
-                description="View recent sign-in sessions"
-                onClick={() => setLoginActivityOpen(true)}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
+          {/* Security */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+              <SectionHeader title="Security" />
+              <CardContent className="p-2">
+                <SettingItem
+                  icon={<Lock className="h-4 w-4 text-primary" />}
+                  label="Change Password"
+                  description="Update your account password"
+                  onClick={() => setChangePasswordOpen(true)}
+                />
+                <SettingItem
+                  icon={<ShieldCheck className="h-4 w-4 text-primary" />}
+                  label="Login Activity"
+                  description="View recent sign-in sessions"
+                  onClick={() => setLoginActivityOpen(true)}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Support & Share */}
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-2xl border-border/70 shadow-sm">
-            <SectionHeader title="Support" />
-            <CardContent className="p-2">
-              <SettingItem
-                icon={<HelpCircle className="h-4 w-4 text-primary" />}
-                label="Help & FAQ"
-                description="Get answers to common questions"
-                onClick={() => setShowHelp(true)}
-              />
-              <SettingItem
-                icon={<Mail className="h-4 w-4 text-primary" />}
-                label="Contact Support"
-                description={SUPPORT_EMAIL}
-                onClick={() => window.open(`mailto:${SUPPORT_EMAIL}`, "_blank")}
-              />
-              <SettingItem
-                icon={<Star className="h-4 w-4 text-primary" />}
-                label="Rate on Play Store"
-                description="Love the app? Leave a review ⭐"
-                onClick={handleRateApp}
-              />
-              <SettingItem
-                icon={<Share2 className="h-4 w-4 text-primary" />}
-                label="Share App"
-                description="Recommend to other PG owners"
-                onClick={handleShareApp}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
+          {/* Support & Share */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+              <SectionHeader title="Support" />
+              <CardContent className="p-2">
+                <SettingItem
+                  icon={<HelpCircle className="h-4 w-4 text-primary" />}
+                  label="Help & FAQ"
+                  description="Get answers to common questions"
+                  onClick={() => setShowHelp(true)}
+                />
+                <SettingItem
+                  icon={<Mail className="h-4 w-4 text-primary" />}
+                  label="Contact Support"
+                  description={SUPPORT_EMAIL}
+                  onClick={() => window.open(`mailto:${SUPPORT_EMAIL}`, "_blank")}
+                />
+                <SettingItem
+                  icon={<Star className="h-4 w-4 text-primary" />}
+                  label="Rate on Play Store"
+                  description="Love the app? Leave a review ⭐"
+                  onClick={handleRateApp}
+                />
+                <SettingItem
+                  icon={<Share2 className="h-4 w-4 text-primary" />}
+                  label="Share App"
+                  description="Recommend to other PG owners"
+                  onClick={handleShareApp}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Legal */}
-        <motion.div variants={itemVariants}>
-          <Card className="rounded-2xl border-border/70 shadow-sm">
-            <SectionHeader title="Legal" />
-            <CardContent className="p-2">
-              <SettingItem
-                icon={<ShieldCheck className="h-4 w-4 text-primary" />}
-                label="Privacy & Legal Policies"
-                onClick={() => navigate("/legal")}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
+          {/* Legal */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+              <SectionHeader title="Legal" />
+              <CardContent className="p-2">
+                <SettingItem
+                  icon={<ShieldCheck className="h-4 w-4 text-primary" />}
+                  label="Privacy & Legal Policies"
+                  description="Terms, privacy policy, and licenses"
+                  onClick={() => navigate("/legal")}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
         {/* Danger Zone */}
         <motion.div variants={itemVariants}>

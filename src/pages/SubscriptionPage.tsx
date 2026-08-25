@@ -105,38 +105,36 @@ export default function SubscriptionPage() {
   return (
     <div className="flex min-h-screen flex-col bg-muted/20 text-foreground">
       {/* Top Full Screen Header Bar */}
-      <header className="sticky top-0 z-30 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-2 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => accessLocked ? undefined : navigate(-1)}
-            disabled={accessLocked}
-            className="h-9 w-9 rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="flex items-center gap-2 text-lg font-extrabold leading-tight text-white">
-              Plans & Billing
-              <Award className="h-4 w-4 text-amber-500" />
-            </h1>
-            <p className="truncate text-xs text-blue-100">Choose the right plan for your property</p>
+      <header className="sticky top-0 z-30 border-b border-blue-400/20 bg-gradient-to-r from-[#0e6ce7] via-[#155bc7] to-[#243b8f] px-4 py-3 text-white shadow-lg shadow-blue-950/10 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              aria-label="Back"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="flex items-center gap-2 text-base sm:text-lg font-black tracking-tight text-white">
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-amber-300" />
+                Subscription Plans
+              </h1>
+              <p className="truncate text-xs text-blue-100">Choose the right plan for your property</p>
+            </div>
           </div>
-        </div>
 
-        {isTrialActive && (
-          <Badge className="border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
-            {daysLeft ?? 0} {daysLeft === 1 ? "day" : "days"} free
-          </Badge>
-        )}
+          {isTrialActive && (
+            <Badge className="border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
+              {daysLeft ?? 0} {daysLeft === 1 ? "day" : "days"} free
+            </Badge>
+          )}
         </div>
       </header>
 
       {/* Main Full-Screen Body */}
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 space-y-4 px-1.5 py-4 pb-10">
+      <main className="mx-auto w-full max-w-7xl flex-1 space-y-4 px-4 sm:px-6 lg:px-8 py-4 pb-12">
         
         {/* Subscription Expiry Status Banner */}
         <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-blue-500/10 p-4 flex items-center gap-3 text-foreground shadow-xs">

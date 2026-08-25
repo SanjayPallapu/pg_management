@@ -604,124 +604,121 @@ export const PaymentReconciliation = ({
               </div>
             )}
 
-            {/* Payment Distribution */}
+            {/* Payment Distribution & Daily Timeline — 2-col on desktop */}
             {reconciliationData.paymentModeTotal > 0 && (
-              <div className="bg-background border border-border/80 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-                <div className="space-y-4">
-                  <h3 className="font-bold text-sm text-foreground">Payment Distribution</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <div className="h-3 w-3 rounded-full bg-blue-500 mt-1" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">UPI Payments</span>
-                          <span className="text-sm font-bold text-blue-600">
-                            {reconciliationData.paymentModeTotal > 0 
-                              ? `${Math.round((reconciliationData.upiTotal / reconciliationData.paymentModeTotal) * 100)}%` 
-                              : '0%'}
-                          </span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+                <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-sm text-foreground">Payment Distribution</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <div className="h-3 w-3 rounded-full bg-blue-500 mt-1" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">UPI Payments</span>
+                            <span className="text-sm font-bold text-blue-600">
+                              {reconciliationData.paymentModeTotal > 0 
+                                ? `${Math.round((reconciliationData.upiTotal / reconciliationData.paymentModeTotal) * 100)}%` 
+                                : '0%'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()}</div>
                         </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.upiTotal.toLocaleString()}</div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="h-3 w-3 rounded-full bg-[#10b981] mt-1" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">Cash Payments</span>
+                            <span className="text-sm font-bold text-[#10b981]">
+                              {reconciliationData.paymentModeTotal > 0 
+                                ? `${Math.round((reconciliationData.cashTotal / reconciliationData.paymentModeTotal) * 100)}%` 
+                                : '0%'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()}</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <div className="h-3 w-3 rounded-full bg-[#10b981] mt-1" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">Cash Payments</span>
-                          <span className="text-sm font-bold text-[#10b981]">
-                            {reconciliationData.paymentModeTotal > 0 
-                              ? `${Math.round((reconciliationData.cashTotal / reconciliationData.paymentModeTotal) * 100)}%` 
-                              : '0%'}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">₹{reconciliationData.cashTotal.toLocaleString()}</div>
-                      </div>
+                  </div>
+
+                  <div className="relative h-36 w-36">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={pieChartData} 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius={38} 
+                          outerRadius={54} 
+                          paddingAngle={3} 
+                          dataKey="value"
+                        >
+                          {pieChartData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : '#10b981'} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span className="text-sm font-extrabold text-foreground">₹{reconciliationData.paymentModeTotal.toLocaleString()}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="relative h-36 w-36">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie 
-                        data={pieChartData} 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius={38} 
-                        outerRadius={54} 
-                        paddingAngle={3} 
-                        dataKey="value"
-                      >
-                        {pieChartData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : '#10b981'} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-sm font-extrabold text-foreground">₹{reconciliationData.paymentModeTotal.toLocaleString()}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Daily Payment Timeline */}
-            {reconciliationData.paymentModeTotal > 0 && (
-              <div className="bg-background border border-border/80 rounded-2xl p-3 shadow-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-foreground">Daily Payment Timeline</h3>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2 w-2 rounded-full bg-blue-500" />
-                      <span className="text-muted-foreground">UPI</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2 w-2 rounded-full bg-[#10b981]" />
-                      <span className="text-muted-foreground">Cash</span>
+                <div className="bg-background border border-border/80 rounded-2xl p-4 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-sm text-foreground">Daily Payment Timeline</h3>
+                    <div className="flex items-center gap-3 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full bg-blue-500" />
+                        <span className="text-muted-foreground">UPI</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+                        <span className="text-muted-foreground">Cash</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="h-44 bg-transparent p-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dailyTimelineData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                      <XAxis dataKey="day" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fontSize: 9 }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={28} tickLine={false} axisLine={false} />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload || !payload.length) return null;
-                          const totalVal = payload.reduce((sum, entry) => sum + (entry.value as number), 0);
-                          return (
-                            <div className="bg-background border border-border px-2.5 py-1.5 rounded-xl shadow-md text-xs">
-                              <p className="font-bold text-muted-foreground mb-1">{label} Jul</p>
-                              {payload.map((entry: any) => (
-                                <p key={entry.name} className="font-semibold" style={{ color: entry.name === 'upi' ? '#3b82f6' : '#10b981' }}>
-                                  {entry.name === 'upi' ? 'UPI' : 'Cash'}: ₹{entry.value.toLocaleString()}
-                                </p>
-                              ))}
-                              <div className="border-t border-border mt-1 pt-1 font-bold text-foreground">
-                                Total: ₹{totalVal.toLocaleString()}
+                  
+                  <div className="h-44 bg-transparent p-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dailyTimelineData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                        <XAxis dataKey="day" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 9 }} tickFormatter={v => v > 0 ? `₹${(v / 1000).toFixed(0)}k` : '0'} width={28} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                          cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload || !payload.length) return null;
+                            const totalVal = payload.reduce((sum, entry) => sum + (entry.value as number), 0);
+                            return (
+                              <div className="bg-background border border-border px-2.5 py-1.5 rounded-xl shadow-md text-xs">
+                                <p className="font-bold text-muted-foreground mb-1">{label} Jul</p>
+                                {payload.map((entry: any) => (
+                                  <p key={entry.name} className="font-semibold" style={{ color: entry.name === 'upi' ? '#3b82f6' : '#10b981' }}>
+                                    {entry.name === 'upi' ? 'UPI' : 'Cash'}: ₹{entry.value.toLocaleString()}
+                                  </p>
+                                ))}
+                                <div className="border-t border-border mt-1 pt-1 font-bold text-foreground">
+                                  Total: ₹{totalVal.toLocaleString()}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        }} 
-                      />
-                      <Bar dataKey="upi" stackId="a" fill="#3b82f6" radius={[4, 4, 4, 4]} name="upi" />
-                      <Bar dataKey="cash" stackId="a" fill="#10b981" radius={[4, 4, 4, 4]} name="cash" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                            );
+                          }} 
+                        />
+                        <Bar dataKey="upi" stackId="a" fill="#3b82f6" radius={[4, 4, 4, 4]} name="upi" />
+                        <Bar dataKey="cash" stackId="a" fill="#10b981" radius={[4, 4, 4, 4]} name="cash" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             )}
-
-
 
             {/* Individual Payment Details */}
-            <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm">
+            <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-3 sm:p-4 shadow-sm">
               <div className="flex flex-col gap-3 border-b border-border/50 pb-3">
                 {/* Top row: Title and Search */}
                 <div className="flex items-center justify-between w-full gap-3">
@@ -736,7 +733,7 @@ export const PaymentReconciliation = ({
                       placeholder="Search tenant"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-8 w-36 rounded-xl pl-7 text-xs"
+                      className="h-8 w-36 sm:w-48 rounded-xl pl-7 text-xs"
                     />
                   </div>
                 </div>
@@ -757,7 +754,7 @@ export const PaymentReconciliation = ({
                   </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
                 {filteredPaymentDetails.map((detail, detailIdx) => {
                   const detailKey = `${detail.tenantId}-${'month' in detail ? detail.month : selectedMonth}-${'year' in detail ? detail.year : selectedYear}`;
                   return (
