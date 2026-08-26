@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, type Variants } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -17,9 +17,11 @@ import {
   ShieldCheck,
   Sparkles,
   Smartphone,
+  Star,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import logo from "@/assets/pg-hub/pg-hub-logo.png";
 import rentCollection from "@/assets/pg-hub/editorial/rent-collection.jpg";
 import roomOccupancy from "@/assets/pg-hub/editorial/room-occupancy.jpg";
@@ -67,6 +69,40 @@ const reveal = {
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-80px" },
   transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+};
+
+const testimonials = [
+  {
+    name: "Rajesh K.",
+    role: "PG Owner, Hyderabad",
+    text: "This app saved me 5 hours every week on rent collection. The WhatsApp reminders are a game changer!",
+    rating: 5,
+  },
+  {
+    name: "Priya M.",
+    role: "PG Manager, Bangalore",
+    text: "Managing 3 PGs was a nightmare before. Now everything is in one place. Highly recommend!",
+    rating: 5,
+  },
+  {
+    name: "Arun S.",
+    role: "Hostel Owner, Chennai",
+    text: "The receipt generation and tenant tracking features are exactly what I needed. Worth every rupee.",
+    rating: 5,
+  },
+];
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
 };
 
 gsap.registerPlugin(ScrollTrigger);
