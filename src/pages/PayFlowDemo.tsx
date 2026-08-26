@@ -166,8 +166,8 @@ function MoneyHero({ onViewCollections }: { onViewCollections: () => void }) {
 
 function PhoneShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[430px] rounded-[42px] border-[10px] border-[#15171a] bg-[#f4f5ed] shadow-[0_36px_120px_rgba(0,0,0,0.28)]">
-      <div className="min-h-[760px] overflow-hidden rounded-[30px] bg-[#f4f5ed]">
+    <div className="mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[430px] rounded-[32px] sm:rounded-[42px] border-[6px] sm:border-[10px] border-[#15171a] bg-[#f4f5ed] shadow-[0_20px_60px_rgba(0,0,0,0.18)] md:shadow-[0_36px_120px_rgba(0,0,0,0.28)] overflow-hidden">
+      <div className="min-h-[640px] sm:min-h-[720px] lg:min-h-[760px] overflow-hidden bg-[#f4f5ed] relative flex flex-col">
         {children}
       </div>
     </div>
@@ -177,42 +177,52 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
 function TopBar({ view, setView }: { view: View; setView: (view: View) => void }) {
   const activeLabel = sidebar.find((item) => item.id === view)?.label ?? "Overview";
   return (
-    <header className="sticky top-0 z-20 border-b border-black/5 bg-[#f4f5ed]/90 px-4 py-3 backdrop-blur">
-      <div className="flex items-center justify-between gap-3">
-        <button className="flex h-11 min-w-0 items-center gap-2 rounded-2xl bg-white px-3 font-black shadow-sm">
-          All Properties <ChevronDown className="h-4 w-4" />
+    <header className="sticky top-0 z-20 border-b border-black/5 bg-[#f4f5ed]/90 px-3.5 sm:px-4 py-2.5 sm:py-3 backdrop-blur shrink-0">
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
+        <button className="flex h-9 sm:h-11 min-w-0 items-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-white px-2.5 sm:px-3 text-xs sm:text-sm font-black shadow-sm">
+          All Properties <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </button>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setView("ai")} className="grid h-11 w-11 place-items-center rounded-2xl bg-[#111315] text-lime-300"><Bot className="h-5 w-5" /></button>
-          <button className="grid h-11 w-11 place-items-center rounded-2xl bg-white shadow-sm"><BellRing className="h-5 w-5" /></button>
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-lime-300 font-black">S</div>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <button onClick={() => setView("ai")} className="grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-xl sm:rounded-2xl bg-[#111315] text-lime-300">
+            <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+          <button className="grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-xl sm:rounded-2xl bg-white shadow-sm">
+            <BellRing className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+          <div className="grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-xl sm:rounded-2xl bg-lime-300 font-black text-xs sm:text-sm">
+            S
+          </div>
         </div>
       </div>
-      <p className="mt-2 text-xs font-bold text-slate-500">{activeLabel} · Last synced just now</p>
+      <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-bold text-slate-500">{activeLabel} · Last synced just now</p>
     </header>
   );
 }
 
 function HomeView({ setView, openPayment }: { setView: (view: View) => void; openPayment: () => void }) {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div>
-        <p className="text-sm font-bold text-slate-500">Good morning, Sanjay</p>
-        <h1 className="mt-1 text-3xl font-black leading-tight tracking-normal text-[#111315]">Collect faster. Manage smarter.</h1>
+        <p className="text-xs sm:text-sm font-bold text-slate-500">Good morning, Sanjay</p>
+        <h1 className="mt-0.5 sm:mt-1 text-2xl sm:text-3xl font-black leading-tight tracking-normal text-[#111315]">
+          Collect faster. Manage smarter.
+        </h1>
       </div>
       <MoneyHero onViewCollections={() => setView("payments")} />
-      <Card className="bg-gradient-to-br from-lime-200 via-white to-orange-100">
+      <Card className="bg-gradient-to-br from-lime-200 via-white to-orange-100 p-3.5 sm:p-4">
         <div className="flex items-start gap-3">
-          <img src={analytics} alt="Analytics illustration" className="h-24 w-24 rounded-3xl object-cover" />
+          <img src={analytics} alt="Analytics illustration" className="h-16 w-16 sm:h-24 sm:w-24 rounded-2xl sm:rounded-3xl object-cover aspect-square shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase text-slate-500">Your daily PayFlow summary</p>
-            <p className="mt-2 text-lg font-black leading-snug">₹48,500 collected today from 12 tenants.</p>
-            <p className="mt-1 text-sm text-slate-600">5 tenants still need follow-up. Room 204 and 307 are overdue.</p>
-            <Button onClick={() => setView("ai")} size="sm" className="mt-3 rounded-xl bg-[#111315] text-lime-200 hover:bg-black">View full summary</Button>
+            <p className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Your daily PayFlow summary</p>
+            <p className="mt-1 sm:mt-2 text-base sm:text-lg font-black leading-snug">₹48,500 collected today from 12 tenants.</p>
+            <p className="mt-1 text-xs sm:text-sm text-slate-600">5 tenants still need follow-up. Room 204 and 307 are overdue.</p>
+            <Button onClick={() => setView("ai")} size="sm" className="mt-2.5 sm:mt-3 rounded-xl bg-[#111315] text-xs font-bold text-lime-200 hover:bg-black">
+              View full summary
+            </Button>
           </div>
         </div>
       </Card>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         {[
           [IndianRupee, "Collect Rent", "bg-lime-200", openPayment],
           [UserRound, "Add Tenant", "bg-orange-100", () => setView("tenants")],
@@ -223,32 +233,32 @@ function HomeView({ setView, openPayment }: { setView: (view: View) => void; ope
         ].map(([Icon, label, tone, action]) => {
           const ActionIcon = Icon as typeof Home;
           return (
-            <button key={label as string} onClick={action as () => void} className={`min-h-[92px] rounded-[22px] p-3 text-left shadow-sm ${tone as string}`}>
-              <ActionIcon className="h-5 w-5" />
-              <span className="mt-3 block text-xs font-black leading-tight">{label as string}</span>
+            <button key={label as string} onClick={action as () => void} className={`min-h-[80px] sm:min-h-[92px] rounded-[18px] sm:rounded-[22px] p-2.5 sm:p-3 text-left shadow-sm transition hover:scale-[1.02] ${tone as string}`}>
+              <ActionIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="mt-2 sm:mt-3 block text-[11px] sm:text-xs font-black leading-tight">{label as string}</span>
             </button>
           );
         })}
       </div>
       <section>
-        <div className="mb-3 flex items-end justify-between">
+        <div className="mb-2.5 sm:mb-3 flex items-end justify-between">
           <div>
-            <h2 className="text-xl font-black">Today's collection</h2>
-            <p className="text-xs font-semibold text-slate-500">What happened and what needs attention</p>
+            <h2 className="text-lg sm:text-xl font-black">Today's collection</h2>
+            <p className="text-[11px] sm:text-xs font-semibold text-slate-500">What happened and what needs attention</p>
           </div>
-          <button onClick={() => setView("payments")} className="text-xs font-black text-[#111315]">View all</button>
+          <button onClick={() => setView("payments")} className="text-[11px] sm:text-xs font-black text-[#111315] hover:underline">View all</button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {[
             ["Paid", "124 tenants", "₹3,74,000", "bg-emerald-100 text-emerald-900"],
             ["Partial", "12 tenants", "₹42,500", "bg-orange-100 text-orange-900"],
             ["Pending", "18 tenants", "₹40,000", "bg-yellow-100 text-yellow-900"],
             ["Overdue", "7 tenants", "₹26,000", "bg-red-100 text-red-900"],
           ].map(([title, count, amount, tone]) => (
-            <button key={title} onClick={() => setView("payments")} className={`rounded-[24px] p-4 text-left ${tone}`}>
-              <p className="text-sm font-black">{title}</p>
-              <p className="mt-4 text-2xl font-black">{amount}</p>
-              <p className="text-xs font-bold opacity-70">{count}</p>
+            <button key={title} onClick={() => setView("payments")} className={`rounded-[18px] sm:rounded-[24px] p-3 sm:p-4 text-left ${tone} transition hover:scale-[1.01]`}>
+              <p className="text-xs sm:text-sm font-black">{title}</p>
+              <p className="mt-2.5 sm:mt-4 text-xl sm:text-2xl font-black">{amount}</p>
+              <p className="text-[10px] sm:text-xs font-bold opacity-70">{count}</p>
             </button>
           ))}
         </div>
@@ -260,26 +270,26 @@ function HomeView({ setView, openPayment }: { setView: (view: View) => void; ope
 
 function IllustrationRail() {
   return (
-    <section className="overflow-hidden rounded-[28px] bg-[#111315] p-4 text-white">
+    <section className="overflow-hidden rounded-[22px] sm:rounded-[28px] bg-[#111315] p-3.5 sm:p-4 text-white">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-black uppercase text-lime-300">Motion canvas</p>
-          <h2 className="text-xl font-black">All product illustrations</h2>
+          <p className="text-[10px] sm:text-xs font-black uppercase text-lime-300">Motion canvas</p>
+          <h2 className="text-lg sm:text-xl font-black">All product illustrations</h2>
         </div>
-        <Sparkles className="h-5 w-5 text-lime-300" />
+        <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-lime-300" />
       </div>
-      <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+      <div className="mt-3 sm:mt-4 flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
         {allIllustrations.map((item, index) => (
           <motion.figure
             key={item.title}
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -8, rotate: index % 2 ? 1.5 : -1.5 }}
+            whileHover={{ y: -6, rotate: index % 2 ? 1 : -1 }}
             viewport={{ once: true }}
-            className="w-40 shrink-0 overflow-hidden rounded-[24px] bg-white text-[#111315]"
+            className="w-32 sm:w-40 shrink-0 overflow-hidden rounded-[18px] sm:rounded-[24px] bg-white text-[#111315]"
           >
-            <img src={item.src} alt={item.title} className="h-40 w-full object-cover" loading="lazy" />
-            <figcaption className="p-3 text-xs font-black">{item.title}</figcaption>
+            <img src={item.src} alt={item.title} className="h-32 sm:h-40 w-full object-cover aspect-square" loading="lazy" />
+            <figcaption className="p-2 sm:p-3 text-[11px] sm:text-xs font-black truncate">{item.title}</figcaption>
           </motion.figure>
         ))}
       </div>
@@ -291,49 +301,57 @@ function PaymentsView({ openPayment, openReminder, setView }: { openPayment: () 
   const [tab, setTab] = useState("All");
   const filtered = tab === "All" ? tenants : tenants.filter((tenant) => tenant.status === tab);
   return (
-    <div className="space-y-4 p-4 pb-28">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-black">Payments</h1>
-          <p className="text-sm font-semibold text-slate-500">18 tenants need attention</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Payments</h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500">18 tenants need attention</p>
         </div>
-        <img src={rentCollection} alt="Rent collection" className="h-20 w-20 rounded-[24px] object-cover shadow-md" />
+        <img src={rentCollection} alt="Rent collection" className="h-16 w-16 sm:h-20 sm:w-20 rounded-[18px] sm:rounded-[24px] object-cover shadow-md aspect-square" />
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
         {["All", "Paid", "Partial", "Pending", "Overdue"].map((item) => (
-          <button key={item} onClick={() => setTab(item)} className={`rounded-full px-4 py-2 text-sm font-black ${tab === item ? "bg-[#111315] text-lime-300" : "bg-white text-slate-700"}`}>{item}</button>
+          <button
+            key={item}
+            onClick={() => setTab(item)}
+            className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black shrink-0 transition ${
+              tab === item ? "bg-[#111315] text-lime-300" : "bg-white text-slate-700"
+            }`}
+          >
+            {item}
+          </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-3 shadow-sm">
+      <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2.5 sm:py-3 shadow-sm">
         <Search className="h-4 w-4 text-slate-400" />
-        <span className="text-sm font-semibold text-slate-400">Search tenant or room</span>
+        <span className="text-xs sm:text-sm font-semibold text-slate-400">Search tenant or room</span>
       </div>
-      <div className="grid gap-3">
+      <div className="grid gap-2.5 sm:gap-3">
         {filtered.map((tenant) => {
           const remaining = tenant.rent - tenant.paid;
           const progress = Math.round((tenant.paid / tenant.rent) * 100);
           return (
-            <Card key={tenant.name}>
-              <div className="flex items-start justify-between gap-3">
+            <Card key={tenant.name} className="p-3.5 sm:p-4">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div>
-                  <h2 className="text-lg font-black">{tenant.name}</h2>
-                  <p className="text-xs font-semibold text-slate-500">Room {tenant.room} · Double Sharing</p>
+                  <h2 className="text-base sm:text-lg font-black">{tenant.name}</h2>
+                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500">Room {tenant.room} · Double Sharing</p>
                 </div>
-                <Badge className={statusTone[tenant.status as keyof typeof statusTone]}>{tenant.status}</Badge>
+                <Badge className={`text-[10px] sm:text-xs ${statusTone[tenant.status as keyof typeof statusTone]}`}>{tenant.status}</Badge>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div><p className="text-xs font-bold text-slate-400">Rent</p><p className="font-black">{money(tenant.rent)}</p></div>
-                <div><p className="text-xs font-bold text-slate-400">Paid</p><p className="font-black">{money(tenant.paid)}</p></div>
-                <div><p className="text-xs font-bold text-slate-400">Remaining</p><p className="font-black">{money(remaining)}</p></div>
+              <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <div><p className="text-[10px] sm:text-xs font-bold text-slate-400">Rent</p><p className="font-black">{money(tenant.rent)}</p></div>
+                <div><p className="text-[10px] sm:text-xs font-bold text-slate-400">Paid</p><p className="font-black">{money(tenant.paid)}</p></div>
+                <div><p className="text-[10px] sm:text-xs font-bold text-slate-400">Remaining</p><p className="font-black">{money(remaining)}</p></div>
               </div>
-              <div className="mt-4">
-                <Progress value={progress} className="h-3 bg-slate-100 [&>div]:bg-lime-400" />
-                <p className="mt-2 text-xs font-bold text-slate-500">{progress}% collected · {tenant.due}</p>
+              <div className="mt-3 sm:mt-4">
+                <Progress value={progress} className="h-2.5 sm:h-3 bg-slate-100 [&>div]:bg-lime-400" />
+                <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-bold text-slate-500">{progress}% collected · {tenant.due}</p>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <Button onClick={openPayment} size="sm" className="rounded-xl bg-[#111315] text-lime-300 hover:bg-black">Record</Button>
-                <Button onClick={openReminder} size="sm" variant="outline" className="rounded-xl">Remind</Button>
-                <Button onClick={() => setView("tenants")} size="sm" variant="outline" className="rounded-xl">History</Button>
+              <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-1.5 sm:gap-2">
+                <Button onClick={openPayment} size="sm" className="rounded-xl bg-[#111315] text-[11px] sm:text-xs text-lime-300 hover:bg-black">Record</Button>
+                <Button onClick={openReminder} size="sm" variant="outline" className="rounded-xl text-[11px] sm:text-xs">Remind</Button>
+                <Button onClick={() => setView("tenants")} size="sm" variant="outline" className="rounded-xl text-[11px] sm:text-xs">History</Button>
               </div>
             </Card>
           );
@@ -346,18 +364,18 @@ function PaymentsView({ openPayment, openReminder, setView }: { openPayment: () 
 function TenantsView({ openPayment, openReminder }: { openPayment: () => void; openReminder: () => void }) {
   const rahul = tenants[0];
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={onboarding} alt="Tenant onboarding" className="h-24 w-24 rounded-[28px] object-cover" />
+        <img src={onboarding} alt="Tenant onboarding" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square" />
         <div>
-          <p className="text-sm font-bold text-slate-500">Tenant management</p>
-          <h1 className="text-3xl font-black">Rahul Sharma</h1>
-          <Badge className="mt-2 bg-emerald-100 text-emerald-800">Active</Badge>
+          <p className="text-xs sm:text-sm font-bold text-slate-500">Tenant management</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Rahul Sharma</h1>
+          <Badge className="mt-1 sm:mt-2 bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs">Active</Badge>
         </div>
       </div>
-      <Card>
-        <p className="text-xs font-black uppercase text-slate-400">Room 204 · Double Sharing</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+      <Card className="p-3.5 sm:p-4">
+        <p className="text-[10px] sm:text-xs font-black uppercase text-slate-400">Room 204 · Double Sharing</p>
+        <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
           {[
             ["Phone", rahul.phone],
             ["Email", "rahul@demo.in"],
@@ -366,29 +384,32 @@ function TenantsView({ openPayment, openReminder }: { openPayment: () => void; o
             ["Security deposit", "₹10,000"],
             ["Payment status", "₹4,500 pending"],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl bg-slate-50 p-3">
-              <p className="text-[11px] font-bold text-slate-400">{label}</p>
-              <p className="mt-1 font-black">{value}</p>
+            <div key={label} className="rounded-xl sm:rounded-2xl bg-slate-50 p-2.5 sm:p-3">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-400">{label}</p>
+              <p className="mt-0.5 sm:mt-1 font-black text-xs sm:text-sm">{value}</p>
             </div>
           ))}
         </div>
       </Card>
-      <Card>
-        <h2 className="text-lg font-black">Payment overview</h2>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Expected</p><b>{money(9500)}</b></div>
-          <div className="rounded-2xl bg-emerald-50 p-3"><p className="text-xs text-slate-400">Paid</p><b>{money(5000)}</b></div>
-          <div className="rounded-2xl bg-orange-50 p-3"><p className="text-xs text-slate-400">Pending</p><b>{money(4500)}</b></div>
+      <Card className="p-3.5 sm:p-4">
+        <h2 className="text-base sm:text-lg font-black">Payment overview</h2>
+        <div className="mt-2.5 sm:mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 p-2.5 sm:p-3"><p className="text-[10px] sm:text-xs text-slate-400">Expected</p><b>{money(9500)}</b></div>
+          <div className="rounded-xl sm:rounded-2xl bg-emerald-50 p-2.5 sm:p-3"><p className="text-[10px] sm:text-xs text-slate-400">Paid</p><b>{money(5000)}</b></div>
+          <div className="rounded-xl sm:rounded-2xl bg-orange-50 p-2.5 sm:p-3"><p className="text-[10px] sm:text-xs text-slate-400">Pending</p><b>{money(4500)}</b></div>
         </div>
-        <div className="mt-4 space-y-2 text-sm">
+        <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
           {["August 2026 · ₹5,000 · Partial", "July 2026 · ₹9,500 · Paid", "June 2026 · ₹9,500 · Paid"].map((item) => (
-            <div key={item} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3 font-bold"><span>{item}</span><CircleCheck className="h-4 w-4 text-emerald-500" /></div>
+            <div key={item} className="flex items-center justify-between rounded-xl sm:rounded-2xl bg-slate-50 px-3 py-2 sm:py-3 font-bold">
+              <span>{item}</span>
+              <CircleCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 shrink-0" />
+            </div>
           ))}
         </div>
       </Card>
       <div className="grid grid-cols-2 gap-2">
-        <Button onClick={openPayment} className="h-12 rounded-2xl bg-[#111315] text-lime-300 hover:bg-black">Record Payment</Button>
-        <Button onClick={openReminder} className="h-12 rounded-2xl bg-lime-300 text-[#111315] hover:bg-lime-200">Send Reminder</Button>
+        <Button onClick={openPayment} className="h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-[#111315] text-xs sm:text-sm font-bold text-lime-300 hover:bg-black">Record Payment</Button>
+        <Button onClick={openReminder} className="h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-lime-300 text-xs sm:text-sm font-bold text-[#111315] hover:bg-lime-200">Send Reminder</Button>
       </div>
     </div>
   );
@@ -396,29 +417,29 @@ function TenantsView({ openPayment, openReminder }: { openPayment: () => void; o
 
 function PropertiesView({ setView }: { setView: (view: View) => void }) {
   return (
-    <div className="space-y-4 p-4 pb-28">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-black">Properties</h1>
-          <p className="text-sm font-semibold text-slate-500">All Properties consolidated</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Properties</h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500">All Properties consolidated</p>
         </div>
-        <img src={multiProperty} alt="Multi property" className="h-20 w-20 rounded-[24px] object-cover" />
+        <img src={multiProperty} alt="Multi property" className="h-16 w-16 sm:h-20 sm:w-20 rounded-[18px] sm:rounded-[24px] object-cover aspect-square shadow-md" />
       </div>
       {properties.map((property) => (
-        <Card key={property.name}>
-          <div className="flex items-start justify-between">
+        <Card key={property.name} className="p-3.5 sm:p-4">
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-xl font-black">{property.name}</h2>
-              <p className="text-sm font-semibold text-slate-500">{property.city}</p>
+              <h2 className="text-lg sm:text-xl font-black">{property.name}</h2>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500">{property.city}</p>
             </div>
-            <Badge className="bg-lime-200 text-[#111315]">{property.collection}% collected</Badge>
+            <Badge className="bg-lime-200 text-[#111315] text-[10px] sm:text-xs">{property.collection}% collected</Badge>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-            <div className="rounded-2xl bg-slate-50 p-3"><b>{property.beds}</b><p className="text-xs text-slate-400">Beds</p></div>
-            <div className="rounded-2xl bg-slate-50 p-3"><b>{property.occupied}</b><p className="text-xs text-slate-400">Occupied</p></div>
-            <div className="rounded-2xl bg-slate-50 p-3"><b>{property.expected}</b><p className="text-xs text-slate-400">Expected</p></div>
+          <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            <div className="rounded-xl sm:rounded-2xl bg-slate-50 p-2.5 sm:p-3"><b>{property.beds}</b><p className="text-[10px] sm:text-xs text-slate-400">Beds</p></div>
+            <div className="rounded-xl sm:rounded-2xl bg-slate-50 p-2.5 sm:p-3"><b>{property.occupied}</b><p className="text-[10px] sm:text-xs text-slate-400">Occupied</p></div>
+            <div className="rounded-xl sm:rounded-2xl bg-slate-50 p-2.5 sm:p-3"><b>{property.expected}</b><p className="text-[10px] sm:text-xs text-slate-400">Expected</p></div>
           </div>
-          <Button onClick={() => setView("rooms")} className="mt-4 h-11 w-full rounded-2xl bg-[#111315] text-lime-300 hover:bg-black">Manage Property</Button>
+          <Button onClick={() => setView("rooms")} className="mt-3 sm:mt-4 h-10 sm:h-11 w-full rounded-xl sm:rounded-2xl bg-[#111315] text-xs sm:text-sm font-bold text-lime-300 hover:bg-black">Manage Property</Button>
         </Card>
       ))}
     </div>
@@ -427,29 +448,29 @@ function PropertiesView({ setView }: { setView: (view: View) => void }) {
 
 function RoomsView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={roomOccupancy} alt="Rooms and beds" className="h-24 w-24 rounded-[28px] object-cover" />
+        <img src={roomOccupancy} alt="Rooms and beds" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square shadow-md" />
         <div>
-          <h1 className="text-3xl font-black">Rooms & Beds</h1>
-          <p className="text-sm font-semibold text-slate-500">Urban Nest PG · Floor 2</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Rooms & Beds</h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500">Urban Nest PG · Floor 2</p>
         </div>
       </div>
-      <div className="grid gap-3">
+      <div className="grid gap-2.5 sm:gap-3">
         {[
           ["201", "3 / 3 occupied", "₹27,000/month", "Full", 100],
           ["202", "2 / 3 occupied", "₹18,000/month", "1 bed available", 66],
           ["203", "1 / 4 occupied", "₹9,500/month", "3 beds available", 25],
         ].map(([room, occ, rent, status, value]) => (
-          <Card key={room as string}>
+          <Card key={room as string} className="p-3.5 sm:p-4">
             <div className="flex items-center justify-between">
-              <div><h2 className="text-2xl font-black">{room}</h2><p className="text-sm font-bold text-slate-500">{occ}</p></div>
-              <Badge className={(value as number) === 100 ? "bg-[#111315] text-lime-300" : "bg-lime-200 text-[#111315]"}>{status}</Badge>
+              <div><h2 className="text-xl sm:text-2xl font-black">{room}</h2><p className="text-xs sm:text-sm font-bold text-slate-500">{occ}</p></div>
+              <Badge className={(value as number) === 100 ? "bg-[#111315] text-lime-300 text-[10px] sm:text-xs" : "bg-lime-200 text-[#111315] text-[10px] sm:text-xs"}>{status}</Badge>
             </div>
-            <p className="mt-3 text-sm font-black">{rent}</p>
-            <div className="mt-3 flex gap-2">
+            <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm font-black">{rent}</p>
+            <div className="mt-2.5 sm:mt-3 flex gap-1.5 sm:gap-2">
               {Array.from({ length: room === "203" ? 4 : 3 }).map((_, i) => (
-                <span key={i} className={`h-10 flex-1 rounded-2xl ${(i + 1) * 25 <= (value as number) || (room !== "203" && i < Math.round((value as number) / 34)) ? "bg-[#111315]" : "bg-slate-100 border border-dashed border-slate-300"}`} />
+                <span key={i} className={`h-8 sm:h-10 flex-1 rounded-xl sm:rounded-2xl ${(i + 1) * 25 <= (value as number) || (room !== "203" && i < Math.round((value as number) / 34)) ? "bg-[#111315]" : "bg-slate-100 border border-dashed border-slate-300"}`} />
               ))}
             </div>
           </Card>
@@ -461,35 +482,35 @@ function RoomsView() {
 
 function UtilitiesView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={bills} alt="Utility bills" className="h-24 w-24 rounded-[28px] object-cover" />
+        <img src={bills} alt="Utility bills" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square shadow-md" />
         <div>
-          <h1 className="text-3xl font-black">Utilities</h1>
-          <p className="text-sm font-semibold text-slate-500">Electricity · AC · Other</p>
+          <h1 className="text-2xl sm:text-3xl font-black">Utilities</h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500">Electricity · AC · Other</p>
         </div>
       </div>
-      <Card className="bg-gradient-to-br from-yellow-100 to-white">
-        <p className="text-xs font-black uppercase text-slate-500">August Electricity</p>
-        <h2 className="mt-2 text-4xl font-black">₹24,000</h2>
-        <p className="text-sm font-semibold text-slate-600">48 eligible tenants · Equal split preview</p>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+      <Card className="bg-gradient-to-br from-yellow-100 to-white p-3.5 sm:p-4">
+        <p className="text-[10px] sm:text-xs font-black uppercase text-slate-500">August Electricity</p>
+        <h2 className="mt-1 sm:mt-2 text-3xl sm:text-4xl font-black">₹24,000</h2>
+        <p className="text-xs sm:text-sm font-semibold text-slate-600">48 eligible tenants · Equal split preview</p>
+        <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-1.5 sm:gap-2">
           {["Equal split", "Per room", "Per person", "Meter reading"].map((method, i) => (
-            <button key={method} className={`rounded-2xl px-3 py-3 text-left text-sm font-black ${i === 0 ? "bg-[#111315] text-lime-300" : "bg-white"}`}>{method}</button>
+            <button key={method} className={`rounded-xl sm:rounded-2xl px-2.5 sm:px-3 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-black ${i === 0 ? "bg-[#111315] text-lime-300" : "bg-white"}`}>{method}</button>
           ))}
         </div>
       </Card>
-      <Card>
-        <h2 className="text-lg font-black">Charge preview</h2>
+      <Card className="p-3.5 sm:p-4">
+        <h2 className="text-base sm:text-lg font-black">Charge preview</h2>
         {[
           ["Rahul Sharma", "₹500"],
           ["Priya Singh", "₹500"],
           ["Arjun Kumar", "₹750"],
           ["Neha Reddy", "₹500"],
         ].map(([name, amount]) => (
-          <div key={name} className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3 text-sm font-black"><span>{name}</span><span>{amount}</span></div>
+          <div key={name} className="mt-2 sm:mt-3 flex items-center justify-between rounded-xl sm:rounded-2xl bg-slate-50 px-3 py-2 sm:py-3 text-xs sm:text-sm font-black"><span>{name}</span><span>{amount}</span></div>
         ))}
-        <div className="mt-4 grid grid-cols-2 gap-2"><Button className="rounded-2xl bg-[#111315] text-lime-300 hover:bg-black">Generate Charges</Button><Button variant="outline" className="rounded-2xl">Send to Tenants</Button></div>
+        <div className="mt-3.5 sm:mt-4 grid grid-cols-2 gap-2"><Button className="rounded-xl sm:rounded-2xl bg-[#111315] text-xs sm:text-sm font-bold text-lime-300 hover:bg-black">Generate Charges</Button><Button variant="outline" className="rounded-xl sm:rounded-2xl text-xs sm:text-sm">Send to Tenants</Button></div>
       </Card>
     </div>
   );
@@ -497,14 +518,14 @@ function UtilitiesView() {
 
 function ReceiptView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={receipts} alt="Smart receipts" className="h-24 w-24 rounded-[28px] object-cover" />
-        <div><h1 className="text-3xl font-black">Receipts</h1><p className="text-sm font-semibold text-slate-500">Professional receipt sharing</p></div>
+        <img src={receipts} alt="Smart receipts" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square shadow-md" />
+        <div><h1 className="text-2xl sm:text-3xl font-black">Receipts</h1><p className="text-xs sm:text-sm font-semibold text-slate-500">Professional receipt sharing</p></div>
       </div>
-      <Card className="border border-dashed border-slate-200">
-        <div className="flex items-start justify-between"><div><p className="text-sm font-black">PG Hub PayFlow</p><h2 className="text-2xl font-black">Payment Receipt</h2></div><Badge className="bg-emerald-100 text-emerald-800">Generated</Badge></div>
-        <div className="mt-5 grid gap-3 text-sm">
+      <Card className="border border-dashed border-slate-200 p-3.5 sm:p-4">
+        <div className="flex items-start justify-between"><div><p className="text-xs sm:text-sm font-black">PG Hub PayFlow</p><h2 className="text-xl sm:text-2xl font-black">Payment Receipt</h2></div><Badge className="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs">Generated</Badge></div>
+        <div className="mt-4 sm:mt-5 grid gap-2 sm:gap-3 text-xs sm:text-sm">
           {[
             ["Tenant", "Rahul Sharma"],
             ["Room", "204"],
@@ -514,10 +535,10 @@ function ReceiptView() {
             ["Date", "05 Aug 2026"],
             ["Receipt ID", "PGP-2026-000184"],
           ].map(([label, value]) => (
-            <div key={label} className="flex justify-between border-b border-slate-100 pb-2"><span className="font-semibold text-slate-500">{label}</span><b>{value}</b></div>
+            <div key={label} className="flex justify-between border-b border-slate-100 pb-1.5 sm:pb-2"><span className="font-semibold text-slate-500">{label}</span><b>{value}</b></div>
           ))}
         </div>
-        <div className="mt-5 grid grid-cols-3 gap-2"><Button size="sm" className="rounded-xl"><Download className="h-4 w-4" /> Download</Button><Button size="sm" variant="outline" className="rounded-xl"><Send className="h-4 w-4" /> Share</Button><Button size="sm" variant="outline" className="rounded-xl"><MessageCircle className="h-4 w-4" /> WhatsApp</Button></div>
+        <div className="mt-4 sm:mt-5 grid grid-cols-3 gap-1.5 sm:gap-2"><Button size="sm" className="rounded-xl text-[10px] sm:text-xs"><Download className="h-3.5 w-3.5" /> Download</Button><Button size="sm" variant="outline" className="rounded-xl text-[10px] sm:text-xs"><Send className="h-3.5 w-3.5" /> Share</Button><Button size="sm" variant="outline" className="rounded-xl text-[10px] sm:text-xs"><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</Button></div>
       </Card>
     </div>
   );
@@ -525,13 +546,13 @@ function ReceiptView() {
 
 function MoveOutView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={securityDeposit} alt="Security deposit" className="h-24 w-24 rounded-[28px] object-cover" />
-        <div><h1 className="text-3xl font-black">Move-out</h1><p className="text-sm font-semibold text-slate-500">Rahul Sharma · Room 204</p></div>
+        <img src={securityDeposit} alt="Security deposit" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square shadow-md" />
+        <div><h1 className="text-2xl sm:text-3xl font-black">Move-out</h1><p className="text-xs sm:text-sm font-semibold text-slate-500">Rahul Sharma · Room 204</p></div>
       </div>
-      <Card>
-        <p className="text-xs font-black uppercase text-slate-500">Move-out settlement</p>
+      <Card className="p-3.5 sm:p-4">
+        <p className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Move-out settlement</p>
         {[
           ["Monthly rent", 9500],
           ["Prorated rent", 7750],
@@ -540,14 +561,14 @@ function MoveOutView() {
           ["Discount", -500],
           ["Security deposit", -10000],
         ].map(([label, amount]) => (
-          <div key={label as string} className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3 text-sm font-bold"><span>{label as string}</span><span>{money(amount as number)}</span></div>
+          <div key={label as string} className="mt-2 sm:mt-3 flex items-center justify-between rounded-xl sm:rounded-2xl bg-slate-50 px-3 py-2 sm:py-3 text-xs sm:text-sm font-bold"><span>{label as string}</span><span>{money(amount as number)}</span></div>
         ))}
-        <div className="mt-5 rounded-[24px] bg-[#111315] p-4 text-white">
-          <p className="text-sm font-semibold text-white/55">Refund to tenant</p>
-          <p className="mt-1 text-4xl font-black text-lime-300">₹300</p>
-          <p className="mt-2 text-xs text-white/50">Total deductions: ₹9,700</p>
+        <div className="mt-4 sm:mt-5 rounded-[20px] sm:rounded-[24px] bg-[#111315] p-3.5 sm:p-4 text-white">
+          <p className="text-xs sm:text-sm font-semibold text-white/55">Refund to tenant</p>
+          <p className="mt-1 text-3xl sm:text-4xl font-black text-lime-300">₹300</p>
+          <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-white/50">Total deductions: ₹9,700</p>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2"><Button className="rounded-2xl bg-lime-300 text-[#111315] hover:bg-lime-200">Save Settlement</Button><Button variant="outline" className="rounded-2xl">Generate Receipt</Button></div>
+        <div className="mt-3.5 sm:mt-4 grid grid-cols-2 gap-2"><Button className="rounded-xl sm:rounded-2xl bg-lime-300 text-xs sm:text-sm font-bold text-[#111315] hover:bg-lime-200">Save Settlement</Button><Button variant="outline" className="rounded-xl sm:rounded-2xl text-xs sm:text-sm">Generate Receipt</Button></div>
       </Card>
     </div>
   );
@@ -555,23 +576,23 @@ function MoveOutView() {
 
 function ReportsView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <div className="flex items-center gap-3">
-        <img src={analytics} alt="Reports analytics" className="h-24 w-24 rounded-[28px] object-cover" />
-        <div><h1 className="text-3xl font-black">Reports</h1><p className="text-sm font-semibold text-slate-500">Revenue, occupancy and methods</p></div>
+        <img src={analytics} alt="Reports analytics" className="h-18 w-18 sm:h-24 sm:w-24 rounded-2xl sm:rounded-[28px] object-cover aspect-square shadow-md" />
+        <div><h1 className="text-2xl sm:text-3xl font-black">Reports</h1><p className="text-xs sm:text-sm font-semibold text-slate-500">Revenue, occupancy and methods</p></div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
         {[
           ["Monthly revenue", "₹4.82L"],
           ["Pending rent", "₹82.5K"],
           ["Overdue rent", "₹26K"],
           ["Occupancy", "90%"],
-        ].map(([label, value]) => <Card key={label}><p className="text-xs font-bold text-slate-400">{label}</p><p className="mt-3 text-2xl font-black">{value}</p></Card>)}
+        ].map(([label, value]) => <Card key={label} className="p-3 sm:p-4"><p className="text-[10px] sm:text-xs font-bold text-slate-400">{label}</p><p className="mt-2 sm:mt-3 text-xl sm:text-2xl font-black">{value}</p></Card>)}
       </div>
-      <Card className="bg-[#111315] text-white">
-        <div className="flex items-center justify-between"><h2 className="text-xl font-black">Collection trend</h2><PieChart className="h-5 w-5 text-lime-300" /></div>
-        <div className="mt-6 flex h-40 items-end gap-3">
-          {[52, 70, 62, 84, 78, 92, 76].map((height, index) => <motion.span key={index} initial={{ height: 0 }} animate={{ height: `${height}%` }} className="flex-1 rounded-t-2xl bg-gradient-to-t from-lime-400 to-yellow-200" />)}
+      <Card className="bg-[#111315] text-white p-3.5 sm:p-4">
+        <div className="flex items-center justify-between"><h2 className="text-lg sm:text-xl font-black">Collection trend</h2><PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-lime-300" /></div>
+        <div className="mt-4 sm:mt-6 flex h-32 sm:h-40 items-end gap-2 sm:gap-3">
+          {[52, 70, 62, 84, 78, 92, 76].map((height, index) => <motion.span key={index} initial={{ height: 0 }} animate={{ height: `${height}%` }} className="flex-1 rounded-t-xl sm:rounded-t-2xl bg-gradient-to-t from-lime-400 to-yellow-200" />)}
         </div>
       </Card>
     </div>
@@ -580,20 +601,20 @@ function ReportsView() {
 
 function AiView({ openReminder }: { openReminder: () => void }) {
   return (
-    <div className="space-y-4 p-4 pb-28">
-      <Card className="overflow-hidden bg-[#111315] text-white">
-        <div className="flex items-center gap-3"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-lime-300 text-[#111315]"><Bot className="h-6 w-6" /></div><div><h1 className="text-3xl font-black">PayFlow AI</h1><p className="text-sm text-white/55">Ask anything about your collections.</p></div></div>
-        <div className="mt-5 grid gap-2">
-          {["Who owes me rent?", "How much did I collect this week?", "Draft a reminder for Rahul."].map((prompt) => <button key={prompt} className="rounded-2xl bg-white/8 px-3 py-3 text-left text-sm font-bold text-white/80">{prompt}</button>)}
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
+      <Card className="overflow-hidden bg-[#111315] text-white p-3.5 sm:p-4">
+        <div className="flex items-center gap-3"><div className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-xl sm:rounded-2xl bg-lime-300 text-[#111315]"><Bot className="h-5 w-5 sm:h-6 sm:w-6" /></div><div><h1 className="text-2xl sm:text-3xl font-black">PayFlow AI</h1><p className="text-xs sm:text-sm text-white/55">Ask anything about your collections.</p></div></div>
+        <div className="mt-3.5 sm:mt-5 grid gap-1.5 sm:gap-2">
+          {["Who owes me rent?", "How much did I collect this week?", "Draft a reminder for Rahul."].map((prompt) => <button key={prompt} className="rounded-xl sm:rounded-2xl bg-white/8 px-3 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-bold text-white/80 transition hover:bg-white/12">{prompt}</button>)}
         </div>
       </Card>
-      <Card>
-        <p className="text-xs font-black uppercase text-violet-600">AI response</p>
-        <h2 className="mt-2 text-2xl font-black">You have ₹26,000 overdue across 7 tenants.</h2>
-        <div className="mt-4 space-y-2">
-          {["Rahul Sharma — ₹9,500", "Priya Singh — ₹6,000", "Arjun Kumar — ₹4,500"].map((row) => <div key={row} className="rounded-2xl bg-slate-50 px-3 py-3 text-sm font-black">{row}</div>)}
+      <Card className="p-3.5 sm:p-4">
+        <p className="text-[10px] sm:text-xs font-black uppercase text-violet-600">AI response</p>
+        <h2 className="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-black">You have ₹26,000 overdue across 7 tenants.</h2>
+        <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
+          {["Rahul Sharma — ₹9,500", "Priya Singh — ₹6,000", "Arjun Kumar — ₹4,500"].map((row) => <div key={row} className="rounded-xl sm:rounded-2xl bg-slate-50 px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-black">{row}</div>)}
         </div>
-        <Button onClick={openReminder} className="mt-4 h-12 w-full rounded-2xl bg-lime-300 text-[#111315] hover:bg-lime-200">Send all reminders</Button>
+        <Button onClick={openReminder} className="mt-3.5 sm:mt-4 h-11 sm:h-12 w-full rounded-xl sm:rounded-2xl bg-lime-300 text-xs sm:text-sm font-bold text-[#111315] hover:bg-lime-200">Send all reminders</Button>
       </Card>
       <IllustrationRail />
     </div>
@@ -602,25 +623,25 @@ function AiView({ openReminder }: { openReminder: () => void }) {
 
 function PricingMoreView() {
   return (
-    <div className="space-y-4 p-4 pb-28">
-      <h1 className="text-3xl font-black">Run your PG smarter.</h1>
+    <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
+      <h1 className="text-2xl sm:text-3xl font-black">Run your PG smarter.</h1>
       {[
         ["Basic", "₹199/month", "For small PG operators.", ["Tenant management", "Room management", "Rent tracking", "Basic reports"]],
         ["Plus", "₹299/month", "Most popular.", ["Everything in Basic", "WhatsApp reminders", "Digital receipts", "Utility billing", "Advanced analytics"]],
         ["Pro Max", "₹499/month", "For growing operators.", ["Everything in Plus", "Multi-property", "AI assistant", "Staff roles", "Priority support"]],
       ].map(([plan, price, desc, features], index) => (
-        <Card key={plan as string} className={index === 1 ? "bg-[#111315] text-white" : ""}>
-          <div className="flex items-start justify-between"><div><h2 className="text-2xl font-black">{plan as string}</h2><p className="text-sm font-semibold opacity-60">{desc as string}</p></div>{index === 1 && <Badge className="bg-lime-300 text-[#111315]">Most Popular</Badge>}</div>
-          <p className="mt-4 text-4xl font-black">{price as string}</p>
-          <ul className="mt-4 grid gap-2 text-sm font-bold opacity-80">{(features as string[]).map((feature) => <li key={feature} className="flex items-center gap-2"><Check className="h-4 w-4 text-lime-500" />{feature}</li>)}</ul>
-          <Button className={`mt-5 h-12 w-full rounded-2xl ${index === 1 ? "bg-lime-300 text-[#111315] hover:bg-lime-200" : "bg-[#111315] text-lime-300 hover:bg-black"}`}>Start {plan as string}</Button>
+        <Card key={plan as string} className={`p-3.5 sm:p-4 ${index === 1 ? "bg-[#111315] text-white" : ""}`}>
+          <div className="flex items-start justify-between"><div><h2 className="text-xl sm:text-2xl font-black">{plan as string}</h2><p className="text-xs sm:text-sm font-semibold opacity-60">{desc as string}</p></div>{index === 1 && <Badge className="bg-lime-300 text-[#111315] text-[10px] sm:text-xs">Most Popular</Badge>}</div>
+          <p className="mt-3 sm:mt-4 text-2xl sm:text-4xl font-black">{price as string}</p>
+          <ul className="mt-3 sm:mt-4 grid gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold opacity-80">{(features as string[]).map((feature) => <li key={feature} className="flex items-center gap-1.5 sm:gap-2"><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-lime-500" />{feature}</li>)}</ul>
+          <Button className={`mt-4 sm:mt-5 h-11 sm:h-12 w-full rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold ${index === 1 ? "bg-lime-300 text-[#111315] hover:bg-lime-200" : "bg-[#111315] text-lime-300 hover:bg-black"}`}>Start {plan as string}</Button>
         </Card>
       ))}
-      <Card className="bg-gradient-to-br from-lime-200 to-orange-100">
-        <h2 className="text-2xl font-black">Refer PG owners. Earn rewards.</h2>
-        <p className="mt-2 text-sm font-semibold text-slate-600">Your referral code: <b>PGHUB50</b></p>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-sm"><div><b>3</b><p>referrals</p></div><div><b>₹600</b><p>earned</p></div><div><b>₹200</b><p>pending</p></div></div>
-        <Button className="mt-4 rounded-2xl bg-[#111315] text-lime-300 hover:bg-black"><MessageCircle className="h-4 w-4" /> Share Referral</Button>
+      <Card className="bg-gradient-to-br from-lime-200 to-orange-100 p-3.5 sm:p-4">
+        <h2 className="text-xl sm:text-2xl font-black">Refer PG owners. Earn rewards.</h2>
+        <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-semibold text-slate-600">Your referral code: <b>PGHUB50</b></p>
+        <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-2 text-xs sm:text-sm"><div><b>3</b><p>referrals</p></div><div><b>₹600</b><p>earned</p></div><div><b>₹200</b><p>pending</p></div></div>
+        <Button className="mt-3.5 sm:mt-4 rounded-xl sm:rounded-2xl bg-[#111315] text-xs sm:text-sm font-bold text-lime-300 hover:bg-black"><MessageCircle className="h-4 w-4" /> Share Referral</Button>
       </Card>
     </div>
   );
@@ -632,25 +653,25 @@ function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void })
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 md:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div initial={{ y: 420 }} animate={{ y: 0 }} exit={{ y: 420 }} className="w-full max-w-[430px] rounded-t-[32px] bg-white p-5 shadow-2xl md:rounded-[32px]">
+          <motion.div initial={{ y: 420 }} animate={{ y: 0 }} exit={{ y: 420 }} className="w-full max-w-[430px] rounded-t-[28px] sm:rounded-t-[32px] bg-white p-4 sm:p-5 shadow-2xl md:rounded-[32px]">
             {!success ? (
               <>
-                <div className="flex items-center justify-between"><h2 className="text-2xl font-black">Record payment</h2><button onClick={onClose}><X className="h-5 w-5" /></button></div>
-                <p className="mt-1 text-sm font-semibold text-slate-500">Rahul Sharma · August 2026</p>
-                <div className="mt-5 grid gap-3">
-                  <label className="grid gap-1 text-sm font-black">Amount<input defaultValue="4500" className="h-12 rounded-2xl bg-slate-50 px-4 font-bold outline-none" /></label>
-                  <div className="grid grid-cols-3 gap-2">{["UPI", "Cash", "Bank"].map((method, i) => <button key={method} className={`rounded-2xl px-3 py-3 text-sm font-black ${i === 0 ? "bg-[#111315] text-lime-300" : "bg-slate-50"}`}>{method}</button>)}</div>
-                  <label className="grid gap-1 text-sm font-black">Payment date<input type="date" defaultValue="2026-08-23" className="h-12 rounded-2xl bg-slate-50 px-4 font-bold outline-none" /></label>
-                  <label className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black">Generate receipt<span className="h-6 w-11 rounded-full bg-lime-300 p-1"><i className="block h-4 w-4 rounded-full bg-[#111315] translate-x-5" /></span></label>
+                <div className="flex items-center justify-between"><h2 className="text-xl sm:text-2xl font-black">Record payment</h2><button onClick={onClose}><X className="h-5 w-5" /></button></div>
+                <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-500">Rahul Sharma · August 2026</p>
+                <div className="mt-4 sm:mt-5 grid gap-2.5 sm:gap-3">
+                  <label className="grid gap-1 text-xs sm:text-sm font-black">Amount<input defaultValue="4500" className="h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-50 px-3.5 sm:px-4 font-bold outline-none text-sm sm:text-base" /></label>
+                  <div className="grid grid-cols-3 gap-2">{["UPI", "Cash", "Bank"].map((method, i) => <button key={method} className={`rounded-xl sm:rounded-2xl px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-black ${i === 0 ? "bg-[#111315] text-lime-300" : "bg-slate-50"}`}>{method}</button>)}</div>
+                  <label className="grid gap-1 text-xs sm:text-sm font-black">Payment date<input type="date" defaultValue="2026-08-23" className="h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-50 px-3.5 sm:px-4 font-bold outline-none text-xs sm:text-sm" /></label>
+                  <label className="flex items-center justify-between rounded-xl sm:rounded-2xl bg-slate-50 px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-black">Generate receipt<span className="h-5 w-10 sm:h-6 sm:w-11 rounded-full bg-lime-300 p-0.5 sm:p-1 flex items-center justify-end"><i className="block h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full bg-[#111315]" /></span></label>
                 </div>
-                <Button onClick={() => setSuccess(true)} className="mt-5 h-13 w-full rounded-2xl bg-lime-300 py-4 text-base font-black text-[#111315] hover:bg-lime-200">Record ₹4,500</Button>
+                <Button onClick={() => setSuccess(true)} className="mt-4 sm:mt-5 h-12 sm:h-13 w-full rounded-xl sm:rounded-2xl bg-lime-300 py-3 sm:py-4 text-sm sm:text-base font-black text-[#111315] hover:bg-lime-200">Record ₹4,500</Button>
               </>
             ) : (
-              <div className="py-8 text-center">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-lime-300 text-[#111315]"><Check className="h-10 w-10" /></motion.div>
-                <h2 className="mt-5 text-3xl font-black">Payment recorded</h2>
-                <p className="mt-2 text-sm font-semibold text-slate-500">₹4,500 received from Rahul Sharma. Receipt ready to share.</p>
-                <div className="mt-6 grid grid-cols-2 gap-2"><Button className="rounded-2xl bg-[#111315] text-lime-300 hover:bg-black">Share Receipt</Button><Button onClick={onClose} variant="outline" className="rounded-2xl">Done</Button></div>
+              <div className="py-6 sm:py-8 text-center">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mx-auto grid h-16 w-16 sm:h-20 sm:w-20 place-items-center rounded-full bg-lime-300 text-[#111315]"><Check className="h-8 w-8 sm:h-10 sm:w-10" /></motion.div>
+                <h2 className="mt-4 sm:mt-5 text-2xl sm:text-3xl font-black">Payment recorded</h2>
+                <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm font-semibold text-slate-500">₹4,500 received from Rahul Sharma. Receipt ready to share.</p>
+                <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-2"><Button className="rounded-xl sm:rounded-2xl bg-[#111315] text-xs sm:text-sm font-bold text-lime-300 hover:bg-black">Share Receipt</Button><Button onClick={onClose} variant="outline" className="rounded-xl sm:rounded-2xl text-xs sm:text-sm">Done</Button></div>
               </div>
             )}
           </motion.div>
@@ -666,11 +687,11 @@ function ReminderSheet({ open, onClose }: { open: boolean; onClose: () => void }
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 md:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div initial={{ y: 420 }} animate={{ y: 0 }} exit={{ y: 420 }} className="w-full max-w-[430px] rounded-t-[32px] bg-white p-5 shadow-2xl md:rounded-[32px]">
-            <div className="flex items-center justify-between"><h2 className="text-2xl font-black">Rent reminder</h2><button onClick={onClose}><X className="h-5 w-5" /></button></div>
-            <p className="mt-2 text-sm font-semibold text-slate-500">Rahul Sharma · ₹4,500 pending · Due 3 days ago</p>
-            <div className="mt-5 rounded-[24px] bg-emerald-50 p-4 text-sm font-semibold leading-relaxed text-emerald-950">{message}</div>
-            <div className="mt-5 grid gap-2"><Button className="h-12 rounded-2xl bg-[#25D366] text-white hover:bg-[#1fb258]"><MessageCircle className="h-4 w-4" /> Send via WhatsApp</Button><Button variant="outline" className="h-12 rounded-2xl"><Copy className="h-4 w-4" /> Copy message</Button><Button variant="outline" className="h-12 rounded-2xl">Edit message</Button></div>
+          <motion.div initial={{ y: 420 }} animate={{ y: 0 }} exit={{ y: 420 }} className="w-full max-w-[430px] rounded-t-[28px] sm:rounded-t-[32px] bg-white p-4 sm:p-5 shadow-2xl md:rounded-[32px]">
+            <div className="flex items-center justify-between"><h2 className="text-xl sm:text-2xl font-black">Rent reminder</h2><button onClick={onClose}><X className="h-5 w-5" /></button></div>
+            <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm font-semibold text-slate-500">Rahul Sharma · ₹4,500 pending · Due 3 days ago</p>
+            <div className="mt-4 sm:mt-5 rounded-[20px] sm:rounded-[24px] bg-emerald-50 p-3.5 sm:p-4 text-xs sm:text-sm font-semibold leading-relaxed text-emerald-950">{message}</div>
+            <div className="mt-4 sm:mt-5 grid gap-2"><Button className="h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-[#25D366] text-xs sm:text-sm font-bold text-white hover:bg-[#1fb258]"><MessageCircle className="h-4 w-4" /> Send via WhatsApp</Button><Button variant="outline" className="h-11 sm:h-12 rounded-xl sm:rounded-2xl text-xs sm:text-sm"><Copy className="h-4 w-4" /> Copy message</Button><Button variant="outline" className="h-11 sm:h-12 rounded-xl sm:rounded-2xl text-xs sm:text-sm">Edit message</Button></div>
           </motion.div>
         </motion.div>
       )}
@@ -700,68 +721,132 @@ export default function PayFlowDemo() {
 
   return (
     <main className="min-h-screen bg-[#e9f95c] text-[#111315]">
-      <div className="mx-auto grid min-h-screen max-w-[1440px] grid-cols-1 md:grid-cols-[280px_1fr]">
-        <aside className="hidden bg-[#111315] p-5 text-white md:block">
-          <div className="mb-8 rounded-[28px] bg-lime-300 p-4 text-[#111315]">
-            <p className="text-xs font-black uppercase">PG Hub PayFlow</p>
-            <h1 className="mt-2 text-2xl font-black leading-tight">Collect faster. Manage smarter.</h1>
+      <div className="mx-auto grid min-h-screen max-w-7xl 2xl:max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr]">
+        <aside className="hidden bg-[#111315] p-5 text-white lg:block">
+          <div className="mb-8 rounded-[24px] bg-lime-300 p-4 text-[#111315]">
+            <p className="text-[10px] font-black uppercase">PG Hub PayFlow</p>
+            <h1 className="mt-1 text-xl font-black leading-tight">Collect faster. Manage smarter.</h1>
           </div>
           <nav className="grid gap-1">
             {sidebar.map((item) => {
               const Icon = item.icon;
-              return <button key={item.id} onClick={() => setView(item.id)} className={`flex h-12 items-center gap-3 rounded-2xl px-3 text-left text-sm font-black transition ${view === item.id ? "bg-white text-[#111315]" : "text-white/60 hover:bg-white/8 hover:text-white"}`}><Icon className="h-4 w-4" />{item.label}</button>;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setView(item.id)}
+                  className={`flex h-11 items-center gap-3 rounded-2xl px-3 text-left text-sm font-black transition ${
+                    view === item.id ? "bg-white text-[#111315]" : "text-white/60 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
             })}
           </nav>
         </aside>
 
-        <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#ffffff_0,#f4f5ed_36%,#e9f95c_120%)]">
-          <div className="sticky top-0 z-30 flex items-center justify-between border-b border-black/5 bg-[#f4f5ed]/85 px-4 py-3 backdrop-blur md:hidden">
-            <button onClick={() => setNavOpen(true)} className="grid h-11 w-11 place-items-center rounded-2xl bg-[#111315] text-lime-300"><Menu className="h-5 w-5" /></button>
-            <b>PG Hub PayFlow</b>
-            <button onClick={() => setView("ai")} className="grid h-11 w-11 place-items-center rounded-2xl bg-lime-300"><Bot className="h-5 w-5" /></button>
+        <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#ffffff_0,#f4f5ed_36%,#e9f95c_120%)] flex flex-col justify-between">
+          <div className="sticky top-0 z-30 flex items-center justify-between border-b border-black/5 bg-[#f4f5ed]/85 px-4 py-3 backdrop-blur lg:hidden">
+            <button onClick={() => setNavOpen(true)} className="grid h-10 w-10 place-items-center rounded-xl bg-[#111315] text-lime-300">
+              <Menu className="h-5 w-5" />
+            </button>
+            <b className="text-sm font-black">PG Hub PayFlow</b>
+            <button onClick={() => setView("ai")} className="grid h-10 w-10 place-items-center rounded-xl bg-lime-300">
+              <Bot className="h-5 w-5" />
+            </button>
           </div>
-          <div className="grid gap-8 p-4 md:grid-cols-[minmax(0,1fr)_430px] md:p-8">
-            <div className="hidden pt-4 md:block">
-              <p className="text-sm font-black uppercase text-slate-500">Android-first product demo</p>
-              <h2 className="mt-3 max-w-3xl text-6xl font-black leading-none tracking-normal lg:text-7xl">A premium rent collection cockpit for Indian PG owners.</h2>
-              <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-slate-600">PayFlow turns rent, tenants, rooms, receipts, utilities, move-outs and AI follow-ups into a simple 3-tap mobile flow.</p>
-              <div className="mt-8 grid max-w-3xl grid-cols-3 gap-3">
-                {["₹4.82L expected", "77.5% collected", "7 overdue"].map((metric) => <div key={metric} className="rounded-[28px] bg-white p-5 text-xl font-black shadow-lg">{metric}</div>)}
+          <div className="grid gap-6 sm:gap-8 p-4 sm:p-6 lg:p-8 md:grid-cols-[minmax(0,1fr)_380px] lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_430px] items-start">
+            <div className="hidden pt-2 md:block">
+              <p className="text-xs sm:text-sm font-black uppercase text-slate-500">Android-first product demo</p>
+              <h2 className="mt-2 sm:mt-3 text-4xl lg:text-5xl xl:text-6xl font-black leading-tight tracking-normal">
+                A premium rent collection cockpit for Indian PG owners.
+              </h2>
+              <p className="mt-3 sm:mt-5 text-sm sm:text-base lg:text-lg font-semibold leading-relaxed text-slate-600">
+                PayFlow turns rent, tenants, rooms, receipts, utilities, move-outs and AI follow-ups into a simple 3-tap mobile flow.
+              </p>
+              <div className="mt-6 sm:mt-8 grid grid-cols-3 gap-2.5 sm:gap-3">
+                {["₹4.82L expected", "77.5% collected", "7 overdue"].map((metric) => (
+                  <div key={metric} className="rounded-[22px] bg-white p-3.5 sm:p-4 text-base sm:text-lg font-black shadow-md text-center">
+                    {metric}
+                  </div>
+                ))}
               </div>
-              <div className="mt-8"><IllustrationRail /></div>
+              <div className="mt-6 sm:mt-8">
+                <IllustrationRail />
+              </div>
             </div>
-            <PhoneShell>
-              <TopBar view={view} setView={setView} />
-              <AnimatePresence mode="wait">
-                <motion.div key={view} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
-                  {activeView}
-                </motion.div>
-              </AnimatePresence>
-              <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-[430px] grid-cols-5 gap-1 border-t border-black/5 bg-white/92 px-2 py-2 backdrop-blur md:absolute">
-                {bottomNav.map((item) => {
-                  const Icon = item.icon;
-                  const active = view === item.id || (item.id === "more" && !bottomNav.some((nav) => nav.id === view));
-                  return <button key={item.id} onClick={() => setView(item.id)} className={`grid min-h-[58px] place-items-center rounded-2xl text-[10px] font-black ${active ? "bg-[#111315] text-lime-300" : "text-slate-500"}`}><Icon className="h-5 w-5" />{item.label}</button>;
-                })}
-              </nav>
-            </PhoneShell>
+            
+            <div className="w-full flex justify-center">
+              <PhoneShell>
+                <TopBar view={view} setView={setView} />
+                <AnimatePresence mode="wait">
+                  <motion.div key={view} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} transition={{ duration: 0.18 }} className="flex-1 overflow-y-auto">
+                    {activeView}
+                  </motion.div>
+                </AnimatePresence>
+                <nav className="sticky bottom-0 z-30 mx-auto w-full grid grid-cols-5 gap-1 border-t border-black/5 bg-white/92 px-2 py-1.5 backdrop-blur shrink-0">
+                  {bottomNav.map((item) => {
+                    const Icon = item.icon;
+                    const active = view === item.id || (item.id === "more" && !bottomNav.some((nav) => nav.id === view));
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setView(item.id)}
+                        className={`grid min-h-[50px] sm:min-h-[56px] place-items-center rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-black transition ${
+                          active ? "bg-[#111315] text-lime-300" : "text-slate-500 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </PhoneShell>
+            </div>
           </div>
         </section>
       </div>
 
       <AnimatePresence>
         {navOpen && (
-          <motion.div className="fixed inset-0 z-50 bg-black/50 md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.aside initial={{ x: -320 }} animate={{ x: 0 }} exit={{ x: -320 }} className="h-full w-80 bg-[#111315] p-5 text-white">
-              <div className="mb-5 flex items-center justify-between"><b>PG Hub PayFlow</b><button onClick={() => setNavOpen(false)}><X className="h-5 w-5" /></button></div>
-              <nav className="grid gap-1">{sidebar.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => { setView(item.id); setNavOpen(false); }} className="flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-black text-white/75 hover:bg-white/8"><Icon className="h-4 w-4" />{item.label}</button>; })}</nav>
+          <motion.div className="fixed inset-0 z-50 bg-black/50 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.aside initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} className="h-full w-72 sm:w-80 bg-[#111315] p-5 text-white">
+              <div className="mb-5 flex items-center justify-between">
+                <b className="text-base font-black">PG Hub PayFlow</b>
+                <button onClick={() => setNavOpen(false)}>
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <nav className="grid gap-1">
+                {sidebar.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setView(item.id);
+                        setNavOpen(false);
+                      }}
+                      className="flex h-11 items-center gap-3 rounded-2xl px-3 text-sm font-black text-white/75 hover:bg-white/8 transition"
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </nav>
             </motion.aside>
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setView("ai")} className="fixed bottom-24 right-4 z-40 hidden rounded-full bg-[#111315] px-5 py-4 text-sm font-black text-lime-300 shadow-2xl md:flex"><Bot className="mr-2 h-4 w-4" /> Ask PayFlow AI</button>
+      <button onClick={() => setView("ai")} className="fixed bottom-20 right-4 z-40 hidden rounded-full bg-[#111315] px-5 py-3.5 text-xs sm:text-sm font-black text-lime-300 shadow-2xl lg:flex items-center gap-2 hover:bg-black transition">
+        <Bot className="h-4 w-4" /> Ask PayFlow AI
+      </button>
       <PaymentSheet open={paymentOpen} onClose={() => { setPaymentOpen(false); }} />
       <ReminderSheet open={reminderOpen} onClose={() => setReminderOpen(false)} />
     </main>
   );
 }
+
