@@ -37,7 +37,6 @@ android {
 
     sourceSets {
         main {
-            res.exclude '**/splash.png'
             res.exclude '**/config 2.xml'
             res.exclude '**/config 3.xml'
             res.exclude '**/config*.xml'

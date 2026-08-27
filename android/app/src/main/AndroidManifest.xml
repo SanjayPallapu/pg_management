@@ -40,7 +40,7 @@
 
         <!-- TWA Primary Activity -->
         <activity
-            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:alwaysRetainTaskState="true"
