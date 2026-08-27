@@ -4,11 +4,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.browser.trusted.TrustedWebActivityDisplayMode;
 import androidx.browser.trusted.TrustedWebActivityIntentBuilder;
+import androidx.core.content.ContextCompat;
 import com.google.androidbrowserhelper.trusted.TwaLauncher;
+import com.google.androidbrowserhelper.trusted.splashscreens.SplashImageTransferTask;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "PGHubLauncher";
@@ -40,19 +43,30 @@ public class MainActivity extends AppCompatActivity {
                 ? getIntent().getData()
                 : Uri.parse(DEFAULT_URL);
 
+            int primaryColor = ContextCompat.getColor(this, R.color.colorPrimary);
+
             TrustedWebActivityIntentBuilder twaBuilder = new TrustedWebActivityIntentBuilder(launchUri)
-                .setNavigationBarColor(0xFF0062FF)
-                .setToolbarColor(0xFF0062FF)
+                .setNavigationBarColor(primaryColor)
+                .setToolbarColor(primaryColor)
                 .setDisplayMode(new TrustedWebActivityDisplayMode.DefaultMode());
 
+            SplashImageTransferTask splashImageTransferTask = new SplashImageTransferTask(
+                this,
+                R.drawable.splash,
+                primaryColor,
+                ImageView.ScaleType.CENTER,
+                getPackageName() + ".fileprovider"
+            );
+
             mTwaLauncher = new TwaLauncher(this);
-            mTwaLauncher.launch(twaBuilder, null, null, null);
+            mTwaLauncher.launch(twaBuilder, null, splashImageTransferTask, null);
         } catch (Exception e) {
             Log.e(TAG, "TwaLauncher error, launching fallback CustomTabsIntent", e);
             try {
+                int primaryColor = ContextCompat.getColor(this, R.color.colorPrimary);
                 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                     .setShowTitle(false)
-                    .setToolbarColor(0xFF0062FF)
+                    .setToolbarColor(primaryColor)
                     .build();
                 customTabsIntent.launchUrl(this, Uri.parse(DEFAULT_URL));
             } catch (Exception ex) {
