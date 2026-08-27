@@ -1,0 +1,50 @@
+name: Build TWA Test APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'twa/**'
+      - '.github/workflows/twa-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-twa:
+    name: Build TWA Test APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build TWA Debug APK
+        run: |
+          cd twa
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Stage Artifacts
+        run: |
+          mkdir -p staging
+          cp twa/app/build/outputs/apk/debug/app-debug.apk staging/PG-HUB-TWA-Test.apk
+          echo "Staged TWA Test APK:"
+          ls -lh staging/
+
+      - name: Upload TWA Test APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PG-HUB-TWA-Test-APK
+          path: staging/PG-HUB-TWA-Test.apk
+          retention-days: 14
