@@ -1,19 +1,7 @@
 package com.sanjay.pgmanagement;
 
-import android.os.Bundle;
-import android.view.Window;
-import android.view.WindowManager;
-import com.getcapacitor.BridgeActivity;
+import com.google.androidbrowserhelper.trusted.LauncherActivity;
 
-public class MainActivity extends BridgeActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        registerPlugin(NativeContactPickerPlugin.class);
-        registerPlugin(UpiPaymentPlugin.class);
-        super.onCreate(savedInstanceState);
-        // Set the status bar color to match our theme
-        Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(0xFF0E6CE7);
-    }
+public class MainActivity extends LauncherActivity {
+    // Inherits official TWA Splash Screen Strategy, Digital Asset Links verification, and lifecycle management
 }
