@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.browser.trusted.TrustedWebActivityDisplayMode;
+import androidx.browser.trusted.TrustedWebActivityIntentBuilder;
 import com.google.androidbrowserhelper.trusted.TwaLauncher;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,8 +40,13 @@ public class MainActivity extends AppCompatActivity {
                 ? getIntent().getData()
                 : Uri.parse(DEFAULT_URL);
 
+            TrustedWebActivityIntentBuilder twaBuilder = new TrustedWebActivityIntentBuilder(launchUri)
+                .setNavigationBarColor(0xFF0062FF)
+                .setToolbarColor(0xFF0062FF)
+                .setDisplayMode(new TrustedWebActivityDisplayMode.DefaultMode());
+
             mTwaLauncher = new TwaLauncher(this);
-            mTwaLauncher.launch(launchUri);
+            mTwaLauncher.launch(twaBuilder, null, null, null);
         } catch (Exception e) {
             Log.e(TAG, "TwaLauncher error, launching fallback CustomTabsIntent", e);
             try {
