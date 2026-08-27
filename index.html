@@ -106,7 +106,13 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="position: fixed; inset: 0; background: #0062FF; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; margin: 0; padding: 0;">
+        <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
+          <img src="/pwa-splash-logo.png" alt="PG HUB" style="width: 100%; height: 100%; object-fit: contain; border-radius: 32px; box-shadow: 0 20px 40px -10px rgba(0, 20, 80, 0.4);" />
+        </div>
+      </div>
+    </div>
     <noscript>Please enable JavaScript to use PG HUB.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

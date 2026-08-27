@@ -139,7 +139,6 @@ const AppContent = () => {
   return (
     <MonthProvider>
       <PwaUpdatePrompt />
-      <PlayStoreUpdateManager />
       <ActiveTabProvider>
       <PGSetupDraftProvider>
       <BrowserRouter>

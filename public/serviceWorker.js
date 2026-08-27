@@ -12,17 +12,13 @@ const STATIC_ASSETS = [
   '/apple-touch-icon.png',
 ];
 
-// Install event - pre-cache core static shell
+// Install event - pre-cache core static shell and activate immediately
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
       .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => {
-        // Do not force skipWaiting automatically on install so that users
-        // currently in an active form flow aren't interrupted abruptly.
-        // PwaUpdatePrompt will send 'SKIP_WAITING' when user accepts reload.
-      })
+      .then(() => self.skipWaiting())
   );
 });
 

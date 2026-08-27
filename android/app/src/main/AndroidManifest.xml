@@ -60,6 +60,10 @@
                 android:resource="@color/colorPrimary" />
 
             <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
+                android:resource="@drawable/splash" />
+
+            <meta-data
                 android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
                 android:resource="@color/colorPrimary" />
 
@@ -70,6 +74,10 @@
             <meta-data
                 android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
                 android:value="${applicationId}.fileprovider" />
+
+            <meta-data
+                android:name="android.support.customtabs.trusted.ADDITIONAL_TRUSTED_ORIGINS"
+                android:resource="@array/additional_trusted_origins" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
