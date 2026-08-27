@@ -27,6 +27,9 @@ export function PGHubButton({
         className={`pgh-button pgh-button--${variant} ${className}`}
         disabled={disabled || loading}
         onClick={(event) => {
+          if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+            try { navigator.vibrate(10); } catch { /* ignore */ }
+          }
           void Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
           onClick?.(event);
         }}

@@ -16,35 +16,18 @@ window.addEventListener('unhandledrejection', (event) => {
 
 console.log('main.tsx loaded, platform:', Capacitor.getPlatform());
 
-// Native Capacitor WebView asset recovery & SW cleanup
-const isNativeApp = Capacitor.isNativePlatform();
-
+// Register Service Worker for PWA and TWA
 if ('serviceWorker' in navigator) {
-  if (isNativeApp) {
-    // Unregister all service workers on native platform asynchronously without blocking
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((r) => r.unregister());
-    });
-
-    // Clear all Cache Storage to ensure fresh local assets
-    if ('caches' in window) {
-      caches.keys().then((names) => {
-        names.forEach((name) => caches.delete(name));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/serviceWorker.js')
+      .then((registration) => {
+        console.log('[PWA] Service Worker registered with scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.warn('[PWA] Service Worker registration failed:', error);
       });
-    }
-  } else {
-    // Web / PWA only
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/serviceWorker.js')
-        .then((registration) => {
-          console.log('SW registered:', registration.scope);
-        })
-        .catch((error) => {
-          console.log('SW registration failed:', error);
-        });
-    });
-  }
+  });
 }
 
 try {

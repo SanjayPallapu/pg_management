@@ -1,31 +1,42 @@
-const STATIC_CACHE = 'pg-static-v6';
-const DYNAMIC_CACHE = 'pg-dynamic-v6';
+const CACHE_VERSION = 'pg-hub-pwa-v7';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
-// Static assets to cache on install
+// Core static assets to pre-cache on install
 const STATIC_ASSETS = [
+  '/',
   '/manifest.json',
+  '/favicon.jpg',
   '/icon-192.png',
   '/icon-512.png',
+  '/apple-touch-icon.png',
 ];
 
-// Install event - cache static assets
+// Install event - pre-cache core static shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches
+      .open(STATIC_CACHE)
       .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+      .then(() => {
+        // Do not force skipWaiting automatically on install so that users
+        // currently in an active form flow aren't interrupted abruptly.
+        // PwaUpdatePrompt will send 'SKIP_WAITING' when user accepts reload.
+      })
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and claim clients
 self.addEventListener('activate', (event) => {
-  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE];
+  const allowedCaches = [STATIC_CACHE, DYNAMIC_CACHE];
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (!currentCaches.includes(cacheName)) {
+            if (!allowedCaches.includes(cacheName)) {
+              console.log('[SW] Deleting legacy cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
@@ -35,95 +46,73 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - implement caching strategies
+// Message listener for skipWaiting trigger
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Fetch event - cache strategy router
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Never cache authenticated API data. Cache Storage keys do not safely
-  // isolate responses by Supabase user session, which can surface stale or
-  // incorrect room/tenant data after an account or PG switch.
-  const isAuthenticatedApiRequest =
-    url.hostname.endsWith('.supabase.co') ||
-    request.headers.has('authorization') ||
-    request.headers.has('apikey');
-  if (isAuthenticatedApiRequest) {
-    return;
-  }
-
-  // Skip non-GET requests
+  // 1. Skip non-GET requests
   if (request.method !== 'GET') {
     return;
   }
 
-  // JavaScript bundles - Network first to avoid stale chunk mismatches & white screens
-  if (request.destination === 'script') {
-    event.respondWith(networkFirstWithCache(request, DYNAMIC_CACHE));
+  // 2. Never cache authenticated backend/Supabase APIs
+  const isApiOrAuth =
+    url.hostname.endsWith('.supabase.co') ||
+    request.headers.has('authorization') ||
+    request.headers.has('apikey') ||
+    url.pathname.startsWith('/rest/v1/') ||
+    url.pathname.startsWith('/auth/v1/');
+
+  if (isApiOrAuth) {
     return;
   }
 
-  // Static media/styles/fonts - Cache first, fallback to network
-  if (request.destination === 'style' || 
-      request.destination === 'image' ||
-      request.destination === 'font') {
-    event.respondWith(cacheFirstWithNetwork(request, STATIC_CACHE));
-    return;
-  }
-
-  // HTML pages - Network first with cache fallback
-  if (request.destination === 'document' || request.headers.get('accept')?.includes('text/html')) {
+  // 3. Document / Navigation (HTML pages) -> Network-first
+  // Ensures user always gets the latest index.html pointing to latest JS chunks on Vercel
+  if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirstDocument(request));
     return;
   }
 
-  // Default - Stale while revalidate
-  event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
+  // 4. Vite hashed assets (/assets/*) -> Cache-first
+  // Vite appends unique hash to every chunk; cached chunks never become stale
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(cacheFirstAsset(request));
+    return;
+  }
+
+  // 5. Static icons, images, fonts -> Stale while revalidate
+  if (
+    request.destination === 'style' ||
+    request.destination === 'image' ||
+    request.destination === 'font' ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.json')
+  ) {
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
+    return;
+  }
+
+  // 6. Default -> Network first with cache fallback
+  event.respondWith(networkFirstWithCache(request, DYNAMIC_CACHE));
 });
 
-// Always check the network for the application shell. Hashed JavaScript files
-// change on every deployment, so serving an old HTML shell can request chunks
-// that no longer exist on the server.
+// Network-first for HTML documents
 async function networkFirstDocument(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   try {
     const networkResponse = await fetch(request, { cache: 'no-store' });
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    const cachedResponse = await cache.match(request);
-    return cachedResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-  }
-}
-
-// Cache first strategy
-async function cacheFirstWithNetwork(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-  }
-}
-
-// Network first strategy
-async function networkFirstWithCache(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse && networkResponse.ok) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
@@ -132,48 +121,109 @@ async function networkFirstWithCache(request, cacheName) {
     if (cachedResponse) {
       return cachedResponse;
     }
-    return new Response(JSON.stringify({ error: 'Offline', cached: false }), {
+    // Fallback to root shell
+    const rootShell = await cache.match('/');
+    if (rootShell) {
+      return rootShell;
+    }
+    return new Response('PG HUB is currently offline. Please check your internet connection.', {
       status: 503,
-      headers: { 'Content-Type': 'application/json' }
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'text/plain' },
     });
   }
 }
 
-// Stale while revalidate strategy
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
+// Cache-first for hashed Vite assets
+async function cacheFirstAsset(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  const cached = await cache.match(request);
+  if (cached) {
+    return cached;
+  }
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.ok) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
-  }).catch(() => null);
-  
-  return cachedResponse || fetchPromise || new Response('Offline', { status: 503 });
+  } catch (error) {
+    return cached || new Response(null, { status: 404 });
+  }
 }
 
-// Handle background sync for offline mutations
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-payments') {
-    event.waitUntil(syncPendingPayments());
+// Stale-while-revalidate for images & static files
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const fetchPromise = fetch(request)
+    .then((networkResponse) => {
+      if (networkResponse && networkResponse.ok) {
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    })
+    .catch(() => null);
+
+  return cached || (await fetchPromise) || new Response(null, { status: 503 });
+}
+
+// Network-first with cache fallback
+async function networkFirstWithCache(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    return new Response(JSON.stringify({ error: 'Network unavailable', offline: true }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// Push notification listener
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      self.registration.showNotification(data.title || 'PG HUB Notification', {
+        body: data.body || '',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: data.url || '/',
+      });
+    } catch {
+      self.registration.showNotification('PG HUB', {
+        body: event.data.text(),
+        icon: '/icon-192.png',
+      });
+    }
   }
 });
 
-async function syncPendingPayments() {
-  // Placeholder for syncing pending mutations when back online
-  console.log('Syncing pending payments...');
-}
-
-// Handle push notifications (for future use)
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-    });
-  }
+// Notification click -> open or focus PWA window
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
 });

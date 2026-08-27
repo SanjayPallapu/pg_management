@@ -45,6 +45,7 @@ import { useMonthContext } from "./contexts/MonthContext";
 import { hasCompletedOnboarding, shouldShowOnboardingAfterLogout } from "@/lib/onboardingState";
 import { captureReferralCodeFromUrl, getReferralStats, validateAndApplyReferralCode } from "@/utils/referralHelper";
 import { PlayStoreUpdateManager } from "@/components/PlayStoreUpdateManager";
+import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { SubscriptionAccessGate } from "@/components/SubscriptionAccessGate";
 
 // Protected route component that wraps children with PGProvider and RentProvider
@@ -137,6 +138,7 @@ const AppContent = () => {
 
   return (
     <MonthProvider>
+      <PwaUpdatePrompt />
       <PlayStoreUpdateManager />
       <ActiveTabProvider>
       <PGSetupDraftProvider>

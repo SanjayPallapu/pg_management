@@ -4,4 +4,8 @@
     <string name="title_activity_main">PG HUB</string>
     <string name="package_name">com.pgmanager.app</string>
     <string name="custom_url_scheme">com.pgmanager.app</string>
+    <string name="twa_default_url">https://pgmanagee.vercel.app</string>
+    <string name="asset_statements" translatable="false">
+        [{\\\"relation\\\": [\\\"delegate_permission/common.handle_all_urls\\\"], \\\"target\\\": {\\\"namespace\\\": \\\"android_app\\\", \\\"package_name\\\": \\\"com.sanjay.pgmanagement\\\", \\\"sha256_cert_fingerprints\\\": [\\\"19:80:9E:C6:27:DA:EC:93:1D:97:92:E1:11:48:DF:66:2C:27:3D:B6:38:D6:4C:46:04:0F:48:9E:5E:6A:20:D8\\\"]}}]
+    </string>
 </resources>
