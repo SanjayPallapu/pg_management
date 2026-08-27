@@ -6,7 +6,8 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="upi" android:host="pay" />
         </intent>
-        <!-- Android 11+ package visibility for UPI apps -->
+        <!-- Android 11+ package visibility for personal-UPI fallback. These apps
+             may be installed even when they do not advertise the exact pay URI. -->
         <package android:name="com.phonepe.app" />
         <package android:name="net.one97.paytm" />
         <package android:name="money.super.payments" />
@@ -15,10 +16,6 @@
         <package android:name="com.kotak811mobilebankingapp.instantsavingsupiscanandpayrecharge" />
         <package android:name="com.google.android.apps.nbu.paisa.user" />
         <package android:name="in.org.npci.upiapp" />
-        <!-- Custom Tabs / TWA supporting browsers -->
-        <intent>
-            <action android:name="android.support.customtabs.action.CustomTabsService" />
-        </intent>
     </queries>
 
     <application
@@ -30,80 +27,21 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
 
-        <meta-data
-            android:name="asset_statements"
-            android:resource="@string/asset_statements" />
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
 
-        <meta-data
-            android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="barcode_ui" />
-
-        <!-- TWA Primary Activity -->
         <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:alwaysRetainTaskState="true"
             android:launchMode="singleTask"
             android:exported="true">
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="https://pgmanagee.vercel.app" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
-                android:resource="@color/colorPrimary" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
-                android:resource="@color/colorPrimary" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
-                android:resource="@drawable/splash" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
-                android:resource="@color/colorPrimary" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
-                android:value="300" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
-                android:value="${applicationId}.fileprovider" />
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.ADDITIONAL_TRUSTED_ORIGINS"
-                android:resource="@array/additional_trusted_origins" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- TWA Digital Asset Links & Deep Links -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="pgmanagee.vercel.app" />
-            </intent-filter>
-
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="pgmanager.app" />
-            </intent-filter>
-
-            <!-- Custom Auth scheme callback -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -113,6 +51,7 @@
                     android:host="auth"
                     android:pathPrefix="/callback" />
             </intent-filter>
+
         </activity>
 
         <provider
@@ -127,6 +66,7 @@
     </application>
 
     <!-- Permissions -->
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />

@@ -1,43 +1,19 @@
 package com.sanjay.pgmanagement;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import androidx.browser.customtabs.CustomTabsIntent;
-import com.google.androidbrowserhelper.trusted.LauncherActivity;
+import android.view.Window;
+import android.view.WindowManager;
+import com.getcapacitor.BridgeActivity;
 
-public class MainActivity extends LauncherActivity {
-    private static final String TAG = "PGHubLauncher";
-    private static final String DEFAULT_URL = "https://pgmanagee.vercel.app";
-
+public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        try {
-            super.onCreate(savedInstanceState);
-        } catch (Exception e) {
-            Log.e(TAG, "LauncherActivity startup error, launching fallback CustomTab", e);
-            launchFallback();
-        }
-    }
-
-    private void launchFallback() {
-        try {
-            CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
-                .setShowTitle(false)
-                .setToolbarColor(0xFF0062FF)
-                .build();
-            customTabsIntent.launchUrl(this, Uri.parse(DEFAULT_URL));
-            finish();
-        } catch (Exception e) {
-            Log.e(TAG, "CustomTabs fallback failed, opening standard browser intent", e);
-            try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(DEFAULT_URL));
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(browserIntent);
-            } catch (Exception ignored) {
-            }
-            finish();
-        }
+        registerPlugin(NativeContactPickerPlugin.class);
+        registerPlugin(UpiPaymentPlugin.class);
+        super.onCreate(savedInstanceState);
+        // Set the status bar color to match our theme
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(0xFF0E6CE7);
     }
 }

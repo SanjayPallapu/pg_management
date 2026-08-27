@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="title_activity_main">PG HUB</string>
+    <string name="package_name">com.sanjay.pgmanagement.twatest</string>
+    <string name="custom_url_scheme">com.sanjay.pgmanagement.twatest</string>
+    <string name="asset_statements" translatable="false">
+        [{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"android_app\", \"package_name\": \"com.sanjay.pgmanagement.twatest\", \"sha256_cert_fingerprints\": [\"63:36:95:01:80:84:65:40:39:BE:58:D7:93:13:4F:13:E3:4D:2F:5A:F2:D3:CE:1A:65:A9:D8:CB:BD:33:33:10\"]}}]
+    </string>
+    <string-array name="additional_trusted_origins">
+        <item>https://pgmanagee.vercel.app</item>
+        <item>https://pgmanager.app</item>
+    </string-array>
+</resources>

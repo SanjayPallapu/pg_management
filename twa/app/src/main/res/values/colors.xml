@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#0062FF</color>
+    <color name="colorPrimaryDark">#0052D6</color>
+    <color name="colorAccent">#0062FF</color>
+    <color name="twa_status_bar_color">#0062FF</color>
+    <color name="twa_nav_bar_color">#0062FF</color>
+</resources>
