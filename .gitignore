@@ -29,6 +29,7 @@ scripts/
 
 # Keystore files
 *.keystore
+!twa/app/test.keystore
 *.jks
 android/app/release.keystore
 android/daemon/
