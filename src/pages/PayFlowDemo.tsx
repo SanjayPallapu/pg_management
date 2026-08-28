@@ -38,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 import rentCollection from "@/assets/pg-hub/editorial/rent-collection.jpg";
 import roomOccupancy from "@/assets/pg-hub/editorial/room-occupancy.jpg";
 import reminders from "@/assets/pg-hub/editorial/whatsapp-reminders.jpg";
@@ -128,7 +129,7 @@ const bottomNav: Array<{ id: View; label: string; icon: typeof Home }> = [
 ];
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-[28px] bg-white p-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)] ${className}`}>{children}</div>;
+  return <div className={cn("rounded-[28px] bg-white p-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)]", className)}>{children}</div>;
 }
 
 function MoneyHero({ onViewCollections }: { onViewCollections: () => void }) {
@@ -630,11 +631,24 @@ function PricingMoreView() {
         ["Plus", "₹299/month", "Most popular.", ["Everything in Basic", "WhatsApp reminders", "Digital receipts", "Utility billing", "Advanced analytics"]],
         ["Pro Max", "₹499/month", "For growing operators.", ["Everything in Plus", "Multi-property", "AI assistant", "Staff roles", "Priority support"]],
       ].map(([plan, price, desc, features], index) => (
-        <Card key={plan as string} className={`p-3.5 sm:p-4 ${index === 1 ? "bg-[#111315] text-white" : ""}`}>
-          <div className="flex items-start justify-between"><div><h2 className="text-xl sm:text-2xl font-black">{plan as string}</h2><p className="text-xs sm:text-sm font-semibold opacity-60">{desc as string}</p></div>{index === 1 && <Badge className="bg-lime-300 text-[#111315] text-[10px] sm:text-xs">Most Popular</Badge>}</div>
+        <Card key={plan as string} className={`p-3.5 sm:p-4 transition-all ${index === 1 ? "bg-[#111315] text-white shadow-xl ring-2 ring-lime-300/40" : "bg-white text-slate-900"}`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black">{plan as string}</h2>
+              <p className={`text-xs sm:text-sm font-semibold ${index === 1 ? "text-white/70" : "text-slate-500"}`}>{desc as string}</p>
+            </div>
+            {index === 1 && <Badge className="bg-lime-300 text-[#111315] text-[10px] sm:text-xs font-black">Most Popular</Badge>}
+          </div>
           <p className="mt-3 sm:mt-4 text-2xl sm:text-4xl font-black">{price as string}</p>
-          <ul className="mt-3 sm:mt-4 grid gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold opacity-80">{(features as string[]).map((feature) => <li key={feature} className="flex items-center gap-1.5 sm:gap-2"><Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-lime-500" />{feature}</li>)}</ul>
-          <Button className={`mt-4 sm:mt-5 h-11 sm:h-12 w-full rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold ${index === 1 ? "bg-lime-300 text-[#111315] hover:bg-lime-200" : "bg-[#111315] text-lime-300 hover:bg-black"}`}>Start {plan as string}</Button>
+          <ul className={`mt-3 sm:mt-4 grid gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold ${index === 1 ? "text-white/90" : "text-slate-700"}`}>
+            {(features as string[]).map((feature) => (
+              <li key={feature} className="flex items-center gap-1.5 sm:gap-2">
+                <Check className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${index === 1 ? "text-lime-300" : "text-emerald-600"}`} />
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <Button className={`mt-4 sm:mt-5 h-11 sm:h-12 w-full rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black ${index === 1 ? "bg-lime-300 text-[#111315] hover:bg-lime-200 shadow-md" : "bg-[#111315] text-lime-300 hover:bg-black"}`}>Start {plan as string}</Button>
         </Card>
       ))}
       <Card className="bg-gradient-to-br from-lime-200 to-orange-100 p-3.5 sm:p-4">
@@ -756,7 +770,7 @@ export default function PayFlowDemo() {
               <Bot className="h-5 w-5" />
             </button>
           </div>
-          <div className="grid gap-6 sm:gap-8 p-4 sm:p-6 lg:p-8 md:grid-cols-[minmax(0,1fr)_380px] lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_430px] items-start">
+          <div className="grid gap-6 sm:gap-8 p-4 sm:p-6 lg:p-8 md:grid-cols-[minmax(0,1fr)_380px] lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_430px] items-center justify-center">
             <div className="hidden pt-2 md:block">
               <p className="text-xs sm:text-sm font-black uppercase text-slate-500">Android-first product demo</p>
               <h2 className="mt-2 sm:mt-3 text-4xl lg:text-5xl xl:text-6xl font-black leading-tight tracking-normal">
@@ -777,7 +791,7 @@ export default function PayFlowDemo() {
               </div>
             </div>
             
-            <div className="w-full flex justify-center">
+            <div className="w-full flex items-center justify-center">
               <PhoneShell>
                 <TopBar view={view} setView={setView} />
                 <AnimatePresence mode="wait">

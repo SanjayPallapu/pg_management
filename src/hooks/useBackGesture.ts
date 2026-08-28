@@ -61,6 +61,8 @@ export const useBackGesture = (
   useEffect(() => {
     if (!open) return;
 
+    const initialPath = window.location.pathname + window.location.search;
+
     const stableClose = () => {
       onCloseRef.current();
     };
@@ -87,7 +89,12 @@ export const useBackGesture = (
       // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
-        if (!isHandlingPopState && options?.keepHistoryOnClose !== true) {
+        
+        // ONLY call history.back() if we are still on the same route and not navigating away
+        const currentPath = window.location.pathname + window.location.search;
+        const isSameRoute = currentPath === initialPath;
+
+        if (!isHandlingPopState && options?.keepHistoryOnClose !== true && isSameRoute && window.history.state?.modalOpen) {
           window.history.back();
         }
         globalHistoryPushed = false;

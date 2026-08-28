@@ -37,8 +37,8 @@ export default function TenantProfilesPage() {
   return (
     <main className="min-h-[100dvh] bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
-          <button onClick={() => navigate("/?tab=settings")} className="grid h-9 w-9 place-items-center rounded-xl bg-muted hover:bg-muted/80 transition-colors" aria-label="Back"><ArrowLeft className="h-5 w-5" /></button>
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))} className="grid h-9 w-9 place-items-center rounded-xl bg-muted hover:bg-muted/80 transition-colors" aria-label="Back"><ArrowLeft className="h-5 w-5" /></button>
           <div><h1 className="text-base sm:text-lg font-black">Tenant Profiles</h1><p className="text-[11px] sm:text-xs text-muted-foreground">Completed and incomplete onboarding</p></div>
         </div>
       </header>

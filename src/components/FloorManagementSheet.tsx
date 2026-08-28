@@ -198,7 +198,7 @@ export const FloorManagementSheet = ({ open, onOpenChange, rooms, onFloorNamesUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full max-w-md overflow-hidden bg-muted/25 px-0 sm:max-w-lg flex flex-col h-full">
+        <SheetContent className="w-full max-w-md overflow-hidden bg-background px-0 sm:max-w-lg flex flex-col h-full shadow-2xl">
           <SheetHeader className="flex flex-row items-center gap-2 space-y-0 border-b border-white/10 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 px-3 pb-4 pt-4 text-white">
             <Button
               variant="ghost"

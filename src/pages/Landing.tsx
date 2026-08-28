@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ComparisonSection from "@/components/landing/ComparisonSection";
 import logo from "@/assets/pg-hub/pg-hub-logo.png";
 import rentCollection from "@/assets/pg-hub/editorial/rent-collection.jpg";
 import roomOccupancy from "@/assets/pg-hub/editorial/room-occupancy.jpg";
@@ -272,15 +273,6 @@ export default function Landing() {
             </Button>
           </div>
 
-          <div className="payflow-gsap-hero mt-6 sm:mt-8 grid grid-cols-[72px_1fr] sm:grid-cols-[88px_1fr] items-center gap-3 sm:gap-4 rounded-[24px] sm:rounded-[28px] bg-[#111315] p-3 sm:p-4 text-white shadow-[0_20px_60px_rgba(17,19,21,0.16)] max-w-md sm:max-w-lg">
-            <img src="/pg-hub-playstore-qr.svg" alt="QR code to download PG Hub on Google Play" className="h-18 w-18 sm:h-[88px] sm:w-[88px] rounded-[16px] sm:rounded-[18px] bg-[#f4f5ed] object-contain shrink-0" />
-            <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-black uppercase text-lime-300">Scan to download</p>
-              <h2 className="mt-0.5 sm:mt-1 text-base sm:text-xl font-black leading-tight">Install PG Hub from Google Play</h2>
-              <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs font-medium text-white/60 line-clamp-2 sm:line-clamp-none">Open app listing instantly with any camera.</p>
-            </div>
-          </div>
-
           <div className="payflow-gsap-hero mt-6 sm:mt-8 grid grid-cols-3 gap-2 sm:gap-3 max-w-xl">
             {["₹4.82L expected", "77.5% collected", "7 need attention"].map((item) => (
               <div key={item} className="rounded-xl sm:rounded-[20px] bg-white p-2.5 sm:p-4 text-xs sm:text-sm font-black shadow-sm text-center">
@@ -293,48 +285,6 @@ export default function Landing() {
         <div className="w-full flex justify-center py-4 md:py-0">
           <DashboardMockup />
         </div>
-      </section>
-
-      {/* QR Banner Section */}
-      <section className="mx-auto max-w-7xl 2xl:max-w-[1600px] px-4 pb-14 sm:pb-20 md:px-8">
-        <motion.div
-          {...reveal}
-          className="grid overflow-hidden rounded-[28px] sm:rounded-[40px] bg-[#4938ff] text-white shadow-[0_24px_80px_rgba(0,0,0,0.2)] md:grid-cols-[1.1fr_0.9fr] items-center"
-        >
-          <div className="p-6 sm:p-10 lg:p-12">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-black uppercase text-lime-300">
-              <QrCode className="h-3.5 w-3.5" /> Scan and install
-            </div>
-            <h2 className="mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black leading-tight tracking-normal">
-              Download the rent cockpit built for PG owners.
-            </h2>
-            <p className="mt-3 sm:mt-5 text-sm sm:text-base lg:text-lg font-semibold leading-relaxed text-white/70">
-              Scan the QR or tap the button to open the official PG Hub Play Store page. Works seamlessly across any Android device.
-            </p>
-            <div className="mt-6 sm:mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="h-12 sm:h-14 rounded-2xl bg-lime-300 px-6 sm:px-8 text-sm sm:text-base font-black text-[#111315] hover:bg-lime-200">
-                <a href={playStoreUrl} target="_blank" rel="noreferrer">
-                  Open Play Store <ArrowRight className="ml-1.5 h-4 w-4" />
-                </a>
-              </Button>
-              <Button onClick={() => navigate("/payflow")} variant="outline" className="h-12 sm:h-14 rounded-2xl border-white/30 bg-transparent px-6 sm:px-8 text-sm sm:text-base font-black text-white hover:bg-white hover:text-[#111315]">
-                Explore Demo
-              </Button>
-            </div>
-          </div>
-          <div className="relative grid place-items-center bg-lime-300 p-6 sm:p-10 text-[#111315]">
-            <div className="rounded-[28px] sm:rounded-[36px] bg-[#f4f5ed] p-4 sm:p-6 shadow-[10px_10px_0_rgba(17,19,21,1)] sm:shadow-[14px_14px_0_rgba(17,19,21,1)] w-full max-w-[280px] sm:max-w-[320px]">
-              <img src="/pg-hub-playstore-qr.svg" alt="QR code to download PG Hub on Google Play" className="w-full aspect-square rounded-[20px] sm:rounded-[24px] object-contain" />
-              <div className="mt-3 sm:mt-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] sm:text-xs font-black uppercase text-slate-600">Google Play</p>
-                  <p className="text-base sm:text-lg font-black">PG Hub</p>
-                </div>
-                <Smartphone className="h-6 w-6 sm:h-7 sm:w-7" />
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
       {/* Marquee */}
@@ -526,6 +476,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Comparison Section */}
+      <ComparisonSection />
 
       {/* Payments Section */}
       <section id="payments" className="mx-auto grid max-w-7xl 2xl:max-w-[1600px] gap-6 sm:gap-8 px-4 py-14 sm:py-20 md:grid-cols-2 md:px-8 items-center">

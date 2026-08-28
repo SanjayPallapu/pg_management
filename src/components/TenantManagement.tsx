@@ -1130,7 +1130,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                             </>
                           )}
                         </div>
-                        <div className="flex flex-col items-end gap-2 ml-2">
+                        <div className="flex flex-col items-end justify-between gap-2 ml-2 shrink-0">
                           {isEditMode && !isEditing && (
                             <Button
                               type="button"
@@ -1144,24 +1144,16 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
                           {!isEditing && (
                             <>
-                              {isPartial ? (
-                                <Badge className="bg-overdue text-overdue-foreground px-3 py-1 text-sm">
-                                  ₹{remaining.toLocaleString()}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className={getTenantStyles(tenant).badge}>
-                                  {getPaymentStatusForMonth(tenant.id)}
-                                </Badge>
-                              )}
-
-                              {/* Action badges */}
+                              {/* Action buttons (Call & WhatsApp) */}
                               {tenant.phone && tenant.phone !== "••••••••••" && (
-                                <div className="flex items-center gap-1">
-                                  {/* Call badge */}
+                                <div className="flex items-center gap-1.5">
+                                  {/* Call button */}
                                   <a
                                     href={`tel:${tenant.phone}`}
-                                    className="p-1.5 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                                     title={`Call ${tenant.name}`}
+                                    aria-label={`Call ${tenant.name}`}
                                   >
                                     <Phone className="h-4 w-4" />
                                   </a>
@@ -1171,8 +1163,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                     <DropdownMenuTrigger asChild>
                                       <button
                                         onClick={(e) => e.stopPropagation()}
-                                        className="p-1.5 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                                        title="WhatsApp options"
+                                        className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                                        title="WhatsApp & Profile options"
+                                        aria-label="WhatsApp & Profile options"
                                       >
                                         <MessageCircle className="h-4 w-4" />
                                       </button>
@@ -1332,6 +1325,23 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   </DropdownMenu>
                                 </div>
                               )}
+
+                              {/* Payment Status Pill / Badge */}
+                              <div className="mt-0.5 flex justify-end">
+                                {isPaid ? (
+                                  <span className="badge-paid-periwinkle">
+                                    Paid
+                                  </span>
+                                ) : isPartial ? (
+                                  <span className="price-badge-red text-[10px] sm:text-xs px-2.5 py-0.5 font-bold">
+                                    ₹{remaining.toLocaleString()}
+                                  </span>
+                                ) : (
+                                  <Badge variant="outline" className={cn("text-[11px] font-semibold px-2 py-0.5", getTenantStyles(tenant).badge)}>
+                                    {getPaymentStatusForMonth(tenant.id)}
+                                  </Badge>
+                                )}
+                              </div>
                             </>
                           )}
 

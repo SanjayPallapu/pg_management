@@ -760,23 +760,31 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    {/* Fixed status area container equal to width needed by Not Paid */}
+                    {/* Fixed status area container */}
                     <div className="w-[68px] flex justify-center shrink-0">
-                      <Badge
-                        variant="outline"
-                        className={
-                          `w-full justify-center text-center text-xs px-1 py-0.5 ${
-                            isPaid
-                              ? "bg-paid text-paid-foreground cursor-pointer hover:opacity-80"
-                              : isPartial
+                      {isPaid ? (
+                        <button
+                          type="button"
+                          onClick={handlePaidClick}
+                          className="badge-paid-periwinkle w-full justify-center text-center cursor-pointer hover:opacity-85 text-[11px] py-0.5"
+                        >
+                          Paid
+                        </button>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={
+                            `w-full justify-center text-center text-[11px] font-semibold px-1 py-0.5 ${
+                              isPartial
                                 ? "bg-partial text-partial-foreground cursor-pointer hover:opacity-80"
                                 : "bg-pending text-pending-foreground"
-                          }`
-                        }
-                        onClick={isPaid || isPartial ? handlePaidClick : undefined}
-                      >
-                        {isPaid ? "Paid" : isPartial ? "Partial" : "Not Paid"}
-                      </Badge>
+                            }`
+                          }
+                          onClick={isPartial ? handlePaidClick : undefined}
+                        >
+                          {isPartial ? "Partial" : "Not Paid"}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -10,12 +10,13 @@ interface UseSwipeTabsOptions {
 /**
  * Hook to enable swipe left/right navigation between tabs.
  * Swipe left goes to next tab, swipe right goes to previous tab.
+ * Accidental tab triggers during vertical scrolling are strictly prevented.
  */
 export const useSwipeTabs = ({
   tabs,
   currentTab,
   onTabChange,
-  threshold = 50,
+  threshold = 80,
 }: UseSwipeTabsOptions) => {
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
@@ -32,8 +33,8 @@ export const useSwipeTabs = ({
     const deltaX = touchEndX - touchStartX.current;
     const deltaY = Math.abs(touchEndY - touchStartY.current);
     
-    // Only trigger if horizontal swipe is dominant
-    if (Math.abs(deltaX) < threshold || deltaY > Math.abs(deltaX) * 0.7) {
+    // Strictly cancel if user was scrolling vertically (deltaY > 35) or if vertical delta is noticeable
+    if (deltaY > 35 || Math.abs(deltaX) < threshold || deltaY > Math.abs(deltaX) * 0.4) {
       return;
     }
 
