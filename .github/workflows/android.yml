@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - early-access
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
     tags:
       - 'play-release-*'
   workflow_dispatch:
