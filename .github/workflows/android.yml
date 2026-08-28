@@ -61,9 +61,6 @@ jobs:
       - name: Build Web Assets
         run: npm run build
 
-      - name: Sync Capacitor
-        run: npx cap sync android
-
       - name: Validate Android Signing Secrets
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
