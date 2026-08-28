@@ -6,7 +6,7 @@
     <string name="custom_url_scheme">com.pgmanager.app</string>
     <string name="twa_default_url">https://pgmanagee.vercel.app</string>
     <string name="asset_statements" translatable="false">
-        [{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"android_app\", \"package_name\": \"com.sanjay.pgmanagement\", \"sha256_cert_fingerprints\": [\"6B:6B:8A:54:12:36:FB:83:61:DA:D2:82:C4:2B:8F:18:FB:FC:6A:DE:91:42:CF:B2:3F:CF:C0:02:DB:AA:99:7F\", \"19:80:9E:C6:27:DA:EC:93:1D:97:92:E1:11:48:DF:66:2C:27:3D:B6:38:D6:4C:46:04:0F:48:9E:5E:6A:20:D8\"]}}]
+        [{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"android_app\", \"package_name\": \"com.sanjay.pgmanagement\", \"sha256_cert_fingerprints\": [\"6D:6D:CA:54:12:36:FB:83:61:D4:D2:02:C4:2B:0F:10:FD:FC:6A:0C:91:42:0F:0B:02:DB:AA:99:7F\", \"6B:6B:8A:54:12:36:FB:83:61:DA:D2:82:C4:2B:8F:18:FB:FC:6A:DE:91:42:CF:B2:3F:CF:C0:02:DB:AA:99:7F\", \"19:80:9E:C6:27:DA:EC:93:1D:97:92:E1:11:48:DF:66:2C:27:3D:B6:38:D6:4C:46:04:0F:48:9E:5E:6A:20:D8\"]}}]
     </string>
     <string-array name="additional_trusted_origins">
         <item>https://pgmanagee.vercel.app</item>
