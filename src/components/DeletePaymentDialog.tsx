@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PaymentEntry } from '@/types';
 import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { useBackGesture } from '@/hooks/useBackGesture';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 interface DeletePaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -12,6 +15,7 @@ interface DeletePaymentDialogProps {
   paymentEntries: PaymentEntry[];
   onConfirmDelete: (entriesToDelete: number[], newAmountPaid: number, newEntries: PaymentEntry[]) => void;
 }
+
 export const DeletePaymentDialog = ({
   open,
   onOpenChange,
@@ -21,9 +25,22 @@ export const DeletePaymentDialog = ({
   onConfirmDelete
 }: DeletePaymentDialogProps) => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+
+  useBackGesture(open, () => {
+    setSelectedIndices([]);
+    onOpenChange(false);
+  });
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedIndices([]);
+    }
+  }, [open]);
+
   const toggleEntry = (index: number) => {
     setSelectedIndices(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
   };
+
   const toggleAll = () => {
     if (selectedIndices.length === paymentEntries.length) {
       setSelectedIndices([]);
@@ -31,6 +48,7 @@ export const DeletePaymentDialog = ({
       setSelectedIndices(paymentEntries.map((_, i) => i));
     }
   };
+
   const {
     newTotal,
     newEntries,
@@ -44,19 +62,32 @@ export const DeletePaymentDialog = ({
       remainingBalance: monthlyRent - total
     };
   }, [selectedIndices, paymentEntries, monthlyRent]);
+
   const handleConfirm = () => {
     onConfirmDelete(selectedIndices, newTotal, newEntries);
     setSelectedIndices([]);
     onOpenChange(false);
   };
+
   const handleCancel = () => {
     setSelectedIndices([]);
     onOpenChange(false);
   };
-  return <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+
+  return (
+    <AlertDialog open={open} onOpenChange={(val) => { if (!val) handleCancel(); }}>
+      <AlertDialogContent className="max-w-md max-h-[85vh] overflow-y-auto relative">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="absolute right-4 top-4 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+          aria-label="Close dialog"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
         <AlertDialogHeader>
-          <AlertDialogTitle>Remove Payment Entries</AlertDialogTitle>
+          <AlertDialogTitle className="pr-6">Remove Payment Entries</AlertDialogTitle>
           <AlertDialogDescription>
             Select which payment entries to remove for {tenantName}. Unselected entries will be kept.
           </AlertDialogDescription>
@@ -112,5 +143,6 @@ export const DeletePaymentDialog = ({
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialog>;
+    </AlertDialog>
+  );
 };

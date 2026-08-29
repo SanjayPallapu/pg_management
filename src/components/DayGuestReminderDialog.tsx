@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,9 @@ interface Props {
   reminderData: DayGuestReminderInput | null;
 }
 
+const STORAGE_AC_RATE_KEY = 'pg_day_guest_ac_rate_default';
+const STORAGE_DISCOUNT_KEY = 'pg_day_guest_discount_default';
+
 export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Props) => {
   const { currentPG } = usePG();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -44,7 +47,13 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const [acPerDayCharge, setAcPerDayCharge] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
 
-  useBackGesture(open, () => onOpenChange(false));
+  useBackGesture(open, () => handleClose());
+
+  const handleClose = useCallback(() => {
+    setGeneratedImage(null);
+    setTemplateData(null);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const recalculateTemplate = useCallback((
     includeAc: boolean,
@@ -57,6 +66,14 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     setAcPerDayCharge(acPerDay);
     setDiscountAmount(discountVal);
     setGeneratedImage(null);
+
+    // Save defaults to localStorage for convenience
+    if (includeAc && acPerDay > 0) {
+      try { localStorage.setItem(STORAGE_AC_RATE_KEY, acPerDay.toString()); } catch {}
+    }
+    if (discountVal > 0) {
+      try { localStorage.setItem(STORAGE_DISCOUNT_KEY, discountVal.toString()); } catch {}
+    }
 
     const rentSubtotal = baseData.numberOfDays * baseData.perDayRate;
     const acTotal = includeAc ? (acPerDay * baseData.numberOfDays) : 0;
@@ -85,9 +102,23 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   useEffect(() => {
     if (reminderData && open) {
       const isAcRoom = Boolean(reminderData.isAc);
-      const perDayCharge = isAcRoom ? (reminderData.acElectricBill || 0) : 0;
-      const initialDiscount = reminderData.discount || 0;
-      recalculateTemplate(isAcRoom, perDayCharge, initialDiscount, reminderData);
+      let defaultAcRate = reminderData.acElectricBill || 0;
+      if (isAcRoom && !defaultAcRate) {
+        try {
+          const saved = localStorage.getItem(STORAGE_AC_RATE_KEY);
+          if (saved) defaultAcRate = parseInt(saved) || 0;
+        } catch {}
+      }
+
+      let defaultDiscount = reminderData.discount || 0;
+      if (!defaultDiscount) {
+        try {
+          const savedDisc = localStorage.getItem(STORAGE_DISCOUNT_KEY);
+          if (savedDisc) defaultDiscount = parseInt(savedDisc) || 0;
+        } catch {}
+      }
+
+      recalculateTemplate(isAcRoom, defaultAcRate, defaultDiscount, reminderData);
     }
   }, [reminderData, open, recalculateTemplate]);
 
@@ -100,7 +131,6 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     try {
       const dataUrl = await generateReceiptImage(reminderRef.current);
       setGeneratedImage(dataUrl);
-
     } catch (error) {
       console.error('Error generating reminder:', error);
       toast({ title: 'Failed to generate', variant: 'destructive' });
@@ -112,7 +142,6 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const handleDownload = () => {
     if (!generatedImage || !reminderData) return;
     downloadReceiptImage(generatedImage, `dayguest-reminder-${reminderData.guestName}`);
-
   };
 
   const shareToWhatsApp = async () => {
@@ -128,7 +157,6 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       await navigator.clipboard.writeText(displayPhone);
-
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -150,12 +178,6 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     }
   };
 
-  const handleClose = () => {
-    setGeneratedImage(null);
-    setTemplateData(null);
-    onOpenChange(false);
-  };
-
   return (
     <>
       {templateData && (
@@ -164,39 +186,53 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent>
-          <DialogHeader>
-            <div className="flex items-center gap-2 pt-1">
-              <DialogTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-green-600" />
-                Send Payment Reminder
-              </DialogTitle>
+      <Sheet open={open} onOpenChange={(val) => { if (!val) handleClose(); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 h-full [&>button]:hidden flex flex-col bg-background">
+          <SheetHeader className="px-4 pt-4 pb-3 border-b bg-background shrink-0">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="h-8 w-8 shrink-0 rounded-xl"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex flex-col text-left">
+                <SheetTitle className="text-base text-foreground font-bold">
+                  Send Payment Reminder
+                </SheetTitle>
+                <p className="text-xs text-muted-foreground">
+                  Generate reminder for {reminderData?.guestName || 'Guest'}
+                </p>
+              </div>
             </div>
-            <DialogDescription>
-              Generate and send day guest payment reminder to {reminderData?.guestName} via WhatsApp.
-            </DialogDescription>
-          </DialogHeader>
+          </SheetHeader>
 
           {reminderData && (
-            <div className="py-4 space-y-4">
-              <div className="rounded-lg p-4 text-sm space-y-2 border border-border bg-muted/30">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Guest Stay Summary Card */}
+              <div className="rounded-2xl p-4 text-sm space-y-2 border border-border bg-muted/30">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Guest:</span>
-                  <span className="font-semibold">{reminderData.guestName}</span>
+                  <span className="font-semibold text-foreground">{reminderData.guestName}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">Room:</span>
+                  <span className="font-semibold text-foreground">Room {reminderData.roomNo} {reminderData.isAc ? '(❄️ AC)' : ''}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Stay Duration:</span>
+                  <span className="font-semibold text-foreground">{reminderData.numberOfDays} days ({format(new Date(reminderData.fromDate), 'dd MMM')} - {format(new Date(reminderData.toDate), 'dd MMM')})</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-border/50">
                   <span className="text-muted-foreground">Amount Due:</span>
-                  <span className="font-semibold text-amber-600">₹{Math.floor(reminderData.balance).toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stay:</span>
-                  <span className="font-semibold">{reminderData.numberOfDays} days</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">₹{Math.floor(templateData?.balance ?? reminderData.balance).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
               {/* AC Electric Bill Section */}
-              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3.5 space-y-3">
+              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Zap className="h-4 w-4 text-sky-500" />
@@ -229,13 +265,13 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                           placeholder="e.g. 50"
                           value={acPerDayCharge || ""}
                           onChange={(e) => recalculateTemplate(true, Math.max(0, parseInt(e.target.value) || 0), discountAmount)}
-                          className="pl-7 h-9 text-xs font-bold bg-background"
+                          className="pl-7 h-9 text-xs font-bold bg-background rounded-xl"
                         />
                       </div>
                     </div>
 
                     {acPerDayCharge > 0 && (
-                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs">
+                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs">
                         <span className="text-muted-foreground text-[11px]">
                           Calculation ({reminderData.numberOfDays} days):
                         </span>
@@ -249,7 +285,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
               </div>
 
               {/* Custom Discount Section */}
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-2">
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-2">
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-emerald-500" />
                   <div>
@@ -268,11 +304,11 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                     placeholder="e.g. 100"
                     value={discountAmount || ""}
                     onChange={(e) => recalculateTemplate(includeAcBill, acPerDayCharge, Math.max(0, parseInt(e.target.value) || 0))}
-                    className="pl-7 h-9 text-xs font-bold bg-background"
+                    className="pl-7 h-9 text-xs font-bold bg-background rounded-xl"
                   />
                 </div>
                 {discountAmount > 0 && templateData && (
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
                     <span className="text-muted-foreground text-[11px]">Final Total Amount:</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">
                       ₹{templateData.totalAmount.toLocaleString('en-IN')} (Saved ₹{discountAmount.toLocaleString('en-IN')})
@@ -281,34 +317,36 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                 )}
               </div>
 
+              {/* Image Preview */}
               {generatedImage && (
                 <div className="relative">
-                  <img src={generatedImage} alt="Day Guest Reminder" className="w-full rounded-lg border" />
-                  <Button size="sm" variant="secondary" className="absolute top-2 right-2" onClick={handleDownload}>
+                  <img src={generatedImage} alt="Day Guest Reminder" className="w-full rounded-2xl border shadow-sm" />
+                  <Button size="sm" variant="secondary" className="absolute top-2 right-2 rounded-xl" onClick={handleDownload}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
               )}
-
-              <Button
-                onClick={generateReminder}
-                disabled={isGenerating || !templateData}
-                variant="secondary"
-                className="w-full h-11"
-              >
-                {isGenerating ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
-                ) : generatedImage ? 'Regenerate Image' : 'Generate Reminder Image'}
-              </Button>
             </div>
           )}
 
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
+          {/* Sticky Bottom Actions */}
+          <div className="p-4 border-t bg-background shrink-0 space-y-2">
+            <Button
+              onClick={generateReminder}
+              disabled={isGenerating || !templateData}
+              variant={generatedImage ? "outline" : "default"}
+              className="w-full h-11 rounded-xl font-bold"
+            >
+              {isGenerating ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+              ) : generatedImage ? 'Regenerate Image' : 'Generate Reminder Image'}
+            </Button>
+
             {generatedImage && (
               <Button
                 onClick={shareToWhatsApp}
                 disabled={isSending}
-                className="w-full gap-2 bg-green-600 hover:bg-green-700 h-11"
+                className="w-full gap-2 bg-green-600 hover:bg-green-700 h-11 rounded-xl font-bold text-white"
               >
                 {isSending ? (
                   <><Loader2 className="h-4 w-4 animate-spin" />Sending...</>
@@ -317,12 +355,9 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                 )}
               </Button>
             )}
-            <Button variant="outline" onClick={handleClose} className="w-full h-11 mt-0">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

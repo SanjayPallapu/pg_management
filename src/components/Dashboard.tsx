@@ -943,7 +943,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2.5">
                 {(rooms || []).filter(room => {
                   const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
                   return room.capacity - activeTenantsCount > 0;
@@ -957,11 +957,11 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                         setAddTenantRoomSelectOpen(false);
                         onQuickAddTenant(room);
                       }}
-                      className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border bg-card shadow-sm hover:bg-accent/50 cursor-pointer transition-all active:scale-95"
+                      className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-border bg-card shadow-xs hover:bg-accent/50 cursor-pointer transition-all active:scale-95 text-center"
                     >
-                      <h4 className="font-bold text-lg">{room.roomNo}</h4>
-                      <div className="flex items-center gap-1 mt-1 bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full">
-                        <span className="text-xs font-semibold">{available} bed{available > 1 ? 's' : ''}</span>
+                      <h4 className="font-bold text-base text-foreground">{room.roomNo}</h4>
+                      <div className="flex items-center justify-center gap-1 mt-1 bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold">{available} bed{available > 1 ? 's' : ''}</span>
                       </div>
                     </div>
                   );

@@ -21,8 +21,8 @@ import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCi
 import { isTenantActiveNow } from '@/utils/dateOnly';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { useCollectorNames } from '@/hooks/useCollectorNames';
 import { DayGuestReminderDialog, type DayGuestReminderInput } from '@/components/DayGuestReminderDialog';
+import { DayGuestChatMenu } from '@/components/DayGuestChatMenu';
 
 interface DayGuestSheetProps {
   open: boolean;
@@ -363,7 +363,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   )}
                 >
                   <Users className="h-3.5 w-3.5" />
-                  <span>Guests ({dayGuests.length})</span>
+                  <span>Guests ({filteredGuests.length})</span>
                 </button>
 
                 <button
@@ -383,7 +383,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto bg-background">
-              {/* SECTION: Select Room (Only Available Rooms with Green Badge) */}
+              {/* SECTION: Select Room (Only Available Rooms with 4 columns matching Tenant Select Room) */}
               {activeTab === 'rooms' && (
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -399,7 +399,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                       <p className="text-xs text-muted-foreground/80 mt-1">All rooms are currently fully occupied</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-4 gap-2.5">
                       {availableRooms.map((room) => (
                         <div
                           key={room.id}
@@ -407,14 +407,14 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                             onOpenChange(false);
                             navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`);
                           }}
-                          className="p-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
+                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-border bg-card shadow-xs hover:bg-accent/50 cursor-pointer transition-all active:scale-95 text-center group"
                         >
-                          <span className="text-lg font-black text-foreground group-hover:text-emerald-600 transition-colors">
+                          <span className="text-base font-bold text-foreground group-hover:text-emerald-600 transition-colors">
                             {room.roomNo}
                           </span>
-                          <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
-                            {room.available} Bed{room.available === 1 ? '' : 's'}
-                          </span>
+                          <div className="flex items-center justify-center gap-1 mt-1 bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-full">
+                            <span className="text-[10px] font-semibold">{room.available} bed{room.available > 1 ? 's' : ''}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -458,20 +458,20 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Total Guests ({monthName})</span>
-                      <span className="font-bold text-foreground">{dayGuests.length}</span>
+                      <span className="font-bold text-foreground">{filteredGuests.length}</span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* SECTION: Day Guests Present */}
+              {/* SECTION: Day Guests Present (Exact Rent Tab Layout with In-Card Room Badge and DayGuestChatMenu) */}
               {activeTab === 'guests' && (
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-4 w-4 text-foreground" />
                       <h3 className="text-sm font-bold text-foreground">
-                        Day Guests Present ({dayGuests.length})
+                        Day Guests Present ({filteredGuests.length})
                       </h3>
                     </div>
                   </div>
@@ -480,214 +480,173 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                     <div className="flex items-center justify-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
-                  ) : Object.keys(guestsByRoom).length === 0 ? (
+                  ) : filteredGuests.length === 0 ? (
                     <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-muted-foreground/20 text-muted-foreground">
                       <p className="text-sm font-medium">No day guests present for {monthName}</p>
                       <p className="text-xs text-muted-foreground/80 mt-1">Switch to Rooms tab to add a new day guest</p>
                     </div>
                   ) : (
-                    Object.entries(guestsByRoom)
-                      .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-                      .map(([roomNo, guests]) => (
-                        <Card key={roomNo}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-base">Room {roomNo}</h3>
-                                <Badge variant="secondary" className="text-xs font-semibold">{guests.length}</Badge>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                  "h-7 px-2.5 text-xs font-bold gap-1 rounded-xl cursor-pointer transition-all",
-                                  editModeRoom === roomNo ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                                )}
-                                onClick={() => setEditModeRoom(editModeRoom === roomNo ? null : roomNo)}
-                              >
-                                <SquarePen className="h-3.5 w-3.5" />
-                                <span>{editModeRoom === roomNo ? "Done" : "Edit"}</span>
-                              </Button>
-                            </div>
+                    <div className="space-y-3">
+                      {filteredGuests
+                        .slice()
+                        .sort((a, b) => {
+                          const roomA = rooms.find(r => r.id === a.room_id)?.roomNo || '';
+                          const roomB = rooms.find(r => r.id === b.room_id)?.roomNo || '';
+                          return roomA.localeCompare(roomB, undefined, { numeric: true }) || a.guest_name.localeCompare(b.guest_name);
+                        })
+                        .map((guest) => {
+                          const room = rooms.find(r => r.id === guest.room_id);
+                          const roomNo = room?.roomNo || 'Unknown';
+                          const amountPaid = guest.amount_paid || 0;
+                          const remaining = Math.max(0, guest.total_amount - amountPaid);
+                          const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
+                          const isPaid = guest.payment_status === 'Paid';
+                          const paymentEntries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
+                          const displayAmount = isPaid ? guest.total_amount : remaining;
 
-                            <div className="space-y-3">
-                              {guests.map(guest => {
-                                const amountPaid = guest.amount_paid || 0;
-                                const remaining = guest.total_amount - amountPaid;
-                                const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
-                                const isPaid = guest.payment_status === 'Paid';
-                                const paymentEntries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
-                                const showActions = editModeRoom === roomNo;
+                          return (
+                            <div
+                              key={guest.id}
+                              className={cn(
+                                "card-interactive p-4 border rounded-2xl relative transition-all duration-200",
+                                isPaid
+                                  ? "bg-paid-muted/30 border-paid/40"
+                                  : isPartial
+                                  ? "bg-partial-muted/30 border-partial/40"
+                                  : "bg-card border-border"
+                              )}
+                            >
+                              <div className="flex justify-between items-start">
+                                {/* Left Column */}
+                                <div className="space-y-1 flex-1 pr-2 min-w-0">
+                                  {/* Guest Name and Room Badge */}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-base text-foreground truncate">
+                                      {guest.guest_name}
+                                    </span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border">
+                                      Room {roomNo}
+                                    </span>
+                                  </div>
 
-                                return (
-                                  <div
-                                    key={guest.id}
-                                    className={cn(
-                                      "p-3.5 rounded-2xl border space-y-2.5 transition-all",
-                                      isPaid
-                                        ? "bg-paid-muted/30 border-paid/40"
-                                        : isPartial
-                                        ? "bg-partial-muted/30 border-partial/40"
-                                        : "bg-pending-muted/30 border-pending/40"
-                                    )}
-                                  >
-                                    {/* Top Row: Name on Left, Amount on Top Right */}
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
-                                        <span className="font-bold text-foreground text-sm block truncate">{guest.guest_name}</span>
-                                        {guest.mobile_number && (
-                                          <p className="text-xs text-muted-foreground mt-0.5">{guest.mobile_number}</p>
-                                        )}
-                                      </div>
-                                      <div className="text-right shrink-0">
-                                        <span className="text-base font-black text-foreground block">
-                                          ₹{guest.total_amount.toLocaleString()}
-                                        </span>
-                                        {(isPartial || isPaid) && (
-                                          <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
-                                            <span className="text-paid">Paid: ₹{amountPaid.toLocaleString()}</span>
-                                            {!isPaid && (
-                                              <span className="text-pending ml-1">Due: ₹{remaining.toLocaleString()}</span>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
+                                  {/* Phone Number */}
+                                  {guest.mobile_number && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {guest.mobile_number}
                                     </div>
+                                  )}
 
-                                    {/* Middle Row: Dates and Days */}
-                                    <div className="text-xs text-muted-foreground flex items-center justify-between">
-                                      <span>
-                                        {format(new Date(guest.from_date), 'MMM d')} – {format(new Date(guest.to_date), 'MMM d, yyyy')}
+                                  {/* Stay Period & Days */}
+                                  <div className="text-xs text-muted-foreground">
+                                    {format(new Date(guest.from_date), 'dd MMM yyyy')} – {format(new Date(guest.to_date), 'dd MMM yyyy')} ({guest.number_of_days} days)
+                                  </div>
+
+                                  {/* Payments Breakdown */}
+                                  {(paymentEntries.length > 0 || isPaid) && (
+                                    <div className="mt-2 space-y-1">
+                                      <div className={cn("text-xs font-medium", !isPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
+                                        {isPaid ? "Payments:" : "Payment:"}
+                                      </div>
+                                      {paymentEntries.length > 0 ? (
+                                        paymentEntries.map((entry, idx) => (
+                                          <div key={idx} className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                                            <span>₹{entry.amount.toLocaleString()}{entry.date ? ` on ${format(new Date(entry.date), 'dd MMM yyyy')}` : ''}</span>
+                                            <span className={entry.mode === 'upi' ? 'tag-upi' : 'tag-cash'}>
+                                              {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                            </span>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <div className="text-xs text-muted-foreground">
+                                          <span>₹{amountPaid.toLocaleString()}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Red Price Badge on bottom of Left Div (for Pending/Partial) */}
+                                  {!isPaid && (
+                                    <div className="mt-3 pt-1">
+                                      <span className="price-badge-red shrink-0">
+                                        ₹{displayAmount.toLocaleString()}
                                       </span>
-                                      <span className="font-semibold text-foreground/80">({guest.number_of_days} days)</span>
                                     </div>
+                                  )}
+                                </div>
 
-                                    {/* Bottom Row: Actions on Left, Paid/Pending Clickable Badge on Bottom Right */}
-                                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                      <div className="flex items-center gap-1.5">
-                                        {showActions ? (
-                                          <div className="flex items-center gap-1">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 px-2 text-xs gap-1 rounded-lg"
-                                              onClick={() => handleEditStart(guest)}
-                                            >
-                                              <Pencil className="h-3 w-3" />
-                                              <span>Edit</span>
-                                            </Button>
-                                            {canManageDayGuests && (
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/40 rounded-lg"
-                                                onClick={() => handleDeleteStart(guest)}
-                                              >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                              </Button>
-                                            )}
-                                          </div>
-                                        ) : (
-                                          guest.mobile_number && !guest.mobile_number.includes('•') ? (
-                                            <div className="flex items-center gap-1.5">
-                                              <a
-                                                href={`tel:${guest.mobile_number}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="grid h-7 w-7 place-items-center rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
-                                                title={`Call ${guest.guest_name}`}
-                                              >
-                                                <Phone className="h-3.5 w-3.5" />
-                                              </a>
-                                              <a
-                                                href={`https://wa.me/${guest.mobile_number.replace(/\D/g, "").startsWith("91") ? guest.mobile_number.replace(/\D/g, "") : `91${guest.mobile_number.replace(/\D/g, "")}`}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="grid h-7 w-7 place-items-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
-                                                title="Chat on WhatsApp"
-                                              >
-                                                <MessageCircle className="h-3.5 w-3.5" />
-                                              </a>
-                                              {!isPaid && (
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="h-7 px-2 text-[11px] font-bold gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 rounded-lg"
-                                                  onClick={() => openReminder(guest, roomNo)}
-                                                >
-                                                  <MessageCircle className="h-3 w-3" />
-                                                  Remind
-                                                </Button>
-                                              )}
-                                            </div>
-                                          ) : null
-                                        )}
-                                      </div>
-
-                                      {/* Bottom Right Clickable Payment Status Badge */}
-                                      <div>
-                                        {isPaid ? (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleStatusChange(guest, 'Pending')}
-                                            className="badge-paid-periwinkle px-3.5 py-1 text-xs font-bold rounded-xl cursor-pointer hover:opacity-85 active:scale-95 transition-all shadow-xs"
-                                            title="Click to undo payment"
-                                          >
-                                            Paid
-                                          </button>
-                                        ) : isPartial ? (
-                                          <button
-                                            type="button"
-                                            onClick={() => handlePaymentStart(guest)}
-                                            className="px-3.5 py-1 text-xs font-bold rounded-xl bg-amber-500 text-white hover:bg-amber-600 active:scale-95 transition-all shadow-xs cursor-pointer"
-                                            title="Click to pay remaining"
-                                          >
-                                            Partial (Due ₹{remaining.toLocaleString()})
-                                          </button>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            onClick={() => handlePaymentStart(guest)}
-                                            className="px-3.5 py-1 text-xs font-bold rounded-xl bg-foreground text-background hover:bg-foreground/90 active:scale-95 transition-all shadow-xs cursor-pointer"
-                                            title="Click to record payment"
-                                          >
-                                            Mark Paid
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Payment Entries Details if any */}
-                                    {paymentEntries.length > 0 && (
-                                      <div className="space-y-0.5 pt-1 border-t border-border/40">
-                                        {paymentEntries.map((entry, idx) => (
-                                          <div key={idx} className="text-[11px] text-muted-foreground flex items-center gap-1">
-                                            <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
-                                            {entry.collectedBy && (
-                                              <span className="text-muted-foreground text-[10px]">({entry.collectedBy})</span>
-                                            )}
-                                            {entry.mode && (
-                                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
-                                                {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                                              </span>
-                                            )}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    {/* Notes */}
-                                    {guest.notes && (
-                                      <p className="text-xs text-muted-foreground italic">{guest.notes}</p>
+                                {/* Right Column */}
+                                <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+                                  {/* Top: Price for Paid */}
+                                  <div className="w-[84px] text-center">
+                                    {isPaid && (
+                                      <span className="text-lg font-extrabold text-foreground">
+                                        ₹{displayAmount.toLocaleString()}
+                                      </span>
                                     )}
                                   </div>
-                                );
-                              })}
+
+                                  {/* Middle: Action icons */}
+                                  {guest.mobile_number && guest.mobile_number !== "••••••••••" ? (
+                                    <div className="flex w-[84px] items-center justify-between my-2">
+                                      <DayGuestChatMenu
+                                        guestName={guest.guest_name}
+                                        phone={guest.mobile_number}
+                                        isPaid={isPaid}
+                                        isPartial={isPartial}
+                                        message={!isPaid ? `Hi ${guest.guest_name}, your day guest stay payment of ₹${remaining.toLocaleString()} for Room ${roomNo} is pending. Please pay at your earliest convenience. Thank you!` : undefined}
+                                        onReminder={!isPaid ? () => openReminder(guest, roomNo) : undefined}
+                                        onReceipt={(isPaid || isPartial) ? () => openReminder(guest, roomNo) : undefined}
+                                        onEdit={() => handleEditStart(guest)}
+                                        onDelete={canManageDayGuests ? () => handleDeleteStart(guest) : undefined}
+                                      />
+                                      <a
+                                        href={`tel:${guest.mobile_number}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400 cursor-pointer active:scale-95"
+                                        title={`Call ${guest.guest_name}`}
+                                      >
+                                        <Phone className="h-4 w-4" />
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <div className="w-[84px] my-2" />
+                                  )}
+
+                                  {/* Bottom: Paid badge or Pay button */}
+                                  <div className="w-[84px]">
+                                    {isPaid ? (
+                                      <button
+                                        type="button"
+                                        className="badge-paid-periwinkle w-full px-0 text-center block cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                                        onClick={() => handleStatusChange(guest, 'Pending')}
+                                        title="Click to undo payment"
+                                      >
+                                        Paid
+                                      </button>
+                                    ) : isPartial ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handlePaymentStart(guest)}
+                                        className="btn-pay-black w-full px-0 text-center"
+                                      >
+                                        Pay
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handlePaymentStart(guest)}
+                                        className="btn-pay-black w-full px-0 text-center"
+                                      >
+                                        Pay
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))
+                          );
+                        })}
+                    </div>
                   )}
                 </div>
               )}

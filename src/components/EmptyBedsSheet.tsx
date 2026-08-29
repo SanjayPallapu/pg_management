@@ -152,8 +152,8 @@ export const EmptyBedsSheet = ({
                       {floorRooms.map(room => (
                         <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-md px-3 py-2 text-sm">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold">R{room.roomNo.replace(/^R/i, "")}</span>
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{room.capacity}S</Badge>
+                            <span className="font-bold">{room.roomNo.replace(/^R/i, "")}</span>
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">{room.capacity}-sharing</Badge>
                           </div>
                           <div className="flex items-center gap-1 text-pending font-medium">
                             <Bed className="h-3 w-3" />
@@ -275,12 +275,11 @@ export const EmptyBedsSheet = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <span className="text-xs font-black text-primary">R{room.roomNo.replace(/^R/i, "")}</span>
+                    <span className="text-xs font-black text-primary">{room.roomNo.replace(/^R/i, "")}</span>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-sm text-foreground">R{room.roomNo.replace(/^R/i, "")}</span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">
                         {room.capacity}-sharing
                       </Badge>
                       {room.reservedBeds && room.reservedBeds > 0 ? (
