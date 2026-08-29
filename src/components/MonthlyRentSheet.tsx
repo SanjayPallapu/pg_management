@@ -510,14 +510,14 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       };
     });
 
-    // Sort by: Paid > Partial > Pending (overdue/advance-not-paid) > Not-due
+    // Sort by: Overdue / Due > Advance Not Paid > Partial > Not-due > Paid (at the bottom)
     // Within pending categories, sort by due day (earliest first)
     const categoryOrder: Record<string, number> = {
-      paid: 1,
-      partial: 2,
-      overdue: 3,
-      "advance-not-paid": 4,
-      "not-due": 5,
+      overdue: 1,
+      "advance-not-paid": 2,
+      partial: 3,
+      "not-due": 4,
+      paid: 5,
     };
     return tenantsData.sort((a, b) => {
       const aOrder = categoryOrder[a.paymentCategory] || 99;
