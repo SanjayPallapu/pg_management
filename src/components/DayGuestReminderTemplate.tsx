@@ -12,6 +12,7 @@ export interface DayGuestReminderData {
   roomNo: string;
   isAc?: boolean;
   acPerDayCharge?: number; // per-day AC electricity charge, multiplied by numberOfDays
+  discount?: number; // custom discount amount in rupees
   pgName?: string;
   pgLogoUrl?: string;
 }
@@ -251,6 +252,16 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
                 </td>
                 <td style={{ padding: "10px 16px", fontWeight: 600, color: "#0284c7" }}>
                   {formatCurrency(data.acPerDayCharge! * data.numberOfDays)}
+                </td>
+              </tr>
+            )}
+            {Boolean(data.discount && data.discount > 0) && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "10px 16px", color: "#16a34a" }}>
+                  Special Discount:
+                </td>
+                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#16a34a" }}>
+                  - {formatCurrency(data.discount!)}
                 </td>
               </tr>
             )}

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Bell, Download, MessageCircle, ArrowLeft, Zap } from 'lucide-react';
+import { Loader2, Bell, Download, MessageCircle, ArrowLeft, Zap, Tag } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DayGuestReminderTemplate, type DayGuestReminderData } from '@/components/DayGuestReminderTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -24,6 +24,7 @@ export interface DayGuestReminderInput {
   roomNo: string;
   isAc?: boolean;
   acElectricBill?: number;
+  discount?: number;
 }
 
 interface Props {
@@ -41,60 +42,54 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const [templateData, setTemplateData] = useState<DayGuestReminderData | null>(null);
   const [includeAcBill, setIncludeAcBill] = useState(false);
   const [acPerDayCharge, setAcPerDayCharge] = useState<number>(0);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
 
   useBackGesture(open, () => onOpenChange(false));
+
+  const recalculateTemplate = useCallback((
+    includeAc: boolean,
+    acPerDay: number,
+    discountVal: number,
+    baseData = reminderData
+  ) => {
+    if (!baseData) return;
+    setIncludeAcBill(includeAc);
+    setAcPerDayCharge(acPerDay);
+    setDiscountAmount(discountVal);
+    setGeneratedImage(null);
+
+    const rentSubtotal = baseData.numberOfDays * baseData.perDayRate;
+    const acTotal = includeAc ? (acPerDay * baseData.numberOfDays) : 0;
+    const effectiveDiscount = Math.max(0, discountVal || 0);
+    const newTotal = Math.max(0, rentSubtotal + acTotal - effectiveDiscount);
+    const newBalance = Math.max(0, newTotal - baseData.amountPaid);
+
+    setTemplateData({
+      guestName: baseData.guestName,
+      fromDate: baseData.fromDate,
+      toDate: baseData.toDate,
+      numberOfDays: baseData.numberOfDays,
+      perDayRate: baseData.perDayRate,
+      totalAmount: newTotal,
+      amountPaid: baseData.amountPaid,
+      balance: newBalance,
+      roomNo: baseData.roomNo,
+      isAc: includeAc || Boolean(baseData.isAc),
+      acPerDayCharge: includeAc ? acPerDay : 0,
+      discount: effectiveDiscount,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+  }, [reminderData, currentPG]);
 
   useEffect(() => {
     if (reminderData && open) {
       const isAcRoom = Boolean(reminderData.isAc);
-      setIncludeAcBill(isAcRoom);
       const perDayCharge = isAcRoom ? (reminderData.acElectricBill || 0) : 0;
-      setAcPerDayCharge(perDayCharge);
-
-      const totalAcBill = perDayCharge * reminderData.numberOfDays;
-      setTemplateData({
-        guestName: reminderData.guestName,
-        fromDate: reminderData.fromDate,
-        toDate: reminderData.toDate,
-        numberOfDays: reminderData.numberOfDays,
-        perDayRate: reminderData.perDayRate,
-        totalAmount: reminderData.totalAmount + totalAcBill,
-        amountPaid: reminderData.amountPaid,
-        balance: reminderData.balance + totalAcBill,
-        roomNo: reminderData.roomNo,
-        isAc: isAcRoom,
-        acPerDayCharge: perDayCharge,
-        pgName: currentPG?.name,
-        pgLogoUrl: currentPG?.logoUrl,
-      });
+      const initialDiscount = reminderData.discount || 0;
+      recalculateTemplate(isAcRoom, perDayCharge, initialDiscount, reminderData);
     }
-  }, [reminderData, open, currentPG]);
-
-  // Update templateData when AC bill changes
-  const handleAcBillChange = (include: boolean, perDayAmount: number) => {
-    if (!reminderData) return;
-    setIncludeAcBill(include);
-    setAcPerDayCharge(perDayAmount);
-    setGeneratedImage(null); // Reset preview to force regenerate
-
-    const perDay = include ? (perDayAmount || 0) : 0;
-    const totalAcBill = perDay * reminderData.numberOfDays;
-    setTemplateData({
-      guestName: reminderData.guestName,
-      fromDate: reminderData.fromDate,
-      toDate: reminderData.toDate,
-      numberOfDays: reminderData.numberOfDays,
-      perDayRate: reminderData.perDayRate,
-      totalAmount: reminderData.totalAmount + totalAcBill,
-      amountPaid: reminderData.amountPaid,
-      balance: reminderData.balance + totalAcBill,
-      roomNo: reminderData.roomNo,
-      isAc: include || Boolean(reminderData.isAc),
-      acPerDayCharge: perDay,
-      pgName: currentPG?.name,
-      pgLogoUrl: currentPG?.logoUrl,
-    });
-  };
+  }, [reminderData, open, recalculateTemplate]);
 
   const generateReminder = useCallback(async () => {
     if (!reminderData || !templateData || !reminderRef.current) {
@@ -215,7 +210,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                   <Switch
                     id="include-ac"
                     checked={includeAcBill}
-                    onCheckedChange={(checked) => handleAcBillChange(checked, acPerDayCharge)}
+                    onCheckedChange={(checked) => recalculateTemplate(checked, acPerDayCharge, discountAmount)}
                   />
                 </div>
 
@@ -233,7 +228,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                           min="0"
                           placeholder="e.g. 50"
                           value={acPerDayCharge || ""}
-                          onChange={(e) => handleAcBillChange(true, Math.max(0, parseInt(e.target.value) || 0))}
+                          onChange={(e) => recalculateTemplate(true, Math.max(0, parseInt(e.target.value) || 0), discountAmount)}
                           className="pl-7 h-9 text-xs font-bold bg-background"
                         />
                       </div>
@@ -249,6 +244,39 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                         </span>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+
+              {/* Custom Discount Section */}
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-emerald-500" />
+                  <div>
+                    <Label htmlFor="guest-discount" className="text-xs font-bold text-foreground cursor-pointer">
+                      Special Discount
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">Apply custom discount (₹) to total bill</p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                  <Input
+                    id="guest-discount"
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 100"
+                    value={discountAmount || ""}
+                    onChange={(e) => recalculateTemplate(includeAcBill, acPerDayCharge, Math.max(0, parseInt(e.target.value) || 0))}
+                    className="pl-7 h-9 text-xs font-bold bg-background"
+                  />
+                </div>
+                {discountAmount > 0 && templateData && (
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
+                    <span className="text-muted-foreground text-[11px]">Final Total Amount:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      ₹{templateData.totalAmount.toLocaleString('en-IN')} (Saved ₹{discountAmount.toLocaleString('en-IN')})
+                    </span>
                   </div>
                 )}
               </div>
