@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle, Pencil } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Phone, CreditCard, FileText, IndianRupee, MessageCircle, Pencil, SquarePen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, differenceInDays, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
+import { useRooms } from '@/hooks/useRooms';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -28,9 +29,12 @@ const DayGuestPage = () => {
   const roomNo = searchParams.get('roomNo') || '';
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { rooms } = useRooms();
   const canManageDayGuests = role === 'admin' || role === 'owner';
 
   const { dayGuests, isLoading, addDayGuest, updateDayGuest, deleteDayGuest } = useDayGuests(roomId);
+
+  const [isHistoryEditMode, setIsHistoryEditMode] = useState(false);
 
   // Form state
   const [guestName, setGuestName] = useState('');
@@ -98,6 +102,7 @@ const DayGuestPage = () => {
 
   const openReminder = (guest: DayGuest) => {
     const amountPaid = guest.amount_paid || 0;
+    const room = (rooms || []).find(r => r.id === roomId || r.roomNo === roomNo);
     setReminderData({
       guestName: guest.guest_name,
       guestPhone: guest.mobile_number || '',
@@ -109,6 +114,7 @@ const DayGuestPage = () => {
       amountPaid,
       balance: guest.total_amount - amountPaid,
       roomNo,
+      isAc: Boolean(room?.isAc),
     });
     setReminderDialogOpen(true);
   };
@@ -151,7 +157,15 @@ const DayGuestPage = () => {
     await updateDayGuest.mutateAsync({
       id: guest.id,
       payment_status: newStatus,
+      amount_paid: newStatus === 'Paid' ? guest.total_amount : 0,
+      payment_entries: newStatus === 'Paid' ? [{
+        amount: guest.total_amount,
+        date: new Date().toISOString(),
+        type: 'full',
+        mode: 'upi',
+      }] : [],
     });
+    toast.success(newStatus === 'Paid' ? `Marked ${guest.guest_name} as Paid` : `Payment reset to Pending for ${guest.guest_name}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -362,7 +376,24 @@ const DayGuestPage = () => {
         {/* Day Guest History */}
         <Card className="p-0 border-0 sm:border shadow-none sm:shadow-sm bg-transparent sm:bg-card">
           <CardHeader className="p-0 pb-2">
-            <CardTitle className="text-base font-bold">Guest History</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-bold">Guest History ({dayGuests.length})</CardTitle>
+              {dayGuests.length > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 px-2.5 text-xs font-bold gap-1 rounded-xl cursor-pointer transition-all",
+                    isHistoryEditMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setIsHistoryEditMode(prev => !prev)}
+                >
+                  <SquarePen className="h-3.5 w-3.5" />
+                  <span>{isHistoryEditMode ? "Done" : "Edit"}</span>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -375,82 +406,142 @@ const DayGuestPage = () => {
               </p>
             ) : (
               <div className="space-y-3">
-                {dayGuests.map((guest) => (
-                  <div
-                    key={guest.id}
-                    className="flex items-start justify-between p-3 border rounded-lg"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{guest.guest_name}</span>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            guest.payment_status === 'Paid'
-                              ? 'bg-paid text-paid-foreground'
-                              : 'bg-pending text-pending-foreground'
-                          )}
-                        >
-                          {guest.payment_status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(guest.from_date), 'MMM d')} -{' '}
-                        {format(new Date(guest.to_date), 'MMM d, yyyy')} ({guest.number_of_days} days)
-                      </p>
-                      <p className="text-sm font-medium text-primary">
-                        ₹{guest.total_amount.toLocaleString()}
-                      </p>
-                      {guest.mobile_number && (
-                        <p className="text-xs text-muted-foreground">{guest.mobile_number}</p>
+                {dayGuests.map((guest) => {
+                  const isPaid = guest.payment_status === 'Paid';
+                  const amountPaid = guest.amount_paid || 0;
+                  const remaining = guest.total_amount - amountPaid;
+                  const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
+
+                  return (
+                    <div
+                      key={guest.id}
+                      className={cn(
+                        "p-3.5 rounded-2xl border space-y-2.5 transition-all",
+                        isPaid
+                          ? "bg-paid-muted/30 border-paid/40"
+                          : isPartial
+                          ? "bg-partial-muted/30 border-partial/40"
+                          : "bg-pending-muted/30 border-pending/40"
                       )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Select
-                        value={guest.payment_status}
-                        onValueChange={(v) => handleStatusChange(guest, v as 'Paid' | 'Pending')}
-                      >
-                        <SelectTrigger className="h-8 w-24 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Paid">Paid</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-2 text-xs"
-                          onClick={() => handleEditStart(guest)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        {guest.payment_status === 'Pending' && guest.mobile_number && !guest.mobile_number.includes('•') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-2 text-xs gap-1 text-emerald-600 border-emerald-300"
-                            onClick={() => openReminder(guest)}
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                        {canManageDayGuests && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(guest.id)}
-                            className="h-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                    >
+                      {/* Top Row: Name on Left, Amount on Top Right */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-foreground text-sm block truncate">{guest.guest_name}</span>
+                          {guest.mobile_number && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{guest.mobile_number}</p>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-base font-black text-foreground block">
+                            ₹{guest.total_amount.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Dates and Days */}
+                      <div className="text-xs text-muted-foreground flex items-center justify-between">
+                        <span>
+                          {format(new Date(guest.from_date), 'MMM d')} – {format(new Date(guest.to_date), 'MMM d, yyyy')}
+                        </span>
+                        <span className="font-semibold text-foreground/80">({guest.number_of_days} days)</span>
+                      </div>
+
+                      {/* Bottom Row: Actions on Left, Paid/Pending Clickable Badge on Bottom Right */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                        <div className="flex items-center gap-1.5">
+                          {isHistoryEditMode ? (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs gap-1 rounded-lg"
+                                onClick={() => handleEditStart(guest)}
+                              >
+                                <Pencil className="h-3 w-3" />
+                                <span>Edit</span>
+                              </Button>
+                              {canManageDayGuests && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/40 rounded-lg"
+                                  onClick={() => handleDelete(guest.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            guest.mobile_number && !guest.mobile_number.includes('•') ? (
+                              <div className="flex items-center gap-1.5">
+                                <a
+                                  href={`tel:${guest.mobile_number}`}
+                                  className="grid h-7 w-7 place-items-center rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                                  title={`Call ${guest.guest_name}`}
+                                >
+                                  <Phone className="h-3.5 w-3.5" />
+                                </a>
+                                <a
+                                  href={`https://wa.me/${guest.mobile_number.replace(/\D/g, "").startsWith("91") ? guest.mobile_number.replace(/\D/g, "") : `91${guest.mobile_number.replace(/\D/g, "")}`}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="grid h-7 w-7 place-items-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                                  title="Chat on WhatsApp"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                </a>
+                                {!isPaid && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-[11px] font-bold gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 rounded-lg"
+                                    onClick={() => openReminder(guest)}
+                                  >
+                                    <MessageCircle className="h-3 w-3" />
+                                    Remind
+                                  </Button>
+                                )}
+                              </div>
+                            ) : null
+                          )}
+                        </div>
+
+                        {/* Bottom Right Clickable Payment Status Badge */}
+                        <div>
+                          {isPaid ? (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(guest, 'Pending')}
+                              className="badge-paid-periwinkle px-3.5 py-1 text-xs font-bold rounded-xl cursor-pointer hover:opacity-85 active:scale-95 transition-all shadow-xs"
+                              title="Click to undo payment"
+                            >
+                              Paid
+                            </button>
+                          ) : isPartial ? (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(guest, 'Paid')}
+                              className="px-3.5 py-1 text-xs font-bold rounded-xl bg-amber-500 text-white hover:bg-amber-600 active:scale-95 transition-all shadow-xs cursor-pointer"
+                              title="Click to mark fully Paid"
+                            >
+                              Partial (Due ₹{remaining.toLocaleString()})
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(guest, 'Paid')}
+                              className="px-3.5 py-1 text-xs font-bold rounded-xl bg-foreground text-background hover:bg-foreground/90 active:scale-95 transition-all shadow-xs cursor-pointer"
+                              title="Click to mark Paid"
+                            >
+                              Mark Paid
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

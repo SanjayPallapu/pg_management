@@ -969,8 +969,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
           </div>
 
-          {/* Room Welcome Banner Illustration - Clean, borderless, reduced vertical spacing */}
-          <div className="my-1 overflow-hidden rounded-2xl flex items-center justify-center">
+          {/* Room Welcome Banner Illustration - Clean with gradient background */}
+          <div className="my-1 overflow-hidden rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/50 dark:border-amber-900/30 p-2">
             <img
               src="/room-welcome-banner.png"
               alt="Room & Tenant Onboarding"
@@ -2430,6 +2430,16 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
       {/* Welcome Dialog for new tenants */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
+
+      {/* Delete Payment Dialog for undo payments */}
+      <DeletePaymentDialog
+        open={!!deletePaymentTenant}
+        onOpenChange={(open) => !open && setDeletePaymentTenant(null)}
+        tenantName={deletePaymentTenant?.name || ""}
+        monthlyRent={deletePaymentTenant?.monthlyRent || 0}
+        paymentEntries={deletePaymentTenant?.paymentEntries || []}
+        onConfirmDelete={handleDeletePayments}
+      />
 
     </>
   );

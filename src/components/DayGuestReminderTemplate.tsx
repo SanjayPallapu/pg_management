@@ -10,6 +10,8 @@ export interface DayGuestReminderData {
   amountPaid: number;
   balance: number;
   roomNo: string;
+  isAc?: boolean;
+  acElectricBill?: number;
   pgName?: string;
   pgLogoUrl?: string;
 }
@@ -229,7 +231,9 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Room No:</td>
-              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>{data.roomNo}</td>
+              <td style={{ padding: "10px 16px", fontWeight: 500, color: "#1a1a1a" }}>
+                {data.roomNo} {data.isAc ? " (❄️ AC Room)" : ""}
+              </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Per Day Rent:</td>
@@ -237,6 +241,14 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
                 {formatCurrency(data.perDayRate)}
               </td>
             </tr>
+            {Boolean(data.acElectricBill && data.acElectricBill > 0) && (
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <td style={{ padding: "10px 16px", color: "#6b7280" }}>AC Electricity Bill:</td>
+                <td style={{ padding: "10px 16px", fontWeight: 600, color: "#0284c7" }}>
+                  {formatCurrency(data.acElectricBill!)}
+                </td>
+              </tr>
+            )}
             <tr>
               <td style={{ padding: "10px 16px", color: "#6b7280" }}>Total Amount:</td>
               <td style={{ padding: "10px 16px", fontWeight: 600, color: "#1a1a1a" }}>

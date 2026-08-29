@@ -97,6 +97,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
 
   const openReminder = (guest: DayGuest, roomNo: string) => {
     const amountPaid = guest.amount_paid || 0;
+    const room = (rooms || []).find(r => r.roomNo === roomNo);
     setReminderData({
       guestName: guest.guest_name,
       guestPhone: guest.mobile_number || '',
@@ -108,6 +109,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       amountPaid,
       balance: guest.total_amount - amountPaid,
       roomNo,
+      isAc: Boolean(room?.isAc),
     });
     setReminderDialogOpen(true);
   };

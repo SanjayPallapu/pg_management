@@ -2,7 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Bell, Download, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Loader2, Bell, Download, MessageCircle, ArrowLeft, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DayGuestReminderTemplate, type DayGuestReminderData } from '@/components/DayGuestReminderTemplate';
 import { generateReceiptImage, downloadReceiptImage } from '@/utils/generateReceiptImage';
@@ -19,6 +22,8 @@ export interface DayGuestReminderInput {
   amountPaid: number;
   balance: number;
   roomNo: string;
+  isAc?: boolean;
+  acElectricBill?: number;
 }
 
 interface Props {
@@ -34,26 +39,60 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const reminderRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<DayGuestReminderData | null>(null);
+  const [includeAcBill, setIncludeAcBill] = useState(false);
+  const [acBillAmount, setAcBillAmount] = useState<number>(0);
 
   useBackGesture(open, () => onOpenChange(false));
 
   useEffect(() => {
     if (reminderData && open) {
+      const isAcRoom = Boolean(reminderData.isAc);
+      setIncludeAcBill(isAcRoom);
+      const extraAc = isAcRoom ? (reminderData.acElectricBill || 0) : 0;
+      setAcBillAmount(extraAc);
+
       setTemplateData({
         guestName: reminderData.guestName,
         fromDate: reminderData.fromDate,
         toDate: reminderData.toDate,
         numberOfDays: reminderData.numberOfDays,
         perDayRate: reminderData.perDayRate,
-        totalAmount: reminderData.totalAmount,
+        totalAmount: reminderData.totalAmount + extraAc,
         amountPaid: reminderData.amountPaid,
-        balance: reminderData.balance,
+        balance: reminderData.balance + extraAc,
         roomNo: reminderData.roomNo,
+        isAc: isAcRoom,
+        acElectricBill: extraAc,
         pgName: currentPG?.name,
         pgLogoUrl: currentPG?.logoUrl,
       });
     }
   }, [reminderData, open, currentPG]);
+
+  // Update templateData when AC bill changes
+  const handleAcBillChange = (include: boolean, amount: number) => {
+    if (!reminderData) return;
+    setIncludeAcBill(include);
+    setAcBillAmount(amount);
+    setGeneratedImage(null); // Reset preview to force regenerate
+
+    const extra = include ? (amount || 0) : 0;
+    setTemplateData({
+      guestName: reminderData.guestName,
+      fromDate: reminderData.fromDate,
+      toDate: reminderData.toDate,
+      numberOfDays: reminderData.numberOfDays,
+      perDayRate: reminderData.perDayRate,
+      totalAmount: reminderData.totalAmount + extra,
+      amountPaid: reminderData.amountPaid,
+      balance: reminderData.balance + extra,
+      roomNo: reminderData.roomNo,
+      isAc: include || Boolean(reminderData.isAc),
+      acElectricBill: extra,
+      pgName: currentPG?.name,
+      pgLogoUrl: currentPG?.logoUrl,
+    });
+  };
 
   const generateReminder = useCallback(async () => {
     if (!reminderData || !templateData || !reminderRef.current) {
@@ -157,6 +196,46 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                   <span className="text-muted-foreground">Stay:</span>
                   <span className="font-semibold">{reminderData.numberOfDays} days</span>
                 </div>
+              </div>
+
+              {/* AC Electric Bill Section */}
+              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-sky-500" />
+                    <div>
+                      <Label htmlFor="include-ac" className="text-xs font-bold text-foreground cursor-pointer">
+                        AC Electricity Bill
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">Add custom electric charge to reminder</p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="include-ac"
+                    checked={includeAcBill}
+                    onCheckedChange={(checked) => handleAcBillChange(checked, acBillAmount)}
+                  />
+                </div>
+
+                {includeAcBill && (
+                  <div className="pt-2 border-t border-sky-500/20 space-y-1.5">
+                    <Label htmlFor="ac-amount" className="text-xs text-muted-foreground">
+                      Custom AC Bill Amount (₹)
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                      <Input
+                        id="ac-amount"
+                        type="number"
+                        min="0"
+                        placeholder="Enter AC electricity bill amount"
+                        value={acBillAmount || ""}
+                        onChange={(e) => handleAcBillChange(true, Math.max(0, parseInt(e.target.value) || 0))}
+                        className="pl-7 h-9 text-xs font-bold bg-background"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {generatedImage && (
