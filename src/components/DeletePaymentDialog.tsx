@@ -76,7 +76,7 @@ export const DeletePaymentDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={(val) => { if (!val) handleCancel(); }}>
-      <AlertDialogContent className="max-w-md w-[92vw] sm:w-full max-h-[85vh] overflow-y-auto relative rounded-2xl p-5 shadow-2xl">
+      <AlertDialogContent className="max-w-md w-[92vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-5 shadow-2xl z-[100]">
         <button
           type="button"
           onClick={handleCancel}

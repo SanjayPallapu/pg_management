@@ -57,21 +57,35 @@ export function DayGuestChatMenu({
           <MessageCircle className="h-[18px] w-[18px]" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-52 z-50">
         <DropdownMenuItem onSelect={openWhatsApp} className="gap-2 cursor-pointer">
           <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span>Chat with Guest</span>
         </DropdownMenuItem>
 
         {onReminder && !isPaid && (
-          <DropdownMenuItem onSelect={onReminder} className="gap-2 cursor-pointer">
+          <DropdownMenuItem
+            onSelect={() => {
+              setTimeout(() => {
+                onReminder();
+              }, 100);
+            }}
+            className="gap-2 cursor-pointer"
+          >
             <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span>Payment Reminder</span>
           </DropdownMenuItem>
         )}
 
         {onReceipt && (isPaid || isPartial) && (
-          <DropdownMenuItem onSelect={onReceipt} className="gap-2 cursor-pointer">
+          <DropdownMenuItem
+            onSelect={() => {
+              setTimeout(() => {
+                onReceipt();
+              }, 100);
+            }}
+            className="gap-2 cursor-pointer"
+          >
             <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>Generate Receipt</span>
           </DropdownMenuItem>
@@ -80,14 +94,28 @@ export function DayGuestChatMenu({
         {(onEdit || onDelete) && <DropdownMenuSeparator />}
 
         {onEdit && (
-          <DropdownMenuItem onSelect={onEdit} className="gap-2 cursor-pointer">
+          <DropdownMenuItem
+            onSelect={() => {
+              setTimeout(() => {
+                onEdit();
+              }, 100);
+            }}
+            className="gap-2 cursor-pointer"
+          >
             <Pencil className="h-4 w-4 text-muted-foreground" />
             <span>Edit Guest</span>
           </DropdownMenuItem>
         )}
 
         {onDelete && (
-          <DropdownMenuItem onSelect={onDelete} className="gap-2 text-destructive cursor-pointer">
+          <DropdownMenuItem
+            onSelect={() => {
+              setTimeout(() => {
+                onDelete();
+              }, 100);
+            }}
+            className="gap-2 text-destructive cursor-pointer"
+          >
             <Trash2 className="h-4 w-4" />
             <span>Delete Guest</span>
           </DropdownMenuItem>

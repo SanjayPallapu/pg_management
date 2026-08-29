@@ -266,13 +266,18 @@ export const EmptyBedsSheet = ({
                 ))}
             </div>
 
-            {/* Rightmost Fill Vacancy Editorial Image */}
-            <div className="shrink-0">
-              <img
-                src={vacancyImg}
-                alt="Fill Vacancy"
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border border-border/60 shadow-xs"
-              />
+            {/* Rightmost Fill Vacancy Editorial Card matching Rent Tab exactly */}
+            <div className="w-[88px] sm:w-[102px] shrink-0 flex flex-col items-center select-none">
+              <div className="w-full h-[102px] sm:h-[118px] rounded-t-[3.5rem] rounded-b-2xl bg-gradient-to-b from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950 flex items-center justify-center p-1.5 shadow-sm border border-black/5 dark:border-white/10 relative overflow-hidden">
+                <img
+                  src={vacancyImg}
+                  alt="Fill Vacancy"
+                  className="w-full h-full object-cover object-center rounded-t-[3rem] rounded-b-xl shadow-xs"
+                />
+              </div>
+              <span className="font-semibold text-[11px] sm:text-xs text-foreground text-center leading-tight mt-1.5 px-0.5 line-clamp-2 max-w-[88px] sm:max-w-[102px]">
+                Fill Vacancy
+              </span>
             </div>
           </div>
         </div>

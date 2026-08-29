@@ -111,7 +111,9 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
       roomNo,
       isAc: Boolean(room?.isAc),
     });
-    setReminderDialogOpen(true);
+    setTimeout(() => {
+      setReminderDialogOpen(true);
+    }, 100);
   };
 
   // Handle OS back gesture to close sub-dialogs
@@ -119,6 +121,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   useBackGesture(deleteDialogOpen, () => setDeleteDialogOpen(false));
   useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
   useBackGesture(unpaidDialogOpen, () => setUnpaidDialogOpen(false));
+  useBackGesture(reminderDialogOpen, () => setReminderDialogOpen(false));
 
   // Filter guests whose stay overlaps the selected month
   // (from_date <= endOfMonth AND to_date >= startOfMonth)

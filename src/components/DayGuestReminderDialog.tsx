@@ -179,6 +179,16 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     }
   };
 
+  const safeFormat = (dateStr?: string, pattern = 'dd MMM') => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? '—' : format(d, pattern);
+    } catch {
+      return '—';
+    }
+  };
+
   return (
     <>
       {templateData && (
@@ -188,14 +198,14 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
       )}
 
       <Sheet open={open} onOpenChange={(val) => { if (!val) handleClose(); }}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0 h-full [&>button]:hidden flex flex-col bg-background">
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 h-full [&>button]:hidden flex flex-col bg-background z-[80]">
           <SheetHeader className="px-4 pt-4 pb-3 border-b bg-background shrink-0">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleClose}
-                className="h-8 w-8 shrink-0 rounded-xl"
+                className="h-8 w-8 shrink-0 rounded-xl cursor-pointer"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -224,7 +234,9 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Stay Duration:</span>
-                  <span className="font-semibold text-foreground">{reminderData.numberOfDays} days ({format(new Date(reminderData.fromDate), 'dd MMM')} - {format(new Date(reminderData.toDate), 'dd MMM')})</span>
+                  <span className="font-semibold text-foreground">
+                    {reminderData.numberOfDays} days ({safeFormat(reminderData.fromDate)} - {safeFormat(reminderData.toDate)})
+                  </span>
                 </div>
                 <div className="flex justify-between pt-1 border-t border-border/50">
                   <span className="text-muted-foreground">Amount Due:</span>
