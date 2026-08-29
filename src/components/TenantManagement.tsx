@@ -615,15 +615,33 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         setPartialPaymentDate(new Date());
       }
     } else {
-      // Open delete payment dialog
+      // Open delete payment dialog or direct undo
       const tenant = room.tenants.find((t) => t.id === tenantId);
       const payment = getSelectedMonthPayment(tenantId);
-      if (tenant && payment && payment.paymentEntries.length > 0) {
+      if (tenant && payment && payment.paymentEntries?.length > 0) {
         setDeletePaymentTenant({
           id: tenantId,
           name: tenant.name,
           monthlyRent: tenant.monthlyRent,
           paymentEntries: payment.paymentEntries,
+        });
+      } else if (tenant) {
+        updateTenant.mutate({
+          tenantId,
+          updates: { paymentStatus: "Pending", paymentDate: undefined },
+        });
+        upsertPayment.mutate({
+          tenantId,
+          month: selectedMonth,
+          year: selectedYear,
+          paymentStatus: "Pending",
+          paymentDate: undefined,
+          amountPaid: 0,
+          paymentEntries: [],
+        });
+        toast({
+          title: "Payment undone",
+          description: `Payment for ${tenant.name} marked as Pending`,
         });
       }
     }
@@ -951,12 +969,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
           </div>
 
-          {/* Room Welcome Banner Illustration */}
-          <div className="mt-3 overflow-hidden rounded-2xl border border-amber-200/60 dark:border-amber-900/40 shadow-sm bg-amber-500/5">
+          {/* Room Welcome Banner Illustration - Clean, borderless, reduced vertical spacing */}
+          <div className="my-1 overflow-hidden rounded-2xl flex items-center justify-center">
             <img
               src="/room-welcome-banner.png"
               alt="Room & Tenant Onboarding"
-              className="w-full h-auto max-h-[160px] object-cover object-center rounded-2xl"
+              className="w-full h-auto max-h-[140px] object-contain object-center rounded-2xl"
             />
           </div>
 
@@ -1339,22 +1357,20 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 </div>
                               ) : null}
 
-                              {/* Payment Status Pill / Badge matching width of Call and WhatsApp buttons */}
-                              <div className="w-full">
-                                {isPaid ? (
-                                  <span className="badge-paid-periwinkle w-full justify-center text-center block text-[11px] py-1 rounded-lg font-bold">
-                                    Paid
-                                  </span>
-                                ) : isPartial ? (
-                                  <span className="price-badge-red w-full justify-center text-center block text-[10px] sm:text-xs py-1 font-bold rounded-lg">
-                                    ₹{remaining.toLocaleString()}
-                                  </span>
-                                ) : (
-                                  <Badge variant="outline" className={cn("w-full justify-center text-center text-[11px] font-semibold py-1 rounded-lg block", getTenantStyles(tenant).badge)}>
-                                    {getPaymentStatusForMonth(tenant.id)}
-                                  </Badge>
-                                )}
-                              </div>
+                              {/* Payment Status Pill / Badge - Only show when NOT paid (e.g. Pending or Partial) */}
+                              {!isPaid && (
+                                <div className="w-full">
+                                  {isPartial ? (
+                                    <span className="price-badge-red w-full justify-center text-center block text-[10px] sm:text-xs py-1 font-bold rounded-lg">
+                                      ₹{remaining.toLocaleString()}
+                                    </span>
+                                  ) : (
+                                    <Badge variant="outline" className={cn("w-full justify-center text-center text-[11px] font-semibold py-1 rounded-lg block", getTenantStyles(tenant).badge)}>
+                                      {getPaymentStatusForMonth(tenant.id)}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
 

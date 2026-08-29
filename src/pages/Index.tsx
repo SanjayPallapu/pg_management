@@ -56,6 +56,16 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const { setActiveTab: setContextTab } = useActiveTab();
   const [activeTab, setActiveTabLocal] = useState(() => searchParams.get('tab') || localStorage.getItem('pg_active_tab') || 'dashboard');
+  const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
+
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ hidden: boolean }>) => {
+      setHideVoice(e.detail.hidden);
+    };
+    window.addEventListener("voice_agent_visibility_change" as any, handler);
+    return () => window.removeEventListener("voice_agent_visibility_change" as any, handler);
+  }, []);
+
   const setActiveTab = (tab: string) => {
     setActiveTabLocal(tab);
     setContextTab(tab);
@@ -385,7 +395,7 @@ const Index = () => {
       </div>
       </div>
 
-      {activeTab === "dashboard" && (
+      {activeTab === "dashboard" && !hideVoice && (
         <Button
           size="icon"
           className="fixed right-3 z-[54] h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:from-violet-600 hover:to-indigo-700"

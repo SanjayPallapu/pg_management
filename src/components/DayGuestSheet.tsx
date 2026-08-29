@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { useRooms } from '@/hooks/useRooms';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCircle, TrendingUp, AlertTriangle, UserPlus, Plus, Users, DoorOpen } from 'lucide-react';
+import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCircle, TrendingUp, AlertTriangle, UserPlus, Plus, Users, DoorOpen, Phone } from 'lucide-react';
 import { isTenantActiveNow } from '@/utils/dateOnly';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -52,7 +52,7 @@ interface EditingGuest {
 
 export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const navigate = useNavigate();
-  const { selectedMonth, selectedYear } = useMonthContext();
+  const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear } = useMonthContext();
   const { dayGuests, isLoading, updateDayGuest, deleteDayGuest } = useDayGuests();
   const { rooms } = useRooms();
   const { role } = useAuth();
@@ -291,13 +291,47 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
             {/* Header */}
             <SheetHeader className="px-4 pt-4 pb-3 border-b bg-background sticky top-0 z-10 shrink-0">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <SheetTitle className="text-base text-foreground font-bold text-left flex-1 min-w-0 truncate">
-                  Day Guest Hub - {monthName}
-                </SheetTitle>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <SheetTitle className="text-base text-foreground font-bold truncate">
+                    Day Guest Hub
+                  </SheetTitle>
+                </div>
+
+                {/* Month Selector on rightmost side */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Select
+                    value={selectedMonth.toString()}
+                    onValueChange={(val) => setSelectedMonth(parseInt(val))}
+                  >
+                    <SelectTrigger className="h-8 px-2.5 text-xs font-bold bg-muted/50 border-border/80 rounded-xl min-w-[85px] focus:ring-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      {[
+                        { value: 1, label: "Jan" },
+                        { value: 2, label: "Feb" },
+                        { value: 3, label: "Mar" },
+                        { value: 4, label: "Apr" },
+                        { value: 5, label: "May" },
+                        { value: 6, label: "Jun" },
+                        { value: 7, label: "Jul" },
+                        { value: 8, label: "Aug" },
+                        { value: 9, label: "Sep" },
+                        { value: 10, label: "Oct" },
+                        { value: 11, label: "Nov" },
+                        { value: 12, label: "Dec" },
+                      ].map((m) => (
+                        <SelectItem key={m.value} value={m.value.toString()} className="text-xs font-medium">
+                          {m.label} {selectedYear}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Side-by-Side Section Switcher */}
@@ -483,91 +517,149 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                   <div
                                     key={guest.id}
                                     className={cn(
-                                      "border rounded-lg p-3 space-y-2",
-                                      isPaid ? 'bg-paid-muted border-paid' : isPartial ? 'bg-partial-muted border-partial' : 'bg-pending-muted border-pending'
+                                      "border rounded-2xl p-3.5 space-y-2.5",
+                                      isPaid ? 'bg-paid-muted/40 border-paid/40' : isPartial ? 'bg-partial-muted/40 border-partial/40' : 'bg-pending-muted/40 border-pending/40'
                                     )}
                                   >
-                                    <div className="flex items-start justify-between">
-                                      <div>
+                                    {/* Top Row: Name on Left, Call & WhatsApp badges on Right */}
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                          <span className="font-medium">{guest.guest_name}</span>
+                                          <span className="font-bold text-foreground text-sm truncate">{guest.guest_name}</span>
                                           <Badge
                                             variant="outline"
                                             className={cn(
+                                              "text-[10px] px-2 py-0.5 font-bold shrink-0",
                                               isPaid
-                                                ? 'bg-paid text-paid-foreground'
+                                                ? 'bg-paid text-paid-foreground border-paid'
                                                 : isPartial
-                                                ? 'bg-partial text-partial-foreground'
-                                                : 'bg-pending text-pending-foreground'
+                                                ? 'bg-partial text-partial-foreground border-partial'
+                                                : 'bg-pending text-pending-foreground border-pending'
                                             )}
                                           >
                                             {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending'}
                                           </Badge>
                                         </div>
                                         {guest.mobile_number && (
-                                          <p className="text-xs text-muted-foreground">{guest.mobile_number}</p>
+                                          <p className="text-xs text-muted-foreground mt-0.5">{guest.mobile_number}</p>
                                         )}
                                       </div>
 
-                                      {showActions && (
-                                        <div className="flex items-center gap-1">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 px-2 text-xs"
-                                            onClick={() => handleEditStart(guest)}
-                                          >
-                                            Edit
-                                          </Button>
-                                          {canManageDayGuests && (
+                                      {/* Top Right Action Badges: Call & Chat/WhatsApp */}
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        {guest.mobile_number && !guest.mobile_number.includes('•') ? (
+                                          <>
+                                            {/* Call Badge */}
+                                            <a
+                                              href={`tel:${guest.mobile_number}`}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                                              title={`Call ${guest.guest_name}`}
+                                              aria-label={`Call ${guest.guest_name}`}
+                                            >
+                                              <Phone className="h-3.5 w-3.5" />
+                                            </a>
+
+                                            {/* WhatsApp Chat Badge */}
+                                            <a
+                                              href={`https://wa.me/${guest.mobile_number.replace(/\D/g, "").startsWith("91") ? guest.mobile_number.replace(/\D/g, "") : `91${guest.mobile_number.replace(/\D/g, "")}`}`}
+                                              onClick={(e) => e.stopPropagation()}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                                              title="Chat on WhatsApp"
+                                              aria-label="Chat on WhatsApp"
+                                            >
+                                              <MessageCircle className="h-3.5 w-3.5" />
+                                            </a>
+                                          </>
+                                        ) : null}
+
+                                        {showActions && (
+                                          <div className="flex items-center gap-1 ml-1">
                                             <Button
                                               variant="outline"
                                               size="sm"
-                                              className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/50"
-                                              onClick={() => handleDeleteStart(guest)}
+                                              className="h-7 px-2 text-xs"
+                                              onClick={() => handleEditStart(guest)}
                                             >
-                                              Delete
+                                              Edit
                                             </Button>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {/* Dates and Amount */}
-                                    <div className="flex items-center justify-between text-sm">
-                                      <div>
-                                        <span className="text-muted-foreground">
-                                          {format(new Date(guest.from_date), 'MMM d')} - {format(new Date(guest.to_date), 'MMM d')}
-                                        </span>
-                                        <span className="text-muted-foreground ml-1">({guest.number_of_days} days)</span>
-                                      </div>
-                                      <span className="font-semibold text-primary">₹{guest.total_amount.toLocaleString()}</span>
-                                    </div>
-
-                                    {/* Payment Summary */}
-                                    {(isPartial || isPaid) && (
-                                      <div className="text-sm font-medium">
-                                        <span className="text-paid">Paid: ₹{amountPaid.toLocaleString()}</span>
-                                        {!isPaid && (
-                                          <>
-                                            <span className="mx-2">•</span>
-                                            <span className="text-pending">Due: ₹{remaining.toLocaleString()}</span>
-                                          </>
+                                            {canManageDayGuests && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/50"
+                                                onClick={() => handleDeleteStart(guest)}
+                                              >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            )}
+                                          </div>
                                         )}
                                       </div>
-                                    )}
+                                    </div>
 
-                                    {/* Payment Entries */}
+                                    {/* Middle Row: Dates on top, (X days) below */}
+                                    <div className="space-y-0.5 text-xs text-muted-foreground">
+                                      <div>
+                                        {format(new Date(guest.from_date), 'MMM d, yyyy')} – {format(new Date(guest.to_date), 'MMM d, yyyy')}
+                                      </div>
+                                      <div className="font-semibold text-foreground/80">
+                                        ({guest.number_of_days} days)
+                                      </div>
+                                    </div>
+
+                                    {/* Amount Line: Total / Paid on Left, Record Payment button at rightmost place */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                                      <div>
+                                        <div className="text-sm font-black text-foreground">
+                                          ₹{guest.total_amount.toLocaleString()}
+                                        </div>
+                                        {(isPartial || isPaid) && (
+                                          <div className="text-[11px] font-semibold text-muted-foreground">
+                                            <span className="text-paid">Paid: ₹{amountPaid.toLocaleString()}</span>
+                                            {!isPaid && (
+                                              <span className="text-pending ml-1.5">• Due: ₹{remaining.toLocaleString()}</span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Rightmost Payment Action Button */}
+                                      <div>
+                                        {isPaid ? (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 text-xs font-bold rounded-xl border-border hover:bg-muted"
+                                            onClick={() => handleStatusChange(guest, 'Pending')}
+                                          >
+                                            Mark Unpaid
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            size="sm"
+                                            className="h-8 text-xs font-bold rounded-xl bg-foreground text-background hover:bg-foreground/90 px-3.5"
+                                            onClick={() => handlePaymentStart(guest)}
+                                          >
+                                            {isPartial ? 'Pay Remaining' : 'Record Payment'}
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Payment Entries Details if any */}
                                     {paymentEntries.length > 0 && (
-                                      <div className="space-y-0.5">
+                                      <div className="space-y-0.5 pt-1 border-t border-border/40">
                                         {paymentEntries.map((entry, idx) => (
-                                          <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <div key={idx} className="text-[11px] text-muted-foreground flex items-center gap-1">
                                             <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
                                             {entry.collectedBy && (
-                                              <span className="text-muted-foreground text-[10px]">{entry.collectedBy}</span>
+                                              <span className="text-muted-foreground text-[10px]">({entry.collectedBy})</span>
                                             )}
                                             {entry.mode && (
-                                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
                                                 {entry.mode === 'upi' ? 'UPI' : 'Cash'}
                                               </span>
                                             )}
@@ -575,42 +667,6 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                         ))}
                                       </div>
                                     )}
-
-                                    {/* Payment Actions */}
-                                    <div className="flex items-center gap-2 pt-2 border-t border-border">
-                                      {isPaid ? (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-7 text-xs"
-                                          onClick={() => handleStatusChange(guest, 'Pending')}
-                                        >
-                                          Mark Unpaid
-                                        </Button>
-                                      ) : (
-                                        <>
-                                          <Button
-                                            size="sm"
-                                            className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90"
-                                            onClick={() => handlePaymentStart(guest)}
-                                          >
-                                            {isPartial ? 'Pay Remaining' : 'Record Payment'}
-                                          </Button>
-                                        </>
-                                      )}
-                                      {/* WhatsApp Reminder for pending guests */}
-                                      {!isPaid && guest.mobile_number && !guest.mobile_number.includes('•') && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-7 text-xs gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-                                          onClick={() => openReminder(guest, roomNo)}
-                                        >
-                                          <MessageCircle className="h-3.5 w-3.5" />
-                                          Remind
-                                        </Button>
-                                      )}
-                                    </div>
 
                                     {/* Notes */}
                                     {guest.notes && (

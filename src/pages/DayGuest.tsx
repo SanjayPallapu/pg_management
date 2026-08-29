@@ -162,13 +162,13 @@ const DayGuestPage = () => {
 
   return (
     <AppLayout title={`Day Guest — Room ${roomNo}`}>
-      <div className="p-2 sm:p-4 space-y-4 max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 py-4 space-y-4 max-w-2xl mx-auto">
         {/* Uploaded Illustration Header Banner - Clean, no border, no background */}
         <div className="w-full flex items-center justify-center pt-1 pb-1">
           <img
             src="/add-tenant-illustration.png"
             alt="Add Day Guest Illustration"
-            className="w-full max-w-[280px] sm:max-w-[320px] h-auto object-contain"
+            className="w-full max-w-[340px] sm:max-w-[380px] h-auto object-contain"
           />
         </div>
 

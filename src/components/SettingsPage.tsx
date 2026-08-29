@@ -46,6 +46,7 @@ import {
   ArrowLeft,
   FileBarChart,
   ContactRound,
+  Mic,
 } from "lucide-react";
 import {
   Sheet,
@@ -209,6 +210,18 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   };
 
   const isDark = theme === "dark";
+
+  const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
+
+  const toggleHideVoice = () => {
+    setHideVoice(prev => {
+      const next = !prev;
+      localStorage.setItem("hide_voice_agent", next ? "true" : "false");
+      window.dispatchEvent(new CustomEvent("voice_agent_visibility_change", { detail: { hidden: next } }));
+      toast.success(next ? "Voice Assistant button hidden" : "Voice Assistant button visible");
+      return next;
+    });
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -402,6 +415,19 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                   label="Notifications"
                   description="Manage push notification preferences"
                   onClick={() => setNotificationsOpen(true)}
+                />
+                <SettingItem
+                  icon={<Mic className="h-4 w-4 text-primary" />}
+                  label="Voice Assistant Button"
+                  description={hideVoice ? "Floating voice button is hidden" : "Floating voice button is visible"}
+                  onClick={() => toggleHideVoice()}
+                  trailing={
+                    <Switch
+                      checked={!hideVoice}
+                      onCheckedChange={() => toggleHideVoice()}
+                      className="pointer-events-none"
+                    />
+                  }
                 />
               </CardContent>
             </Card>
