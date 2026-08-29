@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bed, Users, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import vacancyImg from "@/assets/pg-hub/editorial/fill-vacancy.jpg";
 
 interface RoomStat {
   roomNo: string;
@@ -169,14 +170,14 @@ export const EmptyBedsSheet = ({
           </div>
         </div>
 
-        {/* By Sharing Type with Filters */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">By Sharing Type</h3>
+        {/* By Sharing Type with Filters & Vacancy Image */}
+        <div className="mb-4 p-3 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
+          <div className="flex items-center justify-between mb-2.5">
+            <h3 className="text-sm font-bold text-foreground">By Sharing Type</h3>
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 px-2">
+                <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg">
                   <SlidersHorizontal className="h-4 w-4" />
                   <span className="sr-only">Filters</span>
                 </Button>
@@ -237,31 +238,42 @@ export const EmptyBedsSheet = ({
             </Popover>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(bySharing)
-              .sort(([a], [b]) => Number(b) - Number(a))
-              .map(([capacity, data]) => (
-                <button
-                  key={capacity}
-                  onClick={() => setSharingFilter(sharingFilter === Number(capacity) ? null : Number(capacity))}
-                  className="inline-block"
-                >
-                  <Badge
-                    variant="outline"
-                    className={`py-1.5 px-3 cursor-pointer transition-colors ${
-                      sharingFilter === Number(capacity)
-                        ? 'bg-primary/15 border-primary'
-                        : 'hover:bg-accent/50'
-                    }`}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+              {Object.entries(bySharing)
+                .sort(([a], [b]) => Number(b) - Number(a))
+                .map(([capacity, data]) => (
+                  <button
+                    key={capacity}
+                    onClick={() => setSharingFilter(sharingFilter === Number(capacity) ? null : Number(capacity))}
+                    className="inline-block"
                   >
-                    <span className="font-medium">{capacity}-sharing</span>
-                    <span className="mx-2 text-muted-foreground">•</span>
-                    <span>{data.beds} beds</span>
-                    <span className="mx-2 text-muted-foreground">•</span>
-                    <span className="text-paid">₹{data.perBed.toLocaleString()}/bed</span>
-                  </Badge>
-                </button>
-              ))}
+                    <Badge
+                      variant="outline"
+                      className={`py-1.5 px-3 rounded-xl cursor-pointer transition-all ${
+                        sharingFilter === Number(capacity)
+                          ? 'bg-primary/15 border-primary text-primary font-bold'
+                          : 'hover:bg-accent/50'
+                      }`}
+                    >
+                      <span className="font-bold">{capacity}-sharing</span>
+                      <span className="mx-1.5 text-muted-foreground">•</span>
+                      <span>{data.beds} beds</span>
+                      <span className="mx-1.5 text-muted-foreground">•</span>
+                      <span className="text-paid font-semibold">₹{data.perBed.toLocaleString()}/bed</span>
+                    </Badge>
+                  </button>
+                ))}
+            </div>
+
+            {/* Rightmost Fill Vacancy Editorial Image */}
+            <div className="shrink-0">
+              <img
+                src={vacancyImg}
+                alt="Fill Vacancy"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border border-border/60 shadow-xs"
+              />
+            </div>
           </div>
         </div>
 

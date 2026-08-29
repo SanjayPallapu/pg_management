@@ -1014,7 +1014,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
             ) : null}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {onEditRoom && (
               <button
                 type="button"
@@ -1022,9 +1022,10 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                   e.stopPropagation();
                   onEditRoom(room);
                 }}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                title="Room Settings"
               >
-                <Settings className="h-3.5 w-3.5" />
+                <Settings className="h-4 w-4" />
               </button>
             )}
             <button
@@ -1032,7 +1033,7 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
               onClick={() => {
                 onViewDetails(room);
               }}
-              className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+              className="flex items-center gap-1.5 text-sm text-primary hover:underline font-bold cursor-pointer"
             >
               Manage Room
             </button>
