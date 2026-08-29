@@ -1917,12 +1917,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               };
 
               const isPaid = tenant.payment.paymentStatus === "Paid";
+              const isDue = tenant.paymentCategory === "overdue" || tenant.paymentCategory === "advance-not-paid" || tenant.paymentCategory === "partial";
               const cardDesignClass = isPaid
                 ? "tenant-card-paid"
-                : isPartial
-                ? "rounded-2xl border border-amber-200 border-l-[5px] border-l-amber-500 bg-[#FFF9EE] dark:bg-[#251C14] dark:border-amber-900/50"
-                : tenant.paymentCategory === "overdue"
-                ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-[#FFF5F5] dark:bg-[#2B1717] dark:border-red-900/50"
+                : isDue
+                ? "rounded-2xl border border-red-200 border-l-[5px] border-l-red-500 bg-red-50 dark:bg-red-950/30 dark:border-red-900/50"
                 : "rounded-2xl border border-blue-200 border-l-[5px] border-l-blue-500 bg-[#F0F7FF] dark:bg-[#142032] dark:border-blue-900/50";
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 

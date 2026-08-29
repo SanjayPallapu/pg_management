@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { PaymentEntry } from '@/types';
 import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,14 +26,35 @@ export const DeletePaymentDialog = ({
 }: DeletePaymentDialogProps) => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
 
+  // Cache latest values to prevent content disappearing during exit animations
+  const cachedData = useRef({
+    tenantName,
+    monthlyRent,
+    paymentEntries
+  });
+
+  if (open && (tenantName || (paymentEntries && paymentEntries.length > 0))) {
+    cachedData.current = {
+      tenantName: tenantName || cachedData.current.tenantName,
+      monthlyRent: monthlyRent || cachedData.current.monthlyRent,
+      paymentEntries: (paymentEntries && paymentEntries.length > 0) ? paymentEntries : cachedData.current.paymentEntries,
+    };
+  }
+
+  const activeName = tenantName || cachedData.current.tenantName;
+  const activeRent = monthlyRent || cachedData.current.monthlyRent;
+  const activeEntries = (paymentEntries && paymentEntries.length > 0) ? paymentEntries : cachedData.current.paymentEntries;
+
   useBackGesture(open, () => {
-    setSelectedIndices([]);
     onOpenChange(false);
   });
 
   useEffect(() => {
     if (!open) {
-      setSelectedIndices([]);
+      const timer = setTimeout(() => {
+        setSelectedIndices([]);
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
@@ -42,10 +63,10 @@ export const DeletePaymentDialog = ({
   };
 
   const toggleAll = () => {
-    if (selectedIndices.length === paymentEntries.length) {
+    if (selectedIndices.length === activeEntries.length) {
       setSelectedIndices([]);
     } else {
-      setSelectedIndices(paymentEntries.map((_, i) => i));
+      setSelectedIndices(activeEntries.map((_, i) => i));
     }
   };
 
@@ -54,28 +75,26 @@ export const DeletePaymentDialog = ({
     newEntries,
     remainingBalance
   } = useMemo(() => {
-    const remaining = paymentEntries.filter((_, i) => !selectedIndices.includes(i));
+    const remaining = activeEntries.filter((_, i) => !selectedIndices.includes(i));
     const total = remaining.reduce((sum, entry) => sum + entry.amount, 0);
     return {
       newTotal: total,
       newEntries: remaining,
-      remainingBalance: monthlyRent - total
+      remainingBalance: activeRent - total
     };
-  }, [selectedIndices, paymentEntries, monthlyRent]);
+  }, [selectedIndices, activeEntries, activeRent]);
 
   const handleConfirm = () => {
     onConfirmDelete(selectedIndices, newTotal, newEntries);
-    setSelectedIndices([]);
     onOpenChange(false);
   };
 
   const handleCancel = () => {
-    setSelectedIndices([]);
     onOpenChange(false);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={(val) => { if (!val) handleCancel(); }}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-md w-[92vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl p-5 shadow-2xl z-[100]">
         <button
           type="button"
@@ -89,22 +108,22 @@ export const DeletePaymentDialog = ({
         <AlertDialogHeader className="pr-6">
           <AlertDialogTitle>Remove Payment Entries</AlertDialogTitle>
           <AlertDialogDescription>
-            Select which payment entries to remove for {tenantName}. Unselected entries will be kept.
+            Select which payment entries to remove for {activeName}. Unselected entries will be kept.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="py-2 space-y-3">
           {/* Select All option */}
-          {paymentEntries.length > 1 && (
+          {activeEntries.length > 1 && (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted transition-colors" onClick={toggleAll}>
-              <Checkbox checked={selectedIndices.length === paymentEntries.length} onCheckedChange={toggleAll} />
-              <span className="font-semibold text-sm">Select All ({paymentEntries.length} entries)</span>
+              <Checkbox checked={selectedIndices.length === activeEntries.length} onCheckedChange={toggleAll} />
+              <span className="font-semibold text-sm">Select All ({activeEntries.length} entries)</span>
             </div>
           )}
 
           {/* Payment entries list */}
           <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-            {paymentEntries.map((entry, index) => (
+            {activeEntries.map((entry, index) => (
               <div
                 key={index}
                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedIndices.includes(index) ? 'bg-destructive/10 border-destructive/30' : 'bg-card hover:bg-muted/50'}`}

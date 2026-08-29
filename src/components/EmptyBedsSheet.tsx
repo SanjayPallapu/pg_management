@@ -123,55 +123,8 @@ export const EmptyBedsSheet = ({
           </div>
         </div>
 
-        {/* Floor-wise Empty Beds */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Floor-wise Vacancy</h3>
-          <div className="space-y-2">
-            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => {
-              const isExpanded = floorFilter === floor;
-              const floorRooms = roomStats.filter(r => r.emptyBeds > 0 && r.floor === floor)
-                .sort((a, b) => a.roomNo.localeCompare(b.roomNo));
-              return (
-                <div key={floor} className={`rounded-lg border transition-colors ${isExpanded ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
-                  <button
-                    onClick={() => setFloorFilter(isExpanded ? null : floor)}
-                    className="w-full p-3 text-left flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="text-xs text-muted-foreground">Floor {floor}</div>
-                      <div className="text-lg font-bold">{emptyBeds} <span className="text-sm font-normal text-muted-foreground">/ {totalCapacity}</span></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-muted rounded-full h-1.5">
-                        <div className="bg-pending h-1.5 rounded-full transition-all" style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }} />
-                      </div>
-                      <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
-                    </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="px-3 pb-3 space-y-1.5">
-                      {floorRooms.map(room => (
-                        <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-md px-3 py-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold">{room.roomNo.replace(/^R/i, "")}</span>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">{room.capacity}-sharing</Badge>
-                          </div>
-                          <div className="flex items-center gap-1 text-pending font-medium">
-                            <Bed className="h-3 w-3" />
-                            <span>{room.emptyBeds} empty</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* By Sharing Type with Filters & Vacancy Image */}
-        <div className="mb-4 p-3 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
+        <div className="mb-4 p-3.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
           <div className="flex items-center justify-between mb-2.5">
             <h3 className="text-sm font-bold text-foreground">By Sharing Type</h3>
 
@@ -239,7 +192,7 @@ export const EmptyBedsSheet = ({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+            <div className="flex flex-wrap gap-2.5 flex-1 min-w-0">
               {Object.entries(bySharing)
                 .sort(([a], [b]) => Number(b) - Number(a))
                 .map(([capacity, data]) => (
@@ -250,17 +203,17 @@ export const EmptyBedsSheet = ({
                   >
                     <Badge
                       variant="outline"
-                      className={`py-1.5 px-3 rounded-xl cursor-pointer transition-all ${
+                      className={`py-2 px-3.5 rounded-xl cursor-pointer transition-all text-xs sm:text-sm ${
                         sharingFilter === Number(capacity)
-                          ? 'bg-primary/15 border-primary text-primary font-bold'
-                          : 'hover:bg-accent/50'
+                          ? 'bg-primary/15 border-primary text-primary font-extrabold shadow-xs'
+                          : 'hover:bg-accent/50 font-semibold'
                       }`}
                     >
                       <span className="font-bold">{capacity}-sharing</span>
                       <span className="mx-1.5 text-muted-foreground">•</span>
-                      <span>{data.beds} beds</span>
+                      <span className="font-semibold">{data.beds} beds</span>
                       <span className="mx-1.5 text-muted-foreground">•</span>
-                      <span className="text-paid font-semibold">₹{data.perBed.toLocaleString()}/bed</span>
+                      <span className="text-paid font-bold">₹{data.perBed.toLocaleString()}/bed</span>
                     </Badge>
                   </button>
                 ))}
@@ -283,43 +236,44 @@ export const EmptyBedsSheet = ({
         </div>
 
         {/* Room List */}
-        <div>
-          <div className="space-y-2">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-foreground mb-2.5">Available Rooms ({roomsWithEmptyBeds.length})</h3>
+          <div className="space-y-2.5">
             {roomsWithEmptyBeds.map(room => (
               <div
                 key={room.roomNo}
-                className="flex items-center justify-between p-3 rounded-xl border bg-card hover:bg-accent/30 transition-colors shadow-xs"
+                className="flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent/30 transition-colors shadow-xs"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <span className="text-xs font-black text-primary">{room.roomNo.replace(/^R/i, "")}</span>
+                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                    <span className="text-sm font-black text-primary">{room.roomNo.replace(/^R/i, "")}</span>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">
+                      <Badge variant="secondary" className="text-xs sm:text-sm px-2.5 py-0.5 font-bold">
                         {room.capacity}-sharing
                       </Badge>
                       {room.reservedBeds && room.reservedBeds > 0 ? (
-                        <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-[10px] py-0 px-1.5 font-bold">
+                        <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-xs py-0.5 px-2 font-bold">
                           {room.reservedBeds} Reserved
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                      <Users className="h-3 w-3" />
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mt-1">
+                      <Users className="h-3.5 w-3.5" />
                       <span>{room.occupied}/{room.capacity} occupied</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-1 text-sm font-medium text-pending">
-                    <Bed className="h-3.5 w-3.5" />
+                  <div className="flex items-center justify-end gap-1 text-sm sm:text-base font-bold text-pending">
+                    <Bed className="h-4 w-4" />
                     <span>{room.emptyBeds} empty</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground font-medium">
                     ₹{Math.round(room.perBedRent).toLocaleString()}/bed
                   </div>
-                  <div className="text-sm font-semibold text-paid">
+                  <div className="text-sm sm:text-base font-bold text-paid">
                     +₹{Math.round(room.potentialAdditionalRent).toLocaleString()}
                   </div>
                 </div>
@@ -333,12 +287,59 @@ export const EmptyBedsSheet = ({
               </div>
             )}
           </div>
+        </div>
 
-
+        {/* Floor-wise Vacancy (Moved to Bottom) */}
+        <div className="mb-4 p-3.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
+          <h3 className="text-sm font-bold text-foreground mb-2.5">Floor-wise Vacancy</h3>
+          <div className="space-y-2">
+            {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => {
+              const isExpanded = floorFilter === floor;
+              const floorRooms = roomStats.filter(r => r.emptyBeds > 0 && r.floor === floor)
+                .sort((a, b) => a.roomNo.localeCompare(b.roomNo));
+              return (
+                <div key={floor} className={`rounded-xl border transition-colors ${isExpanded ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
+                  <button
+                    onClick={() => setFloorFilter(isExpanded ? null : floor)}
+                    className="w-full p-3 text-left flex items-center justify-between cursor-pointer"
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground">Floor {floor}</div>
+                      <div className="text-base sm:text-lg font-bold text-foreground">
+                        {emptyBeds} <span className="text-xs sm:text-sm font-normal text-muted-foreground">/ {totalCapacity} total</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-muted rounded-full h-2">
+                        <div className="bg-pending h-2 rounded-full transition-all" style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-1.5">
+                      {floorRooms.map(room => (
+                        <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-lg px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold">{room.roomNo.replace(/^R/i, "")}</span>
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">{room.capacity}-sharing</Badge>
+                          </div>
+                          <div className="flex items-center gap-1 text-pending font-bold text-xs sm:text-sm">
+                            <Bed className="h-3.5 w-3.5" />
+                            <span>{room.emptyBeds} empty</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
+      </div>
+    </div>
+  </SheetContent>
+</Sheet>
+);
 };
