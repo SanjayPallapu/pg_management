@@ -124,6 +124,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         nameInput?.focus();
       }, 350);
     }
+  }, [isOpen, autoScrollToAdd]);
+
   const [isAddTenantFullScreenOpen, setIsAddTenantFullScreenOpen] = useState(autoScrollToAdd);
 
   useEffect(() => {
@@ -892,7 +894,8 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1748,6 +1751,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         </div>
       </div>
     </SheetContent>
+  </Sheet>
 
       {/* Full Screen Add Tenant Sheet */}
       <Sheet open={isAddTenantFullScreenOpen} onOpenChange={setIsAddTenantFullScreenOpen}>
@@ -1900,20 +1904,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         </SheetContent>
       </Sheet>
 
-          {/* Room Notes - Admin Only */}
-          {isAdmin && (
-            <div className="space-y-2">
-              <Label>Room Notes</Label>
-              <Textarea
-                placeholder="Add any notes about this room..."
-                value={room.notes || ""}
-                onChange={(e) => updateRoom.mutate({ ...room, notes: e.target.value })}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </SheetContent>
+
 
       {/* Enter Payment Amount Sheet */}
       <Sheet open={!!partialPaymentTenant} onOpenChange={(open) => !open && setPartialPaymentTenant(null)}>
@@ -2397,6 +2388,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       {/* Welcome Dialog for new tenants */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
 
-    </Sheet>
+    </>
   );
 };
