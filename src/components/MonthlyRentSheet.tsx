@@ -1613,7 +1613,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       {/* Motion Canvas Services & Tools — Arched card carousel using all /payflow product illustrations */}
       <div className="mt-1 mb-3 space-y-1.5">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">Quick Services</h2>
+          <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">All Services</h2>
           <span className="text-[11px] text-muted-foreground font-medium">Scroll for more →</span>
         </div>
         <div className="flex gap-3 sm:gap-3.5 overflow-x-auto pb-2 pt-1 px-1 snap-x touch-pan-x scrollbar-none">

@@ -948,6 +948,15 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
           </div>
 
+          {/* Room Welcome Banner Illustration */}
+          <div className="mt-3 overflow-hidden rounded-2xl border border-amber-200/60 dark:border-amber-900/40 shadow-sm bg-amber-500/5">
+            <img
+              src="/room-welcome-banner.png"
+              alt="Room & Tenant Onboarding"
+              className="w-full h-auto max-h-[160px] object-cover object-center rounded-2xl"
+            />
+          </div>
+
           {/* Current Tenants */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">

@@ -83,9 +83,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 3 * 60 * 1000, // 3 min default staleness
+      staleTime: 1 * 60 * 1000, // 1 min staleness for snappy updates
       gcTime: 15 * 60 * 1000,   // 15 min garbage collection
-      refetchOnWindowFocus: false, // prevent refetch storms
+      refetchOnWindowFocus: true, // auto refetch when app opens/gains focus
       retry: 1,                   // single retry on failure
       refetchOnReconnect: true,
     },
@@ -98,6 +98,17 @@ const AppContent = () => {
 
   useEffect(() => {
     captureReferralCodeFromUrl();
+  }, []);
+
+  // Sync fresh state from DB whenever app returns to foreground
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void queryClient.invalidateQueries();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   useEffect(() => {

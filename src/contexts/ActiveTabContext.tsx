@@ -13,7 +13,15 @@ const ActiveTabContext = createContext<ActiveTabContextType>({
 export const useActiveTab = () => useContext(ActiveTabContext);
 
 export const ActiveTabProvider = ({ children }: { children: ReactNode }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTabState] = useState<string>(() => {
+    return localStorage.getItem('pg_active_tab') || 'dashboard';
+  });
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    localStorage.setItem('pg_active_tab', tab);
+  };
+
   return (
     <ActiveTabContext.Provider value={{ activeTab, setActiveTab }}>
       {children}

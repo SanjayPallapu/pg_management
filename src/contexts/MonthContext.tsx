@@ -19,8 +19,24 @@ export const useMonthContext = () => {
 
 export const MonthProvider = ({ children }: { children: ReactNode }) => {
   const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonthState] = useState<number>(() => {
+    const saved = localStorage.getItem('pg_selected_month');
+    return saved ? parseInt(saved, 10) : currentDate.getMonth() + 1;
+  });
+  const [selectedYear, setSelectedYearState] = useState<number>(() => {
+    const saved = localStorage.getItem('pg_selected_year');
+    return saved ? parseInt(saved, 10) : currentDate.getFullYear();
+  });
+
+  const setSelectedMonth = (month: number) => {
+    setSelectedMonthState(month);
+    localStorage.setItem('pg_selected_month', String(month));
+  };
+
+  const setSelectedYear = (year: number) => {
+    setSelectedYearState(year);
+    localStorage.setItem('pg_selected_year', String(year));
+  };
 
   return (
     <MonthContext.Provider value={{ selectedMonth, selectedYear, setSelectedMonth, setSelectedYear }}>

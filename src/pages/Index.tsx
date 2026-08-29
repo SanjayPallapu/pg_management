@@ -55,10 +55,11 @@ const Index = () => {
   const [autoScrollToAdd, setAutoScrollToAdd] = useState(false);
   const [searchParams] = useSearchParams();
   const { setActiveTab: setContextTab } = useActiveTab();
-  const [activeTab, setActiveTabLocal] = useState(searchParams.get('tab') || 'dashboard');
+  const [activeTab, setActiveTabLocal] = useState(() => searchParams.get('tab') || localStorage.getItem('pg_active_tab') || 'dashboard');
   const setActiveTab = (tab: string) => {
     setActiveTabLocal(tab);
     setContextTab(tab);
+    localStorage.setItem('pg_active_tab', tab);
     // Close all open dialogs/sheets when switching tabs
     setIsDialogOpen(false);
     setSelectedRoom(null);

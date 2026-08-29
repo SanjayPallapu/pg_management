@@ -82,13 +82,14 @@ export const RoomQuickNav = ({ rooms, payments, month, year, onSelect }: Props) 
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isExpanded && "rotate-180")} />
         </button>
         <div className={cn("quick-room-strip", isExpanded ? "expanded mt-2" : "collapsed")}>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5 p-2 sm:p-3 rounded-xl bg-muted/20 border border-border/40">
             {items.map((item) => (
               <button
                 key={item.roomNo}
                 onClick={() => onSelect(item.roomNo)}
+                type="button"
                 className={cn(
-                  "min-w-0 px-0.5 py-1.5 text-[11px] font-semibold rounded-md border transition-all hover:scale-105 active:scale-95",
+                  "w-full h-9 px-1 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer",
                   colorFor[item.status],
                 )}
                 title={`Room ${item.roomNo} • ${item.status}`}
