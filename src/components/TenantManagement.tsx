@@ -45,6 +45,8 @@ import {
   Contact,
   ClipboardList,
   CalendarClock,
+  Check,
+  CircleCheckBig,
 } from "lucide-react";
 import {
   pickContactFromDevice,
@@ -286,6 +288,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   });
   const [includeSecurityDeposit, setIncludeSecurityDeposit] = useState(false);
   const FIXED_SECURITY_DEPOSIT = 2000;
+  const [customSecurityDeposit, setCustomSecurityDeposit] = useState<number>(2000);
 
   const [numberSelectOpen, setNumberSelectOpen] = useState(false);
   const [numbersToSelect, setNumbersToSelect] = useState<string[]>([]);
@@ -428,6 +431,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       startDate: newTenant.startDate || new Date().toISOString().split("T")[0],
       monthlyRent: newTenant.monthlyRent || Math.floor(room.rentAmount / room.capacity),
       paymentStatus: newTenant.paymentStatus || ("Pending" as const),
+      securityDepositAmount: includeSecurityDeposit ? customSecurityDeposit : undefined,
     };
 
     try {
@@ -463,7 +467,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       roomNo: room.roomNo,
       sharingType: `${room.capacity} Sharing`,
       monthlyRent: tenant.monthlyRent,
-      securityDeposit: includeSecurityDeposit ? FIXED_SECURITY_DEPOSIT : undefined,
+      securityDeposit: includeSecurityDeposit ? customSecurityDeposit : undefined,
     });
     setIsAddTenantFullScreenOpen(false);
     setWelcomeDialogOpen(true);
@@ -1409,7 +1413,17 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                             </div>
                           </div>
                           <div className="flex items-center justify-end">
-                            {isPartial ? (
+                            {isPaid ? (
+                              <button
+                                type="button"
+                                onClick={() => handlePaymentToggle(tenant.id, false)}
+                                className="badge-paid-periwinkle px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-85 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                title="Click to undo / edit payment"
+                              >
+                                <CircleCheckBig className="h-4 w-4" />
+                                <span>Paid</span>
+                              </button>
+                            ) : isPartial ? (
                               <Button
                                 onClick={() => handlePayRemaining(tenant.id)}
                                 className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-xl font-bold text-xs px-4"
@@ -1417,13 +1431,15 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 Pay Remaining
                               </Button>
                             ) : (
-                              <div className="flex items-center space-x-2.5 bg-background/60 px-3 py-1.5 rounded-xl border border-border/50">
-                                <Label className="text-xs font-semibold cursor-pointer select-none">Rent Paid</Label>
-                                <Switch
-                                  checked={isTenantPaidForMonth(tenant.id)}
-                                  onCheckedChange={(checked) => handlePaymentToggle(tenant.id, checked)}
-                                />
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handlePaymentToggle(tenant.id, true)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                title="Click to mark as paid"
+                              >
+                                <Check className="h-4 w-4" />
+                                <span>Mark Paid</span>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -1854,21 +1870,42 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   </div>
                 </div>
 
-                {/* Security Deposit Toggle */}
-                <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
-                  <div className="flex flex-col">
-                    <Label htmlFor="securityDeposit-fs" className="cursor-pointer font-medium text-sm">
-                      Include Security Deposit
-                    </Label>
-                    <span className="text-xs text-muted-foreground">
-                      Fixed amount: ₹{FIXED_SECURITY_DEPOSIT.toLocaleString()}
-                    </span>
+                {/* Security Deposit Toggle & Editable Input */}
+                <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <Label htmlFor="securityDeposit-fs" className="cursor-pointer font-semibold text-sm text-foreground">
+                        Include Security Deposit
+                      </Label>
+                      <span className="text-xs text-muted-foreground">
+                        {includeSecurityDeposit ? "Editable deposit amount" : `Default: ₹${FIXED_SECURITY_DEPOSIT.toLocaleString()}`}
+                      </span>
+                    </div>
+                    <Switch
+                      id="securityDeposit-fs"
+                      checked={includeSecurityDeposit}
+                      onCheckedChange={setIncludeSecurityDeposit}
+                    />
                   </div>
-                  <Switch
-                    id="securityDeposit-fs"
-                    checked={includeSecurityDeposit}
-                    onCheckedChange={setIncludeSecurityDeposit}
-                  />
+
+                  {includeSecurityDeposit && (
+                    <div className="pt-2 border-t border-border/50 space-y-1.5 animate-in fade-in-50 duration-200">
+                      <Label htmlFor="securityDepositAmount-fs" className="text-xs font-semibold text-muted-foreground">
+                        Deposit Amount (₹)
+                      </Label>
+                      <div className="relative flex items-center">
+                        <Wallet className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                        <Input
+                          id="securityDepositAmount-fs"
+                          type="number"
+                          value={customSecurityDeposit}
+                          onChange={(e) => setCustomSecurityDeposit(Math.max(0, parseInt(e.target.value) || 0))}
+                          placeholder="Enter deposit amount"
+                          className="pl-11 bg-background border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

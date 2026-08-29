@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +17,8 @@ import { cn } from '@/lib/utils';
 import { useDayGuests, DayGuest } from '@/hooks/useDayGuests';
 import { useRooms } from '@/hooks/useRooms';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Calendar, SquarePen, Trash2, Loader2, IndianRupee, ArrowLeft, MessageCircle, TrendingUp, AlertTriangle, UserPlus, Plus, Users, DoorOpen } from 'lucide-react';
+import { isTenantActiveNow } from '@/utils/dateOnly';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
@@ -49,6 +51,7 @@ interface EditingGuest {
 }
 
 export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
+  const navigate = useNavigate();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { dayGuests, isLoading, updateDayGuest, deleteDayGuest } = useDayGuests();
   const { rooms } = useRooms();
@@ -274,41 +277,113 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
           className="w-full max-w-full sm:max-w-xl p-0 [&>button]:hidden bg-slate-50 dark:bg-slate-900"
         >
           <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
-            <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background sticky top-0 z-10 shrink-0">
+            {/* Header */}
+            <SheetHeader className="px-4 pt-4 pb-3 border-b bg-background sticky top-0 z-10 shrink-0">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onOpenChange(false)}>
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <SheetTitle className="text-base text-foreground font-bold text-left flex-1 min-w-0 truncate">
-                  Day Guest Details - {monthName}
+                  Day Guest Hub - {monthName}
                 </SheetTitle>
-              </div>
-              <div className="grid grid-cols-2 gap-6 mt-2">
-                <div className="bg-paid/10 rounded-lg p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Collected</p>
-                  <p className="text-base font-bold text-paid">₹{totalCollected.toLocaleString()}</p>
-                </div>
-                <div className="bg-pending/10 rounded-lg p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                  <p className="text-base font-bold text-pending">₹{totalPending.toLocaleString()}</p>
-                </div>
               </div>
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto bg-background">
-            <div className="p-4 space-y-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="p-4 space-y-6">
+                
+                {/* SECTION 1: Amount Collected and Pending */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      Revenue Overview ({monthName})
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Collected</span>
+                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1.5">
+                        ₹{totalCollected.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Pending</span>
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <p className="text-xl font-black text-amber-700 dark:text-amber-300 mt-1.5">
+                        ₹{totalPending.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              ) : Object.keys(guestsByRoom).length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  No day guests for {monthName}
+
+                {/* SECTION 2: Select Room to Add Day Guest */}
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <UserPlus className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-bold text-foreground">Select Room to Add Day Guest</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Tap room to add</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                    {(rooms || []).map((room) => {
+                      const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
+                      const available = Math.max(0, room.capacity - activeTenantsCount);
+                      return (
+                        <div
+                          key={room.id}
+                          onClick={() => {
+                            onOpenChange(false);
+                            navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`);
+                          }}
+                          className="p-3 rounded-2xl border border-border/80 bg-card hover:border-primary/50 hover:bg-primary/5 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
+                        >
+                          <span className="text-base font-black text-foreground group-hover:text-primary transition-colors">
+                            {room.roomNo}
+                          </span>
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                            {available} bed{available === 1 ? '' : 's'} free
+                          </span>
+                          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                            <Plus className="h-2.5 w-2.5" />
+                            <span>Add Guest</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              ) : (
-                Object.entries(guestsByRoom)
-                  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-                  .map(([roomNo, guests]) => (
+
+                {/* SECTION 3: Day Guests Present */}
+                <div className="space-y-3 pt-3 border-t border-border/70">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-4 w-4 text-foreground" />
+                      <h3 className="text-sm font-bold text-foreground">
+                        Day Guests Present ({dayGuests.length})
+                      </h3>
+                    </div>
+                  </div>
+
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : Object.keys(guestsByRoom).length === 0 ? (
+                    <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-muted-foreground/20 text-muted-foreground">
+                      <p className="text-sm font-medium">No day guests present for {monthName}</p>
+                      <p className="text-xs text-muted-foreground/80 mt-1">Select a room above to add a new day guest</p>
+                    </div>
+                  ) : (
+                    Object.entries(guestsByRoom)
+                      .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+                      .map(([roomNo, guests]) => (
                     <Card key={roomNo}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -480,11 +555,12 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                     </Card>
                   ))
               )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Dialog */}
       <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

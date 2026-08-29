@@ -475,13 +475,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                   alt={banner.id}
                   className="w-full h-full object-cover"
                 />
-                {banner.badge && (
-                  <div className="absolute top-2.5 right-2.5 z-10">
-                    <span className={`px-2.5 py-1 text-[10px] sm:text-xs font-bold text-white rounded-full shadow-sm ${banner.badgeColor}`}>
-                      {banner.badge}
-                    </span>
-                  </div>
-                )}
               </div>
             ))}
           </div>
