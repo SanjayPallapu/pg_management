@@ -28,6 +28,7 @@ import {
   DoorOpen,
   CircleCheckBig,
   Gift,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -537,9 +538,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
             <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Security<br/>Deposit</span>
           </div>
 
-          <div onClick={() => navigate("/referrals")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
-            <div className="bg-amber-500/10 p-2 sm:p-2.5 rounded-full"><Gift className="w-5 h-5 text-amber-500" /></div>
-            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Refer<br/>&amp; Earn</span>
+          <div onClick={() => setDayGuestSheetOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
+            <div className="bg-teal-500/10 p-2 sm:p-2.5 rounded-full"><CalendarDays className="w-5 h-5 text-teal-500" /></div>
+            <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Day<br/>Guest</span>
           </div>
 
           <div onClick={() => setActiveSheet("tenant-pricing")} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">

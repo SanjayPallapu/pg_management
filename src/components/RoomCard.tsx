@@ -638,171 +638,154 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Rent amount display on right */}
-                    <div className="text-right flex flex-col items-end justify-center">
-                      <span className="text-xs font-bold text-foreground">₹{tenant.monthlyRent.toLocaleString()}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {/* Call badge - fixed position */}
+                    {tenant.phone && tenant.phone !== "••••••••••" ? (
+                      <a
+                        href={`tel:${tenant.phone}`}
+                        className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400 shrink-0"
+                        title={`Call ${tenant.name}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Phone className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <div className="h-8 w-8 shrink-0" aria-hidden="true" />
+                    )}
+                    {/* WhatsApp dropdown menu - Always visible */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className={`grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 transition-colors shrink-0 ${whatsappSent ? "bg-emerald-500/20 text-emerald-600" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"}`}
+                          title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
+                          className="gap-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
+                        </DropdownMenuItem>
+                        {(isPaid || isPartial) && (
+                          <DropdownMenuItem onClick={handlePaidClick} className="gap-2">
+                            <Receipt className="h-4 w-4" />
+                            Generate Receipt
+                          </DropdownMenuItem>
+                        )}
+                        {tenant.phone && tenant.phone !== "••••••••••" && (
+                          <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            Chat with Tenant
+                          </DropdownMenuItem>
+                        )}
+                        {tenant.phone && tenant.phone !== "••••••••••" && !isPaid && (
+                          <DropdownMenuItem onClick={openPaymentReminder} className="gap-2">
+                            <Bell className="h-4 w-4" />
+                            Payment Reminder
+                          </DropdownMenuItem>
+                        )}
+                        {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // Dispatch custom event to open security deposit dialog directly
+                              const event = new CustomEvent('openSecurityDeposit', { 
+                                detail: { 
+                                  tenantId: tenant.id,
+                                  tenantName: tenant.name,
+                                  tenantPhone: tenant.phone,
+                                  roomNo: room.roomNo,
+                                  roomCapacity: room.capacity
+                                } 
+                              });
+                              setTimeout(() => {
+                                window.dispatchEvent(event);
+                              }, 100);
+                            }}
+                            className="gap-2"
+                          >
+                            <Wallet className="h-4 w-4" />
+                            Security Deposit
+                          </DropdownMenuItem>
+                        )}
+                        {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // Dispatch custom event to open security deposit receipt dialog directly
+                              const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                detail: { 
+                                  tenantId: tenant.id
+                                } 
+                              });
+                              setTimeout(() => {
+                                window.dispatchEvent(event);
+                              }, 100);
+                            }}
+                            className="gap-2"
+                          >
+                            <Receipt className="h-4 w-4" />
+                            Security Deposit Receipt
+                          </DropdownMenuItem>
+                        )}
+                        {tenant.phone && tenant.phone !== "••••••••••" && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setWelcomeData({
+                                tenantName: tenant.name,
+                                tenantPhone: tenant.phone,
+                                joiningDate: tenant.startDate,
+                                roomNo: room.roomNo,
+                                sharingType: `${room.capacity} Sharing`,
+                                monthlyRent: tenant.monthlyRent,
+                              });
+                              setTimeout(() => {
+                                setWelcomeDialogOpen(true);
+                              }, 100);
+                            }}
+                            className="gap-2"
+                          >
+                            <PartyPopper className="h-4 w-4" />
+                            Welcome
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                            onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
+                            className="gap-2"
+                          >
+                            <ClipboardList className="h-4 w-4" />
+                            {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    {/* Fixed status area container */}
+                    <div className="w-[68px] flex justify-center shrink-0">
                       {isPaid ? (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold leading-none">Paid</span>
-                      ) : isPartial ? (
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold leading-none">Partial</span>
+                        <button
+                          type="button"
+                          onClick={handlePaidClick}
+                          className="badge-paid-periwinkle w-full justify-center text-center cursor-pointer hover:opacity-85 text-[11px] py-0.5"
+                        >
+                          Paid
+                        </button>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground font-medium leading-none">Pending</span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            `w-full justify-center text-center text-[11px] font-semibold px-1 py-0.5 ${
+                              isPartial
+                                ? "bg-partial text-partial-foreground cursor-pointer hover:opacity-80"
+                                : "bg-pending text-pending-foreground"
+                            }`
+                          }
+                          onClick={isPartial ? handlePaidClick : undefined}
+                        >
+                          {isPartial ? "Partial" : "Not Paid"}
+                        </Badge>
                       )}
-                    </div>
-
-                    {/* Action Group: Call & Chat on top, Paid Badge matching full width */}
-                    <div className="flex flex-col items-end gap-1 shrink-0 w-[72px]">
-                      <div className="flex items-center gap-1.5 w-full">
-                        {/* Call badge */}
-                        {tenant.phone && tenant.phone !== "••••••••••" ? (
-                          <a
-                            href={`tel:${tenant.phone}`}
-                            className="flex-1 h-7 flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
-                            title={`Call ${tenant.name}`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                          </a>
-                        ) : (
-                          <div className="flex-1 h-7" aria-hidden="true" />
-                        )}
-                        {/* WhatsApp dropdown menu */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className={`flex-1 h-7 flex items-center justify-center rounded-lg border border-emerald-500/20 transition-colors ${whatsappSent ? "bg-emerald-500/20 text-emerald-600" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"}`}
-                              title={whatsappSent ? "Receipt sent - Click for options" : "WhatsApp options"}
-                            >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
-                              className="gap-2"
-                            >
-                              <FileText className="h-4 w-4" />
-                              {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
-                            </DropdownMenuItem>
-                            {(isPaid || isPartial) && (
-                              <DropdownMenuItem onClick={handlePaidClick} className="gap-2">
-                                <Receipt className="h-4 w-4" />
-                                Generate Receipt
-                              </DropdownMenuItem>
-                            )}
-                            {tenant.phone && tenant.phone !== "••••••••••" && (
-                              <DropdownMenuItem onClick={openWhatsAppChat} className="gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                Chat with Tenant
-                              </DropdownMenuItem>
-                            )}
-                            {tenant.phone && tenant.phone !== "••••••••••" && !isPaid && (
-                              <DropdownMenuItem onClick={openPaymentReminder} className="gap-2">
-                                <Bell className="h-4 w-4" />
-                                Payment Reminder
-                              </DropdownMenuItem>
-                            )}
-                            {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  // Dispatch custom event to open security deposit dialog directly
-                                  const event = new CustomEvent('openSecurityDeposit', { 
-                                    detail: { 
-                                      tenantId: tenant.id,
-                                      tenantName: tenant.name,
-                                      tenantPhone: tenant.phone,
-                                      roomNo: room.roomNo,
-                                      roomCapacity: room.capacity
-                                    } 
-                                  });
-                                  setTimeout(() => {
-                                    window.dispatchEvent(event);
-                                  }, 100);
-                                }}
-                                className="gap-2"
-                              >
-                                <Wallet className="h-4 w-4" />
-                                Security Deposit
-                              </DropdownMenuItem>
-                            )}
-                            {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  // Dispatch custom event to open security deposit receipt dialog directly
-                                  const event = new CustomEvent('openSecurityDepositReceipt', { 
-                                    detail: { 
-                                      tenantId: tenant.id
-                                    } 
-                                  });
-                                  setTimeout(() => {
-                                    window.dispatchEvent(event);
-                                  }, 100);
-                                }}
-                                className="gap-2"
-                              >
-                                <Receipt className="h-4 w-4" />
-                                Security Deposit Receipt
-                              </DropdownMenuItem>
-                            )}
-                            {tenant.phone && tenant.phone !== "••••••••••" && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setWelcomeData({
-                                    tenantName: tenant.name,
-                                    tenantPhone: tenant.phone,
-                                    joiningDate: tenant.startDate,
-                                    roomNo: room.roomNo,
-                                    sharingType: `${room.capacity} Sharing`,
-                                    monthlyRent: tenant.monthlyRent,
-                                  });
-                                  setTimeout(() => {
-                                    setWelcomeDialogOpen(true);
-                                  }, 100);
-                                }}
-                                className="gap-2"
-                              >
-                                <PartyPopper className="h-4 w-4" />
-                                Welcome
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                                onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
-                                className="gap-2"
-                              >
-                                <ClipboardList className="h-4 w-4" />
-                                {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
-                              </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      {/* Fixed status area container matching width of Call and Chat buttons */}
-                      <div className="w-full">
-                        {isPaid ? (
-                          <button
-                            type="button"
-                            onClick={handlePaidClick}
-                            className="badge-paid-periwinkle w-full justify-center text-center cursor-pointer hover:opacity-85 text-[10.5px] py-0.5 rounded-lg font-bold"
-                          >
-                            Paid
-                          </button>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className={
-                              `w-full justify-center text-center text-[10.5px] font-semibold px-1 py-0.5 rounded-lg ${
-                                isPartial
-                                  ? "bg-partial text-partial-foreground cursor-pointer hover:opacity-80"
-                                  : "bg-pending text-pending-foreground"
-                              }`
-                            }
-                            onClick={isPartial ? handlePaidClick : undefined}
-                          >
-                            {isPartial ? "Partial" : "Not Paid"}
-                          </Badge>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>

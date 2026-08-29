@@ -1151,15 +1151,14 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                           )}
 
                           {!isEditing && (
-                            <>
-                              {/* Action buttons (Call & WhatsApp) */}
-                              {tenant.phone && tenant.phone !== "••••••••••" && (
-                                <div className="flex items-center gap-1.5">
+                            <div className="flex flex-col items-end gap-1.5 shrink-0 w-[80px]">
+                              {tenant.phone && tenant.phone !== "••••••••••" ? (
+                                <div className="flex items-center gap-1.5 w-full">
                                   {/* Call button */}
                                   <a
                                     href={`tel:${tenant.phone}`}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                                    className="flex-1 h-9 flex items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                                     title={`Call ${tenant.name}`}
                                     aria-label={`Call ${tenant.name}`}
                                   >
@@ -1171,7 +1170,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                     <DropdownMenuTrigger asChild>
                                       <button
                                         onClick={(e) => e.stopPropagation()}
-                                        className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                                        className="flex-1 h-9 flex items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                                         title="WhatsApp & Profile options"
                                         aria-label="WhatsApp & Profile options"
                                       >
@@ -1302,26 +1301,28 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                           Security Deposit Receipt
                                         </DropdownMenuItem>
                                       )}
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setWelcomeData({
-                                            tenantName: tenant.name,
-                                            tenantPhone: tenant.phone,
-                                            joiningDate: tenant.startDate,
-                                            roomNo: room.roomNo,
-                                            sharingType: `${room.capacity} Sharing`,
-                                            monthlyRent: tenant.monthlyRent,
-                                            securityDeposit: undefined,
-                                          });
-                                          setTimeout(() => {
-                                            setWelcomeDialogOpen(true);
-                                          }, 100);
-                                        }}
-                                        className="gap-2"
-                                      >
-                                        <PartyPopper className="h-4 w-4" />
-                                        Welcome
-                                      </DropdownMenuItem>
+                                      {tenant.phone && tenant.phone !== "••••••••••" && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setWelcomeData({
+                                              tenantName: tenant.name,
+                                              tenantPhone: tenant.phone,
+                                              joiningDate: tenant.startDate,
+                                              roomNo: room.roomNo,
+                                              sharingType: `${room.capacity} Sharing`,
+                                              monthlyRent: tenant.monthlyRent,
+                                              securityDeposit: undefined,
+                                            });
+                                            setTimeout(() => {
+                                              setWelcomeDialogOpen(true);
+                                            }, 100);
+                                          }}
+                                          className="gap-2"
+                                        >
+                                          <PartyPopper className="h-4 w-4" />
+                                          Welcome
+                                        </DropdownMenuItem>
+                                      )}
                                       <DropdownMenuItem
                                         onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
                                         className="gap-2"
@@ -1332,25 +1333,25 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </div>
-                              )}
+                              ) : null}
 
-                              {/* Payment Status Pill / Badge */}
-                              <div className="mt-0.5 flex justify-end">
+                              {/* Payment Status Pill / Badge matching width of Call and WhatsApp buttons */}
+                              <div className="w-full">
                                 {isPaid ? (
-                                  <span className="badge-paid-periwinkle">
+                                  <span className="badge-paid-periwinkle w-full justify-center text-center block text-[11px] py-1 rounded-lg font-bold">
                                     Paid
                                   </span>
                                 ) : isPartial ? (
-                                  <span className="price-badge-red text-[10px] sm:text-xs px-2.5 py-0.5 font-bold">
+                                  <span className="price-badge-red w-full justify-center text-center block text-[10px] sm:text-xs py-1 font-bold rounded-lg">
                                     ₹{remaining.toLocaleString()}
                                   </span>
                                 ) : (
-                                  <Badge variant="outline" className={cn("text-[11px] font-semibold px-2 py-0.5", getTenantStyles(tenant).badge)}>
+                                  <Badge variant="outline" className={cn("w-full justify-center text-center text-[11px] font-semibold py-1 rounded-lg block", getTenantStyles(tenant).badge)}>
                                     {getPaymentStatusForMonth(tenant.id)}
                                   </Badge>
                                 )}
                               </div>
-                            </>
+                            </div>
                           )}
 
                           {isEditing && (
@@ -1400,28 +1401,28 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                       </div>
 
                       {!isEditing && (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between gap-4 pt-1">
                           <div>
-                            <Label>Monthly Rent</Label>
-                            <div className="text-lg font-semibold bg-background/50 rounded-lg px-3 py-2">
+                            <Label className="text-xs text-muted-foreground font-medium">Monthly Rent</Label>
+                            <div className="text-base font-bold bg-background/60 rounded-xl px-3 py-1.5 border border-border/50">
                               ₹{tenant.monthlyRent.toLocaleString()}
                             </div>
                           </div>
-                          <div className="flex items-end">
+                          <div className="flex items-center justify-end">
                             {isPartial ? (
                               <Button
                                 onClick={() => handlePayRemaining(tenant.id)}
-                                className="w-full bg-foreground text-background hover:bg-foreground/90"
+                                className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-xl font-bold text-xs px-4"
                               >
                                 Pay Remaining
                               </Button>
                             ) : (
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2.5 bg-background/60 px-3 py-1.5 rounded-xl border border-border/50">
+                                <Label className="text-xs font-semibold cursor-pointer select-none">Rent Paid</Label>
                                 <Switch
                                   checked={isTenantPaidForMonth(tenant.id)}
                                   onCheckedChange={(checked) => handlePaymentToggle(tenant.id, checked)}
                                 />
-                                <Label>Rent Paid</Label>
                               </div>
                             )}
                           </div>
@@ -1873,7 +1874,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
             </div>
 
             {/* Action Footer */}
-            <div className="shrink-0 border-t bg-background p-4">
+            <div className="shrink-0 border-t bg-background p-4 pb-24 sm:pb-6">
               <Button
                 onClick={handleAddTenant}
                 disabled={!newTenant.name || !newTenant.phone || addTenant.isPending}
