@@ -190,7 +190,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
   const [rulesShareData, setRulesShareData] = useState<{ tenantName: string; tenantPhone: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeEnabled, setEditModeEnabled] = useState(false);
+
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [downloadType, setDownloadType] = useState<"year" | "month" | "history">("month");
   const [downloadMonth, setDownloadMonth] = useState(selectedMonth);
@@ -1716,43 +1716,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         </div>
       </div>
 
-      {/* Header/Action Row */}
-      <div className="flex items-center justify-between w-full">
-        {/* Edit Mode Toggle on the leftmost side */}
-        <div className="flex items-center gap-1.5 bg-muted/50 dark:bg-slate-900 px-2 py-1 rounded-lg border border-border">
-          <label htmlFor="edit-mode" className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none">
-            Edit Mode
-          </label>
-          <Switch
-            id="edit-mode"
-            checked={editModeEnabled}
-            onCheckedChange={setEditModeEnabled}
-            className="data-[state=checked]:bg-destructive scale-75 origin-right"
-          />
-        </div>
-        
-        {/* Action buttons on the right side */}
-        <div className="flex gap-1.5 items-center">
-          <Button
-            onClick={() => setPendingSheetOpen(true)}
-            variant="outline"
-            size="icon"
-            title="Select Pending Tenants"
-            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30 h-8 w-8 shrink-0 border-amber-300/40"
-          >
-            <AlertTriangle className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setHistoryOpen(true)} variant="outline" size="icon" title="Payment History" className="h-8 w-8 shrink-0">
-            <History className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setPgRulesOpen(true)} variant="outline" size="icon" title="PG Rules & Regulations" className="h-8 w-8 shrink-0">
-            <FileText className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setDownloadDialogOpen(true)} variant="outline" size="icon" title="Export Excel" className="h-8 w-8 shrink-0">
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+
 
       <div className="space-y-4">
 
@@ -2098,14 +2062,11 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
                         {isPaid ? (
                           <button
                             type="button"
-                            className="badge-paid-periwinkle w-full px-0 text-center block cursor-pointer"
-                            onClick={() => {
-                              if (editModeEnabled) {
-                                handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus);
-                              }
-                            }}
+                            className="badge-paid-periwinkle w-full px-0 text-center block cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                            onClick={() => handlePaymentToggle(tenant.id, tenant.name, tenant.payment.paymentStatus)}
+                            title="Click to edit or undo payment"
                           >
-                            {editModeEnabled ? "Undo Paid" : "Paid"}
+                            Paid
                           </button>
                         ) : isPartial ? (
                           <button

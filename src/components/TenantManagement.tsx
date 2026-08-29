@@ -124,7 +124,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         nameInput?.focus();
       }, 350);
     }
-  }, [isOpen, autoScrollToAdd]);
+  const [isAddTenantFullScreenOpen, setIsAddTenantFullScreenOpen] = useState(autoScrollToAdd);
+
+  useEffect(() => {
+    if (autoScrollToAdd) {
+      setIsAddTenantFullScreenOpen(true);
+    }
+  }, [autoScrollToAdd]);
 
   // Handle OS back gesture to close dialog
   useBackGesture(isOpen, onClose);
@@ -468,6 +474,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
       monthlyRent: tenant.monthlyRent,
       securityDeposit: includeSecurityDeposit ? FIXED_SECURITY_DEPOSIT : undefined,
     });
+    setIsAddTenantFullScreenOpen(false);
     setWelcomeDialogOpen(true);
     // Reset security deposit toggle for next tenant
     setIncludeSecurityDeposit(false);
@@ -1715,82 +1722,138 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
               </div>
             )}
 
-          {/* Add New Tenant - Admin Only */}
+          {/* Add New Tenant Button - Triggers Full Screen Form */}
           {canManageTenants && availableBeds > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add New Tenant ({availableBeds} beds available)
-              </h3>
+            <Button
+              type="button"
+              onClick={() => setIsAddTenantFullScreenOpen(true)}
+              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-md hover:bg-primary/90 flex items-center justify-center gap-2 transition-all mt-4"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Add New Tenant ({availableBeds} {availableBeds === 1 ? "bed" : "beds"} available)</span>
+            </Button>
+          )}
 
-              <div className="p-4 border rounded-lg space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium text-muted-foreground">Tenant Name</Label>
-                    <div className="relative flex items-center">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleChooseFromContacts}
-                        className="absolute left-1.5 h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors rounded-lg z-10"
-                        title="Choose from Contacts"
-                      >
-                        <Contact className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        id="new-tenant-name"
-                        value={newTenant.name}
-                        onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
-                        placeholder="Enter name"
-                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
-                    <div className="relative flex items-center">
-                      <Phone className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
-                      <Input
-                        value={newTenant.phone}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                          setNewTenant({ ...newTenant, phone: value });
-                        }}
-                        placeholder="Enter phone"
-                        maxLength={10}
-                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
-                      />
-                    </div>
+          {/* Room Notes - Admin Only */}
+          {isAdmin && (
+            <div className="space-y-2 mt-4">
+              <Label>Room Notes</Label>
+              <Textarea
+                placeholder="Add any notes about this room..."
+                value={room.notes || ""}
+                onChange={(e) => updateRoom.mutate({ ...room, notes: e.target.value })}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </SheetContent>
+
+      {/* Full Screen Add Tenant Sheet */}
+      <Sheet open={isAddTenantFullScreenOpen} onOpenChange={setIsAddTenantFullScreenOpen}>
+        <SheetContent side="right" className="w-full max-w-full h-full p-0 sm:max-w-xl [&>button]:hidden border-none">
+          <div className="flex h-full flex-col bg-background">
+            {/* Header */}
+            <SheetHeader className="shrink-0 border-b bg-background px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl hover:bg-muted"
+                  onClick={() => setIsAddTenantFullScreenOpen(false)}
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="text-left">
+                  <SheetTitle className="text-base font-bold text-foreground">Add New Tenant</SheetTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Room {room.roomNo} · {availableBeds} {availableBeds === 1 ? "bed" : "beds"} available
+                  </p>
+                </div>
+              </div>
+            </SheetHeader>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
+              {/* Uploaded Illustration Header Banner */}
+              <div className="overflow-hidden rounded-2xl border border-amber-200/70 dark:border-amber-900/40 shadow-sm bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent">
+                <img
+                  src="/add-tenant-illustration.png"
+                  alt="Add Tenant Illustration"
+                  className="w-full h-auto max-h-[175px] object-cover object-center rounded-2xl"
+                />
+              </div>
+
+              {/* Inputs Form */}
+              <div className="p-4 border rounded-2xl bg-background shadow-xs space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-muted-foreground">Tenant Name</Label>
+                  <div className="relative flex items-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleChooseFromContacts}
+                      className="absolute left-1.5 h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors rounded-lg z-10"
+                      title="Choose from Contacts"
+                    >
+                      <Contact className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      id="new-tenant-name-fs"
+                      value={newTenant.name}
+                      onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
+                      placeholder="Enter full name"
+                      className="pl-11 bg-background border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-muted-foreground">Phone Number</Label>
+                  <div className="relative flex items-center">
+                    <Phone className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
+                    <Input
+                      value={newTenant.phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setNewTenant({ ...newTenant, phone: value });
+                      }}
+                      placeholder="Enter 10-digit phone number"
+                      maxLength={10}
+                      className="pl-11 bg-background border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="monthlyRent" className="text-sm font-medium text-muted-foreground">Monthly Rent (₹)</Label>
+                    <Label htmlFor="monthlyRent-fs" className="text-sm font-medium text-muted-foreground">Monthly Rent (₹)</Label>
                     <div className="relative flex items-center">
                       <span className="absolute left-4 text-primary font-medium pointer-events-none select-none text-base z-10">₹</span>
                       <Input
-                        id="monthlyRent"
+                        id="monthlyRent-fs"
                         type="number"
                         value={newTenant.monthlyRent}
                         onChange={(e) => setNewTenant({ ...newTenant, monthlyRent: Math.max(0, parseInt(e.target.value) || 0) })}
                         placeholder="Enter amount"
-                        className="pl-11 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
+                        className="pl-11 bg-background border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm"
                       />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Joining Date</Label>
+                    <Label htmlFor="startDate-fs" className="text-sm font-medium text-muted-foreground">Joining Date</Label>
                     <div className="relative flex items-center">
                       <CalendarIcon className="absolute left-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
                       <Input
-                        id="startDate"
+                        id="startDate-fs"
                         type="date"
                         value={newTenant.startDate}
                         onChange={(e) => setNewTenant({ ...newTenant, startDate: e.target.value })}
                         required
-                        className="pl-11 pr-10 bg-background/50 border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="pl-11 pr-10 bg-background border-border hover:border-primary/50 focus-visible:ring-primary/20 h-11 rounded-xl text-sm appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                       <ChevronDown className="absolute right-3.5 h-4 w-4 text-primary pointer-events-none z-10" />
                     </div>
@@ -1798,9 +1861,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                 </div>
 
                 {/* Security Deposit Toggle */}
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
                   <div className="flex flex-col">
-                    <Label htmlFor="securityDeposit" className="cursor-pointer">
+                    <Label htmlFor="securityDeposit-fs" className="cursor-pointer font-medium text-sm">
                       Include Security Deposit
                     </Label>
                     <span className="text-xs text-muted-foreground">
@@ -1808,29 +1871,34 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                     </span>
                   </div>
                   <Switch
-                    id="securityDeposit"
+                    id="securityDeposit-fs"
                     checked={includeSecurityDeposit}
                     onCheckedChange={setIncludeSecurityDeposit}
                   />
                 </div>
-
-                <Button
-                  onClick={handleAddTenant}
-                  disabled={!newTenant.name || !newTenant.phone || addTenant.isPending}
-                  className="w-full"
-                >
-                  {addTenant.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    "Add Tenant"
-                  )}
-                </Button>
               </div>
             </div>
-          )}
+
+            {/* Action Footer */}
+            <div className="shrink-0 border-t bg-background p-4">
+              <Button
+                onClick={handleAddTenant}
+                disabled={!newTenant.name || !newTenant.phone || addTenant.isPending}
+                className="h-12 w-full rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-md hover:bg-primary/95"
+              >
+                {addTenant.isPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Adding Tenant...
+                  </>
+                ) : (
+                  `Add Tenant to Room ${room.roomNo}`
+                )}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
           {/* Room Notes - Admin Only */}
           {isAdmin && (
