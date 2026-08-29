@@ -22,7 +22,7 @@ import roomDirectoryBanner from '@/assets/room-directory-banner.png';
 
 interface RoomDirectoryProps {
   rooms: Room[];
-  onViewDetails: (room: Room) => void;
+  onViewDetails: (room: Room, autoAddTenant?: boolean) => void;
 }
 
 const getFloorName = (floor: number): string => {

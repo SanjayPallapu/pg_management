@@ -110,29 +110,18 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (isOpen && autoScrollToAdd) {
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTo({
-            top: scrollRef.current.scrollHeight,
-            behavior: "smooth"
-          });
-        }
-        // Focus the name input
-        const nameInput = document.getElementById("new-tenant-name");
-        nameInput?.focus();
-      }, 350);
-    }
-  }, [isOpen, autoScrollToAdd]);
-
   const [isAddTenantFullScreenOpen, setIsAddTenantFullScreenOpen] = useState(autoScrollToAdd);
 
   useEffect(() => {
-    if (autoScrollToAdd) {
-      setIsAddTenantFullScreenOpen(true);
-    }
+    setIsAddTenantFullScreenOpen(autoScrollToAdd);
   }, [autoScrollToAdd]);
+
+  const handleCloseAddTenantFullScreen = () => {
+    setIsAddTenantFullScreenOpen(false);
+    if (autoScrollToAdd) {
+      onClose();
+    }
+  };
 
   // Handle OS back gesture to close dialog
   useBackGesture(isOpen, onClose);
@@ -895,7 +884,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Sheet open={isOpen && !autoScrollToAdd} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1754,7 +1743,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   </Sheet>
 
       {/* Full Screen Add Tenant Sheet */}
-      <Sheet open={isAddTenantFullScreenOpen} onOpenChange={setIsAddTenantFullScreenOpen}>
+      <Sheet open={isAddTenantFullScreenOpen} onOpenChange={(open) => { if (!open) handleCloseAddTenantFullScreen(); else setIsAddTenantFullScreenOpen(true); }}>
         <SheetContent side="right" className="w-full max-w-full h-full p-0 sm:max-w-xl [&>button]:hidden border-none">
           <div className="flex h-full flex-col bg-background">
             {/* Header */}
@@ -1765,7 +1754,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 rounded-xl hover:bg-muted"
-                  onClick={() => setIsAddTenantFullScreenOpen(false)}
+                  onClick={handleCloseAddTenantFullScreen}
                   aria-label="Back"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -1781,12 +1770,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
-              {/* Uploaded Illustration Header Banner */}
-              <div className="overflow-hidden rounded-2xl border border-amber-200/70 dark:border-amber-900/40 shadow-sm bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent">
+              {/* Uploaded Illustration Header Banner - Clean, no border, no background */}
+              <div className="flex justify-center w-full py-1">
                 <img
                   src="/add-tenant-illustration.png"
                   alt="Add Tenant Illustration"
-                  className="w-full h-auto max-h-[175px] object-cover object-center rounded-2xl"
+                  className="w-full max-w-sm h-auto max-h-[175px] object-contain mx-auto"
                 />
               </div>
 

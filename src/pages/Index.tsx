@@ -203,10 +203,10 @@ const Index = () => {
 
 
 
-  const handleViewDetails = (room: Room) => {
+  const handleViewDetails = (room: Room, autoAddTenant = false) => {
     setSelectedRoom(room);
     setIsDialogOpen(true);
-    setAutoScrollToAdd(false);
+    setAutoScrollToAdd(autoAddTenant);
   };
 
   // Show loading state only for new signups

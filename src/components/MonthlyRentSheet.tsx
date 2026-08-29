@@ -1619,12 +1619,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         <div className="flex gap-3 sm:gap-3.5 overflow-x-auto pb-2 pt-1 px-1 snap-x touch-pan-x scrollbar-none">
           {[
             {
-              title: "Utility Bills",
-              image: billsImg,
-              gradient: "from-sky-200 via-blue-100 to-indigo-100 dark:from-sky-950 dark:via-blue-900/40 dark:to-indigo-950",
-              onClick: () => setAcSheetOpen(true),
-            },
-            {
               title: "Rent Collection",
               image: rentCollectionImg,
               gradient: "from-emerald-200 via-teal-100 to-green-100 dark:from-emerald-950 dark:via-teal-900/40 dark:to-green-950",
@@ -1635,6 +1629,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               image: remindersImg,
               gradient: "from-green-200 via-emerald-100 to-lime-100 dark:from-green-950 dark:via-emerald-900/40 dark:to-lime-950",
               onClick: () => setPendingSheetOpen(true),
+            },
+            {
+              title: "Utility Bills",
+              image: billsImg,
+              gradient: "from-sky-200 via-blue-100 to-indigo-100 dark:from-sky-950 dark:via-blue-900/40 dark:to-indigo-950",
+              onClick: () => setAcSheetOpen(true),
             },
             {
               title: "Smart Receipts",
@@ -1649,16 +1649,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               onClick: () => window.dispatchEvent(new CustomEvent("openSecurityDepositSheet")),
             },
             {
-              title: "Tenant Onboarding",
-              image: onboardingImg,
-              gradient: "from-violet-200 via-purple-100 to-indigo-100 dark:from-violet-950 dark:via-purple-900/40 dark:to-indigo-950",
-              onClick: () => setPgRulesOpen(true),
-            },
-            {
               title: "Room Occupancy",
               image: roomOccupancyImg,
               gradient: "from-cyan-200 via-sky-100 to-blue-100 dark:from-cyan-950 dark:via-sky-900/40 dark:to-blue-950",
               onClick: () => setCleanupSheetOpen(true),
+            },
+            {
+              title: "Fill Vacancy",
+              image: vacancyImg,
+              gradient: "from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950",
+              onClick: () => setCleanupSheetOpen(true),
+            },
+            {
+              title: "Tenant Onboarding",
+              image: onboardingImg,
+              gradient: "from-violet-200 via-purple-100 to-indigo-100 dark:from-violet-950 dark:via-purple-900/40 dark:to-indigo-950",
+              onClick: () => setPgRulesOpen(true),
             },
             {
               title: "Analytics & Excel",
@@ -1673,42 +1679,36 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               onClick: () => setPreviousOverdueOpen(true),
             },
             {
-              title: "Multi-Property",
-              image: multiPropertyImg,
-              gradient: "from-purple-200 via-fuchsia-100 to-pink-100 dark:from-purple-950 dark:via-fuchsia-900/40 dark:to-pink-950",
-              onClick: () => setPgRulesOpen(true),
-            },
-            {
-              title: "Fill Vacancy",
-              image: vacancyImg,
-              gradient: "from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950",
-              onClick: () => setCleanupSheetOpen(true),
-            },
-            {
               title: "Business Growth",
               image: growthImg,
               gradient: "from-yellow-200 via-amber-100 to-orange-100 dark:from-yellow-950 dark:via-amber-900/40 dark:to-orange-950",
               onClick: () => setDownloadDialogOpen(true),
             },
+            {
+              title: "Multi-Property",
+              image: multiPropertyImg,
+              gradient: "from-purple-200 via-fuchsia-100 to-pink-100 dark:from-purple-950 dark:via-fuchsia-900/40 dark:to-pink-950",
+              onClick: () => setPgRulesOpen(true),
+            },
           ].map((item, idx) => (
             <div
               key={idx}
               onClick={item.onClick}
-              className="w-[84px] sm:w-[98px] shrink-0 snap-start cursor-pointer group flex flex-col items-center select-none"
+              className="w-[88px] sm:w-[102px] shrink-0 snap-start cursor-pointer group flex flex-col items-center select-none"
             >
               <div
                 className={cn(
-                  "w-full h-[96px] sm:h-[114px] rounded-t-[3.5rem] rounded-b-2xl bg-gradient-to-b flex items-center justify-center p-1.5 shadow-sm border border-black/5 dark:border-white/10 transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-md group-active:scale-95 relative overflow-hidden",
+                  "w-full h-[102px] sm:h-[118px] rounded-t-[3.5rem] rounded-b-2xl bg-gradient-to-b flex items-center justify-center p-1.5 shadow-sm border border-black/5 dark:border-white/10 transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-md group-active:scale-95 relative overflow-hidden",
                   item.gradient
                 )}
               >
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover rounded-t-[3rem] rounded-b-xl shadow-xs transition-transform duration-200 group-hover:scale-105"
+                  className="w-full h-full object-cover object-center rounded-t-[3rem] rounded-b-xl shadow-xs transition-transform duration-200 group-hover:scale-105"
                 />
               </div>
-              <span className="font-semibold text-[11px] sm:text-xs text-foreground text-center leading-tight mt-1.5 px-0.5 line-clamp-2 max-w-[84px] sm:max-w-[98px]">
+              <span className="font-semibold text-[11px] sm:text-xs text-foreground text-center leading-tight mt-1.5 px-0.5 line-clamp-2 max-w-[88px] sm:max-w-[102px]">
                 {item.title}
               </span>
             </div>
