@@ -272,6 +272,15 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const totalCollected = filteredGuests.reduce((sum, g) => sum + (g.amount_paid || 0), 0);
   const totalPending = filteredGuests.reduce((sum, g) => sum + (g.total_amount - (g.amount_paid || 0)), 0);
 
+  // Available rooms for day guests (rooms with at least 1 free bed)
+  const availableRooms = (rooms || [])
+    .map(room => {
+      const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
+      const available = Math.max(0, room.capacity - activeTenantsCount);
+      return { ...room, available, activeTenantsCount };
+    })
+    .filter(room => room.available > 0);
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -338,37 +347,42 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto bg-background">
-              {/* SECTION: Select Room */}
+              {/* SECTION: Select Room (Only Available Rooms with Green Badge) */}
               {activeTab === 'rooms' && (
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-foreground">Select Room to Add Day Guest</h3>
+                    <h3 className="text-sm font-bold text-foreground">
+                      Available Rooms ({availableRooms.length})
+                    </h3>
                     <span className="text-xs text-muted-foreground">Tap room to open form</span>
                   </div>
 
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                    {(rooms || []).map((room) => {
-                      const activeTenantsCount = (room.tenants || []).filter(t => t && isTenantActiveNow(t.startDate, t.endDate)).length;
-                      const available = Math.max(0, room.capacity - activeTenantsCount);
-                      return (
+                  {availableRooms.length === 0 ? (
+                    <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-muted-foreground/20 text-muted-foreground">
+                      <p className="text-sm font-medium">No available rooms at the moment</p>
+                      <p className="text-xs text-muted-foreground/80 mt-1">All rooms are currently fully occupied</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                      {availableRooms.map((room) => (
                         <div
                           key={room.id}
                           onClick={() => {
                             onOpenChange(false);
                             navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`);
                           }}
-                          className="p-3.5 rounded-2xl border border-border/80 bg-card hover:border-primary/50 hover:bg-primary/5 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
+                          className="p-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
                         >
-                          <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
+                          <span className="text-lg font-black text-foreground group-hover:text-emerald-600 transition-colors">
                             {room.roomNo}
                           </span>
-                          <span className="text-[11px] font-semibold text-muted-foreground mt-0.5">
-                            {available} Bed{available === 1 ? '' : 's'}
+                          <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                            {room.available} Bed{room.available === 1 ? '' : 's'}
                           </span>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
