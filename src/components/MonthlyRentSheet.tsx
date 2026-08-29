@@ -1597,17 +1597,86 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         />
       </div>
 
-      {/* AC Electricity Banner — Tap to open AC Bills directly */}
-      <div
-        onClick={() => setAcSheetOpen(true)}
-        className="mt-1 mb-3 cursor-pointer overflow-hidden rounded-2xl border border-white/20 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
-        title="Open AC Electricity Bills"
-      >
-        <img
-          src="/ac-bill-banner-v5.png"
-          alt="AC Electricity Billing - Tap to open"
-          className="w-full h-auto max-h-[140px] object-cover object-center rounded-2xl"
-        />
+      {/* Motion Canvas Services & Tools — Arched card carousel replacing AC bill banner */}
+      <div className="mt-1 mb-3 space-y-1.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">Quick Services</h2>
+          <span className="text-[11px] text-muted-foreground font-medium">Scroll for more →</span>
+        </div>
+        <div className="flex gap-3 sm:gap-3.5 overflow-x-auto pb-2 pt-1 px-1 snap-x touch-pan-x scrollbar-none">
+          {[
+            {
+              title: "AC Bills",
+              image: "/icons/electricity-bill-update.png",
+              gradient: "from-sky-200 via-blue-100 to-indigo-100 dark:from-sky-950 dark:via-blue-900/40 dark:to-indigo-950",
+              onClick: () => setAcSheetOpen(true),
+            },
+            {
+              title: "PG Rules",
+              image: "/icons/pg-rules-3d.png",
+              gradient: "from-lime-200 via-green-100 to-emerald-100 dark:from-lime-950 dark:via-green-900/40 dark:to-emerald-950",
+              onClick: () => setPgRulesOpen(true),
+            },
+            {
+              title: "Pending Rent",
+              image: "/icons/pending-3d.jpg",
+              gradient: "from-amber-200 via-yellow-100 to-orange-100 dark:from-amber-950 dark:via-yellow-900/40 dark:to-orange-950",
+              onClick: () => setPendingSheetOpen(true),
+            },
+            {
+              title: "Payment History",
+              image: "/icons/financials-3d.jpg",
+              gradient: "from-purple-200 via-violet-100 to-fuchsia-100 dark:from-purple-950 dark:via-violet-900/40 dark:to-fuchsia-950",
+              onClick: () => setHistoryOpen(true),
+            },
+            {
+              title: "Overdue Rent",
+              image: "/icons/prev-overdue-3d.jpg",
+              gradient: "from-rose-200 via-red-100 to-pink-100 dark:from-rose-950 dark:via-red-900/40 dark:to-pink-950",
+              onClick: () => setPreviousOverdueOpen(true),
+            },
+            {
+              title: "Deposit Hub",
+              image: "/icons/safe-box-3d.png",
+              gradient: "from-orange-200 via-amber-100 to-yellow-100 dark:from-orange-950 dark:via-amber-900/40 dark:to-yellow-950",
+              onClick: () => window.dispatchEvent(new CustomEvent("openSecurityDepositSheet")),
+            },
+            {
+              title: "Left Tenants",
+              image: "/icons/tenant-movement-3d.png",
+              gradient: "from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950",
+              onClick: () => setCleanupSheetOpen(true),
+            },
+            {
+              title: "Excel Report",
+              image: "/icons/calculator-3d.png",
+              gradient: "from-blue-200 via-sky-100 to-indigo-100 dark:from-blue-950 dark:via-sky-900/40 dark:to-indigo-950",
+              onClick: () => setDownloadDialogOpen(true),
+            },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              onClick={item.onClick}
+              className="w-[84px] sm:w-[98px] shrink-0 snap-start cursor-pointer group flex flex-col items-center select-none"
+            >
+              <div
+                className={cn(
+                  "w-full h-[96px] sm:h-[114px] rounded-t-[3.2rem] rounded-b-2xl bg-gradient-to-b flex items-center justify-center p-2 shadow-sm border border-black/5 dark:border-white/10 transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-md group-active:scale-95 relative overflow-hidden",
+                  item.gradient
+                )}
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="max-w-[85%] max-h-[85%] object-contain drop-shadow-md rounded-xl transition-transform duration-200 group-hover:scale-105"
+                />
+              </div>
+              <span className="font-semibold text-[11px] sm:text-xs text-foreground text-center leading-tight mt-1.5 px-0.5 line-clamp-2 max-w-[84px] sm:max-w-[98px]">
+                {item.title}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Header/Action Row */}

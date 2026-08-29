@@ -266,9 +266,12 @@ export const SecurityDepositCard = ({
       }, 150);
     };
 
+     const handleOpenSheet = () => setSheetOpen(true);
+     window.addEventListener('openSecurityDepositSheet', handleOpenSheet);
      window.addEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
      window.addEventListener('openSecurityDepositReceipt', handleOpenSecurityDepositReceipt as EventListener);
      return () => {
+       window.removeEventListener('openSecurityDepositSheet', handleOpenSheet);
        window.removeEventListener('openSecurityDeposit', handleOpenSecurityDeposit as EventListener);
        window.removeEventListener('openSecurityDepositReceipt', handleOpenSecurityDepositReceipt as EventListener);
      };
