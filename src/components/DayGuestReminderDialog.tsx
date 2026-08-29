@@ -40,7 +40,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   const reminderRef = useRef<HTMLDivElement>(null);
   const [templateData, setTemplateData] = useState<DayGuestReminderData | null>(null);
   const [includeAcBill, setIncludeAcBill] = useState(false);
-  const [acBillAmount, setAcBillAmount] = useState<number>(0);
+  const [acPerDayCharge, setAcPerDayCharge] = useState<number>(0);
 
   useBackGesture(open, () => onOpenChange(false));
 
@@ -48,21 +48,22 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
     if (reminderData && open) {
       const isAcRoom = Boolean(reminderData.isAc);
       setIncludeAcBill(isAcRoom);
-      const extraAc = isAcRoom ? (reminderData.acElectricBill || 0) : 0;
-      setAcBillAmount(extraAc);
+      const perDayCharge = isAcRoom ? (reminderData.acElectricBill || 0) : 0;
+      setAcPerDayCharge(perDayCharge);
 
+      const totalAcBill = perDayCharge * reminderData.numberOfDays;
       setTemplateData({
         guestName: reminderData.guestName,
         fromDate: reminderData.fromDate,
         toDate: reminderData.toDate,
         numberOfDays: reminderData.numberOfDays,
         perDayRate: reminderData.perDayRate,
-        totalAmount: reminderData.totalAmount + extraAc,
+        totalAmount: reminderData.totalAmount + totalAcBill,
         amountPaid: reminderData.amountPaid,
-        balance: reminderData.balance + extraAc,
+        balance: reminderData.balance + totalAcBill,
         roomNo: reminderData.roomNo,
         isAc: isAcRoom,
-        acElectricBill: extraAc,
+        acPerDayCharge: perDayCharge,
         pgName: currentPG?.name,
         pgLogoUrl: currentPG?.logoUrl,
       });
@@ -70,25 +71,26 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
   }, [reminderData, open, currentPG]);
 
   // Update templateData when AC bill changes
-  const handleAcBillChange = (include: boolean, amount: number) => {
+  const handleAcBillChange = (include: boolean, perDayAmount: number) => {
     if (!reminderData) return;
     setIncludeAcBill(include);
-    setAcBillAmount(amount);
+    setAcPerDayCharge(perDayAmount);
     setGeneratedImage(null); // Reset preview to force regenerate
 
-    const extra = include ? (amount || 0) : 0;
+    const perDay = include ? (perDayAmount || 0) : 0;
+    const totalAcBill = perDay * reminderData.numberOfDays;
     setTemplateData({
       guestName: reminderData.guestName,
       fromDate: reminderData.fromDate,
       toDate: reminderData.toDate,
       numberOfDays: reminderData.numberOfDays,
       perDayRate: reminderData.perDayRate,
-      totalAmount: reminderData.totalAmount + extra,
+      totalAmount: reminderData.totalAmount + totalAcBill,
       amountPaid: reminderData.amountPaid,
-      balance: reminderData.balance + extra,
+      balance: reminderData.balance + totalAcBill,
       roomNo: reminderData.roomNo,
       isAc: include || Boolean(reminderData.isAc),
-      acElectricBill: extra,
+      acPerDayCharge: perDay,
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
     });
@@ -207,33 +209,46 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
                       <Label htmlFor="include-ac" className="text-xs font-bold text-foreground cursor-pointer">
                         AC Electricity Bill
                       </Label>
-                      <p className="text-[11px] text-muted-foreground">Add custom electric charge to reminder</p>
+                      <p className="text-[11px] text-muted-foreground">Add per-day electric charge to reminder</p>
                     </div>
                   </div>
                   <Switch
                     id="include-ac"
                     checked={includeAcBill}
-                    onCheckedChange={(checked) => handleAcBillChange(checked, acBillAmount)}
+                    onCheckedChange={(checked) => handleAcBillChange(checked, acPerDayCharge)}
                   />
                 </div>
 
                 {includeAcBill && (
-                  <div className="pt-2 border-t border-sky-500/20 space-y-1.5">
-                    <Label htmlFor="ac-amount" className="text-xs text-muted-foreground">
-                      Custom AC Bill Amount (₹)
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
-                      <Input
-                        id="ac-amount"
-                        type="number"
-                        min="0"
-                        placeholder="Enter AC electricity bill amount"
-                        value={acBillAmount || ""}
-                        onChange={(e) => handleAcBillChange(true, Math.max(0, parseInt(e.target.value) || 0))}
-                        className="pl-7 h-9 text-xs font-bold bg-background"
-                      />
+                  <div className="pt-2 border-t border-sky-500/20 space-y-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ac-per-day-amount" className="text-xs text-muted-foreground">
+                        Per Day AC Electric Charge (₹/day)
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                        <Input
+                          id="ac-per-day-amount"
+                          type="number"
+                          min="0"
+                          placeholder="e.g. 50"
+                          value={acPerDayCharge || ""}
+                          onChange={(e) => handleAcBillChange(true, Math.max(0, parseInt(e.target.value) || 0))}
+                          className="pl-7 h-9 text-xs font-bold bg-background"
+                        />
+                      </div>
                     </div>
+
+                    {acPerDayCharge > 0 && (
+                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs">
+                        <span className="text-muted-foreground text-[11px]">
+                          Calculation ({reminderData.numberOfDays} days):
+                        </span>
+                        <span className="font-bold text-sky-600 dark:text-sky-400">
+                          ₹{acPerDayCharge} × {reminderData.numberOfDays} = ₹{(acPerDayCharge * reminderData.numberOfDays).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

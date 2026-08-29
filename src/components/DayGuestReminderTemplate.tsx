@@ -11,7 +11,7 @@ export interface DayGuestReminderData {
   balance: number;
   roomNo: string;
   isAc?: boolean;
-  acElectricBill?: number;
+  acPerDayCharge?: number; // per-day AC electricity charge, multiplied by numberOfDays
   pgName?: string;
   pgLogoUrl?: string;
 }
@@ -241,11 +241,16 @@ export const DayGuestReminderTemplate = forwardRef<HTMLDivElement, Props>(({ dat
                 {formatCurrency(data.perDayRate)}
               </td>
             </tr>
-            {Boolean(data.acElectricBill && data.acElectricBill > 0) && (
+            {Boolean(data.acPerDayCharge && data.acPerDayCharge > 0) && (
               <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td style={{ padding: "10px 16px", color: "#6b7280" }}>AC Electricity Bill:</td>
+                <td style={{ padding: "10px 16px", color: "#6b7280" }}>
+                  AC Electricity:
+                  <span style={{ display: "block", fontSize: "11px", color: "#9ca3af" }}>
+                    {formatCurrency(data.acPerDayCharge!)} × {data.numberOfDays} days
+                  </span>
+                </td>
                 <td style={{ padding: "10px 16px", fontWeight: 600, color: "#0284c7" }}>
-                  {formatCurrency(data.acElectricBill!)}
+                  {formatCurrency(data.acPerDayCharge! * data.numberOfDays)}
                 </td>
               </tr>
             )}
