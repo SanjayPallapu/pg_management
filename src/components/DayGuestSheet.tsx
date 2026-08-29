@@ -59,6 +59,9 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const { collectors } = useCollectorNames();
   const canManageDayGuests = role === 'admin' || role === 'owner';
 
+  // Active section tab: 'rooms' | 'guests' | 'revenue'
+  const [activeTab, setActiveTab] = useState<'rooms' | 'guests' | 'revenue'>('rooms');
+
   // Handle OS back gesture to close sheet
   useBackGesture(open, () => onOpenChange(false));
 
@@ -287,48 +290,60 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   Day Guest Hub - {monthName}
                 </SheetTitle>
               </div>
+
+              {/* Side-by-Side Section Switcher */}
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/60 rounded-xl mt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('rooms')}
+                  className={cn(
+                    "flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                    activeTab === 'rooms'
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <DoorOpen className="h-3.5 w-3.5" />
+                  <span>Rooms</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('guests')}
+                  className={cn(
+                    "flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                    activeTab === 'guests'
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>Guests ({dayGuests.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('revenue')}
+                  className={cn(
+                    "flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                    activeTab === 'revenue'
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>Revenue</span>
+                </button>
+              </div>
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto bg-background">
-              <div className="p-4 space-y-6">
-                
-                {/* SECTION 1: Amount Collected and Pending */}
-                <div className="space-y-2.5">
+              {/* SECTION: Select Room */}
+              {activeTab === 'rooms' && (
+                <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      Revenue Overview ({monthName})
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Collected</span>
-                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1.5">
-                        ₹{totalCollected.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 flex flex-col justify-between shadow-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Pending</span>
-                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <p className="text-xl font-black text-amber-700 dark:text-amber-300 mt-1.5">
-                        ₹{totalPending.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 2: Select Room to Add Day Guest */}
-                <div className="space-y-2.5 pt-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <UserPlus className="h-4 w-4 text-primary" />
-                      <h3 className="text-sm font-bold text-foreground">Select Room to Add Day Guest</h3>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Tap room to add</span>
+                    <h3 className="text-sm font-bold text-foreground">Select Room to Add Day Guest</h3>
+                    <span className="text-xs text-muted-foreground">Tap room to open form</span>
                   </div>
 
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
@@ -342,26 +357,66 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                             onOpenChange(false);
                             navigate(`/day-guest/${room.id}?roomNo=${encodeURIComponent(room.roomNo)}`);
                           }}
-                          className="p-3 rounded-2xl border border-border/80 bg-card hover:border-primary/50 hover:bg-primary/5 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
+                          className="p-3.5 rounded-2xl border border-border/80 bg-card hover:border-primary/50 hover:bg-primary/5 shadow-xs cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center text-center group"
                         >
-                          <span className="text-base font-black text-foreground group-hover:text-primary transition-colors">
+                          <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
                             {room.roomNo}
                           </span>
-                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                            {available} bed{available === 1 ? '' : 's'} free
+                          <span className="text-[11px] font-semibold text-muted-foreground mt-0.5">
+                            {available} Bed{available === 1 ? '' : 's'}
                           </span>
-                          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                            <Plus className="h-2.5 w-2.5" />
-                            <span>Add Guest</span>
-                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
+              )}
 
-                {/* SECTION 3: Day Guests Present */}
-                <div className="space-y-3 pt-3 border-t border-border/70">
+              {/* SECTION: Revenue Overview */}
+              {activeTab === 'revenue' && (
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      Revenue Overview ({monthName})
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Collected</span>
+                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-2">
+                        ₹{totalCollected.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Pending</span>
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <p className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-2">
+                        ₹{totalPending.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl border border-border/80 bg-muted/20 space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Total Expected</span>
+                      <span className="font-bold text-foreground">₹{(totalCollected + totalPending).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Total Guests ({monthName})</span>
+                      <span className="font-bold text-foreground">{dayGuests.length}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION: Day Guests Present */}
+              {activeTab === 'guests' && (
+                <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-4 w-4 text-foreground" />
@@ -378,185 +433,185 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                   ) : Object.keys(guestsByRoom).length === 0 ? (
                     <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-muted-foreground/20 text-muted-foreground">
                       <p className="text-sm font-medium">No day guests present for {monthName}</p>
-                      <p className="text-xs text-muted-foreground/80 mt-1">Select a room above to add a new day guest</p>
+                      <p className="text-xs text-muted-foreground/80 mt-1">Switch to Rooms tab to add a new day guest</p>
                     </div>
                   ) : (
                     Object.entries(guestsByRoom)
                       .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
                       .map(([roomNo, guests]) => (
-                    <Card key={roomNo}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">Room {roomNo}</h3>
-                            <Badge variant="secondary" className="text-xs">{guests.length}</Badge>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => setEditModeRoom(editModeRoom === roomNo ? null : roomNo)}
-                          >
-                            <SquarePen className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        <div className="space-y-3">
-                          {guests.map(guest => {
-                            const amountPaid = guest.amount_paid || 0;
-                            const remaining = guest.total_amount - amountPaid;
-                            const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
-                            const isPaid = guest.payment_status === 'Paid';
-                            const paymentEntries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
-                            const showActions = editModeRoom === roomNo;
-
-                            return (
-                              <div
-                                key={guest.id}
-                                className={cn(
-                                  "border rounded-lg p-3 space-y-2",
-                                  isPaid ? 'bg-paid-muted border-paid' : isPartial ? 'bg-partial-muted border-partial' : 'bg-pending-muted border-pending'
-                                )}
+                        <Card key={roomNo}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-lg">Room {roomNo}</h3>
+                                <Badge variant="secondary" className="text-xs">{guests.length}</Badge>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setEditModeRoom(editModeRoom === roomNo ? null : roomNo)}
                               >
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">{guest.guest_name}</span>
-                                      <Badge
-                                        variant="outline"
-                                        className={cn(
-                                          isPaid
-                                            ? 'bg-paid text-paid-foreground'
-                                            : isPartial
-                                            ? 'bg-partial text-partial-foreground'
-                                            : 'bg-pending text-pending-foreground'
-                                        )}
-                                      >
-                                        {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending'}
-                                      </Badge>
-                                    </div>
-                                    {guest.mobile_number && (
-                                      <p className="text-xs text-muted-foreground">{guest.mobile_number}</p>
-                                    )}
-                                  </div>
+                                <SquarePen className="h-4 w-4" />
+                              </Button>
+                            </div>
 
-                                  {showActions && (
-                                    <div className="flex items-center gap-1">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 px-2 text-xs"
-                                        onClick={() => handleEditStart(guest)}
-                                      >
-                                        Edit
-                                      </Button>
-                                      {canManageDayGuests && (
+                            <div className="space-y-3">
+                              {guests.map(guest => {
+                                const amountPaid = guest.amount_paid || 0;
+                                const remaining = guest.total_amount - amountPaid;
+                                const isPartial = amountPaid > 0 && amountPaid < guest.total_amount;
+                                const isPaid = guest.payment_status === 'Paid';
+                                const paymentEntries = (guest.payment_entries as DayGuestPaymentEntry[]) || [];
+                                const showActions = editModeRoom === roomNo;
+
+                                return (
+                                  <div
+                                    key={guest.id}
+                                    className={cn(
+                                      "border rounded-lg p-3 space-y-2",
+                                      isPaid ? 'bg-paid-muted border-paid' : isPartial ? 'bg-partial-muted border-partial' : 'bg-pending-muted border-pending'
+                                    )}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium">{guest.guest_name}</span>
+                                          <Badge
+                                            variant="outline"
+                                            className={cn(
+                                              isPaid
+                                                ? 'bg-paid text-paid-foreground'
+                                                : isPartial
+                                                ? 'bg-partial text-partial-foreground'
+                                                : 'bg-pending text-pending-foreground'
+                                            )}
+                                          >
+                                            {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending'}
+                                          </Badge>
+                                        </div>
+                                        {guest.mobile_number && (
+                                          <p className="text-xs text-muted-foreground">{guest.mobile_number}</p>
+                                        )}
+                                      </div>
+
+                                      {showActions && (
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 px-2 text-xs"
+                                            onClick={() => handleEditStart(guest)}
+                                          >
+                                            Edit
+                                          </Button>
+                                          {canManageDayGuests && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/50"
+                                              onClick={() => handleDeleteStart(guest)}
+                                            >
+                                              Delete
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Dates and Amount */}
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div>
+                                        <span className="text-muted-foreground">
+                                          {format(new Date(guest.from_date), 'MMM d')} - {format(new Date(guest.to_date), 'MMM d')}
+                                        </span>
+                                        <span className="text-muted-foreground ml-1">({guest.number_of_days} days)</span>
+                                      </div>
+                                      <span className="font-semibold text-primary">₹{guest.total_amount.toLocaleString()}</span>
+                                    </div>
+
+                                    {/* Payment Summary */}
+                                    {(isPartial || isPaid) && (
+                                      <div className="text-sm font-medium">
+                                        <span className="text-paid">Paid: ₹{amountPaid.toLocaleString()}</span>
+                                        {!isPaid && (
+                                          <>
+                                            <span className="mx-2">•</span>
+                                            <span className="text-pending">Due: ₹{remaining.toLocaleString()}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Payment Entries */}
+                                    {paymentEntries.length > 0 && (
+                                      <div className="space-y-0.5">
+                                        {paymentEntries.map((entry, idx) => (
+                                          <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                            <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
+                                            {entry.collectedBy && (
+                                              <span className="text-muted-foreground text-[10px]">{entry.collectedBy}</span>
+                                            )}
+                                            {entry.mode && (
+                                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
+                                                {entry.mode === 'upi' ? 'UPI' : 'Cash'}
+                                              </span>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Payment Actions */}
+                                    <div className="flex items-center gap-2 pt-2 border-t border-border">
+                                      {isPaid ? (
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          className="h-7 px-2 text-xs text-destructive hover:text-destructive border-destructive/50"
-                                          onClick={() => handleDeleteStart(guest)}
+                                          className="h-7 text-xs"
+                                          onClick={() => handleStatusChange(guest, 'Pending')}
                                         >
-                                          Delete
+                                          Mark Unpaid
+                                        </Button>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90"
+                                            onClick={() => handlePaymentStart(guest)}
+                                          >
+                                            {isPartial ? 'Pay Remaining' : 'Record Payment'}
+                                          </Button>
+                                        </>
+                                      )}
+                                      {/* WhatsApp Reminder for pending guests */}
+                                      {!isPaid && guest.mobile_number && !guest.mobile_number.includes('•') && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-7 text-xs gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                                          onClick={() => openReminder(guest, roomNo)}
+                                        >
+                                          <MessageCircle className="h-3.5 w-3.5" />
+                                          Remind
                                         </Button>
                                       )}
                                     </div>
-                                  )}
-                                </div>
 
-                                {/* Dates and Amount */}
-                                <div className="flex items-center justify-between text-sm">
-                                  <div>
-                                    <span className="text-muted-foreground">
-                                      {format(new Date(guest.from_date), 'MMM d')} - {format(new Date(guest.to_date), 'MMM d')}
-                                    </span>
-                                    <span className="text-muted-foreground ml-1">({guest.number_of_days} days)</span>
-                                  </div>
-                                  <span className="font-semibold text-primary">₹{guest.total_amount.toLocaleString()}</span>
-                                </div>
-
-                                {/* Payment Summary */}
-                                {(isPartial || isPaid) && (
-                                  <div className="text-sm font-medium">
-                                    <span className="text-paid">Paid: ₹{amountPaid.toLocaleString()}</span>
-                                    {!isPaid && (
-                                      <>
-                                        <span className="mx-2">•</span>
-                                        <span className="text-pending">Due: ₹{remaining.toLocaleString()}</span>
-                                      </>
+                                    {/* Notes */}
+                                    {guest.notes && (
+                                      <p className="text-xs text-muted-foreground italic">{guest.notes}</p>
                                     )}
                                   </div>
-                                )}
-
-                                {/* Payment Entries */}
-                                {paymentEntries.length > 0 && (
-                                  <div className="space-y-0.5">
-                                    {paymentEntries.map((entry, idx) => (
-                                      <div key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <span>{entry.type === 'partial' ? 'Partial' : entry.type === 'remaining' ? 'Remaining' : 'Paid'}: ₹{entry.amount.toLocaleString()} on {format(new Date(entry.date), 'dd MMM yyyy')}</span>
-                                        {entry.collectedBy && (
-                                          <span className="text-muted-foreground text-[10px]">{entry.collectedBy}</span>
-                                        )}
-                                        {entry.mode && (
-                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.mode === 'upi' ? 'bg-upi-muted text-upi' : 'bg-cash-muted text-cash'}`}>
-                                            {entry.mode === 'upi' ? 'UPI' : 'Cash'}
-                                          </span>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Payment Actions */}
-                                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                                  {isPaid ? (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 text-xs"
-                                      onClick={() => handleStatusChange(guest, 'Pending')}
-                                    >
-                                      Mark Unpaid
-                                    </Button>
-                                  ) : (
-                                    <>
-                                      <Button
-                                        size="sm"
-                                        className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90"
-                                        onClick={() => handlePaymentStart(guest)}
-                                      >
-                                        {isPartial ? 'Pay Remaining' : 'Record Payment'}
-                                      </Button>
-                                    </>
-                                  )}
-                                  {/* WhatsApp Reminder for pending guests */}
-                                  {!isPaid && guest.mobile_number && !guest.mobile_number.includes('•') && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 text-xs gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-                                      onClick={() => openReminder(guest, roomNo)}
-                                    >
-                                      <MessageCircle className="h-3.5 w-3.5" />
-                                      Remind
-                                    </Button>
-                                  )}
-                                </div>
-
-                                {/* Notes */}
-                                {guest.notes && (
-                                  <p className="text-xs text-muted-foreground italic">{guest.notes}</p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-              )}
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </SheetContent>

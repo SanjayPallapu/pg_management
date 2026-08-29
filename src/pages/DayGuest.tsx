@@ -162,14 +162,23 @@ const DayGuestPage = () => {
 
   return (
     <AppLayout title={`Day Guest — Room ${roomNo}`}>
-      <div className="p-4 space-y-6 max-w-2xl mx-auto">
+      <div className="p-2 sm:p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Uploaded Illustration Header Banner - Clean, no border, no background */}
+        <div className="w-full flex items-center justify-center pt-1 pb-1">
+          <img
+            src="/add-tenant-illustration.png"
+            alt="Add Day Guest Illustration"
+            className="w-full max-w-[280px] sm:max-w-[320px] h-auto object-contain"
+          />
+        </div>
+
         {/* Add Day Guest Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Add Day Guest</CardTitle>
+        <Card className="p-0 border-0 sm:border shadow-none sm:shadow-sm bg-transparent sm:bg-card">
+          <CardHeader className="p-0 pb-2">
+            <CardTitle className="text-base font-bold">Add Day Guest</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="p-0">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               {/* Guest Name */}
               <div className="space-y-2">
                 <Label htmlFor="guestName" className="flex items-center gap-2">
@@ -351,11 +360,11 @@ const DayGuestPage = () => {
         </Card>
 
         {/* Day Guest History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Guest History</CardTitle>
+        <Card className="p-0 border-0 sm:border shadow-none sm:shadow-sm bg-transparent sm:bg-card">
+          <CardHeader className="p-0 pb-2">
+            <CardTitle className="text-base font-bold">Guest History</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
