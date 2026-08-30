@@ -669,9 +669,9 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
       >
         <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" aria-hidden="true" />
 
-        <SheetHeader className="relative z-10 px-2 pt-4 pb-4">
+        <SheetHeader className="relative z-10 px-3 pt-4 pb-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -681,13 +681,13 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
-                <SheetTitle className="text-base font-extrabold text-white">Room {room.roomNo}</SheetTitle>
-                <span className="text-[10px] text-cyan-200/80">{room.capacity} Sharing · {activeTenants.length} Active Tenant{activeTenants.length === 1 ? '' : 's'}</span>
+                <SheetTitle className="text-lg font-black text-white">Room {room.roomNo}</SheetTitle>
+                <span className="text-xs text-cyan-200 font-medium block mt-0.5">{room.capacity} Sharing · {activeTenants.length} Active Tenant{activeTenants.length === 1 ? '' : 's'}</span>
               </div>
             </div>
             <Button
               size="sm"
-              className="h-9 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 text-white font-bold text-xs shrink-0"
+              className="h-9 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 text-white font-extrabold text-xs shrink-0"
               onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
             >
               <Send className="mr-1.5 h-3.5 w-3.5" /> Share All
@@ -697,16 +697,16 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
           {/* Bill summary row */}
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
-              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Total Bill</span>
-              <span className="block text-sm font-black text-white mt-0.5">₹{draftTotal.toLocaleString()}</span>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-cyan-200">Total Bill</span>
+              <span className="block text-base font-black text-white mt-0.5">₹{draftTotal.toLocaleString()}</span>
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
-              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-emerald-300">Paid</span>
-              <span className="block text-sm font-black text-white mt-0.5">₹{roomCollected.toLocaleString()}</span>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Paid</span>
+              <span className="block text-base font-black text-white mt-0.5">₹{roomCollected.toLocaleString()}</span>
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
-              <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
-              <span className={cn("block text-sm font-black mt-0.5", roomPending > 0 ? "text-orange-300" : "text-emerald-300")}>
+              <span className="block text-[10px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
+              <span className={cn("block text-base font-black mt-0.5", roomPending > 0 ? "text-orange-300" : "text-emerald-300")}>
                 ₹{roomPending.toLocaleString()}
               </span>
             </div>
@@ -714,11 +714,11 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
 
           {/* Progress */}
           <div className="mt-2.5 space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-cyan-200">
+            <div className="flex items-center justify-between text-xs text-cyan-200 font-semibold">
               <span>Collection rate</span>
               <span className="font-black text-white">{roomPct}%{roomPct === 100 ? " — All paid!" : ""}</span>
             </div>
-            <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+            <div className="h-2 rounded-full bg-white/15 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -732,24 +732,24 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
       </div>
 
       {/* Scrollable detail body */}
-      <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-3.5">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {/* Meter Readings */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Meter Readings</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">Meter Readings</h4>
             <label className="flex items-center gap-1.5 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={isCustom}
                 onChange={(e) => onModeToggle(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-border text-cyan-600 cursor-pointer"
+                className="h-4 w-4 rounded border-border text-cyan-600 cursor-pointer"
               />
-              <span className="text-[10px] text-muted-foreground">Flat Rate (₹{draftUnitPrice}/unit)</span>
+              <span className="text-xs font-semibold text-muted-foreground">Flat Rate (₹{draftUnitPrice}/unit)</span>
             </label>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Prev Reading</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Prev Reading</Label>
               <Input
                 type="number"
                 value={startReadingDraft}
@@ -757,11 +757,11 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                 onBlur={handleStartBlur}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                 placeholder="Start"
-                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+                className="h-10 text-sm font-semibold px-3 focus-visible:ring-cyan-500"
               />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Curr Reading</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Curr Reading</Label>
               <Input
                 type="number"
                 value={endReadingDraft}
@@ -769,11 +769,11 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                 onBlur={handleEndBlur}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                 placeholder="End"
-                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+                className="h-10 text-sm font-semibold px-3 focus-visible:ring-cyan-500"
               />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Units Consumed</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Units Consumed</Label>
               <Input
                 type="number"
                 value={unitsDraft}
@@ -781,11 +781,11 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                 onBlur={handleUnitsBlur}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                 placeholder="0"
-                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+                className="h-10 text-sm font-bold px-3 focus-visible:ring-cyan-500"
               />
             </div>
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Rate / Unit (₹)</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Rate / Unit (₹)</Label>
               <Input
                 type="number"
                 value={priceDraft}
@@ -793,7 +793,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                 onChange={(e) => setPriceDraft(e.target.value)}
                 onBlur={handlePriceBlur}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500 disabled:opacity-40"
+                className="h-10 text-sm font-bold px-3 focus-visible:ring-cyan-500 disabled:opacity-40"
               />
             </div>
           </div>
@@ -801,14 +801,14 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
 
         {/* Bill Split Strategy */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-          <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Bill Split Strategy</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">Bill Split Strategy</h4>
           <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Strategy</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Strategy</Label>
               <select
                 value={selectedSplitType}
                 onChange={(e) => handleSplitTypeChange(e.target.value)}
-                className="h-9 rounded-lg border border-border bg-background px-2 text-xs font-semibold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground w-full cursor-pointer"
+                className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-500 text-foreground w-full cursor-pointer"
               >
                 <option value="active_tenants">Split by Active Tenants</option>
                 <option value="capacity">Split by Capacity ({room.capacity} sharing)</option>
@@ -818,7 +818,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
             <div>
               {selectedSplitType === "custom" ? (
                 <>
-                  <Label className="text-[10px] font-extrabold uppercase text-muted-foreground block mb-1">Persons</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground block mb-1">Persons</Label>
                   <Input
                     type="number"
                     min="1"
@@ -827,19 +827,19 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                     onBlur={handleSplitCountBlur}
                     onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                     placeholder="Count"
-                    className="h-9 text-xs px-2.5 focus-visible:ring-cyan-500"
+                    className="h-10 text-sm font-bold px-3 focus-visible:ring-cyan-500"
                   />
                 </>
               ) : (
-                <div className="h-9 flex flex-col justify-center">
-                  <span className="text-[10px] font-extrabold uppercase text-muted-foreground block">Total</span>
-                  <span className="text-xs font-black text-cyan-500 mt-0.5">₹{draftTotal.toLocaleString()}</span>
+                <div className="h-10 flex flex-col justify-center">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Total Bill</span>
+                  <span className="text-sm font-black text-cyan-600 dark:text-cyan-400">₹{draftTotal.toLocaleString()}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl bg-cyan-500/5 border border-cyan-500/20 px-3 py-2 text-[11px]">
+          <div className="flex items-center justify-between rounded-xl bg-cyan-500/5 border border-cyan-500/20 px-3.5 py-2.5 text-xs font-semibold">
             <span className="text-muted-foreground">
               {selectedSplitType === "custom" ? `Custom split by ${draftSplitCount} persons` : selectedSplitType === "capacity" ? `Split by ${room.capacity} slots` : `Proportional by active tenants`}
             </span>
@@ -848,17 +848,17 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
         </div>
 
         {/* Tenant Breakdown */}
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between px-0.5">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Tenant Breakdown</h4>
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Users className="h-3 w-3" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">Tenant Breakdown</h4>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <Users className="h-3.5 w-3.5" />
               <span>{dayWiseShares.length} tenants</span>
             </div>
           </div>
 
           {dayWiseShares.length === 0 ? (
-            <div className="text-center text-muted-foreground py-6 text-xs border border-dashed border-border rounded-2xl">
+            <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-2xl">
               No active tenants in this room.
             </div>
           ) : dayWiseShares.map((tenant: any) => {
@@ -880,7 +880,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={cn(
-                    "h-10 w-10 rounded-full border flex items-center justify-center text-xs font-black shrink-0",
+                    "h-11 w-11 rounded-full border flex items-center justify-center text-sm font-black shrink-0",
                     isPaid
                       ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
                       : "bg-muted border-border text-foreground"
@@ -888,12 +888,12 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                     {initials}
                   </div>
                   <div className="min-w-0">
-                    <span className="font-extrabold text-xs truncate block">{tenant.name}</span>
-                    <span className="text-[10px] text-muted-foreground block mt-0.5">{tenant.daysStayed} days stayed</span>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Share: ₹{(tenant.share || 0).toLocaleString()}
+                    <span className="font-black text-sm text-foreground truncate block">{tenant.name}</span>
+                    <span className="text-xs text-muted-foreground block mt-0.5">{tenant.daysStayed} days stayed</span>
+                    <span className="text-xs text-muted-foreground block font-medium">
+                      Share: <span className="font-extrabold text-foreground">₹{(tenant.share || 0).toLocaleString()}</span>
                       {hasOverdue && (
-                        <span className="text-orange-500 ml-1 font-bold">+ ₹{tenant.overdueAcTotal.toLocaleString()} overdue</span>
+                        <span className="text-orange-500 ml-1.5 font-black">+ ₹{tenant.overdueAcTotal.toLocaleString()} overdue</span>
                       )}
                     </span>
                   </div>
@@ -904,23 +904,23 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 w-8 p-0 rounded-xl border-border text-muted-foreground hover:text-foreground"
+                      className="h-9 w-9 p-0 rounded-xl border-border text-muted-foreground hover:text-foreground"
                       onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
                     >
-                      <Send className="h-3.5 w-3.5" />
+                      <Send className="h-4 w-4" />
                     </Button>
                   )}
                   <Button
                     size="sm"
                     className={cn(
-                      "h-8 px-3 text-[10px] font-bold rounded-xl border-0",
+                      "h-9 px-3.5 text-xs font-extrabold rounded-xl border-0",
                       isPaid
                         ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                         : "bg-cyan-500 hover:bg-cyan-600 text-white"
                     )}
                     onClick={() => { if (tenant.id && onTogglePaymentStatus) onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending'); }}
                   >
-                    {isPaid ? <><Check className="h-3 w-3 mr-1" /> Paid</> : "Mark Paid"}
+                    {isPaid ? <><Check className="h-3.5 w-3.5 mr-1" /> Paid</> : "Mark Paid"}
                   </Button>
                 </div>
               </div>
@@ -936,16 +936,16 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
       >
         <Button
           variant="outline"
-          className="flex-1 text-[11px] font-bold h-11 rounded-xl"
+          className="flex-1 text-xs font-extrabold h-11 rounded-xl"
           onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
         >
-          <Bell className="mr-1.5 h-3.5 w-3.5" /> Send Reminder
+          <Bell className="mr-1.5 h-4 w-4" /> Send Reminder
         </Button>
         <Button
-          className="flex-1 text-[11px] font-bold h-11 rounded-xl bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm"
+          className="flex-1 text-xs font-extrabold h-11 rounded-xl bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm"
           onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
         >
-          <Zap className="mr-1.5 h-3.5 w-3.5" /> Share Bill
+          <Zap className="mr-1.5 h-4 w-4" /> Share Bill
         </Button>
       </div>
     </div>

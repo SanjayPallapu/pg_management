@@ -132,9 +132,10 @@ export default function SubscriptionPage() {
     ];
   }, [billingCycle]);
 
-  const handleCheckout = () => {
+  const handleCheckout = (targetPlanKey?: SubscriptionPlanKey) => {
+    const planToCheckout = targetPlanKey || activePlanKey;
     initiatePayment({
-      plan: activePlanKey,
+      plan: planToCheckout,
       onSuccess: async () => {
         await refreshSubscription();
         navigate("/", { replace: true });
@@ -300,7 +301,7 @@ export default function SubscriptionPage() {
                   <Button
                     type="button"
                     className="h-11 w-full rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-sm font-black text-white shadow-lg hover:opacity-95"
-                    onClick={(e) => { e.stopPropagation(); handleCheckout(); }}
+                    onClick={(e) => { e.stopPropagation(); handleCheckout("lifetime"); }}
                     disabled={razorpayLoading}
                   >
                     {razorpayLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Opening checkout…</> : "Get Lifetime Pro Max · ₹9,999"}
@@ -382,20 +383,29 @@ export default function SubscriptionPage() {
                       <div className="w-full rounded-xl bg-emerald-500/10 py-2 text-center text-xs font-extrabold text-emerald-700 dark:text-emerald-300">
                         Active Plan
                       </div>
-                    ) : isSelected ? (
+                    ) : (
                       <Button
                         type="button"
                         size="sm"
-                        className="h-9 w-full rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-xs font-extrabold text-white shadow-sm"
-                        onClick={(event) => { event.stopPropagation(); handleCheckout(); }}
+                        className={cn(
+                          "h-9 w-full rounded-xl text-xs font-extrabold shadow-sm transition-all",
+                          isSelected
+                            ? "bg-gradient-to-r from-violet-600 to-blue-600 text-white"
+                            : "bg-muted hover:bg-primary/10 text-foreground"
+                        )}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedPlanKey(planKey);
+                          handleCheckout(planKey);
+                        }}
                         disabled={razorpayLoading}
                       >
-                        {razorpayLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `Choose · ${actualPriceLocal.symbol}${actualPriceLocal.price.toLocaleString()}`}
+                        {razorpayLoading && isSelected ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          `Choose · ${actualPriceLocal.symbol}${actualPriceLocal.price.toLocaleString()}`
+                        )}
                       </Button>
-                    ) : (
-                      <div className="w-full rounded-xl bg-muted py-2 text-center text-xs font-bold text-muted-foreground">
-                        Tap to select
-                      </div>
                     )}
                   </div>
                 </div>

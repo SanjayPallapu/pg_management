@@ -180,6 +180,22 @@ export const PGHubPayFlowDrawer = ({
 
           {/* Navigation Links */}
           <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+            {/* Theme Toggle placed at the top above Overview */}
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="group flex w-full items-center gap-3.5 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-gray-200 hover:text-white hover:bg-white/[0.08] active:bg-white/[0.12] transition-all mb-1 border-b border-white/10 pb-2.5"
+            >
+              <div className="shrink-0">
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5 text-amber-400 group-hover:text-amber-300" />
+                ) : (
+                  <Moon className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" />
+                )}
+              </div>
+              <span className="flex-1 truncate">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+
             {menuItems.map((item, index) => (
               <button
                 key={index}
@@ -193,23 +209,8 @@ export const PGHubPayFlowDrawer = ({
             ))}
           </div>
 
-          {/* Footer with theme toggle and sign out */}
-          <div className="p-3 border-t border-white/10 space-y-1">
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-gray-200 hover:text-white hover:bg-white/[0.08] transition-all"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-amber-400 shrink-0" />
-              ) : (
-                <Moon className="h-5 w-5 text-indigo-300 shrink-0" />
-              )}
-              <span className="flex-1">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-400 font-bold uppercase">
-                {theme === 'dark' ? '☀️' : '🌙'}
-              </span>
-            </button>
+          {/* Footer with sign out */}
+          <div className="p-3 border-t border-white/10">
             <button
               type="button"
               onClick={async () => {
