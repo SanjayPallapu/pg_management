@@ -627,9 +627,9 @@ function PricingMoreView() {
     <div className="space-y-3.5 sm:space-y-4 p-3.5 sm:p-4 pb-24 sm:pb-28">
       <h1 className="text-2xl sm:text-3xl font-black">Run your PG smarter.</h1>
       {[
-        ["Basic", "₹199/month", "For small PG operators.", ["Tenant management", "Room management", "Rent tracking", "Basic reports"]],
-        ["Plus", "₹299/month", "Most popular.", ["Everything in Basic", "WhatsApp reminders", "Digital receipts", "Utility billing", "Advanced analytics"]],
-        ["Pro Max", "₹499/month", "For growing operators.", ["Everything in Plus", "Multi-property", "AI assistant", "Staff roles", "Priority support"]],
+        ["Basic", "₹499/month", "For small PG operators.", ["Tenant management", "Room management", "Rent tracking", "Basic reports"]],
+        ["Plus", "₹799/month", "Most popular.", ["Everything in Basic", "WhatsApp reminders", "Digital receipts", "Utility billing", "Advanced analytics"]],
+        ["Pro Max", "₹999/month", "For growing operators.", ["Everything in Plus", "Multi-property", "AI assistant", "Staff roles", "Priority support"]],
       ].map(([plan, price, desc, features], index) => (
         <Card key={plan as string} className={`p-3.5 sm:p-4 transition-all ${index === 1 ? "bg-[#111315] text-white shadow-xl ring-2 ring-lime-300/40" : "bg-white text-slate-900"}`}>
           <div className="flex items-start justify-between">

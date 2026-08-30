@@ -6,7 +6,15 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { Dashboard } from "@/components/Dashboard";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
-import { DashboardSkeleton, RentSheetSkeleton, ListSkeleton, CardSkeleton } from "@/components/skeletons";
+import { 
+  DashboardSkeleton, 
+  RentSheetSkeleton, 
+  ListSkeleton, 
+  CardSkeleton,
+  RoomDirectorySkeleton,
+  ReconciliationSkeleton,
+  SettingsSkeleton
+} from "@/components/skeletons";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -349,8 +357,8 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="rooms" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
-              <Suspense fallback={<CardSkeleton />}>
-                {isLoading ? <CardSkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
+              <Suspense fallback={<RoomDirectorySkeleton />}>
+                {isLoading ? <RoomDirectorySkeleton /> : <RoomDirectory rooms={rooms} onViewDetails={handleViewDetails} />}
               </Suspense>
             </TabsContent>
 
@@ -361,13 +369,13 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="reconciliation" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
-              <Suspense fallback={<RentSheetSkeleton />}>
+              <Suspense fallback={<ReconciliationSkeleton />}>
                 <PaymentReconciliation standalone />
               </Suspense>
             </TabsContent>
 
             <TabsContent value="settings" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
-              <Suspense fallback={<ListSkeleton />}>
+              <Suspense fallback={<SettingsSkeleton />}>
                 <SettingsPage rooms={rooms} />
               </Suspense>
             </TabsContent>

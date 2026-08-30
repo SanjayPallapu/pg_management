@@ -107,7 +107,7 @@ const FAQ_DATA: FAQItem[] = [
   {
     category: "Billing & Subscription",
     question: "What are the subscription plans?",
-    answer: "Basic is ₹199/month for 1 PG and 100 active tenants, Plus is ₹299/month for 2 PGs and 200 active tenants, and Pro is ₹499/month for 4 PGs and 500 active tenants. Annual billing is also available.",
+    answer: "Basic is ₹499/month for 1 PG and 100 active tenants, Plus is ₹799/month for 2 PGs and 200 active tenants, Pro is ₹999/month for 4 PGs and 500 active tenants, and Lifetime Pro Max is a one-time payment of ₹9,999. Annual billing with 17% savings is also available.",
   },
   {
     category: "Billing & Subscription",

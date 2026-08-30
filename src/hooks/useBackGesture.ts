@@ -89,8 +89,9 @@ export const useBackGesture = (
       // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
-        
         // Cleanly remove modalOpen state marker without triggering browser history back
+        const currentPath = window.location.pathname + window.location.search;
+        const isSameRoute = currentPath === initialPath;
         if (!isHandlingPopState && isSameRoute && window.history.state?.modalOpen) {
           try {
             window.history.replaceState(null, '');

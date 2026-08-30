@@ -22,6 +22,7 @@ import { isTenantActiveNow } from '@/utils/dateOnly';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollectorNames } from '@/hooks/useCollectorNames';
 import { DayGuestReminderDialog, type DayGuestReminderInput } from '@/components/DayGuestReminderDialog';
+import { DayGuestReceiptDialog } from '@/components/DayGuestReceiptDialog';
 import { DayGuestChatMenu } from '@/components/DayGuestChatMenu';
 
 interface DayGuestSheetProps {
@@ -95,6 +96,10 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<DayGuestReminderInput | null>(null);
 
+  // Receipt dialog state
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<DayGuestReminderInput | null>(null);
+
   const openReminder = (guest: DayGuest, roomNo: string) => {
     const amountPaid = guest.amount_paid || 0;
     const room = (rooms || []).find(r => r.roomNo === roomNo);
@@ -116,12 +121,34 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
     }, 100);
   };
 
+  const openReceipt = (guest: DayGuest, roomNo: string) => {
+    const amountPaid = guest.amount_paid || guest.total_amount || 0;
+    const room = (rooms || []).find(r => r.roomNo === roomNo);
+    setReceiptData({
+      guestName: guest.guest_name,
+      guestPhone: guest.mobile_number || '',
+      fromDate: guest.from_date,
+      toDate: guest.to_date,
+      numberOfDays: guest.number_of_days,
+      perDayRate: guest.per_day_rate,
+      totalAmount: guest.total_amount,
+      amountPaid,
+      balance: Math.max(0, guest.total_amount - amountPaid),
+      roomNo,
+      isAc: Boolean(room?.isAc),
+    });
+    setTimeout(() => {
+      setReceiptDialogOpen(true);
+    }, 100);
+  };
+
   // Handle OS back gesture to close sub-dialogs
   useBackGesture(editDialogOpen, () => setEditDialogOpen(false));
   useBackGesture(deleteDialogOpen, () => setDeleteDialogOpen(false));
   useBackGesture(paymentDialogOpen, () => setPaymentDialogOpen(false));
   useBackGesture(unpaidDialogOpen, () => setUnpaidDialogOpen(false));
   useBackGesture(reminderDialogOpen, () => setReminderDialogOpen(false));
+  useBackGesture(receiptDialogOpen, () => setReceiptDialogOpen(false));
 
   // Filter guests whose stay overlaps the selected month
   // (from_date <= endOfMonth AND to_date >= startOfMonth)
@@ -598,7 +625,7 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
                                         isPartial={isPartial}
                                         message={!isPaid ? `Hi ${guest.guest_name}, your day guest stay payment of ₹${remaining.toLocaleString()} for Room ${roomNo} is pending. Please pay at your earliest convenience. Thank you!` : undefined}
                                         onReminder={!isPaid ? () => openReminder(guest, roomNo) : undefined}
-                                        onReceipt={(isPaid || isPartial) ? () => openReminder(guest, roomNo) : undefined}
+                                        onReceipt={(isPaid || isPartial) ? () => openReceipt(guest, roomNo) : undefined}
                                         onEdit={() => handleEditStart(guest)}
                                         onDelete={canManageDayGuests ? () => handleDeleteStart(guest) : undefined}
                                       />
@@ -1020,6 +1047,13 @@ export const DayGuestSheet = ({ open, onOpenChange }: DayGuestSheetProps) => {
         open={reminderDialogOpen}
         onOpenChange={setReminderDialogOpen}
         reminderData={reminderData}
+      />
+
+      {/* Day Guest Receipt Dialog */}
+      <DayGuestReceiptDialog
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        receiptData={receiptData}
       />
     </>
   );

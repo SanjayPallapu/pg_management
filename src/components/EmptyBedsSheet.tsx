@@ -225,7 +225,7 @@ export const EmptyBedsSheet = ({
                 <img
                   src={vacancyImg}
                   alt="Fill Vacancy"
-                  className="w-full h-full object-cover object-center rounded-t-[2.75rem] rounded-b-lg shadow-xs animate-in fade-in-0 slide-in-from-left-4 duration-500 [mask-image:linear-gradient(to_right,rgba(0,0,0,0.15)_0%,rgba(0,0,0,1)_45%)]"
+                  className="w-full h-full object-cover object-center rounded-t-[2.75rem] rounded-b-lg shadow-xs"
                 />
               </div>
               <span className="font-semibold text-[10px] sm:text-xs text-foreground text-center leading-tight mt-1 px-0.5 line-clamp-2 max-w-[84px] sm:max-w-[96px]">

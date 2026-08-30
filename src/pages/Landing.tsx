@@ -560,9 +560,9 @@ export default function Landing() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            ["Basic", "₹199/month", "Tenant management, rooms, rent tracking and basic reports.", "Start Basic"],
-            ["Plus", "₹299/month", "WhatsApp reminders, receipts, utility billing and advanced analytics.", "Start Plus"],
-            ["Pro Max", "₹499/month", "Multi-property, AI assistant, staff roles and priority support.", "Start Pro Max"],
+            ["Basic", "₹499/month", "Tenant management, rooms, rent tracking and basic reports.", "Start Basic"],
+            ["Plus", "₹799/month", "WhatsApp reminders, receipts, utility billing and advanced analytics.", "Start Plus"],
+            ["Pro Max", "₹999/month", "Multi-property, AI assistant, staff roles and priority support.", "Start Pro Max"],
           ].map(([plan, price, copy, cta], index) => (
             <motion.article
               key={plan}
