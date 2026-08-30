@@ -111,9 +111,9 @@ export const useRazorpay = () => {
           throw new Error(await getFunctionErrorMessage(error, "Failed to initiate payment. Please try later"));
         }
 
-        if (!data?.subscription_id) {
+        if (!data?.subscription_id && !data?.order_id) {
           console.error("Invalid response from edge function:", data);
-          throw new Error("Failed to start subscription checkout. Please try again");
+          throw new Error("Failed to start checkout. Please try again");
         }
 
         if (data.checkout_mode === "trial_authorization") {
@@ -123,18 +123,20 @@ export const useRazorpay = () => {
         }
 
         // Open Razorpay checkout
-        const options = {
+        const options: any = {
           key: data.key_id,
-          subscription_id: data.subscription_id,
           name: "PG HUB",
-          description: data.description,
-          handler: async function (response: RazorpayCheckoutResponse) {
+          description: data.description || "PG HUB Subscription",
+          handler: async function (response: any) {
             try {
               const razorpaySubscriptionId = response.razorpay_subscription_id || data.subscription_id;
               const { data: syncData, error: syncError } = await supabase.functions.invoke("sync-razorpay-subscription", {
                 body: {
                   plan,
                   razorpay_subscription_id: razorpaySubscriptionId,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id || data.order_id,
+                  razorpay_signature: response.razorpay_signature,
                 },
               });
 
@@ -145,6 +147,7 @@ export const useRazorpay = () => {
               }
 
               setIsLoading(false);
+              toast.success(syncData?.message || "Plan activated successfully!");
               onSuccess();
             } catch (syncErr) {
               console.error("Error syncing subscription:", syncErr);
@@ -166,6 +169,14 @@ export const useRazorpay = () => {
             },
           },
         };
+
+        if (data.subscription_id) {
+          options.subscription_id = data.subscription_id;
+        } else if (data.order_id) {
+          options.order_id = data.order_id;
+          options.amount = data.amount;
+          options.currency = data.currency || "INR";
+        }
 
         const razorpay = new window.Razorpay(options);
         razorpay.on("payment.failed", (response: RazorpayFailureResponse) => {

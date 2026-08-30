@@ -27,6 +27,9 @@ interface PGHubPayFlowDrawerProps {
   onOpenUtilities?: () => void;
   onOpenMoveOuts?: () => void;
   onOpenAIAssistant?: () => void;
+  onOpenDayGuests?: () => void;
+  onOpenSecurityDeposit?: () => void;
+  onOpenAuditHistory?: () => void;
 }
 
 export const PGHubPayFlowDrawer = ({
@@ -38,6 +41,9 @@ export const PGHubPayFlowDrawer = ({
   onOpenUtilities,
   onOpenMoveOuts,
   onOpenAIAssistant,
+  onOpenDayGuests,
+  onOpenSecurityDeposit,
+  onOpenAuditHistory,
 }: PGHubPayFlowDrawerProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
@@ -57,17 +63,17 @@ export const PGHubPayFlowDrawer = ({
     {
       label: "Overview",
       icon: <LayoutGrid className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "dashboard", "/?tab=dashboard"),
+      action: () => handleAction(undefined, "dashboard"),
     },
     {
       label: "Payments",
       icon: <CreditCard className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "reconciliation", "/?tab=reconciliation"),
+      action: () => handleAction(undefined, "reconciliation"),
     },
     {
       label: "Tenants",
       icon: <Users className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "rooms", "/?tab=rooms"),
+      action: () => handleAction(undefined, "rooms"),
     },
     {
       label: "Properties",
@@ -76,14 +82,14 @@ export const PGHubPayFlowDrawer = ({
         if (onOpenProperties) {
           handleAction(onOpenProperties);
         } else {
-          handleAction(undefined, "settings", "/?tab=settings");
+          handleAction(undefined, "settings");
         }
       },
     },
     {
       label: "Rooms & Beds",
       icon: <Bed className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "rooms", "/?tab=rooms"),
+      action: () => handleAction(undefined, "rooms"),
     },
     {
       label: "Utilities",
@@ -99,7 +105,7 @@ export const PGHubPayFlowDrawer = ({
     {
       label: "Receipts",
       icon: <ReceiptText className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "rent-sheet", "/?tab=rent-sheet"),
+      action: () => handleAction(undefined, "rent-sheet"),
     },
     {
       label: "Move-outs",
@@ -119,7 +125,7 @@ export const PGHubPayFlowDrawer = ({
         if (onOpenReports) {
           handleAction(onOpenReports);
         } else {
-          handleAction(undefined, "settings", "/?tab=settings");
+          handleAction(undefined, "settings");
         }
       },
     },
@@ -130,8 +136,7 @@ export const PGHubPayFlowDrawer = ({
         if (onOpenAIAssistant) {
           handleAction(onOpenAIAssistant);
         } else {
-          window.dispatchEvent(new CustomEvent("trigger_voice_assistant"));
-          onOpenChange(false);
+          navigate("/voice");
         }
       },
     },
@@ -143,7 +148,7 @@ export const PGHubPayFlowDrawer = ({
     {
       label: "Settings",
       icon: <Settings className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => handleAction(undefined, "settings", "/?tab=settings"),
+      action: () => handleAction(undefined, "settings"),
     },
   ];
 

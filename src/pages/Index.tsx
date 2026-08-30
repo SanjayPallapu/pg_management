@@ -27,6 +27,10 @@ const MonthlyRentSheet = lazy(() => import("@/components/MonthlyRentSheet").then
 const TenantManagement = lazy(() => import("@/components/TenantManagement").then(m => ({ default: m.TenantManagement })));
 const SecurityDepositCard = lazy(() => import("@/components/SecurityDepositCard").then(m => ({ default: m.SecurityDepositCard })));
 const PaymentReconciliation = lazy(() => import("@/components/PaymentReconciliation").then(m => ({ default: m.PaymentReconciliation })));
+const ManagePropertiesSheet = lazy(() => import("@/components/settings/ManagePropertiesSheet").then(m => ({ default: m.ManagePropertiesSheet })));
+const Reports = lazy(() => import("@/components/Reports").then(m => ({ default: m.Reports })));
+const AuditHistorySheet = lazy(() => import("@/components/AuditHistorySheet").then(m => ({ default: m.AuditHistorySheet })));
+const DayGuestSheet = lazy(() => import("@/components/DayGuestSheet").then(m => ({ default: m.DayGuestSheet })));
 import { useTenantPayments } from "@/hooks/useTenantPayments";
 import { PGSwitcher } from "@/components/pg";
 import { Room } from "@/types";
@@ -67,13 +71,33 @@ const Index = () => {
   const [activeTab, setActiveTabLocal] = useState(() => searchParams.get('tab') || localStorage.getItem('pg_active_tab') || 'dashboard');
   const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [dayGuestsOpen, setDayGuestsOpen] = useState(false);
 
   useEffect(() => {
     const handler = (e: CustomEvent<{ hidden: boolean }>) => {
       setHideVoice(e.detail.hidden);
     };
+    const onOpenDayGuests = () => setDayGuestsOpen(true);
+    const onOpenProperties = () => setPropertiesOpen(true);
+    const onOpenReports = () => setReportsOpen(true);
+    const onOpenAudit = () => setAuditOpen(true);
+
     window.addEventListener("voice_agent_visibility_change" as any, handler);
-    return () => window.removeEventListener("voice_agent_visibility_change" as any, handler);
+    window.addEventListener("open_day_guests", onOpenDayGuests);
+    window.addEventListener("open_properties_sheet", onOpenProperties);
+    window.addEventListener("open_reports_sheet", onOpenReports);
+    window.addEventListener("open_audit_sheet", onOpenAudit);
+
+    return () => {
+      window.removeEventListener("voice_agent_visibility_change" as any, handler);
+      window.removeEventListener("open_day_guests", onOpenDayGuests);
+      window.removeEventListener("open_properties_sheet", onOpenProperties);
+      window.removeEventListener("open_reports_sheet", onOpenReports);
+      window.removeEventListener("open_audit_sheet", onOpenAudit);
+    };
   }, []);
 
   const setActiveTab = (tab: string) => {
@@ -424,7 +448,52 @@ const Index = () => {
         open={menuDrawerOpen} 
         onOpenChange={setMenuDrawerOpen} 
         onSelectTab={setActiveTab} 
+        onOpenProperties={() => setPropertiesOpen(true)}
+        onOpenReports={() => setReportsOpen(true)}
+        onOpenUtilities={() => {
+          setActiveTab("rent-sheet");
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("open_ac_electricity"));
+          }, 100);
+        }}
+        onOpenMoveOuts={() => navigate("/left-tenants")}
+        onOpenAIAssistant={() => navigate("/voice")}
+        onOpenDayGuests={() => setDayGuestsOpen(true)}
+        onOpenSecurityDeposit={() => {
+          window.dispatchEvent(new CustomEvent("openSecurityDepositSheet"));
+        }}
+        onOpenAuditHistory={() => setAuditOpen(true)}
       />
+
+      {/* Drawer & Quick Action Modals */}
+      <Suspense fallback={null}>
+        {propertiesOpen && (
+          <ManagePropertiesSheet
+            open={propertiesOpen}
+            onOpenChange={setPropertiesOpen}
+            onNavigateToSetup={() => navigate("/setup")}
+          />
+        )}
+        {reportsOpen && (
+          <Reports
+            open={reportsOpen}
+            onOpenChange={setReportsOpen}
+            rooms={rooms}
+          />
+        )}
+        {auditOpen && (
+          <AuditHistorySheet
+            open={auditOpen}
+            onOpenChange={setAuditOpen}
+          />
+        )}
+        {dayGuestsOpen && (
+          <DayGuestSheet
+            open={dayGuestsOpen}
+            onOpenChange={setDayGuestsOpen}
+          />
+        )}
+      </Suspense>
       </div>
     </RentProvider>
   );

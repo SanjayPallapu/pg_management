@@ -29,6 +29,7 @@ import { TenantChatMenu } from './TenantChatMenu';
 import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
 
 import { isTenantActiveNow } from '@/utils/dateOnly';
+import securityDepositHeroImg from '@/assets/security-deposit-hero.png';
 
 const DEPOSIT_COLLECTED_BY_CACHE_KEY = 'security-deposit-collected-by';
 
@@ -492,9 +493,18 @@ export const SecurityDepositCard = ({
             </div>
           </SheetHeader>
 
-          <div className="mt-4 space-y-6 px-1.5 pb-6">
+          <div className="mt-4 space-y-4 px-1.5 pb-6">
+            {/* Hero Illustration above deposited text */}
+            <div className="w-full flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/15 overflow-hidden">
+              <img
+                src={securityDepositHeroImg}
+                alt="Security Deposit Protection"
+                className="w-full max-h-48 sm:max-h-56 object-contain rounded-xl select-none"
+              />
+            </div>
+
             {/* Summary */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="p-4 rounded-lg bg-paid-muted">
                 <div className="flex items-center gap-2 text-paid">
                   <CheckCircle className="h-4 w-4" />

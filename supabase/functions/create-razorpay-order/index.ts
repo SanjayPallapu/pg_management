@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Default: SaaS Subscription creation
+    // Default: SaaS Subscription or Lifetime Order creation
     const { plan } = body;
     if (!plan || !(plan in PLAN_CONFIG)) {
       return new Response(JSON.stringify({ error: "Invalid plan selected" }), {
@@ -236,8 +236,69 @@ Deno.serve(async (req) => {
     }
 
     const planKey = plan as PlanKey;
-    const planId = await createOrFetchPlan(credentials, planKey);
     const cfg = PLAN_CONFIG[planKey];
+
+    // Lifetime Plan: Direct One-Time Order
+    if (planKey === "lifetime") {
+      const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: cfg.amount,
+          currency: "INR",
+          receipt: `LT_${userId.slice(0, 8)}_${Date.now().toString().slice(-6)}`,
+          notes: {
+            payment_type: "pghub_subscription",
+            user_id: userId,
+            plan_key: "lifetime",
+            checkout_mode: "immediate_charge",
+          },
+        }),
+      });
+
+      const orderJson = await orderRes.json();
+      if (!orderRes.ok || !orderJson?.id) {
+        throw new Error(orderJson?.error?.description || "Failed to create Razorpay order for lifetime plan");
+      }
+
+      const adminSupabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      await adminSupabase.from("payment_requests").insert({
+        user_id: userId,
+        amount: cfg.amount / 100,
+        payment_method: "razorpay",
+        status: "pending",
+        notes: JSON.stringify({
+          payment_type: "pghub_subscription",
+          razorpay_order_id: orderJson.id,
+          billing_cycle: "lifetime",
+          checkout_mode: "immediate_charge",
+        }),
+      });
+
+      return new Response(
+        JSON.stringify({
+          order_id: orderJson.id,
+          key_id: RAZORPAY_KEY_ID,
+          amount: cfg.amount,
+          currency: "INR",
+          checkout_mode: "immediate_charge",
+          description: "PG HUB Pro Max Lifetime VIP (One-time payment)",
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const planId = await createOrFetchPlan(credentials, planKey);
 
     const { data: currentSubscription } = await supabase
       .from("subscriptions")

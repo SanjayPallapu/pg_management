@@ -63,7 +63,11 @@ export default function SubscriptionPage() {
   const activePlanKeyOnSubscription = isSubscribedAndActive ? subscription?.billingCycle : undefined;
 
   const handleBack = () => {
-    navigate("/", { replace: true });
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/?tab=settings", { replace: true });
+    }
   };
 
   const cards = useMemo(() => {

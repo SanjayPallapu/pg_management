@@ -48,8 +48,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { plan, razorpay_subscription_id } = await req.json();
-    if (!razorpay_subscription_id || !plan || !PAID_PLANS.has(plan as PlanKey)) {
+    const body = await req.json();
+    const { plan, razorpay_subscription_id, razorpay_payment_id, razorpay_order_id } = body;
+    if (!plan || !PAID_PLANS.has(plan as PlanKey)) {
       return new Response(JSON.stringify({ error: "Invalid subscription request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -58,6 +59,112 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
     const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
+    const adminSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const now = new Date();
+    const planKey = plan as PlanKey;
+    const planConfig = PLAN_CONFIG[planKey];
+
+    // Special handling for Lifetime One-Time Payment
+    if (planKey === "lifetime") {
+      if (!razorpay_payment_id && !razorpay_order_id) {
+        return new Response(JSON.stringify({ error: "Missing payment or order ID for lifetime verification" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify payment with Razorpay
+      let paymentVerified = false;
+      if (razorpay_payment_id) {
+        const payRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+          headers: { Authorization: `Basic ${credentials}` },
+        });
+        const payJson = await payRes.json();
+        if (payRes.ok && ["captured", "authorized"].includes(payJson?.status)) {
+          paymentVerified = true;
+        }
+      } else if (razorpay_order_id) {
+        const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}/payments`, {
+          headers: { Authorization: `Basic ${credentials}` },
+        });
+        const orderJson = await orderRes.json();
+        if (orderRes.ok && Array.isArray(orderJson?.items) && orderJson.items.some((p: any) => ["captured", "authorized"].includes(p?.status))) {
+          paymentVerified = true;
+        }
+      }
+
+      if (!paymentVerified) {
+        return new Response(JSON.stringify({ error: "Lifetime payment could not be verified with Razorpay" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 100 years lifetime expiry
+      const lifetimeExpiresAt = new Date(now.getTime() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString();
+
+      await adminSupabase.from("subscriptions").upsert({
+        user_id: userId,
+        plan: "lifetime",
+        status: "active",
+        max_pgs: planConfig.maxPgs,
+        max_tenants_per_pg: planConfig.includedTenants,
+        features: {
+          billing_cycle: "lifetime",
+          ai_logo: true,
+          auto_reminders: true,
+          daily_reports: true,
+          is_lifetime: true,
+          razorpay_payment_id: razorpay_payment_id || null,
+          razorpay_order_id: razorpay_order_id || null,
+        },
+        expires_at: lifetimeExpiresAt,
+        payment_approved_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      }, { onConflict: "user_id" });
+
+      if (razorpay_order_id) {
+        await adminSupabase
+          .from("payment_requests")
+          .update({
+            status: "approved",
+            approved_at: now.toISOString(),
+            notes: JSON.stringify({
+              payment_type: "pghub_subscription",
+              plan_key: "lifetime",
+              razorpay_payment_id,
+              razorpay_order_id,
+              activated_at: now.toISOString(),
+            }),
+          })
+          .eq("user_id", userId)
+          .eq("payment_method", "razorpay");
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Pro Max Lifetime VIP Activated Successfully",
+          plan: "lifetime",
+          expires_at: lifetimeExpiresAt,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!razorpay_subscription_id) {
+      return new Response(JSON.stringify({ error: "Missing subscription ID" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     let subscriptionRes: Response | null = null;
     let subscription: any = null;
 
