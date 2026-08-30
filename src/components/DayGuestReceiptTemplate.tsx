@@ -95,11 +95,10 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
             src={pgLogoUrl}
             alt="Logo"
             style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "10px",
+              width: "64px",
+              height: "64px",
+              borderRadius: "12px",
               objectFit: "cover",
-              border: "1px solid #e2e8f0",
             }}
           />
         </div>
@@ -112,21 +111,22 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
             top: "50%",
             transform: "translateY(-50%)",
             textAlign: "right",
-            fontSize: "9px",
+            fontSize: "10px",
             color: "#64748b",
-            background: "#f8fafc",
-            padding: "5px 9px",
-            borderRadius: "6px",
-            border: "1px solid #e2e8f0",
+            maxWidth: "130px",
+            wordBreak: "break-word",
+            whiteSpace: "normal",
           }}
         >
-          <div style={{ textTransform: "uppercase", letterSpacing: "0.3px" }}>Receipt No:</div>
+          <div style={{ textTransform: "uppercase", letterSpacing: "0.4px", fontWeight: 700, fontSize: "9px" }}>Receipt No:</div>
           <div
             style={{
-              fontWeight: 700,
-              color: "#334155",
+              fontWeight: 800,
+              color: "#1e293b",
               fontFamily: "monospace",
               fontSize: "10px",
+              lineHeight: "1.2",
+              marginTop: "2px",
             }}
           >
             {receiptNo}
@@ -134,12 +134,12 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         </div>
 
         {/* Center: Title & Subtitle */}
-        <div style={{ width: "100%", paddingLeft: "80px", paddingRight: "80px" }}>
+        <div style={{ width: "100%", paddingLeft: "84px", paddingRight: "84px" }}>
           <div
             style={{
               fontSize: "14px",
-              fontWeight: 700,
-              color: "#475569",
+              fontWeight: 800,
+              color: "#334155",
               textTransform: "uppercase",
               letterSpacing: "0.5px",
             }}
@@ -152,10 +152,10 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
               alignItems: "center",
               justifyContent: "center",
               gap: "6px",
-              fontSize: "17px",
-              fontWeight: 700,
+              fontSize: "16px",
+              fontWeight: 800,
               color: "#0f172a",
-              marginTop: "3px",
+              marginTop: "2px",
             }}
           >
             <span style={{ fontSize: "15px" }}>🧾</span>
@@ -164,11 +164,11 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
           <div
             style={{
               fontSize: "11px",
-              fontWeight: 600,
+              fontWeight: 700,
               color: "#15803d",
               marginTop: "4px",
               background: "#dcfce7",
-              padding: "2px 8px",
+              padding: "3px 10px",
               borderRadius: "6px",
               display: "inline-block",
               width: "fit-content",
@@ -341,7 +341,7 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       {/* Payment Meta Info */}
       <div
         style={{
-          margin: "0 20px auto",
+          margin: "0 20px 0",
           fontSize: "10px",
           color: "#64748b",
           display: "flex",
@@ -351,6 +351,25 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       >
         <span>Mode: <strong style={{ color: "#334155" }}>{data.paymentMode ? data.paymentMode.toUpperCase() : "UPI / CASH"}</strong></span>
         <span>Receipt Generated on: <strong style={{ color: "#334155" }}>{formatDate(data.paymentDate || new Date().toISOString())}</strong></span>
+      </div>
+
+      {/* Feel Good Appreciation Card */}
+      <div
+        style={{
+          margin: "10px 20px auto",
+          background: "#f0fdf4",
+          border: "1px dashed #86efac",
+          borderRadius: "8px",
+          padding: "8px 12px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>
+          ✨ We loved having you stay with us!
+        </div>
+        <div style={{ fontSize: "10px", color: "#15803d", marginTop: "2px" }}>
+          Hope you had a comfortable and pleasant stay. Looking forward to welcoming you again!
+        </div>
       </div>
 
       {/* Footer */}

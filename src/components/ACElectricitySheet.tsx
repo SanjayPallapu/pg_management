@@ -374,33 +374,33 @@ export const ACElectricitySheet = ({
                         >
                           <div className="flex items-center gap-3.5">
                             {/* Radial progress ring */}
-                            <div className="relative h-12 w-12 shrink-0">
-                              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
-                                <circle cx="18" cy="18" r="15.915" fill="none" stroke="currentColor" strokeWidth="3" className="text-border" />
+                            <div className="relative h-13 w-13 shrink-0">
+                              <svg className="w-13 h-13 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+                                <circle cx="18" cy="18" r="15.915" fill="none" stroke="currentColor" strokeWidth="3.2" className="text-border" />
                                 <circle
                                   cx="18" cy="18" r="15.915" fill="none"
                                   stroke={allPaid ? "#10b981" : "#06b6d4"}
-                                  strokeWidth="3"
+                                  strokeWidth="3.2"
                                   strokeDasharray={`${roomPct} 100`}
                                   strokeLinecap="round"
                                   className="transition-all duration-500"
                                 />
                               </svg>
-                              <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-foreground">{roomPct}%</div>
+                              <div className="absolute inset-0 flex items-center justify-center text-xs font-black text-foreground">{roomPct}%</div>
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <span className="font-extrabold text-sm">Room {item.room.roomNo}</span>
-                                <Badge className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border-0", allPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-orange-500/10 text-orange-500")}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-black text-base text-foreground">Room {item.room.roomNo}</span>
+                                <Badge className={cn("text-xs font-black px-2.5 py-0.5 rounded-full border-0", allPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-orange-500/10 text-orange-500")}>
                                   {allPaid ? "All Paid" : `₹${roomPending.toLocaleString()} Due`}
                                 </Badge>
                               </div>
-                              <p className="text-[10px] text-muted-foreground">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">{item.units || 0} Units · ₹{item.unitPrice}/Unit · Bill: ₹{(item.total || 0).toLocaleString()}</p>
+                              <p className="text-sm font-semibold text-foreground/80">{item.room.capacity} Sharing · {item.activeTenants.length} Tenant{item.activeTenants.length === 1 ? '' : 's'}</p>
+                              <p className="text-sm font-bold text-foreground mt-0.5">{item.units || 0} Units · ₹{item.unitPrice}/Unit · <span className="font-black text-cyan-600 dark:text-cyan-400">Bill: ₹{(item.total || 0).toLocaleString()}</span></p>
                             </div>
 
-                            <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
+                            <ChevronRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
                           </div>
                         </button>
                       );
@@ -414,33 +414,33 @@ export const ACElectricitySheet = ({
                 <div className="space-y-3">
                   {/* Summary pill */}
                   {pendingTenantsList.length > 0 && (
-                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-orange-500/8 border border-orange-500/20">
-                      <div className="h-10 w-10 rounded-2xl bg-orange-500/15 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="h-5 w-5 text-orange-500" />
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-orange-500/10 border border-orange-500/25">
+                      <div className="h-12 w-12 rounded-2xl bg-orange-500/20 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="h-6 w-6 text-orange-500" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-foreground">{pendingTenantsList.length} Pending</p>
-                        <p className="text-xs text-muted-foreground">₹{pendingTotal.toLocaleString()} outstanding</p>
+                        <p className="text-lg font-black text-foreground">{pendingTenantsList.length} Pending</p>
+                        <p className="text-sm font-bold text-muted-foreground">₹{pendingTotal.toLocaleString()} outstanding</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {pendingTenantsList.map(tenant => (
-                      <div key={tenant.id} className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card">
-                        <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-                          <span className="text-[10px] font-black text-orange-600">{tenant.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                      <div key={tenant.id} className="flex items-center gap-3.5 p-4 rounded-2xl border border-border bg-card shadow-xs">
+                        <div className="h-11 w-11 rounded-full bg-orange-500/15 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-black text-orange-600">{tenant.name?.charAt(0)?.toUpperCase() || '?'}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-extrabold truncate">{tenant.name}</p>
-                          <p className="text-[10px] text-muted-foreground">Room {tenant.roomNo}</p>
+                          <p className="text-base font-black text-foreground truncate">{tenant.name}</p>
+                          <p className="text-sm font-bold text-muted-foreground">Room {tenant.roomNo}</p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-sm font-black text-orange-500">₹{tenant.pending.toLocaleString()}</span>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="text-lg font-black text-orange-500">₹{tenant.pending.toLocaleString()}</span>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 px-3 text-[10px] font-bold rounded-xl border-cyan-500/30 text-cyan-600 hover:bg-cyan-500/10"
+                            className="h-9 px-3.5 text-xs font-black rounded-xl border-cyan-500/30 text-cyan-600 hover:bg-cyan-500/10"
                             onClick={() => onShare(tenant.roomItem, tenant.roomItem.units, tenant.roomItem.unitPrice, tenant.roomItem.startReading, tenant.roomItem.endReading, tenant.roomItem.splitType, tenant.roomItem.splitCount, tenant.name)}
                           >
                             Remind
@@ -453,8 +453,8 @@ export const ACElectricitySheet = ({
                         <div className="h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
                           <Check className="h-7 w-7 text-emerald-500" />
                         </div>
-                        <p className="text-sm font-black text-foreground">All cleared!</p>
-                        <p className="text-xs text-muted-foreground mt-1">No pending AC bills this month.</p>
+                        <p className="text-base font-black text-foreground">All cleared!</p>
+                        <p className="text-sm text-muted-foreground mt-1">No pending AC bills this month.</p>
                       </div>
                     )}
                   </div>
@@ -471,32 +471,32 @@ export const ACElectricitySheet = ({
                     className="w-full flex items-center justify-between p-4 rounded-2xl bg-[linear-gradient(120deg,#0e7490,#0369a1)] text-white shadow-lg"
                   >
                     <div className="text-left">
-                      <p className="text-sm font-black">Share All Bills</p>
-                      <p className="text-[11px] text-cyan-200 mt-0.5">Send to all {acRooms.reduce((n, item) => n + (item.tenantShares || []).filter((s: any) => s.share > 0).length, 0)} tenants with AC charges</p>
+                      <p className="text-base font-black">Share All Bills</p>
+                      <p className="text-xs text-cyan-100 font-medium mt-0.5">Send to all {acRooms.reduce((n, item) => n + (item.tenantShares || []).filter((s: any) => s.share > 0).length, 0)} tenants with AC charges</p>
                     </div>
-                    <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                      <Share2 className="h-5 w-5" />
+                    <div className="h-11 w-11 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                      <Share2 className="h-6 w-6" />
                     </div>
                   </button>
 
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground px-0.5">Room-wise</h3>
+                  <div className="space-y-2.5">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground px-0.5">Room-wise</h3>
                     {acRooms.map(item => (
-                      <div key={item.room.id} className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card">
-                        <div className="h-9 w-9 rounded-2xl bg-cyan-500/10 flex items-center justify-center shrink-0">
-                          <Snowflake className="h-4 w-4 text-cyan-600" />
+                      <div key={item.room.id} className="flex items-center gap-3.5 p-4 rounded-2xl border border-border bg-card shadow-xs">
+                        <div className="h-11 w-11 rounded-2xl bg-cyan-500/15 flex items-center justify-center shrink-0">
+                          <Snowflake className="h-5 w-5 text-cyan-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-extrabold">Room {item.room.roomNo}</p>
-                          <p className="text-[10px] text-muted-foreground">₹{(item.total || 0).toLocaleString()} · {item.splitType === 'custom' ? 'Custom' : item.splitType === 'capacity' ? 'Capacity' : 'Proportional'}</p>
+                          <p className="text-base font-black text-foreground">Room {item.room.roomNo}</p>
+                          <p className="text-sm font-bold text-foreground/80 mt-0.5">₹{(item.total || 0).toLocaleString()} · {item.splitType === 'custom' ? 'Custom' : item.splitType === 'capacity' ? 'Capacity' : 'Proportional'}</p>
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 px-3 text-[10px] font-bold rounded-xl border-blue-500/30 text-blue-600 hover:bg-blue-500/10 shrink-0"
+                          className="h-9 px-3.5 text-xs font-black rounded-xl border-blue-500/30 text-blue-600 hover:bg-blue-500/10 shrink-0"
                           onClick={() => onShare(item, item.units, item.unitPrice, item.startReading, item.endReading, item.splitType, item.splitCount)}
                         >
-                          <Send className="h-3 w-3 mr-1" /> Share
+                          <Send className="h-3.5 w-3.5 mr-1" /> Share
                         </Button>
                       </div>
                     ))}
@@ -506,7 +506,7 @@ export const ACElectricitySheet = ({
 
               {/* ── REPORTS TAB ── */}
               {activeTab === 'reports' && (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {/* Export button */}
                   <button
                     type="button"
@@ -514,35 +514,35 @@ export const ACElectricitySheet = ({
                     className="w-full flex items-center justify-between p-4 rounded-2xl bg-[linear-gradient(120deg,#065f46,#047857)] text-white shadow-lg"
                   >
                     <div className="text-left">
-                      <p className="text-sm font-black">Export to Excel</p>
-                      <p className="text-[11px] text-emerald-200 mt-0.5">Download full AC bill report for {months.find(m => m.value === acMonth)?.label} {acYear}</p>
+                      <p className="text-base font-black">Export to Excel</p>
+                      <p className="text-xs text-emerald-100 font-medium mt-0.5">Download full AC bill report for {months.find(m => m.value === acMonth)?.label} {acYear}</p>
                     </div>
-                    <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                      <FileSpreadsheet className="h-5 w-5" />
+                    <div className="h-11 w-11 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-6 w-6" />
                     </div>
                   </button>
 
                   {/* Summary cards */}
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="p-4 rounded-2xl border border-border bg-card">
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
-                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">Collected</span>
+                        <span className="text-xs font-black uppercase tracking-wide text-muted-foreground">Collected</span>
                       </div>
-                      <p className="text-xl font-black text-emerald-600">₹{collectedTotal.toLocaleString()}</p>
+                      <p className="text-2xl font-black text-emerald-600">₹{collectedTotal.toLocaleString()}</p>
                     </div>
                     <div className="p-4 rounded-2xl border border-border bg-card">
                       <div className="flex items-center gap-2 mb-2">
                         <IndianRupee className="h-4 w-4 text-orange-500" />
-                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">Pending</span>
+                        <span className="text-xs font-black uppercase tracking-wide text-muted-foreground">Pending</span>
                       </div>
-                      <p className="text-xl font-black text-orange-500">₹{pendingTotal.toLocaleString()}</p>
+                      <p className="text-2xl font-black text-orange-500">₹{pendingTotal.toLocaleString()}</p>
                     </div>
                   </div>
 
                   {/* Room breakdown */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground px-0.5">Room Breakdown</h3>
+                  <div className="space-y-2.5">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground px-0.5">Room Breakdown</h3>
                     {acRooms.map(item => {
                       const roomExpected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.share || 0), 0);
                       const roomCollected = (item.tenantShares || []).reduce((s: number, t: any) => s + (t.acPaymentStatus === 'Paid' ? (t.share || 0) : 0), 0);
@@ -550,19 +550,19 @@ export const ACElectricitySheet = ({
                       const pct = roomExpected > 0 ? Math.round((roomCollected / roomExpected) * 100) : 0;
 
                       return (
-                        <div key={item.room.id} className="p-3.5 rounded-2xl border border-border bg-card space-y-2">
+                        <div key={item.room.id} className="p-4 rounded-2xl border border-border bg-card space-y-2.5 shadow-xs">
                           <div className="flex items-center justify-between">
-                            <span className="font-extrabold text-sm">Room {item.room.roomNo}</span>
-                            <span className={cn("text-xs font-bold", roomPending === 0 ? "text-emerald-500" : "text-orange-500")}>
+                            <span className="font-black text-base text-foreground">Room {item.room.roomNo}</span>
+                            <span className={cn("text-sm font-black", roomPending === 0 ? "text-emerald-500" : "text-orange-500")}>
                               {roomPending === 0 ? "All paid" : `₹${roomPending.toLocaleString()} due`}
                             </span>
                           </div>
-                          <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground">
+                          <div className="grid grid-cols-3 gap-2 text-sm font-semibold text-foreground/80">
                             <span>{item.units || 0} units</span>
-                            <span className="text-center">₹{(item.total || 0).toLocaleString()} bill</span>
-                            <span className="text-right text-emerald-500 font-bold">{pct}%</span>
+                            <span className="text-center font-bold text-foreground">₹{(item.total || 0).toLocaleString()} bill</span>
+                            <span className="text-right text-emerald-500 font-black">{pct}%</span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all"
                               style={{ width: `${pct}%`, background: pct === 100 ? "#10b981" : "#06b6d4" }}

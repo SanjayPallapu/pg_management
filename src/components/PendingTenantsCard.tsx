@@ -24,6 +24,7 @@ import { RulesShareDialog } from '@/components/RulesShareDialog';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { useOnboardingProfileMap } from '@/features/tenant-onboarding';
 import { TenantChatMenu } from '@/components/TenantChatMenu';
+import whatsappRemindersBanner from '@/assets/whatsapp-reminders-banner.png';
 
 interface PendingTenantsCardProps {
   showSummaryCard?: boolean;
@@ -458,8 +459,18 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-1.5 py-1 bg-background">
-              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col h-full">
+            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-2 py-2 bg-background space-y-3">
+              {/* WhatsApp Reminders Hero Banner */}
+              <div className="w-full overflow-hidden rounded-2xl shadow-sm border border-border/50 shrink-0">
+                <img
+                  src={whatsappRemindersBanner}
+                  alt="WhatsApp Reminders - Send smart follow-ups"
+                  className="w-full h-auto object-cover rounded-2xl block"
+                  loading="eager"
+                />
+              </div>
+
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1">
                 <TabsList className="grid w-full grid-cols-3 shrink-0">
                   <TabsTrigger value="overdue" className="gap-1 text-[11px] px-1 truncate">
                     <AlertTriangle className="h-3.5 w-3.5 text-pending shrink-0" />

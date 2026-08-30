@@ -466,14 +466,15 @@ export const SecurityDepositCard = ({
 
       <Sheet open={sheetOpen} onOpenChange={(val) => { setSheetOpen(val); if (!val) { onClose?.(); setShowEditActions(false); } }}>
         <SheetContent
+          className="w-full sm:max-w-xl p-0 [&>button]:hidden flex flex-col h-full bg-background overflow-hidden"
           onInteractOutside={(e) => {
             if (depositDialog || editDialog || removeDialog || receiptDialogOpen) {
               e.preventDefault();
             }
           }}
         >
-          {/* Sticky Header */}
-          <SheetHeader className="px-3 pt-2 pb-3 border-b bg-background sticky top-0 z-10 -mx-1.5 -mt-1">
+          {/* Fixed Header */}
+          <SheetHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0 shrink-0 bg-background">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -485,15 +486,16 @@ export const SecurityDepositCard = ({
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <SheetTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
+                <SheetTitle className="flex items-center gap-2 text-base font-bold">
+                  <Wallet className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                   Security Deposits
                 </SheetTitle>
               </div>
             </div>
           </SheetHeader>
 
-          <div className="mt-4 space-y-4 px-1.5 pb-6">
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto space-y-4 px-4 py-4">
             {/* Hero Illustration */}
             <div className="w-full overflow-hidden rounded-2xl">
               <img
