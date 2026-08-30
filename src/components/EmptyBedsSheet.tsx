@@ -110,28 +110,28 @@ export const EmptyBedsSheet = ({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-1.5 py-4 space-y-6">
+          <div className="flex-1 overflow-y-auto px-1.5 py-2.5 space-y-3">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-primary/10 rounded-lg p-3">
-            <div className="text-2xl font-bold text-primary">{totalEmptyBeds}</div>
-            <p className="text-xs text-muted-foreground">Total Empty Beds</p>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="bg-primary/10 rounded-lg p-2">
+            <div className="text-xl sm:text-2xl font-bold text-primary">{totalEmptyBeds}</div>
+            <p className="text-[11px] sm:text-xs text-muted-foreground">Total Empty Beds</p>
           </div>
-          <div className="bg-paid/10 rounded-lg p-3">
-            <div className="text-2xl font-bold text-paid">₹{Math.round(totalPotentialRevenue).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Potential Revenue</p>
+          <div className="bg-paid/10 rounded-lg p-2">
+            <div className="text-xl sm:text-2xl font-bold text-paid">₹{Math.round(totalPotentialRevenue).toLocaleString()}</div>
+            <p className="text-[11px] sm:text-xs text-muted-foreground">Potential Revenue</p>
           </div>
         </div>
 
         {/* By Sharing Type with Filters & Vacancy Image */}
-        <div className="mb-4 p-3.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
-          <div className="flex items-center justify-between mb-2.5">
-            <h3 className="text-sm font-bold text-foreground">By Sharing Type</h3>
+        <div className="mb-2.5 p-2.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">By Sharing Type</h3>
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg">
-                  <SlidersHorizontal className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-6 px-1.5 rounded-lg">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
                   <span className="sr-only">Filters</span>
                 </Button>
               </PopoverTrigger>
@@ -191,8 +191,8 @@ export const EmptyBedsSheet = ({
             </Popover>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2.5 flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
               {Object.entries(bySharing)
                 .sort(([a], [b]) => Number(b) - Number(a))
                 .map(([capacity, data]) => (
@@ -203,32 +203,32 @@ export const EmptyBedsSheet = ({
                   >
                     <Badge
                       variant="outline"
-                      className={`py-2 px-3.5 rounded-xl cursor-pointer transition-all text-xs sm:text-sm ${
+                      className={`py-1.5 px-2.5 rounded-xl cursor-pointer transition-all text-xs ${
                         sharingFilter === Number(capacity)
                           ? 'bg-primary/15 border-primary text-primary font-extrabold shadow-xs'
                           : 'hover:bg-accent/50 font-semibold'
                       }`}
                     >
                       <span className="font-bold">{capacity}-sharing</span>
-                      <span className="mx-1.5 text-muted-foreground">•</span>
+                      <span className="mx-1 text-muted-foreground">•</span>
                       <span className="font-semibold">{data.beds} beds</span>
-                      <span className="mx-1.5 text-muted-foreground">•</span>
+                      <span className="mx-1 text-muted-foreground">•</span>
                       <span className="text-paid font-bold">₹{data.perBed.toLocaleString()}/bed</span>
                     </Badge>
                   </button>
                 ))}
             </div>
 
-            {/* Rightmost Fill Vacancy Editorial Card matching Rent Tab exactly */}
-            <div className="w-[88px] sm:w-[102px] shrink-0 flex flex-col items-center select-none">
-              <div className="w-full h-[102px] sm:h-[118px] rounded-t-[3.5rem] rounded-b-2xl bg-gradient-to-b from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950 flex items-center justify-center p-1.5 shadow-sm border border-black/5 dark:border-white/10 relative overflow-hidden">
+            {/* Rightmost Fill Vacancy Editorial Card matching Rent Tab */}
+            <div className="w-[84px] sm:w-[96px] shrink-0 flex flex-col items-center select-none">
+              <div className="w-full h-[96px] sm:h-[110px] rounded-t-[3rem] rounded-b-xl bg-gradient-to-b from-teal-200 via-emerald-100 to-cyan-100 dark:from-teal-950 dark:via-emerald-900/40 dark:to-cyan-950 flex items-center justify-center p-1 shadow-sm border border-black/5 dark:border-white/10 relative overflow-hidden">
                 <img
                   src={vacancyImg}
                   alt="Fill Vacancy"
-                  className="w-full h-full object-cover object-center rounded-t-[3rem] rounded-b-xl shadow-xs"
+                  className="w-full h-full object-cover object-center rounded-t-[2.75rem] rounded-b-lg shadow-xs animate-in fade-in-0 slide-in-from-left-4 duration-500 [mask-image:linear-gradient(to_right,rgba(0,0,0,0.15)_0%,rgba(0,0,0,1)_45%)]"
                 />
               </div>
-              <span className="font-semibold text-[11px] sm:text-xs text-foreground text-center leading-tight mt-1.5 px-0.5 line-clamp-2 max-w-[88px] sm:max-w-[102px]">
+              <span className="font-semibold text-[10px] sm:text-xs text-foreground text-center leading-tight mt-1 px-0.5 line-clamp-2 max-w-[84px] sm:max-w-[96px]">
                 Fill Vacancy
               </span>
             </div>
@@ -236,32 +236,32 @@ export const EmptyBedsSheet = ({
         </div>
 
         {/* Room List */}
-        <div className="mb-4">
-          <h3 className="text-sm font-bold text-foreground mb-2.5">Available Rooms ({roomsWithEmptyBeds.length})</h3>
-          <div className="space-y-2.5">
+        <div className="mb-2.5">
+          <h3 className="text-xs sm:text-sm font-bold text-foreground mb-2">Available Rooms ({roomsWithEmptyBeds.length})</h3>
+          <div className="space-y-1.5">
             {roomsWithEmptyBeds.map(room => (
               <div
                 key={room.roomNo}
-                className="flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent/30 transition-colors shadow-xs"
+                className="flex items-center justify-between p-2.5 rounded-xl border bg-card hover:bg-accent/30 transition-colors shadow-xs"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                     <span className="text-sm font-black text-primary">{room.roomNo.replace(/^R/i, "")}</span>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge variant="secondary" className="text-xs sm:text-sm px-2.5 py-0.5 font-bold">
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">
                         {room.capacity}-sharing
                       </Badge>
                       {room.reservedBeds && room.reservedBeds > 0 ? (
-                        <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-xs py-0.5 px-2 font-bold">
+                        <Badge className="bg-amber-500/15 text-amber-600 border border-amber-500/30 text-[11px] py-0 px-1.5 font-bold">
                           {room.reservedBeds} Reserved
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mt-1">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{room.occupied}/{room.capacity} occupied</span>
+                    <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-foreground mt-0.5">
+                      <Users className="h-4 w-4 text-primary shrink-0" />
+                      <span className="font-extrabold text-foreground tracking-tight">{room.occupied}/{room.capacity} occupied</span>
                     </div>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export const EmptyBedsSheet = ({
                     <Bed className="h-4 w-4" />
                     <span>{room.emptyBeds} empty</span>
                   </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  <div className="text-[11px] sm:text-xs text-muted-foreground font-medium">
                     ₹{Math.round(room.perBedRent).toLocaleString()}/bed
                   </div>
                   <div className="text-sm sm:text-base font-bold text-paid">
@@ -281,18 +281,18 @@ export const EmptyBedsSheet = ({
             ))}
 
             {roomsWithEmptyBeds.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Bed className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                <p>All beds are occupied!</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <Bed className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-xs sm:text-sm">All beds are occupied!</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Floor-wise Vacancy (Moved to Bottom) */}
-        <div className="mb-4 p-3.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
-          <h3 className="text-sm font-bold text-foreground mb-2.5">Floor-wise Vacancy</h3>
-          <div className="space-y-2">
+        <div className="mb-2.5 p-2.5 rounded-2xl border border-border/80 bg-card/60 shadow-xs">
+          <h3 className="text-xs sm:text-sm font-bold text-foreground mb-2">Floor-wise Vacancy</h3>
+          <div className="space-y-1.5">
             {floorSummary.map(({ floor, emptyBeds, totalCapacity }) => {
               const isExpanded = floorFilter === floor;
               const floorRooms = roomStats.filter(r => r.emptyBeds > 0 && r.floor === floor)
@@ -301,31 +301,31 @@ export const EmptyBedsSheet = ({
                 <div key={floor} className={`rounded-xl border transition-colors ${isExpanded ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
                   <button
                     onClick={() => setFloorFilter(isExpanded ? null : floor)}
-                    className="w-full p-3 text-left flex items-center justify-between cursor-pointer"
+                    className="w-full p-2.5 text-left flex items-center justify-between cursor-pointer"
                   >
                     <div>
-                      <div className="text-xs font-semibold text-muted-foreground">Floor {floor}</div>
-                      <div className="text-base sm:text-lg font-bold text-foreground">
-                        {emptyBeds} <span className="text-xs sm:text-sm font-normal text-muted-foreground">/ {totalCapacity} total</span>
+                      <div className="text-[11px] font-semibold text-muted-foreground">Floor {floor}</div>
+                      <div className="text-sm sm:text-base font-bold text-foreground">
+                        {emptyBeds} <span className="text-xs font-normal text-muted-foreground">/ {totalCapacity} total</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 bg-muted rounded-full h-2">
+                      <div className="w-16 sm:w-20 bg-muted rounded-full h-2">
                         <div className="bg-pending h-2 rounded-full transition-all" style={{ width: `${(emptyBeds / totalCapacity) * 100}%` }} />
                       </div>
                       <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
                     </div>
                   </button>
                   {isExpanded && (
-                    <div className="px-3 pb-3 space-y-1.5">
+                    <div className="px-2.5 pb-2.5 space-y-1">
                       {floorRooms.map(room => (
-                        <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-lg px-3 py-2 text-sm">
+                        <div key={room.roomNo} className="flex items-center justify-between bg-background/60 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm">
                           <div className="flex items-center gap-2">
                             <span className="font-bold">{room.roomNo.replace(/^R/i, "")}</span>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 font-bold">{room.capacity}-sharing</Badge>
+                            <Badge variant="secondary" className="text-[11px] px-1.5 py-0 font-bold">{room.capacity}-sharing</Badge>
                           </div>
-                          <div className="flex items-center gap-1 text-pending font-bold text-xs sm:text-sm">
-                            <Bed className="h-3.5 w-3.5" />
+                          <div className="flex items-center gap-1 text-pending font-bold text-xs">
+                            <Bed className="h-3 w-3" />
                             <span>{room.emptyBeds} empty</span>
                           </div>
                         </div>

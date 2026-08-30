@@ -45,6 +45,7 @@ import {
   Loader2,
   ArrowLeft,
   FileBarChart,
+  FileClock,
   ContactRound,
   Mic,
 } from "lucide-react";
@@ -63,6 +64,7 @@ import { useNavigate } from "react-router-dom";
 import { SubscriptionDetailsSheet, AdminPaymentApproval, UpgradeDialog } from "@/components/subscription";
 import { NotificationPreferencesSheet } from "./settings/NotificationPreferencesSheet";
 import { ManagePropertiesSheet } from "./settings/ManagePropertiesSheet";
+import { AuditHistorySheet } from "@/components/AuditHistorySheet";
 
 import { ChangePasswordDialog } from "./settings/ChangePasswordDialog";
 import { LoginActivityDialog } from "./settings/LoginActivityDialog";
@@ -129,6 +131,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   const [reportsOpen, setReportsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [loginActivityOpen, setLoginActivityOpen] = useState(false);
@@ -144,6 +147,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       setDeleteConfirmOpen(false);
       setNotificationsOpen(false);
       setPropertiesOpen(false);
+      setAuditOpen(false);
 
       setChangePasswordOpen(false);
       setLoginActivityOpen(false);
@@ -292,37 +296,32 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
   return (
     <>
       <motion.div
-        className="space-y-4 pb-8"
+        className="space-y-2.5 pb-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants} className="px-1 pt-1">
-          <h1 className="text-xl font-black tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground">Manage your property, account, and preferences</p>
-        </motion.div>
-
         {/* Profile Card & Subscription Banner — 2 cols on Desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
           <motion.div variants={itemVariants}>
-            <Card className="relative h-full overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-lg shadow-blue-900/15">
+            <Card className="relative h-full overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-[#0e6ce7] via-[#155bc7] to-[#243b8f] text-white shadow-md">
               <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
               <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-cyan-300/10" />
-              <CardContent className="relative z-10 p-5 flex items-center h-full">
-                <div className="flex items-center gap-4 w-full">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
-                    <User className="h-7 w-7 text-white" />
+              <CardContent className="relative z-10 p-3.5 flex items-center h-full">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                    <User className="h-5 w-5 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
-                    {user?.email && <p className="truncate text-xs text-blue-100">{user.email}</p>}
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
-                        <Shield className="h-3 w-3" />
+                    <h2 className="truncate text-sm sm:text-base font-bold">{user?.user_metadata?.full_name || user?.email || "Owner"}</h2>
+                    {user?.email && <p className="truncate text-[11px] text-blue-100">{user.email}</p>}
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-1.5 py-0.2 text-[10px] font-semibold text-white">
+                        <Shield className="h-2.5 w-2.5" />
                         {roleBadge.label}
                       </span>
                       {currentPG && (
-                        <span className="truncate text-xs text-blue-100">
+                        <span className="truncate text-[11px] text-blue-100">
                           · {currentPG.name}
                         </span>
                       )}
@@ -336,22 +335,22 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           {/* Subscription Expiry Banner */}
           <motion.div variants={itemVariants}>
             <Card className="h-full rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent shadow-xs">
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-3 h-full">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
-                    <Crown className="h-5 w-5" />
+              <CardContent className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5 h-full">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
+                    <Crown className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
-                    <p className="truncate text-sm font-bold">
+                    <p className="text-[9px] font-extrabold uppercase tracking-wider text-muted-foreground">Subscription</p>
+                    <p className="truncate text-xs sm:text-sm font-bold">
                       {subscriptionPlanName}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground mt-0.5">
+                    <p className="truncate text-[11px] text-muted-foreground mt-0.2">
                       {subscriptionEndDate ? (
                         <>
                           {subscriptionHasEnded
                             ? 'Expired'
-                            : subscription?.billingCycle === 'trial' ? 'Free trial ends' : 'Renews'} on{' '}
+                            : subscription?.billingCycle === 'trial' ? 'Trial ends' : 'Renews'} on{' '}
                           <strong className="font-bold text-foreground">{format(subscriptionEndDate, 'dd MMM yyyy')}</strong>
                           {!subscriptionHasEnded && (() => {
                             const daysLeft = Math.max(0, differenceInDays(subscriptionEndDate, new Date()));
@@ -359,12 +358,12 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
                           })()}
                         </>
                       ) : (
-                        subscription?.status === 'active' ? 'Active subscription' : 'Upgrade required to continue'
+                        subscription?.status === 'active' ? 'Active subscription' : 'Upgrade to continue'
                       )}
                     </p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold shrink-0 border-violet-500/30 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10" onClick={() => navigate('/subscription')}>
+                <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold shrink-0 border-violet-500/30 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10 h-7 px-2.5" onClick={() => navigate('/subscription')}>
                   Manage
                 </Button>
               </CardContent>
@@ -372,25 +371,29 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
           </motion.div>
         </div>
 
-        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2.5 sm:gap-4">
-          <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
-            <Building className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-blue-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Properties</span>
+        {/* Quick Actions Grid — 4 Columns */}
+        <motion.div variants={itemVariants} className="grid grid-cols-4 gap-2">
+          <button type="button" onClick={() => setPropertiesOpen(true)} className="rounded-2xl border border-border/70 bg-card p-2 sm:p-2.5 text-center shadow-xs hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <Building className="mx-auto h-5 w-5 text-blue-600" /><span className="mt-1 block text-[10px] sm:text-xs font-bold">Properties</span>
           </button>
-          <button type="button" onClick={() => setReportsOpen(true)} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
-            <FileBarChart className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Reports</span>
+          <button type="button" onClick={() => setReportsOpen(true)} className="rounded-2xl border border-border/70 bg-card p-2 sm:p-2.5 text-center shadow-xs hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <FileBarChart className="mx-auto h-5 w-5 text-emerald-600" /><span className="mt-1 block text-[10px] sm:text-xs font-bold">Reports</span>
           </button>
-          <button type="button" onClick={() => navigate('/subscription')} className="rounded-2xl border border-border/70 bg-card p-3 sm:p-4 text-center shadow-sm hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
-            <CreditCard className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-violet-600" /><span className="mt-2 block text-[10px] sm:text-xs font-bold">Billing</span>
+          <button type="button" onClick={() => setAuditOpen(true)} className="rounded-2xl border border-border/70 bg-card p-2 sm:p-2.5 text-center shadow-xs hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <FileClock className="mx-auto h-5 w-5 text-amber-500" /><span className="mt-1 block text-[10px] sm:text-xs font-bold">Audit</span>
+          </button>
+          <button type="button" onClick={() => navigate('/subscription')} className="rounded-2xl border border-border/70 bg-card p-2 sm:p-2.5 text-center shadow-xs hover:border-primary/40 hover:bg-accent/40 transition-all active:scale-95">
+            <CreditCard className="mx-auto h-5 w-5 text-violet-600" /><span className="mt-1 block text-[10px] sm:text-xs font-bold">Billing</span>
           </button>
         </motion.div>
 
         {/* Settings Sections Grid — 1 col on mobile, 2 on tablet, 3 on wide desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
           {/* Preferences */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+            <Card className="h-full rounded-2xl border-border/70 shadow-xs">
               <SectionHeader title="Preferences" />
-              <CardContent className="p-2">
+              <CardContent className="p-1 sm:p-1.5">
                 <SettingItem
                   icon={isDark ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
                   label="Dark Mode"
@@ -433,15 +436,21 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
             </Card>
           </motion.div>
 
-          {/* Security */}
+          {/* Security & Audit */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
-              <SectionHeader title="Security" />
-              <CardContent className="p-2">
+            <Card className="h-full rounded-2xl border-border/70 shadow-xs">
+              <SectionHeader title="Security & Activity" />
+              <CardContent className="p-1 sm:p-1.5">
+                <SettingItem
+                  icon={<FileClock className="h-4 w-4 text-amber-500" />}
+                  label="Audit History"
+                  description="Review tenant, room, and payment operation logs"
+                  onClick={() => setAuditOpen(true)}
+                />
                 <SettingItem
                   icon={<Lock className="h-4 w-4 text-primary" />}
                   label="Change Password"
-                  description="Update your account password"
+                  description="Verify current password & update"
                   onClick={() => setChangePasswordOpen(true)}
                 />
                 <SettingItem
@@ -456,9 +465,9 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
           {/* Support & Share */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+            <Card className="h-full rounded-2xl border-border/70 shadow-xs">
               <SectionHeader title="Support" />
-              <CardContent className="p-2">
+              <CardContent className="p-1 sm:p-1.5">
                 <SettingItem
                   icon={<HelpCircle className="h-4 w-4 text-primary" />}
                   label="Help & FAQ"
@@ -489,9 +498,9 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
           {/* Legal */}
           <motion.div variants={itemVariants}>
-            <Card className="h-full rounded-2xl border-border/70 shadow-sm">
+            <Card className="h-full rounded-2xl border-border/70 shadow-xs">
               <SectionHeader title="Legal" />
-              <CardContent className="p-2">
+              <CardContent className="p-1 sm:p-1.5">
                 <SettingItem
                   icon={<ShieldCheck className="h-4 w-4 text-primary" />}
                   label="Privacy & Legal Policies"
@@ -506,7 +515,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
         {/* Danger Zone */}
         <motion.div variants={itemVariants}>
           <Card className="border-destructive/20">
-            <CardContent className="p-2 space-y-1">
+            <CardContent className="p-1 sm:p-1.5 space-y-0.5">
               <SettingItem
                 icon={<LogOut className="h-4 w-4 text-destructive" />}
                 label="Sign Out"
@@ -527,15 +536,15 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
         {/* App Info */}
         <motion.div variants={itemVariants}>
-          <div className="flex flex-col items-center gap-1 py-6 text-center">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Smartphone className="h-4 w-4" />
+          <div className="flex flex-col items-center gap-0.5 py-4 text-center">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Smartphone className="h-3.5 w-3.5" />
               <span className="text-xs font-medium">PG HUB</span>
             </div>
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-[10px] text-muted-foreground/70">
               Version {APP_VERSION} · Made with ❤️ in India
             </p>
-            <p className="text-[10px] text-muted-foreground/50 mt-1">
+            <p className="text-[9px] text-muted-foreground/50">
               © {new Date().getFullYear()} PG Management. All rights reserved.
             </p>
           </div>
@@ -553,6 +562,7 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
       )}
       <NotificationPreferencesSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <ManagePropertiesSheet open={propertiesOpen} onOpenChange={setPropertiesOpen} />
+      <AuditHistorySheet open={auditOpen} onOpenChange={setAuditOpen} />
 
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
       <LoginActivityDialog open={loginActivityOpen} onOpenChange={setLoginActivityOpen} />

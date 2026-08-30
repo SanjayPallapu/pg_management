@@ -90,12 +90,13 @@ export const useBackGesture = (
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
         
-        // ONLY call history.back() if we are still on the same route and not navigating away
-        const currentPath = window.location.pathname + window.location.search;
-        const isSameRoute = currentPath === initialPath;
-
-        if (!isHandlingPopState && options?.keepHistoryOnClose !== true && isSameRoute && window.history.state?.modalOpen) {
-          window.history.back();
+        // Cleanly remove modalOpen state marker without triggering browser history back
+        if (!isHandlingPopState && isSameRoute && window.history.state?.modalOpen) {
+          try {
+            window.history.replaceState(null, '');
+          } catch {
+            // Ignore replaceState errors
+          }
         }
         globalHistoryPushed = false;
       }

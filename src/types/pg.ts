@@ -101,7 +101,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   monthly: {
     name: 'Basic',
-    price: 199,
+    price: 499,
     periodLabel: '/month',
     billingCycle: 'monthly',
     maxPgs: 1,
@@ -116,7 +116,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   yearly: {
     name: 'Basic Plan (Yearly)',
-    price: 1999,
+    price: 4999,
     periodLabel: '/year',
     billingCycle: 'yearly',
     maxPgs: 1,
@@ -127,11 +127,11 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Basic billed yearly with approximately 16% savings.',
+    description: 'Basic billed yearly with 2 months free.',
   },
   pro: {
     name: 'Plus',
-    price: 299,
+    price: 799,
     periodLabel: '/month',
     billingCycle: 'pro',
     maxPgs: 2,
@@ -146,7 +146,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   pro_yearly: {
     name: 'Plus Plan (Yearly)',
-    price: 2999,
+    price: 7999,
     periodLabel: '/year',
     billingCycle: 'pro_yearly',
     maxPgs: 2,
@@ -157,11 +157,11 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Plus billed yearly with approximately 16% savings.',
+    description: 'Plus billed yearly with 2 months free.',
   },
   promax: {
     name: 'Pro',
-    price: 499,
+    price: 999,
     periodLabel: '/month',
     billingCycle: 'promax',
     maxPgs: 4,
@@ -176,7 +176,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   promax_yearly: {
     name: 'Pro (Yearly)',
-    price: 4999,
+    price: 9999,
     periodLabel: '/year',
     billingCycle: 'promax_yearly',
     maxPgs: 4,
@@ -187,11 +187,11 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Pro billed yearly with approximately 16% savings.',
+    description: 'Pro billed yearly with 2 months free.',
   },
   lifetime: {
-    name: 'Lifetime',
-    price: 49999,
+    name: 'Pro Max Lifetime',
+    price: 9999,
     periodLabel: 'one-time',
     billingCycle: 'lifetime',
     maxPgs: 4,
@@ -202,7 +202,7 @@ export const SUBSCRIPTION_PLANS = {
       dailyReports: true,
       aiLogo: true,
     },
-    description: 'Legacy lifetime access with all Pro features.',
+    description: 'Lifetime Pro Max access with up to 4 PGs and 500 tenants.',
   },
 } as const;
 
@@ -278,7 +278,7 @@ export const SUBSCRIPTION_PLAN_MARKETING: Record<PaidPlanFamily, {
 export function getPaidPlanFamily(planKey: SubscriptionPlanKey): PaidPlanFamily | null {
   if (planKey === 'monthly' || planKey === 'yearly') return 'basic';
   if (planKey === 'pro' || planKey === 'pro_yearly') return 'plus';
-  if (planKey === 'promax' || planKey === 'promax_yearly') return 'pro';
+  if (planKey === 'promax' || planKey === 'promax_yearly' || planKey === 'lifetime') return 'pro';
   return null;
 }
 
@@ -298,32 +298,32 @@ export const REGIONAL_PRICING: Record<SubscriptionPlanKey, Record<string, Region
     US: { currency: 'USD', symbol: '$', price: 0 },
   },
   monthly: {
-    IN: { currency: 'INR', symbol: '₹', price: 199 },
-    US: { currency: 'USD', symbol: '$', price: 6.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 499 },
+    US: { currency: 'USD', symbol: '$', price: 9.99 },
   },
   yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 1999 },
-    US: { currency: 'USD', symbol: '$', price: 69.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 4999 },
+    US: { currency: 'USD', symbol: '$', price: 99.99 },
   },
   pro: {
-    IN: { currency: 'INR', symbol: '₹', price: 299 },
-    US: { currency: 'USD', symbol: '$', price: 14.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 799 },
+    US: { currency: 'USD', symbol: '$', price: 15.99 },
   },
   pro_yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 2999 },
-    US: { currency: 'USD', symbol: '$', price: 149.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 7999 },
+    US: { currency: 'USD', symbol: '$', price: 159.99 },
   },
   promax: {
-    IN: { currency: 'INR', symbol: '₹', price: 499 },
-    US: { currency: 'USD', symbol: '$', price: 29.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 999 },
+    US: { currency: 'USD', symbol: '$', price: 19.99 },
   },
   promax_yearly: {
-    IN: { currency: 'INR', symbol: '₹', price: 4999 },
-    US: { currency: 'USD', symbol: '$', price: 289.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 9999 },
+    US: { currency: 'USD', symbol: '$', price: 199.99 },
   },
   lifetime: {
-    IN: { currency: 'INR', symbol: '₹', price: 49999 },
-    US: { currency: 'USD', symbol: '$', price: 699.99 },
+    IN: { currency: 'INR', symbol: '₹', price: 9999 },
+    US: { currency: 'USD', symbol: '$', price: 199.99 },
   },
 };
 

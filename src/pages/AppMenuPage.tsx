@@ -1,19 +1,26 @@
 import {
   ArrowLeft,
-  BedDouble,
-  ChevronRight,
+  LayoutGrid,
   CreditCard,
-  FileClock,
-  FileText,
-  Gift,
-  Home,
-  LogOut,
-  Moon,
+  Users,
+  Building2,
+  Bed,
+  Zap,
+  ReceiptText,
+  UserMinus,
+  BarChart3,
+  Bot,
+  Sparkles,
   Settings,
-  ShieldCheck,
+  FileClock,
+  Gift,
+  FileText,
+  Moon,
   Sun,
+  LogOut,
+  ChevronRight,
+  ShieldCheck,
   UserRound,
-  WalletCards,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,38 +32,27 @@ import { AuditHistorySheet } from "@/components/AuditHistorySheet";
 type MenuItemProps = {
   icon: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   onClick: () => void;
   destructive?: boolean;
-  accent?: "blue" | "emerald" | "amber" | "violet";
 };
 
-const accentClasses = {
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-};
-
-const MenuItem = ({ icon, title, description, onClick, destructive = false, accent = "blue" }: MenuItemProps) => (
+const MenuItem = ({ icon, title, description, onClick, destructive = false }: MenuItemProps) => (
   <button
     type="button"
     onClick={onClick}
-    className={`group flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left shadow-sm transition-all active:scale-[0.99] ${destructive ? "border-destructive/20 bg-destructive/[0.04] text-destructive" : "border-border/70 bg-card hover:border-primary/25 hover:bg-muted/40"}`}
+    className={`group flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-left transition-all active:bg-white/[0.12] ${
+      destructive 
+        ? "text-rose-400 hover:text-rose-300 hover:bg-rose-500/10" 
+        : "text-gray-200 hover:text-white hover:bg-white/[0.08]"
+    }`}
   >
-    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${destructive ? "bg-destructive/10" : accentClasses[accent]}`}>{icon}</span>
+    <span className="shrink-0 text-gray-400 group-hover:text-white">{icon}</span>
     <span className="min-w-0 flex-1">
-      <strong className="block text-sm font-bold">{title}</strong>
-      <small className="mt-0.5 block truncate text-[11px] font-medium text-muted-foreground">{description}</small>
+      <strong className="block text-sm font-semibold">{title}</strong>
+      {description && <small className="block truncate text-[11px] text-gray-400 mt-0.5">{description}</small>}
     </span>
-    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-  </button>
-);
-
-const QuickAction = ({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-2 py-3 text-center text-white backdrop-blur-sm transition-colors hover:bg-white/15 active:scale-95">
-    <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15">{icon}</span>
-    <span className="text-[10px] font-bold leading-tight">{label}</span>
+    <ChevronRight className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-gray-300 transition-transform group-hover:translate-x-0.5" />
   </button>
 );
 
@@ -74,59 +70,99 @@ export default function AppMenuPage() {
     window.location.replace("/onboarding");
   };
 
+  const navItems = [
+    { label: "Overview", icon: <LayoutGrid className="h-5 w-5" />, action: () => goToTab("dashboard") },
+    { label: "Payments", icon: <CreditCard className="h-5 w-5" />, action: () => goToTab("reconciliation") },
+    { label: "Tenants", icon: <Users className="h-5 w-5" />, action: () => goToTab("rooms") },
+    { label: "Properties", icon: <Building2 className="h-5 w-5" />, action: () => goToTab("settings") },
+    { label: "Rooms & Beds", icon: <Bed className="h-5 w-5" />, action: () => goToTab("rooms") },
+    { label: "Utilities", icon: <Zap className="h-5 w-5" />, action: () => navigate("/?tab=rent-sheet&openAc=true", { replace: true }) },
+    { label: "Receipts", icon: <ReceiptText className="h-5 w-5" />, action: () => goToTab("rent-sheet") },
+    { label: "Move-outs", icon: <UserMinus className="h-5 w-5" />, action: () => navigate("/left-tenants") },
+    { label: "Reports", icon: <BarChart3 className="h-5 w-5" />, action: () => goToTab("settings") },
+    { label: "AI Assistant", icon: <Bot className="h-5 w-5" />, action: () => { window.dispatchEvent(new CustomEvent("trigger_voice_assistant")); navigate("/"); } },
+    { label: "Subscription", icon: <Sparkles className="h-5 w-5" />, action: () => navigate("/subscription") },
+    { label: "Settings", icon: <Settings className="h-5 w-5" />, action: () => goToTab("settings") },
+    { label: "Audit History", icon: <FileClock className="h-5 w-5" />, action: () => setAuditOpen(true) },
+  ];
+
   return (
-    <main className="min-h-screen bg-muted/25 text-foreground">
-      <div className="bg-gradient-to-br from-[#0e6ce7] via-[#1158c7] to-[#183d91] text-white">
-        <header className="px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <div className="mx-auto flex w-full max-w-5xl items-center gap-3">
-            <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="grid h-10 w-10 place-items-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors">
+    <main className="min-h-screen bg-[#121316] text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#121316]/90 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button 
+              type="button" 
+              onClick={() => navigate("/", { replace: true })} 
+              aria-label="Back" 
+              className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div><h1 className="text-lg sm:text-xl font-black tracking-tight">PG HUB Menu</h1><p className="text-xs text-blue-100">Everything you need, in one place</p></div>
+            <h1 className="text-lg font-bold tracking-tight text-white">PG Hub PayFlow</h1>
           </div>
-        </header>
+          <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold text-gray-300 uppercase">
+            {role || "owner"}
+          </span>
+        </div>
+      </header>
 
-        <div className="mx-auto w-full max-w-5xl px-4 pb-6 pt-2">
-          <div className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 p-4 sm:p-5 backdrop-blur-sm">
-            <div className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-2xl bg-white text-[#1158c7] shadow-lg"><UserRound className="h-6 w-6 sm:h-7 sm:w-7" /></div>
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-base sm:text-lg font-black">{user?.user_metadata?.full_name || "PG HUB Owner"}</h2>
-              <p className="truncate text-xs text-blue-100">{currentPG?.name || user?.email || user?.phone || "Signed-in account"}</p>
-            </div>
-            <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide">{role || "owner"}</span>
+      <div className="mx-auto w-full max-w-xl px-3 py-4 space-y-4">
+        {/* Profile Card */}
+        <div className="flex items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md">
+            <UserRound className="h-6 w-6" />
           </div>
-
-          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
-            <QuickAction icon={<Home className="h-4 w-4 sm:h-5 sm:w-5" />} label="Home" onClick={() => goToTab("dashboard")} />
-            <QuickAction icon={<BedDouble className="h-4 w-4 sm:h-5 sm:w-5" />} label="Rooms" onClick={() => goToTab("rooms")} />
-            <QuickAction icon={<WalletCards className="h-4 w-4 sm:h-5 sm:w-5" />} label="Payments" onClick={() => goToTab("reconciliation")} />
-            <QuickAction icon={<Settings className="h-4 w-4 sm:h-5 sm:w-5" />} label="Settings" onClick={() => goToTab("settings")} />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-bold text-white">{user?.user_metadata?.full_name || "PG HUB Owner"}</h2>
+            <p className="truncate text-xs text-gray-400">{currentPG?.name || user?.email || "Account Active"}</p>
           </div>
         </div>
-      </div>
 
-      <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <section>
-            <h2 className="mb-2.5 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Management</h2>
-            <div className="space-y-2.5">
-              <MenuItem icon={<FileClock className="h-5 w-5" />} title="Audit History" description="Review tenant, room, and payment changes" onClick={() => setAuditOpen(true)} accent="violet" />
-              <MenuItem icon={<Gift className="h-5 w-5" />} title="Refer & Earn" description="Invite an owner; both get 30 bonus days" onClick={() => navigate("/referrals")} accent="emerald" />
-              <MenuItem icon={<CreditCard className="h-5 w-5" />} title="Plans & Billing" description="Subscription, cards, and secure checkout" onClick={() => navigate("/subscription")} accent="amber" />
-            </div>
-          </section>
-
-          <section>
-            <h2 className="mb-2.5 px-1 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">App & Account</h2>
-            <div className="space-y-2.5">
-              <MenuItem icon={isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} title="Appearance" description={`Switch to ${isDark ? "light" : "dark"} mode`} onClick={() => setTheme(isDark ? "light" : "dark")} accent="blue" />
-              <MenuItem icon={<FileText className="h-5 w-5" />} title="Privacy & Legal" description="Terms, privacy, and refund policies" onClick={() => navigate("/legal")} accent="violet" />
-              <MenuItem icon={<LogOut className="h-5 w-5" />} title="Sign Out" description="Sign out of this account" onClick={handleSignOut} destructive />
-            </div>
-          </section>
+        {/* Navigation List */}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 space-y-0.5">
+          {navItems.map((item, i) => (
+            <MenuItem 
+              key={i} 
+              icon={item.icon} 
+              title={item.label} 
+              onClick={item.action} 
+            />
+          ))}
         </div>
 
-        <p className="flex items-center justify-center gap-1.5 py-3 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Your workspace activity is securely tracked.</p>
+        {/* Preferences & More */}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 space-y-0.5">
+          <MenuItem 
+            icon={<Gift className="h-5 w-5" />} 
+            title="Refer & Earn" 
+            description="Invite an owner and earn rewards"
+            onClick={() => navigate("/referrals")} 
+          />
+          <MenuItem 
+            icon={isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} 
+            title="Theme" 
+            description={`Currently ${isDark ? "dark" : "light"} mode`}
+            onClick={() => setTheme(isDark ? "light" : "dark")} 
+          />
+          <MenuItem 
+            icon={<FileText className="h-5 w-5" />} 
+            title="Privacy & Legal" 
+            description="Terms and policies"
+            onClick={() => navigate("/legal")} 
+          />
+          <MenuItem 
+            icon={<LogOut className="h-5 w-5" />} 
+            title="Sign Out" 
+            onClick={handleSignOut} 
+            destructive 
+          />
+        </div>
+
+        <p className="flex items-center justify-center gap-1.5 pt-2 text-xs text-gray-400">
+          <ShieldCheck className="h-4 w-4 text-emerald-400" /> Secure workspace activity tracking
+        </p>
       </div>
 
       <AuditHistorySheet open={auditOpen} onOpenChange={setAuditOpen} />

@@ -343,7 +343,7 @@ export default function TenantProfilePage({ view = "details" }: { view?: TenantP
 
             {view === "actions" && <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <ActionRow icon={Bell} title="Send payment reminder" hint="Notify tenant about pending rent" onClick={() => window.open(`https://wa.me/91${phoneDigits}`, "_blank", "noopener,noreferrer")} />
-              <ActionRow icon={ReceiptText} title="View payments" hint={`Monthly rent ₹${tenant.monthlyRent.toLocaleString("en-IN")}`} onClick={() => navigate(-1)} />
+              <ActionRow icon={ReceiptText} title="View payments" hint={`Monthly rent ₹${tenant.monthlyRent.toLocaleString("en-IN")}`} onClick={() => navigate('/?tab=rent-sheet')} />
               <ActionRow icon={complete ? FileCheck2 : FileText} title={complete ? "Review completed profile" : "Complete tenant profile"} hint={complete ? "Documents ready for owner review" : "Generate and share a secure invite"} accent onClick={() => goToView(complete ? "verify" : "share")} />
               <ActionRow icon={Clock3} title="View onboarding timeline" hint="See link and form activity" onClick={() => goToView("timeline")} />
             </div>}

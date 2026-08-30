@@ -44,6 +44,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
 import { RentProvider } from '@/contexts/RentContext';
 import { SubscriptionBadge } from "@/components/subscription";
+import { PGHubPayFlowDrawer } from "@/components/layout/PGHubPayFlowDrawer";
 
 const Index = () => {
   const { rooms, isLoading, error: roomsError } = useRooms();
@@ -57,6 +58,7 @@ const Index = () => {
   const { setActiveTab: setContextTab } = useActiveTab();
   const [activeTab, setActiveTabLocal] = useState(() => searchParams.get('tab') || localStorage.getItem('pg_active_tab') || 'dashboard');
   const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
 
   useEffect(() => {
     const handler = (e: CustomEvent<{ hidden: boolean }>) => {
@@ -294,7 +296,7 @@ const Index = () => {
               className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-primary/20 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
               title="Open app menu"
               aria-label="Open app menu"
-              onClick={() => navigate("/menu")}
+              onClick={() => setMenuDrawerOpen(true)}
             >
               <Menu className="h-5 w-5" />
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-300 ring-2 ring-primary" />
@@ -409,6 +411,12 @@ const Index = () => {
       )}
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      <PGHubPayFlowDrawer 
+        open={menuDrawerOpen} 
+        onOpenChange={setMenuDrawerOpen} 
+        onSelectTab={setActiveTab} 
+      />
       </div>
     </RentProvider>
   );

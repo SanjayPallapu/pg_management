@@ -13,24 +13,57 @@ interface ChangePasswordDialogProps {
 }
 
 export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialogProps) => {
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const resetForm = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowCurrentPassword(false);
+    setShowPassword(false);
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+      toast.error("New password must be at least 6 characters long");
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      toast.error("New password must be different from current password");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // 1. Verify current password first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        const { error: verifyErr } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword,
+        });
+        if (verifyErr) {
+          toast.error("Current password is incorrect");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Update to new password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -38,8 +71,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
       if (error) throw error;
 
       toast.success("Password changed successfully");
-      setNewPassword("");
-      setConfirmPassword("");
+      resetForm();
       onOpenChange(false);
     } catch (err: any) {
       console.error("Failed to change password:", err);
@@ -50,7 +82,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => { if (!val) resetForm(); onOpenChange(val); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -58,18 +90,44 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
             Change Password
           </DialogTitle>
           <DialogDescription>
-            Update your account password securely. Make sure it has at least 6 characters.
+            Enter your current password first, then choose a secure new password.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleChangePassword} className="space-y-4 my-2">
-          <div className="space-y-2">
+        <form onSubmit={handleChangePassword} className="space-y-3.5 my-2">
+          {/* Current Password Field */}
+          <div className="space-y-1.5">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                type={showCurrentPassword ? "text" : "password"}
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                disabled={isSubmitting}
+              >
+                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* New Password Field */}
+          <div className="space-y-1.5">
             <Label htmlFor="newPassword">New Password</Label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 6 characters)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -87,7 +145,8 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Confirm New Password Field */}
+          <div className="space-y-1.5">
             <Label htmlFor="confirmPassword">Confirm New Password</Label>
             <Input
               id="confirmPassword"
@@ -105,8 +164,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
               type="button"
               variant="outline"
               onClick={() => {
-                setNewPassword("");
-                setConfirmPassword("");
+                resetForm();
                 onOpenChange(false);
               }}
               disabled={isSubmitting}
@@ -116,7 +174,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !newPassword || !confirmPassword}
+              disabled={isSubmitting || !currentPassword || !newPassword || !confirmPassword}
               className="h-9 text-xs font-medium"
             >
               {isSubmitting ? (
