@@ -459,9 +459,9 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 overflow-y-auto px-4 py-4 bg-background space-y-4">
+            <div className="mx-auto flex flex-col w-full max-w-screen-2xl flex-1 overflow-y-auto px-4 py-4 pb-32 bg-background space-y-4">
               {/* WhatsApp Reminders Hero Banner */}
-              <div className="w-full overflow-hidden rounded-2xl">
+              <div className="w-full overflow-hidden rounded-2xl shrink-0">
                 <img
                   src={whatsappRemindersBanner}
                   alt="WhatsApp Reminders - Send smart follow-ups"
