@@ -89,13 +89,14 @@ export const useBackGesture = (
       // If no more modals are active, clean up listeners and history
       if (activeModals.length === 0 && globalHistoryPushed) {
         window.removeEventListener('popstate', handleGlobalPopState);
-        const currentPath = window.location.pathname + window.location.search;
-        const isSameRoute = currentPath === initialPath;
-        if (!isHandlingPopState && isSameRoute && window.history.state?.modalOpen) {
+        // Only clean up the history entry marker — NEVER call history.back()
+        // because that triggers actual page navigation (the root cause of
+        // "close button goes to home page" bug).
+        if (!isHandlingPopState && window.history.state?.modalOpen) {
           try {
-            window.history.back();
+            window.history.replaceState(null, '', window.location.href);
           } catch {
-            // Ignore history errors
+            // Ignore replaceState errors
           }
         }
         globalHistoryPushed = false;

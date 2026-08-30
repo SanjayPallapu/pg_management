@@ -231,9 +231,9 @@ export const ACElectricitySheet = ({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <Snowflake className="h-4 w-4 text-cyan-300 shrink-0" />
-                        <SheetTitle className="text-base font-extrabold text-white">AC Bill</SheetTitle>
+                        <SheetTitle className="text-lg font-black text-white">AC Bill</SheetTitle>
                       </div>
-                      <span className="text-[10px] text-cyan-200/80 block">Track. Split. Collect.</span>
+                      <span className="text-xs text-cyan-200/90 font-medium block">Track. Split. Collect.</span>
                     </div>
                   </div>
                   {/* Month / Year selects */}
@@ -241,7 +241,7 @@ export const ACElectricitySheet = ({
                     <select
                       value={acMonth}
                       onChange={(e) => setAcMonth(parseInt(e.target.value))}
-                      className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
+                      className="h-9 rounded-xl bg-white/10 border border-white/20 text-white px-2.5 text-xs font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {months.map((m) => (
                         <option key={m.value} value={m.value} className="bg-[#071b46] text-white">{m.label}</option>
@@ -250,7 +250,7 @@ export const ACElectricitySheet = ({
                     <select
                       value={acYear}
                       onChange={(e) => setAcYear(parseInt(e.target.value))}
-                      className="h-8 rounded-xl bg-white/10 border border-white/20 text-white px-2 text-[11px] font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
+                      className="h-9 rounded-xl bg-white/10 border border-white/20 text-white px-2.5 text-xs font-bold focus-visible:outline-none focus:ring-1 focus:ring-cyan-300 cursor-pointer backdrop-blur"
                     >
                       {years.map((y) => (
                         <option key={y} value={y} className="bg-[#071b46] text-white">{y}</option>
@@ -262,28 +262,28 @@ export const ACElectricitySheet = ({
                 {/* Collection summary */}
                 <div className="mt-3">
                   <div className="grid grid-cols-3 gap-2 px-2">
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
-                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
-                      <span className="block text-xs font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
+                      <span className="block text-sm font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
                     </div>
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
-                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-emerald-300">Collected</span>
-                      <span className="block text-xs font-black text-white mt-0.5">₹{collectedTotal > 999 ? `${(collectedTotal / 1000).toFixed(1)}k` : collectedTotal.toLocaleString()}</span>
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Collected</span>
+                      <span className="block text-sm font-black text-white mt-0.5">₹{collectedTotal > 999 ? `${(collectedTotal / 1000).toFixed(1)}k` : collectedTotal.toLocaleString()}</span>
                     </div>
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2 text-center backdrop-blur">
-                      <span className="block text-[8px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
-                      <span className="block text-xs font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
+                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
+                      <span className="block text-sm font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 <div className="mt-3 space-y-1 px-2">
-                  <div className="flex items-center justify-between text-[10px] text-cyan-200">
+                  <div className="flex items-center justify-between text-xs text-cyan-200">
                     <span className="font-semibold">Collection Progress</span>
                     <span className="font-black text-white">{overallPct}% Collected</span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/15 overflow-hidden">
+                  <div className="h-2.5 rounded-full bg-white/15 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -302,10 +302,10 @@ export const ACElectricitySheet = ({
                       type="button"
                       onClick={() => setActiveTab(tab.key)}
                       className={cn(
-                        "flex-1 rounded-xl py-1.5 text-[10px] font-bold transition-all",
+                        "flex-1 rounded-xl py-2 text-xs font-bold transition-all",
                         activeTab === tab.key
                           ? "bg-cyan-400 text-slate-900 shadow-sm"
-                          : "text-white/70 hover:text-white"
+                          : "text-white/80 hover:text-white"
                       )}
                     >
                       {tab.label}
@@ -335,12 +335,12 @@ export const ACElectricitySheet = ({
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="block text-[9px] font-bold uppercase text-muted-foreground">Flat Rate</span>
-                        <span className="font-extrabold text-foreground">₹12 / Unit</span>
+                        <span className="block text-[10px] font-bold uppercase text-muted-foreground">Flat Rate</span>
+                        <span className="text-sm font-extrabold text-foreground">₹12 / Unit</span>
                       </div>
                       <div>
-                        <span className="block text-[9px] font-bold uppercase text-muted-foreground">Govt. Commercial</span>
-                        <span className="font-extrabold text-foreground">₹5.4 – ₹9.95 / Unit</span>
+                        <span className="block text-[10px] font-bold uppercase text-muted-foreground">Govt. Commercial</span>
+                        <span className="text-sm font-extrabold text-foreground">₹5.4 – ₹9.95 / Unit</span>
                       </div>
                     </div>
                   </button>
@@ -349,7 +349,7 @@ export const ACElectricitySheet = ({
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between px-0.5">
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Rooms</h3>
-                      <Badge variant="outline" className="text-[9px] px-2 py-0">{acRooms.length} Rooms</Badge>
+                      <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5">{acRooms.length} Rooms</Badge>
                     </div>
 
                     {acRooms.length === 0 ? (

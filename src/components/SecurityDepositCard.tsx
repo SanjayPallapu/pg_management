@@ -494,12 +494,12 @@ export const SecurityDepositCard = ({
           </SheetHeader>
 
           <div className="mt-4 space-y-4 px-1.5 pb-6">
-            {/* Hero Illustration above deposited text */}
-            <div className="w-full flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/15 overflow-hidden">
+            {/* Hero Illustration */}
+            <div className="w-full overflow-hidden rounded-2xl">
               <img
                 src={securityDepositHeroImg}
                 alt="Security Deposit Protection"
-                className="w-full max-h-48 sm:max-h-56 object-contain rounded-xl select-none"
+                className="w-full object-cover select-none rounded-2xl"
               />
             </div>
 

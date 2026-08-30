@@ -12,11 +12,14 @@ import {
   Sparkles, 
   Settings, 
   X,
-  LogOut
+  LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface PGHubPayFlowDrawerProps {
   open: boolean;
@@ -47,6 +50,7 @@ export const PGHubPayFlowDrawer = ({
 }: PGHubPayFlowDrawerProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleAction = (callback?: () => void, tabName?: string, routePath?: string) => {
     onOpenChange(false);
@@ -189,8 +193,23 @@ export const PGHubPayFlowDrawer = ({
             ))}
           </div>
 
-          {/* Footer with sign out */}
-          <div className="p-3 border-t border-white/10">
+          {/* Footer with theme toggle and sign out */}
+          <div className="p-3 border-t border-white/10 space-y-1">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-gray-200 hover:text-white hover:bg-white/[0.08] transition-all"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-amber-400 shrink-0" />
+              ) : (
+                <Moon className="h-5 w-5 text-indigo-300 shrink-0" />
+              )}
+              <span className="flex-1">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-400 font-bold uppercase">
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </span>
+            </button>
             <button
               type="button"
               onClick={async () => {

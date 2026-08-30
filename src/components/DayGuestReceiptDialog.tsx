@@ -132,34 +132,45 @@ export const DayGuestReceiptDialog = ({ open, onOpenChange, receiptData }: Props
 
     setIsSending(true);
     try {
+      // Step 1: Generate receipt image if not already done
       let img = generatedImage;
       if (!img) {
         img = await handleGenerate();
       }
 
+      // Step 2: Download receipt image
       if (img) {
         const filename = `day-guest-receipt-${receiptData.guestName.toLowerCase().replace(/\s+/g, '-')}-room-${receiptData.roomNo}.png`;
         downloadReceiptImage(img, filename);
       }
 
+      // Step 3: Format phone number and copy to clipboard
       const digits = receiptData.guestPhone.replace(/\D/g, '');
       const formattedPhone = digits.startsWith('91') && digits.length === 12 ? digits : `91${digits.slice(-10)}`;
-      const amountPaid = templateData?.amountPaid ?? receiptData.amountPaid;
+      const displayPhone = `+${formattedPhone.slice(0, 2)} ${formattedPhone.slice(2)}`;
 
+      try {
+        await navigator.clipboard.writeText(displayPhone);
+      } catch {
+        // Clipboard API may fail on some browsers
+      }
+
+      // Step 4: Build WhatsApp message and open
+      const amountPaid = templateData?.amountPaid ?? receiptData.amountPaid;
       const messageText = `Hi ${receiptData.guestName},\n\n` +
         `Thank you for staying at *${currentPG?.name || 'our PG'}*! 🧾\n\n` +
         `Here is your payment receipt for your stay in *Room ${receiptData.roomNo}*:\n` +
         `• *Stay Duration*: ${receiptData.numberOfDays} Days\n` +
         `• *Amount Paid*: ₹${amountPaid.toLocaleString('en-IN')}\n` +
         `• *Payment Status*: Fully Paid ✅\n\n` +
-        `The verified receipt image has been downloaded. Thank you!`;
+        `Please find the receipt image attached separately.`;
 
       const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(messageText)}`;
       window.open(whatsappUrl, '_blank');
 
       toast({
-        title: 'Receipt Sent',
-        description: 'WhatsApp opened with receipt details & image saved.',
+        title: '📋 Phone number copied!',
+        description: `${displayPhone} copied to clipboard. Receipt downloaded. WhatsApp opened.`,
       });
     } catch (err) {
       console.error('Failed to send receipt:', err);
