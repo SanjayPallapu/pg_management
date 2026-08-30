@@ -506,22 +506,22 @@ export const SecurityDepositCard = ({
             </div>
 
             {/* Summary */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-lg bg-paid-muted">
-                <div className="flex items-center gap-2 text-paid">
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                  <span className="font-extrabold text-xs uppercase tracking-wide">Deposited</span>
                   <CheckCircle className="h-4 w-4" />
-                  <span className="font-medium">Deposited</span>
                 </div>
-                <div className="text-2xl font-bold mt-1">{depositedCount}</div>
-                <div className="text-sm text-muted-foreground">₹{totalDeposited.toLocaleString()}</div>
+                <div className="text-xl font-black text-foreground mt-0.5">{depositedCount} <span className="text-xs font-semibold text-muted-foreground">tenants</span></div>
+                <div className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5">₹{totalDeposited.toLocaleString()}</div>
               </div>
-              <div className="p-4 rounded-lg bg-pending-muted">
-                <div className="flex items-center gap-2 text-pending">
+              <div className="p-3 rounded-2xl bg-orange-500/10 border border-orange-500/20">
+                <div className="flex items-center justify-between text-orange-600 dark:text-orange-400">
+                  <span className="font-extrabold text-xs uppercase tracking-wide">Not Deposited</span>
                   <XCircle className="h-4 w-4" />
-                  <span className="font-medium">Not Deposited</span>
                 </div>
-                <div className="text-2xl font-bold mt-1">{notDepositedTenants.length}</div>
-                <div className="text-sm text-muted-foreground">Optional</div>
+                <div className="text-xl font-black text-foreground mt-0.5">{notDepositedTenants.length} <span className="text-xs font-semibold text-muted-foreground">tenants</span></div>
+                <div className="text-xs font-bold text-orange-600 dark:text-orange-400 mt-0.5">Pending Deposit</div>
               </div>
             </div>
 

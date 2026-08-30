@@ -233,7 +233,7 @@ export const ACElectricitySheet = ({
                         <Snowflake className="h-4 w-4 text-cyan-300 shrink-0" />
                         <SheetTitle className="text-lg font-black text-white">AC Bill</SheetTitle>
                       </div>
-                      <span className="text-xs text-cyan-200/90 font-medium block">Track. Split. Collect.</span>
+                      <span className="text-xs text-cyan-200/90 font-medium block">Track • Split</span>
                     </div>
                   </div>
                   {/* Month / Year selects */}
@@ -259,21 +259,21 @@ export const ACElectricitySheet = ({
                   </div>
                 </div>
 
-                {/* Collection summary */}
-                <div className="mt-3">
-                  <div className="grid grid-cols-3 gap-2 px-2">
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
-                      <span className="block text-sm font-black text-white mt-0.5">₹{expectedTotal > 999 ? `${(expectedTotal / 1000).toFixed(1)}k` : expectedTotal.toLocaleString()}</span>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Collected</span>
-                      <span className="block text-sm font-black text-white mt-0.5">₹{collectedTotal > 999 ? `${(collectedTotal / 1000).toFixed(1)}k` : collectedTotal.toLocaleString()}</span>
-                    </div>
-                    <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center backdrop-blur">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
-                      <span className="block text-sm font-black text-white mt-0.5">₹{pendingTotal > 999 ? `${(pendingTotal / 1000).toFixed(1)}k` : pendingTotal.toLocaleString()}</span>
-                    </div>
+                {/* Bill summary cards */}
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-cyan-200">Expected</span>
+                    <span className="block text-base font-black text-white mt-0.5">₹{expectedTotal.toLocaleString()}</span>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Collected</span>
+                    <span className="block text-base font-black text-white mt-0.5">₹{collectedTotal.toLocaleString()}</span>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 text-center">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-orange-300">Pending</span>
+                    <span className={cn("block text-base font-black mt-0.5", pendingTotal > 0 ? "text-orange-300" : "text-emerald-300")}>
+                      ₹{pendingTotal.toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
@@ -316,7 +316,7 @@ export const ACElectricitySheet = ({
             </div>
 
             {/* Main content */}
-            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-background text-foreground">
+            <div className="flex-1 overflow-y-auto px-3 py-4 pb-32 space-y-3 bg-background text-foreground">
               {/* ── ROOMS TAB ── */}
               {activeTab === 'ac-bill' && (
                 <>
@@ -372,24 +372,24 @@ export const ACElectricitySheet = ({
                           onClick={() => setSelectedRoomId(item.room.id)}
                           className="group w-full text-left p-4 rounded-2xl border border-border bg-card hover:bg-muted/40 transition-all shadow-sm"
                         >
-                          <div className="flex items-center gap-3.5">
+                          <div className="flex items-center gap-4">
                             {/* Radial progress ring */}
-                            <div className="relative h-13 w-13 shrink-0">
-                              <svg className="w-13 h-13 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
-                                <circle cx="18" cy="18" r="15.915" fill="none" stroke="currentColor" strokeWidth="3.2" className="text-border" />
+                            <div className="relative h-12 w-12 shrink-0 flex items-center justify-center">
+                              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+                                <circle cx="18" cy="18" r="15.915" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted/20" />
                                 <circle
                                   cx="18" cy="18" r="15.915" fill="none"
                                   stroke={allPaid ? "#10b981" : "#06b6d4"}
-                                  strokeWidth="3.2"
+                                  strokeWidth="3"
                                   strokeDasharray={`${roomPct} 100`}
                                   strokeLinecap="round"
                                   className="transition-all duration-500"
                                 />
                               </svg>
-                              <div className="absolute inset-0 flex items-center justify-center text-xs font-black text-foreground">{roomPct}%</div>
+                              <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-foreground">{roomPct}%</div>
                             </div>
 
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 pl-0.5">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-black text-base text-foreground">Room {item.room.roomNo}</span>
                                 <Badge className={cn("text-xs font-black px-2.5 py-0.5 rounded-full border-0", allPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-orange-500/10 text-orange-500")}>

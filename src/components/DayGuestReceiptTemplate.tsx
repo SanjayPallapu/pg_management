@@ -57,7 +57,7 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       ref={ref}
       style={{
         width: "500px",
-        height: "680px",
+        height: "690px",
         background: "#ffffff",
         fontFamily: "'Segoe UI', 'Roboto', Arial, sans-serif",
         overflow: "hidden",
@@ -70,9 +70,9 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       <div
         style={{
           position: "relative",
-          padding: "16px 20px 12px",
+          padding: "14px 16px 10px",
           borderBottom: "1px solid #f1f5f9",
-          marginBottom: "8px",
+          marginBottom: "6px",
           minHeight: "110px",
           display: "flex",
           flexDirection: "column",
@@ -85,7 +85,7 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         <div
           style={{
             position: "absolute",
-            left: "20px",
+            left: "16px",
             top: "50%",
             transform: "translateY(-50%)",
             zIndex: 10,
@@ -95,10 +95,11 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
             src={pgLogoUrl}
             alt="Logo"
             style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "12px",
+              width: "76px",
+              height: "76px",
+              borderRadius: "14px",
               objectFit: "cover",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           />
         </div>
@@ -107,24 +108,24 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         <div
           style={{
             position: "absolute",
-            right: "20px",
+            right: "16px",
             top: "50%",
             transform: "translateY(-50%)",
             textAlign: "right",
             fontSize: "10px",
             color: "#64748b",
-            maxWidth: "130px",
+            maxWidth: "125px",
             wordBreak: "break-word",
             whiteSpace: "normal",
           }}
         >
-          <div style={{ textTransform: "uppercase", letterSpacing: "0.4px", fontWeight: 700, fontSize: "9px" }}>Receipt No:</div>
+          <div style={{ textTransform: "uppercase", letterSpacing: "0.4px", fontWeight: 800, fontSize: "10px" }}>Receipt No:</div>
           <div
             style={{
               fontWeight: 800,
-              color: "#1e293b",
+              color: "#0f172a",
               fontFamily: "monospace",
-              fontSize: "10px",
+              fontSize: "11px",
               lineHeight: "1.2",
               marginTop: "2px",
             }}
@@ -134,10 +135,10 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         </div>
 
         {/* Center: Title & Subtitle */}
-        <div style={{ width: "100%", paddingLeft: "84px", paddingRight: "84px" }}>
+        <div style={{ width: "100%", paddingLeft: "88px", paddingRight: "88px" }}>
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "15px",
               fontWeight: 800,
               color: "#334155",
               textTransform: "uppercase",
@@ -152,23 +153,23 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
               alignItems: "center",
               justifyContent: "center",
               gap: "6px",
-              fontSize: "16px",
+              fontSize: "18px",
               fontWeight: 800,
               color: "#0f172a",
               marginTop: "2px",
             }}
           >
-            <span style={{ fontSize: "15px" }}>🧾</span>
+            <span style={{ fontSize: "17px" }}>🧾</span>
             <span>Day Guest Payment Receipt</span>
           </div>
           <div
             style={{
-              fontSize: "11px",
+              fontSize: "12px",
               fontWeight: 700,
               color: "#15803d",
               marginTop: "4px",
               background: "#dcfce7",
-              padding: "3px 10px",
+              padding: "3px 12px",
               borderRadius: "6px",
               display: "inline-block",
               width: "fit-content",
@@ -182,9 +183,9 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       {/* Amount Banner */}
       <div
         style={{
-          margin: "0 20px 10px",
+          margin: "0 16px 10px",
           background: "linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)",
-          borderRadius: "12px",
+          borderRadius: "14px",
           padding: "14px 16px",
           textAlign: "center",
           border: "1px solid #a7f3d0",
@@ -193,8 +194,8 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       >
         <div
           style={{
-            fontSize: "11px",
-            fontWeight: 700,
+            fontSize: "12px",
+            fontWeight: 800,
             color: "#047857",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
@@ -204,8 +205,8 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         </div>
         <div
           style={{
-            fontSize: "26px",
-            fontWeight: 800,
+            fontSize: "30px",
+            fontWeight: 900,
             color: "#065f46",
             letterSpacing: "-0.5px",
             marginTop: "2px",
@@ -213,7 +214,7 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
         >
           {formatCurrency(amountPaid)}
         </div>
-        <div style={{ fontSize: "10px", color: "#047857", marginTop: "2px", fontWeight: 600 }}>
+        <div style={{ fontSize: "12px", color: "#047857", marginTop: "2px", fontWeight: 700 }}>
           Payment Status: {isFullyPaid ? "Fully Paid" : `Partial Payment (Bal: ${formatCurrency(data.balance)})`}
         </div>
 
@@ -224,10 +225,10 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
             alt="PAID"
             style={{
               position: "absolute",
-              right: "20px",
+              right: "18px",
               top: "50%",
               transform: "translateY(-50%) rotate(-12deg)",
-              width: "68px",
+              width: "72px",
               opacity: 0.85,
               pointerEvents: "none",
             }}
@@ -238,24 +239,24 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       {/* Guest & Room Details Grid */}
       <div
         style={{
-          margin: "0 20px 10px",
+          margin: "0 16px 10px",
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "8px",
+          gap: "10px",
         }}
       >
         <div
           style={{
             background: "#f8fafc",
             border: "1px solid #e2e8f0",
-            borderRadius: "8px",
-            padding: "8px 12px",
+            borderRadius: "10px",
+            padding: "10px 14px",
           }}
         >
-          <div style={{ fontSize: "10px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>
+          <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 700 }}>
             Guest Name
           </div>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>
+          <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", marginTop: "2px" }}>
             {data.guestName}
           </div>
         </div>
@@ -264,14 +265,14 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
           style={{
             background: "#f8fafc",
             border: "1px solid #e2e8f0",
-            borderRadius: "8px",
-            padding: "8px 12px",
+            borderRadius: "10px",
+            padding: "10px 14px",
           }}
         >
-          <div style={{ fontSize: "10px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>
+          <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 700 }}>
             Room & Sharing
           </div>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>
+          <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", marginTop: "2px" }}>
             Room {data.roomNo} {data.isAc ? "(AC)" : "(Non-AC)"}
           </div>
         </div>
@@ -280,18 +281,18 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       {/* Breakdown Table */}
       <div
         style={{
-          margin: "0 20px 10px",
+          margin: "0 16px 10px",
           border: "1px solid #e2e8f0",
-          borderRadius: "8px",
+          borderRadius: "10px",
           overflow: "hidden",
         }}
       >
         <div
           style={{
             background: "#f8fafc",
-            padding: "6px 12px",
-            fontSize: "11px",
-            fontWeight: 700,
+            padding: "8px 14px",
+            fontSize: "12px",
+            fontWeight: 800,
             color: "#475569",
             borderBottom: "1px solid #e2e8f0",
             display: "flex",
@@ -302,31 +303,31 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
           <span>Amount</span>
         </div>
 
-        <div style={{ padding: "6px 12px", fontSize: "11px", display: "flex", justifyContent: "space-between", color: "#334155" }}>
+        <div style={{ padding: "7px 14px", fontSize: "12px", display: "flex", justifyContent: "space-between", color: "#334155" }}>
           <span>Stay ({data.numberOfDays} days × {formatCurrency(data.perDayRate)}/day)</span>
-          <span style={{ fontWeight: 600 }}>{formatCurrency(rentSubtotal)}</span>
+          <span style={{ fontWeight: 700 }}>{formatCurrency(rentSubtotal)}</span>
         </div>
 
         {acTotal > 0 && (
-          <div style={{ padding: "4px 12px", fontSize: "11px", display: "flex", justifyContent: "space-between", color: "#334155" }}>
+          <div style={{ padding: "5px 14px", fontSize: "12px", display: "flex", justifyContent: "space-between", color: "#334155" }}>
             <span>AC Electricity ({data.numberOfDays} days × {formatCurrency(data.acPerDayCharge || 0)})</span>
-            <span style={{ fontWeight: 600 }}>+{formatCurrency(acTotal)}</span>
+            <span style={{ fontWeight: 700 }}>+{formatCurrency(acTotal)}</span>
           </div>
         )}
 
         {discountTotal > 0 && (
-          <div style={{ padding: "4px 12px", fontSize: "11px", display: "flex", justifyContent: "space-between", color: "#16a34a" }}>
+          <div style={{ padding: "5px 14px", fontSize: "12px", display: "flex", justifyContent: "space-between", color: "#16a34a" }}>
             <span>Discount / Concession</span>
-            <span style={{ fontWeight: 600 }}>-{formatCurrency(discountTotal)}</span>
+            <span style={{ fontWeight: 700 }}>-{formatCurrency(discountTotal)}</span>
           </div>
         )}
 
         <div
           style={{
             background: "#f8fafc",
-            padding: "6px 12px",
-            fontSize: "12px",
-            fontWeight: 800,
+            padding: "8px 14px",
+            fontSize: "14px",
+            fontWeight: 900,
             color: "#0f172a",
             borderTop: "1px solid #e2e8f0",
             display: "flex",
@@ -341,33 +342,33 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       {/* Payment Meta Info */}
       <div
         style={{
-          margin: "0 20px 0",
-          fontSize: "10px",
+          margin: "0 16px 0",
+          fontSize: "11px",
           color: "#64748b",
           display: "flex",
           justifyContent: "space-between",
           padding: "0 4px",
         }}
       >
-        <span>Mode: <strong style={{ color: "#334155" }}>{data.paymentMode ? data.paymentMode.toUpperCase() : "UPI / CASH"}</strong></span>
-        <span>Receipt Generated on: <strong style={{ color: "#334155" }}>{formatDate(data.paymentDate || new Date().toISOString())}</strong></span>
+        <span>Mode: <strong style={{ color: "#0f172a" }}>{data.paymentMode ? data.paymentMode.toUpperCase() : "UPI / CASH"}</strong></span>
+        <span>Receipt Generated on: <strong style={{ color: "#0f172a" }}>{formatDate(data.paymentDate || new Date().toISOString())}</strong></span>
       </div>
 
       {/* Feel Good Appreciation Card */}
       <div
         style={{
-          margin: "10px 20px auto",
+          margin: "8px 16px auto",
           background: "#f0fdf4",
           border: "1px dashed #86efac",
-          borderRadius: "8px",
-          padding: "8px 12px",
+          borderRadius: "10px",
+          padding: "8px 14px",
           textAlign: "center",
         }}
       >
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>
+        <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534" }}>
           ✨ We loved having you stay with us!
         </div>
-        <div style={{ fontSize: "10px", color: "#15803d", marginTop: "2px" }}>
+        <div style={{ fontSize: "11px", color: "#15803d", marginTop: "2px", fontWeight: 500 }}>
           Hope you had a comfortable and pleasant stay. Looking forward to welcoming you again!
         </div>
       </div>
@@ -376,9 +377,9 @@ export const DayGuestReceiptTemplate = forwardRef<HTMLDivElement, Props>(({ data
       <div
         style={{
           borderTop: "1px solid #f1f5f9",
-          padding: "10px 20px",
+          padding: "8px 16px",
           textAlign: "center",
-          fontSize: "10px",
+          fontSize: "11px",
           color: "#94a3b8",
           background: "#ffffff",
         }}
