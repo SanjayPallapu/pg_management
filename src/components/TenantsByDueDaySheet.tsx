@@ -77,10 +77,13 @@ export const TenantsByDueDaySheet = ({
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const openWhatsAppChat = (phone: string) => {
+  const openWhatsAppChat = (phone: string, tenantName?: string, balance?: number, roomNo?: string) => {
     const formattedPhone = phone.replace(/\D/g, '');
     const phoneWithCode = formattedPhone.startsWith('91') ? formattedPhone : `91${formattedPhone}`;
-    window.open(`https://wa.me/${phoneWithCode}`, '_blank');
+    const msg = tenantName && balance && roomNo
+      ? encodeURIComponent(`Hi ${tenantName}, your rent payment of ₹${balance.toLocaleString()} for Room ${roomNo} is pending. Please pay at your earliest convenience. Thank you!`)
+      : '';
+    window.open(msg ? `https://wa.me/${phoneWithCode}?text=${msg}` : `https://wa.me/${phoneWithCode}`, '_blank');
   };
 
   return (
@@ -184,21 +187,21 @@ export const TenantsByDueDaySheet = ({
                         </div>
                         <div className="flex-1" />
                         {tenant.phone && tenant.phone !== '••••••••••' && (
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => openWhatsAppChat(tenant.phone)}
-                              className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
-                              title={`WhatsApp ${tenant.name}`}
+                              onClick={() => openWhatsAppChat(tenant.phone, tenant.name, balance, tenant.roomNo)}
+                              className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                              title="Share on WhatsApp"
                             >
-                              <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                              <MessageCircle className="h-4 w-4" />
                             </button>
                             <a
                               href={`tel:${tenant.phone}`}
-                              className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                              className="grid h-9 w-9 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                               title={`Call ${tenant.name}`}
                             >
-                              <Phone className="h-5 w-5 stroke-[1.75]" />
+                              <Phone className="h-4 w-4" />
                             </a>
                           </div>
                         )}

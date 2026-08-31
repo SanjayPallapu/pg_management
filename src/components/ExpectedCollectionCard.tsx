@@ -108,10 +108,13 @@ export const ExpectedCollectionCard = ({
     return Object.values(scheduleByDay).sort((a, b) => a.day - b.day);
   }, [rooms, payments, selectedMonth, selectedYear]);
 
-  const openWhatsAppChat = (phone: string) => {
+  const openWhatsAppChat = (phone: string, tenantName?: string, balance?: number, roomNo?: string) => {
     const formattedPhone = phone.replace(/\D/g, '');
     const phoneWithCode = formattedPhone.startsWith('91') ? formattedPhone : `91${formattedPhone}`;
-    window.open(`https://wa.me/${phoneWithCode}`, '_blank');
+    const msg = tenantName && balance && roomNo
+      ? encodeURIComponent(`Hi ${tenantName}, your rent payment of ₹${balance.toLocaleString()} for Room ${roomNo} is pending. Please pay at your earliest convenience. Thank you!`)
+      : '';
+    window.open(msg ? `https://wa.me/${phoneWithCode}?text=${msg}` : `https://wa.me/${phoneWithCode}`, '_blank');
   };
 
   const filteredData = useMemo(() => {
@@ -309,24 +312,27 @@ export const ExpectedCollectionCard = ({
                               </div>
                             </div>
                             {tenant.phone && tenant.phone !== '••••••••••' && (
-                              <div className="flex items-center gap-2.5 shrink-0 ml-auto">
+                              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); openWhatsAppChat(tenant.phone); }}
-                                  className="text-slate-600 hover:text-green-600 dark:text-slate-300 transition-colors p-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openWhatsAppChat(tenant.phone, tenant.name, tenant.balance, tenant.roomNo);
+                                  }}
+                                  className="grid h-8 w-8 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                                   aria-label={`WhatsApp ${tenant.name}`}
-                                  title={`WhatsApp ${tenant.name}`}
+                                  title="Share on WhatsApp"
                                 >
-                                  <MessageCircle className="h-5 w-5 stroke-[1.75]" />
+                                  <MessageCircle className="h-4 w-4" />
                                 </button>
                                 <a
                                   href={`tel:${tenant.phone}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-slate-600 hover:text-blue-600 dark:text-slate-300 transition-colors p-1"
+                                  className="grid h-8 w-8 place-items-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                                   aria-label={`Call ${tenant.name}`}
                                   title={`Call ${tenant.name}`}
                                 >
-                                  <Phone className="h-5 w-5 stroke-[1.75]" />
+                                  <Phone className="h-4 w-4" />
                                 </a>
                               </div>
                             )}
