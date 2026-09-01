@@ -5,5 +5,5 @@
     <color name="colorAccent">#0062FF</color>
     <color name="twa_status_bar_color">#0062FF</color>
     <color name="twa_nav_bar_color">#0062FF</color>
-    <color name="ic_launcher_background">#0062FF</color>
+    <color name="ic_launcher_background">#000000</color>
 </resources>
