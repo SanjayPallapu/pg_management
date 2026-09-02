@@ -1,5 +1,5 @@
 import { numberToWords, formatIndianCurrency } from "@/utils/numberToWords";
-import buildingLogo from "@/assets/building-logo.jpeg";
+import buildingLogo from "@/assets/pg-hub/pg-hub-logo.png";
 
 export interface BuildingRentReceiptData {
   receivedFrom: string;
@@ -37,7 +37,7 @@ export const BuildingRentReceiptTemplate = ({ data }: BuildingRentReceiptTemplat
     >
       {/* Header with Building Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "10px" }}>
-        <img src={buildingLogo} alt="Building Logo" style={{ width: "70px", height: "70px", objectFit: "contain" }} />
+        <img src={buildingLogo} alt="PG Hub Logo" style={{ width: "70px", height: "70px", objectFit: "contain", backgroundColor: "#000000", borderRadius: "8px" }} />
         <h1
           style={{
             fontSize: "28px",

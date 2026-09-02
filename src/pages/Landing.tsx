@@ -111,7 +111,7 @@ gsap.registerPlugin(ScrollTrigger);
 function Brand() {
   return (
     <div className="flex items-center gap-3">
-      <img src={logo} alt="" className="h-11 w-11 rounded-2xl" />
+      <img src={logo} alt="PG Hub" className="h-11 w-11 rounded-2xl object-contain bg-black shrink-0" />
       <div>
         <p className="text-sm font-black leading-none">PG Hub</p>
         <p className="text-[10px] font-black uppercase text-slate-500">PayFlow</p>

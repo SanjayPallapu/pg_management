@@ -303,7 +303,7 @@ const Index = () => {
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
-      <div className={`sticky top-0 z-40 border-b border-border/60 bg-background transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="sticky top-0 z-40 border-b border-border/60 bg-background">
         <div className="mx-auto flex w-full max-w-[1700px] items-center justify-between px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2">
           {/* Left: Hostel logo / Switcher, Month Picker, and PG details */}
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">

@@ -436,8 +436,8 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   return (
     <>
       <div ref={dashboardRef} className="w-full flex flex-col gap-4 md:gap-6">
-        {/* Banner Carousel — Responsive Multi-Card Display: 1 on Mobile, 2 on Tablet, 3 on Laptop, 4 on XL */}
-        <div className="group relative order-1 w-full">
+        {/* Banner Carousel — Sticky: stays visible while quick actions + content scrolls under it */}
+        <div className="group relative order-1 w-full sticky top-[48px] sm:top-[56px] z-30 bg-background pt-1 pb-2">
           {/* Left / Right Chevron Controls for Desktop */}
           <button
             type="button"

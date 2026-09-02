@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, Building, ChevronLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import appLogo from "@/assets/splash-uploaded-logo.png";
+import appLogo from "@/assets/pg-hub/pg-hub-logo.png";
 import { gsap } from "gsap";
 
 const authSchema = z.object({

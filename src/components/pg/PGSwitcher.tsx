@@ -8,10 +8,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building, Check, Crown, ImageIcon } from 'lucide-react';
+import { Check, Crown, ImageIcon } from 'lucide-react';
 import { usePG } from '@/contexts/PGContext';
 import { Badge } from '@/components/ui/badge';
 import { LogoUpdateDialog } from './LogoUpdateDialog';
+import pgHubLogo from '@/assets/pg-hub/pg-hub-logo.png';
 
 export const PGSwitcher = () => {
   const { pgs, currentPG, selectPG, isProUser } = usePG();
@@ -31,16 +32,12 @@ export const PGSwitcher = () => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="h-11 w-11 sm:h-10 sm:w-10 p-0 shrink-0">
-            {currentPG?.logoUrl ? (
-              <img 
-                src={currentPG.logoUrl} 
-                alt={currentPG.name} 
-                className="h-9 w-9 sm:h-8 sm:w-8 rounded object-cover"
-              />
-            ) : (
-              <Building className="h-5 w-5" />
-            )}
+          <Button variant="outline" size="icon" className="h-11 w-11 sm:h-10 sm:w-10 p-0.5 shrink-0 overflow-hidden">
+            <img 
+              src={currentPG?.logoUrl || pgHubLogo} 
+              alt={currentPG?.name || 'PG Hub'} 
+              className="h-full w-full rounded object-contain bg-black"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[220px]">
@@ -61,17 +58,11 @@ export const PGSwitcher = () => {
                 className="cursor-pointer"
               >
                 <div className="flex items-center gap-2 w-full">
-                  {pg.logoUrl ? (
-                    <img 
-                      src={pg.logoUrl} 
-                      alt={pg.name} 
-                      className="h-6 w-6 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center">
-                      <Building className="h-3 w-3 text-primary" />
-                    </div>
-                  )}
+                  <img 
+                    src={pg.logoUrl || pgHubLogo} 
+                    alt={pg.name} 
+                    className="h-6 w-6 rounded object-contain bg-black shrink-0"
+                  />
                   <span className="truncate flex-1">{pg.name}</span>
                   {currentPG?.id === pg.id && (
                     <Check className="h-4 w-4 text-primary" />
