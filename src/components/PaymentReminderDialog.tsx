@@ -181,7 +181,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       } else {
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-        window.location.href = `https://wa.me/${cleanPhone}`;
+        window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       }
     } catch (e) {
       if (isAbortError(e)) return;
@@ -190,7 +190,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
         let phone = reminderData.tenantPhone.replace(/\D/g, '');
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-        window.location.href = `https://wa.me/${cleanPhone}`;
+        window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       } catch (err) {
         toast({ title: 'Share failed', variant: 'destructive' });
       }
@@ -231,7 +231,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       } else {
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-        window.location.href = `https://wa.me/${cleanPhone}`;
+        window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       }
     } catch (e) {
       if (isAbortError(e)) return;
@@ -241,7 +241,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
         let phone = reminderData.tenantPhone.replace(/\D/g, '');
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-        window.location.href = `https://wa.me/${cleanPhone}`;
+        window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       } catch (err) {
         toast({ title: 'Share failed', variant: 'destructive' });
       }

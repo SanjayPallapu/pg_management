@@ -129,6 +129,24 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     setDownloadMonth(selectedMonth);
   }, [selectedMonth]);
   const [acYear, setAcYear] = useState(selectedYear);
+  // Day overrides are stored per room/month so they survive reopening the sheet
+  // without requiring a database migration.
+  const [acDayOverridesVersion, setAcDayOverridesVersion] = useState(0);
+  type AcStayOverride = { days: number; startDate?: string; endDate?: string };
+  const getAcStayOverrides = (roomId: string, month: number, year: number): Record<string, AcStayOverride> => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(`ac_bill_days_${roomId}_${year}_${month}`) || "{}") as Record<string, number | AcStayOverride>;
+      return Object.fromEntries(Object.entries(stored).map(([tenantId, value]) => [tenantId, typeof value === "number" ? { days: value } : value]));
+    } catch {
+      return {};
+    }
+  };
+  const saveAcTenantStay = (roomId: string, tenantId: string, startDate: string, endDate: string, days: number) => {
+    const key = `ac_bill_days_${roomId}_${acYear}_${acMonth}`;
+    const saved = getAcStayOverrides(roomId, acMonth, acYear);
+    localStorage.setItem(key, JSON.stringify({ ...saved, [tenantId]: { days, startDate, endDate } }));
+    setAcDayOverridesVersion((version) => version + 1);
+  };
   const { byRoom: acByRoom, setReading } = useElectricityReadings(acMonth, acYear);
   const { data: allReadings = [] } = useAllElectricityReadings();
   const [acSheetOpen, setAcSheetOpen] = useState(false);
@@ -361,7 +379,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             room.capacity,
             totalAmount,
             splitType,
-            splitCount
+            splitCount,
+            getAcStayOverrides(room.id, m, y)
           );
           const myShare = shares.find((s) => s.name === tenant.name)?.share || 0;
           if (myShare > 0) {
@@ -684,10 +703,12 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           room.capacity,
           total,
           splitType,
-          splitCount ?? undefined
+          splitCount ?? undefined,
+          getAcStayOverrides(room.id, acMonth, acYear)
         );
         const tenantShares = baseShares.map((share) => {
           const tenantObj = activeTenants.find((t) => t.name === share.name);
+          const stayOverride = tenantObj ? getAcStayOverrides(room.id, acMonth, acYear)[tenantObj.id] : undefined;
           const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, room, acMonth, acYear) : [];
           const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
           const payment = tenantObj ? payments.find((p) => p.tenantId === tenantObj.id && p.month === acMonth && p.year === acYear) : undefined;
@@ -697,6 +718,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             acPaymentStatus: payment?.acPaymentStatus || 'Pending',
             overdueAc,
             overdueAcTotal,
+            stayStartDate: stayOverride?.startDate,
+            stayEndDate: stayOverride?.endDate,
           };
         });
 
@@ -728,7 +751,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           splitCount,
         };
       });
-  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms, payments, allReadings]);
+  }, [rooms, acByRoom, acMonth, acYear, currentPG?.electricityUnitPrice, customModeRooms, payments, allReadings, acDayOverridesVersion]);
+
+  const acPaymentHistory = useMemo(() => {
+    const tenants = rooms.flatMap((room) => room.tenants.map((tenant) => ({ tenant, roomNo: room.roomNo })));
+    return payments
+      .map((payment) => {
+        const acEntry = payment.paymentEntries?.find((entry: any) => entry.type === 'ac');
+        const tenantInfo = tenants.find((item) => item.tenant.id === payment.tenantId);
+        if (!acEntry || !tenantInfo) return null;
+        return {
+          id: `${payment.tenantId}-${payment.year}-${payment.month}`,
+          tenantName: tenantInfo.tenant.name,
+          roomNo: tenantInfo.roomNo,
+          month: payment.month,
+          year: payment.year,
+          amount: acEntry.amount,
+          status: payment.acPaymentStatus || 'Pending',
+          date: acEntry.date,
+          mode: acEntry.mode,
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+      .sort((a, b) => b.year - a.year || b.month - a.month);
+  }, [payments, rooms]);
 
   const handleShareAC = async (
     item: typeof acRooms[number],
@@ -780,7 +826,8 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       item.room.capacity,
       total,
       splitType || 'active_tenants',
-      splitCount ?? undefined
+      splitCount ?? undefined,
+      getAcStayOverrides(item.room.id, acMonth, acYear)
     );
 
     const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
@@ -863,7 +910,10 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             a.download = fileName;
             a.click();
             const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-            window.location.href = `https://wa.me/${cleanPhone}`;
+            // Keep the app mounted when WhatsApp cannot handle the link in an
+            // embedded browser; replacing this page was the source of the
+            // blank white screen after sharing a reminder.
+            window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
           }
         } else {
           const shareNavigator = navigator as Navigator & {
@@ -893,7 +943,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           let phone = targetTenant?.phone?.replace(/\D/g, "");
           if (phone) {
             const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
-            window.location.href = `https://wa.me/${cleanPhone}`;
+            window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
           }
         } catch (fallbackError) {
           const message = error instanceof Error ? error.message : "";
@@ -941,20 +991,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           ? roomItem.units * (currentPG?.electricityUnitPrice ?? 12)
           : calculateAPCommercialBill(roomItem.units).totalBill;
           
-        const tenantShares = calcAcTenantShares(
-          roomItem.units,
-          currentPG?.electricityUnitPrice ?? 12,
-          roomItem.activeTenants,
-          acYear,
-          acMonth,
-          roomItem.room.capacity,
-          total,
-          roomItem.splitType || 'active_tenants',
-          roomItem.splitCount ?? undefined
-        );
-        
-        const tenantShare = tenantShares.find(s => s.name === tenant.name);
-        share = tenantShare?.share ?? 0;
+        // Reuse the displayed share so the payment amount always matches a
+        // manually adjusted stay duration and the selected unit price.
+        share = roomItem.tenantShares.find((item) => item.id === tenantId)?.share ?? 0;
         
         const overdue = getOverdueAcBills(tenantId, roomItem.room, acMonth, acYear);
         overdueAcTotal = overdue.reduce((sum, om) => sum + om.share, 0);
@@ -2495,6 +2534,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           }
         }}
         acRooms={acRooms}
+        acPaymentHistory={acPaymentHistory}
         acMonth={acMonth}
         acYear={acYear}
         setAcMonth={setAcMonth}
@@ -2515,6 +2555,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           );
         }}
         onTogglePaymentStatus={handleToggleAcPaymentStatus}
+        onSaveTenantStay={saveAcTenantStay}
         months={months}
         years={years}
       />

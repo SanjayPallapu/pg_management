@@ -158,6 +158,7 @@ export const calcAcShare = (units: number, unitPrice: number, activeTenants: num
 };
 
 export interface AcTenantLike {
+  id?: string;
   name: string;
   startDate: string;
   endDate?: string;
@@ -321,19 +322,63 @@ export const calcAcTenantShares = (
   customTotalAmount?: number,
   splitType: string = 'active_tenants',
   splitCount?: number,
+  dayOverrides?: Record<string, number | { days: number; startDate?: string; endDate?: string }>,
 ): AcTenantShare[] => {
   const totalAmount = customTotalAmount !== undefined ? customTotalAmount : units * unitPrice;
-  if (totalAmount <= 0) return [];
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const tenantDays = tenants
-    .map((tenant) => ({
+    .map((tenant) => {
+      const override = dayOverrides?.[tenant.id || tenant.name];
+      const overrideDays = typeof override === 'number' ? override : override?.days;
+      return {
       name: tenant.name,
-      daysStayed: getAcStayedDaysInMonth(tenant.startDate, tenant.endDate, year, month),
-    }))
+      // A manager can correct the occupancy days from the AC sheet. This is
+      // useful when a person stayed only part of the billing period.
+      daysStayed: Math.max(0, Math.min(
+        daysInMonth,
+        overrideDays ?? getAcStayedDaysInMonth(tenant.startDate, tenant.endDate, year, month),
+      )),
+      };
+    })
     .filter((tenant) => tenant.daysStayed > 0);
 
   if (tenantDays.length <= 0) return [];
+
+  // Keep the historical occupants visible even before a reading is entered.
+  // This lets the manager set their stay dates for a past month, and avoids
+  // incorrectly showing “No active tenants” for a ₹0 bill.
+  if (totalAmount <= 0) {
+    return tenantDays.map((tenant) => ({ ...tenant, share: 0 }));
+  }
+
+  // Date-based occupancy: calculate each calendar day separately, then split
+  // that day's cost only among tenants staying on that day. For example, in a
+  // 2-sharing room where A stays days 1-10 and B stays all month, days 1-10
+  // are split between A/B while the remaining days belong entirely to B.
+  if (splitType === 'daily_occupancy') {
+    const shares = new Map(tenantDays.map((tenant) => [tenant.name, 0]));
+    const dailyAmount = totalAmount / daysInMonth;
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const present = tenantDays.filter((tenant) => {
+        const original = tenants.find((item) => item.name === tenant.name);
+        if (!original) return false;
+        const override = dayOverrides?.[original.id || original.name];
+        const overrideData = typeof override === 'number' ? { days: override } : override;
+        const start = Math.max(1, new Date(`${overrideData?.startDate || original.startDate}T12:00:00`).getDate());
+        const end = Math.min(daysInMonth, new Date(`${overrideData?.endDate || original.endDate || `${year}-${String(month).padStart(2, '0')}-${daysInMonth}`}T12:00:00`).getDate());
+        const overriddenDays = overrideData?.days;
+        // When a day count was manually entered, it represents the first N
+        // days of the selected month until an explicit date range is stored.
+        const effectiveEnd = overriddenDays !== undefined ? Math.min(daysInMonth, start + overriddenDays - 1) : end;
+        return day >= start && day <= effectiveEnd;
+      });
+      if (present.length > 0) {
+        present.forEach((tenant) => shares.set(tenant.name, (shares.get(tenant.name) || 0) + dailyAmount / present.length));
+      }
+    }
+    return tenantDays.map((tenant) => ({ ...tenant, share: Math.round(shares.get(tenant.name) || 0) }));
+  }
 
   // Strategy 1: custom split count
   if (splitType === 'custom' && splitCount && splitCount > 0) {
