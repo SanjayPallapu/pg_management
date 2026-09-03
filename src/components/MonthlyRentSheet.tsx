@@ -785,6 +785,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
     splitType?: string,
     splitCount?: number | null,
     targetTenantName?: string,
+    displayedShares?: { name: string; share: number; daysStayed?: number; id?: string; overdueAc?: { monthLabel: string; share: number }[]; overdueAcTotal?: number }[],
   ) => {
     if (draftUnits <= 0) {
       toast({ title: "Enter units first", variant: "destructive" });
@@ -817,7 +818,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         ? draftUnits * draftUnitPrice
         : apBill.totalBill;
 
-    const tenantShares = calcAcTenantShares(
+    const calculatedTenantShares = calcAcTenantShares(
       draftUnits,
       draftUnitPrice,
       item.activeTenants,
@@ -830,6 +831,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       getAcStayOverrides(item.room.id, acMonth, acYear)
     );
 
+    const tenantShares = displayedShares || calculatedTenantShares;
     const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
     const existingPayment = targetTenant ? payments.find(p => p.tenantId === targetTenant.id && p.month === acMonth && p.year === acYear) : undefined;
     const isPaid = existingPayment?.acPaymentStatus === 'Paid';
@@ -842,8 +844,9 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       const overdueAc = tenantObj ? getOverdueAcBills(tenantObj.id, item.room, acMonth, acYear) : [];
       const overdueAcTotal = overdueAc.reduce((sum, om) => sum + om.share, 0);
       return {
-        name: share.daysStayed > 0 ? `${share.name} (${share.daysStayed}d)` : share.name,
+        name: share.daysStayed ? `${share.name} (${share.daysStayed}d)` : share.name,
         share: share.share,
+        daysStayed: share.daysStayed,
         overdueAc,
         overdueAcTotal,
       };
@@ -859,7 +862,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       pgName: currentPG?.name,
       pgLogoUrl: currentPG?.logoUrl,
       tenantName: targetTenantName,
-      calcMode: isCustom ? "custom" : "commercial",
+      calcMode: isCustom || splitType === "custom" ? "custom" : "commercial",
       startReading,
       endReading,
       splitType,
@@ -2534,7 +2537,6 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           }
         }}
         acRooms={acRooms}
-        acPaymentHistory={acPaymentHistory}
         acMonth={acMonth}
         acYear={acYear}
         setAcMonth={setAcMonth}
@@ -2542,7 +2544,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         setReading={setReading}
         customModeRooms={customModeRooms}
         setCustomModeRooms={setCustomModeRooms}
-        onShare={(item, units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName) => {
+        onShare={(item, units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName, calculatedShares) => {
           handleShareAC(
             item,
             units,
@@ -2551,11 +2553,13 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
             endReading,
             splitType,
             splitCount,
-            targetTenantName
+            targetTenantName,
+            calculatedShares
           );
         }}
         onTogglePaymentStatus={handleToggleAcPaymentStatus}
         onSaveTenantStay={saveAcTenantStay}
+        acPaymentHistory={acPaymentHistory}
         months={months}
         years={years}
       />

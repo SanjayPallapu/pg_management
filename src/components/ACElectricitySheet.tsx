@@ -25,13 +25,13 @@ import {
 } from 'lucide-react';
 import { applyStyledExport, saveAndShareExcel } from '@/utils/excelStyles';
 import { toast } from 'sonner';
+import { calculateAPCommercialBill } from '@/hooks/useElectricityReadings';
 
 
 interface ACElectricitySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   acRooms: any[];
-  acPaymentHistory: { id: string; tenantName: string; roomNo: string; month: number; year: number; amount: number; status: 'Paid' | 'Pending'; date?: string; mode?: string }[];
   acMonth: number;
   acYear: number;
   setAcMonth: (m: number) => void;
@@ -47,10 +47,12 @@ interface ACElectricitySheetProps {
     endReading: number | null,
     splitType: string,
     splitCount: number | null,
-    targetTenantName?: string
+    targetTenantName?: string,
+    calculatedShares?: any[],
   ) => void;
   onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
   onSaveTenantStay?: (roomId: string, tenantId: string, startDate: string, endDate: string, days: number) => void;
+  acPaymentHistory?: { id: string; tenantName: string; roomNo: string; month: number; year: number; amount: number; status: 'Paid' | 'Pending'; date?: string; mode?: string }[];
   months: { value: number; label: string }[];
   years: number[];
 }
@@ -59,7 +61,6 @@ export const ACElectricitySheet = ({
   open,
   onOpenChange,
   acRooms,
-  acPaymentHistory,
   acMonth,
   acYear,
   setAcMonth,
@@ -70,12 +71,13 @@ export const ACElectricitySheet = ({
   onShare,
   onTogglePaymentStatus,
   onSaveTenantStay,
+  acPaymentHistory,
   months,
   years,
 }: ACElectricitySheetProps) => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [pricesCardOpen, setPricesCardOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ac-bill' | 'pendings' | 'share-bills' | 'history' | 'reports'>('ac-bill');
+  const [activeTab, setActiveTab] = useState<'ac-bill' | 'pendings' | 'share-bills' | 'reports'>('ac-bill');
 
   const pendingTenantsList = useMemo(() => {
     const list: any[] = [];
@@ -188,7 +190,6 @@ export const ACElectricitySheet = ({
     { key: 'ac-bill', label: 'Rooms' },
     { key: 'pendings', label: 'Pending' },
     { key: 'share-bills', label: 'Share' },
-    { key: 'history', label: 'History' },
     { key: 'reports', label: 'Reports' },
   ];
 
@@ -202,8 +203,8 @@ export const ACElectricitySheet = ({
             onSaveReading={(units, unitPrice, startReading, endReading, splitType, splitCount) => {
               setReading.mutate({ roomId: selectedRoomItem.room.id, units, unitPrice, startReading, endReading, splitType, splitCount });
             }}
-            onShare={(units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName) => {
-              onShare(selectedRoomItem, units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName);
+            onShare={(units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName, calculatedShares) => {
+              onShare(selectedRoomItem, units, unitPrice, startReading, endReading, splitType, splitCount, targetTenantName, calculatedShares);
             }}
             onTogglePaymentStatus={onTogglePaymentStatus}
             onSaveTenantStay={onSaveTenantStay}
@@ -211,6 +212,7 @@ export const ACElectricitySheet = ({
             year={acYear}
             months={months}
             onMonthChange={setAcMonth}
+            paymentHistory={(acPaymentHistory || []).filter((entry) => entry.roomNo === selectedRoomItem.room.roomNo)}
             onModeToggle={(isCustom) => {
               localStorage.setItem(`ac_bill_mode_${selectedRoomItem.room.id}`, isCustom ? "custom" : "commercial");
               setCustomModeRooms((prev) => ({ ...prev, [selectedRoomItem.room.id]: isCustom }));
@@ -515,27 +517,6 @@ export const ACElectricitySheet = ({
                 </div>
               )}
 
-              {/* ── HISTORY TAB ── */}
-              {activeTab === 'history' && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-violet-500/10 border border-violet-500/25">
-                    <div className="h-11 w-11 rounded-2xl bg-violet-500/15 flex items-center justify-center shrink-0"><History className="h-5 w-5 text-violet-600" /></div>
-                    <div><p className="text-base font-black text-foreground">AC payment history</p><p className="text-xs font-medium text-muted-foreground">Past tenants and recorded AC payments</p></div>
-                  </div>
-                  {acPaymentHistory.length === 0 ? (
-                    <div className="py-14 text-center rounded-2xl border border-dashed border-border"><History className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" /><p className="font-bold text-muted-foreground">No AC payments recorded yet</p></div>
-                  ) : acPaymentHistory.map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-border bg-card p-4 shadow-xs">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0"><p className="font-black text-foreground truncate">{entry.tenantName}</p><p className="mt-0.5 text-xs font-semibold text-muted-foreground">Room {entry.roomNo} · {months[entry.month - 1]?.label} {entry.year}</p></div>
-                        <Badge className={cn("border-0", entry.status === 'Paid' ? "bg-emerald-500/10 text-emerald-600" : "bg-orange-500/10 text-orange-600")}>{entry.status}</Badge>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-3"><span className="text-xs font-semibold text-muted-foreground">{entry.date || 'Date not recorded'}{entry.mode ? ` · ${entry.mode.toUpperCase()}` : ''}</span><span className="text-lg font-black text-foreground">₹{entry.amount.toLocaleString()}</span></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* ── REPORTS TAB ── */}
               {activeTab === 'reports' && (
                 <div className="space-y-3.5">
@@ -623,27 +604,18 @@ interface DetailProps {
   item: any;
   onBack: () => void;
   onSaveReading: (units: number, unitPrice: number, startReading: number | null, endReading: number | null, splitType: string, splitCount: number | null) => void;
-  onShare: (units: number, unitPrice: number, startReading: number | null, endReading: number | null, splitType: string, splitCount: number | null, targetTenantName?: string) => void;
+  onShare: (units: number, unitPrice: number, startReading: number | null, endReading: number | null, splitType: string, splitCount: number | null, targetTenantName?: string, calculatedShares?: any[]) => void;
   onTogglePaymentStatus?: (tenantId: string, currentStatus: 'Paid' | 'Pending') => void;
   onSaveTenantStay?: (roomId: string, tenantId: string, startDate: string, endDate: string, days: number) => void;
   month: number;
   year: number;
   months: { value: number; label: string }[];
   onMonthChange: (month: number) => void;
+  paymentHistory: { id: string; tenantName: string; roomNo: string; month: number; year: number; amount: number; status: 'Paid' | 'Pending'; date?: string; mode?: string }[];
   onModeToggle: (isCustom: boolean) => void;
 }
 
-const calculateAPCommercialBill = (u: number) => {
-  if (u <= 0) return { totalBill: 0 };
-  let energyCharges = 0;
-  if (u <= 50) energyCharges = u * 5.4;
-  else if (u <= 100) energyCharges = 50 * 5.4 + (u - 50) * 7.65;
-  else energyCharges = 50 * 5.4 + 50 * 7.65 + (u - 100) * 9.95;
-  const customerCharges = u <= 50 ? 45 : u <= 100 ? 55 : 65;
-  return { totalBill: Math.round(energyCharges + customerCharges) };
-};
-
-const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymentStatus, onSaveTenantStay, onModeToggle, month, year, months, onMonthChange }: DetailProps) => {
+const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymentStatus, onSaveTenantStay, onModeToggle, month, year, months, onMonthChange, paymentHistory }: DetailProps) => {
   const { room, activeTenants, units, unitPrice, total, tenantShares = [], isCustom, startReading, endReading, splitType, splitCount } = item;
 
   const [startReadingDraft, setStartReadingDraft] = useState(startReading !== null ? String(startReading) : "");
@@ -660,6 +632,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
     endDate: tenant.stayEndDate || clampDate((activeTenants.find((item: any) => item.id === tenant.id)?.endDate) || monthEnd),
   });
   const [stayRanges, setStayRanges] = useState<Record<string, { startDate: string; endDate: string }>>({});
+  const [detailTab, setDetailTab] = useState<'bill' | 'history'>('bill');
 
   useEffect(() => { setStartReadingDraft(startReading !== null ? String(startReading) : ""); }, [startReading]);
   useEffect(() => { setEndReadingDraft(endReading !== null ? String(endReading) : ""); }, [endReading]);
@@ -752,24 +725,24 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div className="min-w-0">
+              <div className="min-w-0 leading-tight">
                 <SheetTitle className="text-lg font-black text-white">Room {room.roomNo}</SheetTitle>
-                <span className="text-xs text-cyan-200 font-medium block mt-0.5">{room.capacity} Sharing · {activeTenants.length} Active Tenant{activeTenants.length === 1 ? '' : 's'}</span>
+                <span className="text-xs text-cyan-200 font-medium block mt-1">{room.capacity} Sharing · {activeTenants.length} active tenant{activeTenants.length === 1 ? '' : 's'}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <select
                 value={month}
                 onChange={(event) => onMonthChange(Number(event.target.value))}
-                className="h-9 max-w-24 rounded-xl border border-white/20 bg-white/10 px-2 text-xs font-bold text-white outline-none backdrop-blur"
+                className="h-9 w-[62px] rounded-xl border border-white/20 bg-white/10 px-1.5 text-xs font-bold text-white outline-none backdrop-blur"
                 aria-label="AC bill month"
               >
-                {months.map((item) => <option key={item.value} value={item.value} className="bg-[#0c4a6e] text-white">{item.label}</option>)}
+                {months.map((item) => <option key={item.value} value={item.value} className="bg-[#0c4a6e] text-white">{item.label.slice(0, 3)}</option>)}
               </select>
               <Button
                 size="sm"
                 className="h-9 rounded-xl bg-white/15 border border-white/20 hover:bg-white/25 text-white font-extrabold text-xs"
-                onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+              onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, undefined, dayWiseShares)}
               >
                 <Send className="mr-1.5 h-3.5 w-3.5" /> Share All
               </Button>
@@ -813,8 +786,19 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
         </SheetHeader>
       </div>
 
+      <div className="shrink-0 flex gap-1 border-b border-border bg-background px-3 py-2">
+        <Button type="button" size="sm" variant={detailTab === 'bill' ? 'default' : 'ghost'} onClick={() => setDetailTab('bill')} className="h-8 flex-1 rounded-lg text-xs font-bold">Bill details</Button>
+        <Button type="button" size="sm" variant={detailTab === 'history' ? 'default' : 'ghost'} onClick={() => setDetailTab('history')} className="h-8 flex-1 rounded-lg text-xs font-bold"><History className="mr-1 h-3.5 w-3.5" /> History</Button>
+      </div>
+
       {/* Scrollable detail body */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+        {detailTab === 'history' ? (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-violet-500/25 bg-violet-500/10 p-4"><p className="font-black text-foreground">Room {room.roomNo} AC history</p><p className="mt-1 text-xs font-medium text-muted-foreground">All recorded AC payments, including tenants who have left.</p></div>
+            {paymentHistory.length === 0 ? <div className="py-14 text-center rounded-2xl border border-dashed border-border"><History className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" /><p className="font-bold text-muted-foreground">No AC payments recorded yet</p></div> : paymentHistory.map((entry) => <div key={entry.id} className="rounded-2xl border border-border bg-card p-4"><div className="flex justify-between gap-3"><div><p className="font-black text-foreground">{entry.tenantName}</p><p className="mt-1 text-xs font-semibold text-muted-foreground">{months[entry.month - 1]?.label.slice(0, 3)} {entry.year} · {entry.date || 'Date not recorded'}{entry.mode ? ` · ${entry.mode.toUpperCase()}` : ''}</p></div><Badge className={cn("border-0", entry.status === 'Paid' ? "bg-emerald-500/10 text-emerald-600" : "bg-orange-500/10 text-orange-600")}>{entry.status}</Badge></div><p className="mt-3 border-t border-border/70 pt-3 text-right text-lg font-black">₹{entry.amount.toLocaleString()}</p></div>)}
+          </div>
+        ) : <>
         {/* Meter Readings */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
           <div className="flex items-center justify-between">
@@ -928,6 +912,11 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
             </span>
             <span className="font-extrabold text-cyan-600 dark:text-cyan-400">{shareLabel}</span>
           </div>
+          {selectedSplitType === "daily_occupancy" && (
+            <p className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 px-3.5 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+              <span className="font-bold text-cyan-700 dark:text-cyan-300">How it is calculated:</span> ₹{draftTotal.toLocaleString()} ÷ {new Date(year, month, 0).getDate()} days = ₹{(draftTotal / new Date(year, month, 0).getDate()).toFixed(2)}/day. Each day is divided only among the tenants whose selected dates include that day.
+            </p>
+          )}
         </div>
 
         {/* Tenant Breakdown */}
@@ -1017,7 +1006,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                       size="sm"
                       variant="outline"
                       className="h-9 w-9 p-0 rounded-xl border-border text-muted-foreground hover:text-foreground"
-                      onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name)}
+                      onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, tenant.name, dayWiseShares)}
                     >
                       <Send className="h-4 w-4" />
                     </Button>
@@ -1039,6 +1028,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
             );
           })}
         </div>
+        </>}
       </div>
 
       {/* Detail footer */}
@@ -1049,13 +1039,13 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
         <Button
           variant="outline"
           className="flex-1 text-xs font-extrabold h-11 rounded-xl"
-          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, undefined, dayWiseShares)}
         >
           <Bell className="mr-1.5 h-4 w-4" /> Send Reminder
         </Button>
         <Button
           className="flex-1 text-xs font-extrabold h-11 rounded-xl bg-[linear-gradient(100deg,#06b6d4,#3b82f6)] text-white hover:opacity-95 shadow-sm"
-          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount)}
+          onClick={() => onShare(draftUnits, draftUnitPrice, startVal, endVal, selectedSplitType, draftSplitCount, undefined, dayWiseShares)}
         >
           <Zap className="mr-1.5 h-4 w-4" /> Share Bill
         </Button>

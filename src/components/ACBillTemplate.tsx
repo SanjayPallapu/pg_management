@@ -8,7 +8,7 @@ export interface ACBillData {
   units: number;
   unitPrice: number;
   totalAmount: number;
-  tenants: { name: string; share: number }[];
+  tenants: { name: string; share: number; daysStayed?: number; overdueAc?: { monthLabel: string; share: number }[]; overdueAcTotal?: number }[];
   monthLabel: string;
   pgName?: string;
   pgLogoUrl?: string;
@@ -70,8 +70,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         <div style={{ 
           position: "absolute", 
           left: "20px", 
-          top: "50%", 
-          transform: "translateY(-50%)",
+          top: "12px",
           zIndex: 10 
         }}>
           <div style={{
@@ -301,7 +300,9 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
             <div style={{ fontSize: 10, color: isPaid ? "#2e7d32" : "#075985", opacity: 0.8, marginTop: 4 }}>
               {data.splitType === "custom"
                 ? `Split: Custom Split (${data.splitCount} persons)`
-                : data.splitType === "capacity"
+                : data.splitType === "daily_occupancy"
+                  ? `Split: By selected stay dates`
+                  : data.splitType === "capacity"
                   ? `Split: Capped by room capacity`
                   : `Split: Divided by active tenants`}
             </div>
@@ -315,7 +316,9 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
             <div style={{ fontSize: 10, color: isPaid ? "#2e7d32" : "#075985", opacity: 0.8, marginTop: 4 }}>
               {data.splitType === "custom"
                 ? `Split: Custom Split (${data.splitCount} persons)`
-                : data.splitType === "capacity"
+                : data.splitType === "daily_occupancy"
+                  ? `Split: By selected stay dates`
+                  : data.splitType === "capacity"
                   ? `Split: Capped by room capacity`
                   : `Split: Divided by active tenants`}
             </div>
@@ -332,7 +335,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            {data.tenants.map((t: any, i) => {
+            {data.tenants.map((t, i) => {
               const isCurrentTenant = !data.tenantName || (t.name === data.tenantName || t.name.startsWith(data.tenantName + " ("));
               const hasOverdue = isCurrentTenant && t.overdueAcTotal > 0;
               const totalTenantDue = t.share + (t.overdueAcTotal || 0);
@@ -340,6 +343,7 @@ export const ACBillTemplate = forwardRef<HTMLDivElement, Props>(({ data }, ref) 
                 <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "10px 16px", color: "#1e293b", fontWeight: 600, verticalAlign: "top" }}>
                     <div>{t.name}</div>
+                    {t.daysStayed ? <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{t.daysStayed} billing days</div> : null}
                     {isCurrentTenant && t.overdueAc && t.overdueAc.map((om: any) => (
                       <div key={om.monthLabel} style={{ fontSize: 10, color: "#b45309", marginTop: 2 }}>
                         ↳ Overdue AC ({om.monthLabel}): {fmt(om.share)}
