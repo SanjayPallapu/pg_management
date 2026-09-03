@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import { Building2, Layers3, MapPin, UploadCloud, UsersRound } from "lucide-react";
+import { Building2, Layers3, MapPin, Minus, Plus, UploadCloud, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import journeyBuilding from "@/assets/pg-hub/journey-building-transparent.png";
@@ -19,6 +19,7 @@ export default function PGSetupProperty() {
   const { canCreatePG, subscription } = usePG();
   const { property, updateProperty, setPropertyImage, setFloorCount } = usePGSetupDraft();
   const [errors, setErrors] = useState<Errors>({});
+  const [floorsDraft, setFloorsDraft] = useState(String(property.totalFloors));
 
   const chooseImage = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -77,7 +78,68 @@ export default function PGSetupProperty() {
               </label>
             </div>
             <div><PGHubFormField label="City / Area" required icon={MapPin} placeholder="Enter city or area" value={property.city} onChange={(event) => updateProperty({ city: event.currentTarget.value })} error={errors.city} /></div>
-            <div><PGHubFormField label="Total Floors" required icon={Layers3} type="number" inputMode="numeric" min={1} max={20} value={property.totalFloors} onChange={(event) => setFloorCount(Number(event.currentTarget.value))} error={errors.floors} /></div>
+            <div>
+              <label className="pgh-field">
+                <span className="pgh-field__label">Total Floors <em>*</em></span>
+                <span className="pgh-field__wrap flex items-center justify-between p-1 bg-white border border-slate-200 rounded-xl">
+                  <div className="flex items-center gap-2 pl-2">
+                    <Layers3 size={20} className="text-purple-600 shrink-0" />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={20}
+                      value={floorsDraft}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFloorsDraft(val);
+                        const num = parseInt(val, 10);
+                        if (!isNaN(num) && num >= 1 && num <= 20) {
+                          setFloorCount(num);
+                        }
+                      }}
+                      onBlur={() => {
+                        const num = parseInt(floorsDraft, 10);
+                        const validNum = isNaN(num) || num < 1 ? 1 : Math.min(20, num);
+                        setFloorsDraft(String(validNum));
+                        setFloorCount(validNum);
+                      }}
+                      className="w-12 text-sm font-bold text-slate-900 bg-transparent focus:outline-none"
+                    />
+                    <span className="text-xs text-slate-400 font-medium">Floors</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = Math.max(1, property.totalFloors - 1);
+                        setFloorsDraft(String(next));
+                        setFloorCount(next);
+                      }}
+                      disabled={property.totalFloors <= 1}
+                      className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-40 flex items-center justify-center text-slate-700 font-bold transition-all"
+                      aria-label="Decrease floor"
+                    >
+                      <Minus size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = Math.min(20, property.totalFloors + 1);
+                        setFloorsDraft(String(next));
+                        setFloorCount(next);
+                      }}
+                      disabled={property.totalFloors >= 20}
+                      className="w-8 h-8 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 flex items-center justify-center font-bold transition-all"
+                      aria-label="Increase floor"
+                    >
+                      <Plus size={15} />
+                    </button>
+                  </div>
+                </span>
+                {errors.floors && <span className="pgh-field__error">{errors.floors}</span>}
+              </label>
+            </div>
           </div>
 
           <section className="pgh-photo my-1 shrink-0">

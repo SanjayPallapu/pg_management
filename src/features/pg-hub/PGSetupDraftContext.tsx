@@ -47,6 +47,7 @@ type PGSetupDraftValue = {
   setFloorCount: (count: number) => void;
   updateFloor: (id: string, patch: Partial<PGFloorDraft>) => void;
   addFloor: () => void;
+  removeFloor: (id: string) => void;
   setStartingRoom: (value: string) => void;
   setCreationResult: (result: PGCreationResult | null) => void;
   reset: () => void;
@@ -139,6 +140,20 @@ export function PGSetupDraftProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const removeFloor = useCallback((id: string) => {
+    setFloors((current) => {
+      if (current.length <= 1) return current;
+      const filtered = current.filter((f) => f.id !== id);
+      const reindexed = filtered.map((f, idx) => ({
+        ...f,
+        floorNumber: idx,
+        name: f.name === floorLabel(f.floorNumber) ? floorLabel(idx) : f.name,
+      }));
+      setProperty((val) => ({ ...val, totalFloors: reindexed.length }));
+      return reindexed;
+    });
+  }, []);
+
   const setStartingRoom = useCallback((value: string) => {
     setStartingRoomState(value.replace(/\D/g, "").slice(0, 4));
   }, []);
@@ -164,6 +179,7 @@ export function PGSetupDraftProvider({ children }: { children: ReactNode }) {
       setFloorCount,
       updateFloor,
       addFloor,
+      removeFloor,
       setStartingRoom,
       setCreationResult,
       reset,

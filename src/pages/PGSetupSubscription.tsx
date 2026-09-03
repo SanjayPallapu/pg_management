@@ -126,8 +126,12 @@ export default function PGSetupSubscription() {
       period: " one-time",
       badgeStyle: "bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-extrabold",
       cardStyle: "border-amber-500 bg-amber-500/10 ring-2 ring-amber-500/40 shadow-sm",
-      icon: <Crown className="h-5 w-5 text-amber-500 fill-amber-500 shrink-0" />,
-      features: SUBSCRIPTION_PLAN_MARKETING.lifetime.features.slice(0, 4),
+      features: [
+        "Lifetime access — pay once, use forever",
+        "Up to 4 PG properties & 500 tenants",
+        "All Pro & future features included",
+        "VIP Priority Support forever",
+      ],
     },
   ];
 

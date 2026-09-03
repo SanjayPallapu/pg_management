@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BedDouble, Building2, CirclePlus, DoorOpen, Edit3, IndianRupee, Layers3, Snowflake, ChevronRight, ArrowRight } from "lucide-react";
+import { BedDouble, Building2, CirclePlus, DoorOpen, Edit3, IndianRupee, Layers3, Snowflake, ChevronRight, ArrowRight, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PGHubButton } from "@/features/pg-hub/PGHubButton";
@@ -13,7 +13,17 @@ import { getPricePerBed } from "@/constants/pricing";
 
 const sharingLabel = (capacity: number) => capacity === 1 ? "Single sharing" : `${capacity} sharing`;
 
-function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: Partial<PGFloorDraft>) => void }) {
+function FloorRow({
+  floor,
+  canRemove,
+  onUpdate,
+  onRemove,
+}: {
+  floor: PGFloorDraft;
+  canRemove: boolean;
+  onUpdate: (patch: Partial<PGFloorDraft>) => void;
+  onRemove: () => void;
+}) {
   const [editing, setEditing] = useState(false);
   return (
     <article className="flex items-start justify-between gap-3 p-3.5 border-b border-slate-100 last:border-b-0">
@@ -42,20 +52,33 @@ function FloorRow({ floor, onUpdate }: { floor: PGFloorDraft; onUpdate: (patch: 
           )}
         </div>
       </div>
-      <button 
-        type="button" 
-        onClick={() => setEditing((value) => !value)}
-        className="px-3.5 py-1.5 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
-      >
-        <Edit3 size={13} /> {editing ? "Done" : "Edit"}
-      </button>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {canRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-1.5 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 text-xs font-bold transition-all shadow-sm"
+            title="Remove floor"
+            aria-label={`Remove ${floor.name}`}
+          >
+            <Trash2 size={13} />
+          </button>
+        )}
+        <button 
+          type="button" 
+          onClick={() => setEditing((value) => !value)}
+          className="px-3.5 py-1.5 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
+        >
+          <Edit3 size={13} /> {editing ? "Done" : "Edit"}
+        </button>
+      </div>
     </article>
   );
 }
 
 export default function PGSetupCapacity() {
   const navigate = useNavigate();
-  const { property, floors, startingRoom, creationResult, setStartingRoom, updateFloor, addFloor, setCreationResult } = usePGSetupDraft();
+  const { property, floors, startingRoom, creationResult, setStartingRoom, updateFloor, addFloor, removeFloor, setCreationResult } = usePGSetupDraft();
   const { createPGFromFloorPlan } = usePGSetup();
   const { refreshPGs, canCreatePG, subscription } = usePG();
   const totals = useMemo(() => floors.reduce((sum, floor) => ({ rooms: sum.rooms + floor.rooms, beds: sum.beds + floor.rooms * floor.bedsPerRoom }), { rooms: 0, beds: 0 }), [floors]);
@@ -181,7 +204,15 @@ export default function PGSetupCapacity() {
             <h2 className="text-sm font-extrabold text-slate-900">Set up each floor</h2>
             <div className="flex flex-col gap-2.5 w-full">
               <div className="bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs">
-                {floors.map((floor) => <FloorRow key={floor.id} floor={floor} onUpdate={(patch) => updateFloor(floor.id, patch)} />)}
+                {floors.map((floor) => (
+                  <FloorRow 
+                    key={floor.id} 
+                    floor={floor} 
+                    canRemove={floors.length > 1}
+                    onUpdate={(patch) => updateFloor(floor.id, patch)} 
+                    onRemove={() => removeFloor(floor.id)}
+                  />
+                ))}
               </div>
               
               <button 
