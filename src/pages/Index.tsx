@@ -289,8 +289,8 @@ const Index = () => {
     );
   }
 
-  // Only force automatic setup redirect for explicit new signups (isNewSignup)
-  if (needsSetup && isNewSignup) {
+  // Always redirect to property setup workflow if user has no properties configured yet
+  if (needsSetup) {
     if (canCreatePG) return <Navigate to="/setup/property" replace />;
     return <Navigate to="/subscription" replace />;
   }

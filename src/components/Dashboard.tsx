@@ -253,13 +253,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const isCurrentMonth = selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
 
   const roomStats = rooms.map((room) => {
-    const activeTenants = room.tenants.filter((t) => {
-      const activeInSelectedMonth = isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth);
-      if (isCurrentMonth) {
-        return activeInSelectedMonth && isTenantActiveNow(t.startDate, t.endDate);
-      }
-      return activeInSelectedMonth;
-    });
+    const activeTenants = room.tenants.filter((t) => isTenantActiveNow(t.startDate, t.endDate));
     const activeCount = activeTenants.length;
 
     // Ensure we don't count more occupied than capacity

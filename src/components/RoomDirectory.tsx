@@ -129,11 +129,8 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   }, [selectedMonth, selectedYear]);
 
   const occupiedCountForMonth = useCallback((room: Room) =>
-    room.tenants.filter(t =>
-      isSelectedCurrentMonth
-        ? isTenantActiveNow(t.startDate, t.endDate)
-        : isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth)
-    ).length, [isSelectedCurrentMonth, selectedMonth, selectedYear]);
+    room.tenants.filter(t => isTenantActiveNow(t.startDate, t.endDate)).length,
+  []);
 
   // Dynamically determine floors from actual room data
   const floorData = useMemo(() => {

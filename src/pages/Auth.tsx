@@ -298,8 +298,19 @@ const Auth = () => {
           toast.error(error.message);
         }
         setIsSubmitting(false);
-      } else {
-        navigate("/", { replace: true });
+        const { data: existingPG } = await supabase
+          .from("pgs")
+          .select("id")
+          .eq("owner_id", (await supabase.auth.getUser()).data.user?.id || "")
+          .limit(1)
+          .maybeSingle();
+
+        if (existingPG) {
+          navigate("/", { replace: true });
+        } else {
+          sessionStorage.setItem("isNewSignup", "true");
+          navigate("/setup/property", { replace: true });
+        }
       }
     } catch {
       toast.error("Sign in failed. Please try again.");
@@ -334,7 +345,8 @@ const Auth = () => {
         console.error("Error creating profile:", profileError);
       }
       setIsSubmitting(false);
-      navigate("/", { replace: true });
+      sessionStorage.setItem("isNewSignup", "true");
+      navigate("/setup/property", { replace: true });
     } else {
       setIsSubmitting(false);
     }

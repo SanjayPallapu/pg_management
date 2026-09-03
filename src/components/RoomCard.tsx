@@ -369,20 +369,10 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
     return rentRecords.find((p) => p.tenantId === tenantId);
   };
 
-  // Tenants active in selected month (history view) - show tenants whose end_date hasn't passed yet
-  const tenantsInSelectedMonth = room.tenants.filter((t) =>
-    isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth),
-  );
+  // Room occupants: ONLY active tenants who currently reside in this room (left tenants are removed)
+  const tenantsForDisplay = room.tenants.filter((t) => isTenantActiveNow(t.startDate, t.endDate));
 
-  // For CURRENT month, show occupancy based on who is active NOW (end_date is null or in the future)
-  // For past/future months, show occupancy based on month history
-  const tenantsForDisplay = isSelectedCurrentMonth
-    ? room.tenants.filter((t) => isTenantActiveNow(t.startDate, t.endDate))
-    : tenantsInSelectedMonth;
-
-  const upcomingTenants = isSelectedCurrentMonth
-    ? room.tenants.filter((t) => isTenantUpcoming(t.startDate, t.endDate))
-    : [];
+  const upcomingTenants = room.tenants.filter((t) => isTenantUpcoming(t.startDate, t.endDate));
   const reservedCount = upcomingTenants.length;
 
   const eligibleTenants = tenantsForDisplay;
