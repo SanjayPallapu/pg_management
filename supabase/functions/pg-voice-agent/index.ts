@@ -544,20 +544,31 @@ async function executeTool(
   if (name === "find_tenant") {
     const { data: rooms } = await supabase.from("rooms").select("id, room_no").eq("pg_id", pgId);
     const roomIds = (rooms || []).map((r: any) => r.id);
-    const { data: tenants } = await supabase
+    let q = supabase
       .from("tenants")
       .select("id, name, phone, monthly_rent, start_date, end_date, is_locked, room_id, rooms(room_no)")
-      .in("room_id", roomIds.length ? roomIds : ["00000000-0000-0000-0000-000000000000"])
-      .ilike("name", `%${args.name}%`);
-    if (!tenants?.length) return { found: false };
-    const ids = tenants.map((t: any) => t.id);
+      .in("room_id", roomIds.length ? roomIds : ["00000000-0000-0000-0000-000000000000"]);
+    if (args?.name && args.name.trim()) {
+      q = q.ilike("name", `%${normalizeDigits(args.name.trim())}%`);
+    } else if (args?.roomNo && args.roomNo.trim()) {
+      const rn = normalizeDigits(args.roomNo.trim()).toLowerCase();
+      // will filter in memory below
+    }
+    const { data: tenants } = await q;
+    let active = (tenants || []).filter((t: any) => !t.is_locked && (!t.end_date || t.end_date > today));
+    if (args?.roomNo && args.roomNo.trim()) {
+      const rn = normalizeDigits(args.roomNo.trim()).toLowerCase();
+      active = active.filter((t: any) => (t.rooms?.room_no || "").toLowerCase() === rn);
+    }
+    if (!active.length) return { found: false };
+    const ids = active.map((t: any) => t.id);
     const { data: payments } = await supabase
       .from("tenant_payments").select("tenant_id, amount, amount_paid, payment_status, payment_date")
       .in("tenant_id", ids).eq("month", month).eq("year", year);
     const payMap = new Map((payments || []).map((p: any) => [p.tenant_id, p]));
     return {
       found: true,
-      tenants: tenants.map((t: any) => ({
+      tenants: active.map((t: any) => ({
         name: t.name, phone: t.phone, room: t.rooms?.room_no,
         monthly_rent: t.monthly_rent, start_date: t.start_date, end_date: t.end_date,
         is_locked: t.is_locked,
@@ -954,10 +965,19 @@ function deterministicReply(toolName: string, result: any, isTelugu: boolean): s
       : `Room ${result.room.room_no} has ${result.active_tenants?.length || 0} active tenants${names ? `: ${names}` : ""}.`;
   }
   if (toolName === "find_tenant") {
-    if (!result.found) return isTelugu ? "ఆ టెనెంట్ కనబడలేదు." : "I couldn't find that tenant.";
-    return (result.tenants || []).slice(0, 3).map((tenant: any) =>
-      `${tenant.name}, room ${tenant.room}, rent ${formatRupees(tenant.monthly_rent)}, status ${tenant.current_month_status?.payment_status || "Pending"}`
-    ).join(". ");
+    if (!result.found || !result.tenants?.length) return isTelugu ? "టెనెంట్లు ఎవరూ కనబడలేదు." : "I couldn't find any matching tenants.";
+    if (result.tenants.length === 1) {
+      const t = result.tenants[0];
+      return isTelugu
+        ? `${t.name}, రూమ్ ${t.room || "–"}, అద్దె ${formatRupees(t.monthly_rent)}, స్టేటస్ ${t.current_month_status?.payment_status || "Pending"}.`
+        : `${t.name}, room ${t.room || "–"}, rent ${formatRupees(t.monthly_rent)}, status ${t.current_month_status?.payment_status || "Pending"}.`;
+    }
+    const count = result.tenants.length;
+    const list = result.tenants.slice(0, 6).map((t: any) => `${t.name} (Room ${t.room || "–"})`).join(", ");
+    const more = count > 6 ? (isTelugu ? ` మరియు మరో ${count - 6} మంది` : ` and ${count - 6} more`) : "";
+    return isTelugu
+      ? `మొత్తం ${count} మంది టెనెంట్లు ఉన్నారు: ${list}${more}.`
+      : `You have ${count} active tenants: ${list}${more}.`;
   }
   if (toolName === "get_expenses_summary") {
     return isTelugu
@@ -1094,9 +1114,23 @@ function conversationalFallback(
       : `This month, ${formatRupees(collection.collected)} is collected and ${formatRupees(collection.pending)} is pending.`;
   }
 
+  // Travel / booking / calling external services
+  if (/\b(?:train|cab|taxi|flight|uber|ola|bus|ticket|hotel|call the)\b/i.test(lower)) {
+    return isTelugu
+      ? `నేను నేరుగా రైలు లేదా క్యాబ్‌ను బుక్ చేయలేను, కానీ ప్రయాణ ఖర్చులు లెక్కించడంలో లేదా మీ పీజీ సమాచారంలో సహాయపడగలను.`
+      : `I cannot make external phone calls or book train tickets directly, but I can help plan travel budgets, calculate costs, or manage your PG anytime!`;
+  }
+
+  // General questions or greetings fallback
+  if (/\b(?:how are you|how are things|how's it going|బాగున్నారా|ఎలా ఉన్నారు)\b/i.test(lower)) {
+    return isTelugu
+      ? `నేను చాలా బాగున్నాను! మీకు ఈరోజు ఎలా సహాయపడగలను?`
+      : `I'm doing great! How can I help you today with ${pgName} or anything else?`;
+  }
+
   return isTelugu
-    ? `“${clean.slice(0, 90)}” గురించి విన్నాను. నేను సాధారణ విషయాలు మరియు మీ పీజీ వివరాలు రెండింటికీ సహాయం చేయగలను.`
-    : `I heard "${clean.slice(0, 90)}". I'm here to help with general questions, calculations, or any details about ${pgName}.`;
+    ? `“${clean.slice(0, 90)}” గురించి విన్నాను. నేను సాధారణ ప్రశ్నలు, లెక్కలు మరియు మీ పీజీ వివరాలు రెండింటికీ సహాయం చేయగలను.`
+    : `I heard "${clean.slice(0, 90)}". I'm here to answer general questions, help with calculations, or manage any details for ${pgName}.`;
 }
 
 Deno.serve(async (req) => {
@@ -1267,7 +1301,26 @@ Deno.serve(async (req) => {
       executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null),
     ]);
 
-    const hasAiKey = Boolean(LOVABLE_API_KEY || OPENAI_API_KEY || GEMINI_API_KEY);
+    let openAiKey = OPENAI_API_KEY;
+    let geminiKey = GEMINI_API_KEY;
+    let lovableKey = LOVABLE_API_KEY;
+
+    if (!openAiKey && !geminiKey && !lovableKey) {
+      try {
+        const { data: dbKey } = await auditAdmin.rpc("get_voice_agent_secret", { secret_name: "OPENAI_API_KEY" });
+        if (dbKey && typeof dbKey === "string" && !dbKey.includes("your-openai-api-key") && dbKey.startsWith("sk-")) {
+          openAiKey = dbKey;
+        }
+      } catch {}
+      try {
+        const { data: geminiDbKey } = await auditAdmin.rpc("get_voice_agent_secret", { secret_name: "GEMINI_API_KEY" });
+        if (geminiDbKey && typeof geminiDbKey === "string" && !geminiDbKey.includes("your-") && geminiDbKey.length > 10) {
+          geminiKey = geminiDbKey;
+        }
+      } catch {}
+    }
+
+    const hasAiKey = Boolean(lovableKey || openAiKey || geminiKey);
     if (!hasAiKey) {
       const reply = conversationalFallback(latestUserText, isTelugu, pg.name, snapshot, collection);
       return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
@@ -1277,22 +1330,22 @@ Deno.serve(async (req) => {
 
     let aiEndpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
     let aiHeaders: Record<string, string> = {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      Authorization: `Bearer ${lovableKey}`,
       "Content-Type": "application/json",
     };
     let aiModel = "google/gemini-2.5-flash";
 
-    if (!LOVABLE_API_KEY && OPENAI_API_KEY) {
+    if (!lovableKey && openAiKey) {
       aiEndpoint = "https://api.openai.com/v1/chat/completions";
       aiHeaders = {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${openAiKey}`,
         "Content-Type": "application/json",
       };
       aiModel = "gpt-4o-mini";
-    } else if (!LOVABLE_API_KEY && GEMINI_API_KEY) {
+    } else if (!lovableKey && geminiKey) {
       aiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
       aiHeaders = {
-        Authorization: `Bearer ${GEMINI_API_KEY}`,
+        Authorization: `Bearer ${geminiKey}`,
         "Content-Type": "application/json",
       };
       aiModel = "gemini-2.5-flash";
@@ -1327,19 +1380,11 @@ Deno.serve(async (req) => {
 
       if (!aiResp.ok) {
         const errText = await aiResp.text();
-        if (aiResp.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit. Try again shortly." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (aiResp.status === 402) {
-          return new Response(JSON.stringify({ error: "AI credits exhausted. Add funds in workspace settings." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        console.error("AI error", aiResp.status, errText);
-        return new Response(JSON.stringify({ error: "AI gateway error" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        console.warn("AI gateway error:", aiResp.status, errText);
+        // If AI gateway/credits fail, gracefully fall back to conversational response rather than 500 error
+        const reply = conversationalFallback(latestUserText, isTelugu, pg.name, snapshot, collection);
+        return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 

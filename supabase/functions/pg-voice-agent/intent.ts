@@ -54,7 +54,9 @@ function extractTenant(text: string): string | undefined {
   ];
   for (const pattern of patterns) {
     const value = text.match(pattern)?.[1]?.trim();
-    if (value) return value;
+    if (value && !/^(all|all\s+tenants?|tenants?|everyone|everybody|అందరూ|టెనెంట్లు)$/i.test(value)) {
+      return value;
+    }
   }
   return undefined;
 }
@@ -76,14 +78,20 @@ export function classifyVoiceCommand(
   const text = normalizeVoiceText(rawText);
   const lower = text.toLowerCase();
 
-  // Route general knowledge, calculations, creative writing, jokes, code, and explanations to the conversational agent
-  const isGeneralQuery = /^(?:explain|write|draft|compose|tell me a joke|joke|solve|code|help me write|how do (?:i|you)|how to|what does \b\w+\b mean|why is|why are|meaning of|calculate\b|plan a\b|what is the capital|weather|news)\b/iu.test(lower);
+  // Route general knowledge, calculations, creative writing, jokes, code, travel, and explanations to the conversational agent
+  const isGeneralQuery = /^(?:explain|write|draft|compose|tell me a joke|joke|solve|code|help me write|how do (?:i|you)|how to|what does \b\w+\b mean|why is|why are|meaning of|calculate\b|plan a\b|what is the capital|weather|news|please call|call the|book a)\b/iu.test(lower);
   if (isGeneralQuery) return null;
 
   const dates = dateArgs(text, now);
 
   const pendingQuery = /(who|which|list|show).*(not paid|unpaid|pending|due)|pending.*(tenant|rent)|చెల్లించలేదు|కట్టలేదు|బాకీ|పెండింగ్/u.test(lower);
   if (pendingQuery) return { tool: "list_pending_tenants", args: dates };
+
+  // All tenants query (e.g. "list all tenants", "show all tenants", "all tenants", "who are my tenants")
+  const allTenantsQuery = /(?:list|show|get|see|tell me|who are (?:my|the))\s+(?:all\s+)?tenants?|tenants?\s+list|all\s+tenants?|మంది\s+టెనెంట్లు|టెనెంట్ల\s+జాబితా|అందరూ\s+టెనెంట్లు/iu.test(lower);
+  if (allTenantsQuery) {
+    return { tool: "find_tenant", args: { ...dates, name: "" } };
+  }
 
   const paymentAction = /(record|mark|save|received|collect(?:ed)?|నమోదు|రికార్డ్|వచ్చింది|చెల్లించాడు).*(rent|payment|paid|అద్దె|చెల్లింపు)|(rent|payment|అద్దె).*(record|mark|received|నమోదు|రికార్డ్|వచ్చింది)/u.test(lower);
   if (paymentAction) {
