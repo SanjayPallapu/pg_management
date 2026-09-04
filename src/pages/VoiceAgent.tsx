@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, Loader2, Volume2, Languages, Send, History, Undo2, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, Mic, Loader2, Volume2, Languages, Send, History, Undo2, ShieldCheck, X, Sparkles, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/proxyClient";
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeechRecognition } from "@capacitor-community/speech-recognition";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; whatsappUrl?: string };
 type Phase = "idle" | "listening" | "thinking" | "speaking";
 type Lang = "en-IN" | "te-IN";
 type InputSource = "voice" | "typed";
@@ -30,6 +30,7 @@ type AgentResponse = {
   completedAction?: { id: string; summary: string };
   undoneAction?: { id: string };
   audit?: AuditItem[];
+  actionResult?: any;
 };
 
 type SpeechAlternativeLike = { transcript: string; confidence?: number };
@@ -269,6 +270,7 @@ export default function VoiceAgent() {
       return;
     }
     const requestId = ++requestIdRef.current;
+    try { window.speechSynthesis.cancel(); } catch {}
     transitionPhase("thinking");
     const next: Msg[] = [...messagesRef.current, { role: "user", content: userText }];
     setMessages(next);
@@ -282,7 +284,8 @@ export default function VoiceAgent() {
       if (requestId !== requestIdRef.current) return;
       const reply = response?.reply || "Sorry, no response.";
       if (response?.pendingAction) setPendingAction(response.pendingAction);
-      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+      const whatsappUrl = response?.actionResult?.whatsapp_url;
+      setMessages(prev => [...prev, { role: "assistant", content: reply, whatsappUrl }]);
       speak(reply);
     } catch (e: unknown) {
       console.error(e);
@@ -297,6 +300,7 @@ export default function VoiceAgent() {
     event.preventDefault();
     const value = typedText.trim();
     if (!value || phase === "thinking") return;
+    try { window.speechSynthesis.cancel(); } catch {}
     setTypedText("");
     stopAll();
     void sendToAgent(value, "typed");
@@ -471,11 +475,12 @@ export default function VoiceAgent() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-semibold">Voice Assistant</h1>
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-violet-500" />
+            <h1 className="text-base font-semibold">PG Hub AI</h1>
           </div>
           <p className="text-xs text-muted-foreground truncate">
-            {currentPG?.name || "Select a PG"}
+            {currentPG?.name ? `${currentPG.name} · ` : ""}Voice & General Assistant
           </p>
         </div>
         <Button variant="ghost" size="sm" className="gap-1 px-2"
@@ -495,24 +500,45 @@ export default function VoiceAgent() {
       {/* Conversation */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages.length === 0 && (
-          <div className="text-center text-sm text-muted-foreground mt-8 space-y-3">
-            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center">
+          <div className="text-center text-sm text-muted-foreground mt-6 space-y-3">
+            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center shadow-inner">
               <Mic className="h-7 w-7 text-primary" />
             </div>
-            <p className="font-semibold text-foreground text-base">
-              {autoListen ? (lang === "te-IN" ? "మాట్లాడండి, నేను వింటున్నాను..." : "Just speak, I'm listening...")
-                : (lang === "te-IN" ? "ఇలా అడగండి:" : "Try asking:")}
-            </p>
-            <div className="space-y-1.5">
+            <div>
+              <p className="font-semibold text-foreground text-base">
+                {autoListen ? (lang === "te-IN" ? "మాట్లాడండి, నేను వింటున్నాను..." : "Just speak, I'm listening...")
+                  : (lang === "te-IN" ? "ఇలా అడగండి:" : "Ask anything naturally:")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {lang === "te-IN"
+                  ? "పీజీ మేనేజ్‌మెంట్ లేదా సాధారణ ప్రశ్నలు ఏదైనా మాట్లాడవచ్చు"
+                  : "PG management, calculations, writing, or everyday questions"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5 justify-center max-w-sm mx-auto">
               {(lang === "te-IN"
-                ? ["ఈ నెల ఎంత అద్దె వసూలైంది?", "ఎవరు ఇంకా చెల్లించలేదు?", "ఖాళీ బెడ్‌లు ఎన్ని ఉన్నాయి?"]
-                : ["How much rent collected this month?", "Who hasn't paid yet?", "How many vacant beds?"]
+                ? [
+                    "ఈ నెల ఎంత అద్దె వసూలైంది?",
+                    "ఎవరు ఇంకా చెల్లించలేదు?",
+                    "ఈ నెల లాభం ఎంత వచ్చింది?",
+                    "ఖాళీ బెడ్‌లు ఎన్ని ఉన్నాయి?",
+                    "టెనెంట్లకు నోటీస్ రాయండి",
+                    "EBITDA అంటే ఏమిటి?",
+                  ]
+                : [
+                    "How much rent collected this month?",
+                    "Who hasn't paid yet?",
+                    "What's our profit this month?",
+                    "How many vacant beds?",
+                    "Help me write a notice for tenants",
+                    "What is EBITDA?",
+                  ]
               ).map(q => (
                 <button
                   key={q}
                   type="button"
                   onClick={() => sendToAgent(q)}
-                  className="block mx-auto rounded-full bg-muted/60 px-4 py-1.5 text-xs hover:bg-muted transition-colors"
+                  className="rounded-full bg-muted/70 px-3.5 py-1.5 text-xs hover:bg-muted text-foreground/90 transition-colors border border-border/30"
                 >
                   "{q}"
                 </button>
@@ -533,7 +559,23 @@ export default function VoiceAgent() {
                 m.role === "user"
                   ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-br-sm"
                   : "bg-muted/80 text-foreground rounded-bl-sm border border-border/30"
-              }`}>{m.content}</div>
+              }`}>
+                <div>{m.content}</div>
+                {m.whatsappUrl && (
+                  <div className="mt-2.5 pt-2 border-t border-border/20">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 text-xs h-7 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-medium"
+                      onClick={() => window.open(m.whatsappUrl, "_blank")}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Send via WhatsApp
+                    </Button>
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -600,11 +642,11 @@ export default function VoiceAgent() {
         <Input
           value={typedText}
           onChange={(event) => setTypedText(event.target.value)}
-          placeholder={lang === "te-IN" ? "కమాండ్ టైప్ చేయండి…" : "Type a command…"}
-          aria-label="Type an assistant command"
+          placeholder={lang === "te-IN" ? "ఏదైనా అడగండి లేదా మాట్లాడండి…" : "Ask anything or give a command…"}
+          aria-label="Ask assistant a question or give a command"
           disabled={!currentPG?.id || phase === "thinking"}
         />
-        <Button type="submit" size="icon" disabled={!typedText.trim() || phase === "thinking"} aria-label="Send command">
+        <Button type="submit" size="icon" disabled={!typedText.trim() || phase === "thinking"} aria-label="Send message">
           <Send className="h-4 w-4" />
         </Button>
       </form>

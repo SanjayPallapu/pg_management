@@ -75,6 +75,11 @@ export function classifyVoiceCommand(
 ): DeterministicVoiceIntent | null {
   const text = normalizeVoiceText(rawText);
   const lower = text.toLowerCase();
+
+  // Route general knowledge, calculations, creative writing, jokes, code, and explanations to the conversational agent
+  const isGeneralQuery = /^(?:explain|write|draft|compose|tell me a joke|joke|solve|code|help me write|how do (?:i|you)|how to|what does \b\w+\b mean|why is|why are|meaning of|calculate\b|plan a\b|what is the capital|weather|news)\b/iu.test(lower);
+  if (isGeneralQuery) return null;
+
   const dates = dateArgs(text, now);
 
   const pendingQuery = /(who|which|list|show).*(not paid|unpaid|pending|due)|pending.*(tenant|rent)|చెల్లించలేదు|కట్టలేదు|బాకీ|పెండింగ్/u.test(lower);

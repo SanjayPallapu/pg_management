@@ -39,4 +39,22 @@ describe("fast voice intent routing", () => {
       }),
     }));
   });
+
+  it("passes general AI and non-operational queries to the conversational agent", () => {
+    const generalQueries = [
+      "Explain quantum computing",
+      "What does EBITDA mean?",
+      "Help me write an email to my landlord",
+      "Calculate 17% of 85,000",
+      "Tell me a joke",
+      "Plan a trip to Bangalore",
+      "Why is the sky blue?",
+      "How to write python code for binary search?",
+    ];
+
+    for (const query of generalQueries) {
+      const intent = classifyVoiceCommand(query);
+      expect(intent).toBeNull();
+    }
+  });
 });

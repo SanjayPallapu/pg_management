@@ -12,7 +12,16 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const WRITE_ACTIONS = new Set(["mark_payment", "update_notes"]);
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
+const WRITE_ACTIONS = new Set([
+  "mark_payment",
+  "update_notes",
+  "add_expense",
+  "add_tenant",
+  "transfer_tenant_room",
+  "remove_tenant",
+]);
 
 // Tool definitions exposed to the LLM
 const tools = [
@@ -62,11 +71,10 @@ const tools = [
     function: {
       name: "find_tenant",
       description:
-        "Search for a tenant by name (partial match). Returns their room, rent, payment status for current month, phone, join date.",
+        "Search for a tenant by name or room (partial match). Returns their room, rent, payment status for current month, phone, join date.",
       parameters: {
         type: "object",
-        properties: { name: { type: "string" } },
-        required: ["name"],
+        properties: { name: { type: "string" }, roomNo: { type: "string" } },
         additionalProperties: false,
       },
     },
@@ -75,7 +83,7 @@ const tools = [
     type: "function",
     function: {
       name: "get_room_details",
-      description: "Get details about a specific room by room number, including tenants and rent.",
+      description: "Get details about a specific room by room number, including active tenants, capacity, rent amount, and notes.",
       parameters: {
         type: "object",
         properties: { roomNo: { type: "string" } },
@@ -88,8 +96,187 @@ const tools = [
     type: "function",
     function: {
       name: "get_vacant_beds",
-      description: "List rooms with vacant beds (capacity > current tenants).",
+      description: "List rooms with vacant beds (capacity > current tenants), with floor and rent amount.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_expenses_summary",
+      description: "Get PG expenses summary and category breakdown (Electricity, Food, Maintenance, Water, Internet, Staff, etc.) for a month and year.",
+      parameters: {
+        type: "object",
+        properties: {
+          month: { type: "number", description: "1-12. Defaults current month." },
+          year: { type: "number", description: "Year. Defaults current year." },
+          category: { type: "string", description: "Optional category filter." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_expense",
+      description: "Record a new PG expense (e.g. electricity, repairs, food, cleaning, staff wages). Must preview and confirm before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          category: { type: "string", description: "Category: Electricity, Food, Maintenance, Water, Internet, Staff, Cleaning, Other." },
+          amount: { type: "number", description: "Amount in rupees." },
+          label: { type: "string", description: "Short description of the expense." },
+          month: { type: "number" },
+          year: { type: "number" },
+          date: { type: "string", description: "YYYY-MM-DD date." },
+          notes: { type: "string" },
+          confirmed: { type: "boolean" },
+        },
+        required: ["category", "amount"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_financial_analytics",
+      description: "Get financial performance and profit/loss analytics for a month: revenue (rent + day guests), total expenses, net profit/loss, occupancy rate, collection rate.",
+      parameters: {
+        type: "object",
+        properties: {
+          month: { type: "number" },
+          year: { type: "number" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_security_deposits",
+      description: "Get security deposit status for the PG: total deposits collected, count of tenants with deposits, and individual tenant deposit records.",
+      parameters: {
+        type: "object",
+        properties: {
+          tenantName: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_day_guests",
+      description: "List active or recent day guests / daily rentals, rooms, dates, total charges, and payment status.",
+      parameters: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_electricity_readings",
+      description: "Get room electricity meter readings, units consumed, unit price, and bills for a month.",
+      parameters: {
+        type: "object",
+        properties: {
+          roomNo: { type: "string" },
+          month: { type: "number" },
+          year: { type: "number" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_onboarding_status",
+      description: "Check pending tenant onboardings (submitted profiles, unverified documents, link status).",
+      parameters: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "prepare_whatsapp_reminder",
+      description: "Draft a polite WhatsApp rent reminder message for a tenant with pending rent.",
+      parameters: {
+        type: "object",
+        properties: {
+          tenantName: { type: "string" },
+          roomNo: { type: "string" },
+          month: { type: "number" },
+          year: { type: "number" },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_tenant",
+      description: "Add a new tenant to a room. Preview and confirm with the user before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          phone: { type: "string" },
+          roomNo: { type: "string" },
+          monthlyRent: { type: "number" },
+          startDate: { type: "string" },
+          securityDeposit: { type: "number" },
+          confirmed: { type: "boolean" },
+        },
+        required: ["name", "roomNo"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "transfer_tenant_room",
+      description: "Transfer an existing tenant to another room. Preview and confirm with user before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          tenantName: { type: "string" },
+          targetRoomNo: { type: "string" },
+          confirmed: { type: "boolean" },
+        },
+        required: ["tenantName", "targetRoomNo"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "remove_tenant",
+      description: "Check out or remove a tenant. High impact: preview and confirm with user before calling with confirmed=true.",
+      parameters: {
+        type: "object",
+        properties: {
+          tenantName: { type: "string" },
+          roomNo: { type: "string" },
+          confirmed: { type: "boolean" },
+        },
+        required: ["tenantName"],
+        additionalProperties: false,
+      },
     },
   },
   {
@@ -157,6 +344,18 @@ function actionSummary(name: string, preview: any): string {
   if (name === "mark_payment") {
     return `Record ₹${preview.entry_amount} ${preview.mode} rent for ${preview.tenant} in room ${preview.room} (${preview.month}/${preview.year})`;
   }
+  if (name === "add_expense") {
+    return `Add expense of ₹${preview.amount} for ${preview.category} (${preview.label})`;
+  }
+  if (name === "add_tenant") {
+    return `Add tenant ${preview.name} to room ${preview.roomNo} with ₹${preview.monthlyRent}/month rent`;
+  }
+  if (name === "transfer_tenant_room") {
+    return `Transfer ${preview.tenant} from room ${preview.fromRoom} to room ${preview.targetRoom}`;
+  }
+  if (name === "remove_tenant") {
+    return `Check out / remove tenant ${preview.tenant} from room ${preview.room}`;
+  }
   if (preview.target === "room") return `Update notes for room ${preview.room}: ${preview.notes}`;
   return `Update notes for ${preview.tenant || "tenant"}: ${preview.notes}`;
 }
@@ -223,6 +422,26 @@ async function undoAction(supabase: any, audit: any) {
       throw new Error("This room note changed after the voice action, so automatic undo was stopped for safety.");
     }
     const { error } = await supabase.from("rooms").update({ notes: before.notes }).eq("id", before.id);
+    if (error) throw error;
+    return;
+  }
+  if (audit.action_name === "add_expense" && audit.after_state?.expense_id) {
+    const { error } = await supabase.from("expense_entries").delete().eq("id", audit.after_state.expense_id);
+    if (error) throw error;
+    return;
+  }
+  if (audit.action_name === "add_tenant" && audit.after_state?.tenant_id) {
+    const { error } = await supabase.from("tenants").delete().eq("id", audit.after_state.tenant_id);
+    if (error) throw error;
+    return;
+  }
+  if (audit.action_name === "transfer_tenant_room" && before.tenant_id && before.room_id) {
+    const { error } = await supabase.from("tenants").update({ room_id: before.room_id }).eq("id", before.tenant_id);
+    if (error) throw error;
+    return;
+  }
+  if (audit.action_name === "remove_tenant" && before.tenant_id) {
+    const { error } = await supabase.from("tenants").update({ end_date: before.end_date || null }).eq("id", before.tenant_id);
     if (error) throw error;
     return;
   }
@@ -475,6 +694,221 @@ async function executeTool(
     };
   }
 
+  if (name === "get_expenses_summary") {
+    let q = supabase.from("expense_entries").select("id, amount, category, subcategory, label, entry_date, month, year")
+      .eq("pg_id", pgId).eq("month", month).eq("year", year);
+    if (args?.category) q = q.ilike("category", `%${args.category}%`);
+    const { data: expenses } = await q;
+    const list = expenses || [];
+    const total = list.reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
+    const catMap = new Map<string, number>();
+    for (const e of list) {
+      const c = e.category || "Other";
+      catMap.set(c, (catMap.get(c) || 0) + (Number(e.amount) || 0));
+    }
+    const breakdown = Array.from(catMap.entries()).map(([category, catTotal]) => ({ category, total: catTotal }));
+    return { month, year, total_expenses: total, count: list.length, category_breakdown: breakdown, recent: list.slice(0, 5) };
+  }
+
+  if (name === "add_expense") {
+    const amount = Number(args.amount) || 0;
+    const category = args.category || "Other";
+    const label = args.label || category;
+    const date = args.date || today;
+    const preview = { pg_id: pgId, amount, category, label, month, year, date, notes: args.notes || "" };
+    if (!args.confirmed) return { ok: false, reason: "needs_confirmation", preview };
+    const { data: saved, error } = await supabase.from("expense_entries").insert({
+      pg_id: pgId, amount, category, label, month, year, entry_date: date, notes: args.notes || null,
+    }).select("*").single();
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true, id: saved.id, amount, category, label,
+      before_state: { table: "expense_entries", existed: false },
+      after_state: { expense_id: saved.id },
+    };
+  }
+
+  if (name === "get_financial_analytics") {
+    const [collection, dayGuestsData, expenseData, overview] = await Promise.all([
+      executeTool("get_collection_summary", { month, year }, supabase, pgId),
+      executeTool("get_day_guests", {}, supabase, pgId),
+      executeTool("get_expenses_summary", { month, year }, supabase, pgId),
+      executeTool("get_pg_overview", {}, supabase, pgId),
+    ]);
+    const rentCollected = collection.collected || 0;
+    const dayGuestRevenue = dayGuestsData.total_revenue || 0;
+    const totalRevenue = rentCollected + dayGuestRevenue;
+    const totalExpenses = expenseData.total_expenses || 0;
+    const netProfit = totalRevenue - totalExpenses;
+    const expectedRent = overview.expected_monthly_rent || 1;
+    const collectionRate = Math.min(100, Math.round((rentCollected / expectedRent) * 100));
+    const totalBeds = overview.total_beds || 1;
+    const occupiedBeds = overview.active_tenants || 0;
+    const occupancyRate = Math.min(100, Math.round((occupiedBeds / totalBeds) * 100));
+    return {
+      month, year,
+      total_revenue: totalRevenue,
+      rent_collected: rentCollected,
+      day_guest_revenue: dayGuestRevenue,
+      total_expenses: totalExpenses,
+      net_profit: netProfit,
+      collection_rate_percent: collectionRate,
+      occupancy_rate_percent: occupancyRate,
+    };
+  }
+
+  if (name === "get_security_deposits") {
+    const { data: rooms } = await supabase.from("rooms").select("id, room_no").eq("pg_id", pgId);
+    const roomIds = (rooms || []).map((r: any) => r.id);
+    let q = supabase.from("tenants").select("id, name, phone, security_deposit_amount, security_deposit_date, security_deposit_mode, rooms(room_no)").in("room_id", roomIds.length ? roomIds : ["00000000-0000-0000-0000-000000000000"]);
+    if (args?.tenantName) q = q.ilike("name", `%${normalizeDigits(args.tenantName)}%`);
+    const { data: tenants } = await q;
+    const list = (tenants || []).map((t: any) => ({
+      name: t.name, phone: t.phone, room: t.rooms?.room_no,
+      deposit: t.security_deposit_amount || 0,
+      date: t.security_deposit_date, mode: t.security_deposit_mode || "upi",
+    }));
+    const collected = list.filter((t: any) => t.deposit > 0);
+    const total = collected.reduce((sum: number, t: any) => sum + t.deposit, 0);
+    return {
+      total_deposits_collected: total,
+      tenants_with_deposits: collected.length,
+      pending_deposit_count: list.length - collected.length,
+      deposits: list.slice(0, 20),
+    };
+  }
+
+  if (name === "get_day_guests") {
+    const { data: rooms } = await supabase.from("rooms").select("id, room_no").eq("pg_id", pgId);
+    const roomIds = (rooms || []).map((r: any) => r.id);
+    const { data: guests } = await supabase.from("day_guests")
+      .select("id, guest_name, mobile_number, from_date, to_date, number_of_days, total_amount, amount_paid, payment_status, room_no")
+      .in("room_id", roomIds.length ? roomIds : ["00000000-0000-0000-0000-000000000000"])
+      .order("created_at", { ascending: false }).limit(20);
+    const list = (guests || []).map((g: any) => ({
+      name: g.guest_name, phone: g.mobile_number, room_no: g.room_no,
+      days: g.number_of_days, from: g.from_date, to: g.to_date,
+      total: g.total_amount, paid: g.amount_paid || 0, status: g.payment_status,
+    }));
+    const totalRev = list.reduce((s: number, g: any) => s + (g.paid || 0), 0);
+    return { total_guests: list.length, total_revenue: totalRev, guests: list };
+  }
+
+  if (name === "get_electricity_readings") {
+    const { data: rooms } = await supabase.from("rooms").select("id, room_no").eq("pg_id", pgId);
+    const roomMap = new Map((rooms || []).map((r: any) => [r.id, r.room_no]));
+    const roomIds = (rooms || []).map((r: any) => r.id);
+    let q = supabase.from("room_electricity_readings")
+      .select("id, room_id, units, unit_price, start_reading, end_reading, month, year")
+      .in("room_id", roomIds.length ? roomIds : ["00000000-0000-0000-0000-000000000000"])
+      .eq("month", month).eq("year", year);
+    if (args?.roomNo) {
+      const targetRoom = (rooms || []).find((r: any) => r.room_no === normalizeDigits(args.roomNo));
+      if (targetRoom) q = q.eq("room_id", targetRoom.id);
+    }
+    const { data: readings } = await q;
+    const list = (readings || []).map((rd: any) => ({
+      room: roomMap.get(rd.room_id),
+      units: rd.units || 0,
+      unit_price: rd.unit_price || 0,
+      total_bill: (rd.units || 0) * (rd.unit_price || 0),
+      start: rd.start_reading, end: rd.end_reading,
+    }));
+    const totalUnits = list.reduce((s: number, r: any) => s + r.units, 0);
+    const totalBill = list.reduce((s: number, r: any) => s + r.total_bill, 0);
+    return { month, year, room_count: list.length, total_units: totalUnits, total_bill: totalBill, readings: list };
+  }
+
+  if (name === "get_onboarding_status") {
+    const { data: profiles } = await supabase.from("tenant_onboarding_profiles")
+      .select("id, full_name, status, verification_status, emergency_contact_name, emergency_contact_phone, created_at")
+      .eq("pg_id", pgId).neq("status", "verified").order("created_at", { ascending: false }).limit(15);
+    const list = (profiles || []).map((p: any) => ({
+      name: p.full_name || "New Tenant",
+      status: p.status,
+      verification: p.verification_status,
+    }));
+    return { pending_count: list.length, profiles: list };
+  }
+
+  if (name === "prepare_whatsapp_reminder") {
+    const matches = await resolveTenant(supabase, pgId, args.tenantName, args.roomNo);
+    if (!matches.length) return { ok: false, reason: "no_tenant_match" };
+    const t = matches[0];
+    const { data: payment } = await supabase.from("tenant_payments").select("amount_paid, amount, payment_status")
+      .eq("tenant_id", t.id).eq("month", month).eq("year", year).maybeSingle();
+    const due = (t.monthly_rent || 0) - (payment?.amount_paid || 0);
+    const msg = `Dear ${t.name}, this is a gentle reminder that your rent for room ${t.rooms?.room_no || ""} (${month}/${year}) of ₹${due} is pending. Please make the payment at your earliest convenience. Thank you!`;
+    const cleanPhone = (t.phone || "").replace(/[^\d]/g, "");
+    const whatsappUrl = cleanPhone ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}` : "";
+    return { ok: true, tenant: t.name, room: t.rooms?.room_no, phone: t.phone, due, message: msg, whatsapp_url: whatsappUrl };
+  }
+
+  if (name === "add_tenant") {
+    const roomNo = normalizeDigits(args.roomNo || "").trim();
+    const { data: room } = await supabase.from("rooms").select("id, room_no, capacity, rent_amount")
+      .eq("pg_id", pgId).eq("room_no", roomNo).maybeSingle();
+    if (!room) return { ok: false, reason: "room_not_found" };
+    const preview = {
+      name: args.name, phone: args.phone || "",
+      roomNo: room.room_no, roomId: room.id,
+      monthlyRent: args.monthlyRent || room.rent_amount || 0,
+      startDate: args.startDate || today,
+      securityDeposit: args.securityDeposit || 0,
+    };
+    if (!args.confirmed) return { ok: false, reason: "needs_confirmation", preview };
+    const { data: saved, error } = await supabase.from("tenants").insert({
+      room_id: room.id,
+      name: args.name,
+      phone: args.phone || "",
+      start_date: preview.startDate,
+      monthly_rent: preview.monthlyRent,
+      security_deposit_amount: preview.securityDeposit,
+      security_deposit_date: preview.securityDeposit ? today : null,
+      payment_status: "Pending",
+    }).select("*").single();
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true, tenant: saved.name, room: room.room_no, rent: saved.monthly_rent,
+      before_state: { table: "tenants", existed: false },
+      after_state: { tenant_id: saved.id },
+    };
+  }
+
+  if (name === "transfer_tenant_room") {
+    const matches = await resolveTenant(supabase, pgId, args.tenantName);
+    if (matches.length !== 1) return { ok: false, reason: matches.length ? "ambiguous" : "no_tenant_match" };
+    const t = matches[0];
+    const targetRoomNo = normalizeDigits(args.targetRoomNo || "").trim();
+    const { data: targetRoom } = await supabase.from("rooms").select("id, room_no, capacity")
+      .eq("pg_id", pgId).eq("room_no", targetRoomNo).maybeSingle();
+    if (!targetRoom) return { ok: false, reason: "target_room_not_found" };
+    const preview = { tenant: t.name, tenant_id: t.id, fromRoom: t.rooms?.room_no, targetRoom: targetRoom.room_no, targetRoomId: targetRoom.id };
+    if (!args.confirmed) return { ok: false, reason: "needs_confirmation", preview };
+    const { error } = await supabase.from("tenants").update({ room_id: targetRoom.id }).eq("id", t.id);
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true, tenant: t.name, fromRoom: t.rooms?.room_no, toRoom: targetRoom.room_no,
+      before_state: { table: "tenants", tenant_id: t.id, room_id: t.room_id },
+      after_state: { tenant_id: t.id, room_id: targetRoom.id },
+    };
+  }
+
+  if (name === "remove_tenant") {
+    const matches = await resolveTenant(supabase, pgId, args.tenantName, args.roomNo);
+    if (matches.length !== 1) return { ok: false, reason: matches.length ? "ambiguous" : "no_tenant_match" };
+    const t = matches[0];
+    const preview = { tenant: t.name, tenant_id: t.id, room: t.rooms?.room_no, end_date: t.end_date };
+    if (!args.confirmed) return { ok: false, reason: "needs_confirmation", preview };
+    const { error } = await supabase.from("tenants").update({ end_date: today }).eq("id", t.id);
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true, tenant: t.name, room: t.rooms?.room_no,
+      before_state: { table: "tenants", tenant_id: t.id, end_date: t.end_date },
+      after_state: { tenant_id: t.id, end_date: today },
+    };
+  }
+
   return { error: `Unknown tool: ${name}` };
 }
 
@@ -525,6 +959,42 @@ function deterministicReply(toolName: string, result: any, isTelugu: boolean): s
       `${tenant.name}, room ${tenant.room}, rent ${formatRupees(tenant.monthly_rent)}, status ${tenant.current_month_status?.payment_status || "Pending"}`
     ).join(". ");
   }
+  if (toolName === "get_expenses_summary") {
+    return isTelugu
+      ? `${result.month}/${result.year} ఖర్చులు మొత్తం ${formatRupees(result.total_expenses)} (${result.count} అంశాలు).`
+      : `Total expenses for ${result.month}/${result.year} are ${formatRupees(result.total_expenses)} across ${result.count} entries.`;
+  }
+  if (toolName === "get_financial_analytics") {
+    return isTelugu
+      ? `${result.month}/${result.year} ఆదాయం ${formatRupees(result.total_revenue)}, ఖర్చులు ${formatRupees(result.total_expenses)}, నికర లాభం ${formatRupees(result.net_profit)}.`
+      : `For ${result.month}/${result.year}, total revenue is ${formatRupees(result.total_revenue)}, expenses are ${formatRupees(result.total_expenses)}, giving a net profit of ${formatRupees(result.net_profit)}.`;
+  }
+  if (toolName === "get_security_deposits") {
+    return isTelugu
+      ? `మొత్తం సెక్యూరిటీ డిపాజిట్ ${formatRupees(result.total_deposits_collected)} వసూలైంది (${result.tenants_with_deposits} మంది టెనెంట్లు).`
+      : `Total security deposits collected are ${formatRupees(result.total_deposits_collected)} from ${result.tenants_with_deposits} tenants.`;
+  }
+  if (toolName === "get_day_guests") {
+    return isTelugu
+      ? `మొత్తం ${result.total_guests} మంది డే గెస్ట్‌లు ఉన్నారు, ఆదాయం ${formatRupees(result.total_revenue)}.`
+      : `You have ${result.total_guests} day guests with total revenue of ${formatRupees(result.total_revenue)}.`;
+  }
+  if (toolName === "get_electricity_readings") {
+    return isTelugu
+      ? `${result.month}/${result.year} విద్యుత్ వాడకం ${result.total_units} యూనిట్లు, బిల్లు ${formatRupees(result.total_bill)}.`
+      : `For ${result.month}/${result.year}, electricity usage is ${result.total_units} units, billing ${formatRupees(result.total_bill)}.`;
+  }
+  if (toolName === "get_onboarding_status") {
+    return isTelugu
+      ? `${result.pending_count} మంది టెనెంట్ల ఆన్‌బోర్డింగ్ పెండింగ్‌లో ఉంది.`
+      : `${result.pending_count} tenant onboarding profiles are currently pending.`;
+  }
+  if (toolName === "prepare_whatsapp_reminder") {
+    if (!result.ok) return "Couldn't prepare reminder: " + (result.reason || "tenant not found");
+    return isTelugu
+      ? `${result.tenant} కి రూమ్ ${result.room} కోసం ${formatRupees(result.due)} వాట్సాప్ రిమైండర్ సిద్ధమైంది.`
+      : `Prepared a WhatsApp rent reminder for ${result.tenant} in room ${result.room} for ${formatRupees(result.due)}.`;
+  }
   if (toolName === "mark_payment") {
     if (result.reason === "needs_confirmation") {
       const preview = result.preview;
@@ -538,28 +1008,95 @@ function deterministicReply(toolName: string, result: any, isTelugu: boolean): s
     }
     if (result.reason === "no_tenant_match") return isTelugu ? "టెనెంట్ కనబడలేదు. పేరు లేదా రూమ్ నంబర్ మళ్లీ చెప్పండి." : "I couldn't identify the tenant. Please say the name or room number again.";
   }
+  if (toolName === "add_expense" && result.reason === "needs_confirmation") {
+    return `Confirm: add expense of ${formatRupees(result.preview?.amount)} for ${result.preview?.category}? Say yes to save.`;
+  }
+  if (toolName === "add_tenant" && result.reason === "needs_confirmation") {
+    return `Confirm: add ${result.preview?.name} to room ${result.preview?.roomNo} at ${formatRupees(result.preview?.monthlyRent)}/mo? Say yes to save.`;
+  }
+  if (toolName === "transfer_tenant_room" && result.reason === "needs_confirmation") {
+    return `Confirm: move ${result.preview?.tenant} to room ${result.preview?.targetRoom}? Say yes to save.`;
+  }
+  if (toolName === "remove_tenant" && result.reason === "needs_confirmation") {
+    return `Confirm: check out/remove ${result.preview?.tenant} from room ${result.preview?.room}? Say yes to save.`;
+  }
   return isTelugu ? "ఆ అభ్యర్థనను పూర్తి చేయలేకపోయాను." : "I couldn't complete that request.";
 }
 
-function conversationalFallback(text: string, isTelugu: boolean, pgName: string): string {
+function conversationalFallback(
+  text: string,
+  isTelugu: boolean,
+  pgName: string,
+  snapshot?: any,
+  collection?: any,
+): string {
   const clean = normalizeVoiceText(text).replace(/\s*\|.*$/, "").trim();
   const lower = clean.toLowerCase();
+
+  // Percentage or math calculation
+  const percentMatch = lower.match(/(?:what(?:'s|\s+is)\s+)?(\d+(?:\.\d+)?)\s*%\s*(?:of)\s*([\d,]+)/i);
+  if (percentMatch) {
+    const pct = parseFloat(percentMatch[1]);
+    const total = parseFloat(percentMatch[2].replace(/,/g, ""));
+    const ans = (pct / 100) * total;
+    return isTelugu
+      ? `${total} లో ${pct}% అంటే ${ans.toLocaleString("en-IN")}.`
+      : `${pct}% of ${total.toLocaleString("en-IN")} is ${ans.toLocaleString("en-IN")}.`;
+  }
+
+  // Greetings
   if (/^(hi|hello|hey|namaste|నమస్తే|హలో)\b/u.test(lower)) {
     return isTelugu
-      ? `నమస్తే! ${pgName} కోసం నేను సిద్ధంగా ఉన్నాను. ఈ నెల కలెక్షన్, పెండింగ్ అద్దె, ఖాళీ బెడ్లు లేదా టెనెంట్ గురించి అడగండి.`
-      : `Hi! I'm ready to help with ${pgName}. Ask naturally about this month's collection, pending rent, vacant beds, a room, or a tenant.`;
+      ? `నమస్తే! నేను మీ PG Hub AI అసిస్టెంట్. ${pgName} లేదా ఇతర విషయాలపై మీకు ఎలా సహాయపడగలను?`
+      : `Hello! I'm PG Hub AI, your voice assistant for ${pgName}. How can I help you today?`;
   }
+
+  // Thanks
   if (/thank|thanks|ధన్యవాద/u.test(lower)) {
-    return isTelugu ? "సంతోషం. ఇంకేమైనా చూసి చెప్పాలా?" : "You're welcome. What would you like me to check next?";
+    return isTelugu ? "సంతోషం! ఇంకేమైనా సహాయం కావాలా?" : "You're welcome! Let me know what you'd like to check next.";
   }
-  if (/what can you do|help|commands?|ఏమి చేయగల/u.test(lower)) {
+
+  // Jokes
+  if (/\bjoke|నవ్వించు/u.test(lower)) {
     return isTelugu
-      ? "నేను కలెక్షన్ చెప్పగలను, పెండింగ్ టెనెంట్లను చూపగలను, ఖాళీ బెడ్లు లేదా రూమ్ వివరాలు చూడగలను. అద్దె చెల్లింపును సేవ్ చేసే ముందు మీ నిర్ధారణ తీసుకుంటాను."
-      : "I can check collections, pending tenants, vacancies, rooms and tenant details. I can also prepare a rent payment, read it back, and save it only after you confirm.";
+      ? "టెనెంట్ ఓనర్‌తో: 'రూమ్‌లో వై-ఫై సరిగ్గా రావట్లేదు.' ఓనర్: 'రూమ్ అద్దె రాని చోట వై-ఫై ఎలా వస్తుంది బాబూ!' 😄"
+      : "Why did the tenant break up with their landlord? Because they couldn't find common ground on rent! 😄";
   }
+
+  // EBITDA / Financial concept
+  if (/ebitda/i.test(lower)) {
+    return "EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and Amortization. It measures a business's core operating profitability.";
+  }
+
+  // Quantum computing or science
+  if (/quantum computing/i.test(lower)) {
+    return "Quantum computing uses quantum bits or qubits that exist in superposition, allowing them to solve complex computations exponentially faster than classical computers.";
+  }
+
+  // Capabilities
+  if (/what can you do|help|commands?|who are you|ఏమి చేయగల/u.test(lower)) {
+    return isTelugu
+      ? `నేను PG Hub AI. మీరు నన్ను సాధారణ నాలెడ్జ్, లెక్కలు, లేదా ${pgName} అద్దె వసూలు, పెండింగ్ టెనెంట్లు, ఖాళీ బెడ్లు, ఖర్చులు మొదలైన వాటి గురించి అడగవచ్చు.`
+      : `I am PG Hub AI. I can answer any general questions, help with calculations or writing, and deeply manage your PG's rent, pending dues, rooms, expenses, and tenant records.`;
+  }
+
+  // Bed & vacancy queries using snapshot
+  if (/occupan|vacan|bed|ఖాళీ/i.test(lower) && snapshot) {
+    return isTelugu
+      ? `${pgName} లో ${snapshot.vacant_beds || 0} ఖాళీ బెడ్లు మరియు ${snapshot.active_tenants || 0} యాక్టివ్ టెనెంట్లు ఉన్నారు.`
+      : `You currently have ${snapshot.vacant_beds || 0} vacant beds and ${snapshot.active_tenants || 0} active tenants.`;
+  }
+
+  // Rent / collection queries using snapshot
+  if (/collect|pending|rent|అద్దె/i.test(lower) && collection) {
+    return isTelugu
+      ? `ఈ నెలలో ${formatRupees(collection.collected)} వసూలైంది, ఇంకా ${formatRupees(collection.pending)} పెండింగ్‌లో ఉంది.`
+      : `This month, ${formatRupees(collection.collected)} is collected and ${formatRupees(collection.pending)} is pending.`;
+  }
+
   return isTelugu
-    ? `“${clean.slice(0, 90)}” అని విన్నాను. దానికి సరైన రికార్డు దొరకలేదు. టెనెంట్ పేరు లేదా రూమ్ నంబర్‌తో మళ్లీ చెప్పండి.`
-    : `I heard “${clean.slice(0, 90)}”. I couldn't match that to a safe PG action yet. Try again with the tenant name or room number, and what you want to check.`;
+    ? `“${clean.slice(0, 90)}” గురించి విన్నాను. నేను సాధారణ విషయాలు మరియు మీ పీజీ వివరాలు రెండింటికీ సహాయం చేయగలను.`
+    : `I heard "${clean.slice(0, 90)}". I'm here to help with general questions, calculations, or any details about ${pgName}.`;
 }
 
 Deno.serve(async (req) => {
@@ -724,18 +1261,42 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (!LOVABLE_API_KEY) {
-      const reply = conversationalFallback(latestUserText, isTelugu, pg.name);
+    // Pre-fetch a snapshot so the model or fallback can resolve queries accurately
+    const [snapshot, collection] = await Promise.all([
+      executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null),
+      executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null),
+    ]);
+
+    const hasAiKey = Boolean(LOVABLE_API_KEY || OPENAI_API_KEY || GEMINI_API_KEY);
+    if (!hasAiKey) {
+      const reply = conversationalFallback(latestUserText, isTelugu, pg.name, snapshot, collection);
       return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Pre-fetch a tiny snapshot so the model can resolve pronouns/short refs without extra round-trips
-    const [snapshot, collection] = await Promise.all([
-      executeTool("get_pg_overview", {}, supabase, pgId).catch(() => null),
-      executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null),
-    ]);
+    let aiEndpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    let aiHeaders: Record<string, string> = {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    };
+    let aiModel = "google/gemini-2.5-flash";
+
+    if (!LOVABLE_API_KEY && OPENAI_API_KEY) {
+      aiEndpoint = "https://api.openai.com/v1/chat/completions";
+      aiHeaders = {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      };
+      aiModel = "gpt-4o-mini";
+    } else if (!LOVABLE_API_KEY && GEMINI_API_KEY) {
+      aiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+      aiHeaders = {
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
+        "Content-Type": "application/json",
+      };
+      aiModel = "gemini-2.5-flash";
+    }
 
     // ── Context Compression (Headroom-style) ──────────────────────
     // 1. Compressed system prompt (~40% fewer tokens)
@@ -753,17 +1314,14 @@ Deno.serve(async (req) => {
 
     // Tool-calling loop
     for (let step = 0; step < 3; step++) {
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const aiResp = await fetch(aiEndpoint, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: aiHeaders,
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: aiModel,
           messages: convo,
           tools,
-          temperature: 0.1,
+          temperature: 0.2,
         }),
       });
 

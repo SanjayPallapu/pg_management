@@ -111,6 +111,86 @@ export function crushJSON(toolName: string, data: any): string {
         return data.reason || data.error || JSON.stringify(data);
       }
 
+      case "get_expenses_summary": {
+        const cats = (data.category_breakdown || [])
+          .map((c: any) => `${c.category}: ${formatMoney(c.total)}`)
+          .join(", ");
+        return `${monthLabel(data.month, data.year)} expenses: ${formatMoney(data.total_expenses)} (${data.count} items) — ${cats || "none"}`;
+      }
+
+      case "add_expense": {
+        if (data.ok) return `✓ Added expense ${formatMoney(data.amount)} for ${data.category} (${data.label || ""})`;
+        if (data.reason === "needs_confirmation") {
+          const p = data.preview;
+          return `CONFIRM? add expense ${formatMoney(p.amount)} for ${p.category} (${p.label || ""}) on ${p.date}`;
+        }
+        return data.reason || data.error || JSON.stringify(data);
+      }
+
+      case "get_financial_analytics": {
+        return [
+          `${monthLabel(data.month, data.year)} analytics:`,
+          `Revenue: ${formatMoney(data.total_revenue)} (rent ${formatMoney(data.rent_collected)} + guests ${formatMoney(data.day_guest_revenue)})`,
+          `Expenses: ${formatMoney(data.total_expenses)}`,
+          `Net Profit: ${formatMoney(data.net_profit)}`,
+          `Collection: ${data.collection_rate_percent}%`,
+          `Occupancy: ${data.occupancy_rate_percent}%`,
+        ].join(" | ");
+      }
+
+      case "get_security_deposits": {
+        return `Deposits: total ${formatMoney(data.total_deposits_collected)} across ${data.tenants_with_deposits} tenants (${data.pending_deposit_count} pending)`;
+      }
+
+      case "get_day_guests": {
+        const list = (data.guests || []).slice(0, 5)
+          .map((g: any) => `${g.name}(R${g.room_no}) ${g.days}d ${formatMoney(g.total)} ${g.status}`)
+          .join("; ");
+        return `${data.total_guests} day guests (${formatMoney(data.total_revenue)}): ${list || "none"}`;
+      }
+
+      case "get_electricity_readings": {
+        return `${monthLabel(data.month, data.year)} electricity: ${data.total_units} units billed across ${data.room_count} rooms, total ${formatMoney(data.total_bill)}`;
+      }
+
+      case "get_onboarding_status": {
+        const list = (data.profiles || []).slice(0, 5)
+          .map((p: any) => `${p.name}: ${p.status}`)
+          .join(", ");
+        return `${data.pending_count} pending onboarding: ${list || "none"}`;
+      }
+
+      case "prepare_whatsapp_reminder": {
+        return `WhatsApp reminder for ${data.tenant} (R${data.room}, due ${formatMoney(data.due)}): "${data.message}" | phone: ${data.phone}`;
+      }
+
+      case "add_tenant": {
+        if (data.ok) return `✓ Added tenant ${data.tenant} to room ${data.room} at ${formatMoney(data.rent)}/mo`;
+        if (data.reason === "needs_confirmation") {
+          const p = data.preview;
+          return `CONFIRM? add tenant ${p.name} to room ${p.roomNo} at ${formatMoney(p.monthlyRent)}/mo starting ${p.startDate}`;
+        }
+        return data.reason || data.error || JSON.stringify(data);
+      }
+
+      case "transfer_tenant_room": {
+        if (data.ok) return `✓ Moved ${data.tenant} from room ${data.fromRoom} to room ${data.toRoom}`;
+        if (data.reason === "needs_confirmation") {
+          const p = data.preview;
+          return `CONFIRM? transfer ${p.tenant} to room ${p.targetRoom}`;
+        }
+        return data.reason || data.error || JSON.stringify(data);
+      }
+
+      case "remove_tenant": {
+        if (data.ok) return `✓ Removed tenant ${data.tenant}`;
+        if (data.reason === "needs_confirmation") {
+          const p = data.preview;
+          return `CONFIRM? check out/remove tenant ${p.tenant} from room ${p.room}`;
+        }
+        return data.reason || data.error || JSON.stringify(data);
+      }
+
       default:
         // Fallback: compact JSON (no pretty printing)
         return JSON.stringify(data);
@@ -129,8 +209,8 @@ function monthLabel(m?: number, y?: number): string {
 // ─── System Prompt Compression ──────────────────────────────────────
 
 /**
- * Builds a compact system prompt (~900 tokens vs ~1,500 original).
- * Same instructions, 40% fewer tokens.
+ * Builds the PG Hub AI system prompt:
+ * Natural, ChatGPT-style general assistant with deep integration into PG Hub.
  */
 export function compressSystemPrompt(
   pgName: string,
@@ -139,24 +219,38 @@ export function compressSystemPrompt(
   collection: any,
 ): string {
   const langBlock = isTelugu
-    ? `LANG: Telugu (తెలుగు). Reply in natural spoken Telugu. Numbers in Telugu (e.g. "పన్నెండు వేల రూపాయలు"). English only for proper nouns. Greet with "నమస్కారం". Fuzzy-match misheard names/rooms, read back to confirm.`
-    : `LANG: English (Indian). Say "rupees" for money. Pick most plausible interpretation from voice alternates separated by " | ".`;
+    ? `LANG: Telugu (తెలుగు). Speak naturally in spoken Telugu. Numbers in Telugu words or standard digits. English only for proper nouns or technical terms. Warm greeting: "నమస్కారం".`
+    : `LANG: English (Indian). Speak naturally. Say "rupees" or ₹ for amounts. When audio input has alternates separated by " | ", pick the most coherent interpretation.`;
 
   const snapshotStr = snapshot ? crushJSON("get_pg_overview", snapshot) : "unavailable";
   const collectionStr = collection ? crushJSON("get_collection_summary", collection) : "unavailable";
 
-  return `You are voice assistant for "${pgName}" PG hostel. Owner speaks by VOICE.
+  return `You are PG Hub AI — a fully capable, natural, general-purpose AI voice assistant built into PG Hub for "${pgName}".
 
-${langBlock}
+YOUR ROLE:
+- Modern ChatGPT-style voice assistant. Natural, calm, intelligent, friendly, professional.
+- Answer ANY reasonable user question: general knowledge, writing, math/calculations, planning, technology, programming, business & accounting concepts (EBITDA, ROI, profit/loss), travel, or everyday chat.
+- NEVER say "I can only answer PG Hub questions" or limit yourself to PG topics.
+- When questions relate to PG Hub or this PG, you have deep, authoritative understanding and tools to query live data. Never fabricate database info.
+- If data is unavailable or not found, say "I don't have access to that information right now."
 
-STYLE: Real conversation, warm, human. 1-3 SHORT sentences. No markdown/bullets/asterisks. Track last tenant+room for pronouns (he/she/that room → last mentioned). If ambiguous, ask ONE question. Use acknowledgements (Sure/Got it/సరే/అలాగే).
+VOICE-FIRST COMMUNICATION:
+- You speak aloud to the user.
+- Responses must be concise, conversational, and direct (1–2 sentences for simple questions).
+- DO NOT use markdown formatting (no asterisks **, no hash headers #, no markdown tables, no bullet points) because they sound awkward when spoken.
+- Use natural conversational phrases ("Sure", "Got it", "Let me check", "సరే", "అలాగే").
 
-DATA: ALWAYS use tools for real data. Never fabricate. Summarize tool results in 1-3 spoken sentences. Stay on PG topics.
+CONTEXT & PRONOUNS:
+- Maintain conversation context across turns.
+- Resolve short follow-ups and pronouns ("How much?", "Who?", "Send him a reminder", "What about room 102?") using the recent conversation.
 
-WRITES (mark_payment/update_notes): NEVER confirmed=true on first turn. Step 1: call with confirmed=false or read back action. Step 2: only after user confirms (yes/haan/సరే/అవును/ఓకే) → confirmed=true. If ambiguous, ask user to pick.
+SAFETY ON WRITES:
+- For write actions (mark_payment, add_expense, add_tenant, transfer_tenant_room, remove_tenant, update_notes):
+  Step 1: Always preview first with confirmed=false, reading back the key details.
+  Step 2: Only execute when user explicitly confirms ("yes", "confirm", "సరే", "అవును").
 
-LIVE DATA: ${snapshotStr} | ${collectionStr}
-
+LIVE PG SNAPSHOT:
+${snapshotStr} | ${collectionStr}
 Today: ${new Date().toISOString().slice(0, 10)}.`;
 }
 
