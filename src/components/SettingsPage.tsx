@@ -288,9 +288,19 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
     }
   };
 
-  const handleRateApp = () => {
-    // Opens Play Store listing (update with actual package name)
-    window.open("https://play.google.com/store/apps/details?id=com.sanjay.pgmanagement", "_blank");
+  const handleRateApp = async () => {
+    try {
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
+        const { AppUpdate } = await import("@capawesome/capacitor-app-update");
+        await AppUpdate.openAppStore({ androidPackageName: "com.sanjay.pgmanagement" });
+        return;
+      }
+    } catch (error) {
+      console.warn("[Settings] Could not open the native Play Store", error);
+    }
+
+    window.open(PLAY_STORE_URL, "_blank", "noopener,noreferrer");
   };
 
   const getRoleBadge = () => {
