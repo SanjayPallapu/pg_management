@@ -29,7 +29,7 @@ const GoogleIcon = () => (
 const googleErrorMessage = (message: string) => {
   const normalized = message.toLowerCase();
   if (normalized.includes("unsupported provider") || normalized.includes("provider is not enabled")) {
-    return "Google sign-in is not enabled yet. Use email or phone sign-in.";
+    return "Google sign-in is not enabled yet. Use email sign-in.";
   }
   return message || "Google sign-in failed.";
 };
@@ -118,7 +118,7 @@ export default function EmailAuth() {
     setEmail("");
     setPassword("");
     setMode("signin");
-    navigate("/auth/email?mode=signin", { replace: true });
+    navigate("/auth?mode=signin", { replace: true });
   };
 
   const handleGoogle = async () => {
@@ -137,14 +137,14 @@ export default function EmailAuth() {
   const switchMode = (next: "signin" | "signup") => {
     setMode(next);
     setErrors({});
-    navigate(`/auth/email?mode=${next}`, { replace: true });
+    navigate(`/auth?mode=${next}`, { replace: true });
   };
 
   return (
     <PGHubShell variant="light" className="pgh-email-auth">
       <div className="pgh-email-auth__page">
         <header className="pgh-email-auth__header">
-          <button type="button" onClick={() => navigate("/auth")}><ArrowLeft size={19} /> Back</button>
+          <button type="button" onClick={() => navigate("/landing")}><ArrowLeft size={19} /> Back</button>
           <span>Secure access</span>
         </header>
 

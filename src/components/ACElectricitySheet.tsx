@@ -1021,7 +1021,7 @@ const ACRoomDetailView = ({ item, onBack, onSaveReading, onShare, onTogglePaymen
                     )}
                     onClick={() => { if (tenant.id && onTogglePaymentStatus) onTogglePaymentStatus(tenant.id, tenant.acPaymentStatus || 'Pending'); }}
                   >
-                    {isPaid ? <><Check className="h-3.5 w-3.5 mr-1" /> Paid</> : "Mark Paid"}
+                    {isPaid ? "Paid" : "Mark Paid"}
                   </Button>
                 </div>
               </div>

@@ -525,7 +525,7 @@ function ReceiptView() {
         <div><h1 className="text-2xl sm:text-3xl font-black">Receipts</h1><p className="text-xs sm:text-sm font-semibold text-slate-500">Professional receipt sharing</p></div>
       </div>
       <Card className="border border-dashed border-slate-200 p-3.5 sm:p-4">
-        <div className="flex items-start justify-between"><div><p className="text-xs sm:text-sm font-black">PG Hub PayFlow</p><h2 className="text-xl sm:text-2xl font-black">Payment Receipt</h2></div><Badge className="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs">Generated</Badge></div>
+        <div className="flex items-start justify-between"><div><p className="text-xs sm:text-sm font-black">PG Hub</p><h2 className="text-xl sm:text-2xl font-black">Payment Receipt</h2></div><Badge className="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs">Generated</Badge></div>
         <div className="mt-4 sm:mt-5 grid gap-2 sm:gap-3 text-xs sm:text-sm">
           {[
             ["Tenant", "Rahul Sharma"],
@@ -696,7 +696,7 @@ function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 function ReminderSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const message = "Hi Rahul, your August PG rent of ₹4,500 is pending. Please complete the payment at your earliest convenience. Thank you — PG Hub PayFlow.";
+  const message = "Hi Rahul, your August PG rent of ₹4,500 is pending. Please complete the payment at your earliest convenience. Thank you — PG Hub.";
   return (
     <AnimatePresence>
       {open && (
@@ -738,7 +738,7 @@ export default function PayFlowDemo() {
       <div className="mx-auto grid min-h-screen max-w-7xl 2xl:max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr]">
         <aside className="hidden bg-[#111315] p-5 text-white lg:block">
           <div className="mb-8 rounded-[24px] bg-lime-300 p-4 text-[#111315]">
-            <p className="text-[10px] font-black uppercase">PG Hub PayFlow</p>
+            <p className="text-[10px] font-black uppercase">PG Hub</p>
             <h1 className="mt-1 text-xl font-black leading-tight">Collect faster. Manage smarter.</h1>
           </div>
           <nav className="grid gap-1">
@@ -765,7 +765,7 @@ export default function PayFlowDemo() {
             <button onClick={() => setNavOpen(true)} className="grid h-10 w-10 place-items-center rounded-xl bg-[#111315] text-lime-300">
               <Menu className="h-5 w-5" />
             </button>
-            <b className="text-sm font-black">PG Hub PayFlow</b>
+            <b className="text-sm font-black">PG Hub</b>
             <button onClick={() => setView("ai")} className="grid h-10 w-10 place-items-center rounded-xl bg-lime-300">
               <Bot className="h-5 w-5" />
             </button>
@@ -828,7 +828,7 @@ export default function PayFlowDemo() {
           <motion.div className="fixed inset-0 z-50 bg-black/50 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.aside initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} className="h-full w-72 sm:w-80 bg-[#111315] p-5 text-white">
               <div className="mb-5 flex items-center justify-between">
-                <b className="text-base font-black">PG Hub PayFlow</b>
+                <b className="text-base font-black">PG Hub</b>
                 <button onClick={() => setNavOpen(false)}>
                   <X className="h-5 w-5" />
                 </button>
@@ -863,4 +863,3 @@ export default function PayFlowDemo() {
     </main>
   );
 }
-

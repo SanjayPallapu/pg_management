@@ -100,7 +100,7 @@ export default function AppMenuPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold tracking-tight text-white">PG Hub PayFlow</h1>
+            <h1 className="text-lg font-bold tracking-tight text-white">PG Hub</h1>
           </div>
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold text-gray-300 uppercase">
             {role || "owner"}

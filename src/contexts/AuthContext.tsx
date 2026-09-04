@@ -28,6 +28,7 @@ interface AuthContextType {
   isOwner: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string) => Promise<AuthResponse>;
+  requestEmailMagicLink: (email: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   requestPhoneOtp: (phone: string) => Promise<{ error: AuthError | null }>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<AuthResponse>;
@@ -302,21 +303,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const redirectUrl = Capacitor.isNativePlatform()
       ? 'com.pgmanager.app://auth/callback'
       : `${window.location.origin}/`;
-    // Set flag BEFORE signUp so onAuthStateChange handler picks it up
-    sessionStorage.setItem('isNewSignup', 'true');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: redirectUrl },
     });
-    if (error) {
-      // Remove flag on error
+
+    // With email confirmation enabled, Supabase intentionally returns a user
+    // with no identities for an existing address instead of exposing whether
+    // that account exists. Do not mark that response as a new signup.
+    const isExistingAccount = Boolean(data?.user && data.user.identities?.length === 0);
+    if (error || isExistingAccount) {
       sessionStorage.removeItem('isNewSignup');
-    } else if (data?.user) {
-      // Also update state directly in case onAuthStateChange already fired
+      setIsNewSignup(false);
+      return {
+        data,
+        error: error || new AuthError('This email is already registered. Please sign in instead.'),
+      } as AuthResponse;
+    }
+
+    if (data?.user) {
+      sessionStorage.setItem('isNewSignup', 'true');
       setIsNewSignup(true);
     }
     return { data, error } as AuthResponse;
+  }, []);
+
+  const requestEmailMagicLink = useCallback(async (email: string) => {
+    clearPhoneOtpTestMode();
+    const emailRedirectTo = Capacitor.isNativePlatform()
+      ? 'com.pgmanager.app://auth/callback'
+      : `${window.location.origin}/`;
+    // Email links are a passwordless fallback for existing accounts. New
+    // owners can create their account with Google, avoiding an ambiguous
+    // email signup flow and accidental setup redirects.
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo, shouldCreateUser: false },
+    });
+    return { error };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
@@ -427,6 +452,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isOwner: role === 'owner' || role === 'admin',
     signIn,
     signUp,
+    requestEmailMagicLink,
     signInWithGoogle,
     requestPhoneOtp,
     verifyPhoneOtp,
@@ -453,6 +479,7 @@ export const useAuth = (): AuthContextType => {
       isOwner: false,
       signIn: async () => ({ error: notReady() }),
       signUp: async () => ({ data: { user: null, session: null }, error: notReady() }),
+      requestEmailMagicLink: async () => ({ error: notReady() }),
       signInWithGoogle: async () => ({ error: notReady() }),
       requestPhoneOtp: async () => ({ error: notReady() }),
       verifyPhoneOtp: async () => ({ data: { user: null, session: null }, error: notReady() }),

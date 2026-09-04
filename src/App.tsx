@@ -6,9 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
-import EmailAuth from "./pages/EmailAuth";
 import PhoneLogin from "./pages/PhoneLogin";
-import OTPVerification from "./pages/OTPVerification";
 import PGSetupProperty from "./pages/PGSetupProperty";
 import PGSetupCapacity from "./pages/PGSetupCapacity";
 import PGSetupSubscription from "./pages/PGSetupSubscription";
@@ -155,8 +153,8 @@ const AppContent = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<PhoneLogin />} />
-          <Route path="/auth/otp" element={<OTPVerification />} />
-          <Route path="/auth/email" element={<EmailAuth />} />
+          <Route path="/auth/email" element={<Navigate to="/auth" replace />} />
+          <Route path="/auth/otp" element={<Navigate to="/auth" replace />} />
           <Route path="/tenant-profile/:tenantId" element={
             <ProtectedRoute>
               <TenantProfilePage view="details" />

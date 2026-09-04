@@ -166,7 +166,7 @@ export const PGHubPayFlowDrawer = ({
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-white/10">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              PG Hub PayFlow
+              PG Hub
             </h2>
             <button
               type="button"

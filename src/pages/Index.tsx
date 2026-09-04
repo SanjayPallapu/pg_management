@@ -289,8 +289,10 @@ const Index = () => {
     );
   }
 
-  // Always redirect to property setup workflow if user has no properties configured yet
-  if (needsSetup) {
+  // Only a confirmed new account should be forced into setup. Existing owners
+  // may sign in again before creating another property and should land on the
+  // dashboard instead of being sent back to Property Details.
+  if (needsSetup && isNewSignup) {
     if (canCreatePG) return <Navigate to="/setup/property" replace />;
     return <Navigate to="/subscription" replace />;
   }

@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-const SUPPORT_EMAIL = "support@pgmanager.in";
+const SUPPORT_EMAIL = "support.pghub@gmail.com";
 
 interface FAQItem {
   question: string;
@@ -112,7 +112,7 @@ const FAQ_DATA: FAQItem[] = [
   {
     category: "Billing & Subscription",
     question: "How do I cancel my subscription?",
-    answer: "Email support@pgmanager.in from your registered email with the subject 'Cancel subscription'. We'll process it before your next billing cycle.",
+    answer: "Email support.pghub@gmail.com from your registered email with the subject 'Cancel subscription'. We'll process it before your next billing cycle.",
   },
   // Security
   {

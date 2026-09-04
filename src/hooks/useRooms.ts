@@ -6,6 +6,7 @@ import { useAuditLog } from "./useAuditLog";
 import { usePG } from "@/contexts/PGContext";
 import { toast } from "sonner";
 import { prepareTenantsForDisplay } from "@/utils/tenantHelper";
+import { isTenantActiveNow } from "@/utils/dateOnly";
 import {
   getPhoneOtpTestSession,
   getPhoneOtpTestWorkspace,
@@ -303,9 +304,15 @@ export const useRooms = () => {
         changes.room_id = { old: null, new: (updates as any).roomId };
       }
 
-      const { error } = await (supabase as any).from("tenants").update(updateData).eq("id", tenantId);
+      const { data, error } = await (supabase as any)
+        .from("tenants")
+        .update(updateData)
+        .eq("id", tenantId)
+        .select("id, room_id")
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error("Tenant could not be updated. Please refresh and try again.");
 
       // Log audit for significant updates
       if (Object.keys(changes).length > 0) {
@@ -317,12 +324,36 @@ export const useRooms = () => {
           changes,
         });
       }
+      return data;
     },
     onMutate: async ({ tenantId, updates }) => {
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
       const previousRooms = queryClient.getQueryData(["rooms", currentPG?.id]);
       queryClient.setQueryData(["rooms", currentPG?.id], (old: Room[] | undefined) => {
         if (!old) return old;
+        const destinationRoomId = (updates as Partial<Tenant> & { roomId?: string }).roomId;
+        const sourceRoom = old.find((room) => room.tenants.some((tenant) => tenant.id === tenantId));
+        const movedTenant = sourceRoom?.tenants.find((tenant) => tenant.id === tenantId);
+
+        // A shift must move the tenant between room lists immediately. Simply
+        // changing their roomId left the old room visually unchanged until refetch.
+        if (destinationRoomId && sourceRoom && movedTenant && sourceRoom.id !== destinationRoomId) {
+          const { roomId: _roomId, ...tenantUpdates } = updates as Partial<Tenant> & { roomId?: string };
+          return old.map((room) => {
+            const tenants = room.id === sourceRoom.id
+              ? room.tenants.filter((tenant) => tenant.id !== tenantId)
+              : room.id === destinationRoomId
+                ? [...room.tenants.filter((tenant) => tenant.id !== tenantId), { ...movedTenant, ...tenantUpdates }]
+                : room.tenants;
+            const activeCount = tenants.filter((tenant) => isTenantActiveNow(tenant.startDate, tenant.endDate)).length;
+            return {
+              ...room,
+              tenants,
+              status: activeCount === 0 ? "Vacant" : activeCount >= room.capacity ? "Occupied" : "Partially Occupied",
+            };
+          });
+        }
+
         return old.map((room) => ({
           ...room,
           tenants: room.tenants.map((tenant) => (tenant.id === tenantId ? { ...tenant, ...updates } : tenant)),

@@ -75,7 +75,7 @@ const ContactSection = () =>
         </motion.a>
 
         <motion.a
-        href="mailto:support@pgmanager.in"
+        href="mailto:support.pghub@gmail.com"
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -87,7 +87,7 @@ const ContactSection = () =>
           </div>
           <div>
             <p className="font-semibold text-foreground">Email Us</p>
-            <p className="text-sm text-primary font-medium">support@pgmanager.in</p>
+            <p className="text-sm text-primary font-medium">support.pghub@gmail.com</p>
             <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
           </div>
         </motion.a>

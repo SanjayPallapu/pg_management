@@ -45,8 +45,6 @@ import {
   Contact,
   ClipboardList,
   CalendarClock,
-  Check,
-  CircleCheckBig,
 } from "lucide-react";
 import {
   pickContactFromDevice,
@@ -1433,10 +1431,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                               <button
                                 type="button"
                                 onClick={() => handlePaymentToggle(tenant.id, false)}
-                                className="badge-paid-periwinkle px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-85 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                className="badge-paid-periwinkle px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-85 active:scale-95 transition-all cursor-pointer"
                                 title="Click to undo / edit payment"
                               >
-                                <CircleCheckBig className="h-4 w-4" />
                                 <span>Paid</span>
                               </button>
                             ) : isPartial ? (
@@ -1450,10 +1447,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                               <button
                                 type="button"
                                 onClick={() => handlePaymentToggle(tenant.id, true)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
                                 title="Click to mark as paid"
                               >
-                                <Check className="h-4 w-4" />
                                 <span>Mark Paid</span>
                               </button>
                             )}

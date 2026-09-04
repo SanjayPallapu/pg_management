@@ -15,8 +15,8 @@ import {
 
 export default function PhoneLogin() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, requestPhoneOtp, signIn, signUp, signInWithGoogle } = useAuth();
-  const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
+  const { isAuthenticated, isLoading, requestEmailMagicLink, requestPhoneOtp, signIn, signUp, signInWithGoogle } = useAuth();
+  const [authMethod, setAuthMethod] = useState<"phone" | "email">("email");
   const [emailMode, setEmailMode] = useState<"signin" | "signup">("signin");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -62,35 +62,15 @@ export default function PhoneLogin() {
       setEmailError("Enter a valid email address.");
       return;
     }
-    if (password.length < 6) {
-      setEmailError("Password must be at least 6 characters.");
-      return;
-    }
     setEmailError("");
     setSubmitting(true);
-
-    if (emailMode === "signup") {
-      const { data, error } = await signUp(cleanEmail, password);
-      setSubmitting(false);
-      if (error || !data.user) {
-        toast.error(error?.message || "Could not create your account.");
-        return;
-      }
-      toast.success("Account created. You can now sign in.");
-      setEmail("");
-      setPassword("");
-      setEmailMode("signin");
-      return;
-    }
-
-    const { error } = await signIn(cleanEmail, password);
+    const { error } = await requestEmailMagicLink(cleanEmail);
     setSubmitting(false);
     if (error) {
-      toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password." : error.message);
+      toast.error(error.message || "Could not send a sign-in link. Try Google sign-in.");
       return;
     }
-    completeOnboarding();
-    window.location.replace("/");
+    toast.success("Check your email for a secure sign-in link.");
   };
 
   const continueWithGoogle = async () => {
@@ -99,7 +79,7 @@ export default function PhoneLogin() {
     if (error) {
       setGoogleSubmitting(false);
       const unsupported = error.message.toLowerCase().includes("unsupported provider");
-      toast.error(unsupported ? "Google sign-in is not enabled yet. Use email or phone sign-in." : error.message);
+      toast.error(unsupported ? "Google sign-in is not enabled yet. Use an email sign-in link." : error.message);
     }
   };
 
@@ -126,28 +106,6 @@ export default function PhoneLogin() {
           <p className="text-slate-500 text-sm font-semibold tracking-wide m-0">
             Smart PG & Hostel Management
           </p>
-        </div>
-
-        {/* Tab Switcher — Fixed position directly below header */}
-        <div className="pgh-login__method-switch w-full mb-[24px]" role="tablist" aria-label="Sign-in method">
-          <button 
-            type="button" 
-            role="tab" 
-            aria-selected={authMethod === "phone"} 
-            className={authMethod === "phone" ? "is-active" : ""} 
-            onClick={() => handleTabSwitch("phone")}
-          >
-            Mobile
-          </button>
-          <button 
-            type="button" 
-            role="tab" 
-            aria-selected={authMethod === "email"} 
-            className={authMethod === "email" ? "is-active" : ""} 
-            onClick={() => handleTabSwitch("email")}
-          >
-            Email
-          </button>
         </div>
 
         {/* Authentication Form Container — Expands smoothly for Email tab while maintaining perfect centering */}
@@ -207,10 +165,6 @@ export default function PhoneLogin() {
                     <span className="text-slate-700 font-medium">Email</span>
                     <div><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" autoComplete="email" /></div>
                   </label>
-                  <label className="pgh-auth-field m-0">
-                    <span className="text-slate-700 font-medium">Password</span>
-                    <div><Lock size={18} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
-                  </label>
                   {emailError && <small className="pgh-login__error">{emailError}</small>}
 
                   <PGHubButton 
@@ -218,26 +172,12 @@ export default function PhoneLogin() {
                     loading={submitting} 
                     className="w-full h-12 mt-[24px] rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-bold text-white shadow-lg shadow-blue-600/20 active:scale-98 transition-all"
                   >
-                    {emailMode === "signup" ? "Sign up with email" : "Sign in with email"}
+                    Email me a sign-in link
                   </PGHubButton>
                 </form>
 
                 <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[16px] m-0">
-                  {emailMode === "signup" ? (
-                    <>
-                      Already have an account?{' '}
-                      <button type="button" className="pgh-link-button" onClick={() => setEmailMode("signin")}>
-                        Sign in
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Don’t have an account?{' '}
-                      <button type="button" className="pgh-link-button" onClick={() => setEmailMode("signup")}>
-                        Sign up
-                      </button>
-                    </>
-                  )}
+                  We’ll send a secure sign-in link. No password needed.
                 </p>
 
                 <p className="pgh-login__alternative text-center text-xs text-slate-500 mt-[28px] m-0">

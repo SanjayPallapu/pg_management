@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 
-const supportEmail = "support@pgmanager.in";
+const supportEmail = "support.pghub@gmail.com";
 
 const sections = [
   {

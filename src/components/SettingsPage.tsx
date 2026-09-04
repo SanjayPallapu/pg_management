@@ -70,9 +70,22 @@ import { ChangePasswordDialog } from "./settings/ChangePasswordDialog";
 import { LoginActivityDialog } from "./settings/LoginActivityDialog";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import pgHubLogo from "@/assets/pg-hub/pg-hub-logo.png";
 
 const APP_VERSION = "1.0.0";
-const SUPPORT_EMAIL = "support@pgmanager.in";
+const SUPPORT_EMAIL = "support.pghub@gmail.com";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.sanjay.pgmanagement";
+const APP_SHARE_TEXT = "PG Hub – Smart PG Management\nManage rooms, tenants & rent easily.\n\n📱 Download the app:";
+
+const blobToBase64 = async (blob: Blob) => {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return btoa(binary);
+};
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -234,15 +247,41 @@ export const SettingsPage = ({ rooms = [] }: { rooms?: Room[] }) => {
 
   const handleShareApp = async () => {
     const shareData = {
-      title: "PG HUB",
-      text: "Manage your PG/Hostel easily with PG HUB - Track tenants, collect rent, send reminders!",
-      url: "https://pgmanager.app",
+      title: "PG Hub – Smart PG Management",
+      text: APP_SHARE_TEXT,
+      url: PLAY_STORE_URL,
     };
     try {
+      const logoResponse = await fetch(pgHubLogo);
+      const logoBlob = logoResponse.ok ? await logoResponse.blob() : null;
+
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform()) {
+        const { Share } = await import("@capacitor/share");
+        if (logoBlob) {
+          const { Directory, Filesystem } = await import("@capacitor/filesystem");
+          const fileName = "pg-hub-share-logo.png";
+          await Filesystem.writeFile({ path: fileName, data: await blobToBase64(logoBlob), directory: Directory.Cache });
+          const file = await Filesystem.getUri({ path: fileName, directory: Directory.Cache });
+          await Share.share({ ...shareData, files: [file.uri], dialogTitle: "Share PG Hub" });
+          return;
+        }
+        await Share.share({ ...shareData, dialogTitle: "Share PG Hub" });
+        return;
+      }
+
       if (navigator.share) {
+        if (logoBlob) {
+          const file = new File([logoBlob], "pg-hub-logo.png", { type: logoBlob.type || "image/png" });
+          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            await navigator.share({ ...shareData, files: [file] });
+            return;
+          }
+        }
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(shareData.url);
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        toast.success("PG Hub link copied");
       }
     } catch {
       // User cancelled share

@@ -37,7 +37,7 @@ import vacancy from "@/assets/pg-hub/editorial/fill-vacancy.jpg";
 import expenses from "@/assets/pg-hub/editorial/expenses-budget.jpg";
 import growth from "@/assets/pg-hub/editorial/business-growth.jpg";
 
-const playStoreUrl = "https://play.google.com/store/apps/details?id=com.sanjay.pgmanagement&pcampaignid=web_share";
+const playStoreUrl = "https://play.google.com/store/apps/details?id=com.sanjay.pgmanagement";
 
 const illustrations = [
   { src: rentCollection, title: "Collect rent", copy: "Paid, partial, pending and overdue in one glance." },
@@ -256,10 +256,10 @@ export default function Landing() {
             <Sparkles className="h-3.5 w-3.5 text-lime-600" /> Fintech for PG owners
           </div>
           <h1 className="payflow-gsap-hero mt-4 sm:mt-6 text-4xl sm:text-6xl md:text-5xl lg:text-7xl xl:text-8xl 2xl:text-[104px] font-black leading-[0.95] tracking-tight sm:tracking-normal">
-            Collect rent. Not spreadsheets.
+            Smart PG & Hostel Management
           </h1>
           <p className="payflow-gsap-hero mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg lg:text-xl font-semibold leading-relaxed text-slate-600">
-            PG Hub PayFlow brings rent collection, tenants, rooms, receipts, utilities and property operations into one simple Android-first app.
+            PG Hub brings rent collection, tenants, rooms, receipts, utilities and property operations into one simple Android-first app.
           </p>
 
           <div className="mt-6 sm:mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -359,7 +359,7 @@ export default function Landing() {
                 <div className="grid min-h-[300px] sm:min-h-[340px] gap-0 sm:grid-cols-[1fr_1.1fr]">
                   <figcaption className="flex flex-col justify-between p-5 sm:p-7 order-2 sm:order-1">
                     <div>
-                      <p className="text-[10px] sm:text-xs font-black uppercase text-slate-600">{String(index + 1).padStart(2, "0")} · PG Hub PayFlow</p>
+                      <p className="text-[10px] sm:text-xs font-black uppercase text-slate-600">{String(index + 1).padStart(2, "0")} · PG Hub</p>
                       <h3 className="mt-3 sm:mt-4 text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">{item.title}</h3>
                       <p className="mt-2 sm:mt-3 text-xs sm:text-sm font-semibold leading-relaxed text-slate-700">{item.copy}</p>
                     </div>
@@ -598,7 +598,7 @@ export default function Landing() {
             Your PG deserves better than spreadsheets.
           </h2>
           <p className="mx-auto mt-3 sm:mt-5 max-w-2xl text-sm sm:text-lg font-semibold leading-relaxed text-white/65">
-            Start collecting smarter with PG Hub PayFlow today.
+            Start collecting smarter with PG Hub today.
           </p>
           <div className="mt-6 sm:mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild className="h-12 sm:h-14 rounded-2xl bg-lime-300 px-6 sm:px-8 text-sm sm:text-base font-black text-[#111315] hover:bg-lime-200">
@@ -617,7 +617,7 @@ export default function Landing() {
           <Brand />
           <p className="text-xs sm:text-sm font-bold text-slate-500 text-center md:text-left">Collect faster. Manage smarter. Grow confidently.</p>
           <div className="flex justify-center gap-4 text-xs sm:text-sm font-black text-slate-600">
-            <a href="mailto:support@pgmanager.in" className="hover:underline">Support</a>
+            <a href="mailto:support.pghub@gmail.com" className="hover:underline">Support</a>
             <button onClick={() => navigate("/legal")} className="hover:underline">Privacy</button>
           </div>
         </div>
@@ -625,4 +625,3 @@ export default function Landing() {
     </main>
   );
 }
-
