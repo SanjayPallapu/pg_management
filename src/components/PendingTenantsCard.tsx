@@ -32,7 +32,7 @@ interface PendingTenantsCardProps {
   rooms: Room[];
   open?: boolean;
   onClose?: () => void;
-  defaultTab?: 'overdue' | 'delayed' | 'not-yet-due' | 'previous-month';
+  defaultTab?: 'overdue' | 'not-yet-due' | 'previous-month';
 }
 
 export interface PendingTenantsCardRef {
@@ -70,7 +70,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   useImperativeHandle(ref, () => ({
     openSheet: () => setLocalOpen(true),
   }));
-  const [activeTab, setActiveTab] = useState<'overdue' | 'delayed' | 'not-yet-due' | 'previous-month'>('overdue');
+  const [activeTab, setActiveTab] = useState<'overdue' | 'not-yet-due' | 'previous-month'>('overdue');
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderTenant, setReminderTenant] = useState<TenantWithPayment | null>(null);
@@ -281,8 +281,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   const notYetDueTotal = notYetDue.reduce((sum, t) => sum + t.monthlyRent, 0);
 
   const currentTenants = useMemo(() => {
-    if (activeTab === 'overdue') return overdueCombined;
-    if (activeTab === 'delayed') return delayedCombined;
+    if (activeTab === 'overdue') return [...overdueCombined, ...delayedCombined];
     if (activeTab === 'previous-month') return stillPendingTenants;
     return notYetDue;
   }, [activeTab, overdueCombined, delayedCombined, stillPendingTenants, notYetDue]);
@@ -304,7 +303,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
   }, [currentTenants, selectedTenants]);
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab as 'overdue' | 'delayed' | 'not-yet-due' | 'previous-month');
+    setActiveTab(tab as 'overdue' | 'not-yet-due' | 'previous-month');
     setSelectedTenants(new Set()); // Clear selection when switching tabs
   };
 
@@ -491,20 +490,16 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
 
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1">
-                <TabsList className="grid w-full grid-cols-4 shrink-0 h-10 p-1">
-                  <TabsTrigger value="overdue" className="gap-1 text-[11px] px-1 truncate">
+                <TabsList className="grid w-full grid-cols-3 shrink-0 h-10 p-1">
+                  <TabsTrigger value="overdue" className="gap-1 text-xs px-1 truncate">
                     <AlertTriangle className="h-3.5 w-3.5 text-pending shrink-0" />
                     Overdue ({overdueCombined.length})
                   </TabsTrigger>
-                  <TabsTrigger value="delayed" className="gap-1 text-[11px] px-1 truncate data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300">
-                    <CalendarClock className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                    Delayed ({delayedCombined.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="previous-month" className="gap-1 text-[11px] px-1 truncate">
+                  <TabsTrigger value="previous-month" className="gap-1 text-xs px-1 truncate">
                     <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                     Prev Mo ({stillPendingTenants.length})
                   </TabsTrigger>
-                  <TabsTrigger value="not-yet-due" className="gap-1 text-[11px] px-1 truncate">
+                  <TabsTrigger value="not-yet-due" className="gap-1 text-xs px-1 truncate">
                     <Clock className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                     Upcoming ({notYetDue.length})
                   </TabsTrigger>
@@ -545,19 +540,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                 <ScrollArea className="flex-1 mt-4">
                   <TabsContent value="overdue" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
                     <div className="space-y-2">
-                      {delayedCombined.length > 0 && (
-                        <div 
-                          onClick={() => handleTabChange('delayed')}
-                          className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/30 dark:hover:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 flex items-center justify-between text-xs text-purple-900 dark:text-purple-200 cursor-pointer transition-colors"
-                        >
-                          <span className="flex items-center gap-1.5 truncate">
-                            <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                            <span className="truncate">{delayedCombined.length} tenant(s) with agreed delay (₹{delayedTotal.toLocaleString()}) excluded</span>
-                          </span>
-                          <span className="font-semibold text-purple-600 dark:text-purple-400 shrink-0 hover:underline">View &rarr;</span>
-                        </div>
-                      )}
-                      {overdueCombined.length === 0 ? (
+                      {overdueCombined.length === 0 && delayedCombined.length === 0 ? (
                         <p className="text-center text-muted-foreground py-8">No overdue tenants</p>
                       ) : (
                         overdueCombined.map(tenant => (
@@ -584,48 +567,50 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                           />
                         ))
                       )}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="delayed" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
-                    <div className="space-y-2">
-                      <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 flex items-center justify-between text-xs text-purple-900 dark:text-purple-200">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                          <span>Tenants with agreed late payment date</span>
-                        </span>
-                        <span className="font-bold text-purple-700 dark:text-purple-300">₹{delayedTotal.toLocaleString()}</span>
-                      </div>
-                      {delayedCombined.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground space-y-2">
-                          <CalendarClock className="h-8 w-8 mx-auto text-purple-400 opacity-60" />
-                          <p className="text-sm font-medium">No tenants with agreed delayed payment</p>
-                          <p className="text-xs">Tap "+ Set Agreed Date" on any tenant to set their delayed payment day.</p>
+                      {/* Delayed tenants section inside Overdue tab at the bottom */}
+                      {delayedCombined.length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-purple-200/80 dark:border-purple-900/40">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                              <span className="font-semibold text-xs text-purple-900 dark:text-purple-200">
+                                Agreed Delayed ({delayedCombined.length})
+                              </span>
+                            </div>
+                            <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                              ₹{delayedTotal.toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mb-3">
+                            Tenants with an agreed late payment date. Excluded from overdue until date passes.
+                          </p>
+                          <div className="space-y-2">
+                            {delayedCombined.map(tenant => (
+                              <TenantSelectItem 
+                                key={tenant.id}
+                                tenant={tenant}
+                                isSelected={selectedTenants.has(tenant.id)}
+                                onToggle={handleToggleTenant}
+                                categoryColor="purple"
+                                onReminder={handleOpenReminder}
+                                rooms={rooms}
+                                onWelcome={(tenant) => {
+                                  const room = rooms.find((item) => item.roomNo === tenant.roomNo);
+                                  setWelcomeData({ tenantName: tenant.name, tenantPhone: tenant.phone || '', joiningDate: tenant.startDate || '', roomNo: tenant.roomNo, sharingType: room ? `${room.capacity} Sharing` : '', monthlyRent: tenant.monthlyRent });
+                                  setWelcomeDialogOpen(true);
+                                }}
+                                onRules={(tenant) => { setRulesShareData({ tenantName: tenant.name, tenantPhone: tenant.phone || '' }); setRulesDialogOpen(true); }}
+                                onMarkPaid={handleMarkPaid}
+                                isMarkingPaid={upsertPayment.isPending}
+                                onSetPaymentDate={(t) => {
+                                  setDateTargetTenant(t);
+                                  setDateDialogOpen(true);
+                                }}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      ) : (
-                        delayedCombined.map(tenant => (
-                          <TenantSelectItem 
-                            key={tenant.id}
-                            tenant={tenant}
-                            isSelected={selectedTenants.has(tenant.id)}
-                            onToggle={handleToggleTenant}
-                            categoryColor="purple"
-                            onReminder={handleOpenReminder}
-                            rooms={rooms}
-                            onWelcome={(tenant) => {
-                              const room = rooms.find((item) => item.roomNo === tenant.roomNo);
-                              setWelcomeData({ tenantName: tenant.name, tenantPhone: tenant.phone || '', joiningDate: tenant.startDate || '', roomNo: tenant.roomNo, sharingType: room ? `${room.capacity} Sharing` : '', monthlyRent: tenant.monthlyRent });
-                              setWelcomeDialogOpen(true);
-                            }}
-                            onRules={(tenant) => { setRulesShareData({ tenantName: tenant.name, tenantPhone: tenant.phone || '' }); setRulesDialogOpen(true); }}
-                            onMarkPaid={handleMarkPaid}
-                            isMarkingPaid={upsertPayment.isPending}
-                            onSetPaymentDate={(t) => {
-                              setDateTargetTenant(t);
-                              setDateDialogOpen(true);
-                            }}
-                          />
-                        ))
                       )}
                     </div>
                   </TabsContent>
@@ -844,21 +829,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                   Edit
                 </button>
               </div>
-            ) : (
-              <div className="mt-1">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSetPaymentDate?.(tenant);
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-purple-600 dark:text-purple-400 hover:underline"
-                >
-                  <CalendarClock className="h-3 w-3" />
-                  + Set Agreed Date
-                </button>
-              </div>
-            )}
+            ) : null}
 
             {/* Third section: Payments breakdown (if partial payment) */}
             {isPartiallyPaid && (

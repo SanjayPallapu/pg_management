@@ -1094,7 +1094,34 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   }}
                                 />
                               </div>
-                            </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
+                                  <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                      <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                      {tenant.paymentDueDay ? (
+                                        <span className="text-purple-700 dark:text-purple-300 font-medium">
+                                          Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
+                                        </span>
+                                      ) : (
+                                        <span>Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
+                                      )}
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
+                                      onClick={() => {
+                                        setDateTargetTenant(tenant);
+                                        setDateDialogOpen(true);
+                                      }}
+                                    >
+                                      {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
                           ) : (
                             <>
                               <div className="flex items-center gap-2">
@@ -1112,30 +1139,11 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground">{tenant.phone}</div>
-                              <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                                <span>Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}</span>
-                                {!tenant.endDate && (
-                                  <span className="inline-flex items-center gap-1">
-                                    •
-                                    <CalendarClock className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                                    {tenant.paymentDueDay ? (
-                                      <span className="text-purple-600 dark:text-purple-400 font-medium">
-                                        Agreed: {tenant.paymentDueDay}th of month
-                                      </span>
-                                    ) : (
-                                      <span>Due: {parseDateOnly(tenant.startDate).getDate()}th</span>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDateTargetTenant(tenant);
-                                        setDateDialogOpen(true);
-                                      }}
-                                      className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline font-semibold ml-0.5"
-                                    >
-                                      {tenant.paymentDueDay ? "Edit" : "+ Set date"}
-                                    </button>
+                              <div className="text-xs text-muted-foreground">
+                                Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}
+                                {tenant.paymentDueDay && (
+                                  <span className="text-purple-600 dark:text-purple-400 font-medium ml-1.5">
+                                    • Agreed: {tenant.paymentDueDay}th
                                   </span>
                                 )}
                               </div>
@@ -1605,6 +1613,33 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                     }
                                   }}
                                 />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
+                                <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
+                                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                    {tenant.paymentDueDay ? (
+                                      <span className="text-purple-700 dark:text-purple-300 font-medium">
+                                        Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
+                                      </span>
+                                    ) : (
+                                      <span>Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
+                                    )}
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
+                                    onClick={() => {
+                                      setDateTargetTenant(tenant);
+                                      setDateDialogOpen(true);
+                                    }}
+                                  >
+                                    {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ) : (
