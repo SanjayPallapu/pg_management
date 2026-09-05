@@ -1045,13 +1045,47 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                         "p-3 border rounded-xl space-y-3 transition-all duration-200",
                         !isEditing && "cursor-pointer",
                         getTenantStyles(tenant).card,
-                        isEditing && "ring-2 ring-primary scale-[1.02]",
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1 flex-1">
-                          {isEditing ? (
-                            <div className="space-y-2">
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          {/* Top Row: Header with Delete & Done buttons */}
+                          <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                              Edit Tenant Details
+                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleRemoveTenant(tenant.id)}
+                                title="Delete tenant"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-bold"
+                                onClick={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, editingValues);
+                                  }
+                                  exitEditMode();
+                                }}
+                              >
+                                Done
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Inputs */}
+                          <div className="space-y-2">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Tenant Name</Label>
                               <Input
                                 value={editingValues?.name ?? tenant.name}
                                 onChange={(e) => {
@@ -1063,8 +1097,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   }
                                 }}
                                 placeholder="Name"
-                                className="font-medium"
+                                className="h-9 font-medium"
                               />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Phone Number</Label>
                               <Input
                                 value={editingValues?.phone ?? tenant.phone}
                                 onChange={(e) => {
@@ -1078,54 +1116,123 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 }}
                                 placeholder="Phone"
                                 maxLength={10}
+                                className="h-9"
                               />
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                              <Input
+                                type="date"
+                                value={editingValues?.startDate ?? tenant.startDate}
+                                onChange={(e) => {
+                                  setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                  }
+                                }}
+                                className="h-9"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
+                              <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
+                                <div className="flex items-center gap-1.5 text-muted-foreground min-w-0 flex-1">
+                                  <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                  {tenant.paymentDueDay ? (
+                                    <span className="text-purple-700 dark:text-purple-300 font-medium truncate">
+                                      Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
+                                    </span>
+                                  ) : (
+                                    <span className="truncate">Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
+                                  )}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
+                                  onClick={() => {
+                                    setDateTargetTenant(tenant);
+                                    setDateDialogOpen(true);
+                                  }}
+                                >
+                                  {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Monthly Rent with Shift Room on its right side */}
+                            <div className="flex items-end gap-2 pt-1">
+                              <div className="flex-1 min-w-0">
+                                <Label className="text-xs text-muted-foreground font-medium">Monthly Rent</Label>
                                 <Input
-                                  type="date"
-                                  value={editingValues?.startDate ?? tenant.startDate}
+                                  type="number"
+                                  value={editingValues?.monthlyRent ?? tenant.monthlyRent}
+                                  readOnly={isTenantPaidForMonth(tenant.id)}
+                                  className={cn("h-9 font-semibold", isTenantPaidForMonth(tenant.id) && "opacity-50 cursor-not-allowed")}
                                   onChange={(e) => {
-                                    setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                                    setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
                                   }}
                                   onBlur={async () => {
                                     if (editingValues) {
-                                      await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                      await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
                                     }
                                   }}
                                 />
                               </div>
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
-                                  <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
-                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                      <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                                      {tenant.paymentDueDay ? (
-                                        <span className="text-purple-700 dark:text-purple-300 font-medium">
-                                          Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
-                                        </span>
-                                      ) : (
-                                        <span>Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
-                                      )}
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
-                                      onClick={() => {
-                                        setDateTargetTenant(tenant);
-                                        setDateDialogOpen(true);
-                                      }}
-                                    >
-                                      {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                          ) : (
-                            <>
+                              {!tenant.endDate ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 px-3 text-xs text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 shrink-0 flex items-center gap-1 font-medium"
+                                  onClick={() => setShiftTenant(tenant)}
+                                >
+                                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                                  Shift Room
+                                </Button>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 px-3 text-xs text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 shrink-0"
+                                  onClick={() => handleUpdateTenant(tenant.id, { endDate: undefined })}
+                                >
+                                  Reactivate
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Move Out Button */}
+                            {!tenant.endDate && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start h-auto min-h-10 border-orange-300 px-3 py-2.5 text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20 mt-2"
+                                onClick={() => setMarkLeftTenant(tenant)}
+                              >
+                                <LogOut className="h-4 w-4 mr-2 shrink-0" />
+                                <span className="text-left leading-tight">
+                                  <span className="block text-xs font-bold">Move Out</span>
+                                  <span className="block text-[10px] font-normal opacity-75">Set date &amp; settlement</span>
+                                </span>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <div className="font-medium text-lg">{tenant.name}</div>
+                                <div className="font-medium text-lg truncate">{tenant.name}</div>
                                 <ProfileStatusBadge
                                   status={onboardingProfileMap.get(tenant.id)?.status}
                                   size="sm"
@@ -1133,7 +1240,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
                                 />
                                 {isNewTenant(tenant.startDate) && !tenant.endDate && (
-                                  <Badge className="h-5 px-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 animate-pulse">
+                                  <Badge className="h-5 px-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 animate-pulse shrink-0">
                                     NEW
                                   </Badge>
                                 )}
@@ -1141,12 +1248,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                               <div className="text-sm text-muted-foreground">{tenant.phone}</div>
                               <div className="text-xs text-muted-foreground">
                                 Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}
-                                {tenant.paymentDueDay && (
-                                  <span className="text-purple-600 dark:text-purple-400 font-medium ml-1.5">
-                                    • Agreed: {tenant.paymentDueDay}th
-                                  </span>
-                                )}
                               </div>
+                              {tenant.paymentDueDay && (
+                                <div className="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1 mt-0.5">
+                                  <CalendarClock className="h-3 w-3 shrink-0" />
+                                  <span>Agreed: {tenant.paymentDueDay}th</span>
+                                </div>
+                              )}
                               {tenant.endDate && (
                                 <div className="text-xs text-destructive font-medium">
                                   Left: {format(new Date(tenant.endDate), "d MMM yyyy")}
@@ -1192,342 +1300,257 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   <span className="text-partial">Due: ₹{remaining.toLocaleString()}</span>
                                 </div>
                               )}
-                            </>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end justify-between gap-2 ml-2 shrink-0">
-                          {isEditMode && !isEditing && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => beginEditingTenant(tenant)}
-                            >
-                              Edit details
-                            </Button>
-                          )}
+                            </div>
 
-                          {!isEditing && (
-                            <div className="flex flex-col items-end gap-1.5 shrink-0 w-[80px]">
-                              {tenant.phone && tenant.phone !== "••••••••••" ? (
-                                <div className="flex items-center gap-1.5 w-full">
-                                  {/* Call button */}
-                                  <a
-                                    href={`tel:${tenant.phone}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 h-9 flex items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
-                                    title={`Call ${tenant.name}`}
-                                    aria-label={`Call ${tenant.name}`}
-                                  >
-                                    <Phone className="h-4 w-4" />
-                                  </a>
+                            <div className="flex flex-col items-end justify-between gap-2 ml-2 shrink-0">
+                              {isEditMode && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => beginEditingTenant(tenant)}
+                                >
+                                  Edit details
+                                </Button>
+                              )}
 
-                                  {/* WhatsApp dropdown menu */}
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex-1 h-9 flex items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
-                                        title="WhatsApp & Profile options"
-                                        aria-label="WhatsApp & Profile options"
-                                      >
-                                        <MessageCircle className="h-4 w-4" />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
-                                        className="gap-2"
-                                      >
-                                        <User className="h-4 w-4" />
-                                        Open Profile
-                                      </DropdownMenuItem>
-                                      {(isPaid || isPartial) && (
+                              <div className="flex flex-col items-end gap-1.5 shrink-0 w-[80px]">
+                                {tenant.phone && tenant.phone !== "••••••••••" ? (
+                                  <div className="flex items-center gap-1.5 w-full">
+                                    {/* Call button */}
+                                    <a
+                                      href={`tel:${tenant.phone}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-1 h-9 flex items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                                      title={`Call ${tenant.name}`}
+                                      aria-label={`Call ${tenant.name}`}
+                                    >
+                                      <Phone className="h-4 w-4" />
+                                    </a>
+
+                                    {/* WhatsApp dropdown menu */}
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <button
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex-1 h-9 flex items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
+                                          title="WhatsApp & Profile options"
+                                          aria-label="WhatsApp & Profile options"
+                                        >
+                                          <MessageCircle className="h-4 w-4" />
+                                        </button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
                                         <DropdownMenuItem
-                                          onClick={() => {
-                                            const lastEntry =
-                                              payment?.paymentEntries?.[payment.paymentEntries.length - 1];
-                                            setReceiptData({
-                                              tenantName: tenant.name,
-                                              tenantPhone: tenant.phone,
-                                              paymentMode: lastEntry?.mode || "cash",
-                                              paymentDate: lastEntry?.date
-                                                ? format(new Date(lastEntry.date), "dd-MMM-yyyy")
-                                                : format(new Date(), "dd-MMM-yyyy"),
-                                              joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
-                                              forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
-                                              roomNo: room.roomNo,
-                                              sharingType: `${room.capacity} Sharing`,
-                                              amount: tenant.monthlyRent,
-                                              amountPaid: payment?.amountPaid || tenant.monthlyRent,
-                                              isFullPayment: isPaid,
-                                              remainingBalance: isPartial ? remaining : 0,
-                                              tenantId: tenant.id,
-                                            });
-                                            setTimeout(() => {
-                                              setWhatsappDialogOpen(true);
-                                            }, 100);
-                                          }}
+                                          onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
                                           className="gap-2"
                                         >
-                                          <Receipt className="h-4 w-4" />
-                                          Generate Receipt
+                                          <User className="h-4 w-4" />
+                                          Open Profile
                                         </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          const phone = tenant.phone.replace(/\D/g, "");
-                                          const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-                                          window.location.href = `https://wa.me/${formattedPhone}`;
-                                        }}
-                                        className="gap-2"
-                                      >
-                                        <MessageSquare className="h-4 w-4" />
-                                        Chat with Tenant
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
-                                        className="gap-2"
-                                      >
-                                        <ClipboardList className="h-4 w-4" />
-                                        {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
-                                      </DropdownMenuItem>
-                                      {!isPaid && (
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setReminderData({
-                                              tenantName: tenant.name,
-                                              tenantPhone: tenant.phone,
-                                              joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
-                                              forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
-                                              roomNo: room.roomNo,
-                                              sharingType: `${room.capacity} Sharing`,
-                                              amount: tenant.monthlyRent,
-                                              amountPaid: payment?.amountPaid,
-                                              balance: isPartial ? remaining : tenant.monthlyRent,
-                                            });
-                                            setTimeout(() => {
-                                              setReminderDialogOpen(true);
-                                            }, 100);
-                                          }}
-                                          className="gap-2"
-                                        >
-                                          <Bell className="h-4 w-4" />
-                                          Payment Reminder
-                                        </DropdownMenuItem>
-                                      )}
-                                      {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            // Dispatch custom event to open security deposit dialog directly
-                                            const event = new CustomEvent('openSecurityDeposit', { 
-                                              detail: { 
-                                                tenantId: tenant.id,
+                                        {(isPaid || isPartial) && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              const lastEntry =
+                                                payment?.paymentEntries?.[payment.paymentEntries.length - 1];
+                                              setReceiptData({
                                                 tenantName: tenant.name,
                                                 tenantPhone: tenant.phone,
+                                                paymentMode: lastEntry?.mode || "cash",
+                                                paymentDate: lastEntry?.date
+                                                  ? format(new Date(lastEntry.date), "dd-MMM-yyyy")
+                                                  : format(new Date(), "dd-MMM-yyyy"),
+                                                joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
+                                                forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
                                                 roomNo: room.roomNo,
-                                                roomCapacity: room.capacity
-                                              } 
-                                            });
-                                            setTimeout(() => {
-                                              window.dispatchEvent(event);
-                                            }, 100);
-                                          }}
-                                          className="gap-2"
-                                        >
-                                          <Wallet className="h-4 w-4" />
-                                          Security Deposit
-                                        </DropdownMenuItem>
-                                      )}
-                                      {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                                                sharingType: `${room.capacity} Sharing`,
+                                                amount: tenant.monthlyRent,
+                                                amountPaid: payment?.amountPaid || tenant.monthlyRent,
+                                                isFullPayment: isPaid,
+                                                remainingBalance: isPartial ? remaining : 0,
+                                                tenantId: tenant.id,
+                                              });
+                                              setTimeout(() => {
+                                                setWhatsappDialogOpen(true);
+                                              }, 100);
+                                            }}
+                                            className="gap-2"
+                                          >
+                                            <Receipt className="h-4 w-4" />
+                                            Generate Receipt
+                                          </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuItem
                                           onClick={() => {
-                                            // Dispatch custom event to open security deposit receipt dialog directly
-                                            const event = new CustomEvent('openSecurityDepositReceipt', { 
-                                              detail: { 
-                                                tenantId: tenant.id
-                                              } 
-                                            });
-                                            setTimeout(() => {
-                                              window.dispatchEvent(event);
-                                            }, 100);
+                                            const phone = tenant.phone.replace(/\D/g, "");
+                                            const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+                                            window.location.href = `https://wa.me/${formattedPhone}`;
                                           }}
                                           className="gap-2"
                                         >
-                                          <Receipt className="h-4 w-4" />
-                                          Security Deposit Receipt
+                                          <MessageSquare className="h-4 w-4" />
+                                          Chat with Tenant
                                         </DropdownMenuItem>
-                                      )}
-                                      {tenant.phone && tenant.phone !== "••••••••••" && (
                                         <DropdownMenuItem
-                                          onClick={() => {
-                                            setWelcomeData({
-                                              tenantName: tenant.name,
-                                              tenantPhone: tenant.phone,
-                                              joiningDate: tenant.startDate,
-                                              roomNo: room.roomNo,
-                                              sharingType: `${room.capacity} Sharing`,
-                                              monthlyRent: tenant.monthlyRent,
-                                              securityDeposit: undefined,
-                                            });
-                                            setTimeout(() => {
-                                              setWelcomeDialogOpen(true);
-                                            }, 100);
-                                          }}
+                                          onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
                                           className="gap-2"
                                         >
-                                          <PartyPopper className="h-4 w-4" />
-                                          Welcome
+                                          <ClipboardList className="h-4 w-4" />
+                                          {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "Open Tenant Profile" : "Complete Profile"}
                                         </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuItem
-                                        onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
-                                        className="gap-2"
-                                      >
-                                        <ClipboardList className="h-4 w-4" />
-                                        {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              ) : null}
+                                        {!isPaid && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setReminderData({
+                                                tenantName: tenant.name,
+                                                tenantPhone: tenant.phone,
+                                                joiningDate: tenant.startDate ? format(parseDateOnly(tenant.startDate), "dd-MMM-yyyy") : "",
+                                                forMonth: `${months[selectedMonth - 1].label} ${selectedYear}`,
+                                                roomNo: room.roomNo,
+                                                sharingType: `${room.capacity} Sharing`,
+                                                amount: tenant.monthlyRent,
+                                                amountPaid: payment?.amountPaid,
+                                                balance: isPartial ? remaining : tenant.monthlyRent,
+                                              });
+                                              setTimeout(() => {
+                                                setReminderDialogOpen(true);
+                                              }, 100);
+                                            }}
+                                            className="gap-2"
+                                          >
+                                            <Bell className="h-4 w-4" />
+                                            Payment Reminder
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(!tenant.securityDepositAmount || tenant.securityDepositAmount === 0) && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              const event = new CustomEvent('openSecurityDeposit', { 
+                                                detail: { 
+                                                  tenantId: tenant.id, 
+                                                  tenantName: tenant.name, 
+                                                  tenantPhone: tenant.phone, 
+                                                  roomNo: room.roomNo, 
+                                                  roomCapacity: room.capacity 
+                                                } 
+                                              });
+                                              setTimeout(() => {
+                                                window.dispatchEvent(event);
+                                              }, 100);
+                                            }}
+                                            className="gap-2"
+                                          >
+                                            <Wallet className="h-4 w-4" />
+                                            Security Deposit
+                                          </DropdownMenuItem>
+                                        )}
+                                        {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              const event = new CustomEvent('openSecurityDepositReceipt', { 
+                                                detail: { 
+                                                  tenantId: tenant.id 
+                                                } 
+                                              });
+                                              setTimeout(() => {
+                                                window.dispatchEvent(event);
+                                              }, 100);
+                                            }}
+                                            className="gap-2"
+                                          >
+                                            <Receipt className="h-4 w-4" />
+                                            Security Deposit Receipt
+                                          </DropdownMenuItem>
+                                        )}
+                                        {tenant.phone && tenant.phone !== "••••••••••" && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setWelcomeData({
+                                                tenantName: tenant.name,
+                                                tenantPhone: tenant.phone,
+                                                joiningDate: tenant.startDate,
+                                                roomNo: room.roomNo,
+                                                sharingType: `${room.capacity} Sharing`,
+                                                monthlyRent: tenant.monthlyRent,
+                                                securityDeposit: undefined,
+                                              });
+                                              setTimeout(() => {
+                                                setWelcomeDialogOpen(true);
+                                              }, 100);
+                                            }}
+                                            className="gap-2"
+                                          >
+                                            <PartyPopper className="h-4 w-4" />
+                                            Welcome
+                                          </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem
+                                          onClick={() => navigate(["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? `/tenant-profile/${tenant.id}` : `/tenant-profile/${tenant.id}/share`)}
+                                          className="gap-2"
+                                        >
+                                          <ClipboardList className="h-4 w-4" />
+                                          {["profile_completed", "pending_verification", "form_submitted", "verified"].includes(onboardingProfileMap.get(tenant.id)?.status || "") ? "View Complete Profile" : "Complete Tenant Profile"}
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                ) : null}
 
-                              {/* Payment Status Pill / Badge - Only show when NOT paid (e.g. Pending or Partial) */}
-                              {!isPaid && (
-                                <div className="w-full">
-                                  {isPartial ? (
-                                    <span className="price-badge-red w-full justify-center text-center block text-[10px] sm:text-xs py-1 font-bold rounded-lg">
-                                      ₹{remaining.toLocaleString()}
-                                    </span>
-                                  ) : (
-                                    <Badge variant="outline" className={cn("w-full justify-center text-center text-[11px] font-semibold py-1 rounded-lg block", getTenantStyles(tenant).badge)}>
-                                      {getPaymentStatusForMonth(tenant.id)}
-                                    </Badge>
-                                  )}
-                                </div>
+                                {/* Payment Status Pill / Badge */}
+                                {!isPaid && (
+                                  <div className="w-full">
+                                    {isPartial ? (
+                                      <span className="price-badge-red w-full justify-center text-center block text-[10px] sm:text-xs py-1 font-bold rounded-lg">
+                                        ₹{remaining.toLocaleString()}
+                                      </span>
+                                    ) : (
+                                      <Badge variant="outline" className={cn("w-full justify-center text-center text-[11px] font-semibold py-1 rounded-lg block", getTenantStyles(tenant).badge)}>
+                                        {getPaymentStatusForMonth(tenant.id)}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bottom Row: Monthly Rent & Payment Toggle */}
+                          <div className="flex items-center justify-between gap-4 pt-1">
+                            <div>
+                              <Label className="text-xs text-muted-foreground font-medium">Monthly Rent</Label>
+                              <div className="text-base font-bold bg-background/60 rounded-xl px-3 py-1.5 border border-border/50">
+                                ₹{tenant.monthlyRent.toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-end">
+                              {isPaid ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePaymentToggle(tenant.id, false)}
+                                  className="badge-paid-periwinkle px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-85 active:scale-95 transition-all cursor-pointer"
+                                  title="Click to undo / edit payment"
+                                >
+                                  <span>Paid</span>
+                                </button>
+                              ) : isPartial ? (
+                                <Button
+                                  onClick={() => handlePayRemaining(tenant.id)}
+                                  className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-xl font-bold text-xs px-4"
+                                >
+                                  Pay Remaining
+                                </Button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePaymentToggle(tenant.id, true)}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+                                  title="Click to mark as paid"
+                                >
+                                  <span>Mark Paid</span>
+                                </button>
                               )}
                             </div>
-                          )}
-
-                          {isEditing && (
-                            <>
-                              {!tenant.endDate && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                  onClick={() => setShiftTenant(tenant)}
-                                >
-                                  <ArrowRightLeft className="h-4 w-4 mr-1" />
-                                  Shift Room
-                                </Button>
-                              )}
-                              {tenant.endDate && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                  onClick={() => {
-                                    handleUpdateTenant(tenant.id, { endDate: undefined });
-
-                                  }}
-                                >
-                                  Reactivate
-                                </Button>
-                              )}
-                              <Button variant="destructive" size="sm" onClick={() => handleRemoveTenant(tenant.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                  if (editingValues) {
-                                    await handleUpdateTenant(tenant.id, editingValues);
-                                  }
-                                  exitEditMode();
-                                }}
-                              >
-                                Done
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {!isEditing && (
-                        <div className="flex items-center justify-between gap-4 pt-1">
-                          <div>
-                            <Label className="text-xs text-muted-foreground font-medium">Monthly Rent</Label>
-                            <div className="text-base font-bold bg-background/60 rounded-xl px-3 py-1.5 border border-border/50">
-                              ₹{tenant.monthlyRent.toLocaleString()}
-                            </div>
                           </div>
-                          <div className="flex items-center justify-end">
-                            {isPaid ? (
-                              <button
-                                type="button"
-                                onClick={() => handlePaymentToggle(tenant.id, false)}
-                                className="badge-paid-periwinkle px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-85 active:scale-95 transition-all cursor-pointer"
-                                title="Click to undo / edit payment"
-                              >
-                                <span>Paid</span>
-                              </button>
-                            ) : isPartial ? (
-                              <Button
-                                onClick={() => handlePayRemaining(tenant.id)}
-                                className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-xl font-bold text-xs px-4"
-                              >
-                                Pay Remaining
-                              </Button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handlePaymentToggle(tenant.id, true)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
-                                title="Click to mark as paid"
-                              >
-                                <span>Mark Paid</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {isEditing && (
-                        <div className="space-y-3">
-                          <div>
-                            <Label>Monthly Rent</Label>
-                            <Input
-                              type="number"
-                              value={editingValues?.monthlyRent ?? tenant.monthlyRent}
-                              readOnly={isTenantPaidForMonth(tenant.id)}
-                              className={isTenantPaidForMonth(tenant.id) ? "opacity-50 cursor-not-allowed" : ""}
-                              onChange={(e) => {
-                                const val = Math.max(0, parseInt(e.target.value) || 0);
-                                setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
-                              }}
-                              onBlur={async () => {
-                                if (editingValues) {
-                                  await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
-                                }
-                              }}
-                            />
-                          </div>
-                          {!tenant.endDate && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start h-auto min-h-10 border-orange-300 px-3 py-2.5 text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                              onClick={() => setMarkLeftTenant(tenant)}
-                            >
-                              <LogOut className="h-4 w-4 mr-2 shrink-0" />
-                              <span className="text-left leading-tight">
-                                <span className="block text-xs font-bold">Move Out</span>
-                                <span className="block text-[10px] font-normal opacity-75">Set date &amp; settlement</span>
-                              </span>
-                            </Button>
-                          )}
                         </div>
                       )}
                     </div>
@@ -1568,10 +1591,45 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                         isEditing && "ring-2 ring-primary scale-[1.02]",
                       )}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1 flex-1 min-w-0">
-                          {isEditing ? (
-                            <div className="space-y-2">
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          {/* Top Row: Header with Delete & Done buttons */}
+                          <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                              Edit Reserved Tenant
+                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleRemoveTenant(tenant.id)}
+                                title="Delete tenant"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-bold"
+                                onClick={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, editingValues);
+                                  }
+                                  exitEditMode();
+                                }}
+                              >
+                                Done
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Inputs */}
+                          <div className="space-y-2">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Tenant Name</Label>
                               <Input
                                 value={editingValues?.name ?? tenant.name}
                                 onChange={(e) => {
@@ -1583,8 +1641,12 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                   }
                                 }}
                                 placeholder="Name"
-                                className="font-medium"
+                                className="h-9 font-medium"
                               />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Phone Number</Label>
                               <Input
                                 value={editingValues?.phone ?? tenant.phone}
                                 onChange={(e) => {
@@ -1598,95 +1660,136 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 }}
                                 placeholder="Phone"
                                 maxLength={10}
+                                className="h-9"
                               />
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Joining Date</Label>
+                              <Input
+                                type="date"
+                                value={editingValues?.startDate ?? tenant.startDate}
+                                onChange={(e) => {
+                                  setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                }}
+                                onBlur={async () => {
+                                  if (editingValues) {
+                                    await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                  }
+                                }}
+                                className="h-9"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
+                              <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
+                                <div className="flex items-center gap-1.5 text-muted-foreground min-w-0 flex-1">
+                                  <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                  {tenant.paymentDueDay ? (
+                                    <span className="text-purple-700 dark:text-purple-300 font-medium truncate">
+                                      Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
+                                    </span>
+                                  ) : (
+                                    <span className="truncate">Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
+                                  )}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
+                                  onClick={() => {
+                                    setDateTargetTenant(tenant);
+                                    setDateDialogOpen(true);
+                                  }}
+                                >
+                                  {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Monthly Rent with Shift Room on its right side */}
+                            <div className="flex items-end gap-2 pt-1">
+                              <div className="flex-1 min-w-0">
+                                <Label className="text-xs text-muted-foreground font-medium">Monthly Rent</Label>
                                 <Input
-                                  type="date"
-                                  value={editingValues?.startDate ?? tenant.startDate}
+                                  type="number"
+                                  value={editingValues?.monthlyRent ?? tenant.monthlyRent}
+                                  className="h-9 font-semibold"
                                   onChange={(e) => {
-                                    setEditingValues(prev => prev ? { ...prev, startDate: e.target.value } : null);
+                                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                                    setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
                                   }}
                                   onBlur={async () => {
                                     if (editingValues) {
-                                      await handleUpdateTenant(tenant.id, { startDate: editingValues.startDate });
+                                      await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
                                     }
                                   }}
                                 />
                               </div>
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Agreed Payment Date (Optional delay)</Label>
-                                <div className="mt-1 flex items-center justify-between p-2 rounded-lg border bg-background text-xs">
-                                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                                    <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                                    {tenant.paymentDueDay ? (
-                                      <span className="text-purple-700 dark:text-purple-300 font-medium">
-                                        Agreed: {tenant.paymentDueDay}th of month {tenant.paymentDelayDays ? `(+${tenant.paymentDelayDays}d)` : ''}
-                                      </span>
-                                    ) : (
-                                      <span>Standard joining day ({parseDateOnly(tenant.startDate).getDate()}th)</span>
-                                    )}
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs border-purple-200 hover:bg-purple-50 text-purple-700 dark:text-purple-300 dark:border-purple-800 shrink-0 ml-2"
-                                    onClick={() => {
-                                      setDateTargetTenant(tenant);
-                                      setDateDialogOpen(true);
-                                    }}
-                                  >
-                                    {tenant.paymentDueDay ? "Change Date" : "Set Agreed Date"}
-                                  </Button>
-                                </div>
-                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3 text-xs text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 shrink-0 flex items-center gap-1 font-medium"
+                                onClick={() => setShiftTenant(tenant)}
+                              >
+                                <ArrowRightLeft className="h-3.5 w-3.5" />
+                                Shift Room
+                              </Button>
                             </div>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="font-semibold text-base text-amber-950 dark:text-amber-100">{tenant.name}</div>
-                                <ProfileStatusBadge
-                                  status={onboardingProfileMap.get(tenant.id)?.status}
-                                  size="sm"
-                                  showLabel={false}
-                                  onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
-                                />
-                                <Badge className="h-4 px-1.5 text-[9px] font-bold bg-amber-600 text-white border-0">
-                                  RESERVED
-                                </Badge>
-                              </div>
-                              {tenant.phone && tenant.phone !== "••••••••••" && (
-                                <div className="text-sm text-muted-foreground">{tenant.phone}</div>
-                              )}
-                              <div className="text-xs text-amber-800 dark:text-amber-300 font-medium">
-                                Joining Date: {format(parseDateOnly(tenant.startDate), "d MMM yyyy")} ({daysLeft > 0 ? `in ${daysLeft} days` : 'Today'})
-                              </div>
-                              <div className="text-xs text-muted-foreground font-semibold">
-                                Rent: ₹{tenant.monthlyRent.toLocaleString()}/month
-                              </div>
-                              {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 ? (
-                                <div className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                                  Advance Paid: ₹{tenant.securityDepositAmount.toLocaleString()}
-                                </div>
-                              ) : null}
-                            </>
-                          )}
+                          </div>
                         </div>
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="font-semibold text-base text-amber-950 dark:text-amber-100">{tenant.name}</div>
+                              <ProfileStatusBadge
+                                status={onboardingProfileMap.get(tenant.id)?.status}
+                                size="sm"
+                                showLabel={false}
+                                onClick={() => navigate(`/tenant-profile/${tenant.id}`)}
+                              />
+                              <Badge className="h-4 px-1.5 text-[9px] font-bold bg-amber-600 text-white border-0">
+                                RESERVED
+                              </Badge>
+                            </div>
+                            {tenant.phone && tenant.phone !== "••••••••••" && (
+                              <div className="text-sm text-muted-foreground">{tenant.phone}</div>
+                            )}
+                            <div className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                              Joining Date: {format(parseDateOnly(tenant.startDate), "d MMM yyyy")} ({daysLeft > 0 ? `in ${daysLeft} days` : 'Today'})
+                            </div>
+                            {tenant.paymentDueDay && (
+                              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1 mt-0.5">
+                                <CalendarClock className="h-3 w-3 shrink-0" />
+                                <span>Agreed: {tenant.paymentDueDay}th</span>
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground font-semibold">
+                              Rent: ₹{tenant.monthlyRent.toLocaleString()}/month
+                            </div>
+                            {tenant.securityDepositAmount && tenant.securityDepositAmount > 0 ? (
+                              <div className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                                Advance Paid: ₹{tenant.securityDepositAmount.toLocaleString()}
+                              </div>
+                            ) : null}
+                          </div>
 
-                        <div className="flex flex-col items-end gap-2 ml-2 shrink-0">
-                          {isEditMode && !isEditing && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => beginEditingTenant(tenant)}
-                            >
-                              Edit details
-                            </Button>
-                          )}
+                          <div className="flex flex-col items-end gap-2 ml-2 shrink-0">
+                            {isEditMode && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => beginEditingTenant(tenant)}
+                              >
+                                Edit details
+                              </Button>
+                            )}
 
-                          {!isEditing && (
                             <div className="flex items-center gap-1">
                               {canManageTenants && (
                                 <Button
@@ -1755,49 +1858,6 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                          )}
-
-                          {isEditing && (
-                            <div className="space-y-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                                onClick={() => setShiftTenant(tenant)}
-                              >
-                                <ArrowRightLeft className="h-4 w-4 mr-1" />
-                                Shift Room
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleRemoveTenant(tenant.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {isEditing && (
-                        <div className="space-y-3 pt-2 border-t">
-                          <div>
-                            <Label>Monthly Rent</Label>
-                            <Input
-                              type="number"
-                              value={editingValues?.monthlyRent ?? tenant.monthlyRent}
-                              onChange={(e) => {
-                                const val = Math.max(0, parseInt(e.target.value) || 0);
-                                setEditingValues(prev => prev ? { ...prev, monthlyRent: val } : null);
-                              }}
-                              onBlur={async () => {
-                                if (editingValues) {
-                                  await handleUpdateTenant(tenant.id, { monthlyRent: editingValues.monthlyRent });
-                                }
-                              }}
-                            />
                           </div>
                         </div>
                       )}

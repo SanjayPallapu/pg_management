@@ -474,14 +474,16 @@ export default function VoiceAgent() {
         <Button variant="ghost" size="icon" onClick={() => { stopAll(); navigate("/", { replace: true }); }} aria-label="Back to home">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-violet-500" />
-            <h1 className="text-base font-semibold">PG Hub AI</h1>
+            <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
+            <h1 className="text-base font-semibold truncate">PG Hub AI</h1>
           </div>
-          <p className="text-xs text-muted-foreground truncate">
-            {currentPG?.name ? `${currentPG.name} · ` : ""}Voice & General Assistant
-          </p>
+          {currentPG?.name ? (
+            <p className="text-xs text-muted-foreground truncate">
+              {currentPG.name}
+            </p>
+          ) : null}
         </div>
         <Button variant="ghost" size="sm" className="gap-1 px-2"
           onClick={() => { stopAll(); setLang(l => l === "en-IN" ? "te-IN" : "en-IN"); }}
@@ -555,12 +557,12 @@ export default function VoiceAgent() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.25 }}
             >
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm break-words overflow-hidden ${
                 m.role === "user"
                   ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-br-sm"
                   : "bg-muted/80 text-foreground rounded-bl-sm border border-border/30"
               }`}>
-                <div>{m.content}</div>
+                <div className="break-words">{m.content}</div>
                 {m.whatsappUrl && (
                   <div className="mt-2.5 pt-2 border-t border-border/20">
                     <Button
