@@ -14,7 +14,7 @@ import { useMonthContext } from '@/contexts/MonthContext';
 import { useRooms } from '@/hooks/useRooms';
 import { useRentCalculations } from '@/hooks/useRentCalculations';
 import { PaymentEntry } from '@/types';
-import { isTenantActiveInMonth, hasTenantLeftNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, hasTenantLeftNow, parseDateOnly } from '@/utils/dateOnly';
 import { format, getDaysInMonth, subMonths } from 'date-fns';
 import { applyStyledExport, addStyledSheet, saveAndShareExcel } from '@/utils/excelStyles';
 import { toast } from 'sonner';
@@ -394,15 +394,23 @@ export const PaymentReconciliation = ({
         p.tenantId === tenant.id && p.month === selectedMonth && p.year === selectedYear
       );
       
-      // Only count unpaid tenants
-      if (!payment || payment.paymentStatus === 'Pending') {
-        const joinDay = new Date(tenant.startDate).getDate();
-        if (!scheduleByDay[joinDay]) {
-          scheduleByDay[joinDay] = { day: joinDay, expected: 0, tenants: 0 };
-        }
-        scheduleByDay[joinDay].expected += tenant.monthlyRent;
-        scheduleByDay[joinDay].tenants++;
+      const isPaid = payment?.paymentStatus === 'Paid';
+      if (isPaid) return;
+
+      const amountPaid = payment?.amountPaid || 0;
+      const balance = Math.max(0, tenant.monthlyRent - amountPaid);
+      if (balance <= 0) return;
+
+      const joinDate = parseDateOnly(tenant.startDate);
+      const joinDay = joinDate.getDate();
+      const hasAgreedDelay = typeof tenant.paymentDueDay === 'number' && tenant.paymentDueDay >= 1 && tenant.paymentDueDay <= 31;
+      const effectiveDueDay = hasAgreedDelay ? tenant.paymentDueDay! : joinDay;
+
+      if (!scheduleByDay[effectiveDueDay]) {
+        scheduleByDay[effectiveDueDay] = { day: effectiveDueDay, expected: 0, tenants: 0 };
       }
+      scheduleByDay[effectiveDueDay].expected += balance;
+      scheduleByDay[effectiveDueDay].tenants++;
     });
 
     return Object.values(scheduleByDay).sort((a, b) => a.day - b.day);
