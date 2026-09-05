@@ -3,7 +3,7 @@ import { Room, Tenant, TenantPayment } from '@/types';
 import { isTenantActiveInMonth, hasTenantLeftNow, parseDateOnly, getISTTodayOnly } from '@/utils/dateOnly';
 import { calculateProRataRent } from '@/utils/proRataRent';
 
-export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid';
+export type PaymentCategory = 'paid' | 'partial' | 'overdue' | 'not-due' | 'advance-not-paid' | 'delayed';
 
 export interface TenantWithPayment extends Tenant {
   roomNo: string;
@@ -15,6 +15,7 @@ export interface TenantWithPayment extends Tenant {
   daysStayed?: number;
   isProRata?: boolean;
   hasLeftNow?: boolean;
+  isDelayed?: boolean;
 }
 
 interface UseRentCalculationsProps {
@@ -34,6 +35,7 @@ interface RentCalculationsResult {
   overdueTenants: TenantWithPayment[];
   advanceNotPaidTenants: TenantWithPayment[];
   notDueTenants: TenantWithPayment[];
+  delayedTenants: TenantWithPayment[];
 }
 
 export const useRentCalculations = ({
@@ -77,9 +79,23 @@ export const useRentCalculations = ({
             selectedYear > currentYear ||
             (selectedYear === currentYear && selectedMonth > currentMonth);
           
-          // Tenant's due day = joining day (1–31)
-          const tenantDueDay = joinDate.getDate();
+          // Tenant's base due day = joining day (1–31)
+          const joinDay = joinDate.getDate();
           
+          // An agreed delay is configured if paymentDueDay is set and valid
+          const hasAgreedDelay = typeof tenant.paymentDueDay === 'number' && tenant.paymentDueDay >= 1 && tenant.paymentDueDay <= 31;
+          const effectiveDueDay = hasAgreedDelay ? tenant.paymentDueDay! : joinDay;
+          
+          // Tenant is within agreed delay grace period if:
+          // 1. Owner explicitly configured an agreed payment day
+          // 2. We are in the current month
+          // 3. Today's date has NOT passed their agreed payment day yet (todayDate <= effectiveDueDay)
+          const isDelayedWithinGrace = Boolean(
+            hasAgreedDelay &&
+            isCurrentMonth &&
+            todayDate <= effectiveDueDay
+          );
+
           // Calculate pro-rata rent for mid-month leavers
           // Prefer amountPaid from DB; fallback to summing paymentEntries if amountPaid is 0/missing
           let amountPaid = payment?.amountPaid || 0;
@@ -116,10 +132,9 @@ export const useRentCalculations = ({
             paymentCategory = 'not-due';
           }
           else if (isCurrentMonth) {
-            // Current month logic: compare today's date with tenant's due day (joining day)
-            // If todayDate >= tenantDueDay, it's "advance-not-paid" (due date passed or is today)
-            // If todayDate < tenantDueDay, it's "not-due" (due date hasn't come yet)
-            if (todayDate >= tenantDueDay) {
+            if (isDelayedWithinGrace) {
+              paymentCategory = 'delayed';
+            } else if (todayDate >= effectiveDueDay) {
               paymentCategory = 'advance-not-paid';
             } else {
               paymentCategory = 'not-due';
@@ -138,6 +153,7 @@ export const useRentCalculations = ({
             daysStayed,
             isProRata,
             hasLeftNow, // Track if tenant has left
+            isDelayed: isDelayedWithinGrace,
           };
         })
     );
@@ -147,9 +163,10 @@ export const useRentCalculations = ({
 
     // Filter by category (for display lists - excludes left tenants)
     const paidTenants = eligibleTenants.filter(t => t.paymentCategory === 'paid');
-    const partialTenants = eligibleTenants.filter(t => t.paymentCategory === 'partial');
-    const overdueTenants = eligibleTenants.filter(t => t.paymentCategory === 'overdue');
-    const advanceNotPaidTenants = eligibleTenants.filter(t => t.paymentCategory === 'advance-not-paid');
+    const delayedTenants = eligibleTenants.filter(t => t.paymentCategory === 'delayed' || (t.paymentCategory === 'partial' && t.isDelayed));
+    const partialTenants = eligibleTenants.filter(t => t.paymentCategory === 'partial' && !t.isDelayed);
+    const overdueTenants = eligibleTenants.filter(t => t.paymentCategory === 'overdue' && !t.isDelayed);
+    const advanceNotPaidTenants = eligibleTenants.filter(t => t.paymentCategory === 'advance-not-paid' && !t.isDelayed);
     const notDueTenants = eligibleTenants.filter(t => t.paymentCategory === 'not-due');
 
     // Calculate totals - use allActiveTenants to INCLUDE left tenants' payments in collection totals
@@ -192,6 +209,7 @@ export const useRentCalculations = ({
       overdueTenants,
       advanceNotPaidTenants,
       notDueTenants,
+      delayedTenants,
     };
   }, [selectedMonth, selectedYear, rooms, payments]);
 };

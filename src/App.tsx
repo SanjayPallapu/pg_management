@@ -24,7 +24,6 @@ import ReferralPage from "./pages/ReferralPage";
 import TenantProfilePage from "./pages/TenantProfilePage";
 import TenantProfilesPage from "./pages/TenantProfilesPage";
 import { lazy, Suspense } from "react";
-const CityVisualization = lazy(() => import("./pages/CityVisualization"));
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
 const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
@@ -249,13 +248,6 @@ const AppContent = () => {
           <Route path="/referrals" element={
             <ProtectedRoute>
               <ReferralPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/city" element={
-            <ProtectedRoute>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                <CityVisualization />
-              </Suspense>
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />

@@ -46,9 +46,10 @@ export const TenantsByDueDaySheet = ({
         // Exclude tenants who have already left
         if (hasTenantLeftNow(tenant.endDate)) return false;
 
-        // Check if tenant's joining day matches
+        // Check if tenant's due day matches (agreed payment day or joining day)
         const joinDay = new Date(tenant.startDate).getDate();
-        if (joinDay !== day) return false;
+        const dueDay = tenant.paymentDueDay || joinDay;
+        if (dueDay !== day) return false;
 
         // Check if payment is pending or partial
         const payment = payments.find(
@@ -150,8 +151,13 @@ export const TenantsByDueDaySheet = ({
                             <div className="text-xs text-muted-foreground">
                               Room {tenant.roomNo} • {tenant.capacity} Sharing
                             </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}
+                            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
+                              <span>Joined: {format(parseDateOnly(tenant.startDate), 'dd MMM yyyy')}</span>
+                              {tenant.paymentDueDay && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-purple-200 text-purple-700 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800">
+                                  Agreed {tenant.paymentDueDay}th
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -25,6 +25,8 @@ export interface Tenant {
   securityDepositMode?: string | null;
   securityDepositCollectedBy?: string | null;
   isLocked?: boolean;
+  paymentDueDay?: number | null;
+  paymentDelayDays?: number | null;
 }
 
 export interface PaymentEntry {

@@ -77,6 +77,7 @@ import { DeletePaymentDialog } from "./DeletePaymentDialog";
 import { MarkLeftDialog } from "./MarkLeftDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
 import { ShiftRoomDialog } from "./ShiftRoomDialog";
+import { SetPaymentDateDialog } from "./SetPaymentDateDialog";
 import { ProfileStatusBadge, useOnboardingProfileMap } from "@/features/tenant-onboarding";
 import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow, isTenantUpcoming, getDaysUntilJoining, parseDateOnly } from "@/utils/dateOnly";
 import { useCollectorNames } from "@/hooks/useCollectorNames";
@@ -256,6 +257,9 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
     paymentEntries: PaymentEntry[];
   } | null>(null);
 
+  const [dateDialogOpen, setDateDialogOpen] = useState(false);
+  const [dateTargetTenant, setDateTargetTenant] = useState<Tenant | null>(null);
+
   // Handle OS back gesture to close sub-dialogs
   useBackGesture(confirmAction?.type === "delete", () => setConfirmAction(null));
   useBackGesture(!!deletePaymentTenant, () => setDeletePaymentTenant(null));
@@ -263,6 +267,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
   useBackGesture(!!payRemainingTenant, () => setPayRemainingTenant(null));
   useBackGesture(!!markLeftTenant, () => setMarkLeftTenant(null));
   useBackGesture(!!shiftTenant, () => setShiftTenant(null));
+  useBackGesture(dateDialogOpen, () => setDateDialogOpen(false));
 
   const getPricePerPerson = (capacity: number) => {
     const configuredPrice = Math.round(room.rentAmount / Math.max(1, capacity));
@@ -904,7 +909,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
 
   return (
     <>
-      <Sheet open={isOpen && !autoScrollToAdd} onOpenChange={(open) => !open && onClose()}>
+      <Sheet open={isOpen && !autoScrollToAdd} onOpenChange={(open) => !open && !dateDialogOpen && onClose()}>
       <SheetContent side="bottom" className="h-full w-full px-0 pt-0 pb-0 rounded-none border-none overflow-hidden flex flex-col [&>button]:hidden animate-in duration-300">
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
           <SheetHeader className="px-4 pt-4 pb-2 border-b bg-background shrink-0">
@@ -1107,8 +1112,32 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground">{tenant.phone}</div>
-                              <div className="text-xs text-muted-foreground">
-                                Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}
+                              <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                                <span>Joining Date: {format(new Date(tenant.startDate), "d MMM yyyy")}</span>
+                                {!tenant.endDate && (
+                                  <span className="inline-flex items-center gap-1">
+                                    •
+                                    <CalendarClock className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                    {tenant.paymentDueDay ? (
+                                      <span className="text-purple-600 dark:text-purple-400 font-medium">
+                                        Agreed: {tenant.paymentDueDay}th of month
+                                      </span>
+                                    ) : (
+                                      <span>Due: {parseDateOnly(tenant.startDate).getDate()}th</span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDateTargetTenant(tenant);
+                                        setDateDialogOpen(true);
+                                      }}
+                                      className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline font-semibold ml-0.5"
+                                    >
+                                      {tenant.paymentDueDay ? "Edit" : "+ Set date"}
+                                    </button>
+                                  </span>
+                                )}
                               </div>
                               {tenant.endDate && (
                                 <div className="text-xs text-destructive font-medium">
@@ -2435,6 +2464,13 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
         monthlyRent={deletePaymentTenant?.monthlyRent || 0}
         paymentEntries={deletePaymentTenant?.paymentEntries || []}
         onConfirmDelete={handleDeletePayments}
+      />
+
+      {/* Set Agreed Payment Date Dialog */}
+      <SetPaymentDateDialog
+        open={dateDialogOpen}
+        onOpenChange={setDateDialogOpen}
+        tenant={dateTargetTenant ? { ...dateTargetTenant, roomNo: room.roomNo } : null}
       />
 
     </>

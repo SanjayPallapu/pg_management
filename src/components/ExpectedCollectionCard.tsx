@@ -88,12 +88,13 @@ export const ExpectedCollectionCard = ({
       if (balance === 0) return;
 
       const joinDay = new Date(tenant.startDate).getDate();
-      if (!scheduleByDay[joinDay]) {
-        scheduleByDay[joinDay] = { day: joinDay, expected: 0, tenants: 0, list: [] };
+      const dueDay = tenant.paymentDueDay || joinDay;
+      if (!scheduleByDay[dueDay]) {
+        scheduleByDay[dueDay] = { day: dueDay, expected: 0, tenants: 0, list: [] };
       }
-      scheduleByDay[joinDay].expected += balance;
-      scheduleByDay[joinDay].tenants++;
-      scheduleByDay[joinDay].list.push({
+      scheduleByDay[dueDay].expected += balance;
+      scheduleByDay[dueDay].tenants++;
+      scheduleByDay[dueDay].list.push({
         id: tenant.id,
         name: tenant.name,
         phone: tenant.phone,

@@ -730,6 +730,8 @@ export type Database = {
           security_deposit_mode: string | null
           start_date: string
           updated_at: string
+          payment_due_day: number | null
+          payment_delay_days: number | null
         }
         Insert: {
           created_at?: string
@@ -747,6 +749,8 @@ export type Database = {
           security_deposit_mode?: string | null
           start_date: string
           updated_at?: string
+          payment_due_day?: number | null
+          payment_delay_days?: number | null
         }
         Update: {
           created_at?: string
@@ -764,6 +768,8 @@ export type Database = {
           security_deposit_mode?: string | null
           start_date?: string
           updated_at?: string
+          payment_due_day?: number | null
+          payment_delay_days?: number | null
         }
         Relationships: [
           {

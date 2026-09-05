@@ -126,6 +126,8 @@ export const useRooms = () => {
               ? (tenant as any).security_deposit_collected_by
               : (depositCollectedByCache[tenant.id] || null),
           isLocked: (tenant as any).is_locked || false,
+          paymentDueDay: (tenant as any).payment_due_day ?? null,
+          paymentDelayDays: (tenant as any).payment_delay_days ?? 0,
         })),
       })) as Room[];
 
@@ -191,6 +193,8 @@ export const useRooms = () => {
           monthly_rent: tenant.monthlyRent,
           payment_status: tenant.paymentStatus,
           payment_date: tenant.paymentDate,
+          payment_due_day: tenant.paymentDueDay ?? null,
+          payment_delay_days: tenant.paymentDelayDays ?? 0,
         })
         .select()
         .single();
@@ -298,6 +302,14 @@ export const useRooms = () => {
       if (updates.isLocked !== undefined) {
         updateData.is_locked = updates.isLocked;
         changes.is_locked = { old: !updates.isLocked, new: updates.isLocked };
+      }
+      if (updates.paymentDueDay !== undefined) {
+        updateData.payment_due_day = updates.paymentDueDay;
+        changes.payment_due_day = { old: null, new: updates.paymentDueDay };
+      }
+      if (updates.paymentDelayDays !== undefined) {
+        updateData.payment_delay_days = updates.paymentDelayDays;
+        changes.payment_delay_days = { old: null, new: updates.paymentDelayDays };
       }
       if ((updates as any).roomId !== undefined) {
         updateData.room_id = (updates as any).roomId;
