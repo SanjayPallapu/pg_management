@@ -1,7 +1,6 @@
 import { useState, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -445,9 +444,9 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
       >
         <SheetContent 
           side="right" 
-          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background" : "w-full sm:max-w-xl p-0 bg-background"}
+          className={isMobile ? "w-full max-w-full sm:max-w-full p-0 [&>button]:hidden bg-background overflow-hidden" : "w-full sm:max-w-xl p-0 bg-background overflow-hidden"}
         >
-          <div className="flex flex-col h-full bg-background">
+          <div className="flex flex-col h-full bg-background overflow-hidden">
             <SheetHeader className="mx-auto w-full max-w-screen-2xl px-2 pb-2 pt-4 border-b bg-background shrink-0">
               <div className="flex items-center gap-2">
                 <Button
@@ -478,7 +477,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="mx-auto flex flex-col w-full max-w-screen-2xl flex-1 overflow-y-auto px-4 py-4 pb-32 bg-background space-y-4">
+            <div className="mx-auto flex flex-col w-full max-w-screen-2xl flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 pb-32 bg-background space-y-4">
               {/* WhatsApp Reminders Hero Banner */}
               <div className="w-full overflow-hidden rounded-2xl shrink-0">
                 <img
@@ -537,7 +536,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                   </div>
                 )}
 
-                <ScrollArea className="flex-1 mt-4">
+                <div className="w-full flex-1 mt-4">
                   <TabsContent value="overdue" className="mt-0 pb-12 focus-visible:ring-0 focus-visible:outline-none">
                     <div className="space-y-2">
                       {overdueCombined.length === 0 && delayedCombined.length === 0 ? (
@@ -678,7 +677,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
                       )}
                     </div>
                   </TabsContent>
-                </ScrollArea>
+                </div>
               </Tabs>
             </div>
           </div>
@@ -777,20 +776,20 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
 
   return (
     <div 
-      className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
+      className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all w-full max-w-full overflow-hidden ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
-      <div className="flex items-stretch justify-between gap-3">
+      <div className="flex items-stretch justify-between gap-3 min-w-0">
         {/* Left Div */}
         <div className="flex-1 min-w-0 flex flex-col justify-between">
-          <div>
+          <div className="min-w-0">
             {/* Top row: Name • Room No */}
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="truncate text-base font-bold text-foreground">{tenant.name}</span>
-              <span className="text-slate-400 font-medium text-sm">•</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="truncate text-base font-bold text-foreground min-w-0">{tenant.name}</span>
+              <span className="text-slate-400 font-medium text-sm shrink-0">•</span>
               <span className="text-slate-500 dark:text-slate-400 font-medium text-sm shrink-0">R{tenant.roomNo}</span>
               {isSelected && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground">Selected</span>
+                <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold text-primary-foreground shrink-0">Selected</span>
               )}
             </div>
 
@@ -864,7 +863,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
         </div>
 
         {/* Right Div */}
-        <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right">
+        <div className="flex flex-col justify-between items-end shrink-0 ml-auto text-right w-[84px]">
           {/* Top: Action icons (WhatsApp & Phone) */}
           {tenant.phone && tenant.phone !== '••••••••••' ? (
             <div className="flex w-[84px] items-center justify-between my-2">
