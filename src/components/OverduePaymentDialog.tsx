@@ -94,8 +94,15 @@ export const OverduePaymentDialog = ({
 
   const handleProceedToPayment = () => {
     if (tenant) {
-      setPaymentAmount(tenant.remaining);
+      setPaymentAmount(Math.max(0, tenant.remaining - discount));
       setStep('payment');
+    }
+  };
+
+  const handleDiscountChange = (newDiscount: number) => {
+    setDiscount(newDiscount);
+    if (tenant) {
+      setPaymentAmount(Math.max(0, tenant.remaining - newDiscount));
     }
   };
 
@@ -181,17 +188,22 @@ export const OverduePaymentDialog = ({
               <div className="space-y-4">
                 <section className="rounded-2xl border bg-background p-4 shadow-sm">
                   <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Amount received</Label>
-                  <div className="relative mt-2"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold">₹</span><Input id="amount" type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(Number(e.target.value))} className="h-12 rounded-xl pl-8 text-lg font-bold" /></div>
+                  <div className="relative mt-2"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold">₹</span><Input id="amount" type="number" value={paymentAmount || ''} onChange={(e) => setPaymentAmount(Number(e.target.value))} className="h-12 rounded-xl pl-8 text-lg font-bold" /></div>
+                  {discount > 0 && (
+                    <p className="mt-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      ₹{discount.toLocaleString()} discount applied (₹{tenant.remaining.toLocaleString()} − ₹{discount.toLocaleString()})
+                    </p>
+                  )}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setPaymentAmount(tenant.remaining)} className="h-8 rounded-xl text-xs">Full ₹{tenant.remaining.toLocaleString()}</Button>
-                    {tenant.remaining > 1000 && <Button variant="outline" size="sm" onClick={() => setPaymentAmount(1000)} className="h-8 rounded-xl text-xs">₹1,000</Button>}
-                    {tenant.remaining > 2000 && <Button variant="outline" size="sm" onClick={() => setPaymentAmount(2000)} className="h-8 rounded-xl text-xs">₹2,000</Button>}
+                    <Button variant="outline" size="sm" onClick={() => setPaymentAmount(Math.max(0, tenant.remaining - discount))} className="h-8 rounded-xl text-xs">Full ₹{Math.max(0, tenant.remaining - discount).toLocaleString()}</Button>
+                    {Math.max(0, tenant.remaining - discount) > 1000 && <Button variant="outline" size="sm" onClick={() => setPaymentAmount(1000)} className="h-8 rounded-xl text-xs">₹1,000</Button>}
+                    {Math.max(0, tenant.remaining - discount) > 2000 && <Button variant="outline" size="sm" onClick={() => setPaymentAmount(2000)} className="h-8 rounded-xl text-xs">₹2,000</Button>}
                   </div>
                 </section>
 
                 <section className="rounded-2xl border bg-background p-4 shadow-sm">
                   <Label htmlFor="discount">Discount <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                  <Input id="discount" type="number" value={discount || ''} onChange={(e) => setDiscount(Number(e.target.value) || 0)} placeholder="₹0" className="mt-2 h-11 rounded-xl" />
+                  <Input id="discount" type="number" value={discount || ''} onChange={(e) => handleDiscountChange(Number(e.target.value) || 0)} placeholder="₹0" className="mt-2 h-11 rounded-xl" />
                   {discount > 0 && <p className="mt-2 text-xs text-muted-foreground">Final due after discount: ₹{Math.max(0, tenant.remaining - discount).toLocaleString()}</p>}
                 </section>
 
