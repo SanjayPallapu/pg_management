@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import PhoneLogin from "./pages/PhoneLogin";
@@ -89,6 +89,37 @@ const queryClient = new QueryClient({
   },
 });
 
+// Restores last visited route / tab on page refresh
+const RoutePersistence = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const didRestore = useRef(false);
+
+  useEffect(() => {
+    if (!didRestore.current) {
+      didRestore.current = true;
+      const lastRoute = localStorage.getItem('pg_last_route');
+      if (lastRoute && location.pathname === '/' && !location.search) {
+        if (!lastRoute.startsWith('/auth') && !lastRoute.startsWith('/onboarding') && lastRoute !== '/') {
+          navigate(lastRoute, { replace: true });
+          return;
+        }
+      }
+    }
+
+    if (
+      !location.pathname.startsWith('/auth') &&
+      !location.pathname.startsWith('/onboarding') &&
+      location.pathname !== '/landing'
+    ) {
+      const fullPath = location.pathname + location.search;
+      localStorage.setItem('pg_last_route', fullPath);
+    }
+  }, [location, navigate]);
+
+  return null;
+};
+
 // Inner app component that handles startup behaviours
 const AppContent = () => {
   const { isAuthenticated, user } = useAuth();
@@ -150,6 +181,7 @@ const AppContent = () => {
       <ActiveTabProvider>
       <PGSetupDraftProvider>
       <BrowserRouter>
+        <RoutePersistence />
         <Routes>
           <Route path="/auth" element={<PhoneLogin />} />
           <Route path="/auth/email" element={<Navigate to="/auth" replace />} />

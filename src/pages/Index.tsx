@@ -66,15 +66,32 @@ const Index = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [autoScrollToAdd, setAutoScrollToAdd] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { setActiveTab: setContextTab } = useActiveTab();
-  const [activeTab, setActiveTabLocal] = useState(() => searchParams.get('tab') || localStorage.getItem('pg_active_tab') || 'dashboard');
+  const [activeTab, setActiveTabLocal] = useState(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && ['dashboard', 'rooms', 'rent-sheet', 'reconciliation', 'settings'].includes(tabFromUrl)) {
+      return tabFromUrl;
+    }
+    const savedTab = localStorage.getItem('pg_active_tab');
+    if (savedTab && ['dashboard', 'rooms', 'rent-sheet', 'reconciliation', 'settings'].includes(savedTab)) {
+      return savedTab;
+    }
+    return 'dashboard';
+  });
   const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [dayGuestsOpen, setDayGuestsOpen] = useState(false);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (!tabFromUrl && activeTab !== 'dashboard') {
+      setSearchParams({ tab: activeTab }, { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (e: CustomEvent<{ hidden: boolean }>) => {
@@ -104,6 +121,7 @@ const Index = () => {
     setActiveTabLocal(tab);
     setContextTab(tab);
     localStorage.setItem('pg_active_tab', tab);
+    setSearchParams(tab === 'dashboard' ? {} : { tab }, { replace: true });
     // Close all open dialogs/sheets when switching tabs
     setIsDialogOpen(false);
     setSelectedRoom(null);
@@ -137,8 +155,10 @@ const Index = () => {
   // Sync active tab from URL when searchParams change (e.g. from BottomNav inside dialogs)
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
+    if (tabFromUrl && tabFromUrl !== activeTab && ['dashboard', 'rooms', 'rent-sheet', 'reconciliation', 'settings'].includes(tabFromUrl)) {
+      setActiveTabLocal(tabFromUrl);
+      setContextTab(tabFromUrl);
+      localStorage.setItem('pg_active_tab', tabFromUrl);
     }
   }, [searchParams]);
 

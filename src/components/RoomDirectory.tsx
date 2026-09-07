@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Room } from '@/types';
 import { useMonthContext } from '@/contexts/MonthContext';
-import { isTenantActiveInMonth, isTenantActiveNow } from '@/utils/dateOnly';
+import { isTenantActiveInMonth, isTenantActiveNow, hasTenantLeftNow } from '@/utils/dateOnly';
 import { RoomCard } from './RoomCard';
 import { Input } from '@/components/ui/input';
 import { Search, X, Plus, Settings2, ChevronDown, Snowflake, Compass } from 'lucide-react';
@@ -18,7 +18,19 @@ import { AddRoomsDialog } from './AddRoomsDialog';
 import { RoomEditDialog } from './RoomEditDialog';
 import { FloorManagementSheet, getSavedFloorName } from './FloorManagementSheet';
 import { useDayGuests } from '@/hooks/useDayGuests';
+import { useTenantPayments } from '@/hooks/useTenantPayments';
+import { cn } from '@/lib/utils';
 import roomDirectoryBanner from '@/assets/room-directory-banner.png';
+
+type Status = "paid" | "partial" | "overdue" | "not-due" | "vacant";
+
+const colorFor: Record<Status, string> = {
+  paid: "bg-paid-muted text-paid border-paid/40",
+  partial: "bg-partial-muted text-partial border-partial/40",
+  overdue: "bg-overdue-muted text-overdue border-overdue/40",
+  "not-due": "bg-not-due-muted text-not-due border-not-due/40",
+  vacant: "bg-muted text-muted-foreground border-border",
+};
 
 interface RoomDirectoryProps {
   rooms: Room[];
@@ -32,6 +44,7 @@ const getFloorName = (floor: number): string => {
 export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const { selectedMonth, selectedYear } = useMonthContext();
   const { currentPG, refreshPGs } = usePG();
+  const { payments } = useTenantPayments();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [addRoomsDialogOpen, setAddRoomsDialogOpen] = useState(false);
@@ -42,6 +55,55 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
   const [isQuickNavOpen, setIsQuickNavOpen] = useState(false);
   const [floorNamesVersion, setFloorNamesVersion] = useState(0);
   const quickNavContainerRef = useRef<HTMLDivElement>(null);
+
+  // Compute status for each room matching Rent Tab logic
+  const roomStatusMap = useMemo(() => {
+    const today = new Date();
+    const isCurrent = today.getMonth() + 1 === selectedMonth && today.getFullYear() === selectedYear;
+    const todayDate = today.getDate();
+
+    const map: Record<string, Status> = {};
+
+    rooms.forEach((room) => {
+      const active = room.tenants.filter(
+        (t) => !t.isLocked && isTenantActiveInMonth(t.startDate, t.endDate, selectedYear, selectedMonth) && !hasTenantLeftNow(t.endDate),
+      );
+
+      if (active.length === 0) {
+        map[room.roomNo] = "vacant";
+        return;
+      }
+
+      const statuses = active.map<Status>((t) => {
+        const p = payments.find((pp) => pp.tenantId === t.id && pp.month === selectedMonth && pp.year === selectedYear);
+        if (p?.paymentStatus === "Paid") return "paid";
+
+        let paid = p?.amountPaid || 0;
+        if (paid === 0 && p?.paymentEntries?.length) {
+          paid = p.paymentEntries.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+        }
+        if (paid >= t.monthlyRent && t.monthlyRent > 0) return "paid";
+        if (p?.paymentStatus === "Partial" || paid > 0) return "partial";
+
+        const isPast = selectedYear < today.getFullYear() || (selectedYear === today.getFullYear() && selectedMonth < today.getMonth() + 1);
+        if (isPast || (isCurrent && todayDate >= new Date(t.startDate).getDate())) return "overdue";
+
+        return "not-due";
+      });
+
+      if (statuses.includes("overdue")) {
+        map[room.roomNo] = "overdue";
+      } else if (statuses.includes("partial")) {
+        map[room.roomNo] = "partial";
+      } else if (statuses.includes("not-due") && !statuses.every((s) => s === "paid")) {
+        map[room.roomNo] = "not-due";
+      } else {
+        map[room.roomNo] = "paid";
+      }
+    });
+
+    return map;
+  }, [rooms, payments, selectedMonth, selectedYear]);
   
   // Handle GSAP height slide open/close for Quick Access Grid
   useEffect(() => {
@@ -70,6 +132,9 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
     const room = rooms.find(r => r.roomNo === roomNo);
     if (!room) return;
 
+    // Reset search query if active so all room cards are in the DOM
+    setSearchQuery('');
+
     // Switch AC filter if the target room would be hidden
     if (acFilter === 'ac' && !room.isAc) {
       setAcFilter('all');
@@ -77,12 +142,23 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
       setAcFilter('all');
     }
 
-    // Wait a brief tick for react rendering/filtering updates, then scroll and animate
-    setTimeout(() => {
+    // Scroll and spotlight animate
+    const tryScrollAndAnimate = (attempts = 0) => {
       const element = document.getElementById(`room-card-${roomNo}`);
       if (element) {
-        // Smooth scroll to the element
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Scroll parent container if inside an overflow-y-auto container
+        const container = element.closest('.overflow-y-auto') as HTMLElement | null;
+        if (container) {
+          const containerRect = container.getBoundingClientRect();
+          const elemRect = element.getBoundingClientRect();
+          const relativeTop = elemRect.top - containerRect.top + container.scrollTop;
+          container.scrollTo({
+            top: Math.max(0, relativeTop - 80),
+            behavior: 'smooth'
+          });
+        }
 
         // Trigger GSAP pulse/glow highlight animation
         gsap.killTweensOf(element);
@@ -104,8 +180,12 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
             clearProps: 'boxShadow,scale,borderColor'
           }
         );
+      } else if (attempts < 6) {
+        setTimeout(() => tryScrollAndAnimate(attempts + 1), 60);
       }
-    }, 120);
+    };
+
+    setTimeout(() => tryScrollAndAnimate(0), 40);
   }, [rooms, acFilter]);
   
   // Fetch all day guests once at directory level to avoid N+1 queries
@@ -244,23 +324,28 @@ export const RoomDirectory = ({ rooms, onViewDetails }: RoomDirectoryProps) => {
               {[...rooms]
                 .sort((a, b) => a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true }))
                 .map((room) => {
-                  const isOccupied = room.tenants.length > 0;
+                  const status = roomStatusMap[room.roomNo] || "vacant";
                   return (
                     <button
                       key={room.roomNo}
                       onClick={() => handleSelectRoom(room.roomNo)}
                       type="button"
-                      className={`w-full h-9 px-1 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer ${
-                        isOccupied
-                          ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-                          : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                      }`}
-                      title={`Room ${room.roomNo} • ${isOccupied ? "Occupied" : "Vacant"}`}
+                      className={cn(
+                        "w-full h-9 px-1 text-xs font-bold rounded-lg border transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer",
+                        colorFor[status]
+                      )}
+                      title={`Room ${room.roomNo} • ${status.charAt(0).toUpperCase() + status.slice(1)}`}
                     >
                       {room.roomNo}
                     </button>
                   );
                 })}
+            </div>
+            <div className="flex flex-wrap gap-2.5 mt-2 px-1 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-paid" />Paid</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-partial" />Partial</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-overdue" />Overdue</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-not-due" />Not due</span>
             </div>
           </div>
         </div>

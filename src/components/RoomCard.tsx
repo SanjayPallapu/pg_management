@@ -44,6 +44,8 @@ import { DayGuest } from "@/hooks/useDayGuests";
 import { WhatsAppReceiptDialog } from "./WhatsAppReceiptDialog";
 import { PaymentReminderDialog } from "./PaymentReminderDialog";
 import { WelcomeDialog } from "./WelcomeDialog";
+import { OverduePaymentDialog } from "./OverduePaymentDialog";
+import { PaymentEntry } from "@/types";
 import { ProfileStatusBadge, useOnboardingProfileMap } from "@/features/tenant-onboarding";
 import { format, differenceInDays } from "date-fns";
 import { useElectricityReadings, calcAcTenantShares, calculateAPCommercialBill, type ElectricityReading } from "@/hooks/useElectricityReadings";
@@ -218,7 +220,7 @@ const ACRoomPricingEditor = ({ roomId, reading, setReading }: ACRoomPricingEdito
 
 export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: RoomCardProps) => {
   const { updateTenant } = useRooms();
-  const { payments, markWhatsappSent } = useTenantPayments();
+  const { payments, markWhatsappSent, upsertPayment } = useTenantPayments();
   const { rentRecords } = useRent();
   const { selectedMonth, selectedYear } = useMonthContext();
   const { isOwner } = useAuth();
@@ -227,6 +229,19 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
   const canManageTenants = isOwner;
   const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentTargetTenant, setPaymentTargetTenant] = useState<{
+    id: string;
+    name: string;
+    phone?: string;
+    roomNo: string;
+    monthlyRent: number;
+    remaining: number;
+    amountPaid: number;
+    startDate?: string;
+    endDate?: string;
+    paymentEntries?: PaymentEntry[];
+  } | null>(null);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<{
@@ -331,6 +346,53 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
       label: "December",
     },
   ];
+
+  const handleConfirmPayment = async (data: {
+    tenantId: string;
+    amount: number;
+    date: string;
+    mode: 'upi' | 'cash';
+    month: number;
+    year: number;
+    monthlyRent: number;
+    existingPaid: number;
+    discount?: number;
+    notes?: string;
+  }) => {
+    if (!paymentTargetTenant) return;
+
+    const discount = data.discount || 0;
+    const effectiveRent = Math.max(0, data.monthlyRent - discount);
+    const totalPaid = data.existingPaid + data.amount;
+    const isFullPayment = totalPaid >= effectiveRent;
+    const existingPayment = payments.find(
+      (p) => p.tenantId === data.tenantId && p.month === data.month && p.year === data.year
+    );
+    const existingEntries = existingPayment?.paymentEntries || [];
+    const newEntry: PaymentEntry = {
+      amount: data.amount,
+      date: data.date,
+      type: isFullPayment ? 'full' : 'partial',
+      mode: data.mode,
+    };
+    const notes = [existingPayment?.notes, data.notes].filter(Boolean).join(' | ') || undefined;
+
+    await upsertPayment.mutateAsync({
+      tenantId: data.tenantId,
+      month: data.month,
+      year: data.year,
+      paymentStatus: isFullPayment ? 'Paid' : 'Partial',
+      paymentDate: data.date,
+      amount: data.monthlyRent,
+      amountPaid: isFullPayment ? effectiveRent : totalPaid,
+      paymentEntries: [...existingEntries, newEntry],
+      notes,
+      tenantName: paymentTargetTenant.name,
+      roomNo: paymentTargetTenant.roomNo,
+    });
+
+    toast.success(`Payment recorded for ${paymentTargetTenant.name}`);
+  };
 
   const isSelectedCurrentMonth = (() => {
     const now = new Date();
@@ -496,6 +558,23 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                 setTimeout(() => {
                   setWhatsappDialogOpen(true);
                 }, 100);
+              };
+              const handleNotPaidClick = () => {
+                const paid = payment?.amountPaid || 0;
+                const remaining = Math.max(0, tenant.monthlyRent - paid);
+                setPaymentTargetTenant({
+                  id: tenant.id,
+                  name: tenant.name,
+                  phone: tenant.phone,
+                  roomNo: room.roomNo,
+                  monthlyRent: tenant.monthlyRent,
+                  remaining,
+                  amountPaid: paid,
+                  startDate: tenant.startDate,
+                  endDate: tenant.endDate,
+                  paymentEntries: payment?.paymentEntries || [],
+                });
+                setPaymentDialogOpen(true);
               };
               const openWhatsAppChat = () => {
                 const phone = tenant.phone.replace(/\D/g, "");
@@ -762,19 +841,20 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
                           Paid
                         </button>
                       ) : (
-                        <Badge
-                          variant="outline"
+                        <button
+                          type="button"
+                          onClick={handleNotPaidClick}
                           className={
-                            `w-full justify-center text-center text-[11px] font-semibold px-1 py-0.5 ${
+                            `w-full justify-center text-center text-[11px] font-semibold px-1 py-0.5 rounded-full border transition-all cursor-pointer hover:opacity-85 active:scale-95 ${
                               isPartial
-                                ? "bg-partial text-partial-foreground cursor-pointer hover:opacity-80"
-                                : "bg-pending text-pending-foreground"
+                                ? "bg-partial text-partial-foreground border-partial/40"
+                                : "bg-pending text-pending-foreground border-pending/40"
                             }`
                           }
-                          onClick={isPartial ? handlePaidClick : undefined}
+                          title="Click to open Payment Details"
                         >
                           {isPartial ? "Partial" : "Not Paid"}
-                        </Badge>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1056,6 +1136,17 @@ export const RoomCard = ({ room, onViewDetails, onEditRoom, dayGuests = [] }: Ro
 
       {/* Welcome Dialog */}
       <WelcomeDialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen} welcomeData={welcomeData} />
+
+      {/* Payment Details / Overdue Payment Dialog */}
+      <OverduePaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        tenant={paymentTargetTenant}
+        month={selectedMonth}
+        year={selectedYear}
+        previousMonthPending={null}
+        onConfirmPayment={handleConfirmPayment}
+      />
 
     </Card>
   );
