@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Calendar, IndianRupee, ExternalLink, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, IndianRupee, ExternalLink, RotateCcw, Receipt } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBackGesture } from '@/hooks/useBackGesture';
 import { Room } from '@/types';
 import { format } from 'date-fns';
 import { parseDateOnly } from '@/utils/dateOnly';
 import { useSettlementCalculations } from '@/hooks/useSettlementCalculations';
+import { SettlementRefundDialog, SettlementRefundDialogInput } from '@/components/SettlementRefundDialog';
 
 interface SettlementSummarySheetProps {
   open: boolean;
@@ -23,9 +25,12 @@ export const SettlementSummarySheet = ({
 }: SettlementSummarySheetProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [voucherData, setVoucherData] = useState<SettlementRefundDialogInput | null>(null);
+  const [voucherOpen, setVoucherOpen] = useState(false);
+
   useBackGesture(open, () => onOpenChange(false));
 
-  const { leftTenants, summary, monthName, selectedYear } = useSettlementCalculations(rooms);
+  const { leftTenants, summary, monthName, selectedYear, selectedMonth } = useSettlementCalculations(rooms);
 
   const handleOpenFullPage = (tab?: string) => {
     onOpenChange(false);
@@ -214,6 +219,33 @@ export const SettlementSummarySheet = ({
                           </span>
                         )}
                       </div>
+
+                      {/* Voucher Image button */}
+                      <div className="flex justify-end pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1 text-blue-600 border-blue-500/30 hover:bg-blue-500/10"
+                          onClick={() => {
+                            setVoucherData({
+                              tenantName: tenant.name,
+                              tenantPhone: tenant.phone,
+                              roomNo: tenant.roomNo,
+                              sharingType: `${tenant.capacity} Sharing`,
+                              monthlyRent: tenant.monthlyRent,
+                              startDate: tenant.startDate,
+                              endDate: tenant.endDate,
+                              amountPaid: tenant.amountPaid,
+                              discount: tenant.discount,
+                              extra: tenant.extra,
+                            });
+                            setVoucherOpen(true);
+                          }}
+                        >
+                          <Receipt className="h-3 w-3" />
+                          Voucher Image
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -222,6 +254,14 @@ export const SettlementSummarySheet = ({
           </div>
         </div>
       </SheetContent>
+
+      <SettlementRefundDialog
+        open={voucherOpen}
+        onOpenChange={setVoucherOpen}
+        data={voucherData}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+      />
     </Sheet>
   );
 };

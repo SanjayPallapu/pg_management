@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useRooms } from '@/hooks/useRooms';
@@ -23,16 +23,15 @@ import {
   Calculator, 
   Share2, 
   RotateCcw,
-  ArrowRight,
   Receipt,
-  HelpCircle,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { parseDateOnly } from '@/utils/dateOnly';
 import { toast } from '@/hooks/use-toast';
 import { applyStyledExport, saveAndShareExcel } from '@/utils/excelStyles';
-import { useAuth } from '@/hooks/useAuth';
+import { SettlementRefundDialog, SettlementRefundDialogInput } from '@/components/SettlementRefundDialog';
 
 export default function SettlementPage() {
   const navigate = useNavigate();
@@ -53,18 +52,92 @@ export default function SettlementPage() {
     markRefundUnpaid 
   } = useSettlementCalculations(rooms);
 
+  // Voucher / Image Template Dialog state
+  const [voucherDialogData, setVoucherDialogData] = useState<SettlementRefundDialogInput | null>(null);
+  const [voucherDialogOpen, setVoucherDialogOpen] = useState(false);
+
   // Refund dialog state
   const [refundDialogTenant, setRefundDialogTenant] = useState<SettlementTenant | null>(null);
   const [refundAmountInput, setRefundAmountInput] = useState<string>('');
   const [refundPaymentMode, setRefundPaymentMode] = useState<'upi' | 'cash'>('upi');
 
+  // Days in selected month
+  const daysInMonth = useMemo(() => {
+    return new Date(selectedYear, selectedMonth, 0).getDate();
+  }, [selectedYear, selectedMonth]);
+
   // Calculator state
-  const [calcMonthlyRent, setCalcMonthlyRent] = useState<number>(8000);
+  const defaultFrom = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+  const defaultTo = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-10`;
+  const [calcFromDate, setCalcFromDate] = useState<string>(defaultFrom);
+  const [calcToDate, setCalcToDate] = useState<string>(defaultTo);
   const [calcDaysStayed, setCalcDaysStayed] = useState<number>(10);
+  const [calcRateMode, setCalcRateMode] = useState<'standard-30' | 'calendar' | 'custom'>('standard-30');
+  const [calcCustomRate, setCalcCustomRate] = useState<number>(350);
+  const [calcMonthlyRent, setCalcMonthlyRent] = useState<number>(8000);
   const [calcAmountPaid, setCalcAmountPaid] = useState<number>(8000);
   const [calcDeductions, setCalcDeductions] = useState<number>(0);
   const [calcDeductionNote, setCalcDeductionNote] = useState<string>('Electricity / Maintenance');
   const [calcTenantName, setCalcTenantName] = useState<string>('');
+
+  // Update calculator default dates if month changes
+  useEffect(() => {
+    const f = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+    const t = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-10`;
+    setCalcFromDate(f);
+    setCalcToDate(t);
+    setCalcDaysStayed(10);
+  }, [selectedMonth, selectedYear]);
+
+  // Handle Date range change in calculator
+  const handleCalcFromChange = (newFrom: string) => {
+    setCalcFromDate(newFrom);
+    try {
+      const f = parseDateOnly(newFrom);
+      const t = parseDateOnly(calcToDate);
+      if (!isNaN(f.getTime()) && !isNaN(t.getTime())) {
+        const diff = differenceInDays(t, f) + 1;
+        if (diff > 0) setCalcDaysStayed(diff);
+      }
+    } catch {}
+  };
+
+  const handleCalcToChange = (newTo: string) => {
+    setCalcToDate(newTo);
+    try {
+      const f = parseDateOnly(calcFromDate);
+      const t = parseDateOnly(newTo);
+      if (!isNaN(f.getTime()) && !isNaN(t.getTime())) {
+        const diff = differenceInDays(t, f) + 1;
+        if (diff > 0) setCalcDaysStayed(diff);
+      }
+    } catch {}
+  };
+
+  const handleCalcDaysStayedChange = (days: number) => {
+    setCalcDaysStayed(days);
+    try {
+      const f = parseDateOnly(calcFromDate);
+      if (!isNaN(f.getTime())) {
+        const nextDate = new Date(f);
+        nextDate.setDate(f.getDate() + days - 1);
+        setCalcToDate(format(nextDate, 'yyyy-MM-dd'));
+      }
+    } catch {}
+  };
+
+  // Calculator daily rate
+  const calcDailyRate = useMemo(() => {
+    if (calcRateMode === 'custom') return calcCustomRate || 0;
+    if (calcRateMode === 'calendar') return Math.round(calcMonthlyRent / daysInMonth);
+    return Math.round(calcMonthlyRent / 30);
+  }, [calcRateMode, calcCustomRate, calcMonthlyRent, daysInMonth]);
+
+  // Calculator outputs
+  const calcProRataRent = calcDailyRate * calcDaysStayed;
+  const calcTotalDue = Math.max(0, calcProRataRent + calcDeductions);
+  const calcNetRefund = Math.max(0, calcAmountPaid - calcTotalDue);
+  const calcNetPendingDue = Math.max(0, calcTotalDue - calcAmountPaid);
 
   const filteredTenants = useMemo(() => {
     return leftTenants.filter(t => {
@@ -86,12 +159,6 @@ export default function SettlementPage() {
   const refundEligibleTenants = useMemo(() => {
     return leftTenants.filter(t => t.refundDue > 0);
   }, [leftTenants]);
-
-  // Calculator computed output
-  const calcDailyRate = Math.round(calcMonthlyRent / 30);
-  const calcProRataRent = calcDailyRate * calcDaysStayed;
-  const calcNetRefund = Math.max(0, calcAmountPaid - calcProRataRent - calcDeductions);
-  const calcNetPendingDue = Math.max(0, (calcProRataRent + calcDeductions) - calcAmountPaid);
 
   const handleExportExcel = useCallback(async () => {
     if (leftTenants.length === 0) {
@@ -167,40 +234,35 @@ export default function SettlementPage() {
     setRefundDialogTenant(null);
   };
 
-  const shareRefundWhatsApp = (tenant: SettlementTenant) => {
-    const text = `*PG Hub Move-out Refund Breakdown*\n\n` +
-      `Hello ${tenant.name},\n` +
-      `Here is your move-out pro-rata calculation for Room ${tenant.roomNo} (${monthName} ${selectedYear}):\n\n` +
-      `• Monthly Rent: ₹${tenant.monthlyRent.toLocaleString()}\n` +
-      `• Days Stayed: ${tenant.daysStayed} days (₹${tenant.dailyRate}/day)\n` +
-      `• Pro-rata Rent: ₹${tenant.effectiveRent.toLocaleString()}\n` +
-      (tenant.discount > 0 ? `• Discount: -₹${tenant.discount.toLocaleString()}\n` : '') +
-      (tenant.extra > 0 ? `• Deductions / Extra: +₹${tenant.extra.toLocaleString()}\n` : '') +
-      `• Total Due: ₹${tenant.finalDue.toLocaleString()}\n` +
-      `• Amount Paid: ₹${tenant.amountPaid.toLocaleString()}\n\n` +
-      `*Net Refund Amount: ₹${tenant.refundDue.toLocaleString()}*\n` +
-      `Status: ${tenant.isRefunded ? '✅ Refund Processed' : '⏳ Refund Due'}\n\n` +
-      `Thank you for staying with us!`;
-
-    const url = `https://wa.me/${tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : ''}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+  const openTenantVoucherDialog = (tenant: SettlementTenant) => {
+    setVoucherDialogData({
+      tenantName: tenant.name,
+      tenantPhone: tenant.phone,
+      roomNo: tenant.roomNo,
+      sharingType: `${tenant.capacity} Sharing`,
+      monthlyRent: tenant.monthlyRent,
+      startDate: tenant.startDate,
+      endDate: tenant.endDate,
+      amountPaid: tenant.amountPaid,
+      discount: tenant.discount,
+      extra: tenant.extra,
+    });
+    setVoucherDialogOpen(true);
   };
 
-  const shareCalculatorWhatsApp = () => {
-    const text = `*PG Early Departure & Refund Calculation*\n\n` +
-      (calcTenantName ? `Tenant: ${calcTenantName}\n` : '') +
-      `• Monthly Rent: ₹${calcMonthlyRent.toLocaleString()}\n` +
-      `• Days Stayed: ${calcDaysStayed} days (Daily rate: ₹${calcDailyRate})\n` +
-      `• Pro-rata Rent: ₹${calcProRataRent.toLocaleString()}\n` +
-      (calcDeductions > 0 ? `• Deductions (${calcDeductionNote || 'Utilities'}): ₹${calcDeductions.toLocaleString()}\n` : '') +
-      `• Rent Paid Upfront: ₹${calcAmountPaid.toLocaleString()}\n\n` +
-      (calcNetRefund > 0 
-        ? `*👉 Net Refund to Tenant: ₹${calcNetRefund.toLocaleString()}*`
-        : `*👉 Net Pending Due from Tenant: ₹${calcNetPendingDue.toLocaleString()}*`
-      );
-
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+  const openCalculatorVoucherDialog = () => {
+    setVoucherDialogData({
+      tenantName: calcTenantName || 'Tenant',
+      roomNo: '101',
+      sharingType: 'Standard Sharing',
+      monthlyRent: calcMonthlyRent,
+      startDate: calcFromDate,
+      endDate: calcToDate,
+      amountPaid: calcAmountPaid,
+      extra: calcDeductions,
+      customDailyRate: calcRateMode === 'custom' ? calcCustomRate : undefined,
+    });
+    setVoucherDialogOpen(true);
   };
 
   const headerActions = (
@@ -336,7 +398,7 @@ export default function SettlementPage() {
                 {filteredTenants.map((tenant) => (
                   <Card key={tenant.id} className="border-border/70 shadow-xs hover:border-primary/40 transition-colors">
                     <CardContent className="p-4 space-y-3">
-                      {/* Top Header: Name, Room, Status */}
+                      {/* Top Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2">
@@ -414,7 +476,7 @@ export default function SettlementPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {tenant.phone && (
                             <a
                               href={`tel:${tenant.phone}`}
@@ -424,6 +486,19 @@ export default function SettlementPage() {
                               <Phone className="h-3.5 w-3.5" />
                             </a>
                           )}
+
+                          {/* WhatsApp Template Voucher Image Button */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1 text-xs text-blue-600 border-blue-500/30 hover:bg-blue-500/10"
+                            onClick={() => openTenantVoucherDialog(tenant)}
+                            title="Generate & Send WhatsApp Template Image"
+                          >
+                            <Receipt className="h-3.5 w-3.5" />
+                            <span>Voucher Image</span>
+                          </Button>
+
                           {tenant.refundDue > 0 && (
                             <Button
                               variant="outline"
@@ -435,16 +510,6 @@ export default function SettlementPage() {
                               {tenant.isRefunded ? 'Refunded' : 'Refund'}
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-1 text-xs text-emerald-600 hover:bg-emerald-500/10"
-                            onClick={() => shareRefundWhatsApp(tenant)}
-                            title="Share on WhatsApp"
-                          >
-                            <Share2 className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">WhatsApp</span>
-                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -526,7 +591,7 @@ export default function SettlementPage() {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
                         <span className="text-xs text-muted-foreground">
                           {tenant.isRefunded && tenant.refundPaidAt && (
                             <span>Paid on {format(new Date(tenant.refundPaidAt), 'dd MMM yyyy, h:mm a')}</span>
@@ -537,11 +602,11 @@ export default function SettlementPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 gap-1.5 text-xs text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
-                            onClick={() => shareRefundWhatsApp(tenant)}
+                            className="h-8 gap-1.5 text-xs text-blue-600 border-blue-500/30 hover:bg-blue-500/10"
+                            onClick={() => openTenantVoucherDialog(tenant)}
                           >
-                            <Share2 className="h-3.5 w-3.5" />
-                            Send Receipt
+                            <Receipt className="h-3.5 w-3.5" />
+                            Voucher Image
                           </Button>
 
                           {tenant.isRefunded ? (
@@ -573,7 +638,7 @@ export default function SettlementPage() {
           </TabsContent>
 
           {/* ═══════════════════════════════════════════════
-              TAB 3: REFUND CALCULATOR TOOL
+              TAB 3: REFUND CALCULATOR TOOL WITH DATES & CUSTOM RATE
              ═══════════════════════════════════════════════ */}
           <TabsContent value="calculator" className="space-y-4 mt-3">
             <Card className="border-border/70 shadow-xs">
@@ -581,7 +646,7 @@ export default function SettlementPage() {
                 <div>
                   <h3 className="text-base font-bold text-foreground">Interactive Refund Calculator</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Calculate exact pro-rata refunds when a tenant paid in full and vacates early.
+                    Custom day-wise rent, date range selection (From Date to To Date), and instant WhatsApp voucher image.
                   </p>
                 </div>
 
@@ -596,6 +661,117 @@ export default function SettlementPage() {
                         onChange={(e) => setCalcTenantName(e.target.value)}
                         className="h-9 mt-1 text-sm"
                       />
+                    </div>
+
+                    {/* Date Range Selection */}
+                    <div className="rounded-xl border border-border/80 bg-muted/30 p-2.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-primary" />
+                          Stay Dates (From Date to To Date)
+                        </Label>
+                        <Badge variant="secondary" className="text-xs font-bold text-primary">
+                          {calcDaysStayed} Days
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">From Date</Label>
+                          <Input
+                            type="date"
+                            value={calcFromDate}
+                            onChange={(e) => handleCalcFromChange(e.target.value)}
+                            className="h-8 text-xs mt-0.5"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">To Date</Label>
+                          <Input
+                            type="date"
+                            value={calcToDate}
+                            onChange={(e) => handleCalcToChange(e.target.value)}
+                            className="h-8 text-xs mt-0.5"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-1">
+                        <input
+                          type="range"
+                          min="1"
+                          max="31"
+                          value={calcDaysStayed}
+                          onChange={(e) => handleCalcDaysStayedChange(Number(e.target.value))}
+                          className="w-full accent-primary"
+                        />
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>1 Day</span>
+                          <span>10 Days</span>
+                          <span>20 Days</span>
+                          <span>30 Days</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Day-Wise Rent Mode & Custom Daily Rate */}
+                    <div className="rounded-xl border border-border/80 bg-muted/30 p-2.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold flex items-center gap-1">
+                          <IndianRupee className="h-3.5 w-3.5 text-primary" />
+                          Day-Wise Rent Rate
+                        </Label>
+                        <span className="text-xs font-bold text-primary">
+                          ₹{calcDailyRate} / day
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1">
+                        <Button
+                          type="button"
+                          variant={calcRateMode === 'standard-30' ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-[11px] px-1"
+                          onClick={() => setCalcRateMode('standard-30')}
+                        >
+                          Divide by 30
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={calcRateMode === 'calendar' ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-[11px] px-1"
+                          onClick={() => setCalcRateMode('calendar')}
+                        >
+                          {daysInMonth} Days
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={calcRateMode === 'custom' ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-[11px] px-1"
+                          onClick={() => setCalcRateMode('custom')}
+                        >
+                          Custom Rate
+                        </Button>
+                      </div>
+
+                      {calcRateMode === 'custom' && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <Label className="text-[11px] shrink-0">Custom Rate:</Label>
+                          <div className="relative flex-1">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">₹</span>
+                            <Input
+                              type="number"
+                              value={calcCustomRate || ''}
+                              onChange={(e) => setCalcCustomRate(Number(e.target.value) || 0)}
+                              placeholder="e.g. 350"
+                              className="h-8 pl-6 text-xs"
+                            />
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">/ day</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -616,27 +792,6 @@ export default function SettlementPage() {
                           onChange={(e) => setCalcAmountPaid(Number(e.target.value) || 0)}
                           className="h-9 mt-1 text-sm"
                         />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center">
-                        <Label className="text-xs font-medium">Days Stayed in Month</Label>
-                        <span className="text-xs font-bold text-primary">{calcDaysStayed} Days</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1"
-                        max="31"
-                        value={calcDaysStayed}
-                        onChange={(e) => setCalcDaysStayed(Number(e.target.value))}
-                        className="w-full mt-2 accent-primary"
-                      />
-                      <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                        <span>1 Day</span>
-                        <span>10 Days (Early Exit)</span>
-                        <span>20 Days</span>
-                        <span>30 Days</span>
                       </div>
                     </div>
 
@@ -663,12 +818,20 @@ export default function SettlementPage() {
                     </div>
                   </div>
 
-                  {/* Right Column: Instant Calculation Output */}
+                  {/* Right Column: Instant Calculation Output & Voucher Button */}
                   <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5 flex flex-col justify-between space-y-4">
                     <div className="space-y-2.5 text-xs">
                       <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Standard Daily Rate:</span>
-                        <span className="font-semibold">₹{calcDailyRate}/day</span>
+                        <span className="text-muted-foreground">Stay Dates:</span>
+                        <span className="font-semibold text-foreground">
+                          {calcFromDate} to {calcToDate} ({calcDaysStayed} days)
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Day-Wise Rate:</span>
+                        <span className="font-semibold">
+                          ₹{calcDailyRate}/day ({calcRateMode === 'custom' ? 'Custom' : 'Standard'})
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Pro-Rata Rent ({calcDaysStayed} days):</span>
@@ -695,7 +858,7 @@ export default function SettlementPage() {
                               ₹{calcNetRefund.toLocaleString()}
                             </div>
                             <p className="text-[11px] text-muted-foreground mt-1">
-                              Tenant vacated {30 - calcDaysStayed} days early.
+                              Calculated strictly for {calcDaysStayed} days of stay.
                             </p>
                           </div>
                         ) : (
@@ -711,13 +874,15 @@ export default function SettlementPage() {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={shareCalculatorWhatsApp}
-                      className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share Breakdown via WhatsApp
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        onClick={openCalculatorVoucherDialog}
+                        className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm h-11"
+                      >
+                        <Receipt className="h-4 w-4" />
+                        Generate & Send WhatsApp Template Image
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -784,6 +949,15 @@ export default function SettlementPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* WhatsApp Template Voucher Dialog */}
+      <SettlementRefundDialog
+        open={voucherDialogOpen}
+        onOpenChange={setVoucherDialogOpen}
+        data={voucherDialogData}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+      />
     </AppLayout>
   );
 }
