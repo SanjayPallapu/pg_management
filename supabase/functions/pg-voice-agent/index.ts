@@ -8,12 +8,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
+const EXPLABS_API_KEY = Deno.env.get("EXPLABS_API_KEY") || "";
+const EXPLABS_BASE_URL = "https://api.experientiallabs.ai/v1";
+const EXPLABS_MODEL = "gpt-6-astra";
 const WRITE_ACTIONS = new Set([
   "mark_payment",
   "update_notes",
@@ -1301,55 +1301,22 @@ Deno.serve(async (req) => {
       executeTool("get_collection_summary", {}, supabase, pgId).catch(() => null),
     ]);
 
-    let openAiKey = OPENAI_API_KEY;
-    let geminiKey = GEMINI_API_KEY;
-    let lovableKey = LOVABLE_API_KEY;
-
-    if (!openAiKey && !geminiKey && !lovableKey) {
-      try {
-        const { data: dbKey } = await auditAdmin.rpc("get_voice_agent_secret", { secret_name: "OPENAI_API_KEY" });
-        if (dbKey && typeof dbKey === "string" && !dbKey.includes("your-openai-api-key") && dbKey.startsWith("sk-")) {
-          openAiKey = dbKey;
-        }
-      } catch {}
-      try {
-        const { data: geminiDbKey } = await auditAdmin.rpc("get_voice_agent_secret", { secret_name: "GEMINI_API_KEY" });
-        if (geminiDbKey && typeof geminiDbKey === "string" && !geminiDbKey.includes("your-") && geminiDbKey.length > 10) {
-          geminiKey = geminiDbKey;
-        }
-      } catch {}
-    }
-
-    const hasAiKey = Boolean(lovableKey || openAiKey || geminiKey);
-    if (!hasAiKey) {
-      const reply = conversationalFallback(latestUserText, isTelugu, pg.name, snapshot, collection);
-      return new Response(JSON.stringify({ reply, processingMode: "fast" }), {
+    if (!EXPLABS_API_KEY) {
+      return new Response(JSON.stringify({
+        error: "EXPLABS_API_KEY is not configured. Create one in Experiential Settings → API keys and set it as a Supabase Edge Function secret.",
+      }), {
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    let aiEndpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
-    let aiHeaders: Record<string, string> = {
-      Authorization: `Bearer ${lovableKey}`,
+    // Experiential exposes the OpenAI Chat Completions API, so the tool-call
+    // contract below remains unchanged while requests are charged to this key.
+    const aiEndpoint = `${EXPLABS_BASE_URL}/chat/completions`;
+    const aiHeaders: Record<string, string> = {
+      Authorization: `Bearer ${EXPLABS_API_KEY}`,
       "Content-Type": "application/json",
     };
-    let aiModel = "google/gemini-2.5-flash";
-
-    if (!lovableKey && openAiKey) {
-      aiEndpoint = "https://api.openai.com/v1/chat/completions";
-      aiHeaders = {
-        Authorization: `Bearer ${openAiKey}`,
-        "Content-Type": "application/json",
-      };
-      aiModel = "gpt-4o-mini";
-    } else if (!lovableKey && geminiKey) {
-      aiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-      aiHeaders = {
-        Authorization: `Bearer ${geminiKey}`,
-        "Content-Type": "application/json",
-      };
-      aiModel = "gemini-2.5-flash";
-    }
 
     // ── Context Compression (Headroom-style) ──────────────────────
     // 1. Compressed system prompt (~40% fewer tokens)
@@ -1371,7 +1338,7 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: aiHeaders,
         body: JSON.stringify({
-          model: aiModel,
+          model: EXPLABS_MODEL,
           messages: convo,
           tools,
           temperature: 0.2,
@@ -1389,6 +1356,7 @@ Deno.serve(async (req) => {
       }
 
       const data = await aiResp.json();
+      console.log(`[experiential] model=${EXPLABS_MODEL} usage=${JSON.stringify(data.usage ?? {})}`);
       const msg = data.choices?.[0]?.message;
       if (!msg) break;
       convo.push(msg);

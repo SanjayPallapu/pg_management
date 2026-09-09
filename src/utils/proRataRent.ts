@@ -38,11 +38,6 @@ export const calculateProRataRent = (
     return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
   }
 
-  // Option A: If tenant already paid full monthly rent or more, skip pro-rata
-  if (amountAlreadyPaid >= monthlyRent) {
-    return { effectiveRent: monthlyRent, daysStayed: daysInMonth, isProRata: false, dailyRate: Math.round(monthlyRent / 30) };
-  }
-
   // Calculate days stayed in this month
   // Start date for calculation is either 1st of month or join date (whichever is later)
   const effectiveStart = joinDate > monthStart ? joinDate : monthStart;
@@ -60,12 +55,15 @@ export const calculateProRataRent = (
   // Pro-rata calculation: (daily rate × days stayed)
   // Using 30 as the standard month for daily rate calculation
   const dailyRate = Math.round(monthlyRent / 30);
-  const effectiveRent = dailyRate * daysStayed;
+  const calculatedEffectiveRent = dailyRate * daysStayed;
+  const effectiveRent = Math.min(calculatedEffectiveRent, monthlyRent); // Cap at monthly rent
+  const refundDue = Math.max(0, amountAlreadyPaid - effectiveRent);
 
   return { 
-    effectiveRent: Math.min(effectiveRent, monthlyRent), // Cap at monthly rent
+    effectiveRent, 
     daysStayed, 
     isProRata: true,
-    dailyRate
+    dailyRate,
+    refundDue
   };
 };

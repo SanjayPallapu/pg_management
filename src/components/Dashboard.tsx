@@ -29,6 +29,7 @@ import {
   CircleCheckBig,
   Gift,
   CalendarDays,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -61,6 +62,7 @@ import { KeyNumbersCard } from "./KeyNumbersCard";
 import { BuildingRentCard } from "./BuildingRentCard";
 import { PGRulesCard } from "./PGRulesCard";
 import { BillUnitPricesCard } from "./BillUnitPricesCard";
+import { useSettlementCalculations } from "@/hooks/useSettlementCalculations";
 import { RulesTemplate } from "./RulesTemplate";
 import { SettlementSummarySheet } from "./SettlementSummarySheet";
 import { DayGuestRevenueCard } from "./DayGuestRevenueCard";
@@ -99,6 +101,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
   const [dayGuestSheetOpen, setDayGuestSheetOpen] = useState(false);
   const [emptyBedsSheetOpen, setEmptyBedsSheetOpen] = useState(false);
   const [settlementSheetOpen, setSettlementSheetOpen] = useState(false);
+  const { summary: settlementSummary } = useSettlementCalculations(rooms);
   const [pendingTenantsDefaultTab, setPendingTenantsDefaultTab] = useState<'overdue' | 'not-yet-due' | 'previous-month'>('overdue');
   const [rulesTemplateOpen, setRulesTemplateOpen] = useState(false);
   const [rulesForTemplate, setRulesForTemplate] = useState<Array<{id: string; title: string; description: string; details: string[]; titleTe?: string; descriptionTe?: string; detailsTe?: string[]}>>([]);
@@ -559,7 +562,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         {/* ═══════════════════════════════════════════════
             KPI & Stats Section — Multi-column Grid on Tablets/Desktop
            ═══════════════════════════════════════════════ */}
-        <div className="order-3 grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        <div className="order-3 grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
           {/* Capacity & Occupancy Split Card */}
           <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-0">
@@ -616,7 +619,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
           {/* Potential Revenue Card */}
           <Card
-            className="cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent transition-all hover:shadow-md col-span-1 md:col-span-2 xl:col-span-1"
+            className="cursor-pointer border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent transition-all hover:shadow-md col-span-1"
             onClick={() => setEmptyBedsSheetOpen(true)}
           >
             <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
@@ -644,6 +647,77 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
                 <span className="text-xs text-primary font-medium flex items-center gap-1">
                   View breakdown <ChevronRight className="h-3.5 w-3.5" />
                 </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Settlement & Refund Card */}
+          <Card
+            className="cursor-pointer border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent transition-all hover:shadow-md col-span-1"
+            onClick={() => setSettlementSheetOpen(true)}
+          >
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Handshake className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-muted-foreground">Settlement & Refunds</span>
+                  </div>
+                  {settlementSummary.refundPendingCount > 0 ? (
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                      ₹{settlementSummary.pendingRefundAmount.toLocaleString()} refund due
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                      {settlementSummary.leftCount} {settlementSummary.leftCount === 1 ? "left tenant" : "left tenants"}
+                    </span>
+                  )}
+                </div>
+                <div className="mb-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xl sm:text-2xl font-bold text-paid">₹{settlementSummary.totalPaid.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">{settlementSummary.settledCount} settled</p>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-xl sm:text-2xl font-bold ${settlementSummary.totalBalance > 0 ? "text-pending" : "text-paid"}`}>
+                      ₹{settlementSummary.totalBalance.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {settlementSummary.totalBalance > 0 ? "Pending collection" : "All clear"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-2">
+                <div className="text-xs font-medium text-muted-foreground truncate mr-2">
+                  {settlementSummary.refundPendingCount > 0 ? (
+                    <span 
+                      className="text-amber-700 dark:text-amber-300 font-semibold hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/settlement?tab=refunds');
+                      }}
+                    >
+                      {settlementSummary.refundPendingCount} early exit refund
+                    </span>
+                  ) : (
+                    <span>₹{settlementSummary.totalDue.toLocaleString()} pro-rata due</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span 
+                    className="text-xs text-primary font-medium hover:underline flex items-center gap-0.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/settlement');
+                    }}
+                  >
+                    Full page
+                  </span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                    Details <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

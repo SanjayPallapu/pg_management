@@ -17,6 +17,7 @@ import PayFlowDemo from "./pages/PayFlowDemo";
 import NotFound from "./pages/NotFound";
 import DayGuest from "./pages/DayGuest";
 import LeftTenants from "./pages/LeftTenants";
+import SettlementPage from "./pages/SettlementPage";
 import Legal from "./pages/Legal";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import AppMenuPage from "./pages/AppMenuPage";
@@ -265,6 +266,16 @@ const AppContent = () => {
           <Route path="/left-tenants" element={
             <ProtectedRoute>
               <LeftTenants />
+            </ProtectedRoute>
+          } />
+          <Route path="/settlement" element={
+            <ProtectedRoute>
+              <SettlementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/refunds" element={
+            <ProtectedRoute>
+              <SettlementPage />
             </ProtectedRoute>
           } />
           <Route path="/subscription" element={

@@ -21,6 +21,7 @@ import {
   ChevronRight,
   ShieldCheck,
   UserRound,
+  Handshake,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +80,7 @@ export default function AppMenuPage() {
     { label: "Utilities", icon: <Zap className="h-5 w-5" />, action: () => navigate("/?tab=rent-sheet&openAc=true", { replace: true }) },
     { label: "Receipts", icon: <ReceiptText className="h-5 w-5" />, action: () => goToTab("rent-sheet") },
     { label: "Move-outs", icon: <UserMinus className="h-5 w-5" />, action: () => navigate("/left-tenants") },
+    { label: "Settlements & Refunds", icon: <Handshake className="h-5 w-5" />, action: () => navigate("/settlement") },
     { label: "Reports", icon: <BarChart3 className="h-5 w-5" />, action: () => goToTab("settings") },
     { label: "AI Assistant", icon: <Bot className="h-5 w-5" />, action: () => { window.dispatchEvent(new CustomEvent("trigger_voice_assistant")); navigate("/"); } },
     { label: "Subscription", icon: <Sparkles className="h-5 w-5" />, action: () => navigate("/subscription") },
