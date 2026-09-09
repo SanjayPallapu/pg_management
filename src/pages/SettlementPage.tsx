@@ -872,7 +872,7 @@ export default function SettlementPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Day-Wise Rate:</span>
                         <span className="font-semibold">
-                          ₹{calcDailyRate}/day ({calcRateMode === 'custom' ? 'Custom' : 'Standard'})
+                          ₹{calcDailyRate}/day
                         </span>
                       </div>
                       <div className="flex justify-between items-center">

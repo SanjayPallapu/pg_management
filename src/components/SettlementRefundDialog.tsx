@@ -276,7 +276,7 @@ export const SettlementRefundDialog = ({
       `Hello ${activeTenantName},\n` +
       `Here is your move-out pro-rata calculation for Room ${activeRoomNo}:\n\n` +
       `• *Stay Period:* ${fromFormatted} to ${toFormatted} (${daysStayed} days)\n` +
-      `• *Day-wise Rate:* ₹${effectiveDailyRate}/day (${rateMode === 'custom' ? 'Custom rate' : 'Standard'})\n` +
+      `• *Day-wise Rate:* ₹${effectiveDailyRate}/day\n` +
       `• *Pro-rata Stay Rent:* ₹${proRataRent.toLocaleString('en-IN')}\n` +
       `• *Rent Paid Upfront:* ₹${amountPaid.toLocaleString('en-IN')}\n` +
       (deductions > 0 ? `• *Deductions (${deductionReason}):* -₹${deductions.toLocaleString('en-IN')}\n` : '') +

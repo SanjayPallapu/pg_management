@@ -240,7 +240,7 @@ export const SettlementRefundTemplate = forwardRef<HTMLDivElement, Props>(({ dat
             }}
           >
             <span style={{ color: '#64748b' }}>
-              Day-wise Rate ({data.rateMode === 'custom' ? 'Custom Rate' : data.rateMode === 'calendar' ? 'Calendar' : '30-day Standard'}):
+              Day-wise Rate:
             </span>
             <span style={{ fontWeight: 600, color: '#0f172a' }}>
               {formatCurrency(data.dailyRate)} / day
