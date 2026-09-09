@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { usePG } from "@/contexts/PGContext";
+import { PropertyLogo } from "@/components/pg";
 import { AuditHistorySheet } from "@/components/AuditHistorySheet";
 
 type MenuItemProps = {
@@ -93,16 +94,26 @@ export default function AppMenuPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#121316]/90 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-xl items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button 
               type="button" 
               onClick={() => navigate("/", { replace: true })} 
               aria-label="Back" 
-              className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold tracking-tight text-white">PG Hub</h1>
+            <div className="flex items-center gap-2 min-w-0">
+              <PropertyLogo
+                name={currentPG?.name}
+                logoUrl={currentPG?.logoUrl}
+                size="sm"
+                className="h-8 w-8 rounded-lg shrink-0 border-white/20"
+              />
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white truncate">
+                {currentPG?.name || "PG Hub"}
+              </h1>
+            </div>
           </div>
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold text-gray-300 uppercase">
             {role || "owner"}

@@ -205,6 +205,7 @@ export const SettlementRefundDialog = ({
       isRefund,
       settlementStatus: isRefund ? 'Refund Due' : netDue === 0 ? 'Settled' : 'Pending Due',
       pgName: currentPG?.name || 'PG Management',
+      pgLogoUrl: currentPG?.logoUrl || undefined,
       pgPhone: currentPG?.phone || undefined,
       generatedDate: format(new Date(), 'dd MMM yyyy, h:mm a'),
     };
