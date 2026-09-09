@@ -70,6 +70,8 @@ export const SettlementRefundDialog = ({
   const templateRef = useRef<HTMLDivElement>(null);
 
   // Form states
+  const [tenantName, setTenantName] = useState<string>('');
+  const [roomNo, setRoomNo] = useState<string>('');
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [rateMode, setRateMode] = useState<'standard-30' | 'calendar' | 'custom'>('standard-30');
@@ -106,6 +108,8 @@ export const SettlementRefundDialog = ({
         initialTo = data.endDate.slice(0, 10);
       }
 
+      setTenantName(data.tenantName || 'Tenant');
+      setRoomNo(data.roomNo || '101');
       setFromDate(initialFrom);
       setToDate(initialTo);
       setAmountPaid(data.amountPaid ?? data.monthlyRent);
@@ -181,9 +185,9 @@ export const SettlementRefundDialog = ({
   const templateData: SettlementRefundTemplateData | null = useMemo(() => {
     if (!data) return null;
     return {
-      tenantName: data.tenantName,
+      tenantName: tenantName || data.tenantName || 'Tenant',
       tenantPhone: data.tenantPhone,
-      roomNo: data.roomNo,
+      roomNo: roomNo || data.roomNo || '101',
       sharingType: data.sharingType,
       fromDate: fromFormatted,
       toDate: toFormatted,
@@ -206,6 +210,8 @@ export const SettlementRefundDialog = ({
     };
   }, [
     data,
+    tenantName,
+    roomNo,
     fromFormatted,
     toFormatted,
     daysStayed,
@@ -227,7 +233,7 @@ export const SettlementRefundDialog = ({
     if (!templateRef.current) return;
     setIsGenerating(true);
     try {
-      const url = await generateReceiptImage(templateRef.current, `Refund_Voucher_${data?.tenantName || 'Tenant'}`);
+      const url = await generateReceiptImage(templateRef.current, `Refund_Voucher_${tenantName || data?.tenantName || 'Tenant'}`);
       setGeneratedImage(url);
       toast({ title: 'Template Image Generated', description: 'Ready to share on WhatsApp or download.' });
     } catch (err) {
@@ -242,9 +248,12 @@ export const SettlementRefundDialog = ({
     }
   };
 
+  const activeTenantName = tenantName || data?.tenantName || 'Tenant';
+  const activeRoomNo = roomNo || data?.roomNo || '101';
+
   const handleDownload = () => {
     if (!generatedImage) return;
-    downloadReceiptImage(generatedImage, `Settlement_Refund_${data?.tenantName || 'Tenant'}_Room_${data?.roomNo}.png`);
+    downloadReceiptImage(generatedImage, `Settlement_Refund_${activeTenantName}_Room_${activeRoomNo}.png`);
   };
 
   const shareToWhatsApp = async () => {
@@ -263,8 +272,8 @@ export const SettlementRefundDialog = ({
 
     const messageText =
       `*PG Hub Move-out Settlement & Refund Voucher*\n\n` +
-      `Hello ${data.tenantName},\n` +
-      `Here is your move-out pro-rata calculation for Room ${data.roomNo}:\n\n` +
+      `Hello ${activeTenantName},\n` +
+      `Here is your move-out pro-rata calculation for Room ${activeRoomNo}:\n\n` +
       `• *Stay Period:* ${fromFormatted} to ${toFormatted} (${daysStayed} days)\n` +
       `• *Day-wise Rate:* ₹${effectiveDailyRate}/day (${rateMode === 'custom' ? 'Custom rate' : 'Standard'})\n` +
       `• *Pro-rata Stay Rent:* ₹${proRataRent.toLocaleString('en-IN')}\n` +
@@ -283,12 +292,12 @@ export const SettlementRefundDialog = ({
     if (imageUrl && navigator.canShare) {
       try {
         const blob = dataURLtoBlob(imageUrl);
-        const file = new File([blob], `Settlement_${data.tenantName}_Room_${data.roomNo}.png`, { type: 'image/png' });
+        const file = new File([blob], `Settlement_${activeTenantName}_Room_${activeRoomNo}.png`, { type: 'image/png' });
 
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: `Settlement & Refund Breakdown - ${data.tenantName}`,
+            title: `Settlement & Refund Breakdown - ${activeTenantName}`,
             text: messageText,
           });
           setIsSending(false);
@@ -301,7 +310,7 @@ export const SettlementRefundDialog = ({
 
     // Fallback: download image and open WhatsApp URL
     if (imageUrl) {
-      downloadReceiptImage(imageUrl, `Settlement_${data.tenantName}_Room_${data.roomNo}.png`);
+      downloadReceiptImage(imageUrl, `Settlement_${activeTenantName}_Room_${activeRoomNo}.png`);
     }
 
     const waUrl = phone
@@ -333,6 +342,34 @@ export const SettlementRefundDialog = ({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* ── Section 0: Tenant & Room Details ── */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Tenant Name</Label>
+              <Input
+                value={tenantName}
+                placeholder="e.g. Ramesh Kumar"
+                onChange={(e) => {
+                  setTenantName(e.target.value);
+                  setGeneratedImage(null);
+                }}
+                className="h-8 text-xs mt-0.5"
+              />
+            </div>
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Room Number</Label>
+              <Input
+                value={roomNo}
+                placeholder="e.g. 101"
+                onChange={(e) => {
+                  setRoomNo(e.target.value);
+                  setGeneratedImage(null);
+                }}
+                className="h-8 text-xs mt-0.5 font-medium"
+              />
+            </div>
+          </div>
+
           {/* ── Section 1: Date Range Selection ── */}
           <div className="rounded-xl border border-border/80 bg-muted/30 p-3 space-y-2.5">
             <div className="flex items-center justify-between">

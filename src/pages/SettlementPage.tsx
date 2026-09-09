@@ -79,6 +79,7 @@ export default function SettlementPage() {
   const [calcDeductions, setCalcDeductions] = useState<number>(0);
   const [calcDeductionNote, setCalcDeductionNote] = useState<string>('Electricity / Maintenance');
   const [calcTenantName, setCalcTenantName] = useState<string>('');
+  const [calcRoomNo, setCalcRoomNo] = useState<string>('101');
 
   // Update calculator default dates if month changes
   useEffect(() => {
@@ -253,7 +254,7 @@ export default function SettlementPage() {
   const openCalculatorVoucherDialog = () => {
     setVoucherDialogData({
       tenantName: calcTenantName || 'Tenant',
-      roomNo: '101',
+      roomNo: calcRoomNo || '101',
       sharingType: 'Standard Sharing',
       monthlyRent: calcMonthlyRent,
       startDate: calcFromDate,
@@ -653,14 +654,49 @@ export default function SettlementPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Left Column: Inputs */}
                   <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs font-medium">Tenant Name (Optional)</Label>
-                      <Input
-                        placeholder="e.g. Ramesh Kumar"
-                        value={calcTenantName}
-                        onChange={(e) => setCalcTenantName(e.target.value)}
-                        className="h-9 mt-1 text-sm"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-medium">Tenant Name (Optional)</Label>
+                        <Input
+                          placeholder="e.g. Ramesh Kumar"
+                          value={calcTenantName}
+                          onChange={(e) => setCalcTenantName(e.target.value)}
+                          className="h-9 mt-1 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-medium">Room No</Label>
+                          {rooms.length > 0 && (
+                            <span className="text-[10px] text-muted-foreground">Type or pick</span>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="e.g. 101, 204B"
+                          value={calcRoomNo}
+                          list="calculator-room-options"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCalcRoomNo(val);
+                            // Auto-adjust rent if matching room exists and monthlyRent is currently default
+                            const matched = rooms.find(
+                              (r) => r.roomNo.toLowerCase() === val.trim().toLowerCase()
+                            );
+                            if (matched && matched.rentAmount) {
+                              setCalcMonthlyRent(matched.rentAmount);
+                              setCalcAmountPaid(matched.rentAmount);
+                            }
+                          }}
+                          className="h-9 mt-1 text-sm font-medium"
+                        />
+                        <datalist id="calculator-room-options">
+                          {rooms.map((r) => (
+                            <option key={r.id || r.roomNo} value={r.roomNo}>
+                              Room {r.roomNo} (₹{r.rentAmount || 0}/mo)
+                            </option>
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
 
                     {/* Date Range Selection */}
@@ -821,6 +857,12 @@ export default function SettlementPage() {
                   {/* Right Column: Instant Calculation Output & Voucher Button */}
                   <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5 flex flex-col justify-between space-y-4">
                     <div className="space-y-2.5 text-xs">
+                      <div className="flex justify-between items-center pb-1.5 border-b border-primary/15">
+                        <span className="text-muted-foreground">Tenant / Room:</span>
+                        <span className="font-semibold text-foreground">
+                          {calcTenantName ? `${calcTenantName} • ` : ''}Room {calcRoomNo || '101'}
+                        </span>
+                      </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Stay Dates:</span>
                         <span className="font-semibold text-foreground">
