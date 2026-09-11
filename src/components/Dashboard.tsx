@@ -432,9 +432,9 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
 
   return (
     <>
-      <div ref={dashboardRef} className="w-full flex flex-col gap-4 md:gap-6">
-        {/* Banner Carousel — Sticky: stays visible while quick actions + content scrolls under it */}
-        <div className="group relative order-1 w-full sticky top-[48px] sm:top-[56px] z-30 bg-background pt-1 pb-2">
+      <div ref={dashboardRef} className="w-full flex flex-col gap-2 sm:gap-3">
+        {/* Banner Carousel — Scrolls naturally with page */}
+        <div className="group relative order-1 w-full pt-0.5 pb-0.5">
           {/* Left / Right Chevron Controls for Desktop */}
           <button
             type="button"
@@ -477,7 +477,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-1.5 mt-2">
+          <div className="flex justify-center gap-1.5 mt-1">
             {banners.map((_, idx) => (
               <button
                 key={idx}
@@ -507,7 +507,7 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         {/* ═══════════════════════════════════════════════
             Quick Actions — 5 cols on mobile, 10 cols on Desktop/Tablet
            ═══════════════════════════════════════════════ */}
-        <div className="order-2 grid grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-1.5 sm:gap-2.5 lg:gap-3">
+        <div className="order-2 mt-0 grid grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-1.5 sm:gap-2.5 lg:gap-3">
           <div onClick={() => setAddTenantRoomSelectOpen(true)} className="flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl bg-card border border-border/50 shadow-sm cursor-pointer hover:bg-accent/50 hover:border-primary/30 active:scale-95 transition-all">
             <div className="bg-blue-500/10 p-2 sm:p-2.5 rounded-full"><UserPlus className="w-5 h-5 text-blue-500" /></div>
             <span className="text-[9px] sm:text-xs font-medium text-center leading-tight">Add<br/>Tenant</span>
@@ -562,60 +562,62 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
         {/* ═══════════════════════════════════════════════
             KPI & Stats Section — Multi-column Grid on Tablets/Desktop
            ═══════════════════════════════════════════════ */}
-        <div className="order-3 grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
-          {/* Capacity & Occupancy Split Card */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-0">
-              <div className="grid grid-cols-2 divide-x divide-border">
-                {/* Left: Capacity */}
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Capacity</span>
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold">
-                    {totalOccupied}/{totalCapacity}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{stats.totalRooms} rooms total</p>
+        <div className="order-3 grid gap-2 sm:gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
+          {/* 2x2 Metric Cards Grid */}
+          <div className="col-span-1 md:col-span-2 xl:col-span-2 grid grid-cols-2 gap-2 sm:gap-3">
+            {/* Capacity */}
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">Capacity</span>
+                  <Building className="h-4 w-4 text-muted-foreground shrink-0" />
                 </div>
-                {/* Right: Occupancy */}
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Occupancy</span>
-                    <UserCheck className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold">{stats.occupiedCount} rooms</div>
-                  <p className="text-xs text-muted-foreground mt-1">{occupancyPercent.toFixed(1)}% occupied</p>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold">
+                  {totalOccupied}/{totalCapacity}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate">{stats.totalRooms} rooms total</p>
+              </CardContent>
+            </Card>
 
-          {/* Rent Collected & Pending Split Card */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-0">
-              <div className="grid grid-cols-2 divide-x divide-border">
-                {/* Left: Collected */}
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Collected</span>
-                    <CreditCard className="h-4 w-4 text-paid" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground mt-1">This month</p>
+            {/* Occupancy */}
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">Occupancy</span>
+                  <UserCheck className="h-4 w-4 text-muted-foreground shrink-0" />
                 </div>
-                {/* Right: Pending */}
-                <div className="p-4 sm:p-5 cursor-pointer hover:bg-accent/50 transition-colors rounded-r-lg" onClick={openPendingTenants}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Pending</span>
-                    <AlertTriangle className="h-4 w-4 text-pending" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Tap to collect</p>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.occupiedCount} rooms</div>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate">{occupancyPercent.toFixed(1)}% occupied</p>
+              </CardContent>
+            </Card>
+
+            {/* Collected */}
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">Collected</span>
+                  <CreditCard className="h-4 w-4 text-paid shrink-0" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-paid">₹{stats.rentCollected.toLocaleString()}</div>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate">This month</p>
+              </CardContent>
+            </Card>
+
+            {/* Pending */}
+            <Card 
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:bg-accent/50 active:scale-[0.99] transition-all" 
+              onClick={openPendingTenants}
+            >
+              <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">Pending</span>
+                  <AlertTriangle className="h-4 w-4 text-pending shrink-0" />
+                </div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-pending">₹{stats.pendingRent.toLocaleString()}</div>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate">Tap to collect</p>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Potential Revenue Card */}
           <Card

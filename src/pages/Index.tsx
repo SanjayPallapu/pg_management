@@ -369,13 +369,13 @@ const Index = () => {
 
 
 
-      <div className="mx-auto w-full max-w-[1700px] px-2 sm:px-4 md:px-6 lg:px-8 py-2">
+      <div className="mx-auto w-full max-w-[1700px] px-2 sm:px-4 md:px-6 lg:px-8 pt-1 pb-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div {...swipeHandlers} {...pullToRefreshHandlers} className="touch-pan-y">
             {/* Pull to Refresh Indicator */}
             <PullToRefreshIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} progress={progress} />
 
-            <TabsContent value="dashboard" forceMount className="mt-1 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
+            <TabsContent value="dashboard" forceMount className="mt-0 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 duration-300">
               {isLoading ? (
                 <DashboardSkeleton />
               ) : (
