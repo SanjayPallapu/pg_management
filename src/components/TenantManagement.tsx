@@ -973,18 +973,18 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
           </div>
 
           {/* Room Welcome Banner Illustration */}
-          <div className="my-1 overflow-hidden rounded-2xl border border-border/50 shadow-sm">
+          <div className="!-mt-5 !mb-0 overflow-hidden rounded-2xl border border-border/50 shadow-sm">
             <img
               src="/room-welcome-banner.png"
               srcSet="/room-welcome-banner.png 1x, /room-welcome-banner@2x.png 2x"
               alt="Room & Tenant Onboarding"
-              className="w-full h-auto object-cover object-center"
+              className="w-full h-auto object-cover object-center block"
               style={{ imageRendering: '-webkit-optimize-contrast' }}
             />
           </div>
 
           {/* Current Tenants */}
-          <div className="space-y-3">
+          <div className="space-y-3 !mt-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold">Current Tenants ({activeTenants.length})</h3>
