@@ -973,7 +973,7 @@ export const TenantManagement = ({ room, isOpen, onClose, autoScrollToAdd = fals
           </div>
 
           {/* Room Welcome Banner Illustration */}
-          <div className="!-mt-5 !mb-0 overflow-hidden rounded-2xl border border-border/50 shadow-sm">
+          <div className="!mt-[1.5px] !mb-0 overflow-hidden rounded-2xl border border-border/50 shadow-sm">
             <img
               src="/room-welcome-banner.png"
               srcSet="/room-welcome-banner.png 1x, /room-welcome-banner@2x.png 2x"
