@@ -150,7 +150,45 @@ export const useRazorpay = () => {
               toast.success(syncData?.message || "Plan activated successfully!");
               onSuccess();
             } catch (syncErr) {
-              console.error("Error syncing subscription:", syncErr);
+              console.error("Error syncing subscription via edge function:", syncErr);
+
+              // If payment was completed at Razorpay, check if database was updated (e.g. by webhook)
+              if (response.razorpay_payment_id) {
+                let isNowActive = false;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                  await new Promise((r) => setTimeout(r, 1500));
+                  try {
+                    const { data: currentSub } = await supabase
+                      .from("subscriptions")
+                      .select("status")
+                      .eq("user_id", session.user.id)
+                      .maybeSingle();
+
+                    if (currentSub?.status === "active") {
+                      isNowActive = true;
+                      break;
+                    }
+                  } catch {
+                    // ignore poll errors
+                  }
+                }
+
+                if (isNowActive) {
+                  setIsLoading(false);
+                  toast.success("Payment confirmed! Your plan is active.");
+                  onSuccess();
+                  return;
+                }
+
+                // If still not reflected yet, webhook will complete it shortly
+                setIsLoading(false);
+                toast.info("Payment received! Your plan is activating in the background. Please refresh in a few seconds.", {
+                  duration: 6000,
+                });
+                onSuccess();
+                return;
+              }
+
               toast.error(syncErr instanceof Error ? syncErr.message : "Subscription authorization failed");
               setIsLoading(false);
               onFailure?.();

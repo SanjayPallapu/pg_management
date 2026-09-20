@@ -230,14 +230,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
-    const now = new Date();
-    const planKey = plan as PlanKey;
-    const planConfig = PLAN_CONFIG[planKey];
+    // adminSupabase, now, planKey, planConfig already declared above
     const checkoutMode = String(subscription?.notes?.checkout_mode || "");
     const startAtMs = Number(subscription?.start_at || 0) * 1000;
     const isTrialAuthorization = checkoutMode === "trial_authorization" &&
