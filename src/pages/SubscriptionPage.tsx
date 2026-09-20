@@ -64,6 +64,10 @@ export default function SubscriptionPage() {
   const activePlanKeyOnSubscription = isSubscribedAndActive ? subscription?.billingCycle : undefined;
 
   const handleBack = () => {
+    if (accessLocked) {
+      signOut();
+      return;
+    }
     if (window.history.length > 1) {
       navigate(-1);
     } else {
@@ -176,7 +180,7 @@ export default function SubscriptionPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleBack}
+                onClick={() => signOut()}
                 className="text-white hover:bg-white/15 hover:text-white text-xs font-bold rounded-xl h-7 px-2"
               >
                 Sign Out
