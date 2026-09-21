@@ -73,7 +73,7 @@ export const TenantRentCard = ({
     : '';
 
   return (
-    <div className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
+    <div className={cn("transition-all duration-200 shadow-sm p-2 rounded-2xl", cardDesignClass)}>
       <div className="flex items-stretch justify-between gap-3">
         {/* Left Div */}
         <div className="flex-1 min-w-0 flex flex-col justify-between">

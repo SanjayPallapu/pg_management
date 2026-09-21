@@ -776,7 +776,7 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
 
   return (
     <div 
-      className={`rounded-2xl border border-l-[5px] p-4 shadow-sm transition-all w-full max-w-full overflow-hidden ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
+      className={`rounded-2xl border border-l-[5px] p-2 shadow-sm transition-all w-full max-w-full overflow-hidden ${cardColorStyle} ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
       onClick={() => onToggle(tenant.id)}
     >
       <div className="flex items-stretch justify-between gap-3 min-w-0">

@@ -346,7 +346,7 @@ All colors MUST be HSL.
   border: 1px solid #FCE4C8;
   border-left: 5px solid #FF8A00;
   border-radius: 1.25rem;
-  padding: 1rem;
+  padding: 0.5rem;
   transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 .tenant-card-pending:active {
@@ -364,7 +364,7 @@ All colors MUST be HSL.
   border: 1px solid #C4F0D5;
   border-left: 5px solid #00C853;
   border-radius: 1.25rem;
-  padding: 1rem;
+  padding: 0.5rem;
   transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 .tenant-card-paid:active {

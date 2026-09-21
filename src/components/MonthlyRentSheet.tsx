@@ -1968,7 +1968,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
               const displayAmount = isPaid ? (tenant.payment.amountPaid || tenant.monthlyRent) : remaining;
 
               return (
-                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-4 rounded-2xl", cardDesignClass)}>
+                <div key={tenant.id} data-room-no={tenant.roomNo} className={cn("transition-all duration-200 shadow-sm p-2 rounded-2xl", cardDesignClass)}>
                   <div className="flex items-stretch justify-between gap-3">
                     {/* Left Div */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between">

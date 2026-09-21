@@ -173,7 +173,7 @@ export const PaidTenantsCard = ({ rooms, open, onClose }: PaidTenantsCardProps) 
   };
 
   const TenantRow = ({ tenant, period }: { tenant: PaidTenantRow; period: { month: number; year: number } }) => (
-    <div className="tenant-card-paid shadow-sm p-4 rounded-2xl">
+    <div className="tenant-card-paid shadow-sm p-2 rounded-2xl">
       <div className="flex items-stretch justify-between gap-3">
         {/* Left Div */}
         <div className="flex-1 min-w-0 flex flex-col justify-between">
