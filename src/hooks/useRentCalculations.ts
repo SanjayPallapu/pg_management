@@ -230,9 +230,10 @@ export const useRentCalculations = ({
     const rentCollected = unlockedPaidAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0) + 
                           unlockedPartialAll.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
     
-    // Pending rent only counts non-left tenants and excludes not-due tenants
+    // Pending rent only counts non-left tenants and excludes not-due and agreed delayed tenants
+    // Only adds agreed delayed tenants once their agreed day arrives / passes
     const totalPending = unlockedTenants
-      .filter(t => t.paymentCategory !== 'paid' && t.paymentCategory !== 'not-due')
+      .filter(t => t.paymentCategory !== 'paid' && t.paymentCategory !== 'not-due' && t.paymentCategory !== 'delayed' && !t.isDelayed)
       .reduce((sum, t) => {
         const payment = payments.find(p => p.tenantId === t.id && p.month === selectedMonth && p.year === selectedYear);
         const discount = payment?.notes ? (payment.notes.match(/Discount:\s*₹?(\d+)/i) ? parseInt(payment.notes.match(/Discount:\s*₹?(\d+)/i)![1], 10) : 0) : 0;
