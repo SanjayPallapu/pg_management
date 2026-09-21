@@ -477,7 +477,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
               </div>
             </SheetHeader>
 
-            <div className="mx-auto flex flex-col w-full max-w-screen-2xl flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 pb-32 bg-background space-y-4">
+            <div className="mx-auto flex flex-col w-full max-w-screen-2xl flex-1 overflow-y-auto overflow-x-hidden px-2 py-2.5 pb-32 bg-background space-y-3">
               {/* WhatsApp Reminders Hero Banner */}
               <div className="w-full overflow-hidden rounded-2xl shrink-0">
                 <img
@@ -523,7 +523,7 @@ export const PendingTenantsCard = forwardRef<PendingTenantsCardRef, PendingTenan
 
                 {/* Selected Summary */}
                 {selectedTenants.size > 0 && (
-                  <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30 shrink-0">
+                  <div className="mt-3 p-2 rounded-lg bg-primary/10 border border-primary/30 shrink-0">
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="font-semibold">{selectedTenants.size} tenant(s) selected</span>
@@ -810,11 +810,11 @@ const TenantSelectItem = ({ tenant, isSelected, onToggle, categoryColor, onRemin
                 </span>
                 {tenant.isDelayed ? (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    Due in {Math.max(0, tenant.paymentDueDay - todayDate)}d
+                    Due in {tenant.daysUntilDue !== undefined ? Math.max(0, tenant.daysUntilDue) : Math.max(0, tenant.paymentDueDay - todayDate)}d
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                    Passed by {Math.max(0, todayDate - tenant.paymentDueDay)}d
+                    Passed by {tenant.daysUntilDue !== undefined ? Math.abs(tenant.daysUntilDue) : Math.max(0, todayDate - tenant.paymentDueDay)}d
                   </span>
                 )}
                 <button

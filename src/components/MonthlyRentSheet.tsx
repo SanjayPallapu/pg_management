@@ -482,6 +482,30 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
       const isFutureMonth =
         selectedYear > currentYear || (selectedYear === currentYear && selectedMonth > currentMonth);
       const tenantDueDay = joinDate.getDate();
+      const hasAgreedDelay = typeof tenant.paymentDueDay === "number" && tenant.paymentDueDay >= 1 && tenant.paymentDueDay <= 31;
+      const daysInSelectedMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+      const actualCycleStartDay = Math.min(tenantDueDay, daysInSelectedMonth);
+      const cycleStartDate = new Date(selectedYear, selectedMonth - 1, actualCycleStartDay);
+      cycleStartDate.setHours(0, 0, 0, 0);
+
+      let agreedDueDate: Date | null = null;
+      if (hasAgreedDelay) {
+        if (tenant.paymentDueDay! >= tenantDueDay) {
+          const actualDueDay = Math.min(tenant.paymentDueDay!, daysInSelectedMonth);
+          agreedDueDate = new Date(selectedYear, selectedMonth - 1, actualDueDay);
+        } else {
+          let nextYear = selectedYear;
+          let nextMonth = selectedMonth + 1;
+          if (nextMonth > 12) {
+            nextMonth = 1;
+            nextYear += 1;
+          }
+          const daysInNextMonth = new Date(nextYear, nextMonth, 0).getDate();
+          const actualDueDay = Math.min(tenant.paymentDueDay!, daysInNextMonth);
+          agreedDueDate = new Date(nextYear, nextMonth - 1, actualDueDay);
+        }
+        agreedDueDate.setHours(0, 0, 0, 0);
+      }
 
       // Calculate pro-rata rent for mid-month leavers
       const amountPaid = payment?.amountPaid || 0;
@@ -501,12 +525,22 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         paymentCategory = "paid";
       } else if (payment?.paymentStatus === "Partial" || (amountPaid > 0 && amountPaid < targetRent)) {
         paymentCategory = "partial";
-      } else if (isPastMonth) {
-        paymentCategory = "overdue";
       } else if (isFutureMonth) {
         paymentCategory = "not-due";
+      } else if (hasAgreedDelay && agreedDueDate) {
+        if (today.getTime() < cycleStartDate.getTime()) {
+          paymentCategory = "not-due";
+        } else if (today.getTime() <= agreedDueDate.getTime()) {
+          paymentCategory = "not-due";
+        } else if (isPastMonth) {
+          paymentCategory = "overdue";
+        } else {
+          paymentCategory = "advance-not-paid";
+        }
+      } else if (isPastMonth) {
+        paymentCategory = "overdue";
       } else {
-        if (todayDate < tenantDueDay) {
+        if (today.getTime() < cycleStartDate.getTime()) {
           paymentCategory = "not-due";
         } else {
           paymentCategory = "advance-not-paid";

@@ -639,11 +639,11 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
                 </div>
               </div>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
+            <div className="flex-1 overflow-y-auto px-2 py-2.5 bg-background">
 
           <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(100vh-100px)] mt-4"}>
             <div className="space-y-3">
-              <div className="p-3 bg-amber-500/10 rounded-lg">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
                 <div className="text-xs text-muted-foreground">Total Pending</div>
                 <div className="text-lg font-semibold text-amber-600">₹{totalOverdue.toLocaleString()}</div>
                 <div className="text-xs text-muted-foreground mt-1">{stillPendingTenants.length} tenant(s)</div>
@@ -656,7 +656,7 @@ export const PreviousMonthOverdueCard = ({ defaultOpen = false, onClose, showSum
                 return (
                   <div 
                     key={tenant.id} 
-                    className={`p-4 rounded-xl border ${tenant.hasLeft ? 'bg-destructive/10 border-destructive/30' : 'bg-amber-500/10 border-amber-500/30'}`}
+                    className={`p-2 rounded-xl border ${tenant.hasLeft ? 'bg-destructive/10 border-destructive/30' : 'bg-amber-500/10 border-amber-500/30'}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
