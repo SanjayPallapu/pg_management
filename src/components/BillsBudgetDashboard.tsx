@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useMonthContext } from "@/contexts/MonthContext";
@@ -165,8 +166,8 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
     useExpenseEntries(selectedMonth, selectedYear);
   const { amount: budgetAmount, setBudget } = useMonthlyBudget(selectedMonth, selectedYear);
 
-  // Top Tabs: Bills (default) vs Analysis
-  const [activeTab, setActiveTab] = useState<"bills" | "analysis">("bills");
+  // Analytics sheet open state (accessed via button at top right)
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,13 +180,23 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
     title: string;
     category: ExpenseCategory;
     subcategory?: string | null;
-    entries: ExpenseEntry[];
     defaultLabel?: string;
+    isAll?: boolean;
   } | null>(null);
 
   useBackGesture(Boolean(quickAdd), () => setQuickAdd(null));
   useBackGesture(budgetDialogOpen, () => setBudgetDialogOpen(false));
   useBackGesture(Boolean(sheetState), () => setSheetState(null));
+  useBackGesture(analyticsOpen, () => setAnalyticsOpen(false));
+
+  // Dynamically derive entries for the currently open sheet so deletions and updates reflect immediately
+  const currentSheetEntries = useMemo(() => {
+    if (!sheetState) return [];
+    if (sheetState.isAll) return entries;
+    const preset = PRESET_BILL_ITEMS.find((p) => p.label === sheetState.title);
+    if (preset) return entries.filter(preset.matchFn);
+    return entries.filter((e) => e.label === sheetState.title);
+  }, [sheetState, entries]);
 
   const monthLabel = format(new Date(selectedYear, selectedMonth - 1, 1), "MMMM yyyy");
   const hasBudget = budgetAmount > 0;
@@ -249,8 +260,8 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
       title: card.label,
       category: card.category,
       subcategory: card.isCustom ? null : card.label,
-      entries: card.matchingEntries,
       defaultLabel: card.label,
+      isAll: false,
     });
   };
 
@@ -259,8 +270,8 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
     setSheetState({
       title: "All Bills — This Month",
       category: "other",
-      entries,
       defaultLabel: "Bill",
+      isAll: true,
     });
   };
 
@@ -309,45 +320,23 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
               <p className="text-[11px] font-semibold text-muted-foreground leading-none">{monthLabel}</p>
             </div>
           </div>
-          <MonthYearPicker />
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              className="flex h-10 items-center gap-1.5 rounded-2xl border border-[#e0e2ea] bg-white px-3 text-xs font-black text-[#101426] shadow-2xs hover:bg-[#fafaff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4936ef] dark:border-border dark:bg-card dark:text-white dark:hover:bg-white/5"
+              onClick={() => setAnalyticsOpen(true)}
+              aria-label="Spending Analytics"
+              title="Spending Analytics"
+            >
+              <BarChart3 className="h-4 w-4 text-[#4936ef] dark:text-[#b6a2ff]" />
+              <span>Analysis</span>
+            </button>
+            <MonthYearPicker />
+          </div>
         </header>
 
-        {/* Section Tabs: Bills (Default) vs Analysis */}
-        <div className="mt-2 mb-3 grid grid-cols-2 rounded-2xl border border-[#e4e6ee] bg-muted/40 p-1 dark:border-border dark:bg-muted/20">
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-black transition-all",
-              activeTab === "bills"
-                ? "bg-white text-[#101426] shadow-xs dark:bg-card dark:text-white"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setActiveTab("bills")}
-          >
-            <Receipt className="h-4 w-4 text-[#4936ef] dark:text-[#b6a2ff]" />
-            <span>Bills</span>
-            <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground">
-              {entries.length}
-            </span>
-          </button>
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-black transition-all",
-              activeTab === "analysis"
-                ? "bg-white text-[#101426] shadow-xs dark:bg-card dark:text-white"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setActiveTab("analysis")}
-          >
-            <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Analysis</span>
-          </button>
-        </div>
-
-        {/* SECTION 1: BILLS (EXACT STYLE OF USER SCREENSHOT) */}
-        {activeTab === "bills" && (
-          <div className="space-y-3">
+        {/* Bills Section */}
+        <div className="mt-2 space-y-3">
             {/* Top Budget / Total Spent Hero */}
             <div className="flex items-center justify-between rounded-[22px] border border-[#e4e6ee] bg-white p-4 shadow-[0_12px_28px_-26px_rgba(25,30,58,.5)] dark:border-border dark:bg-card">
               <div>
@@ -472,15 +461,37 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
               <Plus className="mr-2 h-5 w-5" /> Add custom utility bill
             </button>
           </div>
-        )}
+      </div>
 
-        {/* SECTION 2: ANALYSIS */}
-        {activeTab === "analysis" && (
-          <div className="rounded-2xl border border-[#e4e6ee] bg-white p-3 shadow-xs dark:border-border dark:bg-card sm:p-4">
+      {/* Spending Analysis Sheet */}
+      <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+        <SheetContent
+          side="right"
+          className="!w-screen !max-w-none !sm:max-w-none inset-0 flex h-[100dvh] min-h-[100dvh] flex-col border-0 bg-[#f8f9fd] p-0 shadow-none dark:bg-background [&>button]:hidden"
+          onInteractOutside={(event) => event.preventDefault()}
+        >
+          <SheetHeader className="sticky top-0 z-10 shrink-0 border-b bg-white px-3 py-3 dark:bg-card sm:px-4">
+            <div className="flex min-h-11 items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 shrink-0 rounded-full"
+                onClick={() => setAnalyticsOpen(false)}
+                aria-label="Close analytics"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="text-lg font-black">Spending Analysis</SheetTitle>
+                <p className="text-xs font-semibold text-muted-foreground">{monthLabel}</p>
+              </div>
+            </div>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-3 sm:p-5">
             <BillsAnalytics />
           </div>
-        )}
-      </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Ledger Sheet when user taps any bill card or "All entries" */}
       {sheetState && (
@@ -491,7 +502,7 @@ export const BillsBudgetDashboard = ({ onClose }: Props) => {
           category={sheetState.category}
           subcategory={sheetState.subcategory ?? null}
           defaultLabel={sheetState.defaultLabel}
-          entries={sheetState.entries}
+          entries={currentSheetEntries}
           onSave={(data) => addEntry.mutate({ ...data, month: selectedMonth, year: selectedYear })}
           onUpdate={(id, patch) => updateEntry.mutate({ id, ...patch })}
           onDelete={(id) => deleteEntry.mutate(id)}

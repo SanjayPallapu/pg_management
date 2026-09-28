@@ -39,6 +39,8 @@ export const BillsEntriesSheet = ({
 }: Props) => {
   const [editing, setEditing] = useState<ExpenseEntry | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ExpenseEntry | null>(null);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [manageMode, setManageMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [otherFilter, setOtherFilter] = useState<(typeof OTHER_FILTERS)[number]>("All");
@@ -50,6 +52,7 @@ export const BillsEntriesSheet = ({
     const query = searchQuery.trim();
     return entries.filter(
       (e) => {
+        if (deletedIds.has(e.id)) return false;
         const matchesKind = category !== "other" || otherFilter === "All" || (
           otherFilter === "Custom"
             ? !OTHER_FILTERS.slice(1, -1).some((label) => label.toLowerCase() === e.label.toLowerCase())
@@ -60,9 +63,9 @@ export const BillsEntriesSheet = ({
         return matchesKind && matchesQuery;
       }
     );
-  }, [category, entries, otherFilter, searchQuery]);
+  }, [category, entries, otherFilter, searchQuery, deletedIds]);
 
-  const totalAll = useMemo(() => entries.reduce((s, e) => s + e.amount, 0), [entries]);
+  const totalAll = useMemo(() => entries.filter((e) => !deletedIds.has(e.id)).reduce((s, e) => s + e.amount, 0), [entries, deletedIds]);
   const totalFiltered = useMemo(() => filteredEntries.reduce((s, e) => s + e.amount, 0), [filteredEntries]);
   const selectedEntries = useMemo(() => entries.filter((e) => selectedIds.has(e.id)), [entries, selectedIds]);
   const totalSelected = useMemo(() => selectedEntries.reduce((s, e) => s + e.amount, 0), [selectedEntries]);
@@ -82,6 +85,24 @@ export const BillsEntriesSheet = ({
     } else {
       setSelectedIds(new Set(filteredEntries.map((e) => e.id)));
     }
+  };
+
+  const handleDeleteSingle = (id: string) => {
+    setDeletedIds((prev) => new Set(prev).add(id));
+    onDelete(id);
+    setConfirmDelete(null);
+  };
+
+  const handleDeleteSelected = () => {
+    const toDelete = Array.from(selectedIds);
+    setDeletedIds((prev) => {
+      const next = new Set(prev);
+      toDelete.forEach((id) => next.add(id));
+      return next;
+    });
+    toDelete.forEach((id) => onDelete(id));
+    setSelectedIds(new Set());
+    setConfirmDeleteSelected(false);
   };
 
   const initial: QuickExpenseInitial | null = editing
@@ -162,6 +183,18 @@ export const BillsEntriesSheet = ({
                     )}
                     {selectedIds.size === filteredEntries.length && filteredEntries.length > 0 ? "Clear" : "Select all"}
                   </Button>
+                  {manageMode && selectedIds.size > 0 && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="h-11 gap-1 rounded-xl text-xs font-bold shadow-xs"
+                      onClick={() => setConfirmDeleteSelected(true)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete ({selectedIds.size})
+                    </Button>
+                  )}
                   <button
                     type="button"
                     className={cn(
@@ -251,15 +284,36 @@ export const BillsEntriesSheet = ({
             className="sticky bottom-0 border-t bg-white px-3 pt-3 dark:bg-card sm:px-4"
             style={{ paddingBottom: "calc(90px + env(safe-area-inset-bottom, 0px))" }}
           >
-            <Button
-              className="h-12 w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95 shadow-md"
-              onClick={() => onAddPayment(selectedIds.size > 0 ? {
-                amount: totalSelected,
-                label: selectedEntries.length === 1 ? selectedEntries[0].label : `${selectedEntries.length} selected bills`,
-              } : undefined)}
-            >
-              <Plus className="h-5 w-5 mr-1" /> {selectedIds.size > 0 ? `Pay selected · ₹${totalSelected.toLocaleString()}` : "Add Payment"}
-            </Button>
+            {manageMode && selectedIds.size > 0 ? (
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  className="h-12 flex-1 rounded-2xl font-black shadow-md gap-1.5"
+                  onClick={() => setConfirmDeleteSelected(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete ({selectedIds.size})
+                </Button>
+                <Button
+                  className="h-12 flex-1 rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95 shadow-md"
+                  onClick={() => onAddPayment({
+                    amount: totalSelected,
+                    label: selectedEntries.length === 1 ? selectedEntries[0].label : `${selectedEntries.length} selected bills`,
+                  })}
+                >
+                  Pay · ₹{totalSelected.toLocaleString()}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                className="h-12 w-full rounded-2xl bg-[linear-gradient(100deg,#3425e4,#563bfb)] font-black text-white hover:opacity-95 shadow-md"
+                onClick={() => onAddPayment(selectedIds.size > 0 ? {
+                  amount: totalSelected,
+                  label: selectedEntries.length === 1 ? selectedEntries[0].label : `${selectedEntries.length} selected bills`,
+                } : undefined)}
+              >
+                <Plus className="h-5 w-5 mr-1" /> {selectedIds.size > 0 ? `Pay selected · ₹${totalSelected.toLocaleString()}` : "Add Payment"}
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -287,8 +341,28 @@ export const BillsEntriesSheet = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (confirmDelete) { onDelete(confirmDelete.id); setConfirmDelete(null); } }}>
+              onClick={() => { if (confirmDelete) handleDeleteSingle(confirmDelete.id); }}>
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmDeleteSelected} onOpenChange={setConfirmDeleteSelected}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} selected {selectedIds.size === 1 ? "bill" : "bills"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.size} selected {selectedIds.size === 1 ? "entry" : "entries"} totaling ₹{totalSelected.toLocaleString()}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDeleteSelected(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
