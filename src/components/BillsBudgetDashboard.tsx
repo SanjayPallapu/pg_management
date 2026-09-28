@@ -304,7 +304,6 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
   }, [entries]);
 
   const categoryData = (Object.keys(CATEGORY_META) as ExpenseCategory[])
-    .filter((category) => category !== "current")
     .map((category) => ({
       category,
       total: totalFor(category),
@@ -633,7 +632,7 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
 
               <div className="min-h-0 flex-1 overflow-y-auto px-1.5" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
                 <nav className="mt-3 grid min-h-[58px] grid-cols-4 rounded-[18px] border border-[#e0e2ea] bg-white p-1 dark:border-border dark:bg-card" aria-label="Bill categories">
-                  {(["utility", "other", "family"] as ExpenseCategory[]).map((category) => {
+                  {(["current", "utility", "other", "family"] as ExpenseCategory[]).map((category) => {
                     const catTotal = totalFor(category);
                     return (
                       <button
@@ -769,11 +768,26 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                         <div className="space-y-2.5">
                           {utilityCategoryItems.map((preset) => {
                             const Icon = preset.icon;
-                            const matchingEntries = byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
-                            const presetTotal = matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
+                            const isCurrentBill = preset.key === "Current Bill";
+                            const matchingEntries = isCurrentBill
+                              ? [...byCategory("current"), ...byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key)]
+                              : byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key);
+                            const presetTotal = isCurrentBill
+                              ? totalFor("current") + byCategory("utility").filter((entry) => getEntryGroupKey(entry) === preset.key).reduce((sum, entry) => sum + entry.amount, 0)
+                              : matchingEntries.reduce((sum, entry) => sum + entry.amount, 0);
                             return (
                               <div key={preset.key} className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 shadow-sm">
-                                <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openPresetLedger("utility", preset.key, preset.key)}>
+                                <button
+                                  type="button"
+                                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                  onClick={() => {
+                                    if (isCurrentBill) {
+                                      setDetailCategory("current");
+                                    } else {
+                                      openPresetLedger("utility", preset.key, preset.key);
+                                    }
+                                  }}
+                                >
                                   <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", preset.tone)}>
                                     <Icon className="size-5" />
                                   </div>
@@ -783,7 +797,13 @@ export const BillsBudgetDashboard = ({ rooms, onClose }: Props) => {
                                 <button
                                   type="button"
                                   className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                  onClick={() => openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` })}
+                                  onClick={() => {
+                                    if (isCurrentBill) {
+                                      setDetailCategory("current");
+                                    } else {
+                                      openQuickAdd({ category: "utility", subcategory: preset.key, label: preset.key, lockLabel: true, title: `Add ${preset.key}` });
+                                    }
+                                  }}
                                   aria-label={`Add ${preset.key}`}
                                 >
                                   <Plus className="size-4" />
