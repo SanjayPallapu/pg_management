@@ -8,7 +8,6 @@ import {
   ReceiptText, 
   UserMinus, 
   BarChart3, 
-  Bot, 
   Sparkles, 
   Settings, 
   X,
@@ -29,7 +28,6 @@ interface PGHubPayFlowDrawerProps {
   onOpenReports?: () => void;
   onOpenUtilities?: () => void;
   onOpenMoveOuts?: () => void;
-  onOpenAIAssistant?: () => void;
   onOpenDayGuests?: () => void;
   onOpenSecurityDeposit?: () => void;
   onOpenAuditHistory?: () => void;
@@ -43,7 +41,6 @@ export const PGHubPayFlowDrawer = ({
   onOpenReports,
   onOpenUtilities,
   onOpenMoveOuts,
-  onOpenAIAssistant,
   onOpenDayGuests,
   onOpenSecurityDeposit,
   onOpenAuditHistory,
@@ -130,17 +127,6 @@ export const PGHubPayFlowDrawer = ({
           handleAction(onOpenReports);
         } else {
           handleAction(undefined, "settings");
-        }
-      },
-    },
-    {
-      label: "AI Assistant",
-      icon: <Bot className="h-5 w-5 text-gray-300 group-hover:text-white" />,
-      action: () => {
-        if (onOpenAIAssistant) {
-          handleAction(onOpenAIAssistant);
-        } else {
-          navigate("/voice");
         }
       },
     },

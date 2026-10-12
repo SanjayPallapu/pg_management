@@ -254,8 +254,6 @@ export const SUBSCRIPTION_PLAN_MARKETING: Record<PaidPlanFamily, {
       'Consolidated multi-property dashboard',
       'Bulk rent-reminder actions',
       'Advanced collection and overdue insights',
-      'English and Telugu voice assistant',
-      'Voice confirmations, undo and action history',
       'Priority customer support',
     ],
   },

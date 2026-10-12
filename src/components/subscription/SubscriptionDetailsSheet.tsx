@@ -420,7 +420,7 @@ export const SubscriptionDetailsSheet = ({ open, onOpenChange }: SubscriptionDet
                     <ul className="space-y-2 text-xs border-t border-border dark:border-slate-800 pt-3 text-foreground dark:text-slate-300">
                       <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Everything in Basic</li>
                       <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> 2 PGs and 200 tenants</li>
-                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Voice assistant and bulk actions</li>
+                      <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Bulk rent-reminders and actions</li>
                       <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" /> Priority support</li>
                     </ul>
                   </div>

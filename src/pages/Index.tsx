@@ -42,7 +42,6 @@ import {
   Settings,
   Wallet,
   Menu,
-  Mic,
 } from "lucide-react";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
@@ -79,7 +78,6 @@ const Index = () => {
     }
     return 'dashboard';
   });
-  const [hideVoice, setHideVoice] = useState(() => localStorage.getItem("hide_voice_agent") === "true");
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
@@ -94,22 +92,17 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const handler = (e: CustomEvent<{ hidden: boolean }>) => {
-      setHideVoice(e.detail.hidden);
-    };
     const onOpenDayGuests = () => setDayGuestsOpen(true);
     const onOpenProperties = () => setPropertiesOpen(true);
     const onOpenReports = () => setReportsOpen(true);
     const onOpenAudit = () => setAuditOpen(true);
 
-    window.addEventListener("voice_agent_visibility_change" as any, handler);
     window.addEventListener("open_day_guests", onOpenDayGuests);
     window.addEventListener("open_properties_sheet", onOpenProperties);
     window.addEventListener("open_reports_sheet", onOpenReports);
     window.addEventListener("open_audit_sheet", onOpenAudit);
 
     return () => {
-      window.removeEventListener("voice_agent_visibility_change" as any, handler);
       window.removeEventListener("open_day_guests", onOpenDayGuests);
       window.removeEventListener("open_properties_sheet", onOpenProperties);
       window.removeEventListener("open_reports_sheet", onOpenReports);
@@ -451,19 +444,6 @@ const Index = () => {
       </div>
       </div>
 
-      {activeTab === "dashboard" && !hideVoice && (
-        <Button
-          size="icon"
-          className="fixed right-3 z-[54] h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:from-violet-600 hover:to-indigo-700"
-          style={{ bottom: "calc(4.9rem + env(safe-area-inset-bottom, 0px))" }}
-          title="Open Voice Assistant"
-          aria-label="Open Voice Assistant"
-          onClick={() => navigate("/voice")}
-        >
-          <Mic className="h-5 w-5" />
-        </Button>
-      )}
-
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       
       <PGHubPayFlowDrawer 
@@ -479,7 +459,6 @@ const Index = () => {
           }, 100);
         }}
         onOpenMoveOuts={() => navigate("/left-tenants")}
-        onOpenAIAssistant={() => navigate("/voice")}
         onOpenDayGuests={() => setDayGuestsOpen(true)}
         onOpenSecurityDeposit={() => {
           window.dispatchEvent(new CustomEvent("openSecurityDepositSheet"));

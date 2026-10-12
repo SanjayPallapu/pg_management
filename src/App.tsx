@@ -27,7 +27,6 @@ import TenantProfilesPage from "./pages/TenantProfilesPage";
 import { lazy, Suspense } from "react";
 const PublishGuide = lazy(() => import("./pages/PublishGuide"));
 const Showcase = lazy(() => import("./pages/Showcase"));
-const VoiceAgent = lazy(() => import("./pages/VoiceAgent"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const TenantOnboardingFormPage = lazy(() => import("./pages/TenantOnboardingFormPage"));
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
@@ -221,13 +220,7 @@ const AppContent = () => {
               <Showcase />
             </Suspense>
           } />
-          <Route path="/voice" element={
-            <ProtectedRoute>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                <VoiceAgent />
-              </Suspense>
-            </ProtectedRoute>
-          } />
+          <Route path="/voice" element={<Navigate to="/" replace />} />
           <Route path="/" element={
             <ProtectedRoute>
               <Index />
