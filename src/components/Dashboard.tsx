@@ -131,7 +131,6 @@ export const Dashboard = ({ rooms, onStartRentCycle, onQuickAddTenant, onNavigat
     const handleCloseAll = () => {
       setDayGuestSheetOpen(false);
       setEmptyBedsSheetOpen(false);
-      setSettlementSheetOpen(false);
       setRulesTemplateOpen(false);
       setBillsBudgetGridOpen(false);
       setBillsBudgetOpen(false);
