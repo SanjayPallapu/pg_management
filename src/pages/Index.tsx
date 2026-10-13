@@ -449,6 +449,7 @@ const Index = () => {
       <PGHubPayFlowDrawer 
         open={menuDrawerOpen} 
         onOpenChange={setMenuDrawerOpen} 
+        activeTab={activeTab}
         onSelectTab={setActiveTab} 
         onOpenProperties={() => setPropertiesOpen(true)}
         onOpenReports={() => setReportsOpen(true)}
