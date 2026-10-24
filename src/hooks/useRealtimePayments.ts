@@ -34,6 +34,7 @@ export const useRealtimePayments = () => {
             event: '*',
             schema: 'public',
             table: 'tenant_payments',
+            filter: `pg_id=eq.${currentPG.id}`,
           },
           () => {
             // Invalidate payments cache so all tabs/sessions refetch

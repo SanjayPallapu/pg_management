@@ -82,8 +82,19 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1 * 60 * 1000, // 1 min staleness for snappy updates
       gcTime: 15 * 60 * 1000,   // 15 min garbage collection
-      refetchOnWindowFocus: true, // auto refetch when app opens/gains focus
-      retry: 1,                   // single retry on failure
+      // AppContent owns foreground refreshes. Keeping this off prevents the
+      // focus manager and visibility handler from issuing the same requests.
+      refetchOnWindowFocus: false,
+      // Only retry transient transport/server failures; retrying a rejected
+      // request (auth, validation or RLS) slows the UI and adds load.
+      retry: (failureCount, error: unknown) => {
+        const status = typeof error === 'object' && error !== null && 'status' in error
+          ? Number((error as { status?: unknown }).status)
+          : undefined;
+        const isTransient = status === undefined || status === 408 || status === 429 || status >= 500;
+        return isTransient && failureCount < 2;
+      },
+      retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 10_000),
       refetchOnReconnect: true,
     },
   },
@@ -132,7 +143,9 @@ const AppContent = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        void queryClient.invalidateQueries();
+        // Refresh only mounted views. Refetching inactive cached screens on
+        // every resume creates avoidable traffic as the customer base grows.
+        void queryClient.invalidateQueries({ refetchType: 'active' });
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);

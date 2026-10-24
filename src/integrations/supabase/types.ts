@@ -628,6 +628,7 @@ export type Database = {
           payment_date: string | null
           payment_entries: Json | null
           payment_status: string
+          pg_id: string
           tenant_id: string
           updated_at: string
           whatsapp_sent: boolean | null
@@ -645,6 +646,8 @@ export type Database = {
           payment_date?: string | null
           payment_entries?: Json | null
           payment_status?: string
+          // Set by the database trigger from tenant_id when omitted.
+          pg_id?: string
           tenant_id: string
           updated_at?: string
           whatsapp_sent?: boolean | null
@@ -662,6 +665,7 @@ export type Database = {
           payment_date?: string | null
           payment_entries?: Json | null
           payment_status?: string
+          pg_id?: string
           tenant_id?: string
           updated_at?: string
           whatsapp_sent?: boolean | null
@@ -669,6 +673,13 @@ export type Database = {
           year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "tenant_payments_pg_id_fkey"
+            columns: ["pg_id"]
+            isOneToOne: false
+            referencedRelation: "pgs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tenant_payments_tenant_id_fkey"
             columns: ["tenant_id"]

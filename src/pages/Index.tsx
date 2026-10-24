@@ -42,6 +42,7 @@ import {
   Settings,
   Wallet,
   Menu,
+  RefreshCw,
 } from "lucide-react";
 import { BedDouble } from "@/components/icons/BedDouble";
 import { ReceiptIndianRupee } from "@/components/icons/ReceiptIndianRupee";
@@ -53,12 +54,11 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useActiveTab } from "@/contexts/ActiveTabContext";
-import { RentProvider } from '@/contexts/RentContext';
 import { SubscriptionBadge } from "@/components/subscription";
 import { PGHubPayFlowDrawer } from "@/components/layout/PGHubPayFlowDrawer";
 
 const Index = () => {
-  const { rooms, isLoading, error: roomsError } = useRooms();
+  const { rooms, isLoading, isFetching: isRefreshingRooms, error: roomsError, refetch: refetchRooms } = useRooms();
   const { needsSetup, isLoading: pgLoading, currentPG, canCreatePG } = usePG();
   // Prefetch payments data early so Dashboard doesn't show spinners
   const { isLoading: paymentsLoading } = useTenantPayments();
@@ -313,8 +313,7 @@ const Index = () => {
   const apiErrorMessage = roomsError ? (roomsError as Error).message : null;
 
   return (
-    <RentProvider selectedMonth={selectedMonth} selectedYear={selectedYear}>
-      <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Status bar spacer — fills the notch/camera area with theme blue on native Android */}
       <div className="w-full bg-[#0e6ce7] shrink-0" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <div className="flex-1 overflow-y-auto pb-36" ref={scrollContainerRef} onScroll={handleScroll}>
@@ -355,7 +354,19 @@ const Index = () => {
       {apiErrorMessage && (
         <div className="mx-auto w-full max-w-[1700px] px-3 sm:px-6 lg:px-8 pt-4">
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-            Failed to load data: {apiErrorMessage}
+            <div className="flex items-center justify-between gap-3">
+              <span>Failed to load data: {apiErrorMessage}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => void refetchRooms()}
+                disabled={isRefreshingRooms}
+              >
+                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isRefreshingRooms ? 'animate-spin' : ''}`} />
+                Retry
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -497,7 +508,6 @@ const Index = () => {
         )}
       </Suspense>
       </div>
-    </RentProvider>
   );
 };
 export default Index;

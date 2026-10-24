@@ -20,39 +20,13 @@ export const useTenantPayments = () => {
 
       if (getPhoneOtpTestSession()) return [];
 
-      // Step 1: Fetch rooms in this PG
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('pg_id', currentPG.id);
-
-      if (roomsError) {
-        console.error('[Payments] Failed to fetch rooms', roomsError);
-        throw roomsError;
-      }
-
-      const roomIds = (roomsData || []).map(r => r.id);
-      if (roomIds.length === 0) return [];
-
-      // Step 2: Fetch tenants in those rooms
-      const { data: tenantsData, error: tenantsError } = await supabase
-        .from('tenants')
-        .select('id')
-        .in('room_id', roomIds);
-
-      if (tenantsError) {
-        console.error('[Payments] Failed to fetch tenants', tenantsError);
-        throw tenantsError;
-      }
-
-      const tenantIds = (tenantsData || []).map(t => t.id);
-      if (tenantIds.length === 0) return [];
-
-      // Step 3: Fetch tenant payments for those active tenants
+      // Payments are denormalized with pg_id by a database trigger. This keeps
+      // the hot dashboard request to one indexed query instead of fetching
+      // rooms, then tenants, then payments on every refresh.
       const { data, error } = await supabase
         .from('tenant_payments')
         .select('id, tenant_id, month, year, payment_status, payment_date, amount, amount_paid, payment_entries, whatsapp_sent, whatsapp_sent_at, notes, ac_payment_status')
-        .in('tenant_id', tenantIds)
+        .eq('pg_id', currentPG.id)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
@@ -94,6 +68,7 @@ export const useTenantPayments = () => {
         .from('tenant_payments')
         .upsert({
           tenant_id: payment.tenantId,
+          pg_id: currentPG?.id,
           month: payment.month,
           year: payment.year,
           payment_status: payment.paymentStatus,

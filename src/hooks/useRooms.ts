@@ -29,7 +29,7 @@ export const useRooms = () => {
     }
   })();
 
-  const { data: rooms = [], isLoading, error } = useQuery({
+  const { data: rooms = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["rooms", currentPG?.id],
     queryFn: async () => {
       // Don't fetch if no PG is selected
@@ -441,7 +441,9 @@ export const useRooms = () => {
   return {
     rooms,
     isLoading: isLoading || authLoading,
+    isFetching,
     error,
+    refetch,
     updateRoom,
     addTenant,
     updateTenant,
