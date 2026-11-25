@@ -81,8 +81,8 @@ export const MarkLeftDialog = ({
     const joinDay = joinDate.getDate();
 
     // Calculate current billing cycle
-    let cycleStartMonth = selectedMonth;
-    let cycleStartYear = selectedYear;
+    const cycleStartMonth = selectedMonth;
+    const cycleStartYear = selectedYear;
     
     // If join day is 1, billing is calendar month
     if (joinDay === 1) {

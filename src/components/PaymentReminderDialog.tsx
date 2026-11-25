@@ -158,7 +158,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
     try {
       const blob = dataURLtoBlob(generatedAcImage);
       const file = new File([blob], `ac-bill-room-${reminderData.roomNo}.png`, { type: 'image/png' });
-      let phone = reminderData.tenantPhone.replace(/\D/g, '');
+      const phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       try {
@@ -188,7 +188,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       console.warn('Native AC share failed, falling back to download + redirect:', e);
       try {
         downloadReceiptImage(generatedAcImage, `ac-bill-room-${reminderData.roomNo}`);
-        let phone = reminderData.tenantPhone.replace(/\D/g, '');
+        const phone = reminderData.tenantPhone.replace(/\D/g, '');
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
         window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       } catch (err) {
@@ -207,7 +207,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       const safeName = reminderData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `reminder-${safeName}.png`, { type: 'image/png' });
 
-      let phone = reminderData.tenantPhone.replace(/\D/g, '');
+      const phone = reminderData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       try {
@@ -239,7 +239,7 @@ export const PaymentReminderDialog = ({ open, onOpenChange, reminderData }: Paym
       try {
         const image = await getOrCreateReminderImage();
         downloadReceiptImage(image, `reminder-${reminderData.tenantName}`);
-        let phone = reminderData.tenantPhone.replace(/\D/g, '');
+        const phone = reminderData.tenantPhone.replace(/\D/g, '');
         const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
         window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");
       } catch (err) {

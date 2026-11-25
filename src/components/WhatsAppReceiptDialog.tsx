@@ -175,7 +175,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       const file = new File([blob], `receipt-${safeName}.png`, { type: 'image/png' });
 
       // Clean phone number for display
-      let phone = receiptData.tenantPhone.replace(/\D/g, '');
+      const phone = receiptData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search
@@ -205,7 +205,7 @@ export const WhatsAppReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       } else {
         // Fallback: download and open WhatsApp generally (no pre-filled text)
         downloadReceiptImage(generatedImage, receiptData.tenantName);
-        let phone = receiptData.tenantPhone?.replace(/\D/g, '');
+        const phone = receiptData.tenantPhone?.replace(/\D/g, '');
         if (phone) {
           const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
           window.location.href = `https://wa.me/${cleanPhone}`;

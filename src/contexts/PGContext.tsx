@@ -7,6 +7,7 @@ import {
   getPhoneOtpTestSession,
   getPhoneOtpTestWorkspace,
 } from '@/lib/phoneOtpTestMode';
+import { isSubscriptionExemptEmail } from '@/lib/subscriptionAccess';
 
 interface PGContextType {
   pgs: PG[];
@@ -222,10 +223,11 @@ export const PGProvider = ({ children }: PGProviderProps) => {
     return () => clearTimeout(pgTimeout);
   }, [authLoading, isAuthenticated, fetchPGs, fetchSubscription]);
 
+  const hasSubscriptionExemption = isSubscriptionExemptEmail(user?.email);
   const allowedPgs = Math.min(4, subscription?.maxPgs === -1 ? 4 : (subscription?.maxPgs ?? 1));
-  const canCreatePG = pgs.length < allowedPgs;
+  const canCreatePG = hasSubscriptionExemption || pgs.length < allowedPgs;
 
-  const isProUser = subscription?.status === 'active' && subscription?.plan !== 'free';
+  const isProUser = hasSubscriptionExemption || (subscription?.status === 'active' && subscription?.plan !== 'free');
   
   // User needs setup if no PGs created yet
   const needsSetup = !isLoading && !authLoading && pgs.length === 0;

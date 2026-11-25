@@ -276,8 +276,7 @@ export const CollectedByCard = ({ onClose }: { onClose?: () => void }) => {
                     </span>
                   </div>
                 </button>
-                {true && (
-                  <div className="ml-5 mt-1 space-y-2 border-l-2 border-blue-500/20 pl-3 pb-1">
+                <div className="ml-5 mt-1 space-y-2 border-l-2 border-blue-500/20 pl-3 pb-1">
                     {/* Category sub-totals */}
                     <div className="flex flex-wrap gap-2 text-[10px] mb-1">
                       {cats.rent > 0 && (
@@ -329,8 +328,7 @@ export const CollectedByCard = ({ onClose }: { onClose?: () => void }) => {
                         </div>
                       );
                     })}
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}

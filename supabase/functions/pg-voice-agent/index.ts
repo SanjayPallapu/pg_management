@@ -1370,7 +1370,7 @@ Deno.serve(async (req) => {
 
       for (const tc of toolCalls) {
         let parsed: any = {};
-        try { parsed = JSON.parse(tc.function.arguments || "{}"); } catch {}
+        try { parsed = JSON.parse(tc.function.arguments || "{}"); } catch { /* Invalid tool input is handled as an empty request. */ }
         // A model cannot authorize a write. Every chat-originated write is preview-only.
         if (WRITE_ACTIONS.has(tc.function.name)) parsed.confirmed = false;
         const result = await executeTool(tc.function.name, parsed, supabase, pgId);

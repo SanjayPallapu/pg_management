@@ -100,7 +100,9 @@ export default function SettlementPage() {
         const diff = differenceInDays(t, f) + 1;
         if (diff > 0) setCalcDaysStayed(diff);
       }
-    } catch {}
+    } catch {
+      // Ignore incomplete dates while the user is editing the range.
+    }
   };
 
   const handleCalcToChange = (newTo: string) => {
@@ -112,7 +114,9 @@ export default function SettlementPage() {
         const diff = differenceInDays(t, f) + 1;
         if (diff > 0) setCalcDaysStayed(diff);
       }
-    } catch {}
+    } catch {
+      // Ignore incomplete dates while the user is editing the range.
+    }
   };
 
   const handleCalcDaysStayedChange = (days: number) => {
@@ -124,7 +128,9 @@ export default function SettlementPage() {
         nextDate.setDate(f.getDate() + days - 1);
         setCalcToDate(format(nextDate, 'yyyy-MM-dd'));
       }
-    } catch {}
+    } catch {
+      // Ignore an invalid start date until it is corrected.
+    }
   };
 
   // Calculator daily rate

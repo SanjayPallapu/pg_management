@@ -308,6 +308,7 @@ export function trimConversation(
 export function estimateTokens(text: string): number {
   if (!text) return 0;
   // Check if has significant non-ASCII (Telugu/Hindi)
+  // eslint-disable-next-line no-control-regex -- this intentionally counts non-ASCII characters.
   const nonAscii = (text.match(/[^\x00-\x7F]/g) || []).length;
   const ratio = nonAscii > text.length * 0.2 ? 2 : 4;
   return Math.ceil(text.length / ratio);

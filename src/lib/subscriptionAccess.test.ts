@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSubscriptionAccess } from "./subscriptionAccess";
+import { getSubscriptionAccess, isSubscriptionExemptEmail } from "./subscriptionAccess";
 import type { Subscription } from "@/types/pg";
 
 const base: Subscription = {
@@ -28,5 +28,13 @@ describe("getSubscriptionAccess", () => {
 
   it("allows an active lifetime subscription without expiration", () => {
     expect(getSubscriptionAccess({ ...base, billingCycle: "lifetime", expiresAt: undefined }).allowed).toBe(true);
+  });
+});
+
+describe("isSubscriptionExemptEmail", () => {
+  it("allows only the configured account, irrespective of casing or whitespace", () => {
+    expect(isSubscriptionExemptEmail("  SANJAYPALLAPUU@gmail.com ")).toBe(true);
+    expect(isSubscriptionExemptEmail("sanjaypallapu@gmail.com")).toBe(false);
+    expect(isSubscriptionExemptEmail(undefined)).toBe(false);
   });
 });

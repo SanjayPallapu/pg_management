@@ -9,6 +9,14 @@ export type SubscriptionAccess = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// This is intentionally an exact, case-insensitive allowlist—not a domain rule.
+// Server-side enforcement is kept in the matching database migration.
+const SUBSCRIPTION_EXEMPT_EMAILS = new Set(["sanjaypallapuu@gmail.com"]);
+
+export function isSubscriptionExemptEmail(email: string | null | undefined): boolean {
+  return Boolean(email && SUBSCRIPTION_EXEMPT_EMAILS.has(email.trim().toLowerCase()));
+}
+
 export function getSubscriptionAccess(subscription: Subscription | null, now = new Date()): SubscriptionAccess {
   if (!subscription) {
     // Default fallback so fresh signups or uninitialized sessions are never abruptly locked out

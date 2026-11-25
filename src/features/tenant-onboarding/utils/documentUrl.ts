@@ -17,7 +17,7 @@ export async function resolveOnboardingDocumentUrl(rawPath: string | null | unde
 
   // Extract relative storage path inside tenant-onboarding-docs bucket
   const cleanPath = path
-    .replace(/^https?:\/\/[^\/]+\/storage\/v1\/object\/(?:public|sign)\/tenant-onboarding-docs\//, "")
+    .replace(/^https?:\/\/[^/]+\/storage\/v1\/object\/(?:public|sign)\/tenant-onboarding-docs\//, "")
     .replace(/^\/?tenant-onboarding-docs\//, "")
     .replace(/^\/+/, "");
 

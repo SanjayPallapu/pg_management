@@ -56,7 +56,7 @@ export const parseAnyDate = (dateStr: string): Date => {
   if (!dateStr) return new Date(NaN);
   
   // Try standard Date parsing first
-  let parsed = new Date(dateStr);
+  const parsed = new Date(dateStr);
   if (!isNaN(parsed.getTime())) return parsed;
   
   // Try dd-MMM-yyyy parsing (e.g. 05-Jul-2026)

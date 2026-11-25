@@ -590,7 +590,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
 
   // Filter tenants based on search query, exclude locked tenants, and optionally hide left tenants
   const filteredTenants = useMemo(() => {
-    let filtered = tenantsWithPayments.filter((tenant) => !tenant.isLocked);
+    const filtered = tenantsWithPayments.filter((tenant) => !tenant.isLocked);
 
     if (!searchQuery.trim()) return filtered;
     const query = searchQuery.toLowerCase().trim();
@@ -918,7 +918,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
         const file = new File([blob], fileName, { type: "image/png" });
 
         const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
-        let phone = targetTenant?.phone?.replace(/\D/g, "");
+        const phone = targetTenant?.phone?.replace(/\D/g, "");
 
         if (phone) {
           const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
@@ -977,7 +977,7 @@ export const MonthlyRentSheet = ({ rooms }: MonthlyRentSheetProps) => {
           a.click();
           
           const targetTenant = targetTenantName ? item.activeTenants.find((t) => t.name === targetTenantName) : undefined;
-          let phone = targetTenant?.phone?.replace(/\D/g, "");
+          const phone = targetTenant?.phone?.replace(/\D/g, "");
           if (phone) {
             const cleanPhone = phone.startsWith('91') ? phone : `91${phone}`;
             window.open(`https://wa.me/${cleanPhone}`, "_blank", "noopener,noreferrer");

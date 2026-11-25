@@ -54,7 +54,9 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
     try {
       const stored = localStorage.getItem(`electricity-slabs-${currentPG?.id || "default"}`);
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch {
+      // Use the default tariffs when a previous local value cannot be read.
+    }
     return AP_SLABS;
   });
 
@@ -62,7 +64,9 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
     try {
       const stored = localStorage.getItem(`fixed-charges-${currentPG?.id || "default"}`);
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch {
+      // Use the default charges when a previous local value cannot be read.
+    }
     return FIXED_CHARGES;
   });
 
@@ -72,7 +76,9 @@ export const BillUnitPricesCard = ({ defaultOpen = false, onClose, showSummaryCa
       setSlabs(storedSlabs ? JSON.parse(storedSlabs) : AP_SLABS);
       const storedFixed = localStorage.getItem(`fixed-charges-${currentPG?.id || "default"}`);
       setFixedCharges(storedFixed ? JSON.parse(storedFixed) : FIXED_CHARGES);
-    } catch (e) {}
+    } catch {
+      // Keep the existing defaults when stored data is invalid.
+    }
   }, [currentPG?.id]);
 
   useEffect(() => {

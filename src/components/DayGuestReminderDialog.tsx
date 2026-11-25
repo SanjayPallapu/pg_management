@@ -70,10 +70,10 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
 
     // Save defaults to localStorage for convenience
     if (includeAc && acPerDay > 0) {
-      try { localStorage.setItem(STORAGE_AC_RATE_KEY, acPerDay.toString()); } catch {}
+      try { localStorage.setItem(STORAGE_AC_RATE_KEY, acPerDay.toString()); } catch { /* Local storage is optional. */ }
     }
     if (discountVal > 0) {
-      try { localStorage.setItem(STORAGE_DISCOUNT_KEY, discountVal.toString()); } catch {}
+      try { localStorage.setItem(STORAGE_DISCOUNT_KEY, discountVal.toString()); } catch { /* Local storage is optional. */ }
     }
 
     const rentSubtotal = baseData.numberOfDays * baseData.perDayRate;
@@ -108,7 +108,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
         try {
           const saved = localStorage.getItem(STORAGE_AC_RATE_KEY);
           if (saved) defaultAcRate = parseInt(saved) || 0;
-        } catch {}
+        } catch { /* Fall back to the guest's saved rate. */ }
       }
 
       let defaultDiscount = reminderData.discount || 0;
@@ -116,7 +116,7 @@ export const DayGuestReminderDialog = ({ open, onOpenChange, reminderData }: Pro
         try {
           const savedDisc = localStorage.getItem(STORAGE_DISCOUNT_KEY);
           if (savedDisc) defaultDiscount = parseInt(savedDisc) || 0;
-        } catch {}
+        } catch { /* Fall back to the guest's saved discount. */ }
       }
 
       recalculateTemplate(isAcRoom, defaultAcRate, defaultDiscount, reminderData);

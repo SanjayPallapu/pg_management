@@ -78,7 +78,7 @@ export const RulesShareDialog = ({ open, onOpenChange, shareData }: RulesShareDi
        const safeName = shareData.tenantName.replace(/\s+/g, '-').toLowerCase();
        const file = new File([blob], `rules-${safeName}.png`, { type: 'image/png' });
 
-      let phone = shareData.tenantPhone.replace(/\D/g, '');
+      const phone = shareData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search

@@ -4,16 +4,23 @@ import { Crown, AlertTriangle } from "lucide-react";
 import { usePG } from "@/contexts/PGContext";
 import { useNavigate } from "react-router-dom";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanKey } from "@/types/pg";
-import { getSubscriptionAccess } from "@/lib/subscriptionAccess";
+import { getSubscriptionAccess, isSubscriptionExemptEmail } from "@/lib/subscriptionAccess";
+import { useAuth } from "@/hooks/useAuth";
 
 export const SubscriptionBadge = () => {
   const { subscription, isProUser } = usePG();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const access = getSubscriptionAccess(subscription);
+  const hasSubscriptionExemption = isSubscriptionExemptEmail(user?.email);
   const daysUntilExpiry = access.daysRemaining;
   const isExpiringSoon = access.allowed && daysUntilExpiry !== null && daysUntilExpiry <= 7;
   const isExpired = !access.allowed;
+
+  if (hasSubscriptionExemption) {
+    return <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:text-emerald-300">Access granted</Badge>;
+  }
 
   if (isExpired || subscription?.status === "expired") {
     return (

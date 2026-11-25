@@ -108,7 +108,7 @@ export const WelcomeDialog = ({ open, onOpenChange, welcomeData }: WelcomeDialog
       const safeName = welcomeData.tenantName.replace(/\s+/g, '-').toLowerCase();
       const file = new File([blob], `welcome-${safeName}.png`, { type: 'image/png' });
 
-      let phone = welcomeData.tenantPhone.replace(/\D/g, '');
+      const phone = welcomeData.tenantPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search

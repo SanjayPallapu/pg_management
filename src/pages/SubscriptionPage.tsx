@@ -25,13 +25,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { SUBSCRIPTION_PLAN_MARKETING, SUBSCRIPTION_PLANS, type SubscriptionPlanKey, getLocalizedSubscriptionPrice } from "@/types/pg";
 import { format } from "date-fns";
-import { getSubscriptionAccess } from "@/lib/subscriptionAccess";
+import { getSubscriptionAccess, isSubscriptionExemptEmail } from "@/lib/subscriptionAccess";
 
 export default function SubscriptionPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { subscription, refreshSubscription } = usePG();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { initiatePayment, isLoading: razorpayLoading } = useRazorpay();
 
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly" | "lifetime">("monthly");
@@ -55,13 +55,16 @@ export default function SubscriptionPage() {
 
   const currentLocalized = getLocalizedSubscriptionPrice(activePlanKey, "IN");
   const access = useMemo(() => getSubscriptionAccess(subscription), [subscription]);
+  const hasSubscriptionExemption = isSubscriptionExemptEmail(user?.email);
   const daysLeft = access.daysRemaining;
-  const accessLocked = !access.allowed || Boolean((location.state as { accessLocked?: boolean } | null)?.accessLocked);
+  const accessLocked = !hasSubscriptionExemption && (!access.allowed || Boolean((location.state as { accessLocked?: boolean } | null)?.accessLocked));
   
   // Real active status requires BOTH valid date access and DB active status
-  const isSubscribedAndActive = access.allowed && subscription?.status === "active";
-  const isTrialActive = isSubscribedAndActive && subscription?.billingCycle === "trial";
-  const activePlanKeyOnSubscription = isSubscribedAndActive ? subscription?.billingCycle : undefined;
+  const isSubscribedAndActive = hasSubscriptionExemption || (access.allowed && subscription?.status === "active");
+  const isTrialActive = !hasSubscriptionExemption && isSubscribedAndActive && subscription?.billingCycle === "trial";
+  const activePlanKeyOnSubscription = isSubscribedAndActive
+    ? (hasSubscriptionExemption ? "lifetime" : subscription?.billingCycle)
+    : undefined;
 
   const handleBack = () => {
     if (accessLocked) {

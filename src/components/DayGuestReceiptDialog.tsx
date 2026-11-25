@@ -156,7 +156,7 @@ export const DayGuestReceiptDialog = ({ open, onOpenChange, receiptData, onWhats
       const file = new File([blob], `day-guest-receipt-${safeName}.png`, { type: 'image/png' });
 
       // Clean phone number
-      let phone = receiptData.guestPhone.replace(/\D/g, '');
+      const phone = receiptData.guestPhone.replace(/\D/g, '');
       const displayPhone = phone.startsWith('91') ? phone.slice(2) : phone;
 
       // Copy phone number to clipboard for easy search
